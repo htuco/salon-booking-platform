@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.vite/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Flutter / Dart (za Sprint 0)
+.dart_tool/
+.packages
+*.iml
+build/
+ios/Pods/
+ios/.symlinks/
+android/.gradle/
+android/local.properties
+*.jks
+*.keystore
+
+# Tenant secrets — NIKAD u git
+tenants/**/google-services.json
+tenants/**/GoogleService-Info.plist
+tenants/**/*.p8
+tenants/**/*.mobileprovision
+fastlane/report.xml
