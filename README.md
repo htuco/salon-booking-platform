@@ -20,6 +20,7 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, stomato
 | 04 | [Flutter Tenant Factory](docs/04-flutter-tenant-factory.md) — flavors, CI/CD, store submission |
 | 05 | [Vertikalni paketi](docs/05-vertical-packs.md) — frizeri, beauty, zubari, health, generic |
 | 06 | [Auth & Login Flow](docs/06-auth-login-flow.md) — Apple, Google, Email OTP, Facebook · Supabase Auth |
+| 07 | [Tehnička arhitektura](docs/07-tech-architecture.md) — struktura foldera, izbor paketa (Flutter/Next.js/Supabase), monorepo alati |
 
 ---
 
