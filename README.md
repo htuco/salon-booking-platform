@@ -24,6 +24,12 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, stomato
 
 ---
 
+## ✅ Taskovi
+
+**[tasks/](tasks/)** — raspisani taskovi za Sprint 0, jedan `.md` po tasku sa ciljem, definicijom gotovog i koracima. Počni sa [tasks/README.md](tasks/README.md).
+
+---
+
 ## 🖥 Interaktivni wireframe prototip
 
 ```bash
@@ -57,6 +63,7 @@ Otvori `/` za pregled svih ekrana grupisanih po tri dijela sistema.
 ```
 .
 ├── docs/                    # ⬅ dokumentacija — počni ovdje
+├── tasks/                   # raspisani taskovi za Sprint 0
 ├── src/app/
 │   ├── pages/               # wireframe ekrani
 │   ├── components/          # design system prototip
