@@ -1,0 +1,3 @@
+-- Seed podaci za lokalni dev — dva demo salona iz docs/01 §14.
+-- Puni seed (usluge, radnici, radno vrijeme) dolazi u task 02
+-- (docs/tasks/02-supabase-schema-rls.md) zajedno sa init_schema migracijom.
