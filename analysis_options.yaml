@@ -1,0 +1,14 @@
+# Zajednička lint pravila za sve Dart/Flutter pakete u monorepou.
+# Svaki app/paket ga uključuje sa: `include: ../../analysis_options.yaml`
+# (svi su na istoj dubini — apps/<x> i packages/<x> — pa je relativna putanja ista svuda).
+#
+# Ne edituj `analyzer: exclude` ovdje — to je po-projektu (android/ios/web postoje
+# samo u apps/*, ne u packages/*) i ostaje u analysis_options.yaml svakog paketa.
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    avoid_print: true
+    prefer_final_locals: true
+    unnecessary_lambdas: true
