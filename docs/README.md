@@ -24,6 +24,7 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, masere,
 | **04** | [Flutter Tenant Factory](04-flutter-tenant-factory.md) | Kako štancati klijente: flavors, CI/CD, store submission, onboarding checklist, skaliranje |
 | **05** | [Vertikalni paketi](05-vertical-packs.md) | Frizeri, beauty, **zubari**, health, generic — terminologija, pravila, dentalni recall, GDPR |
 | **06** | [Auth & Login Flow](06-auth-login-flow.md) | Apple, Google, Email OTP, Facebook — identity model, per-flavor config, store zahtjevi |
+| **07** | [Tehnička arhitektura](07-tech-architecture.md) | Puna struktura repoa, konkretan izbor Flutter/Next.js/Supabase paketa, monorepo alati, observability |
 
 ---
 
