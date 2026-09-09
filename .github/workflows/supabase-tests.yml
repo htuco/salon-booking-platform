@@ -1,0 +1,63 @@
+name: Supabase tests
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/seed.sql'
+      - 'supabase/tests/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/seed.sql'
+      - 'supabase/tests/**'
+      - 'supabase/config.toml'
+
+concurrency:
+  group: supabase-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rls-isolation:
+    name: Schema, RLS and tenant isolation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      # Applies every migration and seed.sql from scratch. A migration that does
+      # not apply cleanly on an empty database fails here, not in production.
+      - name: Start local Supabase
+        run: supabase start
+
+      # pgTAP: tenant isolation runs inside a rollback transaction.
+      - name: Run pgTAP tests
+        run: supabase test db
+
+      # REST level: two real Auth users, two real JWTs, PostgREST + RLS end to end.
+      - name: Run REST isolation test
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="${API_URL:-http://127.0.0.1:54321}"
+          export SUPABASE_ANON_KEY="${ANON_KEY:-}"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-}"
+          # Fail loudly instead of testing against an unconfigured stack.
+          test -n "$SUPABASE_ANON_KEY" || { echo "ANON_KEY missing from supabase status"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "SERVICE_ROLE_KEY missing from supabase status"; exit 1; }
+          deno run --allow-env --allow-net supabase/tests/rest_isolation.ts
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
