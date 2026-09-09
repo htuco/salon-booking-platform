@@ -2,7 +2,7 @@ name: salon_platform
 publish_to: 'none'
 
 environment:
-  sdk: ^3.13.1
+  sdk: ^3.13.0
 
 # Dart native pub workspaces (SDK ^3.6.0+) — Melos od v7 ne koristi standalone
 # melos.yaml ni pubspec_overrides.yaml, nego se oslanja na ovo. `workspace:`
@@ -16,24 +16,28 @@ workspace:
   - packages/core_ui
 
 dev_dependencies:
-  melos: ^8.3.0
+  args: 2.7.0
+  crypto: 3.0.7
+  image: 4.5.4
+  melos: 7.8.1
+  yaml: 3.1.3
 
 melos:
   scripts:
     analyze:
-      run: melos exec -- dart analyze .
+      run: dart run melos exec -- dart analyze .
       description: Statička analiza za sve Dart/Flutter pakete.
 
     format:
-      run: melos exec -- dart format --set-exit-if-changed .
+      run: dart run melos exec -- dart format --set-exit-if-changed .
       description: Provjeri formatiranje bez izmjene fajlova (koristi se u pre-commit i CI).
 
     format:fix:
-      run: melos exec -- dart format .
+      run: dart run melos exec -- dart format .
       description: Formatira sve pakete.
 
     test:
-      run: melos exec --dir-exists=test -- flutter test
+      run: dart run melos exec --dir-exists=test -- flutter test
       description: Pokreni testove u svakom paketu koji ima test/ folder.
 
     build:client:
