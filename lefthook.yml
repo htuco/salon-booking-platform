@@ -1,0 +1,13 @@
+# Git hook runner — v. docs/07-tech-architecture.md §6.
+# Instalacija (jednom, nakon `npm i`): npx lefthook install
+#
+# Web dio (`src/`, buduci `web/`) nema eslint/prettier konfigurisan još —
+# hook za to se dodaje kad taj toolchain stvarno postoji (docs/07 §4),
+# ne prije, da se ne blokira svaki commit na alatu koji ne radi.
+pre-commit:
+  parallel: true
+  commands:
+    dart-format:
+      glob: "{apps,packages}/**/*.dart"
+      run: dart format --set-exit-if-changed {staged_files}
+      stage_fixed: true

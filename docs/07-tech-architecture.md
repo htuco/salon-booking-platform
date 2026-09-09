@@ -16,7 +16,7 @@ Nadogradnja na skicu iz [04 §2](04-flutter-tenant-factory.md#2-struktura-repozi
 
 ```
 salon_platform/
-├── melos.yaml
+├── pubspec.yaml                     # root — Dart pub workspace (`workspace:` lista) + `melos:` config
 ├── analysis_options.yaml            # linting, dijeli se preko melos-a na sve Dart pakete
 ├── lefthook.yml                     # git hooks — Dart i Node u istom fajlu
 │
@@ -182,6 +182,9 @@ Svaka funkcija je izolovana u svom folderu pod `supabase/functions/<ime>/index.t
 | **CI/CD** | Codemagic za Flutter build/store matrix ([04 §8](04-flutter-tenant-factory.md#8-cicd)), GitHub Actions za `web/` (lint, test, deploy na Vercel) i za pgTAP/RLS testove na svaki PR koji dira `supabase/migrations/` |
 
 **`versionName` je zajednički, `versionCode`/`buildNumber` je po tenantu** — već odlučeno u [04 §8.1](04-flutter-tenant-factory.md#81-pravila-koja-se-ne-pregovaraju), ponovljeno ovdje jer direktno utiče na CI matrix konfiguraciju.
+
+### 6.1 Melos ≥7 — config je u `pubspec.yaml`, ne u `melos.yaml`
+Stariji Melos (≤6) je koristio standalone `melos.yaml` + generisan `pubspec_overrides.yaml` po paketu. Od verzije 7 Melos se oslanja na **Dart native pub workspaces** (Dart SDK ≥3.6): root `pubspec.yaml` ima `workspace:` listu paketa (bez globova — [dart-lang/pub#4391](https://github.com/dart-lang/pub/issues/4391) — lista je eksplicitna) i `melos:` ključ sa onim što je ranije bilo u `melos.yaml`; svaki paket u workspace-u dobija `resolution: workspace` u svom `pubspec.yaml`. `melos bootstrap` tad samo pokreće `flutter pub get` u workspace-u, bez linkovanja preko `pubspec_overrides.yaml`.
 
 ---
 
