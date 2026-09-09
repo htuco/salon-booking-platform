@@ -6,14 +6,24 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 
 | # | Task | Blokira | Procjena |
 |---|---|---|---|
-| [01](01-repo-skeleton.md) | Skeleton repozitorija (melos, apps, packages, supabase/) | sve ostalo | 0.5 dana |
-| [02](02-supabase-schema-rls.md) | Supabase šema + RLS + policy testovi | task 03, 05 | 1–2 dana |
+| [01](01-repo-skeleton.md) ✅ | Skeleton repozitorija (melos, apps, packages, supabase/) | sve ostalo | 0.5 dana |
+| [02](02-supabase-schema-rls.md) ✅ | Supabase šema + RLS + policy testovi | task 03, 05 | 1–2 dana |
 | [03](03-flavor-system.md) | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
 | [04](04-ci-pipeline.md) | CI pipeline — jedna komanda do artefakta | prvi pravi build | 1 dan |
 | [05](05-availability-engine.md) | Availability engine na backendu + testovi | booking UI | 2–3 dana |
 | [06](06-vertical-pack.md) | `VerticalPack` + `Vertical` klasa u `core_domain` | svaki ekran sa tekstom | 2–3 dana |
 
 **Ukupno: ~9–12 radnih dana.** Tek nakon ovoga ima smisla početi `core_ui` theme factory i prvi booking ekran.
+
+> **Task 01 je odrađen** — skeleton je generisan i verifikovan (`melos bootstrap`/`analyze`/`test` prolaze). Prije nego kreneš na task 02, pokreni `supabase start` lokalno da potvrdiš Docker stack — to nije bilo moguće verifikovati u sandboxu bez Docker daemona. Detalji u [01-repo-skeleton.md](01-repo-skeleton.md).
+
+> **Task 02 je odrađen i verifikovan** — migracije, RLS, seed, pgTAP i Deno REST test prolaze na CI-ju
+> ([run 34417077084](https://github.com/htuco/salon-booking-platform/actions/runs/34417077084)): 38 pgTAP testova PASS,
+> 24 REST asercije sa dva stvarna JWT-a. Tenant izolacija je dokazana protiv žive baze, ne samo napisana.
+> Workflow ponavlja dokaz na svaki PR nad `supabase/`.
+>
+> Na razvojnoj mašini nema Dockera, pa `supabase start` ne radi lokalno — dok se ne instalira Docker Desktop,
+> `supabase/` promjene se dokazuju kroz CI, ne lokalno.
 
 ## Kako koristiti ovaj folder
 

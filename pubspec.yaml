@@ -1,0 +1,51 @@
+name: salon_platform
+publish_to: 'none'
+
+environment:
+  sdk: ^3.13.0
+
+# Dart native pub workspaces (SDK ^3.6.0+) — Melos od v7 ne koristi standalone
+# melos.yaml ni pubspec_overrides.yaml, nego se oslanja na ovo. `workspace:`
+# ne podržava globove (dart-lang/pub#4391), zato je lista eksplicitna — novi
+# paket u apps/ ili packages/ mora biti dodat ovdje ručno.
+workspace:
+  - apps/client
+  - apps/admin
+  - packages/core_domain
+  - packages/core_api
+  - packages/core_ui
+
+dev_dependencies:
+  args: 2.7.0
+  crypto: 3.0.7
+  image: 4.5.4
+  melos: 7.8.1
+  yaml: 3.1.3
+
+melos:
+  scripts:
+    analyze:
+      run: dart run melos exec -- dart analyze .
+      description: Statička analiza za sve Dart/Flutter pakete.
+
+    format:
+      run: dart run melos exec -- dart format --set-exit-if-changed .
+      description: Provjeri formatiranje bez izmjene fajlova (koristi se u pre-commit i CI).
+
+    format:fix:
+      run: dart run melos exec -- dart format .
+      description: Formatira sve pakete.
+
+    test:
+      run: dart run melos exec --dir-exists=test -- flutter test
+      description: Pokreni testove u svakom paketu koji ima test/ folder.
+
+    build:client:
+      run: |
+        cd apps/client && flutter build appbundle --flavor $TENANT --dart-define=SALON_ID=$SALON_ID --dart-define=API_URL=$API_URL
+      description: Build jednog tenanta — v. tool/build_tenant.sh i docs/04.
+
+    build:all:
+      run: |
+        melos exec --scope="client" -- echo "TODO (docs/04 §8.1) — rebuild svih tenanata pri promjeni core koda"
+      description: Placeholder za noćni rebuild svih tenanata (docs/04 §8.1) — implementira se u Sprint 1+.

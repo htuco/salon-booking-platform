@@ -1,0 +1,35 @@
+# Šablon — kopiraj u tenants/<flavor>/tenant.yaml za novog klijenta.
+# Puna specifikacija polja: docs/04-flutter-tenant-factory.md §3
+tenant:
+  flavor: replace_me
+  salonId: 00000000-0000-0000-0000-000000000000
+  slug: replace-me
+  vertical: barber # barber | beauty | dental | health | generic — v. docs/05
+
+app:
+  displayName: "Replace Me"
+  shortName: "Replace Me"
+  applicationId: ba.nasadomena.replaceme
+  bundleId: ba.nasadomena.replaceme
+  versionName: "1.0.0"
+  androidVersionCode: 1
+  iosBuildNumber: 1
+
+branding:
+  primaryColor: "#1A1A1A"
+  secondaryColor: "#C9A227"
+  splashBackground: "#1A1A1A"
+  theme: modern_barber
+
+store:
+  shortDescription: "Zakažite termin u par tapova."
+  categoryAndroid: LIFESTYLE
+  categoryIos: LIFESTYLE
+  contentRating: everyone
+  supportEmail: podrska@nasadomena.ba
+  privacyPolicyUrl: https://nasadomena.ba/privatnost/replace-me
+
+targets:
+  android: true
+  ios: false
+  web: true

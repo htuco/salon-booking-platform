@@ -30,6 +30,25 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, stomato
 
 ---
 
+## 🏗 Flutter monorepo (Sprint 0)
+
+Pub workspace (Dart SDK ^3.13.1) sa Melos-om — [task 01](tasks/01-repo-skeleton.md) je odradio skeleton, ostali taskovi u [tasks/](tasks/) ga popunjavaju.
+
+```bash
+dart pub global activate melos   # jednom
+melos bootstrap                  # flutter pub get za sve pakete u workspace-u
+melos run analyze                # dart analyze u svih 5 paketa
+melos run test                   # flutter test u svih 5 paketa
+
+npm i && npx lefthook install    # git hooks (dart format na pre-commit)
+
+supabase init                    # već urađeno — v. supabase/config.toml
+```
+
+> `apps/client`, `apps/admin` i `packages/core_*` su trenutno prazni skeletoni (Flutter default), bez state managementa/routinga — to dolazi tek u Sprint 1 kad se piše prvi ekran ([07 §3](docs/07-tech-architecture.md#3-flutter-paketi--konkretan-izbor)).
+
+---
+
 ## 🖥 Interaktivni wireframe prototip
 
 ```bash
@@ -64,12 +83,25 @@ Otvori `/` za pregled svih ekrana grupisanih po tri dijela sistema.
 .
 ├── docs/                    # ⬅ dokumentacija — počni ovdje
 ├── tasks/                   # raspisani taskovi za Sprint 0
+├── pubspec.yaml             # root — Dart pub workspace + Melos config (melos: key)
+├── apps/
+│   ├── client/              # Flutter — N flavora (skeleton, task 01)
+│   └── admin/               # Flutter — generička app (skeleton, task 01)
+├── packages/
+│   ├── core_domain/         # entiteti, Vertical (skeleton, task 01)
+│   ├── core_api/            # Supabase repozitoriji (skeleton, task 01)
+│   └── core_ui/             # design system (skeleton, task 01)
+├── supabase/                # migrations/, functions/, seed.sql, tests/ (init, task 01)
+├── tenants/                 # build config po klijentu — v. docs/04 §3
+├── tool/                    # new_tenant.dart, gen_flavors.dart — v. tasks/03
 ├── src/app/
 │   ├── pages/               # wireframe ekrani
 │   ├── components/          # design system prototip
 │   └── routes.tsx           # rute prate docs/01 §12
 └── *.docx                   # originalni v1 draftovi (web-first, maj 2026)
 ```
+
+Puna struktura sa obrazloženjem svakog foldera: [docs/07-tech-architecture.md §1](docs/07-tech-architecture.md#1-puna-struktura-repozitorija).
 
 `.docx` fajlovi su zadržani za referencu. Konvertovani su u markdown i značajno dorađeni u `docs/`.
 
