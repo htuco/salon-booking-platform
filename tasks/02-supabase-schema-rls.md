@@ -18,7 +18,7 @@ Prva migracija sa punom MVP šemom, RLS policy po `salon_id` na svakoj tenant-sc
 - [x] `seed.sql` kreira dva demo salona (Barber Studio Vitez, Beauty Studio Travnik iz [01 §14](../docs/01-mvp-spec.md#14-demo-saloni)) sa uslugama, radnicima i radnim vremenom
 - [x] `supabase/tests/` sadrži pgTAP test: "korisnik salona A ne može SELECT/UPDATE/DELETE nad `appointments` salona B"
 - [x] `supabase/tests/` sadrži Deno skriptu koja hita REST API sa dva različita JWT-a (dva različita `AuthIdentity`) i asertuje da klijent prijavljen u salon A ne vidi svoje podatke iz salona B — [06 §4.4](../docs/06-auth-login-flow.md)
-- [ ] Svi testovi prolaze lokalno (`supabase test db`) i CI korak koji ih pokreće na svaki PR koji dira `supabase/migrations/`
+- [x] Svi testovi prolaze lokalno (`supabase test db`) i CI korak koji ih pokreće na svaki PR koji dira `supabase/migrations/`
 
 ## Koraci
 1. `supabase migration new init_schema`, prepiši šemu iz [01 §11](../docs/01-mvp-spec.md#11-database-entities) u SQL (tipovi, foreign key-evi, enum-i za `status`/`source`/`role`)
@@ -33,21 +33,23 @@ Prva migracija sa punom MVP šemom, RLS policy po `salon_id` na svakoj tenant-sc
 ## Zašto ovo prije UI-ja
 Tenant izolacija je poslovni rizik, ne tehnički detalj — [06 §4.3](../docs/06-auth-login-flow.md) eksplicitno upozorava da "salon otkrije da mu vidiš klijentelu kod konkurencije" ubija povjerenje trenutno i nepovratno. Test mora postojati prije prvog pravog korisnika, ne poslije prve žalbe.
 
-## Status (2026-09-10)
+## Status — verifikovan 2026-09-10
 
-Šema, RLS, seed, pgTAP test i Deno REST test su napisani; CI workflow
-[`.github/workflows/supabase-tests.yml`](../.github/workflows/supabase-tests.yml)
-pokreće `supabase start` → `supabase test db` → `rest_isolation.ts` na svaki PR
-koji dira `supabase/migrations/**`, `seed.sql`, `tests/**` ili `config.toml`.
+Zeleno na CI-ju: [run 34417077084](https://github.com/htuco/salon-booking-platform/actions/runs/34417077084), PR #2.
 
-**Zadnja DoD stavka ostaje otvorena** jer testovi još nisu izvršeni protiv žive baze —
-na ovoj mašini nema Docker daemona, pa `supabase start` ne može podići stack.
-Napisan SQL nije dokazan SQL. Zatvori stavku tek kad:
+```
+supabase test db  →  Files=1, Tests=38, Result: PASS
+rest_isolation.ts →  REST tenant isolation passed: 24 assertions, two real JWTs.
+```
 
-1. Docker Desktop radi lokalno, `supabase db reset` prođe čisto (migracije + seed),
-   `supabase test db` prođe i Deno skripta ispiše broj asercija — ili
-2. CI workflow prođe zeleno na prvom PR-u koji dira `supabase/`, što je isti dokaz
-   na tuđem Dockeru.
+Migracije + seed se primjenjuju čisto na praznu bazu (`supabase start` u workflowu),
+38 pgTAP asercija i 24 REST asercije prolaze protiv žive Postgres/PostgREST/GoTrue
+instance. Šema više nije nacrt — task 03 i 05 se mogu osloniti na nju.
 
-Do tada se šema tretira kao neverifikovan nacrt i task 03/05 se oslanjaju na nju
-na vlastitu odgovornost.
+Workflow [`.github/workflows/supabase-tests.yml`](../.github/workflows/supabase-tests.yml)
+ponavlja isti dokaz na svaki PR koji dira `supabase/migrations/**`, `seed.sql`,
+`tests/**` ili `config.toml`, pa regresija u izolaciji pada na PR-u, ne u produkciji.
+
+Napomena za lokalni rad: na razvojnoj mašini nema Docker daemona, pa se `supabase start`
+ne može pokrenuti lokalno. Dok se Docker Desktop ne instalira, CI je jedini način da se
+promjene u šemi dokažu — ne mergaj `supabase/` promjene bez zelenog run-a.
