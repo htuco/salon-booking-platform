@@ -1,0 +1,10 @@
+# GENERISANO — ne editovati ručno. Pokreni: dart run tool/gen_flavors.dart
+#
+# Izvorna ikona: tenants/barberstudiovitez/assets/icon.png
+# Placeholder se pravi sa: dart run tool/gen_placeholder_icons.dart
+# Pravi asset samo zamijeni taj fajl — ovdje se ništa ne mijenja.
+flutter_launcher_icons:
+  image_path: "../../tenants/barberstudiovitez/assets/icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
