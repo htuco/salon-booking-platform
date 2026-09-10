@@ -242,7 +242,10 @@ select throws_ok($$
     '550e8400-e29b-41d4-a716-446655440000', '10000000-0000-4000-8000-000000000001',
     '20000000-0000-4000-8000-000000000001', 'cc000000-0000-4000-8000-000000000001', 'Test Klijent',
     (select mon from tfix), '11:15', '11:45', 5, 'confirmed')
-$$, '23P01', 'Direktan preklapajuci upis pada na exclusion constraintu');
+-- Cetiri argumenta: treci je poruka greske, a ne opis testa. Sa tri argumenta
+-- pgTAP bi poredio opis sa Postgresovom porukom i test bi pao iako je kod
+-- ispravan. NULL znaci "ne provjeravaj tekst poruke", jer je on Postgresov.
+$$, '23P01', NULL, 'Direktan preklapajuci upis pada na exclusion constraintu');
 
 select lives_ok($$
   insert into public.appointments(
