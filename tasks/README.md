@@ -10,7 +10,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 | [02](02-supabase-schema-rls.md) ✅ | Supabase šema + RLS + policy testovi | task 03, 05 | 1–2 dana |
 | [03](03-flavor-system.md) ✅ | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
 | [04](04-ci-pipeline.md) 🟡 | CI pipeline — jedna komanda do artefakta | prvi pravi build | 1 dan |
-| [05](05-availability-engine.md) | Availability engine na backendu + testovi | booking UI | 2–3 dana |
+| [05](05-availability-engine.md) ✅ | Availability engine na backendu + testovi | booking UI | 2–3 dana |
 | [06](06-vertical-pack.md) | `VerticalPack` + `Vertical` klasa u `core_domain` | svaki ekran sa tekstom | 2–3 dana |
 
 **Ukupno: ~9–12 radnih dana.** Tek nakon ovoga ima smisla početi `core_ui` theme factory i prvi booking ekran.
@@ -46,6 +46,15 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > debug ključem, pa AAB nije za store) i **stvarne Supabase vrijednosti** u GitHub `vars`/`secrets`.
 > Prvo je Sprint 3, drugo ide uz [task 07](sprint-1/07-app-plumbing.md). Izbor CI providera je
 > zapisan u [ADR-0005](../docs/adr/0005-github-actions-umjesto-codemagica.md).
+
+> **Task 05 je zatvoren** (✅) — `get_available_slots`, `get_available_dates`, `book_appointment` i
+> exclusion constraint `appointments_no_overlap`. Dokazano na CI-ju:
+> [run 34542304820](https://github.com/htuco/salon-booking-platform/actions/runs/34542304820),
+> 66 pgTAP testova PASS (38 postojećih + 28 novih) plus REST izolacija.
+>
+> Availability i booking pravila su sada **isključivo u bazi**. Kad se piše booking UI
+> ([task 11](sprint-1/11-booking-flow.md)), aplikacija prikazuje listu koju dobije i obrađuje
+> `409` — nijedan slot se ne računa u Dartu.
 
 ## Kako koristiti ovaj folder
 

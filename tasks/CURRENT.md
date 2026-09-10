@@ -4,21 +4,21 @@ Puni task: [`tasks/05-availability-engine.md`](05-availability-engine.md) · Uč
 
 ## Status
 
-U toku
+Gotov — CI zelen ([run 34542304820](https://github.com/htuco/salon-booking-platform/actions/runs/34542304820)), ceka merge PR-a #6
 
 ## Ciljevi
 
-- [ ] `public.get_available_slots(salon, usluga, datum, radnik?)` vraća slobodna vremena početka
-- [ ] Uzima u obzir radno vrijeme i pauze, `pending`/`confirmed` termine, blokade, `buffer_minutes`,
+- [x] `public.get_available_slots(salon, usluga, datum, radnik?)` vraća slobodna vremena početka
+- [x] Uzima u obzir radno vrijeme i pauze, `pending`/`confirmed` termine, blokade, `buffer_minutes`,
       `slot_step_minutes`, `min_advance_booking_hours`, `max_advance_booking_days`
-- [ ] `date_only` mod: `public.get_available_dates(...)` vraća datume, ne vremena
-- [ ] `public.book_appointment(...)` re-validira slot **u istoj transakciji** i vraća konflikt kao
+- [x] `date_only` mod: `public.get_available_dates(...)` vraća datume, ne vremena
+- [x] `public.book_appointment(...)` re-validira slot **u istoj transakciji** i vraća konflikt kao
       `409` kad je slot u međuvremenu zauzet
-- [ ] Zaštita od utrke na nivou baze — exclusion constraint, ne samo provjera prije upisa
-- [ ] pgTAP testovi: prazan raspored, pun dan, buffer koji se preklapa, blokada, pauza, granica
+- [x] Zaštita od utrke na nivou baze — exclusion constraint, ne samo provjera prije upisa
+- [x] pgTAP testovi: prazan raspored, pun dan, buffer koji se preklapa, blokada, pauza, granica
       `min_advance_booking_hours`, `date_only`, dvostruka rezervacija istog slota, autorizacija
-- [ ] Testovi prolaze na CI-ju (`Supabase tests`)
-- [ ] Nula availability logike u Dartu — provjereno pretragom
+- [x] Testovi prolaze na CI-ju (`Supabase tests`)
+- [x] Nula availability logike u Dartu — provjereno pretragom
 
 ## Napomene
 
