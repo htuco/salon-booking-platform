@@ -20,6 +20,19 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // \"\"'); case \"$cmd\" in *\"git commit\"*|*\"git push\"*|*\"git merge\"*) ;; *) exit 0 ;; esac; br=$(git -C \"${CLAUDE_PROJECT_DIR:-.}\" rev-parse --abbrev-ref HEAD 2>/dev/null); hits_main=0; case \"$cmd\" in *\":main\"*|*\" main\"*) hits_main=1 ;; esac; [ \"$br\" = \"main\" ] && hits_main=1; [ \"$hits_main\" = \"1\" ] || exit 0; jq -nc '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"ask\",permissionDecisionReason:\"Ovo pise direktno u main. Konvencija repoa (.claude/docs/ai-interaction.md §4 i §6): svaki rad ide na svoju granu i kroz PR protiv main. Nastavi samo ako je korisnik izricito trazio direktan push.\"}}'",
+            "timeout": 10,
+            "statusMessage": "Provjeravam granu"
+          }
+        ]
+      }
     ]
   }
 }
