@@ -18,45 +18,65 @@ class TenantPreviewApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tenant = kTenants[salonId];
-    final title = tenant?.displayName ?? 'Salon';
     final isDark = tenant?.vertical == 'barber';
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: title,
+      title: tenant?.displayName ?? 'Salon',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: isDark ? const Color(0xFFC6A667) : const Color(0xFFB76E79),
           brightness: isDark ? Brightness.dark : Brightness.light,
         ),
       ),
-      home: Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(isDark ? Icons.content_cut : Icons.spa_outlined, size: 72),
-                const SizedBox(height: 24),
-                Text(title, style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 12),
-                Text(switch (tenant) {
-                  null when salonId.isEmpty =>
-                    'Nedostaje SALON_ID konfiguracija.',
-                  null => 'Nepoznat SALON_ID: $salonId',
-                  final t => 'Hello, ${t.salonId}',
-                }, textAlign: TextAlign.center),
-                if (tenant != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '${tenant.flavor} · ${tenant.vertical}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+      // Tijelo je zaseban widget, ne inline Scaffold: `Theme.of` mora vidjeti
+      // temu koju ovaj MaterialApp postavlja. Pozvan iz `build` metode iznad,
+      // vratio bi Flutterov default (svijetlu) i tekst bi na tamnoj tenant
+      // temi bio nevidljiv.
+      home: TenantHome(tenant: tenant, salonId: salonId),
+    );
+  }
+}
+
+/// Placeholder ekran — Sprint 1 ga zamjenjuje pravim UI-jem.
+class TenantHome extends StatelessWidget {
+  const TenantHome({required this.tenant, required this.salonId, super.key});
+
+  final TenantConfig? tenant;
+  final String salonId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = tenant?.displayName ?? 'Salon';
+    final isDark = tenant?.vertical == 'barber';
+
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(isDark ? Icons.content_cut : Icons.spa_outlined, size: 72),
+              const SizedBox(height: 24),
+              Text(title, style: theme.textTheme.headlineSmall),
+              const SizedBox(height: 12),
+              Text(switch (tenant) {
+                null when salonId.isEmpty =>
+                  'Nedostaje SALON_ID konfiguracija.',
+                null => 'Nepoznat SALON_ID: $salonId',
+                final t => 'Hello, ${t.salonId}',
+              }, textAlign: TextAlign.center),
+              if (tenant case final t?) ...[
+                const SizedBox(height: 8),
+                Text(
+                  '${t.flavor} · ${t.vertical}',
+                  style: theme.textTheme.bodySmall,
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),
