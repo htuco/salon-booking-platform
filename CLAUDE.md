@@ -71,8 +71,13 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
   podržava globove, a paket koji nije u listi tiho ispada iz `melos` skripti i CI-ja.
 - **Odluke iz tabele u `docs/README.md` se ne otvaraju ponovo bez novog podatka.** Ako imaš novi
   podatak, to je ADR (`docs/adr/`), ne usputna promjena koda.
+- **Svaki rad ima svoju granu i otvoren PR protiv `main`. Nema commita direktno na `main`.**
+  Grana se otvara sa svježeg `main`-a prije prve izmjene (`/task start`), PR se otvara **čim
+  postoji prvi commit** — kao draft dok nije gotovo, da se rad vidi dok traje, a ne tek na kraju.
+  Jedan task = jedna grana = jedan PR. Direktan push na `main` je izuzetak koji tražiš ti, i
+  `PreToolUse` hook će pitati prije nego se desi.
 - **Conventional Commits, poruka na bosanskom**, tijelo objašnjava *zašto* i šta je dokazano.
-  Grana se otvara sa `main`, PR ide protiv `main`.
+  Bez ikakvog potpisa AI-ja.
 
 ## Konvencije u jednoj slici
 

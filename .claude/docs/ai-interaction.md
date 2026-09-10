@@ -48,13 +48,28 @@ mislim da je uzrok. Ne nižem nasumične izmjene i ne "popravljam" tako što ukl
 
 Jedan aktivni task odjednom (`tasks/CURRENT.md`). Jedan task = jedna grana = jedan PR.
 
-## 4. Grane
+## 4. Grane i PR-ovi — bez izuzetka
 
-- Otvaraju se sa `main`, svježe povučenog. PR ide **protiv `main`**.
+**Svaki feature, fix i chore ima svoju granu i svoj otvoren PR protiv `main`. Na `main` se ne
+commituje direktno.** Ovo je pravilo koje se najlakše prekrši "samo ovaj put", pa ga čuva i
+`PreToolUse` hook u `.claude/settings.json`: svaki `git commit`/`push`/`merge` koji cilja `main`
+traži tvoju izričitu potvrdu.
+
+Redoslijed, svaki put:
+
+1. `git checkout main && git pull` — grana kreće sa svježeg `main`-a
+2. `git checkout -b feat/<kratko>` — prije **prve** izmjene, ne poslije
+3. prvi commit → `git push -u origin feat/<kratko>`
+4. **`gh pr create --draft --base main`** odmah, ne na kraju — rad se vidi dok traje
+5. rad, commitovi, CI zeleni
+6. `gh pr ready` kad je gotovo, pa ti mergeaš
+7. grana se briše nakon merge-a, lokalno i na remoteu
+
 - Imena: `feat/<kratko>`, `fix/<kratko>`, `chore/<kratko>`, `docs/<kratko>` — kebab-case, bez
   brojeva taskova u imenu (broj je u PR opisu, gdje se može pročitati).
-- Grana živi koliko i task. Nakon merge-a se briše, i lokalno i na remoteu.
+- Jedan task = jedna grana = jedan PR. Grana živi koliko i task.
 - **Ne mergujem i ne brišem granu bez tvoje potvrde.**
+- Direktan push na `main` radim **samo kad ga izričito tražiš** — i tad to kažem u sažetku.
 
 ## 5. Commit konvencija
 
@@ -87,6 +102,8 @@ generisanih fajlova.
 
 ## 6. PR konvencija
 
+- **PR se otvara na početku rada, ne na kraju.** Draft PR sa prvim commitom je normalno stanje;
+  PR koji se pojavi tek kad je sve gotovo krije rad dok traje.
 - **Naslov PR-a = naslov commita** (isti Conventional Commits oblik). Kad PR ima više commitova,
   naslov opisuje cjelinu.
 - **Baza je `main`.** Nema PR-a protiv druge feature grane osim ako se izričito dogovorimo.
