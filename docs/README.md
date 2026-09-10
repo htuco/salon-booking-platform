@@ -25,6 +25,8 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, masere,
 | **05** | [Vertikalni paketi](05-vertical-packs.md) | Frizeri, beauty, **zubari**, health, generic — terminologija, pravila, dentalni recall, GDPR |
 | **06** | [Auth & Login Flow](06-auth-login-flow.md) | Apple, Google, Email OTP, Facebook — identity model, per-flavor config, store zahtjevi |
 | **07** | [Tehnička arhitektura](07-tech-architecture.md) | Puna struktura repoa, konkretan izbor Flutter/Next.js/Supabase paketa, monorepo alati, observability |
+| — | [Team Handbook](TEAM_HANDBOOK.md) | Uloge u proizvodu, kako se doprinosi repou, rad sa Claude Code, razlike među mašinama |
+| — | [ADR-ovi](adr/) | Donesene odluke sa obrazloženjem i odbačenim opcijama |
 
 ---
 

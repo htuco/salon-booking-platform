@@ -1,0 +1,147 @@
+# Arhitektura
+
+Kako je sistem složen i gdje šta živi. Proizvodna specifikacija je u `docs/01`–`docs/07` i ostaje
+izvor istine za *šta* se gradi; ovaj dokument opisuje *kako je repo složen danas* i šta iz toga
+slijedi za svaku promjenu.
+
+## Sistem u jednoj rečenici
+
+Jedan Flutter codebase proizvodi N brandiranih klijentskih aplikacija i jednu generičku admin
+aplikaciju; svi govore sa jednim Supabase projektom u kojem RLS drži salone razdvojene; Firebase
+postoji isključivo za FCM push.
+
+**Ključna asimetrija:** klijentska app je brandirana do detalja, admin app je generička za sve
+salone. Vlasnik ne mari kako mu izgleda admin — mari kako izgleda ono što njegov klijent vidi.
+Zato flavor sistem postoji samo u `apps/client`.
+
+## Slojevi
+
+```
+apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (još ne postoji)
+      └──────────────┬───────────────────┘                          │
+                packages/core_ui                                    │
+                packages/core_api   ← jedini sloj koji zna za mrežu  │
+                packages/core_domain                                │
+                             └──────────── Supabase ────────────────┘
+                                    Postgres + RLS · Auth · Storage · Edge · pg_cron
+                                                  │
+                                            Firebase FCM (samo push)
+```
+
+- **`core_domain`** — entiteti, `Vertical`, formatiranje. Bez Fluttera i bez mreže.
+- **`core_api`** — Supabase repozitoriji, modeli, greške. Jedini sloj koji zna za HTTP i tabele.
+- **`core_ui`** — design system: tokeni, tema, komponente. Ne zna za repozitorije.
+- **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
+  (`env`, `router`, `theme`) i `lib/src/l10n/`.
+
+Danas su svi `core_*` prazni skeletoni, a `apps/*` imaju samo placeholder ekran — Sprint 0 dokazuje
+infrastrukturu, a ne piše ekrane. Kad pišeš prvi pravi kod, poštuj smjer zavisnosti gore:
+`core_domain` ne smije uvesti `core_api`, a `core_ui` ne smije uvesti nijedan repozitorij.
+
+## Flutter monorepo
+
+Dart native pub workspace (SDK `^3.13.0`) sa Melosom 7. Melos ≥7 **nema** `melos.yaml` ni
+`pubspec_overrides.yaml` — sve je u root `pubspec.yaml`: `workspace:` lista paketa i `melos:` ključ
+sa skriptama.
+
+`workspace:` **ne podržava globove**, pa je lista eksplicitna. Novi paket u `apps/` ili `packages/`
+mora se dodati ručno — inače ga `melos exec` preskoči, i ni analiza ni testovi ga ne pokrivaju, a
+ništa ne pada.
+
+Lint je jedan: root `analysis_options.yaml` koji svaki paket uključuje relativnom putanjom
+`../../analysis_options.yaml` (svi su na istoj dubini). `analyzer: exclude` **ostaje po paketu** —
+`android/`, `ios/`, `web/` postoje samo u `apps/*`.
+
+## Kako tenant stiže do aplikacije
+
+```
+tenants/<flavor>/tenant.yaml
+        │  dart run tool/gen_flavors.dart
+        ├─→ Gradle productFlavors        (apps/client/android/app/build.gradle.kts, između markera)
+        ├─→ google-services.json         (placeholder, po flavoru)
+        ├─→ iOS xcconfig                 (apps/client/ios/flavors/<flavor>.xcconfig)
+        └─→ Dart registar                (apps/client/lib/src/generated/tenants.g.dart)
+                │  tool/gen_ios_flavors.sh
+                └─→ Xcode konfiguracije Debug/Profile/Release-<flavor> + scheme
+
+flutter build --flavor <flavor> --dart-define=SALON_ID=<uuid>
+        └─→ main.dart čita SALON_ID → kTenants[salonId] → ime, vertikala, fallback boje
+```
+
+`SALON_ID` je jedini `--dart-define`. Sve ostalo se traži u registru po tom UUID-u, pa dodavanje
+polja u `tenant.yaml` ne mijenja build komandu. Puni detalji, zamke i store korak:
+`.claude/docs/tenant-factory.md`.
+
+Runtime izvor istine je **backend** — vrijednosti iz `tenant.yaml` su fallback dostupan prije prvog
+odgovora, da nema bijelog flasha.
+
+## Supabase
+
+15 tabela u `public`, sve sa RLS-om, plus `private` shema sa autorizacionim helperima. Grupe:
+
+- **Platforma:** `vertical_packs`, `salons`, `salon_builds`, `users`
+- **Katalog salona:** `services`, `employees`, `employee_services`, `working_hours`, `salon_settings`
+- **Ljudi i uređaji:** `auth_identities` (globalno), `customers` (per-salon), `devices`
+- **Rad:** `appointments`, `blocked_slots`, `notification_logs`
+
+Dvije stvari koje se lako previde:
+
+- **Identitet je dvoslojan.** `auth_identities` je jedna osoba na platformi i sinhronizuje se
+  triggerom sa `auth.users`; `customers` je ta osoba **u jednom salonu**. Per-salon je namjerno —
+  salon ne smije vidjeti da klijent ide i kod konkurencije.
+- **`devices.device_id` nije `appointments.device_id`.** Prvo je instalacioni identifikator,
+  drugo je FK na `devices.id`. Zamjena mjesta prolazi tipove i tiho slomi push.
+
+Vrijeme: `working_hours` koristi ISO dane 1=ponedjeljak…7=nedjelja, a `date`/`start_time`/`end_time`
+su **lokalno zidno vrijeme salona** (`timezone` default `Europe/Sarajevo`), ne UTC.
+
+`appointments` je u `supabase_realtime` publikaciji; Realtime poštuje SELECT RLS, pa klijent kroz
+socket dobija tačno ono što bi dobio i kroz REST.
+
+Autorizacija, grantovi i ono što još nije zatvoreno: `.claude/docs/security.md`.
+
+## Edge Functions i cron
+
+`supabase/functions/<ime>/index.ts`, Deno. Danas su to README stubovi:
+
+| Funkcija | Okidač | Šta radi |
+|---|---|---|
+| `send-push` | poziv iz druge funkcije/trigera | FCM HTTP v1, piše `notification_logs` |
+| `expire-pending` | `pg_cron`, ~15 min | `pending` stariji od `pendingExpiryHours` → `cancelled` |
+| `send-reminders` | `pg_cron`, dnevno + po satu | D-1 i H-3 podsjetnici, provjerava log prije slanja |
+| `dental-recall` | `pg_cron`, sedmično | recall za dentalnu vertikalu |
+
+`pg_cron` raspored se registruje **u migraciji**, ne rukom u dashboardu — inače nije reproducibilan
+između okruženja.
+
+## Dostupnost je backend logika
+
+Availability algoritam (`docs/01 §8.1`) živi na backendu i **nikad u aplikaciji**. Aplikacija
+prikazuje listu koju dobije. Razlog je operativan, ne estetski: verzije na telefonima kasne
+mjesecima, pa je pogrešna availability logika u app-u bug koji se ne može hotfixati.
+
+Backend **ponovo validira** slot pri kreiranju termina — između `GET /availability` i
+`POST /appointments` prođe dovoljno vremena da neko drugi uzme isti slot. Odgovor je `409`, a app
+kaže "termin je upravo zauzet".
+
+## Vertikale
+
+Vertikala je red u bazi i config, **nikad grana u kodu**. Nosi terminologiju, default booking
+pravila, feature flagove, temu i tražene pristanke. Pravilo bez izuzetka: nijedan string koji se
+razlikuje po vertikali ne smije stajati u `.dart` fajlu ekrana — takav string se ne može promijeniti
+bez store submissiona. Detalji i tabela terminologije: `docs/05-vertical-packs.md`.
+
+## Web prototip (`src/`)
+
+React + Vite + Tailwind + Radix, rute u `src/app/routes.tsx` prate `docs/01 §12`. Svrha mu je da se
+flow i vizual vide prije prvog Dart fajla. **Nije production kod**; kad ekran pređe u Flutter,
+prototip ostaje kao referenca, ne kao druga implementacija koju treba održavati.
+
+Poznata mrtva težina koju treba ukloniti (`docs/07 §2`): `@mui/*` i `@emotion/*` su u
+`package.json` bez ijednog importa u `src/`.
+
+## Šta još ne postoji
+
+Da ne tražiš uzalud: nema Next.js konzole, nema Riverpod/go_router koda, nema repozitorija u
+`core_api`, nema teme u `core_ui`, nema availability funkcije u bazi, nema pravog FCM-a. Sprint 0
+gradi temelj (flavori, šema, CI); ekrani dolaze u Sprintu 1. Stanje po tasku: `tasks/README.md`.
