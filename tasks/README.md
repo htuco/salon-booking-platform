@@ -8,7 +8,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 |---|---|---|---|
 | [01](01-repo-skeleton.md) ✅ | Skeleton repozitorija (melos, apps, packages, supabase/) | sve ostalo | 0.5 dana |
 | [02](02-supabase-schema-rls.md) ✅ | Supabase šema + RLS + policy testovi | task 03, 05 | 1–2 dana |
-| [03](03-flavor-system.md) 🟡 | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
+| [03](03-flavor-system.md) ✅ | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
 | [04](04-ci-pipeline.md) | CI pipeline — jedna komanda do artefakta | prvi pravi build | 1 dan |
 | [05](05-availability-engine.md) | Availability engine na backendu + testovi | booking UI | 2–3 dana |
 | [06](06-vertical-pack.md) | `VerticalPack` + `Vertical` klasa u `core_domain` | svaki ekran sa tekstom | 2–3 dana |
@@ -26,15 +26,31 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > `supabase/` promjene se dokazuju kroz CI, ne lokalno.
 
 
-> **Task 03 je dijelom gotov** (🟡) — generator `tool/gen_flavors.dart` radi, oba Android APK-a
-> se builduju sa različitim `applicationId` (`ba.nasadomena.barberstudiovitez` /
-> `ba.nasadomena.beautystudiotravnik`) i različitim imenom u launcheru. CI to ponavlja na svaki PR.
+> **Task 03 je zatvoren** (✅) — Android i iOS flavori dokazani na artefaktima, ikone po flavoru rade.
+> `aapt2 dump badging` potvrđuje različit `applicationId` i label; oba APK-a instalirana na isti
+> emulator (API 36, x86_64) istovremeno; iOS bundle nosi tačan `CFBundleIdentifier`,
+> `CFBundleDisplayName` i `AppIcon-<flavor>`. CI to ponavlja na svaki PR.
 >
-> **Ostalo za sljedećeg:** instalacija oba APK-a na emulator istovremeno (system image je sada
-> instaliran, korak je odblokiran), ikone po flavoru, i iOS build na macOS-u.
-> Detalji i komande: [03-flavor-system.md](03-flavor-system.md#status-2026-09-10).
+> Zamke koje su nas koštale (AGP 9 gasi `resValues`, `buildSettings` nadjačava xcconfig, pogrešno
+> ime postavke za ikonu, hardkodiran `CFBundleDisplayName`, xcconfig bez Flutterovog
+> `Generated.xcconfig`) su zapisane u [03-flavor-system.md](03-flavor-system.md#status-2026-09-10)
+> i u [`.claude/docs/tenant-factory.md`](../.claude/docs/tenant-factory.md).
+
+> **Task 04 je dijelom gotov** — dokazni dio CI-ja radi (analyze, format, testovi, tema po tenantu,
+> APK po flavoru sa provjerom `applicationId`, iOS build sa provjerom bundlea). Fali release strana:
+> `tool/build_tenant.sh`, AAB artefakt, secrets kroz environment groups, i auto-inkrement
+> `versionCode`/`buildNumber`. To postaje blokada tek pred prvi store submission (Sprint 3), pa je
+> ostatak taska svjesno odgođen iza 05 i 06.
+
 ## Kako koristiti ovaj folder
 
+- **[`CURRENT.md`](CURRENT.md) je aktivni task** — jedan u svakom trenutku. Vodi ga skill `/task`
+  (`load` ga puni, `start` mijenja status, `complete` ga prazni i dopisuje u `## Istorija`).
+  Puni task fajl i repo su iznad njega; kad se raziđu, `CURRENT.md` se ispravlja.
 - Čekiraj DoD stavke u svakom task fajlu kako napreduješ.
 - Ne otvaraj task 05/06 dok 01–04 nisu gotovi — zavisnosti nisu formalnost, availability engine testovi trebaju stvarnu šemu (02), a CI (04) treba flavor sistem (03) da ima šta da builda.
-- Kad je Sprint 0 gotov, sljedeći taskovi (Sprint 1: booking flow, `core_api`, `core_ui`) idu u novi fajl `07-sprint-1.md` ili novi folder `tasks/sprint-1/` — ne dopisuj ih ovdje.
+- Sprint 1 je raspisan u [`sprint-1/`](sprint-1/) (taskovi 07–11: plumbing, `core_api`, `core_ui`,
+  home ekran, booking flow). Ne dopisuj ih ovdje — ovaj fajl ostaje indeks Sprinta 0.
+- Taskovi se pišu **jedan sprint unaprijed**. Sprint 2 (auth, admin, push) ima redoslijed u
+  [01 §17](../docs/01-mvp-spec.md#17-build-order), ali se raspisuje tek kad Sprint 1 bude gotov —
+  specifikacija napisana tri sprinta ranije zastari prije nego što je iko otvori.

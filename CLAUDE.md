@@ -19,7 +19,8 @@ Tehnički termini ostaju engleski (flavor, migration, RLS, provider). Piši isto
 - `tenants/<flavor>/tenant.yaml` — jedini fajl koji se piše po klijentu.
 - `tool/` — generatori (flavori, iOS konfiguracije, placeholder ikone).
 - `src/` — React wireframe prototip. **Nije production kod** i ne postaje.
-- `docs/` — proizvodna specifikacija (01–07). `tasks/` — raspisani taskovi Sprinta 0.
+- `docs/` — proizvodna specifikacija (01–07). `tasks/` — raspisani taskovi (Sprint 0 + `sprint-1/`);
+  `tasks/CURRENT.md` je aktivni task i prvo što treba pročitati.
 
 ## Pročitaj prije nego što djeluješ
 
@@ -83,7 +84,7 @@ verziju i spomeni to u sažetku, umjesto da preskočiš.
 | Komandu, CI job, env varijablu, način pokretanja | `.claude/docs/workflows.md` (+ `/verify` skill ako mijenja dokaz) |
 | Domenski pojam ili njegovo značenje | `CONTEXT.md` |
 | Odluku koja se ne može pročitati iz koda | novi ADR u `docs/adr/` |
-| Status taska (gotovo / blokirano / ostalo za sljedećeg) | task fajl u `tasks/` **i** blok u `tasks/README.md` |
+| Status taska (gotovo / blokirano / ostalo za sljedećeg) | `tasks/CURRENT.md`, task fajl u `tasks/` **i** blok u pripadajućem `README.md` |
 
 Dva pravila za pisanje ovih dokumenata:
 
@@ -97,7 +98,7 @@ Dva pravila za pisanje ovih dokumenata:
 
 | Skill | Za šta |
 |---|---|
-| `/task load\|start\|review\|verify\|complete` | Životni ciklus taska iz `tasks/` — grana, DoD, status blok, PR |
+| `/task load\|start\|review\|verify\|complete` | Životni ciklus taska — `tasks/CURRENT.md`, grana, DoD, status blok, PR |
 | `/verify` | Kako se u ovom repou stvarno dokazuje da promjena radi |
 | `/handoff` | Predaja posla kolegi: šta je dokazano, šta je zamka, šta je sljedeći korak |
 | `/new-tenant` | Novi klijent od `tenant.yaml` do zelenog CI-ja |

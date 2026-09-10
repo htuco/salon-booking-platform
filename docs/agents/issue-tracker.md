@@ -5,13 +5,17 @@ jedino mjesto koje se čita kad neko preuzima posao.
 
 ## Konvencije
 
+- **`tasks/CURRENT.md` je aktivni task** — tačno jedan u svakom trenutku, sa `## Status`,
+  `## Ciljevi` (šta stvarno preostaje), `## Napomene` i `## Istorija` (zatvoreni taskovi). Vodi ga
+  skill `/task`. Derivat je: puni task fajl i repo su iznad njega.
 - Jedan task = jedan fajl: `tasks/<NN>-<slug>.md`, numerisano po **redoslijedu izvršavanja**
   (šta blokira šta), ne po prioritetu feature-a.
 - Svaki task ima: cilj, **definiciju gotovog kao checkbox listu**, korake, i `## Status (YYYY-MM-DD)`
   blok na dnu kad se na njemu radilo.
 - `tasks/README.md` je index: tabela (`#`, task, blokira, procjena, ✅/🟡) plus kratki status blok
   po tasku ispod nje.
-- Sprint se ne dopisuje u tuđu listu — novi sprint je novi folder (`tasks/sprint-1/`).
+- Sprint se ne dopisuje u tuđu listu — novi sprint je novi folder (`tasks/sprint-1/`), sa nastavkom
+  numeracije (07, 08, …) da `/task load <NN>` ostane jednoznačan.
 
 ## Kad skill kaže "otvori task"
 
