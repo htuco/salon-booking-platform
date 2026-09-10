@@ -59,7 +59,25 @@ Demo UUID-evi: Barber Studio Vitez `...440000`, Beauty Studio Travnik `...440001
 SALON_ID konfiguracija", tema padne na svijetlu, i tenant regresija se ne vidi. Isto važi za
 testove teme.
 
-`melos run build:client` postoji za AAB, ali očekuje `$TENANT`, `$SALON_ID` i `$API_URL` u okolini.
+### `tool/build_tenant.sh` — jedina ulazna tačka u build
+
+```sh
+tool/build_tenant.sh <flavor> <apk|aab|ios> [debug|release]
+BUILD_NUMBER=57 tool/build_tenant.sh barberstudiovitez aab release
+```
+
+Čita `salonId`, `versionName` i `versionCode` iz `tenants/<flavor>/tenant.yaml`, slaže
+`--dart-define`-ove i ispisuje putanju artefakta. **CI poziva ovu skriptu**, ne svoju kopiju
+`flutter build` komande — inače lokalni i CI build tiho odlutaju.
+
+Okolina (sve opciono): `BUILD_NUMBER` nadjačava `versionCode`/`buildNumber` iz `tenant.yaml`
+(koristi ga CI); `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` idu kao `--dart-define` ako su
+postavljeni.
+
+> Release se trenutno potpisuje **debug ključem** iz Flutterovog šablona — AAB iz ovog lanca nije za
+> store dok se ne postavi keystore (Sprint 3, v. `tasks/04-ci-pipeline.md`).
+
+`melos run build:client` je stariji ulaz i očekuje `$TENANT`/`$SALON_ID`/`$API_URL` u okolini;
 `melos run build:all` je namjerno još placeholder (`docs/04 §8.1`).
 
 ## Supabase
@@ -109,6 +127,7 @@ Rute prate `docs/01 §12`; login ekran ima demo prekidače kroz query parametre
 | Workflow | Okida se na | Dokazuje |
 |---|---|---|
 | `Flutter` (`.github/workflows/flutter-build.yml`) | `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
+| `Flutter` → job `release-artifacts` | **ručni trigger** (`workflow_dispatch`) | AAB za oba tenanta kroz `build_tenant.sh`, `versionCode` iz `github.run_number`, provjera `applicationId` i `versionCode` kroz `bundletool dump manifest`, artefakt se čuva 30 dana |
 | `Supabase tests` (`.github/workflows/supabase-tests.yml`) | `supabase/migrations`, `seed.sql`, `tests/`, `config.toml` | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a |
 
 Oba imaju `concurrency` sa `cancel-in-progress`, pa novi push otkazuje stari run iste grane.

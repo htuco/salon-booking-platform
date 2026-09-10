@@ -95,9 +95,9 @@ Skill `/new-tenant` vodi kroz ovo korak po korak; ovo je referenca šta se sve m
 3. `dart run tool/gen_flavors.dart`
 4. `dart run tool/gen_placeholder_icons.dart` pa `dart run flutter_launcher_icons` (u `apps/client`).
 5. Ako je `targets.ios: true` → `tool/gen_ios_flavors.sh` na macOS-u.
-6. **Dodaj flavor u CI matrice** u `.github/workflows/flutter-build.yml` — i `build-flavors` i
-   `build-ios` imaju **eksplicitnu listu**, ne izvedenu iz `tenants/`. Tenant koji nije u matrici
-   se nikad ne buildа na CI-ju, a `--check` to ne hvata.
+6. **Dodaj flavor u sve tri CI matrice** u `.github/workflows/flutter-build.yml` —
+   `build-flavors`, `build-ios` i `release-artifacts` imaju **eksplicitne liste**, ne izvedene iz
+   `tenants/`. Tenant koji nije u matrici se nikad ne buildа na CI-ju, a `--check` to ne hvata.
 7. Build i provjeri na artefaktu (v. `/verify`).
 
 ## Šta ide u `tenant.yaml`, a šta ne

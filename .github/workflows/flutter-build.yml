@@ -19,6 +19,13 @@ on:
       - 'tool/**'
       - 'pubspec.yaml'
       - 'analysis_options.yaml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Build mode za release artefakte'
+        type: choice
+        options: [release, debug]
+        default: release
 
 concurrency:
   group: flutter-${{ github.ref }}
@@ -187,3 +194,72 @@ jobs:
           test "$(read_key CFBundleDisplayName)" = "${{ matrix.display_name }}"
           ls "$app" | grep -q "AppIcon-${{ matrix.flavor }}"
           echo "OK: ${{ matrix.bundle_id }} / ${{ matrix.display_name }} / ikona po flavoru"
+
+  # Artefakt koji izlazi iz CI-ja, ne sa lokalne masine (docs/04 §8.1). Rucni
+  # trigger, jer nema smisla praviti AAB na svaki PR — 44MB po tenantu i dvije
+  # minute Gradlea za nesto sto se objavljuje jednom po izdanju.
+  #
+  # Potpisivanje jos nije podeseno: release se potpisuje debug kljucem iz
+  # Flutterovog sablona, pa ovaj AAB NIJE za store. Keystore i signing config
+  # dolaze u Sprintu 3, uz prvi submission.
+  release-artifacts:
+    name: AAB po tenantu (rucni trigger)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: analyze
+    strategy:
+      fail-fast: false
+      matrix:
+        flavor: [barberstudiovitez, beautystudiotravnik]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # versionCode mora rasti bez editovanja tenant.yaml. github.run_number je
+      # monoton po repou, a Play trazi monotonost po aplikaciji — sto je time
+      # zadovoljeno, jer svaki tenant ima svoju listing istoriju.
+      #
+      # Supabase vrijednosti dolaze iz repository secrets/vars. Kad nisu
+      # postavljene, build i dalje prolazi (Sprint 0 ih jos ne koristi), pa ovaj
+      # job ne pada na konfiguraciji koja jos ne postoji.
+      - name: Build ${{ matrix.flavor }}
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          API_URL: ${{ vars.API_URL }}
+        run: tool/build_tenant.sh ${{ matrix.flavor }} aab ${{ inputs.mode }}
+
+      # Provjera na artefaktu, ne na konfiguraciji: AAB nosi tacan
+      # applicationId i versionCode koji je CI dodijelio.
+      - name: Provjeri applicationId i versionCode u AAB-u
+        run: |
+          set -euo pipefail
+          aab=$(find apps/client/build/app/outputs/bundle -name "*${{ matrix.flavor }}*.aab" | head -1)
+          test -n "$aab" || { echo "AAB nije pronadjen"; exit 1; }
+          curl -sSLo bundletool.jar https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar
+          out=$(java -jar bundletool.jar dump manifest --bundle "$aab")
+          echo "$out" | grep -q 'package="ba.nasadomena.${{ matrix.flavor }}"' \
+            || { echo "Pogresan applicationId"; echo "$out" | head -5; exit 1; }
+          echo "$out" | grep -q 'android:versionCode="${{ github.run_number }}"' \
+            || { echo "versionCode nije onaj koji je CI dodijelio"; echo "$out" | head -5; exit 1; }
+          echo "OK: $aab — ba.nasadomena.${{ matrix.flavor }} / versionCode ${{ github.run_number }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aab-${{ matrix.flavor }}
+          path: apps/client/build/app/outputs/bundle/**/*.aab
+          if-no-files-found: error
+          retention-days: 30

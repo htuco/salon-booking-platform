@@ -222,8 +222,18 @@ String _renderGradle(String current, List<Tenant> tenants) {
       ..writeln(
         '            resValue("string", "app_name", "${tenant.displayName}")',
       )
-      ..writeln('            versionCode = ${tenant.versionCode}')
-      ..writeln('            versionName = "${tenant.versionName}"')
+      // CI mora moći podići versionCode bez editovanja tenant.yaml (docs/04 §8.1),
+      // a vrijednost iz tenant.yaml ostaje default za lokalni build. Flavor blok
+      // nadjačava flutter.versionCode, pa `--build-number` sam ovdje ne stiže —
+      // zato Gradle property, koju prosljeđuje tool/build_tenant.sh.
+      ..writeln(
+        '            versionCode = (project.findProperty("tenantVersionCode") '
+        'as String?)?.toInt() ?: ${tenant.versionCode}',
+      )
+      ..writeln(
+        '            versionName = (project.findProperty("tenantVersionName") '
+        'as String?) ?: "${tenant.versionName}"',
+      )
       ..writeln('        }');
   }
   buffer
