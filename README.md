@@ -30,6 +30,28 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, stomato
 
 ---
 
+## 🤖 Rad sa Claude Code
+
+Repo je opremljen tako da nova sesija (tvoja ili kolegina) može krenuti bez usmenog uvoda.
+
+| Putanja | Šta je |
+|---|---|
+| [CLAUDE.md](CLAUDE.md) | router — kaže koji dokument treba za koji tip promjene |
+| [CONTEXT.md](CONTEXT.md) | domenski rječnik — koja riječ za koji pojam |
+| [.claude/docs/](.claude/docs/) | arhitektura, konvencije, sigurnost, komande, tenant factory |
+| [.claude/skills/](.claude/skills/) | `/task` `/verify` `/handoff` `/new-tenant` `/cleanup` `/research` |
+| [.claude/agents/](.claude/agents/) | recenzenti: RLS, Dart, duplikacija, UI |
+| [docs/adr/](docs/adr/) | zašto je nešto odlučeno i šta je odbačeno |
+| [docs/TEAM_HANDBOOK.md](docs/TEAM_HANDBOOK.md) | uloge u proizvodu + kako se doprinosi repou |
+
+Uobičajen tok: `/task load <NN>` → `/task start` → `/task review` → `/task verify` →
+`/task complete`, pa `/handoff write` ako posao ostaje otvoren za nekog drugog.
+
+Dva pravila koja drže sve ovo živim: **dokument se ažurira u istoj promjeni koja mijenja ono što
+opisuje**, i **dokaz je artefakt ili zeleni CI job, nikad "kod izgleda ispravno"**.
+
+---
+
 ## 🏗 Flutter monorepo (Sprint 0)
 
 Pub workspace (Dart SDK ^3.13.1) sa Melos-om — [task 01](tasks/01-repo-skeleton.md) je odradio skeleton, ostali taskovi u [tasks/](tasks/) ga popunjavaju.
@@ -81,7 +103,10 @@ Otvori `/` za pregled svih ekrana grupisanih po tri dijela sistema.
 
 ```
 .
-├── docs/                    # ⬅ dokumentacija — počni ovdje
+├── CLAUDE.md                # router za Claude Code
+├── CONTEXT.md               # domenski rječnik
+├── .claude/                 # docs/, skills/, agents/ — v. "Rad sa Claude Code"
+├── docs/                    # ⬅ dokumentacija — počni ovdje (+ adr/, agents/)
 ├── tasks/                   # raspisani taskovi za Sprint 0
 ├── pubspec.yaml             # root — Dart pub workspace + Melos config (melos: key)
 ├── apps/

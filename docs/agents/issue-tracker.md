@@ -1,0 +1,41 @@
+# Tracker: markdown u `tasks/`
+
+Ovaj repo nema Jiru ni Linear. Taskovi i njihovo stanje žive kao markdown u `tasks/`, i to je
+jedino mjesto koje se čita kad neko preuzima posao.
+
+## Konvencije
+
+- Jedan task = jedan fajl: `tasks/<NN>-<slug>.md`, numerisano po **redoslijedu izvršavanja**
+  (šta blokira šta), ne po prioritetu feature-a.
+- Svaki task ima: cilj, **definiciju gotovog kao checkbox listu**, korake, i `## Status (YYYY-MM-DD)`
+  blok na dnu kad se na njemu radilo.
+- `tasks/README.md` je index: tabela (`#`, task, blokira, procjena, ✅/🟡) plus kratki status blok
+  po tasku ispod nje.
+- Sprint se ne dopisuje u tuđu listu — novi sprint je novi folder (`tasks/sprint-1/`).
+
+## Kad skill kaže "otvori task"
+
+Napravi novi `tasks/<NN>-<slug>.md` po uzoru na postojeće (`tasks/03-flavor-system.md` je najpuniji
+primjer) i dodaj red u tabelu `tasks/README.md`. Broj je sljedeći slobodan, a kolona "blokira"
+mora biti popunjena — red bez zavisnosti je red koji će neko pokrenuti prerano.
+
+## Kad skill kaže "nađi task"
+
+Korisnik obično da broj (`03`) ili slug. Čitaj **cijeli** fajl plus njegov status blok u
+`tasks/README.md`; ta dva mogu se razilaziti i tad je task fajl detaljniji, a repo iznad oba.
+
+## Stanje
+
+- **✅** — svaka DoD stavka ima dokaz (izlaz komande ili zeleni CI job) zapisan u status bloku.
+- **🟡** — dio je dokazan, ostalo je izričito nabrojano sa komandom kojom se nastavlja.
+- **⛔** — blokirano; napiši čime i ko/šta to odblokira.
+
+Čekirana DoD stavka bez dokaza je tvrdnja, ne stanje. Kad preuzimaš tuđi task, provjeri tvrdnje
+prije nego što kreneš dalje (`/handoff pickup`).
+
+## Zašto ne `.scratch/` ili eksterni tracker
+
+Taskovi ovdje nose komande, izlaze i zamke — to je materijal koji pripada uz kod i mora se mijenjati
+u istom PR-u kao i kod. Tracker u drugom alatu razilazi se od repoa unutar sedmice, a dvoje ljudi
+na dvije mašine (jedna bez Dockera, druga bez macOS-a) nemaju drugi način da prenesu šta je stvarno
+dokazano.
