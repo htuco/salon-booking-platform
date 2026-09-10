@@ -1,0 +1,3 @@
+// GENERISANO — ne editovati ručno. Pokreni: dart run tool/gen_flavors.dart
+#include "../Flutter/Debug.xcconfig"
+#include "beautystudiotravnik.xcconfig"

@@ -1,8 +1,11 @@
 // GENERISANO — ne editovati ručno. Pokreni: dart run tool/gen_flavors.dart
+//
+// PRODUCT_NAME puni CFBundleName i CFBundleDisplayName kroz Info.plist.
+// ASSETCATALOG_COMPILER_APPICON_NAME je stvarno ime Xcode postavke —
+// ASSET_CATALOG_APP_ICON_NAME ne postoji i tiho se ignoriše.
 PRODUCT_BUNDLE_IDENTIFIER = ba.nasadomena.barberstudiovitez
 PRODUCT_NAME = Barber Studio Vitez
-DISPLAY_NAME = Barber Studio Vitez
 MARKETING_VERSION = 1.0.0
 CURRENT_PROJECT_VERSION = 1
-ASSET_CATALOG_APP_ICON_NAME = AppIcon-barberstudiovitez
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-barberstudiovitez
 SALON_ID = 550e8400-e29b-41d4-a716-446655440000
