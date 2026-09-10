@@ -1,0 +1,106 @@
+name: Flutter
+
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'tenants/**'
+      - 'tool/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
+      - '.github/workflows/flutter-build.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'tenants/**'
+      - 'tool/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
+
+concurrency:
+  group: flutter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analiza, format i testovi
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # Generisani fajlovi moraju biti commitani i ažurni — inače gradle blok i
+      # tenants.g.dart tiho odlutaju od tenant.yaml.
+      - name: Provjeri da su generisani fajlovi ažurni
+        run: dart run tool/gen_flavors.dart --check
+
+      - run: dart format --set-exit-if-changed --output=none .
+
+      - run: dart analyze .
+
+      - run: dart run melos exec --dir-exists=test -- flutter test
+
+  build-flavors:
+    name: APK po tenantu
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    needs: analyze
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: barberstudiovitez
+            salon_id: 550e8400-e29b-41d4-a716-446655440000
+          - flavor: beautystudiotravnik
+            salon_id: 550e8400-e29b-41d4-a716-446655440001
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build ${{ matrix.flavor }}
+        working-directory: apps/client
+        run: |
+          flutter build apk --debug \
+            --flavor ${{ matrix.flavor }} \
+            --dart-define=SALON_ID=${{ matrix.salon_id }}
+
+      # Dokazuje da flavor stvarno mijenja applicationId — dva builda sa istim
+      # id-om se ne bi mogla instalirati jedan pored drugog.
+      - name: Provjeri applicationId u APK-u
+        working-directory: apps/client
+        run: |
+          set -euo pipefail
+          apk=$(find build -name "*${{ matrix.flavor }}*.apk" | head -1)
+          test -n "$apk" || { echo "APK nije pronađen"; exit 1; }
+          aapt=$(find "$ANDROID_HOME/build-tools" -name aapt2 | sort -r | head -1)
+          "$aapt" dump badging "$apk" | grep -q "package: name='ba.nasadomena.${{ matrix.flavor }}'" \
+            || { echo "Pogrešan applicationId u $apk"; "$aapt" dump badging "$apk" | head -3; exit 1; }
+          echo "OK: $apk ima applicationId ba.nasadomena.${{ matrix.flavor }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ matrix.flavor }}
+          path: apps/client/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+          retention-days: 7
