@@ -266,7 +266,9 @@ begin
     -- retroaktivno pomjerati vec dogovorene termine.
     v_settings.buffer_minutes,
     'pending',
-    case when private.is_admin(p_salon_id) then 'manual' else 'app' end,
+    -- CASE sa dva literala je text, a kolona je enum — bez eksplicitnog
+    -- kasta INSERT pada na tipu.
+    (case when private.is_admin(p_salon_id) then 'manual' else 'app' end)::public.appointment_source,
     now() + make_interval(hours => v_settings.pending_expiry_hours)
   )
   returning * into v_row;
