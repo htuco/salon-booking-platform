@@ -11,6 +11,16 @@ ispod, koji se čitaju po potrebi.
 Repo se piše na **bosanskom** — dokumentacija, komentari u kodu, commit poruke, PR opisi.
 Tehnički termini ostaju engleski (flavor, migration, RLS, provider). Piši isto.
 
+## Šta se učitava samo, a šta čitam po potrebi
+
+Ovaj fajl se učitava u **svaki** prompt — zato je kratak. Dokumenti iz `.claude/docs/` se čitaju
+tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
+
+- **`tasks/CURRENT.md` + `git status` + zadnja tri commita** — `SessionStart` hook iz
+  `.claude/settings.json` ih ubaci na početku svake sesije.
+- **Ugniježđeni `CLAUDE.md`** u `supabase/`, `apps/client/`, `tool/` i `src/` — učitavaju se sami
+  kad radim sa fajlovima u tom folderu. Tu stoje pravila koja se ne smiju propustiti.
+
 ## Mapa repoa
 
 - `apps/client/` — Flutter, N flavora, brandiran po salonu. `apps/admin/` — Flutter, generička za sve salone.
@@ -19,6 +29,7 @@ Tehnički termini ostaju engleski (flavor, migration, RLS, provider). Piši isto
 - `tenants/<flavor>/tenant.yaml` — jedini fajl koji se piše po klijentu.
 - `tool/` — generatori (flavori, iOS konfiguracije, placeholder ikone).
 - `src/` — React wireframe prototip. **Nije production kod** i ne postaje.
+- `.claude/settings.json` — `SessionStart` hook i odobreni MCP serveri (`supabase`, `context7`, `playwright`).
 - `docs/` — proizvodna specifikacija (01–07). `tasks/` — raspisani taskovi (Sprint 0 + `sprint-1/`);
   `tasks/CURRENT.md` je aktivni task i prvo što treba pročitati.
 
@@ -83,6 +94,8 @@ verziju i spomeni to u sažetku, umjesto da preskočiš.
 | Generator, `tenant.yaml` polje, flavor pipeline, store korak | `.claude/docs/tenant-factory.md` + `tenants/README.md` |
 | Obrazac pisanja koda, imenovanje, lint pravilo | `.claude/docs/conventions.md` |
 | Način rada, grananje, commit ili PR konvencija | `.claude/docs/ai-interaction.md` (+ `.github/pull_request_template.md`) |
+| Pravilo koje se ne smije propustiti u jednom folderu | ugniježđeni `CLAUDE.md` tog foldera (`supabase/`, `apps/client/`, `tool/`, `src/`) |
+| Hook, MCP server ili druga postavka harnessa | `.claude/settings.json` (+ odjeljak u `.claude/docs/workflows.md`) |
 | Komandu, CI job, env varijablu, način pokretanja | `.claude/docs/workflows.md` (+ `/verify` skill ako mijenja dokaz) |
 | Domenski pojam ili njegovo značenje | `CONTEXT.md` |
 | Odluku koja se ne može pročitati iz koda | novi ADR u `docs/adr/` |

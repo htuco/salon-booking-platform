@@ -151,8 +151,36 @@ njih — ali svaki rješava po jedan stvaran problem ovog projekta:
 | `context7` | aktuelna dokumentacija paketa (Flutter, Riverpod, `supabase_flutter`, Gradle) umjesto zastarjelog znanja | `CONTEXT7_API_KEY` |
 | `playwright` | klikanje kroz web prototip u `src/` | — |
 
-**Ključevi se ne pišu u `.mcp.json`** — u fajlu su `${...}` placeholderi koji se čitaju iz okoline.
-Izvezi ih u shellu (ili u `.env` koji je već u `.gitignore`) prije pokretanja sesije.
+Serveri su **odobreni u `.claude/settings.json`** (`enabledMcpjsonServers`), pa ih Claude Code ne
+traži da potvrđuješ svaki put.
+
+**Ključevi se ne pišu u `.mcp.json`** — u fajlu su `${...}` placeholderi koji se čitaju iz okoline
+procesa u kojem je Claude Code pokrenut. Izvezi ih u `~/.zshrc` (ili u shellu prije pokretanja):
+
+```sh
+export SUPABASE_ACCESS_TOKEN=…    # Supabase → Account → Access Tokens
+export SUPABASE_PROJECT_REF=…     # ref projekta iz URL-a dashboarda
+export CONTEXT7_API_KEY=…
+```
+
+Bez tih varijabli `context7` i `supabase` se ne podignu; `playwright` radi bez ičega. Stanje
+servera u sesiji provjeriš sa `/mcp`, izvan sesije sa `claude mcp list`.
 
 Supabase server je namjerno `--read-only`: alat koji može pisati po bazi je alat koji će jednom
 pisati po pogrešnoj bazi. Migracije idu kroz `supabase migration new`, ne kroz MCP.
+
+## Šta hook ubaci na početku sesije
+
+`.claude/settings.json` ima `SessionStart` hook koji u kontekst ubaci `tasks/CURRENT.md`,
+`git status --short --branch` i zadnja tri commita — oko 1.200 tokena, tako da nova sesija zna gdje
+se stalo bez ijednog `Read` poziva.
+
+Provjera bez pokretanja nove sesije:
+
+```sh
+cmd=$(jq -r '.hooks.SessionStart[0].hooks[0].command' .claude/settings.json)
+echo '{}' | CLAUDE_PROJECT_DIR="$PWD" bash -c "$cmd" | jq -r '.hookSpecificOutput.additionalContext'
+```
+
+Hookove pregledaš i gasiš kroz `/hooks`. Izmjena `.claude/settings.json` u sesiji koja je počela
+prije nego je fajl postojao ne mora biti pokupljena — otvori `/hooks` jednom ili restartuj sesiju.

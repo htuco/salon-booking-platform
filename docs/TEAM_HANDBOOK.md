@@ -59,6 +59,7 @@ opis uloga u `docs/01 §5`.
   provjereno i zašto**
 - Crveni CI job je dio taska, ne tuđi problem
 - Promjena koja mijenja opisano ponašanje a ne dira dokumentaciju je nekompletna promjena
+- **Bez potpisa AI-ja** — nema `Co-Authored-By: Claude` ni "Generated with" ni u commitu ni u PR-u
 - Puna konvencija (kad se pita, kad se ne mergea, veličina PR-a): `.claude/docs/ai-interaction.md`
 
 **Šta se nikad ne commituje**
@@ -82,6 +83,8 @@ Repo je opremljen tako da nova sesija — tvoja ili kolegina — može krenuti b
 | `.claude/docs/` | arhitektura, konvencije, sigurnost, komande, tenant factory, način rada — čitaju se po potrebi |
 | `.claude/skills/` | `/task`, `/verify`, `/handoff`, `/new-tenant`, `/cleanup`, `/research` |
 | `.claude/agents/` | recenzenti: `rls-auditor`, `dart-reviewer`, `duplication-scanner`, `flutter-ui-reviewer` |
+| `.claude/settings.json` | `SessionStart` hook (ubaci aktivni task i git stanje) + odobreni MCP serveri |
+| `supabase/`, `apps/client/`, `tool/`, `src/` — `CLAUDE.md` | pravila tog foldera; učitavaju se sama kad se radi u njemu |
 | `docs/adr/` | zašto je nešto odlučeno i šta je odbačeno |
 | `tasks/` | šta se radi sada i dokle se stiglo |
 
