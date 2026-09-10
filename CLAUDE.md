@@ -29,6 +29,7 @@ Tehnički termini ostaju engleski (flavor, migration, RLS, provider). Piši isto
 - **Struktura, slojevi, gdje šta živi, kako se stvari povezuju** → `.claude/docs/architecture.md`
 - **Flavori, `tenant.yaml`, generatori, novi klijent, store build** → `.claude/docs/tenant-factory.md`
 - **Kako se piše kod ovdje** → `.claude/docs/conventions.md`
+- **Kako radim, grane, commit i PR konvencija** → `.claude/docs/ai-interaction.md`
 - **Komande: pokretanje, testovi, generatori, CI, migracije** → `.claude/docs/workflows.md`
 - **Domenski rječnik** (šta je "termin", "vertikala", "tenant", "flavor") → `CONTEXT.md`
 - **Zašto je nešto odlučeno ovako** → `docs/adr/`, pa `docs/README.md` tabela odluka
@@ -81,6 +82,7 @@ verziju i spomeni to u sažetku, umjesto da preskočiš.
 | Strukturu foldera, slojeve, izbor paketa, tok podataka | `.claude/docs/architecture.md` |
 | Generator, `tenant.yaml` polje, flavor pipeline, store korak | `.claude/docs/tenant-factory.md` + `tenants/README.md` |
 | Obrazac pisanja koda, imenovanje, lint pravilo | `.claude/docs/conventions.md` |
+| Način rada, grananje, commit ili PR konvencija | `.claude/docs/ai-interaction.md` (+ `.github/pull_request_template.md`) |
 | Komandu, CI job, env varijablu, način pokretanja | `.claude/docs/workflows.md` (+ `/verify` skill ako mijenja dokaz) |
 | Domenski pojam ili njegovo značenje | `CONTEXT.md` |
 | Odluku koja se ne može pročitati iz koda | novi ADR u `docs/adr/` |
