@@ -120,9 +120,22 @@ Availability algoritam (`docs/01 §8.1`) živi na backendu i **nikad u aplikacij
 prikazuje listu koju dobije. Razlog je operativan, ne estetski: verzije na telefonima kasne
 mjesecima, pa je pogrešna availability logika u app-u bug koji se ne može hotfixati.
 
-Backend **ponovo validira** slot pri kreiranju termina — između `GET /availability` i
-`POST /appointments` prođe dovoljno vremena da neko drugi uzme isti slot. Odgovor je `409`, a app
-kaže "termin je upravo zauzet".
+Backend **ponovo validira** slot pri kreiranju termina — između čitanja liste i slanja zahtjeva
+prođe dovoljno vremena da neko drugi uzme isti slot. Odgovor je `409`, a app kaže "termin je
+upravo zauzet".
+
+Konkretno, u `20260911090000_availability_engine.sql`:
+
+| Funkcija | Za šta |
+|---|---|
+| `get_available_slots(salon, usluga, datum, radnik?)` | slobodna vremena početka, jedan red po (vrijeme, radnik) |
+| `get_available_dates(salon, usluga, od, do, radnik?)` | datumi sa bar jednim slotom — za `date_only` vertikale |
+| `book_appointment(...)` | kreira `pending` termin uz re-validaciju; `PT409` → HTTP 409 |
+
+Uz njih ide exclusion constraint `appointments_no_overlap`: dva aktivna termina istog radnika se
+ne mogu preklopiti ni kad zahtjevi stignu istovremeno. Provjera prije upisa i constraint koriste
+**istu formulu** za zauzeti interval (`[početak, kraj + buffer)`) — inače bi lista nudila slot koji
+constraint odbija.
 
 ## Vertikale
 
@@ -143,5 +156,5 @@ Poznata mrtva težina koju treba ukloniti (`docs/07 §2`): `@mui/*` i `@emotion/
 ## Šta još ne postoji
 
 Da ne tražiš uzalud: nema Next.js konzole, nema Riverpod/go_router koda, nema repozitorija u
-`core_api`, nema teme u `core_ui`, nema availability funkcije u bazi, nema pravog FCM-a. Sprint 0
+`core_api`, nema teme u `core_ui`, nema pravog FCM-a. Sprint 0
 gradi temelj (flavori, šema, CI); ekrani dolaze u Sprintu 1. Stanje po tasku: `tasks/README.md`.
