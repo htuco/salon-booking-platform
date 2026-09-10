@@ -1,52 +1,60 @@
 import 'package:flutter/material.dart';
 
+import 'src/generated/tenants.g.dart';
+
 void main() => runApp(const TenantPreviewApp());
 
-/// Sprint 0 proves that the same entrypoint accepts each generated tenant build.
+/// Sprint 0 dokazuje da isti entrypoint prihvata svaki generisani tenant build.
+///
+/// `SALON_ID` dolazi iz `--dart-define`, a ostatak konfiguracije se traži u
+/// generisanom registru — build ne prosljeđuje ime, boju i vertikalu ručno.
+/// Runtime izvor istine je backend; ovo su fallback vrijednosti dostupne
+/// prije prvog odgovora.
 class TenantPreviewApp extends StatelessWidget {
   const TenantPreviewApp({super.key});
 
+  static const salonId = String.fromEnvironment('SALON_ID');
+
   @override
   Widget build(BuildContext context) {
-    const salonId = String.fromEnvironment('SALON_ID');
-    const appName = String.fromEnvironment('APP_NAME', defaultValue: 'Salon');
-    const theme = String.fromEnvironment(
-      'THEME',
-      defaultValue: 'modern_barber',
-    );
-    const primary = String.fromEnvironment(
-      'PRIMARY_COLOR',
-      defaultValue: '#C9A227',
-    );
-    final seed = Color(int.parse(primary.replaceFirst('#', 'FF'), radix: 16));
+    final tenant = kTenants[salonId];
+    final title = tenant?.displayName ?? 'Salon';
+    final isDark = tenant?.vertical == 'barber';
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: appName,
+      title: title,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: seed,
-          brightness: theme == 'modern_barber'
-              ? Brightness.dark
-              : Brightness.light,
+          seedColor: isDark ? const Color(0xFFC6A667) : const Color(0xFFB76E79),
+          brightness: isDark ? Brightness.dark : Brightness.light,
         ),
       ),
       home: Scaffold(
-        appBar: AppBar(title: const Text(appName)),
+        appBar: AppBar(title: Text(title)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.content_cut, size: 72),
+                Icon(isDark ? Icons.content_cut : Icons.spa_outlined, size: 72),
                 const SizedBox(height: 24),
-                const Text(appName),
+                Text(title, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 12),
-                Text(
-                  salonId.isEmpty
-                      ? 'Nedostaje SALON_ID konfiguracija.'
-                      : 'Hello, $salonId',
-                ),
+                Text(switch (tenant) {
+                  null when salonId.isEmpty =>
+                    'Nedostaje SALON_ID konfiguracija.',
+                  null => 'Nepoznat SALON_ID: $salonId',
+                  final t => 'Hello, ${t.salonId}',
+                }, textAlign: TextAlign.center),
+                if (tenant != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '${tenant.flavor} · ${tenant.vertical}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ],
             ),
           ),
