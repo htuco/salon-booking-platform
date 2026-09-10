@@ -93,9 +93,7 @@ stvarno postoji, da se ne blokira svaki commit na alatu koji ne radi.
 
 ## Git
 
-- **Conventional Commits sa scopeom**: `feat(client):`, `fix(ci):`, `chore(supabase):`.
-  Naslov na bosanskom, u imperativu, bez tačke.
-- **Tijelo poruke nosi zašto i dokaz.** Postojeći `git log` je pisan tako namjerno: šta je bio
-  simptom, šta je bio uzrok, i šta je konkretno pokazalo da je popravljeno. Kopiraj taj standard.
-- **Grana se otvara sa `main`, PR ide protiv `main`.** Imena: `feat/<kratko>`, `fix/<kratko>`.
-- Ne commituj: tajne, `build/`, artefakte, pravi `google-services.json`, `.env`.
+Grananje, commit poruke, PR konvencija i pravila o tome kad pitam a kad odlučim sam žive u
+`.claude/docs/ai-interaction.md` — jedan izvor, da se ne raziđu. Ukratko: Conventional Commits sa
+scopeom, naslov na bosanskom u imperativu, tijelo nosi *zašto* i *dokaz*, grana sa `main`, PR
+protiv `main`, opis po `.github/pull_request_template.md`.

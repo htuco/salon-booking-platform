@@ -52,15 +52,14 @@ opis uloga u `docs/01 §5`.
 - Imena: `feat/<kratko>`, `fix/<kratko>`, `chore/<kratko>`
 - Ne otvaraj task čije zavisnosti nisu gotove — redoslijed u `tasks/README.md` nije formalnost
 
-**Commit poruke**
-- Conventional Commits sa scopeom: `feat(client):`, `fix(ci):`, `chore(supabase):`
-- Naslov na bosanskom, u imperativu, bez tačke
-- Tijelo nosi **zašto**, koja je zamka nađena, i **čime je dokazano**. Postojeći `git log` je uzor
-
-**PR**
-- Opis kaže: cilj, šta je dokazano (sa stvarnim izlazima), i **šta nije provjereno i zašto**
+**Commit poruke i PR-ovi**
+- Conventional Commits sa scopeom (`feat(client):`), naslov na bosanskom u imperativu, tijelo nosi
+  **zašto** i **čime je dokazano**. Postojeći `git log` je uzor
+- PR opis prati `.github/pull_request_template.md`: cilj, dokaz sa stvarnim izlazima, i **šta nije
+  provjereno i zašto**
 - Crveni CI job je dio taska, ne tuđi problem
 - Promjena koja mijenja opisano ponašanje a ne dira dokumentaciju je nekompletna promjena
+- Puna konvencija (kad se pita, kad se ne mergea, veličina PR-a): `.claude/docs/ai-interaction.md`
 
 **Šta se nikad ne commituje**
 - Tajne: `.env`, izlaz `supabase status -o env`, service role ključ, pravi `google-services.json`,
@@ -80,7 +79,7 @@ Repo je opremljen tako da nova sesija — tvoja ili kolegina — može krenuti b
 |---|---|
 | `CLAUDE.md` | router; učitava se uvijek, zato je kratak |
 | `CONTEXT.md` | domenski rječnik — koja riječ za koji pojam |
-| `.claude/docs/` | arhitektura, konvencije, sigurnost, komande, tenant factory — čitaju se po potrebi |
+| `.claude/docs/` | arhitektura, konvencije, sigurnost, komande, tenant factory, način rada — čitaju se po potrebi |
 | `.claude/skills/` | `/task`, `/verify`, `/handoff`, `/new-tenant`, `/cleanup`, `/research` |
 | `.claude/agents/` | recenzenti: `rls-auditor`, `dart-reviewer`, `duplication-scanner`, `flutter-ui-reviewer` |
 | `docs/adr/` | zašto je nešto odlučeno i šta je odbačeno |
