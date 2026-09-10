@@ -1,44 +1,60 @@
 # iOS flavors
 
-`*.xcconfig` fajlovi ovdje su **generisani** iz `tenants/*/tenant.yaml`:
+Sve u ovom folderu je **generisano** iz `tenants/*/tenant.yaml`:
 
 ```sh
-dart run tool/gen_flavors.dart
+dart run tool/gen_flavors.dart     # xcconfig fajlovi
+tool/gen_ios_flavors.sh            # build konfiguracije + scheme u pbxproj
+dart run flutter_launcher_icons    # AppIcon-<flavor> setovi
 ```
 
 Ne editaj ih ručno — sljedeće pokretanje generatora ih prepisuje.
 
-## Šta je generisano, a šta nije
+## Šta koji fajl je
 
-Generator pokriva korak 2 iz [docs/04 §5](../../../../docs/04-flutter-tenant-factory.md#5-ios--gdje-boli):
-po-tenant `xcconfig` sa `PRODUCT_BUNDLE_IDENTIFIER`, `DISPLAY_NAME`, verzijama
-i `ASSET_CATALOG_APP_ICON_NAME`.
+| Fajl | Uloga |
+|---|---|
+| `<flavor>.xcconfig` | tenant vrijednosti: bundleId, `PRODUCT_NAME`, verzije, ime AppIcon seta |
+| `<Mode>-<flavor>.xcconfig` | wrapper koji Xcode build konfiguracija stvarno koristi |
 
-**Nije generisano** i traži macOS + Xcode:
+Wrapper postoji jer Flutterov `Generated.xcconfig` (`FLUTTER_ROOT`, build mode)
+mora ostati u lancu. Da je tenant fajl vezan direktno, build ne bi znao gdje je
+SDK. Wrapper samo uključuje oba:
 
-1. **Xcode scheme** (`Runner-<flavor>`) u `Runner.xcodeproj/xcshareddata/xcschemes/`
-2. **Build configuration** po tenantu (`Debug-<flavor>`, `Release-<flavor>`) koja
-   uključuje odgovarajući `xcconfig`
-3. **App Icon set** (`AppIcon-<flavor>`) u `Assets.xcassets`
-4. **`GoogleService-Info.plist`** po flavoru, kopiran u build fazi
-5. **App ID + provisioning profil** u Apple Developer portalu
+```
+#include "../Flutter/Debug.xcconfig"
+#include "barberstudiovitez.xcconfig"
+```
 
-Koraci 1–3 znače izmjenu `project.pbxproj`. Generisati taj fajl naslijepo, bez
-mogućnosti da se rezultat otvori u Xcodeu i builda, nosi veći rizik nego korist:
-neispravan `pbxproj` ruši projekat za sve flavore odjednom, a greška se ne vidi
-dok se ne otvori na Macu.
+## Imena koja Flutter zahtijeva
 
-Zato je ovaj dio svjesno ostavljen za mašinu koja ima Xcode. Kad se prvi put radi
-na macOS-u, redoslijed je:
+Iz `packages/flutter_tools/lib/src/ios/xcodeproj.dart`:
+
+- **scheme** = `sentenceCase(flavor)`, uz case-insensitive poklapanje — dakle
+  scheme se zove **tačno kao flavor**, npr. `barberstudiovitez`.
+  Scheme nazvan `Runner-<flavor>` se **ne** poklapa i `--flavor` puca.
+- **konfiguracija** = `<Debug|Profile|Release>-<scheme>`.
+
+## Zamka: buildSettings nadjačava xcconfig
+
+Flutterov template drži `PRODUCT_BUNDLE_IDENTIFIER`, `PRODUCT_NAME` i
+`ASSETCATALOG_COMPILER_APPICON_NAME` u `buildSettings` Runner targeta, a te
+vrijednosti imaju **veći prioritet** od xcconfiga. Zato `tool/gen_ios_flavors.rb`
+te ključeve briše iz flavor konfiguracija — bez toga xcconfig je mrtav kod i svi
+flavori dobiju bundleId iz templatea.
+
+Iz istog razloga `Runner/Info.plist` koristi `$(PRODUCT_NAME)` za
+`CFBundleName` i `CFBundleDisplayName`; prije je ime bilo hardkodirano.
+
+Napomena: `ASSET_CATALOG_APP_ICON_NAME` nije Xcode postavka i tiho se ignoriše.
+Prava je `ASSETCATALOG_COMPILER_APPICON_NAME`.
+
+## Provjera
 
 ```sh
-dart run tool/gen_flavors.dart              # xcconfig fajlovi
-# u Xcodeu: dupliraj Debug/Release u Debug-<flavor>/Release-<flavor>,
-# veži ih na flavors/<flavor>.xcconfig, napravi scheme Runner-<flavor>
 flutter build ios --flavor barberstudiovitez --no-codesign \
   --dart-define=SALON_ID=550e8400-e29b-41d4-a716-446655440000
 ```
 
-Tek kad taj build prođe, iOS dio DoD-a iz [taska 03](../../../../tasks/03-flavor-system.md)
-smije biti čekiran. Do tada `targets.ios: true` u `tenant.yaml` znači samo namjeru,
-ne dokazan build.
+Puni provisioning (`fastlane produce` + `match`) nije dio ovoga — v.
+[docs/04 §6.2](../../../../docs/04-flutter-tenant-factory.md#62-apple-app-store--sve-pod-tvojim-accountom).

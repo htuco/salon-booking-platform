@@ -1,5 +1,6 @@
 import 'package:client/main.dart';
 import 'package:client/src/generated/tenants.g.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -40,6 +41,78 @@ void main() {
           RegExp(r'^[a-z][a-z0-9]*$').hasMatch(tenant.flavor),
           isTrue,
           reason: '${tenant.flavor} nije validan gradle flavor',
+        );
+      }
+    });
+  });
+
+  group('TenantHome', () {
+    const barber = TenantConfig(
+      flavor: 'barberstudiovitez',
+      salonId: '550e8400-e29b-41d4-a716-446655440000',
+      slug: 'barberstudiovitez',
+      vertical: 'barber',
+      displayName: 'Barber Studio Vitez',
+    );
+
+    // Ekran se testira direktno, sa proslijedenim tenantom, pa popunjeni slucaj
+    // ne zavisi od --dart-define i moze se pokriti u obicnom `flutter test`.
+    testWidgets('prikazuje ime, flavor i vertikalu tenanta', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: TenantHome(
+            tenant: barber,
+            salonId: '550e8400-e29b-41d4-a716-446655440000',
+          ),
+        ),
+      );
+      expect(
+        find.text('Barber Studio Vitez'),
+        findsNWidgets(2),
+      ); // AppBar + tijelo
+      expect(find.text('Hello, ${barber.salonId}'), findsOneWidget);
+      expect(find.text('barberstudiovitez · barber'), findsOneWidget);
+    });
+
+    // Regresija: `Theme.of` pozvan iznad MaterialApp-a vraca Flutterov default,
+    // pa se tekst iscrta tamno na tamnoj tenant temi. V. TenantPreviewApp.build.
+    testWidgets('tekst koristi temu koju MaterialApp primjenjuje', (
+      tester,
+    ) async {
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFC6A667),
+          brightness: Brightness.dark,
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          home: const TenantHome(
+            tenant: barber,
+            salonId: '550e8400-e29b-41d4-a716-446655440000',
+          ),
+        ),
+      );
+
+      final applied = Theme.of(tester.element(find.byType(Scaffold)));
+      for (final finder in <Finder>[
+        find.text('barberstudiovitez · barber'),
+        find.descendant(
+          of: find.byType(Column),
+          matching: find.text('Barber Studio Vitez'),
+        ),
+      ]) {
+        final style = tester.widget<Text>(finder).style!;
+        final bg = applied.colorScheme.surface;
+        final a = style.color!.computeLuminance();
+        final b = bg.computeLuminance();
+        final ratio =
+            (a > b ? a + 0.05 : b + 0.05) / (a > b ? b + 0.05 : a + 0.05);
+        expect(
+          ratio,
+          greaterThan(4.5),
+          reason: 'kontrast ${ratio.toStringAsFixed(2)}:1 je ispod WCAG AA',
         );
       }
     });

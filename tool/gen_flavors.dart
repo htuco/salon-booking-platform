@@ -33,10 +33,33 @@ void main(List<String> args) {
 
   final iosDir = Directory('${root.path}/apps/client/ios/flavors');
   if (!check) iosDir.createSync(recursive: true);
-  for (final tenant in tenants) {
+  for (final tenant in tenants.where((t) => t.ios)) {
     stale |= _writeFile(
       File('${iosDir.path}/${tenant.flavor}.xcconfig'),
       _renderXcconfig(tenant),
+      check,
+    );
+    // Xcode build konfiguracija se veže na wrapper, ne na tenant fajl direktno:
+    // Flutterov Generated.xcconfig (FLUTTER_ROOT, build mode) mora ostati u
+    // lancu, inače build ne zna gdje je SDK. Ime nosi '-<flavor>' jer
+    // flutter_launcher_icons po tome prepoznaje flavor konfiguraciju.
+    for (final mode in _iosModes.entries) {
+      stale |= _writeFile(
+        File('${iosDir.path}/${mode.key}-${tenant.flavor}.xcconfig'),
+        _renderXcconfigWrapper(tenant, mode.value),
+        check,
+      );
+    }
+  }
+
+  // Po-flavor konfiguracija za flutter_launcher_icons; alat sam skenira
+  // flutter_launcher_icons-*.yaml u korijenu paketa.
+  for (final tenant in tenants) {
+    stale |= _writeFile(
+      File(
+        '${root.path}/apps/client/flutter_launcher_icons-${tenant.flavor}.yaml',
+      ),
+      _renderLauncherIcons(tenant),
       check,
     );
   }
@@ -221,16 +244,49 @@ String _renderGradle(String current, List<Tenant> tenants) {
   return current.replaceRange(anchor, anchor, '\n\n$buffer\n');
 }
 
+/// Build mode -> Flutterov xcconfig koji wrapper mora uključiti.
+/// Flutter generiše samo Debug i Release; Profile se veže na Release, isto
+/// kao što to radi Runner target u praznom Flutter projektu.
+const _iosModes = <String, String>{
+  'Debug': 'Debug',
+  'Profile': 'Release',
+  'Release': 'Release',
+};
+
 String _renderXcconfig(Tenant tenant) =>
     '''
 // $_marker. Pokreni: dart run tool/gen_flavors.dart
+//
+// PRODUCT_NAME puni CFBundleName i CFBundleDisplayName kroz Info.plist.
+// ASSETCATALOG_COMPILER_APPICON_NAME je stvarno ime Xcode postavke —
+// ASSET_CATALOG_APP_ICON_NAME ne postoji i tiho se ignoriše.
 PRODUCT_BUNDLE_IDENTIFIER = ${tenant.bundleId}
 PRODUCT_NAME = ${tenant.displayName}
-DISPLAY_NAME = ${tenant.displayName}
 MARKETING_VERSION = ${tenant.versionName}
 CURRENT_PROJECT_VERSION = ${tenant.iosBuildNumber}
-ASSET_CATALOG_APP_ICON_NAME = AppIcon-${tenant.flavor}
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-${tenant.flavor}
 SALON_ID = ${tenant.salonId}
+''';
+
+String _renderXcconfigWrapper(Tenant tenant, String flutterMode) =>
+    '''
+// $_marker. Pokreni: dart run tool/gen_flavors.dart
+#include "../Flutter/$flutterMode.xcconfig"
+#include "${tenant.flavor}.xcconfig"
+''';
+
+String _renderLauncherIcons(Tenant tenant) =>
+    '''
+# $_marker. Pokreni: dart run tool/gen_flavors.dart
+#
+# Izvorna ikona: tenants/${tenant.flavor}/assets/icon.png
+# Placeholder se pravi sa: dart run tool/gen_placeholder_icons.dart
+# Pravi asset samo zamijeni taj fajl — ovdje se ništa ne mijenja.
+flutter_launcher_icons:
+  image_path: "../../tenants/${tenant.flavor}/assets/icon.png"
+  android: ${tenant.android}
+  ios: ${tenant.ios}
+  remove_alpha_ios: true
 ''';
 
 /// Placeholder da google-services plugin ne pukne prije pravog Firebase

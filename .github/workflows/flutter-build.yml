@@ -50,6 +50,16 @@ jobs:
 
       - run: dart run melos exec --dir-exists=test -- flutter test
 
+      # Kontrast teksta na tenant temi se ne vidi bez --dart-define: prazan
+      # SALON_ID daje svijetlu temu, gdje neusklađenost tema nije vidljiva.
+      - name: Regresija teme po tenantu
+        working-directory: apps/client
+        run: |
+          for id in 550e8400-e29b-41d4-a716-446655440000 \
+                    550e8400-e29b-41d4-a716-446655440001; do
+            flutter test test/tenant_theme_test.dart --dart-define=SALON_ID=$id
+          done
+
   build-flavors:
     name: APK po tenantu
     runs-on: ubuntu-latest
@@ -104,3 +114,76 @@ jobs:
           path: apps/client/build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
           retention-days: 7
+
+  build-ios:
+    name: iOS flavor build
+    runs-on: macos-latest
+    timeout-minutes: 45
+    needs: analyze
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: barberstudiovitez
+            salon_id: 550e8400-e29b-41d4-a716-446655440000
+            bundle_id: ba.nasadomena.barberstudiovitez
+            display_name: Barber Studio Vitez
+          - flavor: beautystudiotravnik
+            salon_id: 550e8400-e29b-41d4-a716-446655440001
+            bundle_id: ba.nasadomena.beautystudiotravnik
+            display_name: Beauty Studio Travnik
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # Xcode konfiguracije i scheme su commitani; ovo dokazuje da postoje za
+      # svaki iOS tenant. Bez schemea `--flavor` puca.
+      #
+      # Ne poredi se bajt-po-bajt sa svjeze generisanim projektom: xcodeproj gem
+      # razlicite verzije serijalizuje pbxproj drugacije, pa bi takva provjera
+      # padala na razlici u alatu, ne na stvarnom driftu.
+      - name: Provjeri iOS scheme i konfiguracije po tenantu
+        run: |
+          set -euo pipefail
+          pbx=apps/client/ios/Runner.xcodeproj/project.pbxproj
+          schemes=apps/client/ios/Runner.xcodeproj/xcshareddata/xcschemes
+          for dir in tenants/*/; do
+            flavor=$(basename "$dir")
+            case "$flavor" in _*) continue;; esac
+            grep -q 'ios: true' "$dir/tenant.yaml" || continue
+            test -f "$schemes/$flavor.xcscheme" \
+              || { echo "Nema scheme za $flavor. Pokreni: tool/gen_ios_flavors.sh"; exit 1; }
+            for mode in Debug Profile Release; do
+              grep -q "$mode-$flavor" "$pbx" \
+                || { echo "Nema konfiguracije $mode-$flavor. Pokreni: tool/gen_ios_flavors.sh"; exit 1; }
+            done
+            echo "OK: $flavor ima scheme + Debug/Profile/Release konfiguracije"
+          done
+
+      - name: Build ${{ matrix.flavor }}
+        working-directory: apps/client
+        run: |
+          flutter build ios --debug --no-codesign \
+            --flavor ${{ matrix.flavor }} \
+            --dart-define=SALON_ID=${{ matrix.salon_id }}
+
+      # buildSettings nadjacava xcconfig, pa se bundleId i ime moraju
+      # provjeriti u gotovom bundleu, ne u konfiguraciji.
+      - name: Provjeri bundleId, ime i ikonu u bundleu
+        working-directory: apps/client
+        run: |
+          set -euo pipefail
+          app="build/ios/iphoneos/${{ matrix.display_name }}.app"
+          test -d "$app" || { echo "Nema $app"; ls build/ios/iphoneos; exit 1; }
+          plist="$app/Info.plist"
+          read_key() { /usr/libexec/PlistBuddy -c "Print :$1" "$plist"; }
+          test "$(read_key CFBundleIdentifier)" = "${{ matrix.bundle_id }}"
+          test "$(read_key CFBundleDisplayName)" = "${{ matrix.display_name }}"
+          ls "$app" | grep -q "AppIcon-${{ matrix.flavor }}"
+          echo "OK: ${{ matrix.bundle_id }} / ${{ matrix.display_name }} / ikona po flavoru"
