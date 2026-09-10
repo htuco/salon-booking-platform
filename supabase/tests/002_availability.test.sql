@@ -73,7 +73,9 @@ select is(
 -- Zauzeca
 -- ---------------------------------------------------------------------------
 -- Termin 10:00-10:30 uz buffer 5 zauzima [10:00, 10:35). Kandidat traje 35 min
--- (30 + buffer), pa otpadaju pocetci 09:45, 10:00, 10:15 i 10:30.
+-- (30 + buffer), pa se preklapa kad je pocetak > 09:25 i < 10:35:
+-- 09:30, 09:45, 10:00, 10:15, 10:30 = pet kandidata. Prva verzija testa je
+-- ocekivala cetiri jer je zaboravila da i kandidat nosi buffer unaprijed.
 insert into public.appointments(
   salon_id, service_id, employee_id, customer_id, customer_name,
   date, start_time, end_time, buffer_minutes, status)
@@ -85,7 +87,7 @@ values (
 select is(
   (select count(*)::int from public.get_available_slots(
     (select salon from tfix), (select svc30 from tfix), (select mon from tfix), (select emir from tfix))),
-  27, 'Potvrdjen termin uklanja 4 kandidata (trajanje + buffer sa obje strane presjeka)');
+  26, 'Potvrdjen termin uklanja 5 kandidata (kandidat i termin nose buffer)');
 
 select is(
   (select count(*)::int from public.get_available_slots(
@@ -104,7 +106,7 @@ where date = (select mon from tfix) and employee_id = (select emir from tfix);
 select is(
   (select count(*)::int from public.get_available_slots(
     (select salon from tfix), (select svc30 from tfix), (select mon from tfix), (select emir from tfix))),
-  27, 'Pending blokira slot isto kao confirmed');
+  26, 'Pending blokira slot isto kao confirmed');
 
 update public.appointments set status = 'cancelled'
 where date = (select mon from tfix) and employee_id = (select emir from tfix);
