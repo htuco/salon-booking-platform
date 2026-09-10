@@ -85,17 +85,37 @@ ispravan `salon_id`. To hvata klasu grešaka koju RLS ne vidi — napad kroz isp
 zahtjev sa pomiješanim ID-evima. Kad dodaješ tabelu vezanu za salon, nosi `salon_id` i veži se
 kompozitno, ne samo po `id`.
 
+## Rezervacija — jedini put kojim termin nastaje
+
+`public.book_appointment(...)` (`20260911090000_availability_engine.sql`) je jedina funkcija kojom
+klijent ili admin kreira termin. `security definer` je, dakle zaobilazi RLS, pa autorizaciju radi
+sama i eksplicitno: **admin salona**, ili **klijent koji je vlasnik tog `customers` reda u salonu
+iz `x-salon-id`**. Nepostojeći klijent i tuđi klijent vraćaju **istu** grešku (`42501`) — inače bi
+funkcija bila endpoint za nabrajanje tuđih klijenata.
+
+Slot se **re-validira u istoj transakciji** neposredno prije upisa, a preklapanje hvata i
+exclusion constraint `appointments_no_overlap` na nivou tabele. Oboje je namjerno: provjera prije
+upisa ne pomaže kad dva zahtjeva stignu istovremeno, a constraint sam ne zna za radno vrijeme.
+Konflikt izlazi kao `PT409`, što PostgREST prevodi u HTTP `409`.
+
+`get_available_slots` i `get_available_dates` su takođe `security definer` jer čitaju
+`appointments` i `blocked_slots`, koje `anon` ne smije vidjeti. Izlaz su samo izvedena slobodna
+vremena — nijedan podatak o klijentu. Pregled slobodnih termina zato ne traži prijavu, a
+rezervacija traži (`grant execute ... to authenticated`).
+
 ## Šta još nije zatvoreno
 
 Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvorene:
 
-- **Klijentski upisi** (kreiranje termina, upis customera, svi `devices` upisi) idu **isključivo
-  kroz validiranu RPC/Edge funkciju.** Bazna šema još nema tu funkciju, i dok ne postoji, klijent
-  nema legitiman put da napiše red.
-- **Direktne admin izmjene termina su dozvoljene u baznoj šemi.** Migracija sa availability
-  logikom mora dodati validaciju slota i zaštitu od utrke (`409`) prije nego što aplikacija počne
-  pisati.
-- **Brisanje/anonimizacija naloga** i booking RPC-evi dolaze u kasnijim migracijama.
+- **Upis `customers` i svi `devices` upisi** i dalje nemaju validiranu funkciju. `book_appointment`
+  traži da klijent **već postoji** — upsert identiteta u klijenta dolazi sa auth radom (Sprint 2).
+- **Direktan admin `insert`/`update` nad `appointments` zaobilazi validaciju slota.** Exclusion
+  constraint sprječava preklapanje, ali radno vrijeme, blokade i `min_advance_booking_hours` ne
+  provjerava niko na tom putu. Admin ekran mora ići kroz `book_appointment`.
+- **Termin bez dodijeljenog radnika nije pokriven constraintom** (`where employee_id is not null`).
+  `book_appointment` uvijek dodijeli radnika; takav red može nastati samo ručnim upisom, i
+  `get_available_slots` ga zato konzervativno tretira kao zauzeće cijelog salona.
+- **Brisanje/anonimizacija naloga** dolazi u kasnijoj migraciji.
 
 ## Tajne
 
@@ -114,7 +134,8 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
 2. Zove li politika `private.*` helper umjesto da prepisuje uslov?
 3. Je li klijentska politika vezana i za `private.client_salon_id()` **i** za `private.owns_identity()`?
 4. Može li se osoblje jednog salona domoći reda drugog salona kroz join, view ili FK?
-5. Vidi li `anon` samo ono što je javni katalog aktivnog salona?
+5. Vidi li `anon` samo ono što je javni katalog aktivnog salona? (`get_available_slots` je izuzetak
+   koji je promišljen: izvedena vremena, bez podataka o klijentu.)
 6. Je li dodan pgTAP test koji **pada** ako se politika ukloni? Politika bez negativnog testa je
    pretpostavka.
 7. Je li workflow `Supabase tests` zelen na PR-u? Lokalno se ne može pokrenuti bez Dockera — v.
