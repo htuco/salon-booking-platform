@@ -29,6 +29,35 @@ android {
         versionName = flutter.versionName
     }
 
+
+    // >>> BEGIN GENERATED FLAVORS
+    // GENERISANO — ne editovati ručno. Pokreni: dart run tool/gen_flavors.dart
+    // AGP 9 gasi resValues po defaultu; app_name po flavoru
+    // se generiše upravo kroz resValue, pa mora biti uključen.
+    buildFeatures {
+        resValues = true
+    }
+
+    flavorDimensions += "tenant"
+
+    productFlavors {
+        create("barberstudiovitez") {
+            dimension = "tenant"
+            applicationId = "ba.nasadomena.barberstudiovitez"
+            resValue("string", "app_name", "Barber Studio Vitez")
+            versionCode = 1
+            versionName = "1.0.0"
+        }
+        create("beautystudiotravnik") {
+            dimension = "tenant"
+            applicationId = "ba.nasadomena.beautystudiotravnik"
+            resValue("string", "app_name", "Beauty Studio Travnik")
+            versionCode = 1
+            versionName = "1.0.0"
+        }
+    }
+    // <<< END GENERATED FLAVORS
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
