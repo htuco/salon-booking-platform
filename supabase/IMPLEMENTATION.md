@@ -26,7 +26,7 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Admins read per-salon customers/appointments. Global auth_identities rows cannot be read by staff JWTs. No API lists salons for an identity.
 - Supabase Auth insert/update automatically upserts auth_identities. Account deletion/anonymization and booking/customer RPCs belong to subsequent migrations.
 - Composite tenant foreign keys prevent mixing an employee/service/customer/device from another salon, even when a tenant ID is present in a forged payload.
-- Client appointment/customer writes and all device writes require validated RPC/Edge functions. The base schema allows direct admin appointment mutations; the availability migration must enforce slot validation and race safety before app usage.
+- Client appointment writes go through `public.book_appointment` (availability migration): it re-validates the slot in the same transaction, assigns an employee when none was chosen, and raises `PT409` (HTTP 409) on conflict. Overlap is additionally prevented by the `appointments_no_overlap` exclusion constraint. Customer upsert and device writes still lack a validated function. Direct admin table writes bypass slot validation — only overlap is enforced.
 - Appointment device_id is the UUID FK to devices.id; devices.device_id is the install identifier. appointments.auth_identity_id must match its referenced customer's identity.
 - Working hours use ISO weekdays 1=Monday to 7=Sunday. date/start_time/end_time are salon-local wall times. timezone defaults to Europe/Sarajevo.
 - salon_builds.build_status/build_url are runtime build tracking fields separate from actual store status. No store status is marked live by seed.
