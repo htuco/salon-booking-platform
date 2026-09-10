@@ -142,13 +142,29 @@ jobs:
 
       - run: flutter pub get
 
-      # Xcode konfiguracije i scheme su commitani; ovo dokazuje da nisu
-      # odlutali od tenant.yaml. Bez schemea `--flavor` puca.
-      - name: Provjeri da su iOS scheme i konfiguracije ažurne
+      # Xcode konfiguracije i scheme su commitani; ovo dokazuje da postoje za
+      # svaki iOS tenant. Bez schemea `--flavor` puca.
+      #
+      # Ne poredi se bajt-po-bajt sa svjeze generisanim projektom: xcodeproj gem
+      # razlicite verzije serijalizuje pbxproj drugacije, pa bi takva provjera
+      # padala na razlici u alatu, ne na stvarnom driftu.
+      - name: Provjeri iOS scheme i konfiguracije po tenantu
         run: |
-          tool/gen_ios_flavors.sh
-          git diff --exit-code -- apps/client/ios/Runner.xcodeproj \
-            || { echo "Xcode projekat je zastario. Pokreni: tool/gen_ios_flavors.sh"; exit 1; }
+          set -euo pipefail
+          pbx=apps/client/ios/Runner.xcodeproj/project.pbxproj
+          schemes=apps/client/ios/Runner.xcodeproj/xcshareddata/xcschemes
+          for dir in tenants/*/; do
+            flavor=$(basename "$dir")
+            case "$flavor" in _*) continue;; esac
+            grep -q 'ios: true' "$dir/tenant.yaml" || continue
+            test -f "$schemes/$flavor.xcscheme" \
+              || { echo "Nema scheme za $flavor. Pokreni: tool/gen_ios_flavors.sh"; exit 1; }
+            for mode in Debug Profile Release; do
+              grep -q "$mode-$flavor" "$pbx" \
+                || { echo "Nema konfiguracije $mode-$flavor. Pokreni: tool/gen_ios_flavors.sh"; exit 1; }
+            done
+            echo "OK: $flavor ima scheme + Debug/Profile/Release konfiguracije"
+          done
 
       - name: Build ${{ matrix.flavor }}
         working-directory: apps/client
