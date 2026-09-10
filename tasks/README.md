@@ -11,7 +11,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 | [03](03-flavor-system.md) ✅ | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
 | [04](04-ci-pipeline.md) 🟡 | CI pipeline — jedna komanda do artefakta | prvi pravi build | 1 dan |
 | [05](05-availability-engine.md) ✅ | Availability engine na backendu + testovi | booking UI | 2–3 dana |
-| [06](06-vertical-pack.md) 🟡 | `VerticalPack` + `Vertical` klasa u `core_domain` | svaki ekran sa tekstom | 2–3 dana |
+| [06](06-vertical-pack.md) ✅ | `VerticalPack` + `Vertical` klasa u `core_domain` | svaki ekran sa tekstom | 2–3 dana |
 
 **Ukupno: ~9–12 radnih dana.** Tek nakon ovoga ima smisla početi `core_ui` theme factory i prvi booking ekran.
 
@@ -55,6 +55,26 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > Availability i booking pravila su sada **isključivo u bazi**. Kad se piše booking UI
 > ([task 11](sprint-1/11-booking-flow.md)), aplikacija prikazuje listu koju dobije i obrađuje
 > `409` — nijedan slot se ne računa u Dartu.
+
+> **Task 06 je zatvoren** (✅) — **Sprint 0 je time gotov.** Terminologija, booking pravila i
+> feature flagovi po vertikali su config koji se čita u runtime-u: `Vertical` u `core_domain`,
+> `VerticalRepository` u `core_api`, `verticalProvider` u `apps/client`. Placeholder ekran uzima
+> CTA iz `vertical.terms`, ne iz literala.
+>
+> Dokazano lokalno: `melos run analyze` (5/5 paketa čisto), `dart format --set-exit-if-changed`
+> (0 changed), `melos run test` — **32 testa PASS**. Ključni test mijenja terminologiju na istoj
+> instanci app-e i pokazuje da je mehanizam runtime, ne compile-time; drugi parsira **stvarni**
+> `supabase/seed.sql` i pada ako seed i Dart model odu u različitim smjerovima.
+>
+> **DB polovina je bila gotova još u tasku 02** — `vertical_packs`, `salons.vertical_pack_key` i
+> `salons.terminology_override` su postojali i bili dokazani; ovaj task je dodao samo Dart stranu.
+> `core_domain` je uz to preveden na čist Dart, jer je kao Flutter paket kršio sloj koji
+> `.claude/docs/architecture.md` opisuje.
+>
+> Ostaje za Sprint 1: ekran čita **živu** bazu tek kad `Supabase.initialize` uđe u
+> [task 07](sprint-1/07-app-plumbing.md) — lanac je dokazan do repozitorija, ne kroz mrežu.
+> `dental`/`health` vertikale i mehanički lint protiv literala u ekranu su svjesno odgođeni;
+> detalji u [06-vertical-pack.md](06-vertical-pack.md#status-2026-09-11--✅-zatvoren).
 
 ## Kako koristiti ovaj folder
 

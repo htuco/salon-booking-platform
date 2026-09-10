@@ -23,6 +23,13 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
 - **Test koji hvata regresiju koju oko ne vidi** → `apps/client/test/tenant_theme_test.dart`,
   pokrenut sa `--dart-define=SALON_ID=...` za oba tenanta. Bez definea tema je svijetla i
   neusklađenost se ne vidi.
+- **Model koji čita tuđi JSONB** → `packages/core_domain/lib/src/vertical/`. Nikad ne baca:
+  ključ koji nedostaje i vrijednost pogrešnog tipa padaju na default, jer je app u storeu uvijek
+  starija od baze. Uz to `packages/core_domain/test/vertical_test.dart` parsira **stvarni**
+  `supabase/seed.sql` i pada ako se seed i model raziđu u ključevima.
+- **Kod koji treba test, a zavisi od tuđeg builder lanca** → `verticalFromSalonRow` u
+  `packages/core_api/`. Mapiranje je izdvojeno iz repozitorija da se testira bez lažiranja
+  PostgREST-a: pravila su u mapiranju, `.from().select().eq()` je tuđi kod.
 
 ## Jezik
 
@@ -55,8 +62,19 @@ Kad naiđeš na takvu zamku, zapiši je tu gdje se dešava — ne u commit poruk
   za modele, `mocktail` za testove, `intl` + `.arb` za jezik. Ne uvodi alternativu bez ADR-a.
 - **Nema `get_it`** — Riverpod je i state i DI kontejner.
 - **Nema `Navigator` imperativno** — web build klijent app-e mora imati prave URL-ove po ekranu.
-- **String koji se razlikuje po vertikali ne smije biti u ekranu.** Ide kroz `Vertical.terms`.
-  Jezik aplikacije (dugmad, greške) ide kroz `.arb`. To su dvije različite stvari i ne miješaju se.
+- **String koji se razlikuje po vertikali ne smije biti u ekranu.** Ide kroz `Vertical.terms`,
+  do kojeg se stiže sa `verticalOf(ref)` (`apps/client/lib/src/core/vertical_provider.dart`):
+
+  ```dart
+  final vertical = verticalOf(ref);
+  Text(vertical.terms.bookCta)          // ne: Text('Zakaži termin')
+  Text(vertical.terms.customerSingular) // ne: Text('Klijent')
+  ```
+
+  Isto vrijedi za grananje: nema `if (vertical.key == 'dental')` u ekranu, nego flag u
+  `Vertical.features`. Jezik aplikacije (dugmad, greške) ide kroz `.arb`. To su dvije različite
+  stvari i ne miješaju se — `.arb` prevodi "Otkaži" na engleski, `terms` bira između "Klijent" i
+  "Pacijent" na istom jeziku.
 
 ## Supabase / SQL
 
