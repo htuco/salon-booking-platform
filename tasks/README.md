@@ -8,7 +8,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 |---|---|---|---|
 | [01](01-repo-skeleton.md) ✅ | Skeleton repozitorija (melos, apps, packages, supabase/) | sve ostalo | 0.5 dana |
 | [02](02-supabase-schema-rls.md) ✅ | Supabase šema + RLS + policy testovi | task 03, 05 | 1–2 dana |
-| [03](03-flavor-system.md) | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
+| [03](03-flavor-system.md) 🟡 | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
 | [04](04-ci-pipeline.md) | CI pipeline — jedna komanda do artefakta | prvi pravi build | 1 dan |
 | [05](05-availability-engine.md) | Availability engine na backendu + testovi | booking UI | 2–3 dana |
 | [06](06-vertical-pack.md) | `VerticalPack` + `Vertical` klasa u `core_domain` | svaki ekran sa tekstom | 2–3 dana |
@@ -25,6 +25,14 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > Na razvojnoj mašini nema Dockera, pa `supabase start` ne radi lokalno — dok se ne instalira Docker Desktop,
 > `supabase/` promjene se dokazuju kroz CI, ne lokalno.
 
+
+> **Task 03 je dijelom gotov** (🟡) — generator `tool/gen_flavors.dart` radi, oba Android APK-a
+> se builduju sa različitim `applicationId` (`ba.nasadomena.barberstudiovitez` /
+> `ba.nasadomena.beautystudiotravnik`) i različitim imenom u launcheru. CI to ponavlja na svaki PR.
+>
+> **Ostalo za sljedećeg:** instalacija oba APK-a na emulator istovremeno (system image je sada
+> instaliran, korak je odblokiran), ikone po flavoru, i iOS build na macOS-u.
+> Detalji i komande: [03-flavor-system.md](03-flavor-system.md#status-2026-09-10).
 ## Kako koristiti ovaj folder
 
 - Čekiraj DoD stavke u svakom task fajlu kako napreduješ.
