@@ -47,17 +47,16 @@ Ne otvaraj generisane fajlove da ih "dotjeraš" — sljedeće pokretanje ih prep
 
 ## 4. CI matrica — korak koji se najčešće zaboravi
 
-`.github/workflows/flutter-build.yml` ima **eksplicitne** liste u `build-flavors` i `build-ios`
-(flavor, `salon_id`, za iOS i `bundle_id` i `display_name`). Tenant koji nije u matrici se nikad ne
-buildа na CI-ju, i `--check` to ne hvata jer generisani fajlovi jesu ažurni.
+`.github/workflows/flutter-build.yml` ima **eksplicitne** liste u `build-flavors`, `build-ios` i
+`release-artifacts` (flavor, `salon_id`, za iOS i `bundle_id` i `display_name`). Tenant koji nije u
+matrici se nikad ne buildа na CI-ju, i `--check` to ne hvata jer generisani fajlovi jesu ažurni.
 
 ## 5. Dokaz
 
 ```sh
 dart run tool/gen_flavors.dart --check
-cd apps/client
-flutter build apk --debug --flavor <flavor> --dart-define=SALON_ID=<uuid>
-aapt2 dump badging build/app/outputs/flutter-apk/*<flavor>*.apk | head -3
+tool/build_tenant.sh <flavor> apk debug
+aapt2 dump badging apps/client/build/app/outputs/flutter-apk/*<flavor>*.apk | head -1
 ```
 
 Traži se `ba.nasadomena.<flavor>` i ispravan `application-label`. Zatim instaliraj **uz** postojeći

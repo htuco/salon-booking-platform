@@ -45,15 +45,15 @@ android {
             dimension = "tenant"
             applicationId = "ba.nasadomena.barberstudiovitez"
             resValue("string", "app_name", "Barber Studio Vitez")
-            versionCode = 1
-            versionName = "1.0.0"
+            versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
+            versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
         }
         create("beautystudiotravnik") {
             dimension = "tenant"
             applicationId = "ba.nasadomena.beautystudiotravnik"
             resValue("string", "app_name", "Beauty Studio Travnik")
-            versionCode = 1
-            versionName = "1.0.0"
+            versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
+            versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
         }
     }
     // <<< END GENERATED FLAVORS

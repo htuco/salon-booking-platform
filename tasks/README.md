@@ -9,7 +9,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 | [01](01-repo-skeleton.md) ✅ | Skeleton repozitorija (melos, apps, packages, supabase/) | sve ostalo | 0.5 dana |
 | [02](02-supabase-schema-rls.md) ✅ | Supabase šema + RLS + policy testovi | task 03, 05 | 1–2 dana |
 | [03](03-flavor-system.md) ✅ | Flavor sistem — dokaz na 2 demo tenanta | task 04 | 2–3 dana |
-| [04](04-ci-pipeline.md) | CI pipeline — jedna komanda do artefakta | prvi pravi build | 1 dan |
+| [04](04-ci-pipeline.md) 🟡 | CI pipeline — jedna komanda do artefakta | prvi pravi build | 1 dan |
 | [05](05-availability-engine.md) | Availability engine na backendu + testovi | booking UI | 2–3 dana |
 | [06](06-vertical-pack.md) | `VerticalPack` + `Vertical` klasa u `core_domain` | svaki ekran sa tekstom | 2–3 dana |
 
@@ -36,11 +36,16 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > `Generated.xcconfig`) su zapisane u [03-flavor-system.md](03-flavor-system.md#status-2026-09-10)
 > i u [`.claude/docs/tenant-factory.md`](../.claude/docs/tenant-factory.md).
 
-> **Task 04 je dijelom gotov** — dokazni dio CI-ja radi (analyze, format, testovi, tema po tenantu,
-> APK po flavoru sa provjerom `applicationId`, iOS build sa provjerom bundlea). Fali release strana:
-> `tool/build_tenant.sh`, AAB artefakt, secrets kroz environment groups, i auto-inkrement
-> `versionCode`/`buildNumber`. To postaje blokada tek pred prvi store submission (Sprint 3), pa je
-> ostatak taska svjesno odgođen iza 05 i 06.
+> **Task 04 je 🟡 — sve osim potpisivanja i stvarnih ključeva.** `tool/build_tenant.sh` je jedina
+> ulazna tačka u build (CI ga poziva, ne svoju kopiju `flutter build`), job `release-artifacts` na
+> ručni trigger pravi AAB za oba tenanta i provjerava `applicationId` i `versionCode` u gotovom
+> bundleu, a `BUILD_NUMBER` iz CI-ja stvarno stiže do artefakta — dokazano sa `versionCode='42'`
+> naspram `'1'` bez te varijable.
+>
+> Ostaju dvije stavke koje traže naloge, ne kod: **Android keystore** (release se sad potpisuje
+> debug ključem, pa AAB nije za store) i **stvarne Supabase vrijednosti** u GitHub `vars`/`secrets`.
+> Prvo je Sprint 3, drugo ide uz [task 07](sprint-1/07-app-plumbing.md). Izbor CI providera je
+> zapisan u [ADR-0005](../docs/adr/0005-github-actions-umjesto-codemagica.md).
 
 ## Kako koristiti ovaj folder
 
