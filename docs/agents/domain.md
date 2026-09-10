@@ -41,4 +41,4 @@ nije.
 | Kako je repo složen danas? | `.claude/docs/architecture.md` |
 | Kako se ovdje piše kod? | `.claude/docs/conventions.md` |
 | Kojom komandom? | `.claude/docs/workflows.md` |
-| Šta se radi sada? | `tasks/` |
+| Šta se radi sada? | `tasks/CURRENT.md`, pa `tasks/` |

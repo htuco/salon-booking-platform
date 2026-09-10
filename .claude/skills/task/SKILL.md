@@ -14,23 +14,30 @@ Ovaj skill vodi task kroz njegov životni ciklus i, što je važnije, održava t
 
 ## Radni fajlovi
 
-- `tasks/<NN>-<slug>.md` — jedan task: cilj, DoD checkboxovi, koraci, `## Status (datum)` na dnu
-- `tasks/README.md` — tabela (`#`, task, blokira, procjena, ✅/🟡) + status blok po tasku
+- **`tasks/CURRENT.md`** — jedan aktivni task, uvijek tačno jedan. Sekcije: `# Trenutni task: <NN — naziv>`,
+  `## Status` (Nije počet | U toku | Gotov), `## Ciljevi` (samo ono što stvarno preostaje),
+  `## Napomene` (kontekst i zamke), `## Istorija` (zatvoreni taskovi, dopisuje se na kraj).
+  Ovo je fajl koji se čita prvi kad neko sjedne za posao.
+- `tasks/<NN>-<slug>.md` — puni task: cilj, DoD checkboxovi, koraci, `## Status (datum)` na dnu
+- `tasks/README.md` i `tasks/sprint-1/README.md` — tabele (`#`, task, blokira, procjena, ✅/🟡) + status blokovi
 - `docs/adr/` — kad task donese odluku koja se ne može pročitati iz koda
+
+`CURRENT.md` je **derivat**, ne izvor: puni task fajl i repo su iznad njega. Kad se raziđu, ispravi
+`CURRENT.md`.
 
 ## Akcija: $ARGUMENTS
 
 | Akcija | Šta radi |
 |---|---|
-| `load` | Učitaj task, pročitaj zavisnosti i DoD, reci šta je stvarno ostalo |
-| `start` | Otvori granu i kreni redom kroz korake |
+| `load` | Učitaj task u `CURRENT.md` — zavisnosti i DoD naspram stvarnog stanja repoa |
+| `start` | Otvori granu, postavi status `U toku`, kreni redom kroz korake |
 | `review` | Provjeri DoD stavku po stavku, bez samouvjeravanja |
 | `verify` | Dokaži da radi — pokreni `/verify` recept za taj tip promjene |
 | `complete` | Zatvori: dokaz, status blok, dokumenti, commit, PR |
 | `explain` | Objasni šta je promijenjeno i kako se dijelovi vežu |
 
-Detalji: `actions/`. Bez argumenta — nabroji opcije i reci koji je task trenutno u toku
-(nađi ga po 🟡 u `tasks/README.md` i po grani na kojoj si).
+Detalji: `actions/`. Bez argumenta — pročitaj `tasks/CURRENT.md` i reci šta je učitano, u kojem je
+statusu i koji je sljedeći korak.
 
 ## Pravila koja važe u svakoj akciji
 
