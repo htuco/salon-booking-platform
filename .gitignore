@@ -16,6 +16,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# Claude Code — licne postavke, ne dijele se
+.claude/settings.local.json
+
 # Editor
 .vscode/*
 !.vscode/extensions.json

@@ -1,0 +1,25 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "enabledMcpjsonServers": [
+    "supabase",
+    "context7",
+    "playwright"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" || exit 0; { echo \"# Stanje projekta (SessionStart hook)\"; echo; echo \"## Aktivni task — tasks/CURRENT.md\"; cat tasks/CURRENT.md 2>/dev/null || echo \"(nema aktivnog taska — pokreni /task load <NN>)\"; echo; echo \"## Git\"; git status --short --branch 2>/dev/null | head -20; echo; git log --oneline -3 2>/dev/null; } | jq -Rs '{hookSpecificOutput:{hookEventName:\"SessionStart\",additionalContext:.}}'",
+            "timeout": 15,
+            "statusMessage": "Učitavam stanje projekta"
+          }
+        ]
+      }
+    ]
+  }
+}

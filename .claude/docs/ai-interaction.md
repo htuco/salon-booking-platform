@@ -64,8 +64,6 @@ Jedan aktivni task odjednom (`tasks/CURRENT.md`). Jedan task = jedna grana = jed
 <zašto — problem koji se rješava, ne prepričan diff>
 <zamka koja je nađena, ako je ima>
 <dokaz — komanda i stvarni izlaz, ili link na CI run>
-
-Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 ```
 
 - **Tipovi:** `feat`, `fix`, `chore`, `docs`, `ci`, `refactor`, `test`.
@@ -76,7 +74,10 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
   šta uzrok, i šta je konkretno pokazalo da je popravljeno. To je standard koji se prati.
 - **Jedan commit = jedna zaokružena promjena.** Ne miješaj refaktor sa popravkom, ni generisano sa
   ručno pisanim ako se može razdvojiti.
-- **Co-Authored-By trailer da, marketinška linija ne.** Nikad "Generated with …" u poruci.
+- **Nikakav potpis AI-ja u commitu.** Bez `Co-Authored-By: Claude`, bez "Generated with …", bez
+  trailera bilo koje vrste. Isto važi za PR opise. Autor commita je čovjek koji ga je pustio —
+  ugašeno i u `.claude/settings.json` (`attribution.commit` i `attribution.pr` su prazni), da ne
+  zavisi od toga da se neko sjeti.
 - **Ne commitujem bez tvoje potvrde** dok lokalne provjere ne prođu (`melos run analyze`,
   `dart format`, `melos run test`, `gen_flavors --check` ako je dirano generisano).
 
