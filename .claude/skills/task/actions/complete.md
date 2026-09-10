@@ -13,8 +13,9 @@ Zatvaranje taska. Ne pokreći dok `/task review` i `/task verify` nisu prošli.
    dotakla. Ako je task donio odluku koja se ne vidi iz koda → novi ADR u `docs/adr/`.
 5. **Commit**: Conventional Commits, naslov na bosanskom u imperativu. Tijelo nosi *zašto*, koje su
    zamke nađene i **čime je dokazano**. Prati stil postojećeg `git log`-a.
-6. **Push grane i PR protiv `main`.** U opisu PR-a: cilj taska, šta je dokazano (sa izlazima), šta
-   nije provjereno i zašto.
+6. **Dopuni PR i skini draft** (`gh pr ready`). U opisu: cilj taska, šta je dokazano (sa stvarnim
+   izlazima), šta nije provjereno i zašto. PR je već otvoren iz `/task start` — ako nije, otvori ga
+   sad, ali to znači da je korak preskočen.
 7. Sačekaj CI. Crveni job je dio taska, ne tuđi problem.
 8. Ponudi `/handoff` ako posao ostaje otvoren za nekog drugog.
 

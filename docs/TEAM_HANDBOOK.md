@@ -48,7 +48,9 @@ opis uloga u `docs/01 §5`.
 3. Dokument koji task spominje — obavezno `.claude/docs/security.md` ako diraš `supabase/`
 
 **Grane**
-- Otvaraju se sa `main`, PR ide protiv `main`
+- **Svaki rad ima svoju granu i otvoren PR protiv `main`. Na `main` se ne commituje direktno** —
+  hook u `.claude/settings.json` traži potvrdu za svaki `commit`/`push`/`merge` koji cilja `main`
+- PR se otvara **čim postoji prvi commit** (draft), ne tek kad je sve gotovo
 - Imena: `feat/<kratko>`, `fix/<kratko>`, `chore/<kratko>`
 - Ne otvaraj task čije zavisnosti nisu gotove — redoslijed u `tasks/README.md` nije formalnost
 
