@@ -1,6 +1,8 @@
 import 'package:client/main.dart';
+import 'package:client/src/core/vertical_provider.dart';
 import 'package:client/src/generated/tenants.g.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Regresija za neusklađenost teme: `Theme.of` pozvan u `build` metodi koja
@@ -13,13 +15,13 @@ import 'package:flutter_test/flutter_test.dart';
 ///   flutter test test/tenant_theme_test.dart \
 ///     --dart-define=SALON_ID=550e8400-e29b-41d4-a716-446655440000
 void main() {
-  const salonId = TenantPreviewApp.salonId;
+  const salonId = kSalonId;
   final tenant = kTenants[salonId];
 
   testWidgets('svaki tekst ima WCAG AA kontrast na tenant temi', (
     tester,
   ) async {
-    await tester.pumpWidget(const TenantPreviewApp());
+    await tester.pumpWidget(const ProviderScope(child: TenantPreviewApp()));
 
     final theme = Theme.of(tester.element(find.byType(Scaffold)));
     final background = theme.colorScheme.surface;
