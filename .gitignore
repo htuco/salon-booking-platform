@@ -52,3 +52,14 @@ fastlane/report.xml
 # Generisane lokalizacije — `flutter gen-l10n` ih stvori iz lib/src/l10n/*.arb prije builda.
 # Commitovana kopija bi zastarila cim se .arb promijeni, a niko ne bi primijetio.
 apps/*/lib/src/l10n/generated/
+
+# Generisani kod (freezed / json_serializable) — nastaje iz anotacija u istom fajlu.
+# Ne commituje se: diff bi bio veci od rucno pisanog koda, a merge konflikti u *.g.dart
+# se rjesavaju samo ponovnim generisanjem. CI ih napravi prije `analyze`
+# (v. .claude/docs/workflows.md).
+*.freezed.dart
+*.g.dart
+
+# Izuzetak: tenants.g.dart NIJE codegen iz anotacija nego izlaz iz tool/gen_flavors.dart
+# nad tenants/*/tenant.yaml, i CI ga provjerava sa `--check`. Mora ostati u gitu.
+!apps/client/lib/src/generated/tenants.g.dart

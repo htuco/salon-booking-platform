@@ -51,7 +51,17 @@ jobs:
       - name: Provjeri da su generisani fajlovi ažurni
         run: dart run tool/gen_flavors.dart --check
 
-      - run: dart format --set-exit-if-changed --output=none .
+      # Generisani kod (freezed/json_serializable) nije u gitu — nastaje iz anotacija
+      # i regenerise se determinsticki. Mora prije `analyze` i `test`, inace analiza
+      # pada na `part 'x.freezed.dart'` fajlovima kojih nema.
+      # Izuzetak je tenants.g.dart: on je izlaz iz tool/gen_flavors.dart, jeste u gitu,
+      # i provjerava ga korak `--check` iznad.
+      - name: Generisi freezed/json_serializable kod
+        run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
+
+      # Generisani fajlovi se ne formatiraju — build_runner ih ispisuje u svom stilu,
+      # a nisu u gitu pa ih niko i ne cita u diffu.
+      - run: dart format --set-exit-if-changed --output=none $(git ls-files '*.dart')
 
       - run: dart analyze .
 

@@ -14,7 +14,9 @@ Future<void> main() async {
     ProviderScope(
       // Env se ubacuje kroz override umjesto da ga app cita iz globalne varijable:
       // test tako podize app sa svojim okruzenjem, bez `--dart-define`-a i bez mreze.
-      overrides: [appEnvProvider.overrideWithValue(env)],
+      // `coreApiOverrides` vezuje `core_api` na ovaj build (SALON_ID); bez njega
+      // repozitoriji bacaju UnimplementedError na prvom pozivu.
+      overrides: [appEnvProvider.overrideWithValue(env), ...coreApiOverrides],
       child: const SalonClientApp(),
     ),
   );
