@@ -32,3 +32,63 @@ Jedan sloj koji zna za mrežu i tabele. Ekran nikad ne dodiruje `SupabaseClient`
 - **`devices.device_id` nije `appointments.device_id`.** Prvo je instalacioni identifikator, drugo FK na `devices.id`. Zamjena prolazi tipove i tiho lomi push.
 - `working_hours` vremena nisu UTC. Konverzija "za svaki slučaj" pomjera radno vrijeme salona za sat ili dva i to se vidi tek kad neko rezerviše.
 - Klijentski **upisi** (termin, customer, device) idu isključivo kroz validiranu RPC/Edge funkciju koja još ne postoji ([security.md](../../.claude/docs/security.md)). Ovaj task pokriva samo čitanje — ne pokušavaj `insert` sa klijenta.
+
+## Status (2026-09-11) — ✅ zatvoren
+
+Svih devet DoD stavki ima dokaz. Zeleno na CI-ju:
+[`Flutter` run 34620424824](https://github.com/htuco/salon-booking-platform/actions/runs/34620424824)
+(analiza, format, 97 testova, oba Android APK-a, oba iOS builda) i
+[`Supabase tests` run 34619433879](https://github.com/htuco/salon-booking-platform/actions/runs/34619433879)
+(pgTAP, REST izolacija, **novi** `rest_public_catalog.ts`).
+
+### Odluka koja je morala pasti prije prvog modela
+
+Task (korak 1), `architecture.md` i presedan iz taska 06 davali su tri različita odgovora na
+pitanje gdje modeli žive. Odlučeno: **jedan model po entitetu, u `core_domain`, sa `fromJson`** —
+[ADR-0006](../../docs/adr/0006-modeli-u-core-domain.md). Alternativa "entitet + DTO" bi od šest
+modela napravila dvanaest klasa uz istu funkcionalnost; alternativa "modeli u `core_api`" bi
+`Vertical` pretvorila u trajni izuzetak. `architecture.md` je ispravljen u istoj promjeni.
+
+**Posljedica za DoD:** stavka kaže "`freezed` … podešeni u `core_api`". Codegen je podešen u
+`core_domain`, jer su modeli tamo. Stavka je ispunjena po namjeri, ne po slovu.
+
+### Dokaz po stavkama
+
+| DoD | Dokaz |
+|---|---|
+| Codegen podešen i dokumentovan | `melos run codegen` / `codegen:watch`; svjež klon bez njega pada sa **95 grešaka**, sa njim `analyze` je čist |
+| Modeli kataloga | 39 testova u `core_domain`, payloadi prepisani iz `seed.sql` redova |
+| `Appointment.status` tipiziran | `AppointmentStatus` enum; test dokazuje da `'rescheduled'` daje `unknown` umjesto `CastError` |
+| Pet repozitorija vraćaju modele | test "nijedan repozitorij ne vraća `Map`" provjerava potpise na tipovima |
+| **Radi bez prijave** | `rest_public_catalog.ts`, **26 asercija** bez korisničkog tokena, nad šest tabela |
+| Greške mapirane | 15 testova; `ApiError` je `sealed`, pa test "switch je iscrpan bez `default` grane" ne bi ni kompajlirao da tip nedostaje |
+| Provideri, bez ručnog cachea | `packages/core_api/lib/src/providers.dart`, keširanje prepušteno `FutureProvider`-u |
+| `mocktail` testovi | 32 testa u `core_api` |
+| Nula `supabase` importa u `apps/*` | `grep` vraća samo `bootstrap.dart` u oba app-a |
+
+### Šta je CI uhvatio, a lokalna suita nije
+
+**Codegen je trebao svakom jobu koji kompajlira, ne samo analizi.** Prvi pokušaj ga je dodao samo u
+`analyze`; analiza i 97 testova su prošli, a **oba Android i oba iOS builda su pala** na
+`part 'appointment.freezed.dart': No such file or directory`. Build jobovi rade svoj `flutter pub
+get` u svom checkoutu i nemaju generisane fajlove. Popravljeno u sva četiri joba, plus u
+`tool/build_tenant.sh` — da lokalni build i CI ne mogu odlutati.
+
+**Format je prijavljivao pogrešan broj fajlova.** Lokalno `dart format $(git ls-files '*.dart')`
+javlja "31 fajl, 0 promijenjeno" dok novi fajlovi nisu `git add`-ovani. Svjež klon je pokazao 54
+fajla i 5 neformatiranih. Provjera nad `git ls-files` prije `git add` ne vidi ono što upravo pišeš.
+
+### Ostalo za sljedećeg
+
+- **`AppointmentRepository` ne postoji, namjerno.** `appointments` nema `anon` politiku; čitanje
+  termina traži prijavljenog korisnika, što dolazi sa Auth-om u Sprintu 2. `Appointment` model
+  postoji jer ga treba odgovor `book_appointment`-a u [tasku 11](11-booking-flow.md).
+- **Nijedan upis.** Ovaj sloj samo čita. `book_appointment` RPC se poziva u tasku 11; klijentski
+  `insert` ostaje zabranjen (`.claude/docs/security.md`).
+- **Integracioni smoke test iz koraka 4 nije pisan kao Dart test.** Bez Dockera lokalno on ne bi
+  imao gdje da se izvrši, pa je isti dokaz dobiven na nivou REST-a (`rest_public_catalog.ts`), gdje
+  je i vjerodostojniji — gađa stvarni PostgREST sa stvarnim politikama. Ako Docker dođe na razvojnu
+  mašinu, vrijedi dodati i Dart stranu.
+- **`riverpod_generator` i dalje nije uveden** (odgođen još u tasku 07); provideri su pisani rukom.
+- **Testovi ne dodiruju mrežu.** Mapiranje je dokazano lokalno, transport samo na CI-ju. To je
+  granica koju `melos run test` ne prelazi i ne treba je pogrešno čitati kao "repozitorij radi".

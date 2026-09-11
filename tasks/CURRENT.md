@@ -4,24 +4,27 @@ Puni task: [`tasks/sprint-1/08-core-api-repozitoriji.md`](sprint-1/08-core-api-r
 
 ## Status
 
-U toku
+Gotov — CI zelen ([Flutter 34620424824](https://github.com/htuco/salon-booking-platform/actions/runs/34620424824),
+[Supabase tests 34619433879](https://github.com/htuco/salon-booking-platform/actions/runs/34619433879)).
+PR [#9](https://github.com/htuco/salon-booking-platform/pull/9) je još draft — zatvara ga `/task complete`.
 
 ## Ciljevi
 
-- [ ] `freezed` + `json_serializable` + `build_runner` u `core_api`; `dart run build_runner build`
-      dokumentovan u `.claude/docs/workflows.md` i uvezan u `melos` skripte
-- [ ] Modeli javnog kataloga: `Salon`, `Service`, `Employee`, `EmployeeService`, `WorkingHour`,
-      `SalonSettings` — polja kroz `@JsonKey` prate `snake_case` iz šeme, bez preimenovanja napamet
-- [ ] `Appointment` sa `status` kao union tipom (`pending`/`confirmed`/`cancelled`/`completed`/`no_show`),
-      ne golim stringom
-- [ ] `SalonRepository.byId`, `ServiceRepository.forSalon`, `EmployeeRepository.forSalon`,
-      `WorkingHoursRepository.forSalon`, `SettingsRepository.forSalon` — vraćaju modele, nikad `Map`
-- [ ] Dokaz da sve radi kao `anon`, bez prijave (poziv bez tokena)
-- [ ] `core_api/src/errors/`: mrežna greška, `PostgrestException`, prazan rezultat, `409` konflikt;
-      ekran nikad ne hvata `PostgrestException`
-- [ ] Riverpod provider po repozitoriju, bez ručnog cache sloja
-- [ ] `mocktail` unit testovi: mapiranje iz stvarnog JSON payloada + svaka klasa grešaka
-- [ ] Nula `supabase` importa u `apps/*` van bootstrapa — **trenutno nije tačno**, v. Napomene
+- [x] `freezed` + `json_serializable` + `build_runner` podešeni — **u `core_domain`, ne `core_api`**
+      (posljedica odluke o sloju, v. ADR-0006); `melos run codegen` + `codegen:watch`, dokumentovano
+      u `.claude/docs/workflows.md`
+- [x] Modeli javnog kataloga: `Salon`, `Service`, `Employee`, `EmployeeService`, `WorkingHour`,
+      `SalonSettings` — `@JsonKey` prati `snake_case` iz šeme
+- [x] `Appointment` sa tipiziranim `status`-om — `AppointmentStatus` enum sa `unknown` fallbackom
+- [x] `SalonRepository.byId`, `ServiceRepository.forSalon`, `EmployeeRepository.forSalon`
+      (+ `serviceLinksForSalon`), `WorkingHoursRepository.forSalon`, `SettingsRepository.forSalon`
+- [x] Radi bez prijave — dokazano na CI-ju: `rest_public_catalog.ts`, **26 asercija bez
+      korisničkog tokena** ([run 34619433879](https://github.com/htuco/salon-booking-platform/actions/runs/34619433879))
+- [x] `core_api/src/errors/`: `ApiError` (`sealed`) → `NetworkError`, `NotFoundError`,
+      `ConflictError`, `ServerError`, `MappingError`; `guard()` obavija svaki poziv
+- [x] Riverpod provider po repozitoriju + `FutureProvider` po podatku, bez ručnog cache sloja
+- [x] `mocktail` unit testovi: mapiranje iz stvarnih seed payloada + svaka klasa grešaka
+- [x] Nula `supabase` importa u `apps/*` van bootstrapa — `supabaseClientProvider` prešao u `core_api`
 
 ## Napomene
 
