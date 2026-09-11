@@ -5,7 +5,7 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 | # | Task | Blokira | Procjena |
 |---|---|---|---|
 | [07](07-app-plumbing.md) ✅ | App plumbing — Riverpod, go_router, env, Supabase klijent | sve ostalo | 2 dana |
-| [08](08-core-api-repozitoriji.md) 🟡 | `core_api` — freezed modeli + repozitoriji | 10, 11, admin | 2–3 dana |
+| [08](08-core-api-repozitoriji.md) ✅ | `core_api` — freezed modeli + repozitoriji | 10, 11, admin | 2–3 dana |
 | [09](09-core-ui-theme-factory.md) | `core_ui` — theme factory po tenantu + tokeni | 10, 11 | 2 dana |
 | [10](10-client-home-runtime-branding.md) | Client home sa runtime brandingom | 11 | 1–2 dana |
 | [11](11-booking-flow.md) | Booking flow (4 koraka + success) | Sprint 2 | 3–4 dana |
@@ -30,6 +30,30 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 > Ostaje za sljedećeg: `riverpod_generator` je svjesno izostavljen, Supabase je dignut ali nije
 > pozvan protiv pravog backenda (nema naloga — prvi pravi poziv ide uz task 08), i `.arb`
 > stringove još nijedan ekran ne koristi.
+
+> **Task 08 je zatvoren** (✅) — `core_api` je sada stvarni sloj, ne skeleton. Pet repozitorija
+> (`Salon`, `Service`, `Employee` + veze, `WorkingHours`, `Settings`), sedam modela u `core_domain`,
+> i `ApiError` kao `sealed` hijerarhija koju ekran može razlikovati.
+>
+> Dokazano na CI-ju: [`Flutter` run 34620424824](https://github.com/htuco/salon-booking-platform/actions/runs/34620424824)
+> (analiza, format, **97 testova**, oba Android APK-a, oba iOS builda) i
+> [`Supabase tests` run 34619433879](https://github.com/htuco/salon-booking-platform/actions/runs/34619433879),
+> gdje novi `rest_public_catalog.ts` sa **26 asercija bez korisničkog tokena** dokazuje da javni
+> katalog stvarno radi prije prijave — to je jedina DoD stavka koju lokalna suita ne može dokazati.
+>
+> **Odluka koja je morala pasti prije prvog modela:** task, `architecture.md` i presedan iz taska 06
+> davali su tri različita odgovora na pitanje gdje modeli žive. Odlučeno — jedan model po entitetu,
+> u `core_domain`, sa `fromJson` ([ADR-0006](../../docs/adr/0006-modeli-u-core-domain.md)).
+> `architecture.md` je ispravljen u istoj promjeni.
+>
+> **Codegen ulazi prvi put u repo** i `*.freezed.dart`/`*.g.dart` **nisu** u gitu — suprotno od
+> `tenants.g.dart`, koji jeste (ADR-0002). `.gitignore` to razdvaja eksplicitno. CI je odmah uhvatio
+> grešku koju lokalna suita nije: codegen treba **svakom** jobu koji kompajlira, ne samo `analyze`-u
+> — bez toga prođu analiza i svih 97 testova, a padnu sva četiri builda.
+>
+> Ostaje za sljedećeg: nema `AppointmentRepository` (nema `anon` politike nad `appointments` — ide uz
+> Auth u Sprintu 2), nema nijednog upisa (`book_appointment` se zove u tasku 11), i testovi ne
+> dodiruju mrežu — mapiranje je dokazano lokalno, transport samo na CI-ju.
 
 ## Redoslijed koji nije očigledan
 
