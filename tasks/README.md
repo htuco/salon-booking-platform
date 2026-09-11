@@ -61,7 +61,9 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > `VerticalRepository` u `core_api`, `verticalProvider` u `apps/client`. Placeholder ekran uzima
 > CTA iz `vertical.terms`, ne iz literala.
 >
-> Dokazano lokalno: `melos run analyze` (5/5 paketa čisto), `dart format --set-exit-if-changed`
+> Dokazano na CI-ju ([run 34544339115](https://github.com/htuco/salon-booking-platform/actions/runs/34544339115)
+> — uz analizu i testove prolaze i oba Android APK-a i oba iOS builda) i lokalno:
+> `melos run analyze` (5/5 paketa čisto), `dart format --set-exit-if-changed`
 > (0 changed), `melos run test` — **32 testa PASS**. Ključni test mijenja terminologiju na istoj
 > instanci app-e i pokazuje da je mehanizam runtime, ne compile-time; drugi parsira **stvarni**
 > `supabase/seed.sql` i pada ako seed i Dart model odu u različitim smjerovima.
