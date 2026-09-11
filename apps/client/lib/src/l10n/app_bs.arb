@@ -29,5 +29,97 @@
   "screenNotFound": "Stranica ne postoji",
   "@screenNotFound": {
     "description": "errorBuilder u go_routeru — nepoznat URL, najčešće na webu."
-  }
+  },
+
+  "workingHours": "Radno vrijeme",
+  "@workingHours": {
+    "description": "Naslov sekcije sa radnim vremenom. Isto u svakoj vertikali — radno vrijeme je radno vrijeme i kod barbera i kod zubara."
+  },
+
+  "location": "Lokacija",
+  "@location": {
+    "description": "Naslov sekcije sa adresom salona."
+  },
+
+  "contact": "Kontakt",
+  "@contact": {
+    "description": "Naslov sekcije sa telefonom, mailom i društvenim mrežama."
+  },
+
+  "closed": "Zatvoreno",
+  "@closed": {
+    "description": "Dan u kojem salon ne radi, u listi radnog vremena."
+  },
+
+  "openUntil": "Otvoreno do {time}",
+  "@openUntil": {
+    "description": "Živi status u heroju kad salon trenutno radi.",
+    "placeholders": {
+      "time": { "type": "String", "example": "20:00" }
+    }
+  },
+
+  "closedOpensAt": "Zatvoreno · otvara u {time}",
+  "@closedOpensAt": {
+    "description": "Živi status kad je salon zatvoren, ali danas još otvara.",
+    "placeholders": {
+      "time": { "type": "String", "example": "09:00" }
+    }
+  },
+
+  "closedToday": "Danas zatvoreno",
+  "@closedToday": {
+    "description": "Živi status kad salon danas više ne otvara."
+  },
+
+  "call": "Pozovi",
+  "@call": {
+    "description": "Akcija koja otvara tel: link."
+  },
+
+  "openInMaps": "Otvori u mapama",
+  "@openInMaps": {
+    "description": "Akcija koja otvara adresu salona u mapama."
+  },
+
+  "instagram": "Instagram",
+  "@instagram": {
+    "description": "Labela dugmeta ka Instagram profilu salona."
+  },
+
+  "facebook": "Facebook",
+  "@facebook": {
+    "description": "Labela dugmeta ka Facebook stranici salona."
+  },
+
+  "salonUnavailable": "Salon trenutno nije dostupan.",
+  "@salonUnavailable": {
+    "description": "Greška na home ekranu kad podaci salona ne stignu — ide uz retry dugme."
+  },
+
+  "dayMondayFriday": "Ponedjeljak – Petak",
+  "@dayMondayFriday": {
+    "description": "Sažeti raspon dana kad su ponedjeljak do petak isti."
+  },
+
+  "dayMonday": "Ponedjeljak",
+  "@dayMonday": { "description": "Dan u sedmici, lista radnog vremena." },
+
+  "dayTuesday": "Utorak",
+  "@dayTuesday": { "description": "Dan u sedmici, lista radnog vremena." },
+
+  "dayWednesday": "Srijeda",
+  "@dayWednesday": { "description": "Dan u sedmici, lista radnog vremena." },
+
+  "dayThursday": "Četvrtak",
+  "@dayThursday": { "description": "Dan u sedmici, lista radnog vremena." },
+
+  "dayFriday": "Petak",
+  "@dayFriday": { "description": "Dan u sedmici, lista radnog vremena." },
+
+  "daySaturday": "Subota",
+  "@daySaturday": { "description": "Dan u sedmici, lista radnog vremena." },
+
+  "daySunday": "Nedjelja",
+  "@daySunday": { "description": "Dan u sedmici, lista radnog vremena." }
 }
