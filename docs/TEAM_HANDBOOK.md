@@ -112,7 +112,7 @@ Repo je opremljen tako da nova sesija — tvoja ili kolegina — može krenuti b
 
 | Ograničenje | Posljedica |
 |---|---|
-| Razvojna mašina **nema Docker** | `supabase start` ne radi lokalno; `supabase/` promjene se dokazuju kroz CI workflow `Supabase tests` |
+| CI ide **samo na push u `main`** | Svakodnevni dokaz je lokalan: `melos run analyze`, `melos run test`, `./tool/test_supabase.sh`. CI dodaje dokaz iz čistog checkouta kad rad ulazi u `main` |
 | iOS traži **macOS + Xcode** | `tool/gen_ios_flavors.sh` i iOS build se ne mogu pokrenuti na Windowsu; dokaz ide na CI job `build-ios` ili na macOS mašinu |
 | Instalacija dva APK-a traži **emulator/uređaj** | API 36 x86_64 je verifikovan; bez uređaja ostaje `aapt2 dump badging` kao djelimičan dokaz |
 
