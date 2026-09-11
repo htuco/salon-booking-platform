@@ -35,6 +35,9 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
+  # Logo i cover salona se ucitavaju sa svakim otvaranjem ekrana; bez kesa to je
+  # isti download na svakom hladnom startu i vidljiv prazan okvir umjesto brenda.
+  cached_network_image: ^3.4.1
   cupertino_icons: ^1.0.8
   core_api:
     path: ../../packages/core_api
@@ -50,6 +53,9 @@ dependencies:
   go_router: ^14.6.2
   intl: any
   supabase_flutter: ^2.8.0
+  # `tel:`, `mailto:`, mape i profili na drustvenim mrezama sa home ekrana
+  # (`docs/02 §3`). Bez ovoga je sekcija kontakta spisak teksta koji se ne moze pozvati.
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:

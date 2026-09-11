@@ -26,23 +26,43 @@ void main() {
     testWidgets('svaki tekst ima WCAG AA kontrast — ${tenant.flavor}', (
       tester,
     ) async {
-      await tester.pumpWidget(_app(tenant));
-      await tester.pumpAndSettle();
+      // Salon mora stici, inace ekran ostane na kosturu i test ne izmjeri nijedan tekst.
+      await tester.pumpWidget(
+        _app(tenant, salon: Future.value(_salon(tenant))),
+      );
+      // `pump`, ne `pumpAndSettle`: od taska 10 `/` je home ekran, a njegov skeleton
+      // pulsira u nedogled — `pumpAndSettle` bi istekao i kad je sve ispravno.
+      await tester.pump();
+      await tester.pump();
+      // Prelaz preko trajanja Material animacije: CTA krene kao onemogucen (salon jos
+      // nije stigao) i **animira** boju teksta u enabled stanje. Mjereno na pola te
+      // animacije, tekst ima 0.38 alpha i test prijavi 2.13:1 na dugmetu koje je
+      // zapravo 8:1. To je mjerenje u pogresnom trenutku, ne greska u temi.
+      await tester.pump(const Duration(milliseconds: 400));
 
       final theme = Theme.of(tester.element(find.byType(Scaffold)));
-      final background = theme.colorScheme.surface;
-      final fallback = theme.textTheme.bodyMedium!.color!;
 
-      for (final text in tester.widgetList<Text>(find.byType(Text))) {
-        final color = text.style?.color ?? fallback;
+      for (final element in find.byType(Text).evaluate()) {
+        final text = element.widget as Text;
+        // Boja teksta bez `style.color` dolazi iz `DefaultTextStyle`-a nad njim, ne iz
+        // `textTheme.bodyMedium`. Razlika je vidljiva baš na CTA dugmetu: `FilledButton`
+        // boju daje kroz `foregroundColor`, pa bi fallback na temu mjerio `onSurface`
+        // na `primary` pozadini i prijavio čitljivo dugme kao neispravno.
+        final color =
+            text.style?.color ?? DefaultTextStyle.of(element).style.color!;
+        // Pozadina se traži **iza konkretnog teksta**, ne uzima kao `surface` za cijeli
+        // ekran. Home ekran ima tekst na obojenim površinama — inicijali salona na
+        // `primaryContainer`, živi status na `status.info` — i mjerenje svega prema
+        // `surface`-u bi ih oborilo iako su čitljivi. Ovo je ista greška kao mjerenje
+        // brand teksta na `surface`-u dok kartica stoji na `surfaceContainer` (task 09).
+        final background = _pozadinaIza(element) ?? theme.colorScheme.surface;
         final ratio = contrastRatio(color, background);
         expect(
           ratio,
           greaterThan(4.5),
           reason:
               'Tekst "${text.data}" ima kontrast ${ratio.toStringAsFixed(2)}:1 '
-              'prema pozadini — ispod WCAG AA. Vjerovatno `Theme.of` iz '
-              'konteksta iznad MaterialApp-a.',
+              'prema svojoj pozadini — ispod WCAG AA.',
         );
       }
     });
@@ -90,7 +110,8 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
 
       final theme = _temaEkrana(tester);
       expect(theme.colorScheme.primary.toARGB32(), 0xFF0B6E4F);
@@ -111,7 +132,8 @@ void main() {
     await tester.pumpWidget(
       _app(tenant, salon: Future.value(_salon(tenant, primary: 'nije-boja'))),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump();
 
     expect(tester.takeException(), isNull);
     final theme = _temaEkrana(tester);
@@ -138,6 +160,12 @@ void main() {
             '00000000-0000-0000-0000-000000000000',
           ),
           salonProvider.overrideWith((ref) => _nikadNeStigne),
+          servicesProvider.overrideWith((ref) async => const <Service>[]),
+          employeesProvider.overrideWith((ref) async => const <Employee>[]),
+          workingHoursProvider.overrideWith(
+            (ref) async => const <WorkingHour>[],
+          ),
+          verticalProvider.overrideWith((ref) async => Vertical.fallback),
         ],
         child: const SalonClientApp(),
       ),
@@ -147,6 +175,40 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(MaterialApp), findsOneWidget);
   });
+}
+
+/// Neprozirna pozadina najbliža datom tekstu, tražena penjanjem uz stablo.
+///
+/// Postoji jer home ekran ima tekst na obojenim površinama: inicijali salona u logo
+/// krugu (`primaryContainer`), živi status u `StatusBadge`-u (`status.info`), cijena na
+/// kartici (`surfaceContainerHighest`). Test koji bi sve mjerio prema `surface`-u bi ih
+/// prijavio kao neispravne, a test koji bi ih nabrajao kao izuzetke bi prestao da štiti
+/// čim neko doda četvrtu obojenu površinu.
+///
+/// `null` znači da iznad teksta nema obojenog pretka — pozivalac tada uzima `surface`.
+Color? _pozadinaIza(Element element) {
+  Color? nadjena;
+
+  element.visitAncestorElements((ancestor) {
+    final widget = ancestor.widget;
+
+    final boja = switch (widget) {
+      Material(:final color) => color,
+      ColoredBox(:final color) => color,
+      Container(:final color) => color,
+      DecoratedBox(decoration: final BoxDecoration d) => d.color,
+      _ => null,
+    };
+
+    // Prozirna pozadina ne skriva ono ispod nje, pa se traženje nastavlja dalje.
+    if (boja != null && boja.a > 0) {
+      nadjena = boja;
+      return false;
+    }
+    return true;
+  });
+
+  return nadjena;
 }
 
 /// Tema onakva kakvu **ekran** vidi.
@@ -189,9 +251,15 @@ Widget _app(TenantConfig tenant, {Future<Salon>? salon}) => ProviderScope(
       ),
     ),
     // `currentSalonIdProvider` se override-uje direktno umjesto kroz `coreApiOverrides`:
-    // ovdje nema `Supabase.instance`, pa repozitorij ne smije ni nastati.
+    // ovdje nema `Supabase.instance`, pa repozitorij ne smije ni nastati. Isto vrijedi
+    // za ostale podatkovne providere otkad je `/` pravi ekran (task 10) — svaki od njih
+    // bi inace napravio repozitorij i posegnuo za `Supabase.instance`.
     currentSalonIdProvider.overrideWithValue(tenant.salonId),
     salonProvider.overrideWith((ref) => salon ?? _nikadNeStigne),
+    servicesProvider.overrideWith((ref) async => const <Service>[]),
+    employeesProvider.overrideWith((ref) async => const <Employee>[]),
+    workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
+    verticalProvider.overrideWith((ref) async => Vertical.fallback),
   ],
   child: const SalonClientApp(),
 );

@@ -1,6 +1,8 @@
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
 import 'package:client/src/core/router/app_router.dart';
+import 'package:core_api/core_api.dart';
+import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,11 +16,29 @@ const _env = AppEnv(
 
 ProviderContainer _container() {
   final container = ProviderContainer(
-    overrides: [appEnvProvider.overrideWithValue(_env)],
+    overrides: [
+      appEnvProvider.overrideWithValue(_env),
+      // Od taska 10 `/` je home ekran koji cita podatke. Ovaj fajl testira rute, ne
+      // sadrzaj, pa provideri vracaju prazno — ali **moraju** biti override-ovani,
+      // inace repozitorij posegne za `Supabase.instance` kojeg u testu nema.
+      currentSalonIdProvider.overrideWithValue(_env.salonId),
+      salonProvider.overrideWith((ref) async => _salon),
+      servicesProvider.overrideWith((ref) async => const <Service>[]),
+      employeesProvider.overrideWith((ref) async => const <Employee>[]),
+      workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
+      verticalProvider.overrideWith((ref) async => Vertical.fallback),
+    ],
   );
   addTearDown(container.dispose);
   return container;
 }
+
+const _salon = Salon(
+  id: '550e8400-e29b-41d4-a716-446655440000',
+  name: 'Barber Studio Vitez',
+  slug: 'barberstudiovitez',
+  city: 'Vitez',
+);
 
 Widget _app(ProviderContainer container) => UncontrolledProviderScope(
   container: container,
@@ -75,7 +95,10 @@ void main() {
 
       final container = _container();
       await tester.pumpWidget(_app(container));
-      await tester.pumpAndSettle();
+      // `pump` umjesto `pumpAndSettle`: home ekran na `/` ima skeleton puls koji nikad
+      // ne stane, pa bi `pumpAndSettle` istekao i kad je router ispravan.
+      await tester.pump();
+      await tester.pump();
 
       expect(
         container.read(appRouterProvider).state.uri.path,
@@ -93,7 +116,10 @@ void main() {
     testWidgets('go na /book/slot mijenja i ekran i putanju', (tester) async {
       final container = _container();
       await tester.pumpWidget(_app(container));
-      await tester.pumpAndSettle();
+      // `pump` umjesto `pumpAndSettle`: home ekran na `/` ima skeleton puls koji nikad
+      // ne stane, pa bi `pumpAndSettle` istekao i kad je router ispravan.
+      await tester.pump();
+      await tester.pump();
 
       final router = container.read(appRouterProvider);
       router.go(ClientRoute.bookSlot.path);
@@ -112,7 +138,10 @@ void main() {
     ) async {
       final container = _container();
       await tester.pumpWidget(_app(container));
-      await tester.pumpAndSettle();
+      // `pump` umjesto `pumpAndSettle`: home ekran na `/` ima skeleton puls koji nikad
+      // ne stane, pa bi `pumpAndSettle` istekao i kad je router ispravan.
+      await tester.pump();
+      await tester.pump();
 
       final router = container.read(appRouterProvider);
       router.go('/appointments/abc-123');
@@ -127,7 +156,10 @@ void main() {
     ) async {
       final container = _container();
       await tester.pumpWidget(_app(container));
-      await tester.pumpAndSettle();
+      // `pump` umjesto `pumpAndSettle`: home ekran na `/` ima skeleton puls koji nikad
+      // ne stane, pa bi `pumpAndSettle` istekao i kad je router ispravan.
+      await tester.pump();
+      await tester.pump();
 
       container.read(appRouterProvider).go('/ne-postoji');
       await tester.pumpAndSettle();

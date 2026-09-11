@@ -40,7 +40,10 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
   komponente primaju gotove stringove ("45 min", "25 KM"), pa isti paket služi i klijentskoj i
   admin aplikaciji. Formatiranje zna ekran, koji jedini poznaje jezik i vertikalu.
 - **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
-  (`env`, `router`, `theme`) i `lib/src/l10n/`.
+  (`env`, `router`, `theme`) i `lib/src/l10n/`. Feature folder drži ekran, njegove privatne
+  widgete u `widgets/` i logiku koja ne pripada ni domenu ni UI-ju — formatiranje cijene i
+  vremena (zna jezik), izračun koji bi se inače sakrio u `build`. `features/home/` je prvi takav
+  i uzor za ostale.
 
 Poštuj smjer zavisnosti gore: `core_domain` ne smije uvesti `core_api`, a `core_ui` ne smije uvesti
 nijedan repozitorij.
@@ -271,3 +274,33 @@ Tri odluke koje se ne vide iz potpisa:
 
 `x-salon-id` se postavlja **jednom**, na klijentu, a ne u repozitorijima: zaboravljen header ne
 daje grešku nego prazan rezultat. Admin app ga ne šalje — v. `ADR-0003` i `.claude/docs/security.md`.
+
+## Kako podaci stižu do ekrana
+
+```
+Postgres (RLS)  →  repozitorij  →  FutureProvider  →  ref.watch  →  widget
+                   core_api         core_api          ekran
+```
+
+Ekran **nikad ne zove repozitorij**. `ref.watch(salonProvider)` je cijeli njegov pristup podacima;
+repozitorij i `SupabaseClient` postoje ispod providera i ekran ne zna za njih. Test time dobija
+jednu tačku presretanja — override providera — umjesto lažiranja PostgREST-a.
+
+Tri pravila koja je uspostavio prvi ekran (`features/home/`, task 10):
+
+- **Svaki izvor se čita zasebno i nijedan ne blokira ostale.** Salon koji se prikazao dok čeka
+  listu usluga je upotrebljiv; ekran koji čeka sve odjednom je prazan onoliko dugo koliko traje
+  najsporiji upit.
+- **Tri stanja prije sretnog slučaja.** Skeleton (ne spinner), greška sa retryjem koji stvarno
+  ponavlja upit (`ref.invalidate`), i sakrivena sekcija umjesto praznog naslova.
+- **Sekcija se sakriva i kad njen upit padne**, ne samo kad je prazna. Ekran čija je glavna svrha
+  dugme "Zakaži" ne smije pasti zato što katalog nije stigao.
+
+Tekst ima dva izvora i granica je stroga: ono što se mijenja po vertikali ide kroz
+`vertical.terms` (CTA, imena sekcija), a ono što je isto u svakoj kroz `.arb` (dani, greške,
+dugmad). Literal u ekranu ne pripada nijednom.
+
+**Vizuelni dokaz bez backenda**: `apps/client/lib/demo_main.dart` je alternativni entry point koji
+puni iste providere podacima iz `supabase/seed.sql`. Nije production kod — store build ide kroz
+`lib/main.dart` — ali dozvoljava da se ekran otvori i snimi na mašini bez Supabase pristupa
+(`flutter run -d chrome -t lib/demo_main.dart --dart-define=SALON_ID=…`).
