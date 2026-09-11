@@ -16,12 +16,17 @@ od "nije provjereno".
 
 | Ne radi | Zašto | Gdje se onda dokazuje |
 |---|---|---|
-| `supabase start`, `supabase db reset`, `supabase test db` | nema Dockera na razvojnoj mašini | CI workflow `Supabase tests` |
+| ~~`supabase start` / `test db`~~ | **radi lokalno** — Docker Desktop je instaliran | `./tool/test_supabase.sh` |
 | iOS build, `tool/gen_ios_flavors.sh` | traži macOS + Xcode | macOS mašina ili CI job `build-ios` |
 | instalacija APK-a, snimak ekrana | traži emulator/uređaj | lokalno sa `adb`, ili ručno |
 
 Kad naiđeš na jedno od ovih, to nije razlog da se preskoči dokaz — to je razlog da se dokaz prebaci
 na CI i da se u sažetku napiše "čeka CI job X".
+
+**Supabase se od 12.09.2026. dokazuje lokalno:** `./tool/test_supabase.sh` diže stack, resetuje bazu
+i pokrene pgTAP plus oba REST testa (66 + 24 + 26 asercija, ~2 min). CI ide **samo na push u `main`**
+i dodaje jedino dokaz iz čistog checkouta. "Čeka CI" više nije prihvatljiv status za `supabase/`
+promjenu — suite se može pokrenuti odmah.
 
 ## Dart / widget promjena
 

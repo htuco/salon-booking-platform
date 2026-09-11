@@ -22,9 +22,21 @@ sistema gdje greška ne pravi bug nego curi tuđe podatke.
 
 ## Kako se ovdje dokazuje
 
-Na razvojnoj mašini **nema Dockera**, pa `supabase start` ne radi lokalno. Promjene se dokazuju
-kroz CI workflow `Supabase tests` (pgTAP + Deno REST test sa dva stvarna JWT-a) — dok taj job nije
-zelen, u sažetku piše "napisano, čeka CI", ne "radi".
+Lokalno, prije commita:
+
+```bash
+supabase start
+supabase test db                                        # pgTAP
+eval "$(supabase status -o env)"
+deno run --allow-env --allow-net tests/rest_isolation.ts        # dva stvarna JWT-a
+deno run --allow-env --allow-net tests/rest_public_catalog.ts   # bez tokena
+```
+
+Dok ta suite nije prošla, u sažetku piše "napisano, nije pokrenuto", ne "radi".
+
+CI workflow `Supabase tests` pokriva isto, ali **samo na push u `main`**, i dodaje jedino što
+lokalno ne možeš: čist checkout. Izlaz `supabase status -o env` sadrži service role ključ —
+nikad u commit ni u sažetak.
 
 **pgTAP test koji ne pada kad se politika ukloni ne testira ništa.** Piši negativan slučaj.
 

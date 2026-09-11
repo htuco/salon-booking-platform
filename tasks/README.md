@@ -20,10 +20,10 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > **Task 02 je odrađen i verifikovan** — migracije, RLS, seed, pgTAP i Deno REST test prolaze na CI-ju
 > ([run 34417077084](https://github.com/htuco/salon-booking-platform/actions/runs/34417077084)): 38 pgTAP testova PASS,
 > 24 REST asercije sa dva stvarna JWT-a. Tenant izolacija je dokazana protiv žive baze, ne samo napisana.
-> Workflow ponavlja dokaz na svaki PR nad `supabase/`.
+> Workflow ponavlja dokaz na push u `main` nad `supabase/`.
 >
-> Na razvojnoj mašini nema Dockera, pa `supabase start` ne radi lokalno — dok se ne instalira Docker Desktop,
-> `supabase/` promjene se dokazuju kroz CI, ne lokalno.
+> Od 12.09.2026. `supabase/` promjene se dokazuju **lokalno** kroz `./tool/test_supabase.sh`
+> (Docker Desktop je instaliran). CI ponavlja isti dokaz na push u `main`, iz čistog checkouta.
 
 
 > **Task 03 je zatvoren** (✅) — Android i iOS flavori dokazani na artefaktima, ikone po flavoru rade.

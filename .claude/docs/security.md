@@ -138,5 +138,5 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
    koji je promišljen: izvedena vremena, bez podataka o klijentu.)
 6. Je li dodan pgTAP test koji **pada** ako se politika ukloni? Politika bez negativnog testa je
    pretpostavka.
-7. Je li workflow `Supabase tests` zelen na PR-u? Lokalno se ne može pokrenuti bez Dockera — v.
-   `.claude/docs/workflows.md`.
+7. Je li suite prošla lokalno (`supabase start && supabase test db` + dva Deno REST testa)? Na
+   `main`-u to ponovi workflow `Supabase tests` iz čistog checkouta — v. `.claude/docs/workflows.md`.

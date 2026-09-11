@@ -1,15 +1,12 @@
 name: Flutter
 
+# Okidac je SAMO push na main (+ rucni trigger). Na PR-u se analiza i testovi
+# dokazuju lokalno (`melos run analyze`, `melos run test`); CI ostaje kao dokaz
+# iz cistog checkouta na tacki gdje rad ulazi u main. Razlog nije samo trosak:
+# lokalni build koristi postojeci build/ i generisane *.g.dart koji su u
+# .gitignore, pa ne moze dokazati da codegen radi na praznom klonu.
+# v. .claude/docs/workflows.md.
 on:
-  pull_request:
-    paths:
-      - 'apps/**'
-      - 'packages/**'
-      - 'tenants/**'
-      - 'tool/**'
-      - 'pubspec.yaml'
-      - 'analysis_options.yaml'
-      - '.github/workflows/flutter-build.yml'
   push:
     branches: [main]
     paths:
@@ -19,6 +16,7 @@ on:
       - 'tool/**'
       - 'pubspec.yaml'
       - 'analysis_options.yaml'
+      - '.github/workflows/flutter-build.yml'
   workflow_dispatch:
     inputs:
       mode:

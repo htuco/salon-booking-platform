@@ -9,8 +9,9 @@ Sve komande se pokreću iz roota repoa osim gdje ne piše drugačije.
 | Flutter (stable) + Dart SDK ≥ 3.13 | sve u `apps/` i `packages/` | CI koristi `subosito/flutter-action@v2`, kanal `stable` |
 | JDK 17 | Android build | CI: `temurin` 17 |
 | Node + npm | web prototip i lefthook | `npm i` |
-| Supabase CLI | migracije i testovi | **traži Docker za `supabase start`** |
-| Docker | lokalni Supabase stack | **nije instaliran na razvojnoj mašini** — v. niže |
+| Supabase CLI | migracije i testovi | `brew install supabase/tap/supabase` |
+| Deno | dva REST testa izolacije | `brew install deno` |
+| Docker Desktop | lokalni Supabase stack | instaliran i radi — v. `./tool/test_supabase.sh` |
 | Xcode (macOS) | iOS flavori | `xcodeproj` gem dolazi sa CocoaPodsom |
 | Android SDK + emulator | instalacija dva APK-a | system image API 36 x86_64 je verifikovan |
 
@@ -163,7 +164,7 @@ postavljeni.
 ## Supabase
 
 ```sh
-supabase start                 # traži Docker
+supabase start                 # traži Docker (Docker Desktop je instaliran)
 supabase db reset              # primijeni sve migracije + seed.sql iz nule
 supabase test db               # pgTAP, unutar rollback transakcije
 supabase migration new <opis>  # novi migracioni fajl
@@ -180,21 +181,28 @@ deno run --allow-env --allow-net supabase/tests/rest_isolation.ts
 Skripta odbija remote host, pravi dva stvarna Auth korisnika, uzima dva JWT-a i briše samo svoje
 fixture.
 
-### Docker ne postoji na razvojnoj mašini
+### Cijela suite jednom komandom
 
-`supabase start` lokalno ne radi. Zato:
+```sh
+./tool/test_supabase.sh              # start + db reset + pgTAP + oba REST testa
+./tool/test_supabase.sh --no-reset   # baza je već svježa
+supabase stop                        # kad završiš
+```
 
-- **Promjene u `supabase/` se dokazuju kroz CI workflow `Supabase tests`**, koji na svaki PR nad
-  `supabase/migrations|seed.sql|tests|config.toml` (i nad `packages/core_api/`) pokrene cijeli
-  stack, `supabase test db` i oba REST testa, pa ugasi stack.
+Zadnji pun prolaz: **66 pgTAP testova, 24 REST asercije sa dva stvarna JWT-a, 26 asercija javnog
+kataloga bez tokena.** Traje oko dvije minute.
+
+**Zamka koja košta pola sata:** `supabase start` nad postojećim volumeom diže bazu **iz backupa** i
+migracije se ne primjenjuju. Testovi tada padnu na `relation "public.users" does not exist` i
+izgleda kao da je šema pokvarena, a nije — samo je stara. `supabase db reset` je jedini način da se
+dokaže da migracije i seed prolaze od nule. Skripta ga zato zove po defaultu.
+
+- **Napisana politika nije dokazana politika.** Dok suite nije prošla, u sažetku piše "napisano,
+  nije pokrenuto", ne "radi".
 - **Isto vrijedi za `core_api` repozitorije.** Da li upit stvarno prolazi kao `anon` i da li kolone
-  koje traži postoje ne može se dokazati unit testom — mapiranje se testira lokalno, transport samo
-  na CI-ju (`supabase/tests/rest_public_catalog.ts`). Zato je `packages/core_api/**` u okidačima tog
-  workflowa: lista kolona u tom testu je kopija one iz repozitorija.
-- **Napisana politika nije dokazana politika.** Dok taj job nije zelen, u sažetku piše "napisano,
-  čeka CI", ne "radi".
-- Ako instaliraš Docker Desktop, dopuni ovaj odjeljak i `tasks/README.md` — to je stanje koje se
-  mijenja, ne trajna činjenica.
+  koje traži postoje ne dokazuje unit test — lista kolona u `rest_public_catalog.ts` je kopija one
+  iz repozitorija, pa promjena u `core_api` traži ponovni prolaz.
+- **Izlaz `supabase status -o env` sadrži service role ključ.** Nikad u commit ni u sažetak.
 
 ## Web prototip
 
@@ -208,11 +216,18 @@ Rute prate `docs/01 §12`; login ekran ima demo prekidače kroz query parametre
 
 ## CI
 
+**CI se okida samo na push u `main`** (plus ručni `workflow_dispatch`) — ne na PR commitove.
+Svakodnevni dokaz je lokalan: `melos run analyze`, `melos run test`, `./tool/test_supabase.sh`.
+
+Razlog nije samo trošak minuta. Lokalni build koristi postojeći `build/` i generisane `*.g.dart`
+koji su u `.gitignore` — zato ne može dokazati da codegen radi na praznom klonu. To je jedina stvar
+koju CI daje a lokalno se ne može dobiti, i treba tačno tamo gdje rad ulazi u `main`.
+
 | Workflow | Okida se na | Dokazuje |
 |---|---|---|
-| `Flutter` (`.github/workflows/flutter-build.yml`) | `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · **codegen** · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
+| `Flutter` (`.github/workflows/flutter-build.yml`) | **push u `main`** nad `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · **codegen** · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
 | `Flutter` → job `release-artifacts` | **ručni trigger** (`workflow_dispatch`) | AAB za oba tenanta kroz `build_tenant.sh`, `versionCode` iz `github.run_number`, provjera `applicationId` i `versionCode` kroz `bundletool dump manifest`, artefakt se čuva 30 dana |
-| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) |
+| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | **push u `main`** nad `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) |
 
 Oba imaju `concurrency` sa `cancel-in-progress`, pa novi push otkazuje stari run iste grane.
 

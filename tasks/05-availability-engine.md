@@ -38,7 +38,7 @@ Ako se ovo piše dok se paralelno pravi Flutter ekran, prirodno je "privremeno" 
 ## Status (2026-09-11) — ✅ zatvoren
 
 Migracija `20260911090000_availability_engine.sql` + `supabase/tests/002_availability.test.sql`.
-Dokaz je CI, jer lokalno nema Dockera:
+Dokaz je bio CI, jer lokalno tada nije bilo Dockera *(od 12.09.2026. radi lokalno: `./tool/test_supabase.sh`)*:
 [run 34542304820](https://github.com/htuco/salon-booking-platform/actions/runs/34542304820) —
 `All tests successful. Files=2, Tests=66, Result: PASS` (38 postojećih + 28 novih), plus REST
 izolacija sa dva stvarna JWT-a.
