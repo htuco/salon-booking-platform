@@ -7,7 +7,7 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 | [07](07-app-plumbing.md) ✅ | App plumbing — Riverpod, go_router, env, Supabase klijent | sve ostalo | 2 dana |
 | [08](08-core-api-repozitoriji.md) ✅ | `core_api` — freezed modeli + repozitoriji | 10, 11, admin | 2–3 dana |
 | [09](09-core-ui-theme-factory.md) ✅ | `core_ui` — theme factory po tenantu + tokeni | 10, 11 | 2 dana |
-| [10](10-client-home-runtime-branding.md) 🟡 | Client home sa runtime brandingom | 11 | 1–2 dana |
+| [10](10-client-home-runtime-branding.md) ✅ | Client home sa runtime brandingom | 11 | 1–2 dana |
 | [11](11-booking-flow.md) | Booking flow (4 koraka + success) | Sprint 2 | 3–4 dana |
 
 **Ukupno: ~10–13 radnih dana**, uz preduslov da su [05](../05-availability-engine.md) i [06](../06-vertical-pack.md) iz Sprinta 0 gotovi — 11 bez 05 nema šta prikazati, a 10 bez 06 piše tekst koji se kasnije prepisuje.
@@ -78,6 +78,37 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 > sedam komponenti iz [02 §16](../../docs/02-user-flows-wireframes.md) namjerno nije napisano dok ih
 > ekran ne zatraži. Detalji: [09-core-ui-theme-factory.md](09-core-ui-theme-factory.md#status-2026-09-11--✅-zatvoren).
 
+
+> **Task 10 je zatvoren** (✅) — `/` je prvi pravi ekran. `HomeScreen` u
+> `apps/client/lib/src/features/home/` slaže hero, usluge, tim, radno vrijeme, kontakt i sticky
+> CTA iz `core_ui` komponenti; čita isključivo providere, nigdje repozitorij.
+>
+> **Dokazano slikom, po prvi put u projektu:** isti web build, dva `SALON_ID`-a, razlika u sve tri
+> dimenzije — ime, boje (zlatna tamna naspram roze svijetle) i terminologija ("Zakaži termin"
+> naspram "Rezerviši termin"). Screenshotovi su u
+> [`docs/screenshots/`](../../docs/screenshots/) i u status bloku taska. Uz to **165 testova PASS**
+> (bilo 140) i čista analiza u svih pet paketa.
+>
+> **Screenshot je našao grešku koju nijedan test nije mogao:** živi status u heroju je koristio
+> `StatusBadge(tone: info)`, a statusne boje su namjerno brand-neutralne — fiksna plava preko
+> zlatnog i roze brenda. Status sada ide u `primaryContainer` i prati tenanta. To je isti obrazac
+> kao u tasku 07: zelena suita, a greška se vidi tek kad se stvar otvori.
+>
+> **Kontrast test je usput ispravljen na dva mjesta** gdje je mjerio pogrešne parove: tekst na
+> obojenoj površini poređen sa `surface`-om (inicijali salona, živi status) i CTA mjeren usred
+> Material prelaza — 2.13:1 na dugmetu koje je zapravo 8.07:1. Sada traži stvarnu pozadinu iza
+> svakog teksta i čeka kraj animacije.
+>
+> **`pumpAndSettle` više ne radi na ekranu sa skeletonom** — pulsira dok je vidljiv, pa test
+> istekne i kad je sve ispravno. Svi testovi koji podižu `/` prešli su na `pump()`; ista zamka
+> čeka svaki sljedeći ekran.
+>
+> Ostaje za sljedećeg: **ništa nije pokrenuto na uređaju ni emulatoru** (dokaz je web build u
+> Chromiumu), **nijedan podatak nije došao sa stvarnog backenda** — `demo_main.dart` ih nosi
+> prepisane iz `seed.sql`, jer Supabase vrijednosti i dalje blokira isti nalog kao u tasku 04 —
+> i tap na uslugu vodi na `/book/service?serviceId=<id>`, koji task 11 mora pročitati, inače
+> preselekcija usluge tiho ne radi. Detalji:
+> [10-client-home-runtime-branding.md](10-client-home-runtime-branding.md#status-2026-09-11--✅-gotovo).
 ## Redoslijed koji nije očigledan
 
 - **07 → 08 → 09 → 10 → 11** je lanac, ne prijedlog. Svaki sljedeći koristi ono što prethodni postavi, i preskakanje znači da prvi ekran postane šablon sa prečicama koje se kopiraju petnaest puta.
