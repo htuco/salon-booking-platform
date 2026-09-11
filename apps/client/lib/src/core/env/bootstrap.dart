@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_env.dart';
@@ -10,6 +11,12 @@ import 'app_env.dart';
 /// singleton je ono što kasnije natjera svaki test da diže cijeli bootstrap.
 Future<AppEnv> bootstrapClient({AppEnv? env}) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Bez ovoga Flutter web čita `defaultRouteName` kao `/` bez obzira na URL u adresnoj
+  // traci, pa `go_router` otvori početnu i **deep link tiho ne radi** — a URL i dalje piše
+  // `/book/slot`, što izgleda potpuno ispravno dok neko ne podijeli vezu. Na ostalim
+  // platformama je no-op.
+  usePathUrlStrategy();
 
   final resolved = env ?? AppEnv.fromDefines();
 

@@ -19,21 +19,18 @@ class AppEnv {
 
   /// Čita okruženje iz `--dart-define` vrijednosti i **odmah** validira.
   ///
-  /// Baca [MissingEnvError] umjesto da vrati poluprazan objekat: pogrešno konfigurisan build
-  /// mora pasti na startu, uz ime varijable koja fali. Ranije se to vidjelo tek kao tekst
-  /// "Nedostaje SALON_ID konfiguracija." na ekranu — na uređaju testera, danima kasnije.
-  factory AppEnv.fromDefines({bool requireSupabase = true}) {
+  /// Baca [MissingEnvError] samo za `SALON_ID` — jedini define bez kojeg build nema smisla,
+  /// jer app ne zna koji salon prikazuje. Pogrešno konfigurisan build tako pada na startu,
+  /// uz ime varijable koja fali; ranije se to vidjelo tek kao tekst na ekranu testera.
+  ///
+  /// Supabase vrijednosti **nisu** obavezne, i to je namjerno. Bez njih se klijent ne diže
+  /// (`bootstrapClient` to provjerava kroz [hasSupabase]) i app radi na fallback podacima —
+  /// što je upravo ono što `flutter run` bez backenda i `flutter build web` za preview
+  /// trebaju. Dok su bile obavezne, web build sa ispravnim `SALON_ID`-om je padao prije
+  /// `runApp` i davao **praznu bijelu stranicu** bez ijedne poruke.
+  factory AppEnv.fromDefines() {
     if (_salonId.isEmpty) {
       throw MissingEnvError('SALON_ID');
-    }
-    // Supabase vrijednosti se traže samo kad app zaista ide na mrežu. Widget test i
-    // `flutter run` bez backenda smiju raditi bez njih — inače bi svaki test morao
-    // nositi lažni URL i ključ.
-    if (requireSupabase) {
-      if (_supabaseUrl.isEmpty) throw MissingEnvError('SUPABASE_URL');
-      if (_supabaseAnonKey.isEmpty) {
-        throw MissingEnvError('SUPABASE_ANON_KEY');
-      }
     }
 
     return AppEnv(

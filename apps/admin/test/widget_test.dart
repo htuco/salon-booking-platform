@@ -1,30 +1,82 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:admin/main.dart';
+import 'package:admin/src/core/env/app_env.dart';
+import 'package:admin/src/core/router/admin_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:admin/main.dart';
+const _env = AdminEnv(supabaseUrl: '', supabaseAnonKey: '');
+
+ProviderContainer _container() {
+  final container = ProviderContainer(
+    overrides: [adminEnvProvider.overrideWithValue(_env)],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+Widget _app(ProviderContainer container) => UncontrolledProviderScope(
+  container: container,
+  child: const SalonAdminApp(),
+);
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('rute prate 01 §12', () {
+    // Prepisano iz specifikacije, ne iz enuma — inace test potvrdjuje sam sebe.
+    const izSpecifikacije = {
+      '/login',
+      '/dashboard',
+      '/appointments',
+      '/appointments/:id',
+      '/appointments/new',
+      '/calendar',
+      '/calendar/block',
+      '/services',
+      '/employees',
+      '/working-hours',
+      '/settings',
+    };
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(AdminRoute.values.map((r) => r.path).toSet(), izSpecifikacije);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('app se podize na /login', (tester) async {
+    final container = _container();
+    await tester.pumpWidget(_app(container));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(container.read(adminRouterProvider).state.uri.path, '/login');
+    expect(find.text(AdminRoute.login.title), findsNWidgets(2));
+  });
+
+  testWidgets('deep link na /employees prezivljava podizanje app-e', (
+    tester,
+  ) async {
+    // Regresija: sa `initialLocation` bi bookmark na /employees otvorio login, a URL
+    // bi i dalje pisao /employees — izgleda ispravno dok neko ne podijeli vezu.
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        AdminRoute.employees.path;
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+
+    final container = _container();
+    await tester.pumpWidget(_app(container));
+    await tester.pumpAndSettle();
+
+    expect(container.read(adminRouterProvider).state.uri.path, '/employees');
+  });
+
+  testWidgets('navigacija na /employees mijenja URL i ekran', (tester) async {
+    final container = _container();
+    await tester.pumpWidget(_app(container));
+    await tester.pumpAndSettle();
+
+    final router = container.read(adminRouterProvider);
+    router.go(AdminRoute.employees.path);
+    await tester.pumpAndSettle();
+
+    expect(router.state.uri.path, '/employees');
+    expect(find.text(AdminRoute.employees.title), findsNWidgets(2));
   });
 }

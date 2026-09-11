@@ -14,7 +14,10 @@ import '../../features/placeholder/placeholder_screen.dart';
 /// Ruta koja postoji i ima URL je ono što se ovdje dokazuje.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: ClientRoute.home.path,
+    // **Bez `initialLocation`.** Na webu `initialLocation` nadjačava URL iz adresne trake,
+    // pa `salon.ba/book/slot` otvori početnu — deep link i dijeljena veza tiho ne rade, a
+    // URL u traci i dalje piše `/book/slot`, što izgleda kao da sve valja. `GoRouter` bez
+    // njega uzme trenutnu platformsku rutu, koja je na mobilnom ionako `/`.
     routes: [
       for (final route in ClientRoute.values)
         GoRoute(
