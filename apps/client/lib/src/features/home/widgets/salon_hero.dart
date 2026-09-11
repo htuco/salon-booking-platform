@@ -62,7 +62,7 @@ class SalonHero extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: AppSpacing.lg),
-                    StatusBadge(label: status, tone: StatusTone.info),
+                    _ZiviStatus(label: status),
                   ],
                 ),
               ),
@@ -70,6 +70,43 @@ class SalonHero extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Živi status salona u heroju ("Otvoreno do 20:00").
+///
+/// Namjerno **nije** `StatusBadge`. Statusne boje su brand-neutralne po dogovoru iz
+/// taska 09 — otkazan termin mora izgledati isto u svakom salonu — pa `StatusTone.info`
+/// donosi fiksnu plavu. U heroju je to plava mrlja preko zlatnog odnosno roze brenda,
+/// što se vidi tek na screenshotu. Ovaj status nije poruka o ishodu akcije nego dio
+/// brendiranog zaglavlja, pa ide u tenant boje.
+class _ZiviStatus extends StatelessWidget {
+  const _ZiviStatus({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: scheme.onPrimaryContainer,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

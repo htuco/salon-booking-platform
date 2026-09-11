@@ -106,6 +106,27 @@ Testovi teme više ne traže `--dart-define`: env ulazi kroz `appEnvProvider` ov
 `tenant_theme_test` sam bira tenanta i pokriva oba. Jedini test koji ga i dalje traži je
 `app_env_test.dart`, koji baš provjerava čitanje pravih define-ova.
 
+### Ekran na ekranu, bez backenda
+
+`main.dart` bez `SUPABASE_URL`-a diže app, ali provideri nemaju šta vratiti — ekran ostane na
+kosturu. Za vizuelnu provjeru postoji drugi entry point koji iste providere puni podacima
+prepisanim iz `supabase/seed.sql`:
+
+```sh
+cd apps/client
+flutter run -d chrome -t lib/demo_main.dart --dart-define=SALON_ID=550e8400-e29b-41d4-a716-446655440000
+```
+
+Za screenshot dokaz se gradi statički build po tenantu i poslužuje lokalno:
+
+```sh
+flutter build web -t lib/demo_main.dart --dart-define=SALON_ID=<uuid> --output=build/demo-<flavor>
+```
+
+**Nije production put.** Store build ide isključivo kroz `lib/main.dart` i `tool/build_tenant.sh`;
+`demo_main.dart` postoji da se ekran može pogledati na mašini bez Supabase pristupa. Podaci u
+njemu vrijede tačno onoliko koliko odgovaraju seedu.
+
 ### Web: provjera da deep link stvarno radi
 
 Ruta koja radi u widget testu ne znači da radi u browseru. Dva su načina da tiho ne radi:

@@ -63,6 +63,17 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
 - **Ruta koja mora imati URL** → `apps/client/lib/src/core/router/app_router.dart`. Rute su
   enum, ne slobodni stringovi; router test poredi skup putanja sa **prepisanom** listom iz
   `docs/01 §12`, a ne sa samim enumom (inače test potvrđuje da je enum jednak sam sebi).
+- **Ekran** → `apps/client/lib/src/features/home/`. Prvi pravi ekran i šablon za ostale; tri
+  pravila stoje u doc komentaru `home_screen.dart`. Podaci dolaze iz providera, nikad direktnim
+  pozivom repozitorija. Tekst koji se razlikuje po vertikali ide kroz `vertical.terms`, ostatak
+  kroz `.arb` — literal "Zakaži termin" u ekranu znači da stomatološka app zove pregled terminom,
+  a to se ne vidi dok se ne otvori treći tenant. Tri stanja se pišu **prije** sretnog slučaja
+  (skeleton, greška sa retryjem, sakrivena prazna sekcija); ekran napisan obrnutim redom dobije
+  spinner preko bijele površine i to ostane.
+- **Logika koja bi se sakrila u `build`** → `apps/client/lib/src/features/home/salon_schedule.dart`.
+  Živi status "Otvoreno do 20:00" se računa iz `WorkingHour`-a u zasebnoj klasi koja prima `now`
+  kao parametar, pa test može stajati u srijedu u 08:00 bez `pumpWidget`-a i bez čekanja srijede.
+  Isti izračun u `build` metodi bi tražio podizanje cijele app-e za provjeru jednog `if`-a.
 
 ## Jezik
 
