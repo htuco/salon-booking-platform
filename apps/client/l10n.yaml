@@ -1,0 +1,7 @@
+# Ulaz za `flutter gen-l10n`. Generisani kod ide u lib/src/l10n/generated/ i **ne** commituje
+# se — `flutter pub get` ga stvori prije builda, pa bi commitovana kopija samo zastarjela.
+arb-dir: lib/src/l10n
+template-arb-file: app_bs.arb
+output-localization-file: app_localizations.dart
+output-dir: lib/src/l10n/generated
+nullable-getter: false

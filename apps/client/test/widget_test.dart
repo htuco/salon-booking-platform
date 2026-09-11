@@ -1,26 +1,34 @@
 import 'package:client/main.dart';
+import 'package:client/src/core/env/app_env.dart';
+import 'package:client/src/core/router/app_router.dart';
 import 'package:client/src/generated/tenants.g.dart';
 import 'package:flutter/material.dart';
-import 'package:client/src/core/vertical_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-void main() {
-  // SALON_ID je compile-time konstanta, pa test bez --dart-define može pokriti
-  // samo prazan slučaj. Sadržaj po tenantu se provjerava kroz registar.
-  testWidgets('Build bez tenanta prijavljuje da konfiguracija nedostaje', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const ProviderScope(child: TenantPreviewApp()));
-    expect(find.text('Nedostaje SALON_ID konfiguracija.'), findsOneWidget);
-  });
+const _barberId = '550e8400-e29b-41d4-a716-446655440000';
 
+/// Env kakav bi bootstrap sastavio za barber tenant, bez Supabase vrijednosti —
+/// widget test ne dize mrezu.
+const _env = AppEnv(
+  salonId: _barberId,
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  apiUrl: '',
+);
+
+Widget _app({AppEnv env = _env}) => ProviderScope(
+  overrides: [appEnvProvider.overrideWithValue(env)],
+  child: const SalonClientApp(),
+);
+
+void main() {
   group('Generisani registar tenanata', () {
     test('sadrži oba demo salona iz seed.sql', () {
       expect(
         kTenants.keys,
         containsAll(<String>[
-          '550e8400-e29b-41d4-a716-446655440000',
+          _barberId,
           '550e8400-e29b-41d4-a716-446655440001',
         ]),
       );
@@ -48,71 +56,34 @@ void main() {
     });
   });
 
-  group('TenantHome', () {
-    const barber = TenantConfig(
-      flavor: 'barberstudiovitez',
-      salonId: '550e8400-e29b-41d4-a716-446655440000',
-      slug: 'barberstudiovitez',
-      vertical: 'barber',
-      displayName: 'Barber Studio Vitez',
-    );
-
-    // Tenant se ubacuje kroz override provider-a, ne kao konstruktorski argument:
-    // popunjeni slucaj tako i dalje ne zavisi od --dart-define i pokriva se u
-    // obicnom `flutter test`.
-    testWidgets('prikazuje ime, flavor i vertikalu tenanta', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [tenantProvider.overrideWithValue(barber)],
-          child: const MaterialApp(home: TenantHome()),
-        ),
-      );
-      expect(
-        find.text('Barber Studio Vitez'),
-        findsNWidgets(2),
-      ); // AppBar + tijelo
-      expect(find.text('Hello, ${barber.salonId}'), findsOneWidget);
-      expect(find.text('barberstudiovitez · barber'), findsOneWidget);
-    });
-
-    // Regresija: `Theme.of` pozvan iznad MaterialApp-a vraca Flutterov default,
-    // pa se tekst iscrta tamno na tamnoj tenant temi. V. TenantPreviewApp.build.
-    testWidgets('tekst koristi temu koju MaterialApp primjenjuje', (
+  group('SalonClientApp', () {
+    testWidgets('podize se na pocetnoj ruti i nosi ime tenanta', (
       tester,
     ) async {
-      final theme = ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFC6A667),
-          brightness: Brightness.dark,
-        ),
-      );
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [tenantProvider.overrideWithValue(barber)],
-          child: MaterialApp(theme: theme, home: const TenantHome()),
-        ),
-      );
+      await tester.pumpWidget(_app());
+      await tester.pumpAndSettle();
 
-      final applied = Theme.of(tester.element(find.byType(Scaffold)));
-      for (final finder in <Finder>[
-        find.text('barberstudiovitez · barber'),
-        find.descendant(
-          of: find.byType(Column),
-          matching: find.text('Barber Studio Vitez'),
+      // AppBar naslov dolazi iz rute, ne iz tenanta — ime tenanta je naslov prozora.
+      expect(find.text(ClientRoute.home.title), findsNWidgets(2)); // AppBar + tijelo
+      expect(find.text(ClientRoute.home.path), findsOneWidget);
+    });
+
+    testWidgets('nepoznat SALON_ID ne rusi app — tenant je samo null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          env: const AppEnv(
+            salonId: 'nepostojeci',
+            supabaseUrl: '',
+            supabaseAnonKey: '',
+            apiUrl: '',
+          ),
         ),
-      ]) {
-        final style = tester.widget<Text>(finder).style!;
-        final bg = applied.colorScheme.surface;
-        final a = style.color!.computeLuminance();
-        final b = bg.computeLuminance();
-        final ratio =
-            (a > b ? a + 0.05 : b + 0.05) / (a > b ? b + 0.05 : a + 0.05);
-        expect(
-          ratio,
-          greaterThan(4.5),
-          reason: 'kontrast ${ratio.toStringAsFixed(2)}:1 je ispod WCAG AA',
-        );
-      }
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(ClientRoute.home.title), findsNWidgets(2)); // AppBar + tijelo
     });
   });
 }
