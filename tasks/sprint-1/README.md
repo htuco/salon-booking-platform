@@ -86,8 +86,10 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 > **Dokazano slikom, po prvi put u projektu:** isti web build, dva `SALON_ID`-a, razlika u sve tri
 > dimenzije — ime, boje (zlatna tamna naspram roze svijetle) i terminologija ("Zakaži termin"
 > naspram "Rezerviši termin"). Screenshotovi su u
-> [`docs/screenshots/`](../../docs/screenshots/) i u status bloku taska. Uz to **165 testova PASS**
-> (bilo 140) i čista analiza u svih pet paketa.
+> [`docs/screenshots/`](../../docs/screenshots/) i u status bloku taska. Uz to, na CI-ju
+> ([`Flutter` run 34637330417](https://github.com/htuco/salon-booking-platform/actions/runs/34637330417)):
+> **165 testova PASS** (bilo 140), čista analiza, oba Android APK-a i oba iOS builda — što pokriva
+> ono što lokalni web build ne može, jer su `cached_network_image` i `url_launcher` nove zavisnosti.
 >
 > **Screenshot je našao grešku koju nijedan test nije mogao:** živi status u heroju je koristio
 > `StatusBadge(tone: info)`, a statusne boje su namjerno brand-neutralne — fiksna plava preko

@@ -71,6 +71,24 @@ Razlika u sve tri dimenzije koje DoD traži, iz istog koda:
 Usluge se razlikuju i po formatiranju trajanja: barber "40 min", beauty "2 h 30 min" za
 pramenove — isti `formatDuration`, druga vrijednost iz baze.
 
+### Dokaz — CI
+
+[`Flutter` run 34637330417](https://github.com/htuco/salon-booking-platform/actions/runs/34637330417)
+— svi jobovi zeleni:
+
+```
+success  Analiza, format i testovi
+success  APK po tenantu (barberstudiovitez, …440000)
+success  APK po tenantu (beautystudiotravnik, …440001)
+success  iOS flavor build (barberstudiovitez, …440000, ba.nasadomena.barberstudiovitez)
+success  iOS flavor build (beautystudiotravnik, …440001, ba.nasadomena.beautystudiotravnik)
+skipped  AAB po tenantu (rucni trigger)
+```
+
+Ovo pokriva ono što lokalni web build ne može: home ekran se kompajlira i pakuje za **oba tenanta
+na obje platforme**. `cached_network_image` i `url_launcher` su nove zavisnosti, a nova zavisnost
+koja ne prođe Android ili iOS build se lokalno ne vidi.
+
 ### Dokaz — testovi
 
 ```
