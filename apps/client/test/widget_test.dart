@@ -1,7 +1,8 @@
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
-import 'package:client/src/core/router/app_router.dart';
 import 'package:client/src/generated/tenants.g.dart';
+import 'package:core_api/core_api.dart';
+import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,9 +18,28 @@ const _env = AppEnv(
   apiUrl: '',
 );
 
-Widget _app({AppEnv env = _env}) => ProviderScope(
-  overrides: [appEnvProvider.overrideWithValue(env)],
+/// Svi podatkovni provideri se override-uju, i to **praznim listama umjesto da se ostave
+/// na miru**: bez override-a bi repozitorij nastao i pozvao `Supabase.instance`, koji u
+/// testu ne postoji. Od taska 10 `/` je pravi ekran, pa ovo vise nije opcija kao dok je
+/// tijelo rute bio placeholder.
+Widget _app({AppEnv env = _env, Salon? salon}) => ProviderScope(
+  overrides: [
+    appEnvProvider.overrideWithValue(env),
+    currentSalonIdProvider.overrideWithValue(env.salonId),
+    salonProvider.overrideWith((ref) async => salon ?? _salon(env.salonId)),
+    servicesProvider.overrideWith((ref) async => const <Service>[]),
+    employeesProvider.overrideWith((ref) async => const <Employee>[]),
+    workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
+    verticalProvider.overrideWith((ref) async => Vertical.fallback),
+  ],
   child: const SalonClientApp(),
+);
+
+Salon _salon(String id) => Salon(
+  id: id,
+  name: 'Barber Studio Vitez',
+  slug: 'barberstudiovitez',
+  city: 'Vitez',
 );
 
 void main() {
@@ -57,18 +77,18 @@ void main() {
   });
 
   group('SalonClientApp', () {
-    testWidgets('podize se na pocetnoj ruti i nosi ime tenanta', (
+    testWidgets('podize se na pocetnoj ruti i prikazuje ime salona', (
       tester,
     ) async {
       await tester.pumpWidget(_app());
-      await tester.pumpAndSettle();
+      // `pump`, ne `pumpAndSettle`: skeleton puls je beskonacna animacija, pa
+      // `pumpAndSettle` istekne cak i kad ekran radi ispravno. Dva `pump`-a su
+      // dovoljna da `FutureProvider` isporuci vrijednost.
+      await tester.pump();
+      await tester.pump();
 
-      // AppBar naslov dolazi iz rute, ne iz tenanta — ime tenanta je naslov prozora.
-      expect(
-        find.text(ClientRoute.home.title),
-        findsNWidgets(2),
-      ); // AppBar + tijelo
-      expect(find.text(ClientRoute.home.path), findsOneWidget);
+      expect(find.text('Barber Studio Vitez'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('nepoznat SALON_ID ne rusi app — tenant je samo null', (
@@ -84,12 +104,11 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
 
-      expect(
-        find.text(ClientRoute.home.title),
-        findsNWidgets(2),
-      ); // AppBar + tijelo
+      expect(tester.takeException(), isNull);
+      expect(find.byType(MaterialApp), findsOneWidget);
     });
   });
 }
