@@ -36,6 +36,15 @@ melos run test           # flutter test u svakom paketu koji ima test/
 `melos exec` ide **samo kroz pakete iz `workspace:` liste** u root `pubspec.yaml`. Paket koji nije
 u listi tiho ispada iz svih ovih komandi.
 
+**`tool/` nije paket, pa `melos run format` ne vidi njegove fajlove — a CI ih vidi.** Provjera u
+CI-ju je `dart format --set-exit-if-changed $(git ls-files '*.dart')`, što obuhvata **svaki**
+verzionisani Dart fajl, uključujući generatore. Zelen `melos run format:fix` lokalno zato ne znači
+zelen CI. Kad diraš `tool/`, pokreni i:
+
+```sh
+dart format tool/
+```
+
 ### Codegen: mora prije `analyze` i `test`
 
 **Generisani kod nije u gitu.** `*.freezed.dart` i `*.g.dart` u `packages/` nastaju iz anotacija

@@ -180,9 +180,7 @@ class Tenant {
     String hexBoja(String kljuc, String podrazumijevana) {
       final vrijednost = branding[kljuc] as String? ?? podrazumijevana;
       if (!RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(vrijednost)) {
-        stderr.writeln(
-          '$flavor: branding.$kljuc "$vrijednost" nije #RRGGBB.',
-        );
+        stderr.writeln('$flavor: branding.$kljuc "$vrijednost" nije #RRGGBB.');
         exit(1);
       }
       return vrijednost.toUpperCase();
