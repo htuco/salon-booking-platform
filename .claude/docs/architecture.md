@@ -82,9 +82,12 @@ ne pragom luminancije — vlasnik smije izabrati žutu, a bijeli tekst na njoj j
    `NetworkError`, `NotFoundError`, `ConflictError`, `ServerError` i `MappingError`; booking flow
    bez te razlike ne zna da li ponuditi "pokušaj ponovo" ili osvježenu listu termina.
 
-`ConflictError` je `409` iz `book_appointment` i exclusion constraint `appointments_no_overlap`
-(task 05). `NotFoundError` namjerno pokriva i "red ne postoji" i "RLS ga ne propušta" — razlika
-između to dvoje je curenje podatka o tuđem tenantu.
+`ConflictError` je konflikt iz `book_appointment` i exclusion constraint
+`appointments_no_overlap` (task 05). Stiže kao **`PT409`**, ne kao `409`: funkcija ga diže sa
+`errcode = 'PT409'`, Postgres klasu `PT` prevodi u HTTP status iz zadnja tri znaka, pa je odgovor
+`409` — ali `PostgrestException.code` nosi `PT409`. Isto vrijedi za `PT404` (usluga ne postoji ili
+nije aktivna), koji je `NotFoundError`. `NotFoundError` namjerno pokriva i "red ne postoji" i "RLS
+ga ne propušta" — razlika između to dvoje je curenje podatka o tuđem tenantu.
 
 ### Vremena nisu `DateTime`
 
@@ -247,7 +250,17 @@ statusne boje) i šest komponenti (`AppButton`, `ServiceCard`, `TimeSlotChip`, `
 `EmptyState`, `SkeletonLoader`). Klijent temu uzima iz `appThemeProvider`-a; `main.dart` više nema
 nijedan heks.
 
-**Upisa još nema.** Ovaj sloj samo čita — `book_appointment` RPC se poziva tek u tasku 11.
+Od taska 11: `BookingRepository` u `core_api` — **prvi i jedini repozitorij koji piše u bazu**.
+Sve tri metode su `rpc`, nijedna `from(...)`: slobodni termini se ne mogu pročitati (slot je
+odsustvo termina, a `appointments` nema politiku za `anon`), a rezervacija mora re-validirati slot
+u istoj transakciji. Uz njega `AvailableSlot` u `core_domain` i `BookingFlowState` u
+`apps/client/lib/src/features/booking/` — jedan provider za sva četiri koraka, bez keširane liste
+slotova.
+
+**Availability logika ostaje isključivo u bazi.** Dart ne filtrira slotove, ne sabira buffer i ne
+računa trajanje; `BookingRepository` samo mapira gotov odgovor. Metoda koja bi primila listu
+termina i vratila slobodna vremena ovdje ne postoji i neće — to je druga implementacija pravila
+koja zastarijeva čim se pravilo promijeni u migraciji.
 
 ## Kičma aplikacije
 

@@ -33,6 +33,17 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
 - **Repozitorij** → `packages/core_api/lib/src/catalog/salon_repository.dart`. Kolone nabrojane
   eksplicitno (nikad `select('*')`), poziv obavijen u `guard(...)` da iz njega izađe samo
   `ApiError`, mapiranje u izdvojenoj `@visibleForTesting` funkciji. Ostala četiri su ga preslikala.
+- **Repozitorij koji piše u bazu** → `packages/core_api/lib/src/booking/booking_repository.dart`.
+  Sve tri metode idu na `rpc`, nijedna na `from(...)`: upis mora proći kroz validiranu funkciju
+  koja re-validira slot u istoj transakciji, a slobodni termini se ne mogu ni pročitati bez
+  gledanja tuđih termina. Isti obrazac mapiranja kao kod čitajućih repozitorija — `guard(...)` i
+  `@visibleForTesting` funkcija koju test gađa umjesto `.rpc(...)` lanca.
+- **Stanje koje preživljava više ekrana** → `apps/client/lib/src/features/booking/`. Jedan
+  `Notifier` za sva četiri koraka, `autoDispose` da izlazak iz flowa čisti izbor. Nosi samo
+  identifikatore i vrijeme — **nikad listu slobodnih termina**: keširana lista znači da korisnik
+  nakon povratka nazad bira iz zastarjelog spiska i dobije `409` na potvrdi. Pravila (šta se briše
+  kad se izbor promijeni, kad je korak popunjen) su u `BookingFlowState`, pa se testiraju bez
+  `pumpWidget`-a — isti razlog kao kod `SalonSchedule`.
 - **Greška koju ekran može razlikovati** → `packages/core_api/lib/src/errors/`. `ApiError` je
   `sealed`, pa `switch` nad njim Dart provjerava na iscrpnost — novi tip obori build tamo gdje nije
   obrađen umjesto da padne u `default` i pojavi se kao pogrešna poruka u produkciji.
