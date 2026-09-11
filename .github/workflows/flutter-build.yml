@@ -1,12 +1,26 @@
 name: Flutter
 
-# Okidac je SAMO push na main (+ rucni trigger). Na PR-u se analiza i testovi
-# dokazuju lokalno (`melos run analyze`, `melos run test`); CI ostaje kao dokaz
-# iz cistog checkouta na tacki gdje rad ulazi u main. Razlog nije samo trosak:
-# lokalni build koristi postojeci build/ i generisane *.g.dart koji su u
-# .gitignore, pa ne moze dokazati da codegen radi na praznom klonu.
+# Dvije brzine, jer nisu svi jobovi jednako skupi:
+#
+#   PR       → samo `analyze` (ubuntu, ~3 min). Kolega dobije povratnu informaciju
+#              prije merge-a, a ne poslije.
+#   push main→ sve, ukljucujuci APK po tenantu i iOS. Tu je dokaz iz cistog
+#              checkouta stvarno potreban, jer lokalni build koristi postojeci
+#              build/ i generisane *.g.dart koji su u .gitignore.
+#
+# macOS runner se naplacuje 10x, pa dvije iOS jobe cine 66 od 86 naplativih
+# minuta punog runa — zato ne idu na svaki PR commit.
 # v. .claude/docs/workflows.md.
 on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'tenants/**'
+      - 'tool/**'
+      - 'pubspec.yaml'
+      - 'analysis_options.yaml'
+      - '.github/workflows/flutter-build.yml'
   push:
     branches: [main]
     paths:
@@ -77,6 +91,8 @@ jobs:
 
   build-flavors:
     name: APK po tenantu
+    # Ne na PR-u: `analyze` vec kompajlira, a APK po tenantu je 17 naplativih minuta.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     needs: analyze
@@ -140,6 +156,8 @@ jobs:
 
   build-ios:
     name: iOS flavor build
+    # Ne na PR-u: macOS je 10x, ove dvije jobe same nose 66 naplativih minuta.
+    if: github.event_name != 'pull_request'
     runs-on: macos-latest
     timeout-minutes: 45
     needs: analyze
