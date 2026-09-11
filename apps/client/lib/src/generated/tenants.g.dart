@@ -10,6 +10,9 @@ class TenantConfig {
     required this.slug,
     required this.vertical,
     required this.displayName,
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.themeName,
   });
 
   final String flavor;
@@ -17,6 +20,15 @@ class TenantConfig {
   final String slug;
   final String vertical;
   final String displayName;
+
+  /// ARGB, ne heks string — app ne parsira boju pri startu.
+  /// Izvor: `branding.primaryColor` iz `tenant.yaml`.
+  final int primaryColor;
+  final int secondaryColor;
+
+  /// Imenovana tema (`modern_barber` | `elegant_beauty`); bira svjetlinu
+  /// i neutralnu paletu dok backend ne odgovori.
+  final String themeName;
 }
 
 const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
@@ -26,6 +38,9 @@ const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
     slug: 'barberstudiovitez',
     vertical: 'barber',
     displayName: 'Barber Studio Vitez',
+    primaryColor: 0xFFC6A667,
+    secondaryColor: 0xFF171717,
+    themeName: 'modern_barber',
   ),
   '550e8400-e29b-41d4-a716-446655440001': TenantConfig(
     flavor: 'beautystudiotravnik',
@@ -33,5 +48,8 @@ const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
     slug: 'beautystudiotravnik',
     vertical: 'beauty',
     displayName: 'Beauty Studio Travnik',
+    primaryColor: 0xFFB76E79,
+    secondaryColor: 0xFFFFF5F5,
+    themeName: 'elegant_beauty',
   ),
 };

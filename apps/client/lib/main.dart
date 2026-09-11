@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'src/core/env/app_env.dart';
 import 'src/core/env/bootstrap.dart';
 import 'src/core/router/app_router.dart';
+import 'src/core/theme_provider.dart';
 import 'src/core/vertical_provider.dart';
 import 'src/l10n/generated/app_localizations.dart';
 
@@ -32,7 +33,6 @@ class SalonClientApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tenant = ref.watch(tenantProvider);
-    final isDark = tenant?.vertical == 'barber';
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
@@ -40,12 +40,10 @@ class SalonClientApp extends ConsumerWidget {
       routerConfig: ref.watch(appRouterProvider),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: isDark ? const Color(0xFFC6A667) : const Color(0xFFB76E79),
-          brightness: isDark ? Brightness.dark : Brightness.light,
-        ),
-      ),
+      // Boje vise nisu ovdje. Tema se gradi iz backend vrijednosti sa fallbackom na
+      // `tenant.yaml` — v. `theme_provider.dart`. Hardkodirani heks u ovom fajlu bi
+      // znacio da treci tenant dobije boje prva dva.
+      theme: ref.watch(appThemeProvider),
     );
   }
 }
