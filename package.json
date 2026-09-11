@@ -1,7 +1,7 @@
 {
   "name": "salon-booking-platform",
   "private": true,
-  "description": "Repo-wide git hookovi. Web toolchain wireframe prototipa je u prototype/.",
+  "description": "Repo-wide git hookovi (lefthook). Web toolchain je u prototype/wireframe/.",
   "scripts": {
     "prepare": "lefthook install"
   },
