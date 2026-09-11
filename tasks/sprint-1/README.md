@@ -4,13 +4,32 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 
 | # | Task | Blokira | Procjena |
 |---|---|---|---|
-| [07](07-app-plumbing.md) | App plumbing — Riverpod, go_router, env, Supabase klijent | sve ostalo | 2 dana |
+| [07](07-app-plumbing.md) ✅ | App plumbing — Riverpod, go_router, env, Supabase klijent | sve ostalo | 2 dana |
 | [08](08-core-api-repozitoriji.md) | `core_api` — freezed modeli + repozitoriji | 10, 11, admin | 2–3 dana |
 | [09](09-core-ui-theme-factory.md) | `core_ui` — theme factory po tenantu + tokeni | 10, 11 | 2 dana |
 | [10](10-client-home-runtime-branding.md) | Client home sa runtime brandingom | 11 | 1–2 dana |
 | [11](11-booking-flow.md) | Booking flow (4 koraka + success) | Sprint 2 | 3–4 dana |
 
 **Ukupno: ~10–13 radnih dana**, uz preduslov da su [05](../05-availability-engine.md) i [06](../06-vertical-pack.md) iz Sprinta 0 gotovi — 11 bez 05 nema šta prikazati, a 10 bez 06 piše tekst koji se kasnije prepisuje.
+
+> **Task 07 je zatvoren** (✅) — oba app-a imaju kičmu: `AppEnv`/`AdminEnv`, `bootstrap()` sa
+> `Supabase.initialize`, `go_router` sa rutama iz [01 §12](../../docs/01-mvp-spec.md#12-screens)
+> i `.arb` lokalizacije u klijentu. Ekrani se i dalje ne pišu — sve rute imaju placeholder
+> tijela, kako task i traži.
+>
+> Dokazano: `melos run analyze` čist, **44 testa PASS**, plus provjera u **pravom Chromiumu**
+> nad `flutter build web` artefaktom — `/book/slot` i `/appointments/abc-123` otvoreni direktno
+> zadržavaju putanju i prikazuju svoj ekran, browser Back radi.
+>
+> **Browser je našao dvije greške koje je zelena test suite propustila:** web build je padao
+> prije `runApp` i davao praznu bijelu stranicu (env je tražio `SUPABASE_*`, a widget testovi
+> uvijek ubacuju env kroz override), i deep link tiho nije radio (`initialLocation` plus
+> izostanak `usePathUrlStrategy()`) dok je URL izgledao ispravno. Obje su sad pokrivene testom.
+> Detalji: [07-app-plumbing.md](07-app-plumbing.md#status-2026-09-11--✅-zatvoren).
+>
+> Ostaje za sljedećeg: `riverpod_generator` je svjesno izostavljen, Supabase je dignut ali nije
+> pozvan protiv pravog backenda (nema naloga — prvi pravi poziv ide uz task 08), i `.arb`
+> stringove još nijedan ekran ne koristi.
 
 ## Redoslijed koji nije očigledan
 
