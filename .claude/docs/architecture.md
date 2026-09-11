@@ -28,7 +28,10 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
                                             Firebase FCM (samo push)
 ```
 
-- **`core_domain`** — entiteti, `Vertical`, formatiranje. Bez Fluttera i bez mreže.
+- **`core_domain`** — entiteti, `Vertical`, formatiranje. Bez Fluttera i bez mreže — to je i u
+  `pubspec.yaml`-u: paket nema `flutter` zavisnost i testovi mu idu na `package:test`. Čim uđe
+  `flutter`, sloj prestaje biti upotrebljiv iz čistog Dart konteksta i smjer zavisnosti se tiho
+  obrne.
 - **`core_api`** — Supabase repozitoriji, modeli, greške. Jedini sloj koji zna za HTTP i tabele.
 - **`core_ui`** — design system: tokeni, tema, komponente. Ne zna za repozitorije.
 - **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
@@ -144,6 +147,24 @@ pravila, feature flagove, temu i tražene pristanke. Pravilo bez izuzetka: nijed
 razlikuje po vertikali ne smije stajati u `.dart` fajlu ekrana — takav string se ne može promijeniti
 bez store submissiona. Detalji i tabela terminologije: `docs/05-vertical-packs.md`.
 
+Put od baze do ekrana:
+
+```
+vertical_packs + salons.terminology_override   (jedan upit, embed po FK-u)
+        │  VerticalRepository            packages/core_api
+        │  verticalProvider              apps/client/lib/src/core/
+        ▼  verticalOf(ref)               → Vertical, nikad null
+Text(vertical.terms.bookCta)
+```
+
+Dvije odluke koje se ne vide iz potpisa:
+
+- **Override se sloji po ključu**, ne zamjenom objekta. Salon koji mijenja samo
+  `customerSingular` ("Klijentica") mora zadržati ostatak vertikalne terminologije.
+- **Parsiranje nikad ne baca.** Nepoznat `key`, ključ koji nedostaje i vrijednost pogrešnog tipa
+  padaju na generic default, jer je app u storeu uvijek starija od baze — vertikala dodana
+  migracijom ne smije srušiti ekran.
+
 ## Web prototip (`src/`)
 
 React + Vite + Tailwind + Radix, rute u `src/app/routes.tsx` prate `docs/01 §12`. Svrha mu je da se
@@ -155,6 +176,10 @@ Poznata mrtva težina koju treba ukloniti (`docs/07 §2`): `@mui/*` i `@emotion/
 
 ## Šta još ne postoji
 
-Da ne tražiš uzalud: nema Next.js konzole, nema Riverpod/go_router koda, nema repozitorija u
-`core_api`, nema teme u `core_ui`, nema pravog FCM-a. Sprint 0
-gradi temelj (flavori, šema, CI); ekrani dolaze u Sprintu 1. Stanje po tasku: `tasks/README.md`.
+Da ne tražiš uzalud: nema Next.js konzole, nema `go_router` ruta, nema teme u `core_ui`, nema
+pravog FCM-a, i nema `Supabase.initialize` u `main`-u (dolazi u tasku 07 — do tada
+`supabaseClientProvider` postoji, ali ga u testu override-uješ). Sprint 0 gradi temelj (flavori,
+šema, CI); ekrani dolaze u Sprintu 1. Stanje po tasku: `tasks/README.md`.
+
+Riverpod i prvi repozitorij **postoje** od taska 06: `VerticalRepository` u `core_api` i
+`verticalProvider` u `apps/client/lib/src/core/`.
