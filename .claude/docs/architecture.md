@@ -218,10 +218,10 @@ Dvije odluke koje se ne vide iz potpisa:
   padaju na generic default, jer je app u storeu uvijek starija od baze — vertikala dodana
   migracijom ne smije srušiti ekran.
 
-## Dizajn (`design/`) i wireframe (`prototype/`)
+## Dizajn (`prototype/ui/`) i wireframe (`prototype/`)
 
-**`design/`** je vizuelni izvor istine: dizajnerski handoff sa 17 ekrana u punoj vjernosti,
-finalnim copyjem na bosanskom i popisanim tokenima (`design/SPEC.md`). Ekran u Flutteru se piše
+**`prototype/ui/`** je vizuelni izvor istine: dizajnerski handoff sa 17 ekrana u punoj vjernosti,
+finalnim copyjem na bosanskom i popisanim tokenima (`prototype/ui/SPEC.md`). Ekran u Flutteru se piše
 po njemu.
 
 Podjela pri prevođenju u kod je ono što ga čini upotrebljivim u white-label sistemu:
@@ -231,9 +231,9 @@ kroz `buildAppTheme()`; **tekst je po vertikali** i dolazi iz `vertical.terms`. 
 paleta jednog brenda, ne konstanta sistema.
 
 **`prototype/`** je stariji React wireframe (Vite + Tailwind + Radix, rute u
-`prototype/src/app/routes.tsx` prate `docs/01 §12`) sa **svojim** toolchainom u istom folderu.
+`prototype/wireframe/src/app/routes.tsx` prate `docs/01 §12`) sa **svojim** toolchainom u istom folderu.
 **Zamrznut je** — služio je da se flow vidi prije prvog Dart fajla, a tu ulogu je preuzeo
-`design/`. Ostaje referenca za flow i rute. Gdje se njih dvoje ne slažu, `design/` je jači.
+`prototype/ui/`. Ostaje referenca za flow i rute. Gdje se njih dvoje ne slažu, `prototype/ui/` je jači.
 
 Root `package.json` drži samo `lefthook` (git hookovi za cijeli repo) i ne miješa se sa
 toolchainom prototipa.
