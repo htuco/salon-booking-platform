@@ -47,6 +47,19 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
   (`app_env_test.dart`) se pokreće **sa** `--dart-define`, jer widget testovi ubacuju env kroz
   override i nikad ne pozovu pravi `fromDefines()` — zbog toga je prazna bijela stranica na
   webu prošla kroz cijelu zelenu suite.
+- **Vrijednost koja se izvodi umjesto da se pogodi** → `onColorFor` u
+  `packages/core_ui/lib/src/theme/contrast.dart`. `onPrimary` se bira poređenjem stvarnih WCAG
+  odnosa, a ne pragom luminancije: zlatna `#C6A667` ima luminanciju 0.42, pa bi naivni prag stavio
+  bijeli tekst i dao 2.6:1. Vlasnik salona bira boju sam i smije izabrati žutu — hardkodiran
+  `onPrimary` je nečitljiva aplikacija kod jednog klijenta, koju niko iz tima nikad ne otvori.
+- **Komponenta koja ne smije znati previše** → `packages/core_ui/lib/src/components/`. Prima gotove
+  stringove ("45 min"), ne modele iz `core_domain` — zato isti paket služi i admin aplikaciji, a
+  formatiranje ostaje u ekranu koji jedini zna jezik i vertikalu. Nijedna ne piše literal boju ni
+  literal razmak.
+- **Test koji mjeri proizvod, ne formulu** → `packages/core_ui/test/components_test.dart`. Renderuje
+  isti ekran u **obje** teme i mjeri svaki `Text` prema njegovoj **stvarnoj** pozadini (badge i
+  izabrani chip imaju svoju), sa stvarnim paletama oba demo tenanta. Tako je nađena roze cijena sa
+  4.12:1: brand tekst je bio mjeren na `surface`, a kartica stoji na `surfaceContainer`.
 - **Ruta koja mora imati URL** → `apps/client/lib/src/core/router/app_router.dart`. Rute su
   enum, ne slobodni stringovi; router test poredi skup putanja sa **prepisanom** listom iz
   `docs/01 §12`, a ne sa samim enumom (inače test potvrđuje da je enum jednak sam sebi).

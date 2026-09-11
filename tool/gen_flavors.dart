@@ -135,6 +135,9 @@ class Tenant {
     required this.slug,
     required this.vertical,
     required this.displayName,
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.themeName,
     required this.applicationId,
     required this.bundleId,
     required this.versionName,
@@ -169,12 +172,29 @@ class Tenant {
       exit(1);
     }
 
+    final branding = yaml['branding'] as YamlMap? ?? YamlMap();
+
+    // Fallback boje ulaze u generisani registar da app ima sta iscrtati prije prvog
+    // odgovora backenda. Format se validira ovdje, a ne u Dartu na uredjaju: neispravan
+    // heks bi tamo bio izuzetak pri startu app-e, ovdje je pad generatora u CI-ju.
+    String hexBoja(String kljuc, String podrazumijevana) {
+      final vrijednost = branding[kljuc] as String? ?? podrazumijevana;
+      if (!RegExp(r'^#[0-9a-fA-F]{6}$').hasMatch(vrijednost)) {
+        stderr.writeln('$flavor: branding.$kljuc "$vrijednost" nije #RRGGBB.');
+        exit(1);
+      }
+      return vrijednost.toUpperCase();
+    }
+
     return Tenant(
       flavor: flavor,
       salonId: salonId,
       slug: tenant['slug'] as String,
       vertical: tenant['vertical'] as String,
       displayName: app['displayName'] as String,
+      primaryColor: hexBoja('primaryColor', '#C6A667'),
+      secondaryColor: hexBoja('secondaryColor', '#171717'),
+      themeName: branding['theme'] as String? ?? 'modern_barber',
       applicationId: app['applicationId'] as String,
       bundleId: app['bundleId'] as String,
       versionName: app['versionName'] as String,
@@ -190,6 +210,9 @@ class Tenant {
   final String slug;
   final String vertical;
   final String displayName;
+  final String primaryColor;
+  final String secondaryColor;
+  final String themeName;
   final String applicationId;
   final String bundleId;
   final String versionName;
@@ -334,6 +357,10 @@ String _renderGoogleServices(Tenant tenant) =>
 }
 ''';
 
+/// `#RRGGBB` → `0xFFRRGGBB` literal za Dart. Alfa je uvijek puna: `tenant.yaml` opisuje
+/// brand boju, a ne prozirnost.
+String _argb(String hex) => '0xFF${hex.substring(1).toUpperCase()}';
+
 String _renderDart(List<Tenant> tenants) {
   final buffer = StringBuffer()
     ..writeln('// $_marker. Pokreni: dart run tool/gen_flavors.dart')
@@ -352,6 +379,9 @@ String _renderDart(List<Tenant> tenants) {
     ..writeln('    required this.slug,')
     ..writeln('    required this.vertical,')
     ..writeln('    required this.displayName,')
+    ..writeln('    required this.primaryColor,')
+    ..writeln('    required this.secondaryColor,')
+    ..writeln('    required this.themeName,')
     ..writeln('  });')
     ..writeln()
     ..writeln('  final String flavor;')
@@ -359,6 +389,17 @@ String _renderDart(List<Tenant> tenants) {
     ..writeln('  final String slug;')
     ..writeln('  final String vertical;')
     ..writeln('  final String displayName;')
+    ..writeln()
+    ..writeln('  /// ARGB, ne heks string — app ne parsira boju pri startu.')
+    ..writeln('  /// Izvor: `branding.primaryColor` iz `tenant.yaml`.')
+    ..writeln('  final int primaryColor;')
+    ..writeln('  final int secondaryColor;')
+    ..writeln()
+    ..writeln(
+      '  /// Imenovana tema (`modern_barber` | `elegant_beauty`); bira svjetlinu',
+    )
+    ..writeln('  /// i neutralnu paletu dok backend ne odgovori.')
+    ..writeln('  final String themeName;')
     ..writeln('}')
     ..writeln()
     ..writeln(
@@ -372,6 +413,9 @@ String _renderDart(List<Tenant> tenants) {
       ..writeln("    slug: '${tenant.slug}',")
       ..writeln("    vertical: '${tenant.vertical}',")
       ..writeln("    displayName: '${tenant.displayName}',")
+      ..writeln('    primaryColor: ${_argb(tenant.primaryColor)},')
+      ..writeln('    secondaryColor: ${_argb(tenant.secondaryColor)},')
+      ..writeln("    themeName: '${tenant.themeName}',")
       ..writeln('  ),');
   }
   buffer.writeln('};');

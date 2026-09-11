@@ -6,7 +6,7 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 |---|---|---|---|
 | [07](07-app-plumbing.md) ✅ | App plumbing — Riverpod, go_router, env, Supabase klijent | sve ostalo | 2 dana |
 | [08](08-core-api-repozitoriji.md) ✅ | `core_api` — freezed modeli + repozitoriji | 10, 11, admin | 2–3 dana |
-| [09](09-core-ui-theme-factory.md) | `core_ui` — theme factory po tenantu + tokeni | 10, 11 | 2 dana |
+| [09](09-core-ui-theme-factory.md) ✅ | `core_ui` — theme factory po tenantu + tokeni | 10, 11 | 2 dana |
 | [10](10-client-home-runtime-branding.md) | Client home sa runtime brandingom | 11 | 1–2 dana |
 | [11](11-booking-flow.md) | Booking flow (4 koraka + success) | Sprint 2 | 3–4 dana |
 
@@ -54,6 +54,29 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 > Ostaje za sljedećeg: nema `AppointmentRepository` (nema `anon` politike nad `appointments` — ide uz
 > Auth u Sprintu 2), nema nijednog upisa (`book_appointment` se zove u tasku 11), i testovi ne
 > dodiruju mrežu — mapiranje je dokazano lokalno, transport samo na CI-ju.
+
+> **Task 09 je zatvoren** (✅) — `core_ui` više nije skeleton. `buildAppTheme` je jedina funkcija koja
+> pravi `ThemeData` u sistemu, tokeni pokrivaju razmake, radijuse, trajanja i statusne boje, a šest
+> komponenti (`AppButton`, `ServiceCard`, `TimeSlotChip`, `StatusBadge`, `EmptyState`,
+> `SkeletonLoader`) čeka prvi pravi ekran.
+>
+> Dokazano na CI-ju: [`Flutter` run 34630719984](https://github.com/htuco/salon-booking-platform/actions/runs/34630719984)
+> — **140 testova** (od toga 38 novih u `core_ui`), oba Android APK-a, oba iOS builda.
+>
+> **Tema je runtime podatak.** Boje dolaze iz `salons.primary_color`, pa iz `tenant.yaml`, pa tek
+> onda iz defaulta; `main.dart` više nema nijedan heks. Prvi frame nosi `tenant.yaml` boju — da tema
+> čeka `salonProvider`, tamni barber bi se otvorio bijelim bljeskom. Zato boje u `tenant.yaml` moraju
+> pratiti bazu: kad se raziđu, korisnik vidi treptaj na startu.
+>
+> **`onPrimary` se računa poređenjem WCAG odnosa, ne pragom luminancije** — zlatna `#C6A667` ima
+> luminanciju 0.42, pa bi prag 0.5 stavio bijeli tekst i dao 2.6:1. Test je usput našao stvarnu
+> grešku koju oko ne bi: roze cijena sa 4.12:1, jer je brand tekst bio mjeren na `surface`, a kartica
+> stoji na `surfaceContainer`.
+>
+> Ostaje za sljedećeg: **ništa nije pokrenuto na uređaju ni u browseru** (dokaz je widget-test nivo,
+> a task 07 je pokazao da browser nalazi ono što suite propusti), `clinical_calm` nema tenanta, i
+> sedam komponenti iz [02 §16](../../docs/02-user-flows-wireframes.md) namjerno nije napisano dok ih
+> ekran ne zatraži. Detalji: [09-core-ui-theme-factory.md](09-core-ui-theme-factory.md#status-2026-09-11--✅-zatvoren).
 
 ## Redoslijed koji nije očigledan
 
