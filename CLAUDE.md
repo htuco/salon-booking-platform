@@ -28,10 +28,10 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - `supabase/` — migracije, seed, pgTAP + Deno testovi, Edge Functions. Izvor istine za šemu.
 - `tenants/<flavor>/tenant.yaml` — jedini fajl koji se piše po klijentu.
 - `tool/` — generatori (flavori, iOS konfiguracije, placeholder ikone).
-- `design/` — dizajnerski handoff: 17 ekrana, tokeni, komponente. **Vizuelni izvor istine.**
-- `prototype/` — React wireframe sa svojim toolchainom. **Zamrznut**, nije production kod.
+- `prototype/ui/` — dizajnerski handoff: 17 ekrana, tokeni, komponente. **Vizuelni izvor istine.**
+- `prototype/wireframe/` — React wireframe sa svojim toolchainom. **Zamrznut**, nije production kod.
 - `.claude/settings.json` — `SessionStart` hook i odobreni MCP serveri (`supabase`, `context7`, `playwright`).
-- Root `package.json` drži samo `lefthook` (git hookovi). Web toolchain je u `prototype/`.
+- Root `package.json` drži samo `lefthook` (git hookovi). Web toolchain je u `prototype/wireframe/`.
 - `docs/` — proizvodna specifikacija (01–07). `tasks/` — raspisani taskovi (Sprint 0 + `sprint-1/`);
   `tasks/CURRENT.md` je aktivni task i prvo što treba pročitati.
 
@@ -42,7 +42,7 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - **Struktura, slojevi, gdje šta živi, kako se stvari povezuju** → `.claude/docs/architecture.md`
 - **Flavori, `tenant.yaml`, generatori, novi klijent, store build** → `.claude/docs/tenant-factory.md`
 - **Kako se piše kod ovdje** → `.claude/docs/conventions.md`
-- **Kako ekran treba da izgleda, tokeni i komponente** → `design/README.md`, pa `design/SPEC.md`
+- **Kako ekran treba da izgleda, tokeni i komponente** → `prototype/ui/README.md`, pa `prototype/ui/SPEC.md`
 - **Kako radim, grane, commit i PR konvencija** → `.claude/docs/ai-interaction.md`
 - **Komande: pokretanje, testovi, generatori, CI, migracije** → `.claude/docs/workflows.md`
 - **Domenski rječnik** (šta je "termin", "vertikala", "tenant", "flavor") → `CONTEXT.md`
@@ -64,10 +64,10 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - **Na razvojnoj mašini nema Dockera, pa `supabase start` ne radi lokalno.** Promjene u `supabase/`
   se dokazuju kroz CI workflow `Supabase tests`, ne lokalno. Ne tvrdi da RLS radi dok taj job nije
   zelen — napisana politika nije dokazana politika.
-- **`design/` je vizuelni izvor istine, `prototype/` je zamrznut.** Ekran se piše po `design/SPEC.md`.
-  Prototip u `prototype/` ostaje referenca za flow i rute; tamo se ne dodaje ni ekran ni popravka.
-  Gdje se njih dvoje ne slažu, `design/` je jači.
-- **Iz `design/` se uzima oblik, ne boja.** Spacing, tipografska skala, radius 0, hairline granice i
+- **`prototype/ui/` je vizuelni izvor istine, `prototype/` je zamrznut.** Ekran se piše po `prototype/ui/SPEC.md`.
+  Prototip u `prototype/wireframe/` ostaje referenca za flow i rute; tamo se ne dodaje ni ekran ni popravka.
+  Gdje se njih dvoje ne slažu, `prototype/ui/` je jači.
+- **Iz `prototype/ui/` se uzima oblik, ne boja.** Spacing, tipografska skala, radius 0, hairline granice i
   oblik komponenti su platformski i idu u `core_ui`. Hex iz handoffa je paleta *jednog* brenda —
   boja dolazi iz `tenant.yaml` kroz `buildAppTheme()`, tekst iz `vertical.terms`. Hardkodiran hex u
   ekranu je greška koja se vidi tek na drugom tenantu.
@@ -106,7 +106,7 @@ verziju i spomeni to u sažetku, umjesto da preskočiš.
 | Strukturu foldera, slojeve, izbor paketa, tok podataka | `.claude/docs/architecture.md` |
 | Generator, `tenant.yaml` polje, flavor pipeline, store korak | `.claude/docs/tenant-factory.md` + `tenants/README.md` |
 | Obrazac pisanja koda, imenovanje, lint pravilo | `.claude/docs/conventions.md` |
-| Dizajn ekrana, token, oblik komponente | `design/README.md` (+ `core_ui` ako mijenja oblik, ne boju) |
+| Dizajn ekrana, token, oblik komponente | `prototype/ui/README.md` (+ `core_ui` ako mijenja oblik, ne boju) |
 | Način rada, grananje, commit ili PR konvencija | `.claude/docs/ai-interaction.md` (+ `.github/pull_request_template.md`) |
 | Pravilo koje se ne smije propustiti u jednom folderu | ugniježđeni `CLAUDE.md` tog foldera (`supabase/`, `apps/client/`, `tool/`, `prototype/`) |
 | Hook, MCP server ili druga postavka harnessa | `.claude/settings.json` (+ odjeljak u `.claude/docs/workflows.md`) |

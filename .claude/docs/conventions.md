@@ -163,9 +163,9 @@ Na svježem klonu `melos run codegen` mora proći prije `analyze` i `test` — i
 - Test koji traži `--dart-define` mora se tako i pokretati u CI-ju; test bez definea koji "prolazi"
   je test koji ne gleda pravu konfiguraciju.
 
-## Dizajn (`design/`)
+## Dizajn (`prototype/ui/`)
 
-Ekran se piše po `design/SPEC.md`. Iz njega se uzima **oblik** — tipografska skala, spacing ritam,
+Ekran se piše po `prototype/ui/SPEC.md`. Iz njega se uzima **oblik** — tipografska skala, spacing ritam,
 radius 0, hairline granice umjesto sjenki, dodirne mete ≥44px, oblik komponenti — i taj oblik živi u
 `core_ui`. **Boja se ne uzima**: hex u handoffu je paleta jednog brenda, a boja dolazi iz
 `tenant.yaml` kroz `buildAppTheme()`. Tekst dolazi iz `vertical.terms`, ne iz stringa u widgetu.
@@ -173,7 +173,7 @@ radius 0, hairline granice umjesto sjenki, dodirne mete ≥44px, oblik komponent
 Hardkodiran hex ili hardkodiran naziv usluge u ekranu prolazi test i prolazi pregled screenshota —
 padne tek na drugom tenantu ili drugoj vertikali.
 
-## Web prototip (`prototype/`)
+## Web prototip (`prototype/wireframe/`)
 
 Radix + Tailwind (shadcn stil), `lucide-react` kao jedini jezik ikona kroz cijeli sistem.
 **Zamrznut** — referenca za flow i rute, ne za vizual i ne za komponente. Nema eslint/prettier

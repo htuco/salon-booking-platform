@@ -233,7 +233,7 @@ njih — ali svaki rješava po jedan stvaran problem ovog projekta:
 |---|---|---|
 | `supabase` | čitanje stvarne šeme i logova umjesto nagađanja iz migracija | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` |
 | `context7` | aktuelna dokumentacija paketa (Flutter, Riverpod, `supabase_flutter`, Gradle) umjesto zastarjelog znanja | `CONTEXT7_API_KEY` |
-| `playwright` | klikanje kroz web artefakte i `design/screens-flat.html` | — |
+| `playwright` | klikanje kroz web artefakte i `prototype/ui/screens-flat.html` | — |
 
 Serveri su **odobreni u `.claude/settings.json`** (`enabledMcpjsonServers`), pa ih Claude Code ne
 traži da potvrđuješ svaki put.

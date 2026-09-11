@@ -156,5 +156,5 @@ Puni build order: [01 §17](01-mvp-spec.md).
 - `source/Salon_Booking_Platform_MVP_Spec_v1.docx` → [01-mvp-spec.md](01-mvp-spec.md)
 - `source/Salon_Booking_Platform_Faza_2_User_Flows_Wireframes.docx` → [02-user-flows-wireframes.md](02-user-flows-wireframes.md)
 
-Vizuelna specifikacija ekrana nije ovdje nego u [`design/`](../design/README.md) — dizajnerski
+Vizuelna specifikacija ekrana nije ovdje nego u [`prototype/ui/`](../prototype/ui/README.md) — dizajnerski
 handoff sa 17 ekrana, tokenima i komponentama.

@@ -1,4 +1,4 @@
-# `design/` — vizuelni izvor istine
+# `prototype/ui/` — vizuelni izvor istine
 
 Dizajnerski handoff za mobilnu klijentsku aplikaciju: 17 ekrana, iPhone 402×874, dark, bosanski.
 Nacrtan je nad brendom **Barber Studio Vitez**, ali se u ovaj repo uzima kao **bazni dizajn sistem
@@ -53,10 +53,10 @@ Ikone su **Lucide**, stroke-width 1.5 — isti jezik ikona kao u `prototype/` (`
 Flutteru. Fontovi su **DM Serif Display** (naslovi) + **Archivo** (tijelo); pakuju se uz aplikaciju,
 ne učitavaju se sa mreže.
 
-## Odnos prema `prototype/`
+## Odnos prema `../wireframe/`
 
-`prototype/` je stariji React wireframe — služio je da se flow vidi prije prvog Dart fajla i
-**zamrznut je**. Gdje se njih dvoje ne slažu, **`design/` je jači**: vjernost je viša i copy je
+`prototype/wireframe/` je stariji React wireframe — služio je da se flow vidi prije prvog Dart fajla i
+**zamrznut je**. Gdje se njih dvoje ne slažu, **`ui/` je jači**: vjernost je viša i copy je
 finalan. Prototip ostaje samo kao referenca za flow i za rute.
 
 ## Doseg naspram taskova
