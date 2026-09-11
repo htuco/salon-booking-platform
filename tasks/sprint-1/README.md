@@ -8,7 +8,7 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 | [08](08-core-api-repozitoriji.md) ✅ | `core_api` — freezed modeli + repozitoriji | 10, 11, admin | 2–3 dana |
 | [09](09-core-ui-theme-factory.md) ✅ | `core_ui` — theme factory po tenantu + tokeni | 10, 11 | 2 dana |
 | [10](10-client-home-runtime-branding.md) ✅ | Client home sa runtime brandingom | 11 | 1–2 dana |
-| [11](11-booking-flow.md) | Booking flow (4 koraka + success) | Sprint 2 | 3–4 dana |
+| [11](11-booking-flow.md) 🟡 | Booking flow (4 koraka + success) | Sprint 2 | 3–4 dana |
 
 **Ukupno: ~10–13 radnih dana**, uz preduslov da su [05](../05-availability-engine.md) i [06](../06-vertical-pack.md) iz Sprinta 0 gotovi — 11 bez 05 nema šta prikazati, a 10 bez 06 piše tekst koji se kasnije prepisuje.
 
@@ -111,6 +111,25 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 > i tap na uslugu vodi na `/book/service?serviceId=<id>`, koji task 11 mora pročitati, inače
 > preselekcija usluge tiho ne radi. Detalji:
 > [10-client-home-runtime-branding.md](10-client-home-runtime-branding.md#status-2026-09-11--✅-gotovo).
+> **Task 11 je u toku** (🟡) — **ne-UI sloj je gotov, ekrani nisu.** `BookingRepository` je prvi
+> repozitorij koji piše u bazu: sve tri metode na `rpc`, nijedna na `from(...)`, jer se slobodni
+> termini ne mogu pročitati bez gledanja tuđih termina, a rezervacija mora re-validirati slot u
+> istoj transakciji. Uz njega `AvailableSlot` u `core_domain` i `BookingFlowState` u klijentu —
+> jedan `autoDispose` provider za sva četiri koraka, **bez keširane liste slotova**. Dokazano
+> lokalno: 205 testova PASS (bilo 165), analiza čista; **CI još nije potvrdio**.
+>
+> **Nađena greška koju bi ekran otkrio tek u produkciji:** `book_appointment` diže konflikt sa
+> `errcode = 'PT409'`, a `mapError` je mapirao samo `409`/`23P01`/`23505`. Postgres klasu `PT`
+> prevodi u HTTP **status**, ali `PostgrestException.code` zadržava `PT409` — konflikt bi ispao
+> `ServerError` i `switch` nad `sealed ApiError` to ne bi prijavio, jer je `ConflictError`
+> obrađen, samo se nikad ne bi desio.
+>
+> Ostaje za sljedećeg: **sva četiri ekrana + success**, `DateStrip` i `StepProgressBar` u
+> `core_ui`, `flutter_animate`/`confetti` u `pubspec.yaml`. Uz to **`book(...)` nije nijednom
+> stvarno pozvan** (traži `authenticated` rolu i `customerId` koji nema odakle doći do Sprinta 2),
+> a **409 putanja nije izazvana uživo** — dokazano je mapiranje, ne ponašanje ekrana. Detalji:
+> [11-booking-flow.md](11-booking-flow.md#status--djelimično-ne-ui-sloj-gotov).
+
 ## Redoslijed koji nije očigledan
 
 - **07 → 08 → 09 → 10 → 11** je lanac, ne prijedlog. Svaki sljedeći koristi ono što prethodni postavi, i preskakanje znači da prvi ekran postane šablon sa prečicama koje se kopiraju petnaest puta.
