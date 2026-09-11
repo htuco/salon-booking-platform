@@ -53,10 +53,7 @@ ApiError _mapPostgrest(PostgrestException error) {
   final code = error.code;
 
   if (code == '23P01' || code == '23505' || code == '409') {
-    return ConflictError(
-      'Termin je u međuvremenu zauzet',
-      cause: error,
-    );
+    return ConflictError('Termin je u međuvremenu zauzet', cause: error);
   }
 
   // PGRST116: "Results contain 0 rows" — `.single()` nad praznim rezultatom.
@@ -71,7 +68,9 @@ ApiError _mapPostgrest(PostgrestException error) {
   }
 
   return ServerError(
-    error.message.isEmpty ? 'Greška baze (${code ?? 'bez koda'})' : error.message,
+    error.message.isEmpty
+        ? 'Greška baze (${code ?? 'bez koda'})'
+        : error.message,
     cause: error,
   );
 }

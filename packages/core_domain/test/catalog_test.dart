@@ -265,7 +265,10 @@ void main() {
     test('nepoznat status iz novije baze ne ruši mapiranje', () {
       // App u storeu je starija od baze: `alter type ... add value` se desi bez
       // novog submissiona. Bez fallbacka bi ovo bio CastError usred liste.
-      final appointment = Appointment.fromJson({...row, 'status': 'rescheduled'});
+      final appointment = Appointment.fromJson({
+        ...row,
+        'status': 'rescheduled',
+      });
 
       expect(appointment.status, AppointmentStatus.unknown);
       expect(appointment.customerName, 'Adnan');

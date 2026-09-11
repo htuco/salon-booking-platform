@@ -15,7 +15,10 @@ void main() {
     test('exclusion constraint je konflikt, ne serverska greška', () {
       // 23P01 — `appointments_no_overlap` iz taska 05.
       final error = mapError(
-        const PostgrestException(message: 'conflicting key value', code: '23P01'),
+        const PostgrestException(
+          message: 'conflicting key value',
+          code: '23P01',
+        ),
       );
 
       expect(error, isA<ConflictError>());
