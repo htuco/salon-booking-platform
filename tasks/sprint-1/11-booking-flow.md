@@ -35,3 +35,67 @@ Klijent od izbora usluge do potvrđenog zahtjeva, bez prijave do zadnjeg koraka,
 - **Broj telefona se ne traži.** Ako se pojavi polje za telefon u koraku "podaci", to je greška u razumijevanju flowa ([06 §3.1](../../docs/06-auth-login-flow.md)).
 - Iskušenje ovog taska je "privremeno" filtrirati slotove u Dartu da bi se brže vidio rezultat. To je tačno ono što [task 05](../05-availability-engine.md) postoji da spriječi.
 - Auth dolazi u Sprintu 2; do tada zadnji korak radi sa guest putanjom ili mock identitetom, ali **struktura poziva mora biti ista** kao kad auth stigne.
+
+---
+
+## Status — djelimično (ne-UI sloj gotov)
+
+Urađen je **sloj ispod ekrana**; četiri ekrana i success ekran nisu dio ove promjene i task
+ostaje otvoren. Grana `feat/booking-repozitorij-availability`.
+
+### Šta je gotovo
+
+- **`BookingRepository`** (`packages/core_api/lib/src/booking/`) — prvi repozitorij koji piše
+  u bazu. `availableSlots`, `availableDates`, `book`; sve tri na `rpc`, nijedna na `from(...)`.
+- **`AvailableSlot`** u `core_domain`, sa `distinctTimes`/`employeesAt` za "bilo koji radnik" —
+  funkcija tada vrati isto vrijeme po svakom slobodnom radniku, pa bi bez svođenja korisnik
+  vidio "09:00" dvaput.
+- **`BookingFlowState` + `BookingFlowNotifier`** (`apps/client/lib/src/features/booking/`) —
+  jedan `autoDispose` provider za sva četiri koraka, sa pravilima brisanja izbora.
+- **`availableSlotsProvider` / `availableDatesProvider`** kao `family`, sa tipiziranim ključem.
+- **Ispravljeno mapiranje konflikta** — v. Dokazano.
+
+### Dokazano
+
+Lokalno: **205 testova PASS** (bilo 165), `melos run analyze` čist. 40 novih testova.
+**Na CI-ju još nije potvrđeno**, kao ni na uređaju.
+
+DoD stavka "nula availability logike u Dartu" provjerena **pretragom**, ne pretpostavkom:
+`grep` za `buffer_minutes|duration_minutes|slotStep|minAdvance` po `core_api/lib` i
+`client/lib` vraća samo čitanje kolona i formatiranje za prikaz ("45 min") — nijedan izračun.
+
+**Nađena greška koju bi ekran otkrio tek u produkciji:** `book_appointment` diže konflikt sa
+`errcode = 'PT409'`, a `mapError` je mapirao samo `409`, `23P01` i `23505`. Postgres klasu `PT`
+prevodi u HTTP status iz zadnja tri znaka, pa je **odgovor** 409 — ali `PostgrestException.code`
+zadržava `PT409`. Konflikt bi zato ispao `ServerError`: korisnik na zauzet termin dobije
+"nešto nije u redu" umjesto osvježene liste, a `switch` nad `sealed ApiError` ne bi ništa
+prijavio jer je `ConflictError` obrađen — samo se nikad ne bi desio. Isto za `PT404`.
+
+### Odluke
+
+- **Stanje flowa ne nosi listu slotova.** Samo identifikatori i vrijeme — to je sve što
+  `book_appointment` traži. Keširana lista bi značila da korisnik nakon povratka nazad bira iz
+  zastarjelog spiska i dobije `409` na potvrdi, tj. tačno ono što flow postoji da izbjegne.
+- **`employeeChosen` je odvojen od `employeeId != null`.** "Bilo koji radnik" je legitiman
+  izbor sa `null` radnikom; uslov nad `employeeId` bi zaključao korisnika na drugom koraku svaki
+  put kad `requireStaffChoice` nije uključen.
+- **Promjena usluge briše radnika i termin** (`clearFrom`). Druga usluga ima drugo trajanje i
+  moguće druge radnike, pa zadržan slot preživi do potvrde i tamo padne kao `409` koji izgleda
+  kao utrka, a zapravo je naša greška.
+- **`autoDispose`** da izlazak iz `/book/*` čisti flow — inače prošli pokušaj dočeka korisnika
+  sa datumom koji je u međuvremenu prošao.
+
+### Ostalo za sljedećeg
+
+- **Sva četiri ekrana i success ekran.** Router i dalje vodi na `PlaceholderScreen`.
+- **Komponente `DateStrip` i `StepProgressBar`** u `core_ui` — i dalje ne postoje.
+- **`flutter_animate`/`confetti`** nisu dodani u `pubspec.yaml`.
+- **`book(...)` nije nijednom stvarno pozvan.** Testovi gađaju mapiranje odgovora, ne mrežu; RPC
+  poziv je dokazan samo pgTAP-om iz taska 05. Prvi stvarni poziv traži Supabase vrijednosti i
+  prijavljenog korisnika — `book_appointment` je grantovan samo roli `authenticated`, a auth
+  dolazi tek u Sprintu 2.
+- **`409` putanja nije izazvana uživo.** Korak 4 iz Koraka ("namjerno izazovi konflikt, dva
+  zahtjeva na isti slot") ostaje neodrađen — dokazano je samo da se `PT409` mapira u
+  `ConflictError`, ne i da ekran na njega osvježi listu.
+- **`customerId` još nema odakle doći.** `book(...)` ga traži kao parametar, a upis u `customers`
+  nema validiranu funkciju (v. "Šta još nije zatvoreno" u `security.md`).
