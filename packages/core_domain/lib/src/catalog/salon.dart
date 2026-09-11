@@ -35,7 +35,9 @@ abstract class Salon with _$Salon {
 
     /// FK na `vertical_packs.key`. Punu vertikalu (terminologiju, pravila, flagove) daje
     /// `VerticalRepository` — ovdje stoji samo ključ, da model ne vuče cijeli pack.
-    @JsonKey(name: 'vertical_pack_key') @Default('generic') String verticalPackKey,
+    @JsonKey(name: 'vertical_pack_key')
+    @Default('generic')
+    String verticalPackKey,
   }) = _Salon;
 
   factory Salon.fromJson(Map<String, dynamic> json) => _$SalonFromJson(json);

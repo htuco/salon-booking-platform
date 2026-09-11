@@ -52,6 +52,5 @@ enum AppointmentStatus {
   bool get blocksSlot => this == pending || this == confirmed;
 
   /// Termin je iza nas, na ovaj ili onaj način.
-  bool get isClosed =>
-      this == cancelled || this == completed || this == noShow;
+  bool get isClosed => this == cancelled || this == completed || this == noShow;
 }
