@@ -51,7 +51,10 @@ Vertikala je od ovog taska **config koji se čita u runtime-u**, a ne literal u 
 
 **Dokaz** — `melos run analyze` (5/5 paketa "No issues found"), `dart format
 --set-exit-if-changed` (0 changed) i `melos run test`: **32 testa PASS** (core_domain 13,
-client 12 + 1 skip, core_api 5, admin 1, core_ui 1).
+client 12 + 1 skip, core_api 5, admin 1, core_ui 1). CI je zelen —
+[run 34544339115](https://github.com/htuco/salon-booking-platform/actions/runs/34544339115): uz
+"Analiza, format i testovi" prolaze i **oba Android APK-a i oba iOS builda**, cime je dokazano da
+nove zavisnosti (`flutter_riverpod`, `supabase_flutter`) ne ruse stvarni tenant build.
 
 Ključni test je `apps/client/test/vertical_terminology_test.dart` → "promjena terminologije
 mijenja tekst bez rebuilda aplikacije": mijenja odgovor repozitorija na **istoj** instanci app-e,
