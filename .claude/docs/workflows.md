@@ -216,18 +216,34 @@ Rute prate `docs/01 §12`; login ekran ima demo prekidače kroz query parametre
 
 ## CI
 
-**CI se okida samo na push u `main`** (plus ručni `workflow_dispatch`) — ne na PR commitove.
-Svakodnevni dokaz je lokalan: `melos run analyze`, `melos run test`, `./tool/test_supabase.sh`.
+CI radi u **dvije brzine**, jer jobovi nisu jednako skupi:
 
-Razlog nije samo trošak minuta. Lokalni build koristi postojeći `build/` i generisane `*.g.dart`
-koji su u `.gitignore` — zato ne može dokazati da codegen radi na praznom klonu. To je jedina stvar
-koju CI daje a lokalno se ne može dobiti, i treba tačno tamo gdje rad ulazi u `main`.
+| Događaj | Šta se pokrene | Naplativo |
+|---|---|---|
+| **PR** | `Supabase tests` + Flutter job `analyze` | **~7 min** |
+| **push u `main`** | sve, uključujući APK po tenantu i oba iOS builda | ~86 min |
+| ručni `workflow_dispatch` | + `release-artifacts` (AAB) | — |
+
+Na PR-u prolazi ono što štiti tuđi rad: **tenant izolacija** (jedino mjesto gdje greška curi tuđe
+podatke) i analiza sa testovima. Skupo je bilo macOS — dvije iOS jobe nose 66 od 86 minuta punog
+runa zbog množioca 10× — pa to ide tek na `main`.
+
+Na `main`-u se dodaje ono što se lokalno **ne može** dobiti: dokaz iz čistog checkouta. Lokalni
+build koristi postojeći `build/` i generisane `*.g.dart` koji su u `.gitignore`, pa ne dokazuje da
+codegen radi na praznom klonu — tačno bug iz commita `e628237`.
+
+Svakodnevno, prije nego išta ode na GitHub: `melos run analyze`, `melos run test`,
+`./tool/test_supabase.sh`.
+
+> **Zašto nema `pre-push` hooka.** Mjereno: codegen + analyze je 54 s, Supabase suite još ~2 min.
+> Hook te dužine se zaobiđe sa `--no-verify` prvog dana, pa bi dao lažan osjećaj pokrivenosti.
+> Provjera koja traje minutama pripada CI-ju, gdje ne blokira nikoga.
 
 | Workflow | Okida se na | Dokazuje |
 |---|---|---|
-| `Flutter` (`.github/workflows/flutter-build.yml`) | **push u `main`** nad `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · **codegen** · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
+| `Flutter` (`.github/workflows/flutter-build.yml`) | **PR** (samo `analyze`) i **push u `main`** (sve) nad `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · **codegen** · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
 | `Flutter` → job `release-artifacts` | **ručni trigger** (`workflow_dispatch`) | AAB za oba tenanta kroz `build_tenant.sh`, `versionCode` iz `github.run_number`, provjera `applicationId` i `versionCode` kroz `bundletool dump manifest`, artefakt se čuva 30 dana |
-| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | **push u `main`** nad `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) |
+| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | **PR i push u `main`** nad `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) |
 
 Oba imaju `concurrency` sa `cancel-in-progress`, pa novi push otkazuje stari run iste grane.
 

@@ -24,9 +24,11 @@ Kad naiđeš na jedno od ovih, to nije razlog da se preskoči dokaz — to je ra
 na CI i da se u sažetku napiše "čeka CI job X".
 
 **Supabase se od 12.09.2026. dokazuje lokalno:** `./tool/test_supabase.sh` diže stack, resetuje bazu
-i pokrene pgTAP plus oba REST testa (66 + 24 + 26 asercija, ~2 min). CI ide **samo na push u `main`**
-i dodaje jedino dokaz iz čistog checkouta. "Čeka CI" više nije prihvatljiv status za `supabase/`
-promjenu — suite se može pokrenuti odmah.
+i pokrene pgTAP plus oba REST testa (66 + 24 + 26 asercija, ~2 min). "Čeka CI" više nije prihvatljiv
+status za `supabase/` promjenu — suite se može pokrenuti odmah.
+
+CI istu suite ponovi na PR-u i na `main`-u, iz čistog checkouta. Skupi jobovi (APK po tenantu, oba
+iOS builda) idu **samo na push u `main`** — za njih „čeka CI" i dalje vrijedi.
 
 ## Dart / widget promjena
 

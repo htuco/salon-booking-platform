@@ -1,10 +1,21 @@
 name: Supabase tests
 
-# Okidac je SAMO push na main (+ rucni trigger). Na PR-u se ovo dokazuje
-# lokalno: `supabase start && supabase test db` plus dva deno REST testa —
-# v. .claude/docs/workflows.md. CI ostaje kao dokaz iz cistog checkouta na
-# tacki gdje rad ulazi u main, ne na svakom commitu.
+# Ide i na PR i na push u main. Ovo je job zbog kojeg CI uopste postoji:
+# tenant izolacija je jedino mjesto gdje greska curi tude podatke, pa tudi
+# PR ne smije uci u main nedokazan. Ubuntu-only, ~3,6 naplativih minuta —
+# skup je bio macOS iOS build, ne ovo.
+#
+# Lokalno se ista suite pokrene sa ./tool/test_supabase.sh (~2 min).
+# v. .claude/docs/workflows.md.
 on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/seed.sql'
+      - 'supabase/tests/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase-tests.yml'
+      - 'packages/core_api/**'
   push:
     branches: [main]
     paths:
