@@ -51,13 +51,32 @@ Redoslijed pri novom tenantu i sve zamke: `.claude/docs/tenant-factory.md`.
 cd apps/client
 flutter build apk   --debug --flavor barberstudiovitez --dart-define=SALON_ID=550e8400-e29b-41d4-a716-446655440000
 flutter build ios   --debug --no-codesign --flavor barberstudiovitez --dart-define=SALON_ID=550e8400-e29b-41d4-a716-446655440000
+flutter build web   --dart-define=SALON_ID=550e8400-e29b-41d4-a716-446655440000
 ```
 
 Demo UUID-evi: Barber Studio Vitez `...440000`, Beauty Studio Travnik `...440001`.
 
-**Bez `--dart-define=SALON_ID` app se builda ali ne nalazi svoj salon** — ekran kaže "Nedostaje
-SALON_ID konfiguracija", tema padne na svijetlu, i tenant regresija se ne vidi. Isto važi za
-testove teme.
+**Bez `--dart-define=SALON_ID` app pada na startu**, u `AppEnv.fromDefines()`, sa porukom koja
+imenuje varijablu. To je namjerno: ranije se pogrešna konfiguracija vidjela tek kao tekst na
+ekranu, na uređaju testera i danima kasnije. `SUPABASE_URL` i `SUPABASE_ANON_KEY` **nisu**
+obavezni — bez njih se Supabase klijent ne diže i app radi na fallback podacima, što je ono
+što `flutter run` bez backenda i web preview i trebaju.
+
+Testovi teme više ne traže `--dart-define`: env ulazi kroz `appEnvProvider` override, pa
+`tenant_theme_test` sam bira tenanta i pokriva oba. Jedini test koji ga i dalje traži je
+`app_env_test.dart`, koji baš provjerava čitanje pravih define-ova.
+
+### Web: provjera da deep link stvarno radi
+
+Ruta koja radi u widget testu ne znači da radi u browseru. Dva su načina da tiho ne radi:
+`initialLocation` u `GoRouter`-u i izostanak `usePathUrlStrategy()` — u oba slučaja URL u
+adresnoj traci ostane tačan, a otvori se početna. Provjerava se nad **gotovim** artefaktom:
+
+```sh
+cd apps/client && flutter build web --dart-define=SALON_ID=<uuid>
+# posluži build/web uz SPA fallback (sve nepoznato -> index.html), pa u browseru otvori
+# /book/slot direktno i potvrdi da se vidi taj ekran, ne početna
+```
 
 ### `tool/build_tenant.sh` — jedina ulazna tačka u build
 

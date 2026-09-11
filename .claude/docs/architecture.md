@@ -176,10 +176,36 @@ Poznata mrtva težina koju treba ukloniti (`docs/07 §2`): `@mui/*` i `@emotion/
 
 ## Šta još ne postoji
 
-Da ne tražiš uzalud: nema Next.js konzole, nema `go_router` ruta, nema teme u `core_ui`, nema
-pravog FCM-a, i nema `Supabase.initialize` u `main`-u (dolazi u tasku 07 — do tada
-`supabaseClientProvider` postoji, ali ga u testu override-uješ). Sprint 0 gradi temelj (flavori,
-šema, CI); ekrani dolaze u Sprintu 1. Stanje po tasku: `tasks/README.md`.
+Da ne tražiš uzalud: nema Next.js konzole, nema teme u `core_ui`, nema pravog FCM-a i nema
+nijednog **pravog ekrana** — sve rute imaju placeholder tijela dok ih ne napišu taskovi 10 i 11.
+Stanje po tasku: `tasks/README.md`.
 
-Riverpod i prvi repozitorij **postoje** od taska 06: `VerticalRepository` u `core_api` i
-`verticalProvider` u `apps/client/lib/src/core/`.
+Postoji od taska 06: `VerticalRepository` u `core_api`, `verticalProvider` u `apps/client`.
+Od taska 07: `AppEnv`/`AdminEnv`, `bootstrapClient()`/`bootstrapAdmin()` sa `Supabase.initialize`,
+`go_router` u oba app-a i `.arb` lokalizacije u klijentu.
+
+## Kičma aplikacije
+
+```
+main()
+  └─ bootstrapClient()          apps/client/lib/src/core/env/
+       ├─ usePathUrlStrategy()  bez ovoga web deep link tiho ne radi
+       ├─ AppEnv.fromDefines()  pada samo na SALON_ID; SUPABASE_* su opcioni
+       └─ Supabase.initialize(headers: {'x-salon-id': …})
+  └─ ProviderScope(overrides: [appEnvProvider.overrideWithValue(env)])
+       └─ MaterialApp.router(routerConfig: appRouterProvider)
+```
+
+Tri odluke koje se ne vide iz potpisa:
+
+- **`AppEnv` ulazi kroz override, ne kroz globalnu varijablu.** Test tako podiže app sa svojim
+  okruženjem, bez `--dart-define`-a i bez mreže; zato `tenant_theme_test` više ne traži define
+  i pokriva oba tenanta umjesto da se skipuje.
+- **Obavezan je samo `SALON_ID`.** Bez Supabase vrijednosti klijent se ne diže i app radi na
+  fallbacku — to je ono što `flutter run` bez backenda i web preview trebaju. Dok su bile
+  obavezne, web build je padao prije `runApp` i davao praznu bijelu stranicu bez poruke.
+- **Nema `initialLocation`.** Na webu nadjačava URL iz adresne trake, pa deep link tiho ne radi
+  dok URL izgleda ispravno. Admin umjesto njega ima redirect sa `/` na `/login`.
+
+`x-salon-id` se postavlja **jednom**, na klijentu, a ne u repozitorijima: zaboravljen header ne
+daje grešku nego prazan rezultat. Admin app ga ne šalje — v. `ADR-0003` i `.claude/docs/security.md`.
