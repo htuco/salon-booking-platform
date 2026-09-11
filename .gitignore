@@ -55,7 +55,8 @@ apps/*/lib/src/l10n/generated/
 
 # Generisani kod (freezed / json_serializable) — nastaje iz anotacija u istom fajlu.
 # Ne commituje se: diff bi bio veci od rucno pisanog koda, a merge konflikti u *.g.dart
-# se rjesavaju samo ponovnim generisanjem. CI ih napravi prije `analyze`
+# se rjesavaju samo ponovnim generisanjem. Generise ih `melos run codegen` — CI ga zove
+# u SVAKOM jobu koji kompajlira, a tool/build_tenant.sh sam prije builda.
 # (v. .claude/docs/workflows.md).
 *.freezed.dart
 *.g.dart

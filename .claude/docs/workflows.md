@@ -42,6 +42,12 @@ u listi tiho ispada iz svih ovih komandi.
 (`@freezed`, `@JsonKey`) i `.gitignore` ih hvata — zato svjež klon pada na `analyze` sa
 `Target of URI doesn't exist: 'salon.freezed.dart'` dok se `melos run codegen` ne pokrene jednom.
 
+**Treba ga svaki korak koji kompajlira, ne samo analiza.** `flutter build` pada na isto, sa
+`part 'x.freezed.dart': No such file or directory`. Zato ga zove svaki od četiri joba u
+`flutter-build.yml`, a `tool/build_tenant.sh` ga pokrene sam prije builda — lokalni build i CI tako
+ne mogu odlutati. (Ovo je greška koju je uhvatio tek CI: prvi pokušaj je dodao codegen samo u
+`analyze` job, pa su oba iOS i oba Android builda pala.)
+
 ```sh
 melos run codegen        # jednom, nakon klona i nakon svake izmjene modela
 melos run codegen:watch  # regeneriše na svaku izmjenu — za rad na modelima
