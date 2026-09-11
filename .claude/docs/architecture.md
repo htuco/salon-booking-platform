@@ -28,18 +28,41 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
                                             Firebase FCM (samo push)
 ```
 
-- **`core_domain`** — entiteti, `Vertical`, formatiranje. Bez Fluttera i bez mreže — to je i u
-  `pubspec.yaml`-u: paket nema `flutter` zavisnost i testovi mu idu na `package:test`. Čim uđe
-  `flutter`, sloj prestaje biti upotrebljiv iz čistog Dart konteksta i smjer zavisnosti se tiho
-  obrne.
-- **`core_api`** — Supabase repozitoriji, modeli, greške. Jedini sloj koji zna za HTTP i tabele.
+- **`core_domain`** — entiteti (`Salon`, `Service`, `Appointment`, `Vertical`), vrijednosni tipovi
+  i pravila. Bez Fluttera i bez mreže — to je i u `pubspec.yaml`-u: paket nema `flutter` zavisnost
+  i testovi mu idu na `package:test`. Čim uđe `flutter`, sloj prestaje biti upotrebljiv iz čistog
+  Dart konteksta i smjer zavisnosti se tiho obrne. `freezed_annotation` i `json_annotation` su
+  čist Dart i to pravilo ne krše.
+- **`core_api`** — Supabase repozitoriji, mapiranje grešaka, Riverpod provideri. Jedini sloj koji
+  zna za HTTP i tabele. **Modeli nisu ovdje nego u `core_domain`** i nose `fromJson` — obrazloženje
+  i odbačene opcije: [ADR-0006](../../docs/adr/0006-modeli-u-core-domain.md).
 - **`core_ui`** — design system: tokeni, tema, komponente. Ne zna za repozitorije.
 - **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
   (`env`, `router`, `theme`) i `lib/src/l10n/`.
 
-Danas su svi `core_*` prazni skeletoni, a `apps/*` imaju samo placeholder ekran — Sprint 0 dokazuje
-infrastrukturu, a ne piše ekrane. Kad pišeš prvi pravi kod, poštuj smjer zavisnosti gore:
-`core_domain` ne smije uvesti `core_api`, a `core_ui` ne smije uvesti nijedan repozitorij.
+Poštuj smjer zavisnosti gore: `core_domain` ne smije uvesti `core_api`, a `core_ui` ne smije uvesti
+nijedan repozitorij. `core_ui` je i dalje skeleton — tema po tenantu dolazi u tasku 09.
+
+### Dva pravila koja `core_api` čuva
+
+1. **Van paketa ne izlazi `Map`.** Repozitorij vraća model iz `core_domain` ili baca; sirovi red
+   ne prelazi granicu.
+2. **Van paketa ne izlazi `PostgrestException`.** Sve greške prolaze kroz `mapError` i izlaze kao
+   `ApiError` — `sealed`, pa `switch` nad njim Dart provjerava na iscrpnost. Ekran razlikuje
+   `NetworkError`, `NotFoundError`, `ConflictError`, `ServerError` i `MappingError`; booking flow
+   bez te razlike ne zna da li ponuditi "pokušaj ponovo" ili osvježenu listu termina.
+
+`ConflictError` je `409` iz `book_appointment` i exclusion constraint `appointments_no_overlap`
+(task 05). `NotFoundError` namjerno pokriva i "red ne postoji" i "RLS ga ne propušta" — razlika
+između to dvoje je curenje podatka o tuđem tenantu.
+
+### Vremena nisu `DateTime`
+
+`working_hours`, `blocked_slots` i `appointments` drže Postgresov `time` i `date` — **lokalno zidno
+vrijeme salona**, bez zone. `core_domain` ih čita u `LocalTime` i `LocalDate`, koji namjerno nemaju
+konverziju u trenutak: `DateTime.parse('09:00:00')` daje vrijeme po zoni **uređaja**, a jedan
+`toUtc()` na tome pomjeri radno vrijeme salona za sat ili dva. Jedini `DateTime` u modelima je
+`Appointment.pendingExpiresAt`, jer je `timestamptz` i jeste stvarni trenutak.
 
 ## Flutter monorepo
 
@@ -180,9 +203,16 @@ Da ne tražiš uzalud: nema Next.js konzole, nema teme u `core_ui`, nema pravog 
 nijednog **pravog ekrana** — sve rute imaju placeholder tijela dok ih ne napišu taskovi 10 i 11.
 Stanje po tasku: `tasks/README.md`.
 
-Postoji od taska 06: `VerticalRepository` u `core_api`, `verticalProvider` u `apps/client`.
+Postoji od taska 06: `Vertical` u `core_domain` i `VerticalRepository` u `core_api`.
 Od taska 07: `AppEnv`/`AdminEnv`, `bootstrapClient()`/`bootstrapAdmin()` sa `Supabase.initialize`,
 `go_router` u oba app-a i `.arb` lokalizacije u klijentu.
+Od taska 08: modeli javnog kataloga u `core_domain`, pet repozitorija i `ApiError` u `core_api`, i
+svi Riverpod provideri — uključujući `supabaseClientProvider` i `verticalProvider`, koji su se iz
+`apps/client` preselili u `core_api`. Aplikacija vezuje svoj `SALON_ID` kroz
+`currentSalonIdProvider.overrideWith(...)`; bez tog override-a repozitorij baca
+`UnimplementedError` na prvom pozivu.
+
+**Upisa još nema.** Ovaj sloj samo čita — `book_appointment` RPC se poziva tek u tasku 11.
 
 ## Kičma aplikacije
 

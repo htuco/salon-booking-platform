@@ -20,6 +20,18 @@ Brandirana klijentska aplikacija. Jedan codebase, N tenanata. Root pravila važe
 - **Nijedna boja se ne piše kao literal.** Tema dolazi iz backenda, sa fallbackom iz `tenant.yaml`.
 - **Nula availability i booking logike u Dartu.** Backend računa slobodne termine i ponovo validira
   slot pri kreiranju; app prikazuje listu koju dobije i obrađuje `409`.
+- **Ekran ne uvozi `supabase_flutter`.** Jedini izuzetak je `lib/src/core/env/bootstrap.dart`, koji
+  poziva `Supabase.initialize`. Sve ostalo ide kroz repozitorij i provider iz `core_api`
+  (`servicesProvider`, `salonProvider`, …). Ekran koji uveze Supabase zaobišao je sloj grešaka i
+  prvi put kad upit padne pokazaće sirovi `PostgrestException`.
+- **Greška se hvata kao `ApiError`, nikad kao `PostgrestException`.** `ApiError` je `sealed`, pa
+  `switch` nad njim mora pokriti `NetworkError`, `NotFoundError`, `ConflictError`, `ServerError` i
+  `MappingError` — tek ta razlika daje ekranu da zna nudi li "pokušaj ponovo" ili osvježenu listu.
+- **`currentSalonIdProvider` mora biti override-ovan** u `ProviderScope`-u (`coreApiOverrides` u
+  `lib/src/core/vertical_provider.dart`). `core_api` ne zna za `--dart-define`; bez override-a
+  svaki repozitorij baca `UnimplementedError` na prvom pozivu.
+- **Vremena iz baze su `LocalTime`/`LocalDate`, ne `DateTime`.** To su zidna vremena salona bez
+  zone; `DateTime` bi ih vezao za zonu uređaja i pomjerio radno vrijeme.
 - **`Theme.of(context)` u `build` metodi koja sama postavlja `MaterialApp` vraća Flutterov default**,
   ne tenant temu — tijelo mora biti zaseban widget. Ta greška je već napravljena jednom
   (`a53a429`), i `test/tenant_theme_test.dart` postoji zbog nje.

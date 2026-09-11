@@ -28,6 +28,16 @@
 /// `docs/05-vertical-packs.md`.
 library;
 
+export 'src/catalog/appointment.dart';
+export 'src/catalog/appointment_status.dart';
+export 'src/catalog/employee.dart';
+export 'src/catalog/employee_service.dart';
+export 'src/catalog/local_date.dart';
+export 'src/catalog/local_time.dart';
+export 'src/catalog/salon.dart';
+export 'src/catalog/salon_settings.dart';
+export 'src/catalog/service.dart';
+export 'src/catalog/working_hour.dart';
 export 'src/vertical/booking_rules.dart';
 export 'src/vertical/vertical.dart';
 export 'src/vertical/vertical_features.dart';

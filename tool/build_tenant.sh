@@ -55,6 +55,13 @@ echo "== $flavor / $target / $mode"
 echo "   salonId      $salon_id"
 echo "   versionName  $version_name"
 
+# Generisani kod (freezed/json_serializable) nije u gitu — nastaje determinsticki iz
+# anotacija. Bez ovoga `flutter build` pada na `part 'x.freezed.dart': No such file or
+# directory` na svakom svjezem klonu. Build je jedina ulazna tacka, pa se generise ovdje,
+# a ne u svakom pozivaocu posebno.
+echo "-> generisem freezed/json_serializable kod"
+(cd "$root" && dart run melos exec --depends-on=build_runner -- dart run build_runner build >/dev/null)
+
 cd "$root/apps/client"
 
 case "$target" in
