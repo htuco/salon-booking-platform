@@ -1,0 +1,33 @@
+{
+  "@@locale": "bs",
+
+  "appTitle": "Salon",
+  "@appTitle": {
+    "description": "Ime aplikacije kad tenant nije poznat. Brandirano ime dolazi iz tenants.g.dart."
+  },
+
+  "cancel": "Otkaži",
+  "@cancel": {
+    "description": "Dugme za odustajanje. Jezik aplikacije, ne terminologija vertikale."
+  },
+
+  "retry": "Pokušaj ponovo",
+  "@retry": {
+    "description": "Ponavljanje neuspjelog mrežnog poziva."
+  },
+
+  "genericError": "Nešto je pošlo naopako. Pokušaj ponovo.",
+  "@genericError": {
+    "description": "Greška bez konkretnog uzroka koji korisnik može popraviti."
+  },
+
+  "noConnection": "Nema veze s internetom.",
+  "@noConnection": {
+    "description": "Prikazuje se kad zahtjev padne bez odgovora servera."
+  },
+
+  "screenNotFound": "Stranica ne postoji",
+  "@screenNotFound": {
+    "description": "errorBuilder u go_routeru — nepoznat URL, najčešće na webu."
+  }
+}

@@ -30,6 +30,14 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
 - **Kod koji treba test, a zavisi od tuđeg builder lanca** → `verticalFromSalonRow` u
   `packages/core_api/`. Mapiranje je izdvojeno iz repozitorija da se testira bez lažiranja
   PostgREST-a: pravila su u mapiranju, `.from().select().eq()` je tuđi kod.
+- **Konfiguracija koja mora pasti glasno** → `apps/client/lib/src/core/env/app_env.dart`.
+  Obavezan define baca sa imenom varijable u poruci; opcioni se degradira na fallback. Test
+  (`app_env_test.dart`) se pokreće **sa** `--dart-define`, jer widget testovi ubacuju env kroz
+  override i nikad ne pozovu pravi `fromDefines()` — zbog toga je prazna bijela stranica na
+  webu prošla kroz cijelu zelenu suite.
+- **Ruta koja mora imati URL** → `apps/client/lib/src/core/router/app_router.dart`. Rute su
+  enum, ne slobodni stringovi; router test poredi skup putanja sa **prepisanom** listom iz
+  `docs/01 §12`, a ne sa samim enumom (inače test potvrđuje da je enum jednak sam sebi).
 
 ## Jezik
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:client/main.dart';
+import 'package:client/src/core/env/app_env.dart';
 import 'package:client/src/core/vertical_provider.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
@@ -39,13 +40,21 @@ Vertical get _beauty => Vertical.fromJson({
   'default_theme': 'elegant_beauty',
 });
 
+const _env = AppEnv(
+  salonId: '550e8400-e29b-41d4-a716-446655440000',
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  apiUrl: '',
+);
+
 Widget _app(Vertical vertical) => ProviderScope(
   overrides: [
+    appEnvProvider.overrideWithValue(_env),
     // Provider se override-uje, ne repozitorij ispod njega: test o terminologiji
     // ne treba ni mrežu ni Supabase inicijalizaciju.
     verticalProvider.overrideWith((ref) async => vertical),
   ],
-  child: const TenantPreviewApp(),
+  child: const SalonClientApp(),
 );
 
 void main() {
@@ -84,14 +93,17 @@ void main() {
     when(() => repository.fetchForSalon(any())).thenAnswer((_) async => served);
 
     final container = ProviderContainer(
-      overrides: [verticalRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        appEnvProvider.overrideWithValue(_env),
+        verticalRepositoryProvider.overrideWithValue(repository),
+      ],
     );
     addTearDown(container.dispose);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const TenantPreviewApp(),
+        child: const SalonClientApp(),
       ),
     );
     await tester.pumpAndSettle();
@@ -117,11 +129,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            appEnvProvider.overrideWithValue(_env),
             verticalProvider.overrideWith(
               (ref) => Completer<Vertical>().future,
             ),
           ],
-          child: const TenantPreviewApp(),
+          child: const SalonClientApp(),
         ),
       );
       await tester.pump();
@@ -138,8 +151,11 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [verticalRepositoryProvider.overrideWithValue(repository)],
-          child: const TenantPreviewApp(),
+          overrides: [
+            appEnvProvider.overrideWithValue(_env),
+            verticalRepositoryProvider.overrideWithValue(repository),
+          ],
+          child: const SalonClientApp(),
         ),
       );
       await tester.pumpAndSettle();

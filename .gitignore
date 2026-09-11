@@ -48,3 +48,7 @@ tenants/**/GoogleService-Info.plist
 tenants/**/*.p8
 tenants/**/*.mobileprovision
 fastlane/report.xml
+
+# Generisane lokalizacije — `flutter gen-l10n` ih stvori iz lib/src/l10n/*.arb prije builda.
+# Commitovana kopija bi zastarila cim se .arb promijeni, a niko ne bi primijetio.
+apps/*/lib/src/l10n/generated/
