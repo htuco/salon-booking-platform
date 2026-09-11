@@ -99,3 +99,17 @@ prijavio jer je `ConflictError` obrađen — samo se nikad ne bi desio. Isto za 
   `ConflictError`, ne i da ekran na njega osvježi listu.
 - **`customerId` još nema odakle doći.** `book(...)` ga traži kao parametar, a upis u `customers`
   nema validiranu funkciju (v. "Šta još nije zatvoreno" u `security.md`).
+
+### CI je blokiran (nije zbog koda)
+
+Oba workflowa (`Flutter`, `Supabase tests`) padaju **prije nego što išta pokrenu**, za 5–6
+sekundi, sa porukom GitHub Actionsa:
+
+> The job was not started because recent account payments have failed or your spending limit
+> needs to be increased.
+
+Nije posljedica ove promjene: run na `main`-u u 19:36 pao je isto, a zadnji zeleni run je u 19:23
+(task 10). Rerun odmah ponovo pada. Odblokira se u **Billing & plans** na `htuco` nalogu, pa
+`gh run rerun` na PR-u [#12](https://github.com/htuco/salon-booking-platform/pull/12).
+
+Dok to ne prođe, za ovu granu **ne postoji CI dokaz** — vrijedi samo lokalnih 205 testova.
