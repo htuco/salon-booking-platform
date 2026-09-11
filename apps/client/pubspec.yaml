@@ -40,6 +40,8 @@ dependencies:
     path: ../../packages/core_api
   core_domain:
     path: ../../packages/core_domain
+  core_ui:
+    path: ../../packages/core_ui
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^2.6.1
