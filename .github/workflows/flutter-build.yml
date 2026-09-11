@@ -46,18 +46,18 @@ jobs:
 
       - run: flutter pub get
 
+      # Generisani kod (freezed/json_serializable) nije u gitu — nastaje determinsticki
+      # iz anotacija. Treba SVAKOM jobu koji kompajlira, ne samo analizi: bez njega
+      # `flutter build` pada na `part 'x.freezed.dart': No such file or directory`.
+      # Izuzetak je tenants.g.dart — on je izlaz iz tool/gen_flavors.dart, jeste u gitu,
+      # i provjerava ga korak `gen_flavors.dart --check`.
+      - name: Generisi freezed/json_serializable kod
+        run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
+
       # Generisani fajlovi moraju biti commitani i ažurni — inače gradle blok i
       # tenants.g.dart tiho odlutaju od tenant.yaml.
       - name: Provjeri da su generisani fajlovi ažurni
         run: dart run tool/gen_flavors.dart --check
-
-      # Generisani kod (freezed/json_serializable) nije u gitu — nastaje iz anotacija
-      # i regenerise se determinsticki. Mora prije `analyze` i `test`, inace analiza
-      # pada na `part 'x.freezed.dart'` fajlovima kojih nema.
-      # Izuzetak je tenants.g.dart: on je izlaz iz tool/gen_flavors.dart, jeste u gitu,
-      # i provjerava ga korak `--check` iznad.
-      - name: Generisi freezed/json_serializable kod
-        run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
 
       # Generisani fajlovi se ne formatiraju — build_runner ih ispisuje u svom stilu,
       # a nisu u gitu pa ih niko i ne cita u diffu.
@@ -104,6 +104,14 @@ jobs:
           cache: true
 
       - run: flutter pub get
+
+      # Generisani kod (freezed/json_serializable) nije u gitu — nastaje determinsticki
+      # iz anotacija. Treba SVAKOM jobu koji kompajlira, ne samo analizi: bez njega
+      # `flutter build` pada na `part 'x.freezed.dart': No such file or directory`.
+      # Izuzetak je tenants.g.dart — on je izlaz iz tool/gen_flavors.dart, jeste u gitu,
+      # i provjerava ga korak `gen_flavors.dart --check`.
+      - name: Generisi freezed/json_serializable kod
+        run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
 
       - name: Build ${{ matrix.flavor }}
         working-directory: apps/client
@@ -158,6 +166,14 @@ jobs:
           cache: true
 
       - run: flutter pub get
+
+      # Generisani kod (freezed/json_serializable) nije u gitu — nastaje determinsticki
+      # iz anotacija. Treba SVAKOM jobu koji kompajlira, ne samo analizi: bez njega
+      # `flutter build` pada na `part 'x.freezed.dart': No such file or directory`.
+      # Izuzetak je tenants.g.dart — on je izlaz iz tool/gen_flavors.dart, jeste u gitu,
+      # i provjerava ga korak `gen_flavors.dart --check`.
+      - name: Generisi freezed/json_serializable kod
+        run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
 
       # Xcode konfiguracije i scheme su commitani; ovo dokazuje da postoje za
       # svaki iOS tenant. Bez schemea `--flavor` puca.
@@ -236,6 +252,14 @@ jobs:
           cache: true
 
       - run: flutter pub get
+
+      # Generisani kod (freezed/json_serializable) nije u gitu — nastaje determinsticki
+      # iz anotacija. Treba SVAKOM jobu koji kompajlira, ne samo analizi: bez njega
+      # `flutter build` pada na `part 'x.freezed.dart': No such file or directory`.
+      # Izuzetak je tenants.g.dart — on je izlaz iz tool/gen_flavors.dart, jeste u gitu,
+      # i provjerava ga korak `gen_flavors.dart --check`.
+      - name: Generisi freezed/json_serializable kod
+        run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
 
       # versionCode mora rasti bez editovanja tenant.yaml. github.run_number je
       # monoton po repou, a Play trazi monotonost po aplikaciji — sto je time
