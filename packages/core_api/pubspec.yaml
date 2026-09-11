@@ -9,11 +9,15 @@ environment:
   sdk: ^3.13.0
   flutter: '>=1.17.0'
 
+# Modeli ne stoje ovdje nego u `core_domain` — v. `docs/adr/0006-modeli-u-core-domain.md`.
+# Ovaj paket drzi repozitorije, mapiranje gresaka i Riverpod providere; codegen mu zato
+# ne treba.
 dependencies:
   core_domain:
     path: ../core_domain
   flutter:
     sdk: flutter
+  flutter_riverpod: ^2.6.1
   supabase_flutter: ^2.8.0
 
 dev_dependencies:

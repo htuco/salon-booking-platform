@@ -30,6 +30,18 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
 - **Kod koji treba test, a zavisi od tuđeg builder lanca** → `verticalFromSalonRow` u
   `packages/core_api/`. Mapiranje je izdvojeno iz repozitorija da se testira bez lažiranja
   PostgREST-a: pravila su u mapiranju, `.from().select().eq()` je tuđi kod.
+- **Repozitorij** → `packages/core_api/lib/src/catalog/salon_repository.dart`. Kolone nabrojane
+  eksplicitno (nikad `select('*')`), poziv obavijen u `guard(...)` da iz njega izađe samo
+  `ApiError`, mapiranje u izdvojenoj `@visibleForTesting` funkciji. Ostala četiri su ga preslikala.
+- **Greška koju ekran može razlikovati** → `packages/core_api/lib/src/errors/`. `ApiError` je
+  `sealed`, pa `switch` nad njim Dart provjerava na iscrpnost — novi tip obori build tamo gdje nije
+  obrađen umjesto da padne u `default` i pojavi se kao pogrešna poruka u produkciji.
+- **Vrijednosni tip koji postoji da spriječi jednu grešku** → `LocalTime`/`LocalDate` u
+  `packages/core_domain/lib/src/catalog/`. Baza drži zidno vrijeme salona bez zone; `DateTime` bi
+  ga vezao za zonu uređaja i tiho pomjerio radno vrijeme. Tip nema konverziju u trenutak — namjerno.
+- **Model sa vrijednošću koju baza može proširiti** → `AppointmentStatus`. Enum sa `unknown`
+  fallbackom: `switch` ostaje iscrpan, a status dodan migracijom nakon zadnjeg store submissiona ne
+  ruši listu termina. Isti razlog zbog kojeg je `Vertical.key` namjerno `String`.
 - **Konfiguracija koja mora pasti glasno** → `apps/client/lib/src/core/env/app_env.dart`.
   Obavezan define baca sa imenom varijable u poruci; opcioni se degradira na fallback. Test
   (`app_env_test.dart`) se pokreće **sa** `--dart-define`, jer widget testovi ubacuju env kroz
@@ -97,9 +109,25 @@ Kad naiđeš na takvu zamku, zapiši je tu gdje se dešava — ne u commit poruk
 
 ## Generisani fajlovi
 
-Commituju se (CI ih provjerava, build ih treba), ali se ne edituju. Prepoznaju se po markeru
-`GENERISANO — ne editovati ručno` ili po `.g.dart` sufiksu. Kad ti treba drugačiji izlaz, mijenjaš
-`tenant.yaml` ili generator, pa pokreneš generator. Više: `.claude/docs/tenant-factory.md`.
+**Dvije vrste, i u gitu se ponašaju suprotno.** Nijedna se ne edituje rukom.
+
+| | Izlaz iz | U gitu? | Provjera |
+|---|---|---|---|
+| `tenants.g.dart`, Gradle blok, `*.xcconfig` | `tool/gen_*.dart` nad `tenants/*/tenant.yaml` | **da** | `dart run tool/gen_flavors.dart --check` |
+| `*.freezed.dart`, `*.g.dart` u `packages/` | `build_runner` nad anotacijama u istom fajlu | **ne** | regeneriše se u CI-ju prije `analyze` |
+
+Prvi su izlaz iz ulaza koji CI nema kako da reprodukuje bez generatora i koji build traži — zato su
+u gitu i zato `--check` pada kad odlutaju (ADR-0002). Drugi nastaju determinstički iz anotacija u
+istom fajlu, pa bi ih commitovanje pretvorilo u diff veći od ručno pisanog koda i u merge konflikte
+koji se ionako rješavaju samo ponovnim generisanjem.
+
+`.gitignore` to razdvaja eksplicitno: `*.g.dart` je ignorisan, a `apps/client/lib/src/generated/tenants.g.dart`
+je izuzet iz ignorisanja. Ako dodaješ novi generator, odluči u koju kolonu ide **prije** prvog
+commita.
+
+Na svježem klonu `melos run codegen` mora proći prije `analyze` i `test` — inače analiza pada na
+`part 'x.freezed.dart'` fajlovima kojih nema. Više: `.claude/docs/workflows.md`, a za flavor stranu
+`.claude/docs/tenant-factory.md`.
 
 ## Testovi
 

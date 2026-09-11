@@ -19,12 +19,14 @@ Sve komande se pokreću iz roota repoa osim gdje ne piše drugačije.
 ```sh
 dart pub global activate melos
 melos bootstrap          # flutter pub get kroz cijeli workspace
+melos run codegen        # OBAVEZNO na svjezem klonu — v. ispod
 npm i && npx lefthook install   # pre-commit: dart format na staged Dart fajlove
 ```
 
 ## Svakodnevno
 
 ```sh
+melos run codegen        # freezed/json_serializable (*.freezed.dart, *.g.dart)
 melos run analyze        # dart analyze u svim paketima
 melos run format         # provjeri formatiranje (ne mijenja)
 melos run format:fix     # formatiraj
@@ -33,6 +35,35 @@ melos run test           # flutter test u svakom paketu koji ima test/
 
 `melos exec` ide **samo kroz pakete iz `workspace:` liste** u root `pubspec.yaml`. Paket koji nije
 u listi tiho ispada iz svih ovih komandi.
+
+### Codegen: mora prije `analyze` i `test`
+
+**Generisani kod nije u gitu.** `*.freezed.dart` i `*.g.dart` u `packages/` nastaju iz anotacija
+(`@freezed`, `@JsonKey`) i `.gitignore` ih hvata — zato svjež klon pada na `analyze` sa
+`Target of URI doesn't exist: 'salon.freezed.dart'` dok se `melos run codegen` ne pokrene jednom.
+
+**Treba ga svaki korak koji kompajlira, ne samo analiza.** `flutter build` pada na isto, sa
+`part 'x.freezed.dart': No such file or directory`. Zato ga zove svaki od četiri joba u
+`flutter-build.yml`, a `tool/build_tenant.sh` ga pokrene sam prije builda — lokalni build i CI tako
+ne mogu odlutati. (Ovo je greška koju je uhvatio tek CI: prvi pokušaj je dodao codegen samo u
+`analyze` job, pa su oba iOS i oba Android builda pala.)
+
+```sh
+melos run codegen        # jednom, nakon klona i nakon svake izmjene modela
+melos run codegen:watch  # regeneriše na svaku izmjenu — za rad na modelima
+```
+
+Skripta gađa samo pakete koji imaju `build_runner` (`--depends-on=build_runner`), danas
+`core_domain`. Dodaš li codegen u drugi paket, dovoljno je dodati mu `build_runner` u
+`dev_dependencies` — skripta ga pokupi sama.
+
+Dvije zamke:
+
+- **`--delete-conflicting-outputs` više ne postoji** u build_runner 2.9+. Komanda ga prihvati uz
+  upozorenje i ignoriše; ne dodaji ga u nove skripte.
+- **`tenants.g.dart` nije ovaj codegen.** On je izlaz iz `tool/gen_flavors.dart` nad `tenant.yaml`,
+  jeste u gitu, i provjerava ga `--check`. `.gitignore` ga eksplicitno izuzima iz `*.g.dart`
+  pravila. Razlika i obrazloženje: `.claude/docs/conventions.md` § Generisani fajlovi.
 
 ## Generatori
 
@@ -124,8 +155,12 @@ fixture.
 `supabase start` lokalno ne radi. Zato:
 
 - **Promjene u `supabase/` se dokazuju kroz CI workflow `Supabase tests`**, koji na svaki PR nad
-  `supabase/migrations|seed.sql|tests|config.toml` pokrene cijeli stack, `supabase test db` i REST
-  test, pa ugasi stack.
+  `supabase/migrations|seed.sql|tests|config.toml` (i nad `packages/core_api/`) pokrene cijeli
+  stack, `supabase test db` i oba REST testa, pa ugasi stack.
+- **Isto vrijedi za `core_api` repozitorije.** Da li upit stvarno prolazi kao `anon` i da li kolone
+  koje traži postoje ne može se dokazati unit testom — mapiranje se testira lokalno, transport samo
+  na CI-ju (`supabase/tests/rest_public_catalog.ts`). Zato je `packages/core_api/**` u okidačima tog
+  workflowa: lista kolona u tom testu je kopija one iz repozitorija.
 - **Napisana politika nije dokazana politika.** Dok taj job nije zelen, u sažetku piše "napisano,
   čeka CI", ne "radi".
 - Ako instaliraš Docker Desktop, dopuni ovaj odjeljak i `tasks/README.md` — to je stanje koje se
@@ -145,9 +180,9 @@ Rute prate `docs/01 §12`; login ekran ima demo prekidače kroz query parametre
 
 | Workflow | Okida se na | Dokazuje |
 |---|---|---|
-| `Flutter` (`.github/workflows/flutter-build.yml`) | `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
+| `Flutter` (`.github/workflows/flutter-build.yml`) | `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · **codegen** · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
 | `Flutter` → job `release-artifacts` | **ručni trigger** (`workflow_dispatch`) | AAB za oba tenanta kroz `build_tenant.sh`, `versionCode` iz `github.run_number`, provjera `applicationId` i `versionCode` kroz `bundletool dump manifest`, artefakt se čuva 30 dana |
-| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | `supabase/migrations`, `seed.sql`, `tests/`, `config.toml` | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a |
+| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) |
 
 Oba imaju `concurrency` sa `cancel-in-progress`, pa novi push otkazuje stari run iste grane.
 

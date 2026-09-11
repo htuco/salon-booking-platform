@@ -50,6 +50,7 @@ const _env = AppEnv(
 Widget _app(Vertical vertical) => ProviderScope(
   overrides: [
     appEnvProvider.overrideWithValue(_env),
+    ...coreApiOverrides,
     // Provider se override-uje, ne repozitorij ispod njega: test o terminologiji
     // ne treba ni mrežu ni Supabase inicijalizaciju.
     verticalProvider.overrideWith((ref) async => vertical),
@@ -95,6 +96,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         appEnvProvider.overrideWithValue(_env),
+        ...coreApiOverrides,
         verticalRepositoryProvider.overrideWithValue(repository),
       ],
     );
@@ -130,6 +132,7 @@ void main() {
         ProviderScope(
           overrides: [
             appEnvProvider.overrideWithValue(_env),
+            ...coreApiOverrides,
             verticalProvider.overrideWith(
               (ref) => Completer<Vertical>().future,
             ),
@@ -153,6 +156,7 @@ void main() {
         ProviderScope(
           overrides: [
             appEnvProvider.overrideWithValue(_env),
+            ...coreApiOverrides,
             verticalRepositoryProvider.overrideWithValue(repository),
           ],
           child: const SalonClientApp(),
