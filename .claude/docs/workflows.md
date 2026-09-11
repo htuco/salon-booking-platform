@@ -235,6 +235,23 @@ codegen radi na praznom klonu — tačno bug iz commita `e628237`.
 Svakodnevno, prije nego išta ode na GitHub: `melos run analyze`, `melos run test`,
 `./tool/test_supabase.sh`.
 
+### Dokaz iz čistog checkouta, bez CI-ja
+
+```sh
+./tool/verify_clean.sh              # klon u temp + pub get + codegen + gen --check + analyze + test
+./tool/verify_clean.sh --with-apk   # plus APK za oba tenanta (~15 min)
+```
+
+Klonira granu u temp folder, pa tamo pokrene cijeli lanac. Klon nosi **samo commitovane fajlove**,
+pa hvata ono što lokalno pokretanje ne može: zaboravljen commit, codegen koji nije ožičen, drift
+generisanog registra. Zadnji pun prolaz: **165 testova, 5 paketa, nula grešaka.**
+
+> **Mora `flutter pub get`, ne `dart pub get`.** `apps/client` ima `generate: true` uz `l10n.yaml`,
+> pa tek flutter varijanta stvori `lib/src/l10n/generated/`. Taj folder je u `.gitignore`, dakle na
+> čistom klonu ga nema — sa `dart pub get` analiza padne na deset `Undefined name 'AppLocalizations'`
+> grešaka kojih u repou nema. Isto vrijedi za `melos bootstrap`: paralelni resolve-ovi na čistom
+> klonu znaju pasti na `Bad state: Attempting to send request on closed client`.
+
 > **Zašto nema `pre-push` hooka.** Mjereno: codegen + analyze je 54 s, Supabase suite još ~2 min.
 > Hook te dužine se zaobiđe sa `--no-verify` prvog dana, pa bi dao lažan osjećaj pokrivenosti.
 > Provjera koja traje minutama pripada CI-ju, gdje ne blokira nikoga.

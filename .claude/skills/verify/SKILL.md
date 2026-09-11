@@ -30,6 +30,10 @@ status za `supabase/` promjenu — suite se može pokrenuti odmah.
 CI istu suite ponovi na PR-u i na `main`-u, iz čistog checkouta. Skupi jobovi (APK po tenantu, oba
 iOS builda) idu **samo na push u `main`** — za njih „čeka CI" i dalje vrijedi.
 
+**Čist checkout se dokazuje i bez CI-ja:** `./tool/verify_clean.sh` klonira granu u temp folder i
+tamo pusti pub get, codegen, `gen_flavors --check`, analizu i testove. To je jedini dokaz koji
+obično pripada CI-ju, pa je koristan kad su GitHub minute potrošene.
+
 ## Dart / widget promjena
 
 ```sh
