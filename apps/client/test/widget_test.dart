@@ -64,7 +64,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // AppBar naslov dolazi iz rute, ne iz tenanta — ime tenanta je naslov prozora.
-      expect(find.text(ClientRoute.home.title), findsNWidgets(2)); // AppBar + tijelo
+      expect(
+        find.text(ClientRoute.home.title),
+        findsNWidgets(2),
+      ); // AppBar + tijelo
       expect(find.text(ClientRoute.home.path), findsOneWidget);
     });
 
@@ -83,7 +86,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text(ClientRoute.home.title), findsNWidgets(2)); // AppBar + tijelo
+      expect(
+        find.text(ClientRoute.home.title),
+        findsNWidgets(2),
+      ); // AppBar + tijelo
     });
   });
 }

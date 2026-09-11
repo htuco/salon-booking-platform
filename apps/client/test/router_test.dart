@@ -59,6 +59,33 @@ void main() {
     });
   });
 
+  group('deep link', () {
+    // Regresija: sa `initialLocation` router na webu otvori pocetnu bez obzira na URL iz
+    // adresne trake, pa dijeljena veza na /book/slot vodi na /. U browseru to izgleda
+    // ispravno (URL ostaje /book/slot), pa se otkrije tek kad neko posalje link.
+    testWidgets('router prati platformsku rutu, ne nametnutu lokaciju', (
+      tester,
+    ) async {
+      // `/book/slot` je ono sto bi na webu doslo iz adresne trake.
+      tester.binding.platformDispatcher.defaultRouteNameTestValue =
+          ClientRoute.bookSlot.path;
+      addTearDown(
+        tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+      );
+
+      final container = _container();
+      await tester.pumpWidget(_app(container));
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        ClientRoute.bookSlot.path,
+        reason: 'deep link mora preziviti podizanje app-e',
+      );
+      expect(find.text(ClientRoute.bookSlot.title), findsNWidgets(2));
+    });
+  });
+
   group('navigacija daje pravi URL', () {
     // Ovo je razlog zasto je `go_router` obavezan: web build mora imati URL po ekranu.
     // `Navigator.push` bi prosao widget test jednako dobro, a na webu ostavio jedan
