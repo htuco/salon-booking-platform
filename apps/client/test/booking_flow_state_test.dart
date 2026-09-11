@@ -28,9 +28,8 @@ void main() {
     test('"bilo koji" prolazi korak iako je employeeId null', () {
       // Zamka: uslov `employeeId != null` bi zaključao korisnika na drugom koraku
       // svaki put kad vertikala ne traži izbor radnika.
-      final state = const BookingFlowState(
-        serviceId: service,
-      ).withAnyEmployee();
+      final state = const BookingFlowState(serviceId: service)
+          .withAnyEmployee();
 
       expect(state.employeeId, isNull);
       expect(state.employeeChosen, isTrue);
@@ -94,10 +93,7 @@ void main() {
       );
 
       expect(bezVremena.isReadyToSubmit(dateOnly: false), isFalse);
-      expect(
-        bezVremena.firstIncompleteStep(dateOnly: false),
-        BookingStep.slot,
-      );
+      expect(bezVremena.firstIncompleteStep(dateOnly: false), BookingStep.slot);
       expect(full().isReadyToSubmit(dateOnly: false), isTrue);
     });
 
@@ -122,9 +118,8 @@ void main() {
         BookingStep.service,
       );
       expect(
-        const BookingFlowState(
-          serviceId: service,
-        ).firstIncompleteStep(dateOnly: false),
+        const BookingFlowState(serviceId: service)
+            .firstIncompleteStep(dateOnly: false),
         BookingStep.employee,
       );
     });

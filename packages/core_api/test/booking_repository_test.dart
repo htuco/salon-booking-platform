@@ -87,7 +87,10 @@ void main() {
         {'available_date': '2026-09-16'},
       ]);
 
-      expect(dates, [const LocalDate(2026, 9, 15), const LocalDate(2026, 9, 16)]);
+      expect(dates, [
+        const LocalDate(2026, 9, 15),
+        const LocalDate(2026, 9, 16),
+      ]);
     });
 
     test('prazan raspon je prazna lista', () {

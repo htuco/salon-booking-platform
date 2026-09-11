@@ -126,8 +126,7 @@ class BookingFlowState {
       switch (step) {
         BookingStep.service => serviceId != null,
         BookingStep.employee => employeeChosen,
-        BookingStep.slot =>
-          date != null && (dateOnly || startTime != null),
+        BookingStep.slot => date != null && (dateOnly || startTime != null),
         BookingStep.details => true,
       };
 
@@ -158,14 +157,8 @@ class BookingFlowState {
       other.note == note;
 
   @override
-  int get hashCode => Object.hash(
-    serviceId,
-    employeeId,
-    employeeChosen,
-    date,
-    startTime,
-    note,
-  );
+  int get hashCode =>
+      Object.hash(serviceId, employeeId, employeeChosen, date, startTime, note);
 
   @override
   String toString() =>
