@@ -34,6 +34,11 @@ Nijedan od tih fajlova se ne edituje ručno — sljedeće pokretanje ih prepisuj
   identifikator — `create("barber-vitez")` ne kompajlira.
 - **`salonId` mora biti UUID** i mora odgovarati redu u [`supabase/seed.sql`](../supabase/seed.sql).
   Ako ne odgovara, aplikacija se builda ali ne nalazi svoj salon.
+- **`branding.primaryColor` i `branding.secondaryColor` moraju biti `#RRGGBB`**, i moraju biti iste
+  kao `salons.primary_color`/`secondary_color` u bazi. To su fallback boje dok backend ne odgovori —
+  kad se raziđu, baza je u pravu, ali korisnik vidi treptaj boje pri startu.
+- **`branding.theme`** je `modern_barber` (tamna), `elegant_beauty` (svijetla) ili `clinical_calm`;
+  bira svjetlinu i neutralnu paletu. Nepoznato ime pada na `modern_barber` umjesto da sruši app.
 
 ## Build
 
