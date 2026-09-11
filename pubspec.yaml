@@ -24,9 +24,20 @@ dev_dependencies:
 
 melos:
   scripts:
+    codegen:
+      run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
+      description: |
+        Generiše freezed/json_serializable kod (*.freezed.dart, *.g.dart) u svakom paketu
+        koji ima build_runner. Generisani fajlovi NISU u gitu, pa ovo mora ići prije
+        `analyze` i `test` na svjezem klonu i u CI-ju.
+
+    codegen:watch:
+      run: dart run melos exec --depends-on=build_runner -- dart run build_runner watch
+      description: Isto kao `codegen`, ali regeneriše na svaku izmjenu — za rad na modelima.
+
     analyze:
       run: dart run melos exec -- dart analyze .
-      description: Statička analiza za sve Dart/Flutter pakete.
+      description: Statička analiza za sve Dart/Flutter pakete. Traži `codegen` prije sebe.
 
     format:
       run: dart run melos exec -- dart format --set-exit-if-changed .

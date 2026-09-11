@@ -12,5 +12,17 @@ environment:
 # "bez Fluttera i bez mreže" — cim paket zavisi od Fluttera, prestaje biti upotrebljiv
 # iz cistog Dart konteksta (skripta, server, test bez binding-a) i smjer zavisnosti
 # se tiho obrne. Testovi zato idu na `package:test`, ne `flutter_test`.
+#
+# `freezed_annotation` i `json_annotation` su cisti Dart i ne krse to pravilo —
+# nose samo `@freezed`/`@JsonKey` anotacije, bez runtime zavisnosti na mrezu.
+# Zasto entitet ovdje nosi `fromJson`: `docs/adr/0006-modeli-u-core-domain.md`.
+dependencies:
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.12.0
+  meta: ^1.15.0
+
 dev_dependencies:
+  build_runner: ^2.4.13
+  freezed: ^3.2.0
+  json_serializable: ^6.8.0
   test: ^1.25.0
