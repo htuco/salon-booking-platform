@@ -36,12 +36,39 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
 - **`core_api`** — Supabase repozitoriji, mapiranje grešaka, Riverpod provideri. Jedini sloj koji
   zna za HTTP i tabele. **Modeli nisu ovdje nego u `core_domain`** i nose `fromJson` — obrazloženje
   i odbačene opcije: [ADR-0006](../../docs/adr/0006-modeli-u-core-domain.md).
-- **`core_ui`** — design system: tokeni, tema, komponente. Ne zna za repozitorije.
+- **`core_ui`** — design system: tokeni, tema, komponente. Ne zna za repozitorije ni za modele —
+  komponente primaju gotove stringove ("45 min", "25 KM"), pa isti paket služi i klijentskoj i
+  admin aplikaciji. Formatiranje zna ekran, koji jedini poznaje jezik i vertikalu.
 - **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
   (`env`, `router`, `theme`) i `lib/src/l10n/`.
 
 Poštuj smjer zavisnosti gore: `core_domain` ne smije uvesti `core_api`, a `core_ui` ne smije uvesti
-nijedan repozitorij. `core_ui` je i dalje skeleton — tema po tenantu dolazi u tasku 09.
+nijedan repozitorij.
+
+### Tema je runtime podatak, ne konstanta
+
+`buildAppTheme(primary, secondary, themeName)` u `core_ui/src/theme/theme_factory.dart` je **jedina**
+funkcija koja pravi `ThemeData` u sistemu. Boje su joj ulaz, jer ih vlasnik salona mijenja iz admin
+aplikacije i promjena mora stići bez novog builda.
+
+Do boje se dolazi lancem, u `apps/client/lib/src/core/theme_provider.dart`:
+
+```
+salons.primary_color (backend)  →  TenantConfig iz tenants.g.dart  →  podrazumijevana paleta
+```
+
+Prva dva koraka su razlog zašto `tenant.yaml` uopšte nosi boje: `salonProvider` je `FutureProvider`,
+pa je prvi frame uvijek bez odgovora. Da tema čeka mrežu, app bi se otvorila u Flutterovoj svijetloj
+temi i tek onda skočila u tenant paletu — na tamnom barberu je to bijeli bljesak preko cijelog
+ekrana. Zato se korak 1 uzima kroz `valueOrNull`, a koraci 2–3 su sinhroni.
+
+Posljedica: boje u `tenant.yaml` moraju biti iste kao red u `salons`. Kad se raziđu, baza je u pravu,
+ali korisnik vidi treptaj boje na startu.
+
+**Kontrast se računa, ne pogađa.** `onPrimary` bira `onColorFor` poređenjem stvarnih WCAG odnosa, a
+ne pragom luminancije — vlasnik smije izabrati žutu, a bijeli tekst na njoj je nečitljiv
+(`docs/02 §14`). Statusne boje (potvrđeno/otkazano) namjerno stoje **van** `ColorScheme`-a, u
+`ThemeExtension`-u, da se ne stope sa brand bojom salona koji izabere zelenu.
 
 ### Dva pravila koja `core_api` čuva
 
@@ -199,8 +226,8 @@ Poznata mrtva težina koju treba ukloniti (`docs/07 §2`): `@mui/*` i `@emotion/
 
 ## Šta još ne postoji
 
-Da ne tražiš uzalud: nema Next.js konzole, nema teme u `core_ui`, nema pravog FCM-a i nema
-nijednog **pravog ekrana** — sve rute imaju placeholder tijela dok ih ne napišu taskovi 10 i 11.
+Da ne tražiš uzalud: nema Next.js konzole, nema pravog FCM-a i nema nijednog **pravog ekrana** —
+sve rute imaju placeholder tijela dok ih ne napišu taskovi 10 i 11.
 Stanje po tasku: `tasks/README.md`.
 
 Postoji od taska 06: `Vertical` u `core_domain` i `VerticalRepository` u `core_api`.
@@ -211,6 +238,11 @@ svi Riverpod provideri — uključujući `supabaseClientProvider` i `verticalPro
 `apps/client` preselili u `core_api`. Aplikacija vezuje svoj `SALON_ID` kroz
 `currentSalonIdProvider.overrideWith(...)`; bez tog override-a repozitorij baca
 `UnimplementedError` na prvom pozivu.
+
+Od taska 09: `core_ui` više nije skeleton — `buildAppTheme`, tokeni (razmaci, radijusi, trajanja,
+statusne boje) i šest komponenti (`AppButton`, `ServiceCard`, `TimeSlotChip`, `StatusBadge`,
+`EmptyState`, `SkeletonLoader`). Klijent temu uzima iz `appThemeProvider`-a; `main.dart` više nema
+nijedan heks.
 
 **Upisa još nema.** Ovaj sloj samo čita — `book_appointment` RPC se poziva tek u tasku 11.
 

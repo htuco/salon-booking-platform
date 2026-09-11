@@ -41,6 +41,22 @@ generisano zastarjelo.
   identifikator i ne kompajlira.
 - **`salonId` mora biti UUID i odgovarati redu u `supabase/seed.sql`.** Ako ne odgovara, app se
   builda uredno i ne nađe svoj salon — najskuplja tiha greška u ovom lancu.
+- **`branding.primaryColor` i `branding.secondaryColor` moraju biti `#RRGGBB`.** Provjera je ovdje,
+  a ne u Dartu na uređaju: neispravan heks bi tamo bio izuzetak pri startu aplikacije, ovdje je pad
+  generatora u CI-ju. U registar ulaze kao ARGB `int`, pa app ne parsira boju pri startu.
+
+### Boje u `tenant.yaml` nisu dekoracija
+
+`branding.primaryColor`/`secondaryColor` su **fallback dok backend ne odgovori**, i moraju biti iste
+kao `salons.primary_color`/`secondary_color` u bazi. Runtime izvor istine je baza — vlasnik boju
+mijenja iz admin aplikacije i promjena stiže bez novog builda.
+
+Kad se razidju, aplikacija i dalje radi, ali korisnik vidi **treptaj boje na startu**: prvi frame u
+boji iz `tenant.yaml`, pa skok na boju iz baze. Zato pri promjeni boje mijenjaj oba mjesta.
+
+`branding.theme` (`modern_barber` | `elegant_beauty` | `clinical_calm`) bira svjetlinu i neutralnu
+paletu. Nepoznato ime **ne ruši app** nego pada na `modern_barber` — tema dodana migracijom poslije
+zadnjeg store submissiona ne smije biti izuzetak. Detalji: `.claude/docs/architecture.md`.
 
 ## Zamke koje su nas već koštale
 
