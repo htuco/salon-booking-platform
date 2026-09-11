@@ -5,7 +5,7 @@
 | **Procjena** | 1–2 dana |
 | **Zavisi od** | [06 — VerticalPack](../06-vertical-pack.md), [08 — core_api](08-core-api-repozitoriji.md), [09 — core_ui](09-core-ui-theme-factory.md) |
 | **Blokira** | 11 (booking flow) |
-| **Reference** | [01 §12](../../docs/01-mvp-spec.md#12-screens) · [02 §2](../../docs/02-user-flows-wireframes.md) · prototip `src/app/pages/LandingPage.tsx` |
+| **Reference** | [01 §12](../../docs/01-mvp-spec.md#12-screens) · [02 §2](../../docs/02-user-flows-wireframes.md) · prototip `prototype/src/app/pages/LandingPage.tsx` |
 
 ## Cilj
 Prvi pravi ekran, i prvi **end-to-end dokaz** da lanac baza → repozitorij → provider → tema → tekst radi: isti build sa drugim `SALON_ID` daje drugi salon, druge boje i drugu terminologiju, bez ijedne izmjene koda.
@@ -22,13 +22,13 @@ Prvi pravi ekran, i prvi **end-to-end dokaz** da lanac baza → repozitorij → 
 
 ## Koraci
 1. Ekran čita `salonProvider`, `servicesProvider`, `employeesProvider`, `verticalProvider` — bez direktnog poziva repozitorija
-2. Složi layout po prototipu (`src/app/pages/LandingPage.tsx`) koristeći komponente iz `core_ui`, ne nove ad-hoc widgete
+2. Složi layout po prototipu (`prototype/src/app/pages/LandingPage.tsx`) koristeći komponente iz `core_ui`, ne nove ad-hoc widgete
 3. Prazno/greška/učitavanje prije nego što se "završi" sretan slučaj
 4. Napravi screenshotove za oba tenanta i zakači ih u status blok taska
 5. Commit: `feat(client): home ekran sa runtime brandingom i vertikalnom terminologijom`
 
 ## Zamke
-- Prototip u `src/` je referenca za flow i vizual, **ne izvor komponenti**. Ne prevodi Tailwind klase jedan-na-jedan; koristi tokene iz `core_ui`.
+- Prototip u `prototype/` je referenca za flow, **ne izvor komponenti** i više ne za vizual — vizual je u `design/`. Ne prevodi Tailwind klase jedan-na-jedan; koristi tokene iz `core_ui`.
 - Ovo je prvi ekran, pa postaje šablon koji će se kopirati. Šta god ovdje bude prečica — literal boja, literal string, poziv repozitorija iz widgeta — bit će ponovljeno petnaest puta.
 
 ---

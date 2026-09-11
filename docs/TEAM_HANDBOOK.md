@@ -86,7 +86,8 @@ Repo je opremljen tako da nova sesija — tvoja ili kolegina — može krenuti b
 | `.claude/skills/` | `/task`, `/verify`, `/handoff`, `/new-tenant`, `/cleanup`, `/research` |
 | `.claude/agents/` | recenzenti: `rls-auditor`, `dart-reviewer`, `duplication-scanner`, `flutter-ui-reviewer` |
 | `.claude/settings.json` | `SessionStart` hook (ubaci aktivni task i git stanje) + odobreni MCP serveri |
-| `supabase/`, `apps/client/`, `tool/`, `src/` — `CLAUDE.md` | pravila tog foldera; učitavaju se sama kad se radi u njemu |
+| `supabase/`, `apps/client/`, `tool/`, `prototype/` — `CLAUDE.md` | pravila tog foldera; učitavaju se sama kad se radi u njemu |
+| `design/` | kako ekran treba da izgleda — handoff sa 17 ekrana, tokeni, komponente |
 | `docs/adr/` | zašto je nešto odlučeno i šta je odbačeno |
 | `tasks/` | šta se radi sada i dokle se stiglo |
 

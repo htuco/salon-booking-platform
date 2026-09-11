@@ -218,14 +218,25 @@ Dvije odluke koje se ne vide iz potpisa:
   padaju na generic default, jer je app u storeu uvijek starija od baze — vertikala dodana
   migracijom ne smije srušiti ekran.
 
-## Web prototip (`src/`)
+## Dizajn (`design/`) i wireframe (`prototype/`)
 
-React + Vite + Tailwind + Radix, rute u `src/app/routes.tsx` prate `docs/01 §12`. Svrha mu je da se
-flow i vizual vide prije prvog Dart fajla. **Nije production kod**; kad ekran pređe u Flutter,
-prototip ostaje kao referenca, ne kao druga implementacija koju treba održavati.
+**`design/`** je vizuelni izvor istine: dizajnerski handoff sa 17 ekrana u punoj vjernosti,
+finalnim copyjem na bosanskom i popisanim tokenima (`design/SPEC.md`). Ekran u Flutteru se piše
+po njemu.
 
-Poznata mrtva težina koju treba ukloniti (`docs/07 §2`): `@mui/*` i `@emotion/*` su u
-`package.json` bez ijednog importa u `src/`.
+Podjela pri prevođenju u kod je ono što ga čini upotrebljivim u white-label sistemu:
+**oblik je platformski** (tipografska skala, spacing ritam, radius 0, hairline granice umjesto
+sjenki, oblik komponenti) i živi u `core_ui`; **boja je po tenantu** i dolazi iz `tenant.yaml`
+kroz `buildAppTheme()`; **tekst je po vertikali** i dolazi iz `vertical.terms`. Hex iz handoffa je
+paleta jednog brenda, ne konstanta sistema.
+
+**`prototype/`** je stariji React wireframe (Vite + Tailwind + Radix, rute u
+`prototype/src/app/routes.tsx` prate `docs/01 §12`) sa **svojim** toolchainom u istom folderu.
+**Zamrznut je** — služio je da se flow vidi prije prvog Dart fajla, a tu ulogu je preuzeo
+`design/`. Ostaje referenca za flow i rute. Gdje se njih dvoje ne slažu, `design/` je jači.
+
+Root `package.json` drži samo `lefthook` (git hookovi za cijeli repo) i ne miješa se sa
+toolchainom prototipa.
 
 ## Šta još ne postoji
 
