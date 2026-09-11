@@ -93,7 +93,9 @@ salon_platform/
 
 ## 2. Ovaj repo danas — šta je prototip, šta ostaje
 
-`src/app/` u ovom repou (React + Vite) je **wireframe prototip**, ne production kod — potvrđeno u [README.md](../README.md). Dvije stvari vrijedne popravke prije nego prototip preraste u referencu za dizajn sistem:
+`prototype/src/app/` u ovom repou (React + Vite) je **wireframe prototip**, ne production kod — potvrđeno u [README.md](../README.md).
+
+**Ažurirano 12.09.2026:** prototip je **zamrznut**. Referenca za dizajn sistem nije postao on nego [`design/`](../design/README.md) — dizajnerski handoff sa 17 ekrana u punoj vjernosti. Prototip je premješten iz roota u `prototype/` zajedno sa svojim toolchainom, a `@mui/*` + `@emotion/*` su tada uklonjeni (prvi red tabele ispod je time zatvoren). Nalazi o ikonama i animacijama i dalje važe.
 
 | Nalaz | Akcija |
 |---|---|

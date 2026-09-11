@@ -5,7 +5,7 @@
 | **Procjena** | 3–4 dana |
 | **Zavisi od** | [05 — availability engine](../05-availability-engine.md), [10 — home](10-client-home-runtime-branding.md) |
 | **Blokira** | Sprint 2 (auth se traži na kraju ovog flowa) |
-| **Reference** | [01 §8](../../docs/01-mvp-spec.md#8-booking-rules) · [01 §9](../../docs/01-mvp-spec.md#9-core-user-flows) · [02](../../docs/02-user-flows-wireframes.md) · prototip `src/app/pages/BookingFlow.tsx` |
+| **Reference** | [01 §8](../../docs/01-mvp-spec.md#8-booking-rules) · [01 §9](../../docs/01-mvp-spec.md#9-core-user-flows) · [02](../../docs/02-user-flows-wireframes.md) · [`design/SPEC.md`](../../design/SPEC.md) ekrani 5c–5g · prototip `prototype/src/app/pages/BookingFlow.tsx` |
 
 ## Cilj
 Klijent od izbora usluge do potvrđenog zahtjeva, bez prijave do zadnjeg koraka, i **bez ijedne linije availability logike u Dartu**.

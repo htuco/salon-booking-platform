@@ -106,7 +106,8 @@ Otvori `/` za pregled svih ekrana grupisanih po tri dijela sistema.
 ├── CLAUDE.md                # router za Claude Code
 ├── CONTEXT.md               # domenski rječnik
 ├── .claude/                 # docs/, skills/, agents/ — v. "Rad sa Claude Code"
-├── docs/                    # ⬅ dokumentacija — počni ovdje (+ adr/, agents/)
+├── docs/                    # ⬅ dokumentacija — počni ovdje (+ adr/, agents/, source/)
+├── design/                  # ⬅ dizajnerski handoff — vizuelni izvor istine (17 ekrana)
 ├── tasks/                   # raspisani taskovi za Sprint 0
 ├── pubspec.yaml             # root — Dart pub workspace + Melos config (melos: key)
 ├── apps/
@@ -119,16 +120,17 @@ Otvori `/` za pregled svih ekrana grupisanih po tri dijela sistema.
 ├── supabase/                # migrations/, functions/, seed.sql, tests/ (init, task 01)
 ├── tenants/                 # build config po klijentu — v. docs/04 §3
 ├── tool/                    # new_tenant.dart, gen_flavors.dart — v. tasks/03
-├── src/app/
-│   ├── pages/               # wireframe ekrani
-│   ├── components/          # design system prototip
-│   └── routes.tsx           # rute prate docs/01 §12
-└── *.docx                   # originalni v1 draftovi (web-first, maj 2026)
+└── prototype/               # React wireframe + svoj toolchain — ZAMRZNUT
+    └── src/app/routes.tsx   # rute prate docs/01 §12
 ```
 
 Puna struktura sa obrazloženjem svakog foldera: [docs/07-tech-architecture.md §1](docs/07-tech-architecture.md#1-puna-struktura-repozitorija).
 
-`.docx` fajlovi su zadržani za referencu. Konvertovani su u markdown i značajno dorađeni u `docs/`.
+Originalni `.docx` draftovi su u `docs/source/`, zadržani za referencu. Konvertovani su u markdown
+i značajno dorađeni u `docs/`.
+
+`design/` je vizuelni izvor istine za ekrane; `prototype/` je stariji React wireframe koji je time
+zamrznut i ostaje samo kao referenca za flow. Root `package.json` drži samo `lefthook`.
 
 ---
 

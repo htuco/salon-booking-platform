@@ -163,11 +163,21 @@ Na svježem klonu `melos run codegen` mora proći prije `analyze` i `test` — i
 - Test koji traži `--dart-define` mora se tako i pokretati u CI-ju; test bez definea koji "prolazi"
   je test koji ne gleda pravu konfiguraciju.
 
-## Web prototip (`src/`)
+## Dizajn (`design/`)
 
-Radix + Tailwind (shadcn stil), `lucide-react` kao jedini jezik ikona kroz cijeli sistem. Nema
-eslint/prettier konfiguracije još, pa ni pre-commit hooka za `src/` — hook se dodaje kad toolchain
-stvarno postoji, da se ne blokira svaki commit na alatu koji ne radi.
+Ekran se piše po `design/SPEC.md`. Iz njega se uzima **oblik** — tipografska skala, spacing ritam,
+radius 0, hairline granice umjesto sjenki, dodirne mete ≥44px, oblik komponenti — i taj oblik živi u
+`core_ui`. **Boja se ne uzima**: hex u handoffu je paleta jednog brenda, a boja dolazi iz
+`tenant.yaml` kroz `buildAppTheme()`. Tekst dolazi iz `vertical.terms`, ne iz stringa u widgetu.
+
+Hardkodiran hex ili hardkodiran naziv usluge u ekranu prolazi test i prolazi pregled screenshota —
+padne tek na drugom tenantu ili drugoj vertikali.
+
+## Web prototip (`prototype/`)
+
+Radix + Tailwind (shadcn stil), `lucide-react` kao jedini jezik ikona kroz cijeli sistem.
+**Zamrznut** — referenca za flow i rute, ne za vizual i ne za komponente. Nema eslint/prettier
+konfiguracije i neće je dobiti; hook se dodaje kad stigne pravi `web/` (Next.js konzola, `docs/07 §1`).
 
 ## Git
 

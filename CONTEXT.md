@@ -146,7 +146,8 @@ storeu; ništa u seedu nije označeno kao objavljeno.
 _Izbjegavaj_: release, deployment.
 
 **Prototip**
-React/Vite ekrani u `src/`. Postoji da se flow i vizual validiraju prije prvog Dart fajla.
+React/Vite ekrani u `prototype/`. Postojao je da se flow i vizual validiraju prije prvog Dart
+fajla; **zamrznut** je otkako `design/` nosi vizual.
 Nije production kod i ne postaje — proizvod je Flutter.
 _Izbjegavaj_: web app (web build **klijent app-e** iz Fluttera je stvarna stvar i drugi kanal),
 frontend.
