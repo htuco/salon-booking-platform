@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'src/generated/tenants.g.dart';
+import 'src/core/vertical_provider.dart';
 
-void main() => runApp(const TenantPreviewApp());
+void main() => runApp(const ProviderScope(child: TenantPreviewApp()));
 
 /// Sprint 0 dokazuje da isti entrypoint prihvata svaki generisani tenant build.
 ///
@@ -10,14 +11,12 @@ void main() => runApp(const TenantPreviewApp());
 /// generisanom registru — build ne prosljeđuje ime, boju i vertikalu ručno.
 /// Runtime izvor istine je backend; ovo su fallback vrijednosti dostupne
 /// prije prvog odgovora.
-class TenantPreviewApp extends StatelessWidget {
+class TenantPreviewApp extends ConsumerWidget {
   const TenantPreviewApp({super.key});
 
-  static const salonId = String.fromEnvironment('SALON_ID');
-
   @override
-  Widget build(BuildContext context) {
-    final tenant = kTenants[salonId];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tenant = ref.watch(tenantProvider);
     final isDark = tenant?.vertical == 'barber';
 
     return MaterialApp(
@@ -33,22 +32,26 @@ class TenantPreviewApp extends StatelessWidget {
       // temu koju ovaj MaterialApp postavlja. Pozvan iz `build` metode iznad,
       // vratio bi Flutterov default (svijetlu) i tekst bi na tamnoj tenant
       // temi bio nevidljiv.
-      home: TenantHome(tenant: tenant, salonId: salonId),
+      home: const TenantHome(),
     );
   }
 }
 
 /// Placeholder ekran — Sprint 1 ga zamjenjuje pravim UI-jem.
-class TenantHome extends StatelessWidget {
-  const TenantHome({required this.tenant, required this.salonId, super.key});
-
-  final TenantConfig? tenant;
-  final String salonId;
+///
+/// Postoji da dokaže lanac **baza → repozitorij → provider → widget**: svaki tekst koji
+/// se razlikuje po vertikali dolazi iz `vertical.terms`, nijedan nije literal ovdje.
+/// Zato "Zakaži termin" na frizerskom buildu i "Rezerviši termin" na beauty buildu izlaze
+/// iz istog `Text`-a, bez `if`-a po vertikali.
+class TenantHome extends ConsumerWidget {
+  const TenantHome({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final title = tenant?.displayName ?? 'Salon';
+    final tenant = ref.watch(tenantProvider);
+    final vertical = verticalOf(ref);
+    final title = tenant?.displayName ?? vertical.terms.businessSingular;
     final isDark = tenant?.vertical == 'barber';
 
     return Scaffold(
@@ -64,9 +67,9 @@ class TenantHome extends StatelessWidget {
               Text(title, style: theme.textTheme.headlineSmall),
               const SizedBox(height: 12),
               Text(switch (tenant) {
-                null when salonId.isEmpty =>
+                null when kSalonId.isEmpty =>
                   'Nedostaje SALON_ID konfiguracija.',
-                null => 'Nepoznat SALON_ID: $salonId',
+                null => 'Nepoznat SALON_ID: $kSalonId',
                 final t => 'Hello, ${t.salonId}',
               }, textAlign: TextAlign.center),
               if (tenant case final t?) ...[
@@ -76,6 +79,19 @@ class TenantHome extends StatelessWidget {
                   style: theme.textTheme.bodySmall,
                 ),
               ],
+              const SizedBox(height: 24),
+              // Terminologija iz vertikale — ovo je dokaz da mehanizam radi.
+              // Na `barber` buildu: "Zakaži termin" / "Barber" / "Moji termini".
+              // Na `beauty` buildu: "Rezerviši termin" / "Stilistica" / "Moji termini".
+              FilledButton(
+                onPressed: null,
+                child: Text(vertical.terms.bookCta),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${vertical.terms.staffPlural} · ${vertical.terms.servicePlural}',
+                style: theme.textTheme.bodySmall,
+              ),
             ],
           ),
         ),

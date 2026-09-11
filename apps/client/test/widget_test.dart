@@ -1,6 +1,8 @@
 import 'package:client/main.dart';
 import 'package:client/src/generated/tenants.g.dart';
 import 'package:flutter/material.dart';
+import 'package:client/src/core/vertical_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -9,7 +11,7 @@ void main() {
   testWidgets('Build bez tenanta prijavljuje da konfiguracija nedostaje', (
     tester,
   ) async {
-    await tester.pumpWidget(const TenantPreviewApp());
+    await tester.pumpWidget(const ProviderScope(child: TenantPreviewApp()));
     expect(find.text('Nedostaje SALON_ID konfiguracija.'), findsOneWidget);
   });
 
@@ -55,15 +57,14 @@ void main() {
       displayName: 'Barber Studio Vitez',
     );
 
-    // Ekran se testira direktno, sa proslijedenim tenantom, pa popunjeni slucaj
-    // ne zavisi od --dart-define i moze se pokriti u obicnom `flutter test`.
+    // Tenant se ubacuje kroz override provider-a, ne kao konstruktorski argument:
+    // popunjeni slucaj tako i dalje ne zavisi od --dart-define i pokriva se u
+    // obicnom `flutter test`.
     testWidgets('prikazuje ime, flavor i vertikalu tenanta', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: TenantHome(
-            tenant: barber,
-            salonId: '550e8400-e29b-41d4-a716-446655440000',
-          ),
+        ProviderScope(
+          overrides: [tenantProvider.overrideWithValue(barber)],
+          child: const MaterialApp(home: TenantHome()),
         ),
       );
       expect(
@@ -86,12 +87,9 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        MaterialApp(
-          theme: theme,
-          home: const TenantHome(
-            tenant: barber,
-            salonId: '550e8400-e29b-41d4-a716-446655440000',
-          ),
+        ProviderScope(
+          overrides: [tenantProvider.overrideWithValue(barber)],
+          child: MaterialApp(theme: theme, home: const TenantHome()),
         ),
       );
 
