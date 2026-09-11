@@ -1,0 +1,55 @@
+# Testno okruzenje za Dart/Flutter dio repoa.
+#
+# Zasto kontejner a ne "pokreni melos lokalno": ovdje niko ne mora imati
+# instaliran Flutter, melos ni tacnu verziju SDK-a, i svako dobija ISTO
+# okruzenje. Uz .dockerignore koji izbacuje sve generisano, kontejner je ujedno
+# i dokaz iz cistog checkouta — codegen mora proci od nule, kao na praznom klonu.
+#
+# Ne gradi APK ni IPA. Android SDK i Xcode ovdje ne postoje; store build ide
+# kroz tool/build_tenant.sh na hostu.
+# Verzija je PRIKOVANA i mora pratiti onu na razvojnoj masini (`flutter --version`).
+# Gotovi Flutter image-i (npr. ghcr.io/cirruslabs/flutter:stable) zaostaju — u
+# trenutku pisanja nose Dart 3.12.0, a root pubspec trazi ^3.13.0, pa `pub get`
+# padne na "version solving failed". Zato instalacija iz zvanicnog arhiva.
+FROM debian:bookworm-slim
+
+ARG FLUTTER_VERSION=3.47.3
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl git unzip xz-utils zip libglu1-mesa \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL -o /tmp/flutter.tar.xz \
+      "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \
+    && tar -xJf /tmp/flutter.tar.xz -C /opt \
+    && rm /tmp/flutter.tar.xz
+ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:/root/.pub-cache/bin:${PATH}"
+
+# Kontejner radi kao root; oboje je potrebno da flutter i git ne odbiju posao.
+RUN git config --global --add safe.directory '*' \
+    && flutter config --no-analytics >/dev/null 2>&1 || true
+RUN flutter --version
+
+WORKDIR /repo
+
+# Prvo samo pubspec fajlovi — Docker kesira ovaj sloj, pa `pub get` ne ide
+# ispocetka na svaku izmjenu koda. Root je pub workspace, pa mu trebaju
+# pubspec-ovi SVIH clanova prije nego resolve prodje.
+COPY pubspec.yaml pubspec.lock ./
+COPY apps/client/pubspec.yaml        apps/client/
+COPY apps/admin/pubspec.yaml         apps/admin/
+COPY packages/core_domain/pubspec.yaml packages/core_domain/
+COPY packages/core_api/pubspec.yaml    packages/core_api/
+COPY packages/core_ui/pubspec.yaml     packages/core_ui/
+RUN flutter pub get
+
+# Tek sada izvorni kod. Sta NE ulazi je u .dockerignore — .dart_tool, build/,
+# *.g.dart, *.freezed.dart i l10n/generated/ ostaju vani, pa ih codegen mora
+# napraviti od nule.
+COPY . .
+
+# `flutter pub get`, ne `dart pub get`: apps/client ima `generate: true` uz
+# l10n.yaml, pa tek flutter varijanta stvori lib/src/l10n/generated/.
+RUN flutter pub get
+
+ENTRYPOINT ["/repo/docker/run_tests.sh"]

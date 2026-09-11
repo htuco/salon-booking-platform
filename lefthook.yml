@@ -7,6 +7,14 @@
 pre-commit:
   parallel: true
   commands:
+    # Prvo identitet, pa tek onda sve ostalo — firmski mail u commitu se poslije
+    # moze samo prepisati (rewrite svih SHA-ova), ne obrisati. v. commit 87f0aff.
+    git-identitet:
+      # skip_empty: false — provjera ne gleda fajlove nego identitet, pa mora
+      # ici i kad u commitu nema nijednog fajla koji drugi hookovi prate.
+      skip_empty: false
+      run: ./tool/check_git_identity.sh
+
     dart-format:
       glob: "{apps,packages}/**/*.dart"
       run: dart format --set-exit-if-changed {staged_files}

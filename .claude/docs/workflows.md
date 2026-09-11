@@ -75,6 +75,16 @@ Dvije zamke:
   jeste u gitu, i provjerava ga `--check`. `.gitignore` ga eksplicitno izuzima iz `*.g.dart`
   pravila. Razlika i obrazloženje: `.claude/docs/conventions.md` § Generisani fajlovi.
 
+### Git identitet je zaključan
+
+`pre-commit` zove `tool/check_git_identity.sh` i **odbija commit** ako `git config user.email` nije
+na dozvoljenoj listi (`htuco04@gmail.com`, `dajiceniz@gmail.com`, bilo koja
+`*@users.noreply.github.com`). Novi saradnik se dodaje u `DOZVOLJENI` u toj skripti, svjesno.
+
+Postoji jer je commit `87f0aff` ušao sa firmskom adresom. Takav commit se poslije **ne može
+obrisati, samo prepisati** — a to mijenja svaki SHA iza njega. Ako repo ikad ode javno, adresa
+završi u arhivama (GH Archive, Software Heritage) koje vraćanje na private ne dotiče.
+
 ## Generatori
 
 ```sh

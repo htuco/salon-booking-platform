@@ -1,0 +1,27 @@
+# Sve sto je generisano ili lokalno NE ulazi u kontejner — to je ono sto ga cini
+# dokazom iz cistog checkouta: codegen mora proci od nule.
+# .git OSTAJE: run_tests.sh koristi `git ls-files '*.dart'` za format check,
+# tacno kao CI — tako generisani fajlovi ispadnu sami, bez rucne liste izuzetaka.
+.dart_tool/
+build/
+**/build/
+**/.dart_tool/
+**/*.g.dart
+**/*.freezed.dart
+apps/*/lib/src/l10n/generated/
+
+# Izuzetak: tenants.g.dart nije codegen iz anotacija nego izlaz iz
+# tool/gen_flavors.dart, i `--check` mora imati sta provjeriti.
+!apps/client/lib/src/generated/tenants.g.dart
+
+# Nema veze sa Dart testovima
+node_modules/
+prototype/
+src/
+design/
+docs/
+supabase/
+tenants/**/google-services.json
+tenants/**/GoogleService-Info.plist
+*.log
+.DS_Store
