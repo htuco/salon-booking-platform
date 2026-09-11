@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/home/home_screen.dart';
 import '../../features/placeholder/placeholder_screen.dart';
 
 /// Rute klijentske app-e, po `docs/01-mvp-spec.md` §12.
@@ -10,8 +11,8 @@ import '../../features/placeholder/placeholder_screen.dart';
 /// kroz imperativni `Navigator`, web verzija ostane bez URL-a i to se otkrije kasno — kad
 /// već postoji petnaest ekrana napisanih po tom uzoru.
 ///
-/// Tijela su namjerno placeholderi: ovaj task postavlja kičmu, a sadržaj pišu taskovi 10 i 11.
-/// Ruta koja postoji i ima URL je ono što se ovdje dokazuje.
+/// Od taska 10 `/` ima pravo tijelo (`HomeScreen`); ostale rute su i dalje placeholderi
+/// dok ih task 11 ne napiše. Ruta koja postoji i ima URL je ono što je task 07 dokazao.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     // **Bez `initialLocation`.** Na webu `initialLocation` nadjačava URL iz adresne trake,
@@ -23,8 +24,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         GoRoute(
           path: route.path,
           name: route.name,
-          builder: (context, state) =>
-              PlaceholderScreen(title: route.title, path: state.uri.path),
+          builder: (context, state) => switch (route) {
+            ClientRoute.home => const HomeScreen(),
+            _ => PlaceholderScreen(title: route.title, path: state.uri.path),
+          },
         ),
     ],
     // Bez ovoga nepoznat URL na webu daje sivi ekran sa stack traceom.

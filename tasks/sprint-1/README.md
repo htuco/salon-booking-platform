@@ -7,7 +7,7 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 | [07](07-app-plumbing.md) ✅ | App plumbing — Riverpod, go_router, env, Supabase klijent | sve ostalo | 2 dana |
 | [08](08-core-api-repozitoriji.md) ✅ | `core_api` — freezed modeli + repozitoriji | 10, 11, admin | 2–3 dana |
 | [09](09-core-ui-theme-factory.md) ✅ | `core_ui` — theme factory po tenantu + tokeni | 10, 11 | 2 dana |
-| [10](10-client-home-runtime-branding.md) | Client home sa runtime brandingom | 11 | 1–2 dana |
+| [10](10-client-home-runtime-branding.md) 🟡 | Client home sa runtime brandingom | 11 | 1–2 dana |
 | [11](11-booking-flow.md) | Booking flow (4 koraka + success) | Sprint 2 | 3–4 dana |
 
 **Ukupno: ~10–13 radnih dana**, uz preduslov da su [05](../05-availability-engine.md) i [06](../06-vertical-pack.md) iz Sprinta 0 gotovi — 11 bez 05 nema šta prikazati, a 10 bez 06 piše tekst koji se kasnije prepisuje.

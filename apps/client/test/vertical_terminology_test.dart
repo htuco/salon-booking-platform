@@ -47,10 +47,31 @@ const _env = AppEnv(
   apiUrl: '',
 );
 
+/// Podaci koje home ekran čita uz vertikalu.
+///
+/// Od taska 10 je `/` pravi ekran, pa `coreApiOverrides` (koji veže samo `SALON_ID`)
+/// više nije dovoljan: svaki podatkovni provider bi napravio repozitorij i posegnuo za
+/// `Supabase.instance`, kojeg u testu nema. Sadržaj je namjerno prazan — ovaj fajl
+/// dokazuje terminologiju, a CTA tekst ne zavisi od liste usluga.
+List<Override> get _podaci => [
+  salonProvider.overrideWith(
+    (ref) async => const Salon(
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      name: 'Barber Studio Vitez',
+      slug: 'barberstudiovitez',
+      city: 'Vitez',
+    ),
+  ),
+  servicesProvider.overrideWith((ref) async => const <Service>[]),
+  employeesProvider.overrideWith((ref) async => const <Employee>[]),
+  workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
+];
+
 Widget _app(Vertical vertical) => ProviderScope(
   overrides: [
     appEnvProvider.overrideWithValue(_env),
     ...coreApiOverrides,
+    ..._podaci,
     // Provider se override-uje, ne repozitorij ispod njega: test o terminologiji
     // ne treba ni mrežu ni Supabase inicijalizaciju.
     verticalProvider.overrideWith((ref) async => vertical),
@@ -65,7 +86,10 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(_app(_barber()));
-    await tester.pumpAndSettle();
+    // Dva `pump`-a umjesto `pumpAndSettle`: home ekran ima skeleton koji pulsira dok
+    // god je vidljiv, pa `pumpAndSettle` istekne i kad je sve ispravno.
+    await tester.pump();
+    await tester.pump();
 
     expect(find.text('Zakaži termin'), findsOneWidget);
   });
@@ -74,7 +98,8 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(_app(_beauty));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump();
 
     // Isti `Text` widget, isti build — samo je config drugi. Da je string bio
     // literal u ekranu, ovo bi tražilo `if` po vertikali.
@@ -97,6 +122,7 @@ void main() {
       overrides: [
         appEnvProvider.overrideWithValue(_env),
         ...coreApiOverrides,
+        ..._podaci,
         verticalRepositoryProvider.overrideWithValue(repository),
       ],
     );
@@ -108,13 +134,15 @@ void main() {
         child: const SalonClientApp(),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump();
 
     expect(find.text('Zakaži termin'), findsOneWidget);
 
     served = _barber(bookCta: 'Zakaži pregled');
     container.invalidate(verticalProvider);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump();
 
     expect(
       find.text('Zakaži pregled'),
@@ -133,6 +161,7 @@ void main() {
           overrides: [
             appEnvProvider.overrideWithValue(_env),
             ...coreApiOverrides,
+            ..._podaci,
             verticalProvider.overrideWith(
               (ref) => Completer<Vertical>().future,
             ),
@@ -157,12 +186,14 @@ void main() {
           overrides: [
             appEnvProvider.overrideWithValue(_env),
             ...coreApiOverrides,
+            ..._podaci,
             verticalRepositoryProvider.overrideWithValue(repository),
           ],
           child: const SalonClientApp(),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
 
       // Fallback terminologija, ne crveni ekran greške.
       expect(find.text(VerticalTerms.fallback.bookCta), findsOneWidget);

@@ -1,15 +1,28 @@
 # Trenutni task: 10 — Client: home ekran sa runtime brandingom
 
-Puni task: [`tasks/sprint-1/10-client-home-runtime-branding.md`](sprint-1/10-client-home-runtime-branding.md) · Sljedeći na redu · Grana: još nije otvorena
+Puni task: [`tasks/sprint-1/10-client-home-runtime-branding.md`](sprint-1/10-client-home-runtime-branding.md) · U toku · Grana: `feat/client-home-runtime-branding`
 
 ## Status
 
-Task 09 je gotov i mergovan — v. Istoriju. **Task 10 još nije počet**: `/task start` otvara granu sa
-svježeg `main`-a.
+Task 09 je gotov i mergovan — v. Istoriju. **Task 10 je u toku** na grani
+`feat/client-home-runtime-branding`.
 
 Ovo je **prvi pravi ekran** i prvi end-to-end dokaz da lanac baza → repozitorij → provider → tema →
 tekst radi: isti build sa drugim `SALON_ID` daje drugi salon, druge boje i drugu terminologiju, bez
 ijedne izmjene koda.
+
+## Ciljevi
+
+- [ ] `/` prikazuje logo i cover, ime, vertikalno tačne naslove sekcija, usluge sa cijenom i
+      trajanjem, tim i primarni CTA
+- [ ] Svaki tekst koji se razlikuje po vertikali ide kroz `vertical.terms.*` — nijedan takav
+      literal u `.dart` fajlu ekrana
+- [ ] Ostali tekstovi (dugmad, greške, prazna stanja) idu kroz `.arb`
+- [ ] Ekran radi bez prijave
+- [ ] Tri stanja: skeleton, greška sa retryjem, prazno
+- [ ] Slike kroz `cached_network_image`
+- [ ] Dokaz: isti build, dva `SALON_ID`-a, dva screenshota — ime, boje **i** terminologija
+- [ ] Web build iste rute radi i ima ispravan URL
 
 ## Šta je spremno, a šta nije
 
