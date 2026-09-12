@@ -1,49 +1,24 @@
-# Trenutni task: 13 — Client: login ekran na kraju booking flowa
+# Trenutni task: nije učitan
 
-Puni task: [`tasks/sprint-2/13-client-login-ekran.md`](sprint-2/13-client-login-ekran.md) · **U toku** ·
-Učitano: 2026-09-12 · Grana: `feat/client-login-ekran`
+Zadnji zatvoreni: **13 — Client: login ekran na kraju booking flowa** (🟡). Sljedeći po redu je
+[14 — Backend: `AuthIdentity` + `Customer` upsert](sprint-2/14-identitet-i-klijent-upsert.md);
+učitaj ga sa `/task load 14`.
 
 ## Status
 
-Drugi task lanca **12 → 13 → 14**. Task 12 je ostavio *ugovor* (`AuthRepository`) i *konfiguraciju*
-(`AuthConfig`, `visibleAuthProvidersProvider`, redirect URL-ovi, OTP template) — ovdje se prvi put
-piše implementacija i ekran koji je zove.
-
-Zavisnost [12](sprint-2/12-auth-provideri.md) je 🟡, ali ono što joj nedostaje (Apple i Google
-konzole) ne dira email OTP — a OTP je jedini provider koji se na ovoj mašini može dokazati do
-kraja, i to je već pokazano u tasku 12 na lokalnom stacku.
+Gotov.
 
 ## Ciljevi
 
-- [ ] `/auth/login` ima pravo tijelo umjesto placeholdera; tri dugmeta sa koraka 4 vode ovdje
-- [ ] **Nema polja za telefon** ([06 §3.1](../docs/06-auth-login-flow.md))
-- [ ] Email OTP: unos maila → 6 cifara → nazad u flow, **bez izlaska iz app-a**
-- [ ] Povratak **tačno na `/book/details`**, sa netaknutim izborom — stanje flowa je `autoDispose`
-- [ ] `bookingCustomerIdProvider` dobija pravu implementaciju; `book(...)` se poziva bez izmjene ekrana
-- [ ] Greška prijave je stanje ekrana, ne `SnackBar` koji nestane
-- [ ] Widget testovi: povratak u flow čuva izbor, otkazana prijava vraća na korak 4
+_(prazno — učitaj sljedeći task)_
 
 ## Napomene
 
-**Zamka koju task imenuje: `bookingFlowProvider` je `autoDispose`.** Odlazak na `/auth/login`
-skida zadnjeg slušaoca i Riverpod čisti izbor — korisnik bi se vratio na prazan sažetak. Provjeriti
-mjerenjem (widget test), ne pretpostavkom.
-
-**Apple i Google traže nove pakete** (`sign_in_with_apple`, `google_sign_in`), a njihov tok se ni sa
-paketima ne može odigrati: konzole iz taska 12 nisu popunjene, mašina nema nijedan iOS certifikat
-(`security find-identity` → `0 valid identities`), pa nema ni instalacije na fizički uređaj.
-Nedokazan nativni tok se ne piše kao dokazan.
-
-**`customers` upsert je [task 14](sprint-2/14-identitet-i-klijent-upsert.md), ne ovaj.** Politika
-`own_customer` (`20260910090000_init_schema.sql`) dozvoljava prijavljenom klijentu da **pročita**
-svoj red u svom salonu — toliko `bookingCustomerIdProvider` ovdje može stvarno uraditi. Red koji bi
-pročitao nastaje tek u tasku 14; do tada je odgovor `null`, ali to je izmjereno stanje baze, ne
-zaglavljena konstanta.
-
-**Login se traži samo ovdje.** Guard na `/book/*` je odluka koja se ne otvara
-([06 §1.1](../docs/06-auth-login-flow.md)).
+_(prazno — učitaj sljedeći task)_
 
 ## Istorija
+
+- **13 — Client: login ekran na kraju booking flowa** (2026-09-12, 🟡) — `/auth/login` dobio pravo tijelo: `SupabaseAuthRepository` u `core_api` (email OTP kroz `signInWithOtp`/`verifyOTP`), `CustomerRepository` koji čita `customers` pod `own_customer`, `AuthRejectedError`/`RateLimitError` da pogrešan kod više ne izlazi kao „nešto je pošlo naopako", `LoginScreen` sa tri faze i `?from=` povratkom koji se provjerava naspram `ClientRoute` liste (inače open redirect na webu). Dokazano: **253 testa PASS** (bilo 238) i **email OTP odigran do kraja u Chromiumu protiv živog Supabase stacka** — četiri prijave, četiri `auth_identities` reda, mail sa šest cifara i bez ijednog linka. **Browser je našao dvije greške koje testovi nisu**: prijava je brisala izbor iz flowa (`bookingFlowProvider` je `autoDispose`, a kartica „Čuvamo vam" — jedini slušalac — crta se samo u fazi izbora providera), i sam test je držao vlastitu pretplatu pa bi prolazio i nad pokvarenom app-om; oboje popravljeno, uz provjeru da test sada **može** pasti. **Ostaje 🟡**: Apple i Google traže pakete kojih nema u `pubspec.yaml` i konzole iz [taska 12](sprint-2/12-konzole-checklist.md), a `customers` je i dalje 0 — red pravi [task 14](sprint-2/14-identitet-i-klijent-upsert.md).
 
 - **12 — Supabase Auth provideri + `AuthConfig` po flavoru** (2026-09-12, 🟡) — `AuthProvider`/`AuthPlatform`/`AuthConfig`/`AuthSession` u `core_domain` ([ADR-0007](../docs/adr/0007-authconfig-u-core-domain.md): vlastiti enum platforme, jer je `core_domain` čist Dart), `AuthRepository` ugovor u `core_api`, `auth:` blok u `tenant.yaml` sa validacijom u generatoru, Google client ID po flavoru kroz `build_tenant.sh`, redirect URL-ovi i OTP template u `supabase/config.toml`. Dokazano: **238 testova PASS** (bilo 215) i **email OTP odigran do kraja** na lokalnom stacku — kod bez linka u mailu, `verify` vraća sesiju, `auth_identities` dobija red (time je prvi put dokazan i trigger iz taska 02). **Ostaje 🟡**: Apple i Google prijava nisu odigrane nijednom — traže tuđe konzole i pravi uređaj, hodogram je [`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
 
