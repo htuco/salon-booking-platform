@@ -72,9 +72,16 @@ set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440000
 -- Rok iz postavki, ne iz konstante
 -- ---------------------------------------------------------------------------
 reset role;
--- Termin je za manje od `min_cancel_hours` sati: pomjeramo ga na danas, umjesto da
--- mijenjamo sat — datum je jedino sto smijemo dirati bez ponovne re-validacije slota.
-update public.appointments set date = (now() at time zone 'Europe/Sarajevo')::date
+-- Termin je za manje od `min_cancel_hours` sati (seed: 3).
+--
+-- **Vrijeme se izvodi iz `now()`, ne iz kalendara.** Prva verzija je samo pomjerala datum na
+-- danas i oslanjala se na to da je 10:00 vec proslo — pa je prolazila popodne, a padala
+-- poslije ponoci, kad je 10:00 opet devet sati u buducnosti. Test je tako mjerio doba dana
+-- u kojem je pokrenut, a ne kod. Sat iza `now()` je unutar roka u svakom trenutku, i
+-- prelazak ponoci nosi datum sa sobom.
+update public.appointments set
+  date = ((now() at time zone 'Europe/Sarajevo') + interval '1 hour')::date,
+  start_time = ((now() at time zone 'Europe/Sarajevo') + interval '1 hour')::time
 where id = (select id from t1);
 
 set local role authenticated;
