@@ -151,6 +151,11 @@ prazan dan, `date_only` grana, `409` putanja i success ekran.
 | Korak 4, sažetak | `task-11-korak4-sazetak-barber.png` | `task-11-korak4-sazetak-beauty.png` |
 | Success, "Na čekanju" | `task-11-success-barber.png` | `task-11-success-beauty.png` |
 
+**Pokrenuto i na iOS simulatoru** (iPhone 17, iOS 26.3) iz flavor builda
+`ba.nasadomena.barberstudiovitez`: home i prvi korak flowa se iscrtavaju u brand temi, sa ikonom
+flavora na springboardu — `task-11-ios-sim-home-barber.png`, `task-11-ios-sim-korak1-barber.png`.
+Time pada stavka "ništa nije pokrenuto na uređaju ni emulatoru", otvorena od taska 09.
+
 Browser je potvrdio četiri stvari koje widget test ne može: **preselekcija iz `?serviceId=` stvarno
 radi** (kartica je označena bez drugog tapa), **nedjelja je u traci prigušena i ne prima tap**,
 **`distinctTimes` radi** (demo vraća dva radnika po vremenu, mreža pokazuje svaki termin jednom), i
@@ -182,7 +187,18 @@ posegnuo za `Supabase.instance`. Widget testovi su ga override-ovali i ništa ni
   RPC je dokazan samo pgTAP-om iz taska 05. Traži Supabase vrijednosti i prijavljenog korisnika.
 - **`409` nije izazvan uživo** — dva stvarna zahtjeva na isti slot. Dokazano je ponašanje ekrana na
   `ConflictError`, ne da ga baza digne u utrci.
-- **Ništa nije pokrenuto na uređaju ni emulatoru** — dokaz je web build u Chromiumu.
+- **Kroz flow se na simulatoru nije kliktalo.** App je pokrenut i ekrani se iscrtavaju, ali
+  automatizacija tapova nad Simulatorom traži accessibility dozvolu za terminal, koju dajem samo ja
+  ručno. Prelaz kroz korake je dokazan u Chromiumu i widget testovima. Na **fizičkom uređaju** nije
+  pokrenuto ništa.
+- **Generator iOS schema gubi Flutterov `PreActions` blok.** `Runner.xcscheme` (Flutterov, nije
+  generisan) ima "Run Prepare Flutter Framework Script"; generisani `barberstudiovitez.xcscheme` i
+  `beautystudiotravnik.xcscheme` ga nemaju, pa ga `flutter run` sam ubaci i time zaprlja radno
+  stablo. Vratio sam izmjenu — generisani fajl se ne edituje rukom — ali drift se vraća pri svakom
+  `flutter run` na svježem klonu. **Popravka je u `tool/gen_ios_flavors.rb`**: neka prenese
+  `PreActions` iz `Runner.xcscheme`. Usput: `gen_flavors --check` ovu razliku **ne vidi**, pa je
+  i to rupa u provjeri. Nađeno pokretanjem na simulatoru, nije dio ovog taska.
+
 - **`AppTextField` iz `docs/02 §16` i dalje ne postoji**; napomena u koraku 4 je goli `TextField`.
   Kandidat za prvi sljedeći ekran koji ima unos.
 - **Konfete na svijetloj paleti su jedva vidljive** (roze na bijelom). Kozmetika, ne greška.

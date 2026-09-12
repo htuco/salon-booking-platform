@@ -55,6 +55,8 @@ Provjereno u repou, ne prepisano iz statusa:
 - [x] Vizuelni dokaz kroz `lib/demo_main.dart` za oba tenanta — svih pet ekrana u Chromiumu,
       `docs/screenshots/task-11-*`. **Našao grešku koju suita nije:** korak 2 je u demou
       prikazivao grešku jer `employeeServiceLinksProvider` nije bio override-ovan
+- [x] Pokrenuto na **iOS simulatoru** (iPhone 17, iOS 26.3) iz flavor builda — home i prvi korak,
+      `docs/screenshots/task-11-ios-sim-*`
 - [x] `./tool/verify_clean.sh` prolazi iz čistog checkouta — 84 client testa iz praznog klona
 
 ## Napomene

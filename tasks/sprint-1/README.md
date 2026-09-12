@@ -133,8 +133,9 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 >
 > Ostaje za sljedećeg: **`book(...)` nije nijednom pozvan protiv prave baze** i **`409` nije
 > izazvan uživo** (dva zahtjeva na isti slot) — oboje traži Supabase vrijednosti i prijavljenog
-> korisnika, a `book_appointment` je grantovan samo roli `authenticated`. Uz to ništa nije
-> pokrenuto na uređaju ni emulatoru. Detalji:
+> korisnika, a `book_appointment` je grantovan samo roli `authenticated`. App **jeste** pokrenut na
+> iOS simulatoru (home i prvi korak), ali kroz flow se tamo nije kliktalo i na fizičkom uređaju nije
+> pokrenuto ništa. Detalji:
 > [11-booking-flow.md](11-booking-flow.md#status--ui-sloj-2026-09-12).
 
 ## Redoslijed koji nije očigledan
