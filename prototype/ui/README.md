@@ -81,3 +81,15 @@ sistem nema. Prave fotografije dolaze sa onboardingom klijenta.
 Posljedica za dokazivanje: snimak ekrana sa seed podacima **ne razlikuje** „fotografija radi" od
 „fotografija tiho pada", jer oba daju prazan okvir. Ko dokazuje rad sa slikama mora privremeno
 usmjeriti jedan red na sliku koja stvarno postoji — i ne commitovati taj URL.
+### Ekrani koje handoff nema
+
+**Koraci OTP prijave (`/auth/login`, unos emaila i unos koda) nisu nacrtani.** Handoff ima korak 4
+(`5f`) kao ekran prijave sa tri dugmeta, ali nijedan ekran iza „Nastavi sa emailom" — a
+`docs/06 §2.1` traži šestocifreni kod.
+
+Ta dva koraka su zato **izvedena iz tokena**, ne izmišljena: isti gutter i ritam kao ostatak flowa,
+hairline granica, `AppRadius.none`, `AppButton` i `inputDecorationTheme` iz `core_ui`, bez ijedne
+nove vrijednosti. Kartica „Čuvamo vam" stoji i na prijavi, jer je prijava dio koraka 4.
+
+Kad handoff dobije te ekrane, mjerodavan je on — ovo je popuna, ne odluka.
+Kako izgledaju danas: [`docs/screenshots/task-13-otp-kod.png`](../../docs/screenshots/task-13-otp-kod.png).

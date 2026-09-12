@@ -16,9 +16,7 @@ ApiError mapError(Object error, [StackTrace? stackTrace]) {
   if (error is PostgrestException) return _mapPostgrest(error);
 
   // AuthException nasljeduje vlastitu hijerarhiju, ne PostgrestException.
-  if (error is AuthException) {
-    return ServerError('Greška autentikacije: ${error.message}', cause: error);
-  }
+  if (error is AuthException) return _mapAuth(error);
 
   if (error is SocketException || error is HttpException) {
     return NetworkError('Nema veze sa serverom', cause: error);
@@ -42,6 +40,48 @@ ApiError mapError(Object error, [StackTrace? stackTrace]) {
   }
 
   return ServerError('Neočekivana greška: $error', cause: error);
+}
+
+/// `AuthException` nosi i `code` (stabilno ime greške) i `statusCode` (HTTP, kao string).
+///
+/// **Gleda se `code` prvo.** `statusCode` je `400` i za pogrešan OTP kod i za neispravan
+/// zahtjev, pa bi mapiranje po njemu obje stvari spojilo u istu poruku. `code` razlikuje
+/// `otp_expired` od `over_email_send_rate_limit`, a to je razlika između "prekucajte kod"
+/// i "sačekajte minut" — jedine dvije akcije koje korisnik na login ekranu uopšte ima.
+///
+/// Lista kodova: <https://supabase.com/docs/guides/auth/debugging/error-codes>.
+ApiError _mapAuth(AuthException error) {
+  // Mreza je pala prije nego sto je zahtjev stigao do Auth servera. Gotrue ga zamota u
+  // vlastiti tip, pa bez ove grane "nema interneta" izlazi kao greska prijave.
+  if (error is AuthRetryableFetchException) {
+    return NetworkError('Nema veze sa serverom', cause: error);
+  }
+
+  return switch (error.code) {
+    'over_email_send_rate_limit' ||
+    'over_request_rate_limit' ||
+    'over_sms_send_rate_limit' => RateLimitError(
+      'Previše zahtjeva — sačekajte prije novog pokušaja',
+      cause: error,
+    ),
+    'otp_expired' ||
+    'otp_disabled' ||
+    'invalid_credentials' ||
+    'email_not_confirmed' ||
+    'user_not_found' ||
+    'validation_failed' => AuthRejectedError(error.message, cause: error),
+    // Kod ne stize uvijek (starije verzije Auth servera, greske prije odgovora).
+    // Tada je HTTP status jedino sto postoji: 429 je rate limit, 400/401/403 su
+    // odbijanje, ostalo je nas problem.
+    _ => switch (error.statusCode) {
+      '429' => RateLimitError(
+        'Previše zahtjeva — sačekajte prije novog pokušaja',
+        cause: error,
+      ),
+      '400' || '401' || '403' => AuthRejectedError(error.message, cause: error),
+      _ => ServerError('Greška autentikacije: ${error.message}', cause: error),
+    },
+  };
 }
 
 /// PostgREST nosi i SQLSTATE i HTTP status u istom polju `code`, kao string.

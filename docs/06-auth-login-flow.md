@@ -409,6 +409,14 @@ Supabase tipovi **ne smiju** procuriti iznad ovog sloja. Ako kasnije pređeš na
 
 **Greške izlaze kao `ApiError`, ne kao `AuthResult`.** Skica je ranije imala `Future<AuthResult>`; u `core_api` svaki repozitorij već signalizira grešku bacanjem `ApiError`, pa bi drugi način signalizacije u istom paketu značio da ekran mora znati koji repozitorij koristi koji. Otkazivanje od strane korisnika (zatvoren Apple/Google dijalog) nije kvar nego očekivan ishod i ima vlastiti tip, `AuthCancelledError` — bez njega svaki korisnik koji se predomisli dobije crvenu poruku o grešci.
 
+**Stanje implementacije (task 13).** `SupabaseAuthRepository` pokriva `sessionChanges`,
+`currentSession`, `requestEmailOtp`, `verifyEmailOtp` i `signOut` — email prijava radi i dokazana
+je od ekrana do baze. `signInWithApple`/`signInWithGoogle`/`signInWithFacebook` bacaju `ServerError`
+sa imenom paketa koji fali (`sign_in_with_apple`, `google_sign_in`, `flutter_facebook_auth`):
+paketi nisu dodani jer se ni sa njima tok ne može odigrati dok client ID-evi iz
+[`12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md) nisu upisani.
+`continueAsGuest` je task 26, `deleteAccount` task 17.
+
 `currentSession` postoji uz `sessionChanges` zbog prvog frejma: router mora sinhrono znati smije li pustiti zaštićenu rutu, a `await` na stream bi prijavljenom korisniku dao treptaj login ekrana.
 
 ### 6.4 Backend autorizacija

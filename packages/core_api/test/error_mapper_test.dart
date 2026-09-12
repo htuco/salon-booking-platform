@@ -166,10 +166,70 @@ void main() {
       ServerError() => 'server',
       MappingError() => 'oblik',
       AuthCancelledError() => 'odustao',
+      AuthRejectedError() => 'odbijeno',
+      RateLimitError() => 'prečesto',
     };
 
     expect(describe(const NetworkError('x')), 'mreža');
     expect(describe(const ConflictError('x')), 'konflikt');
     expect(describe(const AuthCancelledError('x')), 'odustao');
+    expect(describe(const AuthRejectedError('x')), 'odbijeno');
+    expect(describe(const RateLimitError('x')), 'prečesto');
+  });
+
+  group('mapError — AuthException', () {
+    test('pogrešan ili istekao kod je AuthRejectedError, ne ServerError', () {
+      // Razlika koja se vidi na ekranu: "prekucajte kod" naspram "pokušajte kasnije".
+      for (final code in [
+        'otp_expired',
+        'invalid_credentials',
+        'user_not_found',
+      ]) {
+        expect(
+          mapError(AuthException('nevalidan', code: code, statusCode: '400')),
+          isA<AuthRejectedError>(),
+          reason: code,
+        );
+      }
+    });
+
+    test('rate limit ima vlastiti tip — jedina akcija je čekanje', () {
+      expect(
+        mapError(
+          const AuthException(
+            'previše',
+            code: 'over_email_send_rate_limit',
+            statusCode: '429',
+          ),
+        ),
+        isA<RateLimitError>(),
+      );
+    });
+
+    test('bez `code`-a odlučuje HTTP status', () {
+      // Starije verzije Auth servera ne šalju `code`; bez ove grane bi pogrešan kod
+      // izašao kao ServerError i korisnik bi dobio poruku koju ne može riješiti.
+      expect(
+        mapError(const AuthException('odbijeno', statusCode: '403')),
+        isA<AuthRejectedError>(),
+      );
+      expect(
+        mapError(const AuthException('prečesto', statusCode: '429')),
+        isA<RateLimitError>(),
+      );
+      expect(
+        mapError(const AuthException('puklo', statusCode: '500')),
+        isA<ServerError>(),
+      );
+    });
+
+    test('pala mreža unutar Autha je NetworkError, ne greška prijave', () {
+      // `AuthRetryableFetchException` nasljeđuje `AuthException`, pa bi bez vlastite
+      // grane "nema interneta" korisniku izgledalo kao odbijena prijava.
+      expect(
+        mapError(AuthRetryableFetchException(statusCode: '0')),
+        isA<NetworkError>(),
+      );
+    });
   });
 }

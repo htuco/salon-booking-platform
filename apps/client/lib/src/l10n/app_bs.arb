@@ -254,6 +254,11 @@
   "bookingContinueGoogle": "Nastavi sa Google",
   "@bookingContinueGoogle": { "description": "Prijava preko Google naloga." },
 
+  "bookingContinueFacebook": "Nastavi sa Facebookom",
+  "@bookingContinueFacebook": {
+    "description": "Prijava preko Facebooka. Iskljucen po defaultu u tenant.yaml — docs/06 §7.4."
+  },
+
   "bookingContinueEmail": "Nastavi sa emailom",
   "@bookingContinueEmail": { "description": "Prijava preko email OTP koda." },
 
@@ -402,5 +407,73 @@
   "@experienceYears": {
     "description": "Staz radnika uz titulu — handoff: 'Barber · 9 godina'. Bosanski ima tri oblika: 1 godina, 2-4 godine, 5+ godina; ICU 'few' pokriva 2-4 po CLDR pravilima za bs.",
     "placeholders": { "count": { "type": "int" } }
-  }
+  },
+
+  "loginTitle": "Prijava",
+  "@loginTitle": {
+    "description": "Naslov /auth/login kad se otvori van booking flowa. Unutar flowa naslov ostaje bookingLastStepTitle."
+  },
+
+  "loginHint": "Bez lozinke. Prijava traje jedan dodir.",
+  "@loginHint": { "description": "Podnaslov login ekrana, docs/06 §1.1." },
+
+  "loginEmailTitle": "Vaš email",
+  "@loginEmailTitle": { "description": "Naslov koraka u kojem se unosi email za OTP kod." },
+
+  "loginEmailHint": "Šaljemo šestocifreni kod. Bez linka i bez lozinke.",
+  "@loginEmailHint": {
+    "description": "Objasnjenje ispod polja za email. OTP, nikad magic link — docs/06 §2.1."
+  },
+
+  "loginEmailLabel": "Email adresa",
+  "@loginEmailLabel": { "description": "Labela polja za email." },
+
+  "loginSendCode": "Pošalji kod",
+  "@loginSendCode": { "description": "CTA koji zove signInWithOtp." },
+
+  "loginCodeTitle": "Unesite kod",
+  "@loginCodeTitle": { "description": "Naslov koraka u kojem se unosi sestocifreni OTP kod." },
+
+  "loginCodeSentTo": "Kod smo poslali na {email}.",
+  "@loginCodeSentTo": {
+    "description": "Potvrda gdje je kod otisao, iznad polja za kod.",
+    "placeholders": { "email": { "type": "String" } }
+  },
+
+  "loginCodeLabel": "Šestocifreni kod",
+  "@loginCodeLabel": { "description": "Labela polja za OTP kod." },
+
+  "loginVerify": "Potvrdi",
+  "@loginVerify": { "description": "CTA koji zove verifyEmailOtp." },
+
+  "loginResend": "Pošalji kod ponovo",
+  "@loginResend": { "description": "Ponovno slanje OTP koda." },
+
+  "loginChangeEmail": "Promijeni email",
+  "@loginChangeEmail": { "description": "Povratak na unos emaila sa koraka sa kodom." },
+
+  "loginCodeResent": "Novi kod je poslan.",
+  "@loginCodeResent": { "description": "Potvrda nakon ponovnog slanja koda." },
+
+  "loginInvalidEmail": "Unesite ispravnu email adresu.",
+  "@loginInvalidEmail": { "description": "Validacija emaila prije nego sto se posalje zahtjev." },
+
+  "loginInvalidCode": "Kod ima šest cifara.",
+  "@loginInvalidCode": { "description": "Validacija duzine OTP koda prije slanja." },
+
+  "loginRejected": "Kod nije tačan ili je istekao. Pošaljite novi.",
+  "@loginRejected": {
+    "description": "AuthRejectedError na login ekranu. Korisnikova greska, ne kvar sistema."
+  },
+
+  "loginRateLimited": "Previše pokušaja. Sačekajte minut pa pokušajte ponovo.",
+  "@loginRateLimited": { "description": "RateLimitError — jedina ispravna akcija je cekanje." },
+
+  "loginProviderUnavailable": "Ovaj način prijave još nije dostupan. Prijavite se emailom.",
+  "@loginProviderUnavailable": {
+    "description": "Apple/Google/Facebook dok nativni paketi i client ID-evi ne postoje (task 12 konzole)."
+  },
+
+  "loginCancelled": "Prijava je prekinuta.",
+  "@loginCancelled": { "description": "AuthCancelledError — korisnik je zatvorio dijalog, nije kvar." }
 }

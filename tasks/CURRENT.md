@@ -1,27 +1,111 @@
-# Trenutni task: nije učitan
+# Trenutni task: 18 — Client: Početna po handoffu + bottom tab bar
 
-Zadnji zatvoreni: **22 — Šema: fotografije usluga i staž radnika** (✅). Grana je sa **`main`-a**,
-pa se PR merga nezavisno od niza 13 → 14 → 15 → 16.
-
-Sljedeći po redu u [Sprintu 2](sprint-2/README.md) je
-[17 — „Moj račun" + brisanje računa](sprint-2/17-moj-racun-i-brisanje.md), pa
-[18 — Početna po handoffu + tab bar](sprint-2/18-pocetna-i-tab-bar.md), koji je sada odblokiran.
+Puni task: [`tasks/sprint-2/18-pocetna-i-tab-bar.md`](sprint-2/18-pocetna-i-tab-bar.md) ·
+**Nije počet** · Učitano: 2026-09-13
 
 ## Status
 
-Gotov.
+Nije počet.
+
+Zavisnosti su ✅: [11](sprint-1/11-booking-flow.md) (booking flow) i
+[22](sprint-2/22-sema-slike-i-staz.md) (slike usluga, staž radnika). Blokira **19, 20 i 21** — sva
+tri su tab-level ekrani i nemaju gdje da stoje dok tab bara nema.
 
 ## Ciljevi
 
-_(prazno — učitaj sljedeći task)_
+- [ ] **Bottom tab bar** u `core_ui`: pet ćelija, redoslijed **Usluge · Termini · Početna ·
+      Obavijesti · Postavke**, Početna namjerno u sredini
+- [ ] Aktivna ćelija: bijela, `weight 600`, traka 3 px na vrhu, inset 16% lijevo/desno
+- [ ] `StatefulShellRoute` u `go_router`-u; pod-ekrani (Galerija, Recenzije, O aplikaciji,
+      Pravila, Lightbox) **nemaju** tab bar
+- [ ] **Dvije rute koje ne postoje**: Obavijesti i Postavke — v. Napomene
+- [ ] Početna po `01-pocetna.png`: hero foto + serif naslov, živi status, CTA, **Cjenovnik**
+      (tri usluge + „Prikaži svih N"), Majstori (2 kolone), Galerija (3 kolone), Recenzije
+- [ ] Tab se vraća na svoj korijen pri ponovnom tapu; prelaz instant, bez cross-fade
+- [ ] Deep linkovi iz taska 07 i dalje rade — `router_test.dart` to čuva
+- [ ] Screenshot uz `01-pocetna.png`
 
 ## Napomene
 
-_(prazno — učitaj sljedeći task)_
+### Šta već postoji
+
+- **Početna postoji od [taska 10](sprint-1/10-client-home.md)**: hero, usluge, tim, radno vrijeme,
+  kontakt, sticky CTA. Naslijedila je nove tokene, ali joj je **raspored stariji od dizajna** —
+  sekcije nisu one iz `5a`. Providerski vod, tema, skeleton i kontrast testovi ostaju; mijenja se
+  raspored i sadržaj sekcija.
+- **Jedan od pet tabova je već pun**: `/appointments` je pravi ekran od
+  [taska 16](sprint-2/16-moji-termini-i-otkazivanje.md). Danas je *pushed* ekran sa strelicom
+  nazad — sa tab barom gubi strelicu i dobija svoju ćeliju.
+- **`core_ui` ima sve gradivne komponente**: `PhotoFrame`, `ServiceCard`, `SelectableRow`,
+  `StatusBadge`, `SkeletonLoader`, `EmptyState`, `AppDialog`. Tab bar je jedina koja fali.
+- **Slike usluga i staž rade** ([22](sprint-2/22-sema-slike-i-staz.md)) — Cjenovnik i Majstori
+  imaju šta prikazati.
+
+### Tri rupe u podacima koje task fajl ne spominje
+
+Nađene poređenjem DoD-a sa šemom, ne čitanjem taska:
+
+1. **Recenzije nemaju tabelu.** Šema ima 15 tabela i nijedna nije `reviews` — nju pravi
+   [task 20](sprint-2/20-galerija-recenzije.md) (njegov DoD, red 17). Sekcija „Recenzije sa
+   ocjenom" sa `5a` se **ne može napuniti pravim podacima u ovom tasku**.
+2. **Galerija ima kolonu, ali je niko ne koristi.** `salons.gallery_urls jsonb` postoji od init
+   migracije, ali je **nema u seedu, nema u `SalonRepository._columns`, i nema u `Salon` modelu.**
+   Ili se ta tri mjesta dopune (sitno), ili sekcija ostaje skrivena.
+3. **Seed ne puni `logo_url` ni `cover_image_url`.** Zato Početna danas prikazuje zlatni gradijent
+   sa inicijalima „BS", a ne hero fotografiju kakvu `5a` traži. Isto pravilo kao u tasku 22: demo
+   nema prave fotografije i **ne smije se praviti da ima**.
+
+**Izlaz koji je već dogovoren:** DoD taska 20, red 19, kaže da salon bez galerije **sakrije sekciju
+na Početnoj**, ne da pokaže praznu mrežu. To je pravilo za sve tri rupe — Početna crta ono što
+postoji i ćuti o ostalom. Sekcije se pale kad task 20 donese podatke.
+
+Ako se to prihvati, DoD stavka „Galerija (3 kolone), Recenzije" u ovom tasku znači **napisane
+sekcije koje se same sakriju**, ne sekcije sa sadržajem. To treba reći u status bloku, da sljedeći
+ne pomisli da su zaboravljene.
+
+### Rute kojih nema
+
+Tab bar traži pet odredišta; `ClientRoute` danas ima:
+
+| Ćelija | Ruta | Stanje |
+|---|---|---|
+| Usluge | `/services` | placeholder — pravi ekran je [19](sprint-2/19-o-nama-i-usluge.md) |
+| Termini | `/appointments` | ✅ pravi ekran (task 16) |
+| Početna | `/` | ✅ postoji, mijenja se u ovom tasku |
+| Obavijesti | — | **ne postoji**; ekran je [21](sprint-2/21-obavijesti-i-pravni-ekrani.md) |
+| Postavke | — | **ne postoji**; `/account` je „Moj račun" (task [17](sprint-2/17-moj-racun-i-brisanje.md)), a `5k` „Postavke" je širi ekran |
+
+Dvije ćelije će zato voditi na placeholder. To je uredno — tab bar postoji da ekrani ispod njega
+imaju gdje da stanu — ali placeholder mora izgledati namjerno, ne kao pad.
+
+### Zamke
+
+- **`StatefulShellRoute` mijenja oblik rutiranja.** Deep linkovi iz [taska 07](sprint-1/07-app-plumbing.md)
+  moraju i dalje raditi; `router_test.dart` je napisan da to uhvati. Na webu je ovo već jednom
+  puklo tiho (task 07: `initialLocation` + `usePathUrlStrategy`).
+- **Boja iz `tenant.yaml`, ne iz handoffa.** Aktivna ćelija je u `SPEC.md` bijela `#FFFFFF`; to je
+  paleta *jednog* brenda. Ide kroz temu, inače se greška vidi tek na drugom tenantu.
+- **Tab bar je jedina komponenta koju `SPEC.md` traži da se gradi prva** — doslovno tako piše.
+
+### Procjena
+
+Task kaže 2–3 dana i to stoji, **pod uslovom da se prihvati skrivanje praznih sekcija**. Ako se
+traži da Početna prikaže recenzije sa stvarnim podacima, ispred ovog taska ide dio taska 20
+(tabela `reviews` + seed + RLS) i procjena raste za oko pola dana.
 
 ## Istorija
 
 - **22 — Šema: fotografije usluga i staž radnika** (2026-09-12, ✅) — `services.image_url` i `employees.experience_years`, obje nullable jer su prazan okvir i red bez staža **predviđena stanja**: salon bez fotografija mora raditi od prvog dana. Seed puni obje kolone i namjerno ostavlja po jedan red prazan (Brada bez slike, Lejla bez staža), da se to stanje vidi u demou a ne tek kod prvog klijenta. Korak 1 prosljeđuje `imageUrl`, korak 2 spaja titulu i staž kroz ICU plural — iz prave baze: „Barber · 9 godina" i „Barber · 4 godine", oba bosanska oblika tačna. Dokazano: **29 asercija javnog kataloga bez tokena** (bilo 26; grantovi su tabelarni pa nova kolona ulazi sama, ali to se ne vidi iz migracije — vidi se iz poziva bez tokena), 66 pgTAP testova, 242 Dart testa. **Zamka koju je našao browser:** prvi snimak koraka 1 je pokazao četiri prazna okvira, jer se `images.demo.invalid` ne razrješava — red sa URL-om izgleda isto kao red bez njega, pa taj snimak ne dokazuje ništa. Dokaz je napravljen privremenim usmjeravanjem jednog reda na sliku koja stvarno postoji, pa vraćanjem; `seed.sql` nije mijenjan.
+
+- **16 — Client: „Moji termini" + otkazivanje** (2026-09-12, ✅) — `/appointments` po handoffu 5h: dva taba, kartica sa statusom, otkazivanje kroz modal 5p (`AppDialog` u `core_ui` — blur, scrim, destruktivna akcija gore). `AppointmentRepository` postoji prvi put, jer klijent do auth rada nije mogao pročitati nijedan `appointments` red. `cancel_appointment` uzima rok iz `salon_settings.min_cancel_hours` i pamti `cancelled_by`; **rok vrijedi za klijenta, ne za salon** — salon otkazuje kad mora. Odigrano u browseru protiv živog stacka: prijava, rezervacija 22.09. u 13:00, otkazivanje; `cancelled_by = customer`, termin prešao u „Prošle", i **slot odmah opet slobodan** — provjereno `get_available_slots` upitom, ne pretpostavkom. Dokazano: **97 pgTAP testova** (bilo 82), **276 Dart testova** (bilo 256), 12 novih widget testova. pgTAP je usput našao da ista NULL rupa iz taska 14 stoji i u `book_appointment` od taska 05 — **nije curenje i nikad nije bilo**, jer je `owns_identity` FALSE za tuđeg klijenta a `NULL and FALSE` je FALSE (provjereno pokretanjem), ali je zatvorena kroz `create or replace` nad doslovnim tijelom iz taska 05. I da je moj vlastiti test tvrdio pogrešno: direktan `update` sa klijenta ne baca `42501` nego RLS pogodi nula redova, što u Postgresu nije greška.
+
+- **15 — Dokaz izolacije: isti klijent u dva salona** (2026-09-12, ✅) — `rest_cross_salon_isolation.ts`, **22 asercije i tri stvarna JWT-a**: jedan čovjek se prijavi i rezerviše u oba demo salona, pa se mjeri šta ko vidi. Admin salona A ne dobija red salona B ni po `id`, ni po `auth_identity_id` — koji **zna**, jer stoji u njegovom vlastitom redu — ni kroz imenovani embed na `appointments`, ni kad `x-salon-id` postavi na salon B. **Provjereno da test može pasti**: `staff_manage` bez veze sa salonom reda („admin bilo gdje ⇒ admin svugdje") obori aserciju o admin pogledu, `own_customer` bez `client_salon_id()` obori aserciju o klijentu; obje vraćene i provjerene naspram migracije kroz `pg_policy`. Usput nađeno da kompozitni FK-ovi čine embed dvosmislenim (`PGRST201`, HTTP **300**), pa REST testovi moraju tretirati `300` kao grešku — inače prođe kao uspjeh i test pukne kasnije, na mjestu koje ne govori šta je stvarno vraćeno. Puna suita: **82 pgTAP testa, 92 REST asercije**.
+
+- **14 — `AuthIdentity` + `Customer` upsert** (2026-09-12, ✅) — `public.ensure_customer` je drugi i zadnji upis iz klijentske app-e, uz `book_appointment`: identitet izvodi iz tokena (nikad iz argumenta), salon mora doći iz `x-salon-id`, `on conflict do nothing` da drugi poziv ne prepiše ime koje je salon ispravio. **Termin je prvi put stvarno nastao iz aplikacije** — `pending`, 16.09. 10:00–10:40, Emir, Fade — i **`409` je izazvan uživo**: slot zauzet izvana, ekran vraćen na korak 3 sa osvježenom listom u kojoj je zauzeti prozor nestao. Time padaju dvije 🟡 stavke iz [taska 11](sprint-1/11-booking-flow.md). Dokazano: **82 pgTAP testa** (bilo 66), **70 REST asercija** u tri Deno testa, **256 Dart testova**. Tri greške koje testovi i browser nađu a čitanje ne: `not (A and B)` je rupa kad `B` može biti `NULL` — zahtjev bez `x-salon-id` headera je prolazio kroz guard; `revoke ... from public` ne skida `execute` jer ga Supabase daje `anon`-u direktno kroz `pg_default_acl`, i isti propust je stajao na `book_appointment` od taska 05; i sinhroni snimak `customerId`-a je davao grešku dok je upsert bio u letu, jer `null` nije razlikovao „nema klijenta" od „još nije stigao". Zamka zapisana u `workflows.md`: **`supabase db reset` ne učitava `config.toml`**, pa auth template ostaje stari i OTP mail stigne kao engleski magic link.
+
+- **13 — Client: login ekran na kraju booking flowa** (2026-09-12, 🟡) — `/auth/login` dobio pravo tijelo: `SupabaseAuthRepository` u `core_api` (email OTP kroz `signInWithOtp`/`verifyOTP`), `CustomerRepository` koji čita `customers` pod `own_customer`, `AuthRejectedError`/`RateLimitError` da pogrešan kod više ne izlazi kao „nešto je pošlo naopako", `LoginScreen` sa tri faze i `?from=` povratkom koji se provjerava naspram `ClientRoute` liste (inače open redirect na webu). Dokazano: **253 testa PASS** (bilo 238) i **email OTP odigran do kraja u Chromiumu protiv živog Supabase stacka** — četiri prijave, četiri `auth_identities` reda, mail sa šest cifara i bez ijednog linka. **Browser je našao dvije greške koje testovi nisu**: prijava je brisala izbor iz flowa (`bookingFlowProvider` je `autoDispose`, a kartica „Čuvamo vam" — jedini slušalac — crta se samo u fazi izbora providera), i sam test je držao vlastitu pretplatu pa bi prolazio i nad pokvarenom app-om; oboje popravljeno, uz provjeru da test sada **može** pasti. **Ostaje 🟡**: Apple i Google traže pakete kojih nema u `pubspec.yaml` i konzole iz [taska 12](sprint-2/12-konzole-checklist.md), a `customers` je i dalje 0 — red pravi [task 14](sprint-2/14-identitet-i-klijent-upsert.md).
+
+- **12 — Supabase Auth provideri + `AuthConfig` po flavoru** (2026-09-12, 🟡) — `AuthProvider`/`AuthPlatform`/`AuthConfig`/`AuthSession` u `core_domain` ([ADR-0007](../docs/adr/0007-authconfig-u-core-domain.md): vlastiti enum platforme, jer je `core_domain` čist Dart), `AuthRepository` ugovor u `core_api`, `auth:` blok u `tenant.yaml` sa validacijom u generatoru, Google client ID po flavoru kroz `build_tenant.sh`, redirect URL-ovi i OTP template u `supabase/config.toml`. Dokazano: **238 testova PASS** (bilo 215) i **email OTP odigran do kraja** na lokalnom stacku — kod bez linka u mailu, `verify` vraća sesiju, `auth_identities` dobija red (time je prvi put dokazan i trigger iz taska 02). **Ostaje 🟡**: Apple i Google prijava nisu odigrane nijednom — traže tuđe konzole i pravi uređaj, hodogram je [`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
 
 - **11 — Client: booking flow** (2026-09-12, 🟡) — pet ekrana pod `/book/*`, dva prolaza: prvi po tekstu iz `SPEC.md`, drugi **po slikama iz `prototype/ui/`**. Prototip je usput oborio tri odluke: korak 3 je mjesečni kalendar (ne traka datuma, `DateStrip` obrisan), korak 4 je ekran prijave (ne sažetak sa napomenom), success nema konfete. Uz to **odluka da je barber 1:1 sa handoffom** — paleta prepisana znak po znak, copy doslovan, Lucide ikone, pakovani DM Serif Display + Archivo; ostale vertikale dobijaju svoj dizajn. Tokeni promijenjeni **sistemski** (`AppRadius.none` je jedina vrijednost). Dokazano: 215 testova PASS, svih pet ekrana u Chromiumu na 402×874 za oba tenanta, korak 1 i guard na iOS simulatoru ([PR #19](https://github.com/htuco/salon-booking-platform/pull/19)). Slike su našle dvije greške koje testovi nisu mogli: korak 2 je u demou prikazivao grešku (`employeeServiceLinksProvider` bez override-a), a beauty success prazan red (demo termin sa barberovim `serviceId`). **Ostaje 🟡**: `book(...)` nikad nije pozvan protiv prave baze i `409` nije izazvan uživo — oboje traži `Customer` upsert, delegirano u [task 14](sprint-2/14-identitet-i-klijent-upsert.md); fotografije usluga u [22](sprint-2/22-sema-slike-i-staz.md), Početna po handoffu u [18](sprint-2/18-pocetna-i-tab-bar.md).
 - **01 — Skeleton repozitorija** (2026-08) — melos workspace, `apps/client`, `apps/admin`, `packages/core_*`, `supabase init`. `melos bootstrap`/`analyze`/`test` prolaze.
