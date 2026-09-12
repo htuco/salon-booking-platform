@@ -117,17 +117,25 @@ final customerRepositoryProvider = Provider<CustomerRepository>(
   (ref) => CustomerRepository(ref.watch(supabaseClientProvider)),
 );
 
-/// `customers.id` prijavljenog korisnika, ili `null` dok red ne postoji.
+/// `customers.id` prijavljenog korisnika — **pravi red ako ga nema**.
 ///
 /// Ovisi o [currentAuthSessionProvider] namjerno: prijava i odjava moraju ponovo pitati
 /// bazu. Bez te veze bi korisnik koji se prijavio nakon prvog pokušaja zadržao `null` do
 /// restarta app-e.
+///
+/// **Zove `ensureCustomer`, ne `currentCustomerId`.** Prvi put kad se neko prijavi u salon
+/// reda nema i čitanje bi vratilo `null` — a jedini trenutak kad ga smijemo napraviti je
+/// upravo taj. Poziv je idempotentan (`on conflict do nothing` u bazi), pa ga svaka
+/// sljedeća prijava ponovi bez posljedice.
+///
+/// Gost (`isAnonymous`) je namjerno uključen: i on ima `auth_identities` red i rezerviše
+/// pod svojim identitetom — tok gosta je task 26, ali ovdje se ne razlikuje.
 final currentCustomerIdProvider = FutureProvider<String?>((ref) async {
   if (ref.watch(currentAuthSessionProvider) == null) return null;
 
   return ref
       .watch(customerRepositoryProvider)
-      .currentCustomerId(ref.watch(currentSalonIdProvider));
+      .ensureCustomer(ref.watch(currentSalonIdProvider));
 });
 
 // ---------------------------------------------------------------------------
