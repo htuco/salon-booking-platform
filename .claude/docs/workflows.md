@@ -238,7 +238,7 @@ sa podrazumijevana dva se flow potroši prije nego se vidi.
 supabase stop                        # kad završiš
 ```
 
-Zadnji pun prolaz: **82 pgTAP testa** i **92 REST asercije** — 24 izolacija sa dva stvarna JWT-a,
+Zadnji pun prolaz: **97 pgTAP testova** i **92 REST asercije** — 24 izolacija sa dva stvarna JWT-a,
 26 javni katalog bez tokena, 20 upsert klijenta i rezervacija, 22 izolacija između salona sa tri
 JWT-a. Traje oko dvije minute.
 

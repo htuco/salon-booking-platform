@@ -177,6 +177,27 @@ Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** g
 7. Je li suite prošla lokalno (`supabase start && supabase test db` + dva Deno REST testa)? Na
    `main`-u to ponovi workflow `Supabase tests` iz čistog checkouta — v. `.claude/docs/workflows.md`.
 
+## Otkazivanje — `public.cancel_appointment`
+
+Treći i zadnji put kojim klijentska app piše u bazu. `security definer`, sa istom strukturom kao
+`ensure_customer`:
+
+- vlasništvo se izvodi iz tokena, salon iz `x-salon-id`, i oboje mora stajati;
+- **rok vrijedi za klijenta, ne za salon.** `salon_settings.min_cancel_hours` zaustavlja klijenta
+  (`PT403` → HTTP 403); salon otkazuje kad mora, i tada klijent dobije obavijest, ne zabranu;
+- `cancelled_by` kaže **ko** je otkazao (`customer` / `salon` / `system`) — admin ekran i
+  statistika zavise od toga, a `system` je istekao `pending` i piše ga scheduler;
+- **idempotentno**: već otkazan termin vraća isti red bez greške. Dva uređaja i dva tapa nisu kvar.
+
+Nepostojeći i tuđi termin vraćaju **istu** grešku (`42501`).
+
+> **`update` sa klijenta ne baca — ne radi ništa.** `authenticated` *ima* `update` grant na
+> `appointments` i `customers`; ono što ga zaustavlja je odsustvo klijentske `for update` politike,
+> pa RLS filtrira sve redove i `update` pogodi **nula** redova. Nula redova nije greška u
+> Postgresu. Test koji od direktnog `update`-a očekuje `42501` će zato pasti — a tvrdnja je
+> pogrešna, ne kod. Asercija ide na **učinak** (red je netaknut). `insert` je druga priča: njega
+> hvata `with check` politike i on stvarno baca.
+
 ## Čime je izolacija dokazana
 
 Tvrdnje iz ovog dokumenta nisu opis namjere nego opis onoga što suite provjerava. Kad mijenjaš
@@ -191,6 +212,7 @@ ništa.
 | `rest_isolation.ts` | dva stvarna JWT-a; `user_metadata` ne širi pristup |
 | `rest_public_catalog.ts` | katalog radi **bez** tokena, sa kolonama koje `core_api` stvarno šalje |
 | `rest_customer_upsert.ts` | cijeli put app-e: prijava → identitet → klijent → termin → HTTP 409 |
+| `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
 | `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header |
 
 **Curenje kroz embed i kroz filter je češće od curenja kroz direktan upit.** Admin zna
