@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/appointments/appointments_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/booking/booking_success_screen.dart';
 import '../../features/booking/details_step_screen.dart';
@@ -53,6 +54,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ClientRoute.login => LoginScreen(
               from: state.uri.queryParameters['from'],
             ),
+            ClientRoute.appointments => const AppointmentsScreen(),
             _ => PlaceholderScreen(title: route.title, path: state.uri.path),
           },
         ),

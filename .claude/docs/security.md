@@ -113,8 +113,8 @@ rezervacija traži (`grant execute ... to authenticated`).
 
 Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvorene:
 
-- **Upis `customers` i svi `devices` upisi** i dalje nemaju validiranu funkciju. `book_appointment`
-  traži da klijent **već postoji** — upsert identiteta u klijenta dolazi sa auth radom (Sprint 2).
+- **`devices` upisi** i dalje nemaju validiranu funkciju — dolaze sa push radom (task 25).
+  `customers` je **zatvoreno** u tasku 14, v. odjeljak ispod.
 - **Direktan admin `insert`/`update` nad `appointments` zaobilazi validaciju slota.** Exclusion
   constraint sprječava preklapanje, ali radno vrijeme, blokade i `min_advance_booking_hours` ne
   provjerava niko na tom putu. Admin ekran mora ići kroz `book_appointment`.
@@ -122,6 +122,36 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
   `book_appointment` uvijek dodijeli radnika; takav red može nastati samo ručnim upisom, i
   `get_available_slots` ga zato konzervativno tretira kao zauzeće cijelog salona.
 - **Brisanje/anonimizacija naloga** dolazi u kasnijoj migraciji.
+
+## Upsert klijenta — `public.ensure_customer`
+
+Drugi i zadnji put kojim klijentska app piše u bazu (uz `book_appointment`). `security definer`,
+pa autorizaciju radi sama:
+
+- **identitet se izvodi iz tokena** (`auth.uid()` → `auth_identities`), nikad ne stiže kao
+  argument. Da stiže, funkcija bi bila način da se napravi klijent vezan za tuđu osobu;
+- **salon mora doći iz `x-salon-id`** i poklopiti se sa `p_salon_id`. Argument sam po sebi ne
+  dokazuje ništa — pošiljalac ga bira;
+- osoblje je namjerno **isključeno**: admin unos telefonskih klijenata je drugi tok sa drugom
+  validacijom (Sprint 3);
+- `on conflict do nothing`, ne `do update`: drugi poziv ne prepisuje ime koje je salon ispravio.
+
+Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** grešku (`42501`).
+
+> **Dvije zamke nađene testom, ne čitanjem** (task 14) — obje vrijede za svaku sljedeću
+> `security definer` funkciju u ovom repou:
+>
+> 1. **`not (A and B)` je rupa kad `B` može biti `NULL`.** `private.client_salon_id()` vraća `NULL`
+>    za nedostajući header; `true and NULL` je `NULL`, `not NULL` je `NULL`, a `if NULL then` se ne
+>    izvršava — zahtjev **bez headera** je prolazio kroz guard. Provjeru rastavi i hvataj `NULL`
+>    prvi, umjesto da se oslanjaš na to da `not` pretvara nepoznato u odbijanje.
+> 2. **`revoke all on function ... from public` ne skida ništa.** Supabase kroz `pg_default_acl`
+>    daje `execute` na nove funkcije u `public` shemi **direktno** rolama `anon` i `authenticated`
+>    (`select defaclacl from pg_default_acl` → `anon=X/postgres`), ne kroz `PUBLIC`. Nova funkcija
+>    koja ne smije biti javna traži **`revoke ... from public, anon`**. Isti propust je stajao na
+>    `book_appointment` od taska 05 — tok je bio branjen logikom (`auth.uid()` je `NULL` za `anon`),
+>    ali granica koju je ovaj dokument opisivao nije postojala. Zatvoreno u istoj migraciji.
+
 
 ## Tajne
 
@@ -146,3 +176,47 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
    pretpostavka.
 7. Je li suite prošla lokalno (`supabase start && supabase test db` + dva Deno REST testa)? Na
    `main`-u to ponovi workflow `Supabase tests` iz čistog checkouta — v. `.claude/docs/workflows.md`.
+
+## Otkazivanje — `public.cancel_appointment`
+
+Treći i zadnji put kojim klijentska app piše u bazu. `security definer`, sa istom strukturom kao
+`ensure_customer`:
+
+- vlasništvo se izvodi iz tokena, salon iz `x-salon-id`, i oboje mora stajati;
+- **rok vrijedi za klijenta, ne za salon.** `salon_settings.min_cancel_hours` zaustavlja klijenta
+  (`PT403` → HTTP 403); salon otkazuje kad mora, i tada klijent dobije obavijest, ne zabranu;
+- `cancelled_by` kaže **ko** je otkazao (`customer` / `salon` / `system`) — admin ekran i
+  statistika zavise od toga, a `system` je istekao `pending` i piše ga scheduler;
+- **idempotentno**: već otkazan termin vraća isti red bez greške. Dva uređaja i dva tapa nisu kvar.
+
+Nepostojeći i tuđi termin vraćaju **istu** grešku (`42501`).
+
+> **`update` sa klijenta ne baca — ne radi ništa.** `authenticated` *ima* `update` grant na
+> `appointments` i `customers`; ono što ga zaustavlja je odsustvo klijentske `for update` politike,
+> pa RLS filtrira sve redove i `update` pogodi **nula** redova. Nula redova nije greška u
+> Postgresu. Test koji od direktnog `update`-a očekuje `42501` će zato pasti — a tvrdnja je
+> pogrešna, ne kod. Asercija ide na **učinak** (red je netaknut). `insert` je druga priča: njega
+> hvata `with check` politike i on stvarno baca.
+
+## Čime je izolacija dokazana
+
+Tvrdnje iz ovog dokumenta nisu opis namjere nego opis onoga što suite provjerava. Kad mijenjaš
+politiku, mijenjaj i test — i **provjeri da test pada kad politiku oslabiš**, inače ne testira
+ništa.
+
+| Test | Šta dokazuje |
+|---|---|
+| `001_tenant_isolation.test.sql` | politike na nivou SQL-a, po roli |
+| `002_availability.test.sql` | `book_appointment` i `PT409` na nivou baze |
+| `003_customer_upsert.test.sql` | `ensure_customer` — NULL u guardu, grantovi, idempotentnost |
+| `rest_isolation.ts` | dva stvarna JWT-a; `user_metadata` ne širi pristup |
+| `rest_public_catalog.ts` | katalog radi **bez** tokena, sa kolonama koje `core_api` stvarno šalje |
+| `rest_customer_upsert.ts` | cijeli put app-e: prijava → identitet → klijent → termin → HTTP 409 |
+| `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
+| `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header |
+
+**Curenje kroz embed i kroz filter je češće od curenja kroz direktan upit.** Admin zna
+`auth_identity_id` — on stoji u njegovom vlastitom redu — pa je filter po njemu prvo što bi
+probao. Isto vrijedi za `select=*,customers(...)`: kompozitni FK-ovi ga čine dvosmislenim
+(`PGRST201`, HTTP **300**), ali to je prepreka koja traži samo da se pročita poruka o grešci.
+Svaki novi REST test zato mora tretirati `300` kao grešku, ne kao uspjeh.

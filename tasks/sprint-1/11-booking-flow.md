@@ -16,8 +16,8 @@ Klijent od izbora usluge do potvrđenog zahtjeva, bez prijave do zadnjeg koraka,
 - [x] Slotovi dolaze **isključivo** iz backend availability funkcije (task 05). Nula filtriranja, sabiranja buffera ili računanja trajanja u aplikaciji — provjereno pretragom, ne pretpostavkom
 - [x] `bookingGranularity: date_only` podržan: klijent bira samo datum, salon dodjeljuje vrijeme ([05 §4](../../docs/05-vertical-packs.md))
 - [x] Stanje flowa živi u jednom Riverpod provideru; povratak nazad ne gubi izbor, a "restart" ga čisti
-- [~] Slanje ide kroz **validiranu RPC/Edge funkciju**, nikad direktan `insert` sa klijenta — put je takav u kodu i pokriven testom, ali `book_appointment` nije nijednom pozvan protiv prave baze
-- [~] **`409 Conflict` je prvoklasno stanje**, ne generička greška: poruka "Ovaj termin je upravo zauzet. Izaberite drugi." i automatski povratak na osvježenu listu slotova — dokazano testom ekrana, **nije izazvano uživo** (korak 4 iz Koraka)
+- [x] Slanje ide kroz **validiranu RPC/Edge funkciju**, nikad direktan `insert` sa klijenta — **zatvoreno u [tasku 14](../sprint-2/14-identitet-i-klijent-upsert.md)**: `book_appointment` je pozvan iz app-e protiv prave baze i termin postoji (`pending`, 10:00–10:40, Emir)
+- [x] **`409 Conflict` je prvoklasno stanje**, ne generička greška: poruka "Ovaj termin je upravo zauzet. Izaberite drugi." i automatski povratak na osvježenu listu slotova — **izazvano uživo u [tasku 14](../sprint-2/14-identitet-i-klijent-upsert.md)**: `HTTP 409 (Termin je upravo zauzet)`, povratak na korak 3, zauzet termin nestao iz liste
 - [x] Termin nastaje kao `pending`; success ekran to jasno kaže — zahtjev poslan, salon potvrđuje ([01 §18](../../docs/01-mvp-spec.md#18-ključne-odluke))
 - [x] Svi tekstovi kroz `vertical.terms.*` i `.arb`; success ekran koristi `flutter_animate`/`confetti` kao u prototipu
 - [x] Widget testovi: prelaz kroz korake, `409` putanja, `date_only` grana, prazan dan (nema slobodnih termina)

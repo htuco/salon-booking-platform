@@ -84,6 +84,35 @@ jobs:
           test -n "$SUPABASE_ANON_KEY" || { echo "ANON_KEY missing from supabase status"; exit 1; }
           deno run --allow-env --allow-net supabase/tests/rest_public_catalog.ts
 
+      # Upsert klijenta i rezervacija: jedini test koji prolazi cijeli put kojim ide app —
+      # prijava, identitet, ensure_customer, book_appointment — i jedini koji dokazuje da
+      # konflikt stvarno izlazi kao HTTP 409 kroz PostgREST, a ne samo kao PT409 u bazi.
+      - name: Run customer upsert + booking test
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="${API_URL:-http://127.0.0.1:54321}"
+          export SUPABASE_ANON_KEY="${ANON_KEY:-}"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-}"
+          test -n "$SUPABASE_ANON_KEY" || { echo "ANON_KEY missing from supabase status"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "SERVICE_ROLE_KEY missing from supabase status"; exit 1; }
+          deno run --allow-env --allow-net supabase/tests/rest_customer_upsert.ts
+
+      # Cross-salon isolation: the business risk, not a technical formality. One person, two
+      # salons; salon A must not learn that its customer is also salon B's. Covers the paths
+      # a leak actually takes — embed, join, and a filter by auth_identity_id, which an admin
+      # knows because it sits in their own row.
+      - name: Run cross-salon isolation test
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="${API_URL:-http://127.0.0.1:54321}"
+          export SUPABASE_ANON_KEY="${ANON_KEY:-}"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:-}"
+          test -n "$SUPABASE_ANON_KEY" || { echo "ANON_KEY missing from supabase status"; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "SERVICE_ROLE_KEY missing from supabase status"; exit 1; }
+          deno run --allow-env --allow-net supabase/tests/rest_cross_salon_isolation.ts
+
       - name: Stop local Supabase
         if: always()
         run: supabase stop --no-backup

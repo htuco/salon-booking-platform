@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth/auth_repository.dart';
 import 'auth/customer_repository.dart';
 import 'auth/supabase_auth_repository.dart';
+import 'booking/appointment_repository.dart';
 import 'booking/booking_repository.dart';
 import 'catalog/employee_repository.dart';
 import 'catalog/salon_repository.dart';
@@ -117,17 +118,25 @@ final customerRepositoryProvider = Provider<CustomerRepository>(
   (ref) => CustomerRepository(ref.watch(supabaseClientProvider)),
 );
 
-/// `customers.id` prijavljenog korisnika, ili `null` dok red ne postoji.
+/// `customers.id` prijavljenog korisnika — **pravi red ako ga nema**.
 ///
 /// Ovisi o [currentAuthSessionProvider] namjerno: prijava i odjava moraju ponovo pitati
 /// bazu. Bez te veze bi korisnik koji se prijavio nakon prvog pokušaja zadržao `null` do
 /// restarta app-e.
+///
+/// **Zove `ensureCustomer`, ne `currentCustomerId`.** Prvi put kad se neko prijavi u salon
+/// reda nema i čitanje bi vratilo `null` — a jedini trenutak kad ga smijemo napraviti je
+/// upravo taj. Poziv je idempotentan (`on conflict do nothing` u bazi), pa ga svaka
+/// sljedeća prijava ponovi bez posljedice.
+///
+/// Gost (`isAnonymous`) je namjerno uključen: i on ima `auth_identities` red i rezerviše
+/// pod svojim identitetom — tok gosta je task 26, ali ovdje se ne razlikuje.
 final currentCustomerIdProvider = FutureProvider<String?>((ref) async {
   if (ref.watch(currentAuthSessionProvider) == null) return null;
 
   return ref
       .watch(customerRepositoryProvider)
-      .currentCustomerId(ref.watch(currentSalonIdProvider));
+      .ensureCustomer(ref.watch(currentSalonIdProvider));
 });
 
 // ---------------------------------------------------------------------------
@@ -179,6 +188,21 @@ final salonSettingsProvider = FutureProvider<SalonSettings>(
       .watch(settingsRepositoryProvider)
       .forSalon(ref.watch(currentSalonIdProvider)),
 );
+
+/// Termini prijavljenog klijenta i otkazivanje.
+final appointmentRepositoryProvider = Provider<AppointmentRepository>(
+  (ref) => AppointmentRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Termini prijavljenog klijenta u aktivnom salonu.
+///
+/// Ovisi o [currentAuthSessionProvider]: odjava mora isprazniti listu, a prijava je
+/// napuniti bez restarta app-e. Osvježavanje nakon otkazivanja je
+/// `ref.invalidate(myAppointmentsProvider)` — nema lokalne kopije koja bi se „ažurirala".
+final myAppointmentsProvider = FutureProvider<List<Appointment>>((ref) async {
+  if (ref.watch(currentAuthSessionProvider) == null) return const [];
+  return ref.watch(appointmentRepositoryProvider).forCurrentCustomer();
+});
 
 /// Vertikala salona — terminologija, pravila i feature flagovi.
 final verticalProvider = FutureProvider<Vertical>(
