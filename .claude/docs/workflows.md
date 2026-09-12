@@ -233,18 +233,25 @@ sa podrazumijevana dva se flow potroši prije nego se vidi.
 ### Cijela suite jednom komandom
 
 ```sh
-./tool/test_supabase.sh              # start + db reset + pgTAP + oba REST testa
+./tool/test_supabase.sh              # start + db reset + pgTAP + tri REST testa
 ./tool/test_supabase.sh --no-reset   # baza je već svježa
 supabase stop                        # kad završiš
 ```
 
-Zadnji pun prolaz: **66 pgTAP testova, 24 REST asercije sa dva stvarna JWT-a, 26 asercija javnog
-kataloga bez tokena.** Traje oko dvije minute.
+Zadnji pun prolaz: **82 pgTAP testa, 24 REST asercije sa dva stvarna JWT-a, 26 asercija javnog
+kataloga bez tokena, 20 asercija upserta klijenta i rezervacije.** Traje oko dvije minute.
 
 **Zamka koja košta pola sata:** `supabase start` nad postojećim volumeom diže bazu **iz backupa** i
 migracije se ne primjenjuju. Testovi tada padnu na `relation "public.users" does not exist` i
 izgleda kao da je šema pokvarena, a nije — samo je stara. `supabase db reset` je jedini način da se
 dokaže da migracije i seed prolaze od nule. Skripta ga zato zove po defaultu.
+
+**Druga zamka, iz istog gnijezda:** `supabase db reset` **ne učitava `config.toml`**. Promjena
+auth podešavanja — email template, `otp_length`, redirect URL-ovi — traži `supabase stop` pa
+`supabase start`. Simptom je podmukao: prijava i dalje radi, ali mail stigne kao **podrazumijevani
+engleski magic link** umjesto kao šestocifreni kod, pa lokalni dokaz o OTP-u ne govori ništa o
+onome što je u `config.toml`-u. Nađeno u tasku 14; provjera je subject mail-a u Mailpitu
+(`http://127.0.0.1:54324`) — mora pisati „Vaš kod za prijavu".
 
 - **Napisana politika nije dokazana politika.** Dok suite nije prošla, u sažetku piše "napisano,
   nije pokrenuto", ne "radi".

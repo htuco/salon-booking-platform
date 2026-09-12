@@ -113,8 +113,8 @@ rezervacija traži (`grant execute ... to authenticated`).
 
 Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvorene:
 
-- **Upis `customers` i svi `devices` upisi** i dalje nemaju validiranu funkciju. `book_appointment`
-  traži da klijent **već postoji** — upsert identiteta u klijenta dolazi sa auth radom (Sprint 2).
+- **`devices` upisi** i dalje nemaju validiranu funkciju — dolaze sa push radom (task 25).
+  `customers` je **zatvoreno** u tasku 14, v. odjeljak ispod.
 - **Direktan admin `insert`/`update` nad `appointments` zaobilazi validaciju slota.** Exclusion
   constraint sprječava preklapanje, ali radno vrijeme, blokade i `min_advance_booking_hours` ne
   provjerava niko na tom putu. Admin ekran mora ići kroz `book_appointment`.
@@ -122,6 +122,36 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
   `book_appointment` uvijek dodijeli radnika; takav red može nastati samo ručnim upisom, i
   `get_available_slots` ga zato konzervativno tretira kao zauzeće cijelog salona.
 - **Brisanje/anonimizacija naloga** dolazi u kasnijoj migraciji.
+
+## Upsert klijenta — `public.ensure_customer`
+
+Drugi i zadnji put kojim klijentska app piše u bazu (uz `book_appointment`). `security definer`,
+pa autorizaciju radi sama:
+
+- **identitet se izvodi iz tokena** (`auth.uid()` → `auth_identities`), nikad ne stiže kao
+  argument. Da stiže, funkcija bi bila način da se napravi klijent vezan za tuđu osobu;
+- **salon mora doći iz `x-salon-id`** i poklopiti se sa `p_salon_id`. Argument sam po sebi ne
+  dokazuje ništa — pošiljalac ga bira;
+- osoblje je namjerno **isključeno**: admin unos telefonskih klijenata je drugi tok sa drugom
+  validacijom (Sprint 3);
+- `on conflict do nothing`, ne `do update`: drugi poziv ne prepisuje ime koje je salon ispravio.
+
+Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** grešku (`42501`).
+
+> **Dvije zamke nađene testom, ne čitanjem** (task 14) — obje vrijede za svaku sljedeću
+> `security definer` funkciju u ovom repou:
+>
+> 1. **`not (A and B)` je rupa kad `B` može biti `NULL`.** `private.client_salon_id()` vraća `NULL`
+>    za nedostajući header; `true and NULL` je `NULL`, `not NULL` je `NULL`, a `if NULL then` se ne
+>    izvršava — zahtjev **bez headera** je prolazio kroz guard. Provjeru rastavi i hvataj `NULL`
+>    prvi, umjesto da se oslanjaš na to da `not` pretvara nepoznato u odbijanje.
+> 2. **`revoke all on function ... from public` ne skida ništa.** Supabase kroz `pg_default_acl`
+>    daje `execute` na nove funkcije u `public` shemi **direktno** rolama `anon` i `authenticated`
+>    (`select defaclacl from pg_default_acl` → `anon=X/postgres`), ne kroz `PUBLIC`. Nova funkcija
+>    koja ne smije biti javna traži **`revoke ... from public, anon`**. Isti propust je stajao na
+>    `book_appointment` od taska 05 — tok je bio branjen logikom (`auth.uid()` je `NULL` za `anon`),
+>    ali granica koju je ovaj dokument opisivao nije postojala. Zatvoreno u istoj migraciji.
+
 
 ## Tajne
 

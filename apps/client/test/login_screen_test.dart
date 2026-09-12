@@ -428,7 +428,7 @@ Future<ProviderContainer> _pump(
       // vrati prije kraja tijela testa.
       visibleAuthProvidersProvider.overrideWithValue(provideri),
       // `customers` red pravi tek task 14; dotad je odgovor `null` i u pravoj app-i.
-      bookingCustomerIdProvider.overrideWithValue(null),
+      bookingCustomerIdProvider.overrideWith((ref) async => null),
       bookingTodayProvider.overrideWithValue(_danas),
     ],
   );

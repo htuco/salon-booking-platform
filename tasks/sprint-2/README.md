@@ -8,7 +8,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 |---|---|---|---|
 | [12](12-auth-provideri.md) 🟡 | Supabase Auth provideri + `AuthConfig` po flavoru ([konzole](12-konzole-checklist.md)) | 13, 14 | 2 dana |
 | [13](13-client-login-ekran.md) 🟡 | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
-| [14](14-identitet-i-klijent-upsert.md) | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
+| [14](14-identitet-i-klijent-upsert.md) ✅ | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
 | [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
 | [16](16-moji-termini-i-otkazivanje.md) | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
 | [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
@@ -41,12 +41,12 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 
 | Otvoreno u | Šta | Zatvara |
 |---|---|---|
-| [11](../sprint-1/11-booking-flow.md) | `book(...)` nikad nije pozvan protiv prave baze | [14](14-identitet-i-klijent-upsert.md) |
-| [11](../sprint-1/11-booking-flow.md) | `409` nije izazvan uživo | [14](14-identitet-i-klijent-upsert.md) |
+| [11](../sprint-1/11-booking-flow.md) | ~~`book(...)` nikad nije pozvan protiv prave baze~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
+| [11](../sprint-1/11-booking-flow.md) | ~~`409` nije izazvan uživo~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | Usluge nemaju fotografiju, radnici staž | [22](22-sema-slike-i-staz.md) |
 | [11](../sprint-1/11-booking-flow.md) | Početna nije po handoffu | [18](18-pocetna-i-tab-bar.md) |
 | [08](../sprint-1/08-core-api-repozitoriji.md) | Nema `AppointmentRepository` | [16](16-moji-termini-i-otkazivanje.md) |
-| `security.md` | `customers`/`devices` upis bez validirane funkcije | [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
+| `security.md` | ~~`customers`~~ ✅ / `devices` upis bez validirane funkcije | ✅ [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
 | `security.md` | Admin `insert` nad `appointments` zaobilazi validaciju slota | [24](24-admin-akcije-nad-terminima.md) |
 
 ## Što **nije** u ovom sprintu
@@ -86,6 +86,21 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > tačno ono što [task 14](14-identitet-i-klijent-upsert.md) zatvara.
 > **Apple i Google nisu odigrani**: traže pakete kojih nema u `pubspec.yaml` i konzole iz taska 12.
 > Detalji: [13-client-login-ekran.md](13-client-login-ekran.md#status-2026-09-12--🟡-email-prijava-radi-i-dokazana-je-nativni-provideri-nisu).
+
+
+> **14 — `AuthIdentity` + `Customer` upsert (✅, 2026-09-12).** `public.ensure_customer` je drugi i
+> zadnji upis iz klijentske app-e, uz `book_appointment`: identitet izvodi iz tokena, salon mora
+> doći iz `x-salon-id`, `on conflict do nothing` da ne prepiše ime koje je salon ispravio.
+> **Termin je prvi put stvarno nastao iz aplikacije** (`pending`, 16.09. 10:00–10:40, Emir), a
+> **`409` je izazvan uživo** — slot zauzet izvana, ekran vraćen na korak 3 sa osvježenom listom.
+> Time padaju i dvije 🟡 stavke iz [taska 11](../sprint-1/11-booking-flow.md).
+> Dokazano: **82 pgTAP testa** (bilo 66), **70 REST asercija** u tri Deno testa, **256 Dart testova**.
+> Tri greške koje su našli testovi i browser, ne čitanje: `not (A and B)` je rupa kad `B` može biti
+> `NULL` (zahtjev bez headera je prolazio kroz guard); `revoke ... from public` ne skida `execute`
+> jer ga Supabase daje `anon`-u direktno kroz `pg_default_acl` (isti propust je stajao na
+> `book_appointment` od taska 05); i „nema klijenta" naspram „još nije stigao" — sinhroni snimak
+> `customerId`-a je davao grešku dok je upsert bio u letu.
+> Detalji: [14-identitet-i-klijent-upsert.md](14-identitet-i-klijent-upsert.md#status-2026-09-12--✅-zatvoren).
 
 
 ## Dug koji nije task

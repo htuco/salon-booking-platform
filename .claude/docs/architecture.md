@@ -288,8 +288,15 @@ Dvije posljedice koje se ne vide iz potpisa:
   (pogrešan ili istekao kod), `RateLimitError` (čekanje) i `NetworkError` — razlika je ono što
   korisnik može uraditi, a `sealed ApiError` čini `switch` u ekranu iscrpnim.
 
-Upis u `customers` i dalje ne postoji: `CustomerRepository` samo **čita** pod politikom
-`own_customer`, a red pravi `security definer` funkcija iz taska 14.
+Od taska 14: `public.ensure_customer` — **drugi i zadnji upis iz klijentske app-e**, uz
+`book_appointment`. `CustomerRepository.ensureCustomer` ga zove, `currentCustomerIdProvider` ga
+veže za sesiju. Identitet izvodi baza iz JWT-a; klijent šalje samo salon, koji se mora poklopiti
+sa `x-salon-id` headerom (`.claude/docs/security.md`).
+
+`bookingCustomerIdProvider` je zbog toga **`FutureProvider`, ne sinhroni snimak**. Kao snimak je
+`null` značio dvije stvari — „nema klijenta" i „zahtjev je još u letu" — pa je korisnik koji
+dodirne „Pošalji zahtjev" odmah nakon prijave dobijao grešku iako je red već nastao. Slanje sada
+`await`-a taj isti poziv.
 
 Lista providera je podatak iz `tenant.yaml` (`auth.providers`), koji kroz generator ulazi u
 `tenants.g.dart`, pa kroz `AuthConfig.fromNames` do ekrana. Domen nosi **vlastiti** enum platforme

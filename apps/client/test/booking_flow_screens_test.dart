@@ -465,7 +465,7 @@ Future<ProviderContainer> _pumpFlow(
       verticalProvider.overrideWith((ref) async => vertical),
       bookingRepositoryProvider.overrideWithValue(repo),
       bookingTodayProvider.overrideWithValue(_danas),
-      bookingCustomerIdProvider.overrideWithValue(customerId),
+      bookingCustomerIdProvider.overrideWith((ref) async => customerId),
       // Prijava odlučuje koji CTA zadnji korak prikazuje (task 13), a `customerId` samo
       // da li slanje može proći. Test koji zada `customerId` zadaje i sesiju — bez nje
       // bi „prijavljen korisnik bez klijenta" bio jedino stanje koje se može testirati.
