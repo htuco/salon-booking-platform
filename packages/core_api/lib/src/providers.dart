@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth/auth_repository.dart';
 import 'auth/customer_repository.dart';
 import 'auth/supabase_auth_repository.dart';
+import 'booking/appointment_repository.dart';
 import 'booking/booking_repository.dart';
 import 'catalog/employee_repository.dart';
 import 'catalog/salon_repository.dart';
@@ -187,6 +188,21 @@ final salonSettingsProvider = FutureProvider<SalonSettings>(
       .watch(settingsRepositoryProvider)
       .forSalon(ref.watch(currentSalonIdProvider)),
 );
+
+/// Termini prijavljenog klijenta i otkazivanje.
+final appointmentRepositoryProvider = Provider<AppointmentRepository>(
+  (ref) => AppointmentRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Termini prijavljenog klijenta u aktivnom salonu.
+///
+/// Ovisi o [currentAuthSessionProvider]: odjava mora isprazniti listu, a prijava je
+/// napuniti bez restarta app-e. Osvježavanje nakon otkazivanja je
+/// `ref.invalidate(myAppointmentsProvider)` — nema lokalne kopije koja bi se „ažurirala".
+final myAppointmentsProvider = FutureProvider<List<Appointment>>((ref) async {
+  if (ref.watch(currentAuthSessionProvider) == null) return const [];
+  return ref.watch(appointmentRepositoryProvider).forCurrentCustomer();
+});
 
 /// Vertikala salona — terminologija, pravila i feature flagovi.
 final verticalProvider = FutureProvider<Vertical>(
