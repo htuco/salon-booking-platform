@@ -1,7 +1,7 @@
 # Trenutni task: 12 — Supabase Auth provideri + `AuthConfig` po flavoru
 
-Puni task: [`tasks/sprint-2/12-auth-provideri.md`](sprint-2/12-auth-provideri.md) · **Nije počet** ·
-Učitano: 2026-09-12 · Grana: još nije otvorena
+Puni task: [`tasks/sprint-2/12-auth-provideri.md`](sprint-2/12-auth-provideri.md) · **U toku** ·
+Učitano: 2026-09-12 · Grana: `feat/auth-provideri`
 
 ## Status
 

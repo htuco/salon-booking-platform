@@ -6,7 +6,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 
 | # | Task | Blokira | Procjena |
 |---|---|---|---|
-| [12](12-auth-provideri.md) | Supabase Auth provideri + `AuthConfig` po flavoru | 13, 14 | 2 dana |
+| [12](12-auth-provideri.md) 🟡 | Supabase Auth provideri + `AuthConfig` po flavoru | 13, 14 | 2 dana |
 | [13](13-client-login-ekran.md) | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
 | [14](14-identitet-i-klijent-upsert.md) | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
 | [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
