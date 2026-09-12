@@ -1,12 +1,23 @@
 # Trenutni task: 11 — Client: booking flow (4 koraka + success)
 
 Puni task: [`tasks/sprint-1/11-booking-flow.md`](sprint-1/11-booking-flow.md) · U toku ·
-Učitano ponovo: 2026-09-12 · Grana: `feat/booking-flow-ekrani` (ne-UI sloj je stigao kroz PR #17,
-grana `feat/booking-repozitorij-availability`, i mergovan je)
+Učitano ponovo: 2026-09-12 · Grana: `feat/booking-flow-ekrani`, draft PR [#18](https://github.com/htuco/salon-booking-platform/pull/18)
+(ne-UI sloj je stigao ranije kroz PR #17 i mergovan je)
 
 ## Status
 
-**Ne-UI sloj je gotov i na `origin/main`; UI sloj nije počet.** Task 11 je jedini otvoren task —
+**Ekrani su gotovi i dokazani lokalno i slikom. Ostaje dokaz protiv prave baze.**
+
+Ne-UI sloj je stigao ranije (PR #17). Ovaj rad je UI iznad njega: pet ekrana, slanje, dvije nove
+`core_ui` komponente. 215 testova PASS, čist checkout prolazi, oba tenanta snimljena u Chromiumu.
+
+Ono što **nije** dokazano i drži task na 🟡: `book(...)` nije nijednom pozvan protiv prave baze i
+`409` nije izazvan uživo — oboje traži Supabase vrijednosti i prijavljenog korisnika (Sprint 2).
+
+<details>
+<summary>Zatečeno stanje na početku (provjereno u repou)</summary>
+
+**Ne-UI sloj je bio gotov i na `origin/main`; UI sloj nije bio počet.** Task 11 je jedini otvoren task —
 Sprint 1 nema ničega iza njega, a Sprint 2 nije raspisan. "Iduće po redu" je zato ostatak ovog
 taska: četiri ekrana i success.
 
@@ -23,22 +34,28 @@ Provjereno u repou, ne prepisano iz statusa:
   **ne postoje**.
 - `apps/client/pubspec.yaml` — nema ni `flutter_animate` ni `confetti`.
 
+</details>
+
 ## Ciljevi
 
 - [x] Grana sa svježeg `origin/main` — `feat/booking-flow-ekrani`; draft PR ide uz prvi commit
-- [ ] `DateStrip` i `StepProgressBar` u `core_ui`, sa tokenima — ne ad-hoc widgeti u ekranu
-- [ ] `flutter_animate` + `confetti` u `apps/client/pubspec.yaml`
-- [ ] `/book/service` — čita `?serviceId=` sa home ekrana i preselektuje uslugu
-- [ ] `/book/employee` — "bilo ko od nas" prvi, kad `requireStaffChoice` nije uključen
-- [ ] `/book/slot` — datumi i slotovi iz providera; `bookingGranularity: date_only` grana
-- [ ] `/book/details` — sažetak + slanje kroz `bookingFlowProvider`; bez polja za telefon
-- [ ] `/book/success` — `pending`, ne "potvrđeno"; `flutter_animate`/`confetti`
-- [ ] `409` kao prvoklasno stanje na ekranu: poruka + automatski povratak na osvježenu listu
-- [ ] Svaki ekran ima prazno / greška / učitavanje stanje
-- [ ] Svi tekstovi kroz `vertical.terms.*` i `app_bs.arb` — nula literala u ekranu
-- [ ] Widget testovi: prelaz kroz korake, `409` putanja, `date_only` grana, prazan dan
-- [ ] Vizuelni dokaz kroz `lib/demo_main.dart` za oba tenanta (screenshot, kao u tasku 10)
-- [ ] `./tool/verify_clean.sh` prolazi iz čistog checkouta
+- [x] `DateStrip` i `StepProgressBar` u `core_ui` — oba u `_DemoEkran`-u, pa prolaze postojeće
+      provjere kontrasta i dodirne mete u obje palete
+- [x] `flutter_animate` + `confetti` u `apps/client/pubspec.yaml`
+- [x] `/book/service` — čita `?serviceId=`; pokriveno testom (regresija iz taska 10)
+- [x] `/book/employee` — "bilo ko od nas" prvi; lista je presjek sa `employee_services`
+- [x] `/book/slot` — datumi i slotovi iz providera; `date_only` grana pokrivena testom
+- [x] `/book/details` — sažetak, napomena i slanje; bez polja za telefon
+- [x] `/book/success` — `StatusBadge` "Na čekanju", konfete u brand bojama
+- [x] `409` kao prvoklasno stanje: poruka, `ref.invalidate`, povratak na korak 3 sa zadržanim danom
+- [x] Svaki ekran ima prazno / greška / učitavanje stanje
+- [x] Svi tekstovi kroz `vertical.terms.*` i `app_bs.arb`
+- [x] Widget testovi: 8 novih — prelaz, guard, preselekcija, prazan dan, `date_only`, `409`, success.
+      **215 testova PASS** (bilo 205), analiza čista, format čist, `gen_flavors --check` ažurno
+- [x] Vizuelni dokaz kroz `lib/demo_main.dart` za oba tenanta — svih pet ekrana u Chromiumu,
+      `docs/screenshots/task-11-*`. **Našao grešku koju suita nije:** korak 2 je u demou
+      prikazivao grešku jer `employeeServiceLinksProvider` nije bio override-ovan
+- [x] `./tool/verify_clean.sh` prolazi iz čistog checkouta — 84 client testa iz praznog klona
 
 ## Napomene
 

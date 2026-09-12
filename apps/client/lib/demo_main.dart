@@ -48,6 +48,12 @@ Future<void> main() async {
         salonProvider.overrideWith((ref) async => demo.salon),
         servicesProvider.overrideWith((ref) async => demo.services),
         employeesProvider.overrideWith((ref) async => demo.employees),
+        // Bez ovoga drugi korak flowa prikaze gresku umjesto radnika: provider bi
+        // posegnuo za `Supabase.instance`, a demo build ga nema. Prazna lista veza
+        // znaci "svi radnici rade svaku uslugu", sto je za demo tacno.
+        employeeServiceLinksProvider.overrideWith(
+          (ref) async => const <EmployeeService>[],
+        ),
         workingHoursProvider.overrideWith((ref) async => demo.hours),
         verticalProvider.overrideWith((ref) async => demo.vertical),
 
@@ -128,9 +134,17 @@ class _DemoZadnjiTermin extends LastBookingNotifier {
   );
 }
 
+/// Prvi sljedeci dan u kojem demo salon radi — nedjelja se preskace.
+///
+/// Bez preskakanja success ekran zna pokazati termin u nedjelju, kad je salon po
+/// `seed.sql` zatvoren. Nije bug u ekranu, ali je pogresan podatak na slici koja sluzi
+/// kao dokaz.
 LocalDate _demoDatum() {
-  final sutra = DateTime.now().add(const Duration(days: 1));
-  return LocalDate(sutra.year, sutra.month, sutra.day);
+  var dan = DateTime.now().add(const Duration(days: 1));
+  if (dan.weekday == DateTime.sunday) {
+    dan = DateTime(dan.year, dan.month, dan.day + 1);
+  }
+  return LocalDate(dan.year, dan.month, dan.day);
 }
 
 class _Demo {
