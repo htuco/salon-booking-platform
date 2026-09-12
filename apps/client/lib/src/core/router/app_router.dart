@@ -1,6 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/booking/booking_success_screen.dart';
+import '../../features/booking/details_step_screen.dart';
+import '../../features/booking/employee_step_screen.dart';
+import '../../features/booking/service_step_screen.dart';
+import '../../features/booking/slot_step_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/placeholder/placeholder_screen.dart';
 
@@ -11,8 +16,8 @@ import '../../features/placeholder/placeholder_screen.dart';
 /// kroz imperativni `Navigator`, web verzija ostane bez URL-a i to se otkrije kasno — kad
 /// već postoji petnaest ekrana napisanih po tom uzoru.
 ///
-/// Od taska 10 `/` ima pravo tijelo (`HomeScreen`); ostale rute su i dalje placeholderi
-/// dok ih task 11 ne napiše. Ruta koja postoji i ima URL je ono što je task 07 dokazao.
+/// Od taska 10 `/` ima pravo tijelo (`HomeScreen`), od taska 11 i svih pet `/book/*`
+/// ruta. Ostalo (prijava, moji termini, račun) su i dalje placeholderi — Sprint 2.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     // **Bez `initialLocation`.** Na webu `initialLocation` nadjačava URL iz adresne trake,
@@ -26,6 +31,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           name: route.name,
           builder: (context, state) => switch (route) {
             ClientRoute.home => const HomeScreen(),
+            // `?serviceId=` dolazi sa home ekrana (task 10). Bez čitanja ovdje
+            // preselekcija usluge tiho ne radi — korisnik bira istu uslugu dvaput, a
+            // ekran pri tome izgleda ispravno.
+            ClientRoute.bookService => ServiceStepScreen(
+              preselectedServiceId: state.uri.queryParameters['serviceId'],
+            ),
+            ClientRoute.bookEmployee => const EmployeeStepScreen(),
+            ClientRoute.bookSlot => const SlotStepScreen(),
+            ClientRoute.bookDetails => const DetailsStepScreen(),
+            ClientRoute.bookSuccess => const BookingSuccessScreen(),
             _ => PlaceholderScreen(title: route.title, path: state.uri.path),
           },
         ),

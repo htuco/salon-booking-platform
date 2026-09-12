@@ -1,78 +1,92 @@
 # Trenutni task: 11 — Client: booking flow (4 koraka + success)
 
-Puni task: [`tasks/sprint-1/11-booking-flow.md`](sprint-1/11-booking-flow.md) · U toku · Grana: `feat/booking-repozitorij-availability`
+Puni task: [`tasks/sprint-1/11-booking-flow.md`](sprint-1/11-booking-flow.md) · U toku ·
+Učitano ponovo: 2026-09-12 · Grana: `feat/booking-flow-ekrani` (ne-UI sloj je stigao kroz PR #17,
+grana `feat/booking-repozitorij-availability`, i mergovan je)
 
 ## Status
 
-Task 10 je gotov i mergovan (PR #11). **Task 11 je u toku — ne-UI sloj je gotov, ekrani nisu.**
+**Ne-UI sloj je gotov i na `origin/main`; UI sloj nije počet.** Task 11 je jedini otvoren task —
+Sprint 1 nema ničega iza njega, a Sprint 2 nije raspisan. "Iduće po redu" je zato ostatak ovog
+taska: četiri ekrana i success.
 
-Ovo je **najveći ekranski task sprinta** i jedini koji piše u bazu. Sve do sada je bilo čitanje;
-ovdje prvi put ide `book_appointment` i prvi put postoji utrka za isti termin.
+Provjereno u repou, ne prepisano iz statusa:
 
-Urađen je sloj ispod ekrana: `BookingRepository` (sve tri metode `rpc`, nijedna `from(...)`),
-`AvailableSlot` u `core_domain`, i `BookingFlowState`/`BookingFlowNotifier` kao jedan
-`autoDispose` provider za sva četiri koraka. 205 testova PASS lokalno (bilo 165), analiza čista;
-**CI još nije potvrdio**. Puni status i lista šta je ostalo: status blok u task fajlu.
+- `packages/core_api/lib/src/booking/booking_repository.dart` ima `availableSlots`,
+  `availableDates`, `book` — sve tri na `rpc`.
+- `apps/client/lib/src/features/booking/` ima `booking_flow_state.dart` i
+  `booking_flow_provider.dart` (`bookingFlowProvider`, `availableSlotsProvider`,
+  `availableDatesProvider`, `bookingDateOnlyProvider`, `bookingRequiresStaffChoiceProvider`).
+- `apps/client/lib/src/core/router/app_router.dart` — svih pet `/book/*` ruta postoji kao
+  `ClientRoute` enum, ali svaka vodi na `PlaceholderScreen`.
+- `packages/core_ui/lib/src/components/` — šest komponenti; `date_strip` i `step_progress_bar`
+  **ne postoje**.
+- `apps/client/pubspec.yaml` — nema ni `flutter_animate` ni `confetti`.
 
-**Sljedeće je UI**: četiri ekrana + success, uz `DateStrip` i `StepProgressBar` u `core_ui`.
-Stanje, upiti i 409 mapiranje ih čekaju gotovi — ekran zove `bookingFlowProvider` i
-`availableSlotsProvider`, ne repozitorij.
+## Ciljevi
 
-## Šta je spremno, a šta nije
+- [x] Grana sa svježeg `origin/main` — `feat/booking-flow-ekrani`; draft PR ide uz prvi commit
+- [ ] `DateStrip` i `StepProgressBar` u `core_ui`, sa tokenima — ne ad-hoc widgeti u ekranu
+- [ ] `flutter_animate` + `confetti` u `apps/client/pubspec.yaml`
+- [ ] `/book/service` — čita `?serviceId=` sa home ekrana i preselektuje uslugu
+- [ ] `/book/employee` — "bilo ko od nas" prvi, kad `requireStaffChoice` nije uključen
+- [ ] `/book/slot` — datumi i slotovi iz providera; `bookingGranularity: date_only` grana
+- [ ] `/book/details` — sažetak + slanje kroz `bookingFlowProvider`; bez polja za telefon
+- [ ] `/book/success` — `pending`, ne "potvrđeno"; `flutter_animate`/`confetti`
+- [ ] `409` kao prvoklasno stanje na ekranu: poruka + automatski povratak na osvježenu listu
+- [ ] Svaki ekran ima prazno / greška / učitavanje stanje
+- [ ] Svi tekstovi kroz `vertical.terms.*` i `app_bs.arb` — nula literala u ekranu
+- [ ] Widget testovi: prelaz kroz korake, `409` putanja, `date_only` grana, prazan dan
+- [ ] Vizuelni dokaz kroz `lib/demo_main.dart` za oba tenanta (screenshot, kao u tasku 10)
+- [ ] `./tool/verify_clean.sh` prolazi iz čistog checkouta
 
-**Availability engine iz taska 05 je gotov i dokazan na CI-ju** — `get_available_slots`,
-`get_available_dates`, `book_appointment` i exclusion constraint `appointments_no_overlap`.
-Availability logika je isključivo u bazi; Dart je ne smije ni dotaknuti.
+## Napomene
 
-**`core_api` sada ima `BookingRepository`** — uveden u ovom tasku, prvi i jedini upis. Poziv ide
-na RPC funkciju, nikad `insert` sa klijenta (`.claude/docs/security.md`). Ekran ga **ne zove
-direktno**: `availableSlotsProvider(SlotQuery(...))` i `availableDatesProvider(...)` su `family`
-provideri, a osvježavanje liste je `ref.invalidate(...)` — nema lokalne kopije.
+**Grana u task fajlu je zastarjela.** `feat/booking-repozitorij-availability` je mergovan (PR #17),
+kao i `chore/reorganizacija-dizajn-handoff` (PR #16). Lokalni `main` je iza — `git fetch` pa
+`git switch main && git pull` prije nego što se otvori nova grana. Radna kopija je trenutno na
+`chore/reorganizacija-dizajn-handoff`, jedan commit iza `origin/main`.
 
-**`book(...)` traži `customerId`, koji još nema odakle doći.** Upis u `customers` nema validiranu
-funkciju, a sama funkcija je grantovana samo roli `authenticated` — auth je Sprint 2. Do tada
-zadnji korak ide guest putanjom ili mock identitetom, ali struktura poziva ostaje ista.
+**Dizajn handoff je premješten.** Ekrani 5c–5g su sada u `prototype/ui/SPEC.md` (ne više u
+`design/`), `prototype/wireframe/` je zamrznuti React prototip. Task fajl još pokazuje na
+`prototype/wireframe/src/app/pages/BookingFlow.tsx` — to je referenca za flow, ne za izgled.
 
-**Home ekran je uspostavio šablon** koji ovaj task nasljeđuje: podaci iz providera, tekst kroz
-`vertical.terms` i `.arb`, tri stanja prije sretnog slučaja. Detalji su u doc komentaru
-`apps/client/lib/src/features/home/home_screen.dart` i u `.claude/docs/conventions.md`.
+**`prototype/ui/SPEC.md` i `docs/06` se ne slažu oko koraka 4.** SPEC 5f crta "Apple / Google /
+phone sign-in"; `docs/06 §3.1` i `docs/06 §1.1` kažu da se **broj telefona ne traži nigdje**
+(push zamjenjuje SMS), a auth u cjelini dolazi tek u Sprintu 2. **Docs pobjeđuje na flowu**,
+SPEC na obliku. Korak 4 je do Sprinta 2 sažetak + slanje sa guest/mock identitetom, bez
+polja za telefon.
 
-**Komponente koje postoje**: `AppButton`, `ServiceCard`, `TimeSlotChip`, `StatusBadge`,
-`EmptyState`, `SkeletonLoader`. **Ne postoje** (`docs/02 §16`): `AppTextField`, `DateStrip`,
-`StepProgressBar`, `AppBottomSheet`. Booking flow traži bar `DateStrip` i `StepProgressBar` —
-pišu se u `core_ui` sa tokenima, ne kao ad-hoc widgeti u ekranu.
+**SPEC 5e crta mjesečni kalendar, task traži `DateStrip`.** Uzmi oblik iz SPEC-a (grupisanje
+AM/PM, hit target ≥ 44px, prošli dani neselektabilni), ali komponenta ide u `core_ui` sa
+tokenima — hex iz handoffa je paleta jednog brenda.
 
-**`flutter_animate`/`confetti` nisu u `pubspec.yaml`** — DoD ih traži za success ekran.
+**`customerId` još nema odakle doći.** `book(...)` ga traži, upis u `customers` nema validiranu
+funkciju, a `book_appointment` je grantovan samo roli `authenticated`. Do Sprinta 2 zadnji korak
+ide guest/mock putanjom — **struktura poziva ostaje ista**.
 
-## Zamke koje su već poznate
+**CI je blokiran naplatom na `htuco` nalogu do 29.09.2026.** Crven CI nije greška u kodu. Dokaz
+ide lokalno: `melos run analyze`, `melos run test`, `./tool/verify_clean.sh` (čist checkout,
+hvata necommitovan fajl i codegen drift) i `./tool/test_supabase.sh` za bazu.
 
-**Iskušenje ovog taska je "privremeno" filtrirati slotove u Dartu.** To je tačno ono što task 05
-postoji da spriječi. DoD traži provjeru pretragom, ne pretpostavkom.
+**Zamke koje su već platili raniji taskovi:**
 
-**`409 Conflict` je prvoklasno stanje**, ne generička greška — poruka i automatski povratak na
-osvježenu listu slotova. Mapiranje je sada ispravno: konflikt stiže kao **`PT409`**, ne `409`
-(Postgres prevodi status, ne kod u tijelu), a `mapError` je prije mapirao samo `409` — konflikt bi
-tiho ispao `ServerError`. `switch` to ne bi prijavio, jer je `ConflictError` obrađen, samo se
-nikad ne bi desio. **Ostaje dokazati uživo**: dva zahtjeva na isti slot još nisu izazvana.
+- **Nula availability logike u Dartu.** Iskušenje je "privremeno" filtrirati slotove; task 05
+  postoji da to spriječi. DoD traži provjeru `grep`-om, ne pretpostavkom.
+- **Konflikt stiže kao `PT409`**, ne `409` — mapiranje je ispravljeno u ne-UI sloju, ali
+  **ponašanje ekrana na 409 još nije izazvano uživo** (korak 4 iz Koraka taska).
+- **Home tap već vodi na `/book/service?serviceId=<id>`.** Ako prvi korak ne pročita taj query
+  parametar, preselekcija tiho ne radi i korisnik bira uslugu dvaput.
+- **`pumpAndSettle` ne radi na ekranu sa skeletonom** — puls se ponavlja, test istekne i kad je
+  ekran ispravan. Koristi `pump()`.
+- **Svaki widget test koji podiže app mora override-ovati podatkovne providere**, inače
+  repozitorij posegne za `Supabase.instance` kojeg u testu nema.
+- **Screenshot nalazi ono što testovi ne mogu** — task 10 (plavi badge preko zlatnog brenda) i
+  task 07 (prazna bijela stranica). Vizuelna provjera ide kroz `lib/demo_main.dart`.
+- **Ekran zove providere, ne repozitorij.** Osvježavanje liste je `ref.invalidate(...)`; stanje
+  flowa namjerno **ne** nosi listu slotova.
 
-**Home tap na uslugu već vodi na `/book/service?serviceId=<id>`.** Ruta postoji i URL je ispravan,
-ali tijelo je `PlaceholderScreen`. Ako prvi korak ne pročita taj query parametar, preselekcija
-usluge iz `docs/02 §3` tiho ne radi — izgleda ispravno, a korisnik bira uslugu dvaput.
-
-**`pumpAndSettle` ne radi na ekranu sa skeletonom.** Puls se ponavlja dok je vidljiv, pa test
-istekne i kad je ekran ispravan. Svi testovi koji podižu `/` koriste `pump()`; isto važi za svaki
-ekran ovog flowa.
-
-**Podatkovni provideri se moraju override-ovati u svakom widget testu** koji podiže app. Otkad `/`
-nije placeholder, provider bez override-a napravi repozitorij i posegne za `Supabase.instance`,
-kojeg u testu nema.
-
-**Login se traži tek na kraju flowa** (`docs/06 §1.1`) — ne stavljati guard na `/book/*`. Broj
-telefona se ne traži nigdje.
-
-**Screenshot nalazi ono što testovi ne mogu.** U tasku 10 je zelena suita propustila plavi status
-badge preko zlatnog brenda; u tasku 07 praznu bijelu stranicu. Vizuelna provjera ide kroz
-`lib/demo_main.dart` (v. `.claude/docs/workflows.md`).
+**Procjena ostatka: 2–3 dana** od izvornih 3–4 (ne-UI sloj je pojeo oko jedan dan).
 
 ## Istorija
 

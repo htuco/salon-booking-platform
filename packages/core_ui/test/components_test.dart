@@ -52,6 +52,29 @@ class _DemoEkran extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
+        // Booking flow (task 11): traka koraka i traka datuma idu kroz iste provjere
+        // kao ostale komponente — kontrast u obje palete i dodirna meta.
+        const StepProgressBar(
+          totalSteps: 4,
+          currentStep: 2,
+          semanticsLabel: 'Korak 2 od 4',
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        DateStrip(
+          selectedId: '2026-09-15',
+          onSelect: (_) {},
+          days: const [
+            DateStripDay(id: '2026-09-14', weekdayLabel: 'Pon', dayLabel: '14'),
+            DateStripDay(id: '2026-09-15', weekdayLabel: 'Uto', dayLabel: '15'),
+            DateStripDay(
+              id: '2026-09-16',
+              weekdayLabel: 'Sri',
+              dayLabel: '16',
+              available: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
         SkeletonLoader.card(),
         const SizedBox(height: AppSpacing.lg),
         const EmptyState(
@@ -206,6 +229,73 @@ void main() {
     await tester.tap(find.byType(AppButton));
     await tester.pump();
     expect(brojPoziva, 0);
+  });
+
+  testWidgets('DateStrip: pun dan ostaje vidljiv, ali se ne moze tapnuti', (
+    tester,
+  ) async {
+    // Izbacivanje punih dana pomjeri raspored pod prstom i ostavi korisnika bez
+    // odgovora na pitanje "a sta je sa srijedom".
+    final tapnuti = <String>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(
+          primary: barberPrimary,
+          secondary: barberSecondary,
+          themeName: 'modern_barber',
+        ),
+        home: Scaffold(
+          body: DateStrip(
+            onSelect: tapnuti.add,
+            days: const [
+              DateStripDay(
+                id: '2026-09-14',
+                weekdayLabel: 'Pon',
+                dayLabel: '14',
+              ),
+              DateStripDay(
+                id: '2026-09-15',
+                weekdayLabel: 'Uto',
+                dayLabel: '15',
+                available: false,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('15'), findsOneWidget);
+
+    await tester.tap(find.text('15'));
+    await tester.pump();
+    expect(tapnuti, isEmpty);
+
+    await tester.tap(find.text('14'));
+    await tester.pump();
+    expect(tapnuti, ['2026-09-14']);
+  });
+
+  testWidgets('StepProgressBar: korak van raspona se steze, ne rusi ekran', (
+    tester,
+  ) async {
+    // Traka je prikaz stanja; vrijednost van raspona je greska pozivaoca koja ne smije
+    // postati crveni ekran usred bookinga.
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(
+          primary: beautyPrimary,
+          secondary: beautySecondary,
+          themeName: 'elegant_beauty',
+        ),
+        home: const Scaffold(
+          body: StepProgressBar(totalSteps: 4, currentStep: 9),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(StepProgressBar), findsOneWidget);
   });
 
   testWidgets('SkeletonLoader postuje reduce motion', (tester) async {

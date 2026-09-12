@@ -38,7 +38,12 @@ dependencies:
   # Logo i cover salona se ucitavaju sa svakim otvaranjem ekrana; bez kesa to je
   # isti download na svakom hladnom startu i vidljiv prazan okvir umjesto brenda.
   cached_network_image: ^3.4.1
+  # Success ekran (`docs/02 §16`, `prototype/ui/SPEC.md` 5g) je jedini trenutak u flowu
+  # koji smije slaviti. Konfete i ulazna animacija su tu namjerno kratke — `AppDuration`
+  # gore granicu drzi na 300 ms.
+  confetti: ^0.8.0
   cupertino_icons: ^1.0.8
+  flutter_animate: ^4.5.2
   core_api:
     path: ../../packages/core_api
   core_domain:

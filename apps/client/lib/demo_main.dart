@@ -23,6 +23,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'main.dart';
 import 'src/core/env/app_env.dart';
 import 'src/core/env/bootstrap.dart';
+import 'src/features/booking/booking_flow_provider.dart';
+import 'src/features/booking/booking_submit_provider.dart';
 
 Future<void> main() async {
   // Isti bootstrap kao production: `usePathUrlStrategy` i `AppEnv.fromDefines`. Bez
@@ -48,10 +50,87 @@ Future<void> main() async {
         employeesProvider.overrideWith((ref) async => demo.employees),
         workingHoursProvider.overrideWith((ref) async => demo.hours),
         verticalProvider.overrideWith((ref) async => demo.vertical),
+
+        // Booking flow (task 11). Bez ova tri override-a se `/book/slot` u demo buildu
+        // sruši na `Supabase.instance` — ekrani zovu providere, a provideri bi ovdje
+        // posegnuli za klijentom kojeg `bootstrapClient` namjerno nije digao.
+        //
+        // Slotovi su izmišljeni, ali oblik je isti kao iz `get_available_slots`:
+        // jedan red po slobodnom radniku, pa isto vrijeme dolazi više puta i ekran ga
+        // mora svesti (`AvailableSlotList.distinctTimes`).
+        availableSlotsProvider.overrideWith(
+          (ref, query) async => _demoSlotovi(demo, query),
+        ),
+        availableDatesProvider.overrideWith(
+          (ref, query) async => _demoDatumi(query),
+        ),
+        // Success ekran čita zadnji termin. Slanje u demou ne postoji — `book(...)`
+        // traži prijavljenog korisnika (Sprint 2) — pa se `/book/success` otvara
+        // direktno preko URL-a, sa ovim terminom.
+        lastBookingProvider.overrideWith(_DemoZadnjiTermin.new),
       ],
       child: const SalonClientApp(),
     ),
   );
+}
+
+/// Slobodni termini za demo: 09:00–16:30 na pola sata, po dva radnika.
+///
+/// **Ovo nije availability logika.** Nema buffera, radnog vremena ni blokada — to je
+/// posao `get_available_slots` funkcije (task 05). Ovdje je samo prepisan *oblik*
+/// odgovora, da se ekran može pogledati bez backenda.
+List<AvailableSlot> _demoSlotovi(_Demo demo, SlotQuery query) {
+  final radnici = query.employeeId != null
+      ? [query.employeeId!]
+      : [for (final e in demo.employees) e.id];
+
+  return [
+    for (var sat = 9; sat < 17; sat++)
+      for (final minuta in [0, 30])
+        for (final radnik in radnici)
+          // Popodne petkom namjerno prazno, da se prazno stanje vidi i u demou.
+          if (!(query.date.weekday == DateTime.friday && sat >= 13))
+            AvailableSlot(
+              startTime: LocalTime(sat, minuta),
+              employeeId: radnik,
+            ),
+  ];
+}
+
+/// Svi dani u rasponu osim nedjelje — salon nedjeljom ne radi (`seed.sql`).
+List<LocalDate> _demoDatumi(DateRangeQuery query) {
+  final dani = <LocalDate>[];
+  var dan = DateTime(query.from.year, query.from.month, query.from.day);
+  final kraj = DateTime(query.to.year, query.to.month, query.to.day);
+
+  while (!dan.isAfter(kraj)) {
+    if (dan.weekday != DateTime.sunday) {
+      dani.add(LocalDate(dan.year, dan.month, dan.day));
+    }
+    dan = DateTime(dan.year, dan.month, dan.day + 1);
+  }
+  return dani;
+}
+
+/// Zadnji termin za demo success ekran — `pending`, kako ga baza i pravi.
+class _DemoZadnjiTermin extends LastBookingNotifier {
+  @override
+  Appointment? build() => Appointment(
+    id: '40000000-0000-4000-8000-000000000001',
+    salonId: ref.watch(currentSalonIdProvider),
+    serviceId: '10000000-0000-4000-8000-000000000001',
+    customerId: '30000000-0000-4000-8000-000000000001',
+    customerName: 'Demo',
+    date: _demoDatum(),
+    startTime: const LocalTime(10, 0),
+    endTime: const LocalTime(10, 30),
+    status: AppointmentStatus.pending,
+  );
+}
+
+LocalDate _demoDatum() {
+  final sutra = DateTime.now().add(const Duration(days: 1));
+  return LocalDate(sutra.year, sutra.month, sutra.day);
 }
 
 class _Demo {

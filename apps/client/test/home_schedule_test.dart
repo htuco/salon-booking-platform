@@ -1,4 +1,4 @@
-import 'package:client/src/features/home/formatters.dart';
+import 'package:client/src/core/formatters.dart';
 import 'package:client/src/features/home/salon_schedule.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
