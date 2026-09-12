@@ -55,22 +55,29 @@ class BookingSubmitNotifier extends AutoDisposeAsyncNotifier<void> {
   Future<bool> submit() async {
     final flow = ref.read(bookingFlowProvider);
     final dateOnly = ref.read(bookingDateOnlyProvider);
-    final customerId = ref.read(bookingCustomerIdProvider);
 
     // Polovičan izbor je guard, ne validacija: ekran ovdje ne smije stići. Kad stigne,
     // tiho slanje bi napravilo termin koji korisnik nije birao.
     if (!flow.isReadyToSubmit(dateOnly: dateOnly)) return false;
 
-    // Prijavljen korisnik bez `customers` reda je **stvarno stanje sistema** dok upsert
-    // iz taska 14 ne postoji — a ne greška u ekranu. Vraća se greška, a ne tiho `false`:
-    // dugme koje na dodir ne uradi ništa i ne kaže ništa je gore od poruke, jer korisnik
-    // ne zna da li čeka ili je pokvareno.
+    state = const AsyncValue<void>.loading();
+
+    // **Klijent se čeka, ne čita kao snimak.** `ensure_customer` ga pravi pri prvoj
+    // prijavi u salon, pa je u trenutku dodira zahtjev cesto još u letu — sinhrono
+    // čitanje je tada vraćalo `null` i korisnik je dobijao grešku iako je red nastao
+    // (nađeno u browseru, v. status blok taska 14). `await` čeka taj isti poziv.
+    final String? customerId;
+    try {
+      customerId = await ref.read(bookingCustomerIdProvider.future);
+    } on ApiError catch (error, stack) {
+      state = AsyncValue<void>.error(error, stack);
+      return false;
+    }
+
+    // `null` ovdje znači samo jedno: niko nije prijavljen. Greške su izašle iznad.
     if (customerId == null) {
       state = AsyncValue<void>.error(
-        const NotFoundError(
-          'Prijavljeni korisnik nema `customers` red u ovom salonu — upsert '
-          'dolazi u tasku 14 (tasks/sprint-2/14-identitet-i-klijent-upsert.md)',
-        ),
+        const NotFoundError('Rezervacija traži prijavu'),
         StackTrace.current,
       );
       return false;
@@ -81,8 +88,6 @@ class BookingSubmitNotifier extends AutoDisposeAsyncNotifier<void> {
     // Šalje se početak dana i salon ga pomjera pri potvrdi (`docs/05 §4.1`) — availability
     // se ni ovdje ne računa u Dartu.
     final startTime = flow.startTime ?? const LocalTime(0, 0);
-
-    state = const AsyncValue<void>.loading();
 
     try {
       final appointment = await ref

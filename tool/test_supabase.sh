@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Puna Supabase suite lokalno: pgTAP + dva Deno REST testa izolacije.
+# Puna Supabase suite lokalno: pgTAP + cetiri Deno REST testa.
 # Isto sto radi CI workflow `Supabase tests`, samo bez GitHub minuta i bez cekanja.
 #
 #   ./tool/test_supabase.sh            # reset baze pa svi testovi
@@ -46,6 +46,12 @@ deno run --allow-env --allow-net supabase/tests/rest_isolation.ts
 
 echo "==> Javni katalog (bez tokena)"
 deno run --allow-env --allow-net supabase/tests/rest_public_catalog.ts
+
+echo "==> Upsert klijenta i rezervacija (stvaran JWT, stvaran 409)"
+deno run --allow-env --allow-net supabase/tests/rest_customer_upsert.ts
+
+echo "==> Izolacija izmedju salona (isti covjek, dva salona, tri JWT-a)"
+deno run --allow-env --allow-net supabase/tests/rest_cross_salon_isolation.ts
 
 echo
 echo "Sve prolazi. Stack ostaje dignut — 'supabase stop' kad zavrsis."

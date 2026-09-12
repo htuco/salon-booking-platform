@@ -475,5 +475,80 @@
   },
 
   "loginCancelled": "Prijava je prekinuta.",
-  "@loginCancelled": { "description": "AuthCancelledError — korisnik je zatvorio dijalog, nije kvar." }
+  "@loginCancelled": { "description": "AuthCancelledError — korisnik je zatvorio dijalog, nije kvar." },
+
+  "appointmentsTitle": "Moji termini",
+  "@appointmentsTitle": { "description": "Naslov ekrana /appointments (prototype/ui 5h)." },
+
+  "appointmentsUpcoming": "Predstojeći",
+  "@appointmentsUpcoming": { "description": "Tab sa terminima koji tek dolaze." },
+
+  "appointmentsPast": "Prošli",
+  "@appointmentsPast": { "description": "Tab sa terminima koji su iza nas — odradjeni, otkazani, nedolasci." },
+
+  "appointmentsEmptyUpcoming": "Nemate zakazanih termina.",
+  "@appointmentsEmptyUpcoming": { "description": "Prazno stanje prvog taba." },
+
+  "appointmentsEmptyPast": "Ovdje će stajati termini koji su iza vas.",
+  "@appointmentsEmptyPast": { "description": "Prazno stanje drugog taba." },
+
+  "appointmentsSignedOut": "Prijavite se da vidite svoje termine.",
+  "@appointmentsSignedOut": { "description": "Ekran otvoren bez prijave." },
+
+  "appointmentsBookCta": "Zakažite termin",
+  "@appointmentsBookCta": { "description": "Poziv na booking iz praznog stanja — ne prazan ekran." },
+
+  "appointmentCancel": "Otkaži termin",
+  "@appointmentCancel": { "description": "Ulaz u otkazivanje, na kartici termina." },
+
+  "appointmentCancelTitle": "Otkazati termin?",
+  "@appointmentCancelTitle": { "description": "Naslov modala 5p." },
+
+  "appointmentCancelKicker": "OTKAZIVANJE",
+  "@appointmentCancelKicker": { "description": "Kicker iznad naslova modala, verzalom." },
+
+  "appointmentCancelBody": "Termin se oslobađa odmah i neko drugi ga može uzeti. Ova radnja se ne može poništiti.",
+  "@appointmentCancelBody": { "description": "Posljedica potvrde — ne ponavlja naslov." },
+
+  "appointmentCancelConfirm": "Da, otkaži",
+  "@appointmentCancelConfirm": { "description": "Destruktivna potvrda u modalu." },
+
+  "appointmentCancelKeep": "Zadrži termin",
+  "@appointmentCancelKeep": { "description": "Odustajanje u modalu (prototype/ui 5p)." },
+
+  "appointmentCancelled": "Termin je otkazan.",
+  "@appointmentCancelled": { "description": "Potvrda nakon uspjesnog otkazivanja." },
+
+  "appointmentCancelTooLate": "Rok za otkazivanje je prošao. Nazovite salon.",
+  "@appointmentCancelTooLate": { "description": "PT403 iz cancel_appointment — jedina preostala akcija je poziv." },
+
+  "appointmentCancelDeadline": "Otkazivanje je moguće najkasnije {hours} sati prije termina.",
+  "@appointmentCancelDeadline": {
+    "description": "Objasnjenje uz onemogucen CTA. Rok dolazi iz vertical.rules.minCancelHours, nikad iz konstante.",
+    "placeholders": { "hours": { "type": "int" } }
+  },
+
+  "appointmentStatusPending": "Na čekanju",
+  "@appointmentStatusPending": { "description": "Termin je poslan, salon jos nije potvrdio." },
+
+  "appointmentStatusConfirmed": "Potvrđeno",
+  "@appointmentStatusConfirmed": { "description": "Salon je potvrdio termin." },
+
+  "appointmentStatusCancelled": "Otkazano",
+  "@appointmentStatusCancelled": { "description": "Termin je otkazan." },
+
+  "appointmentStatusCompleted": "Odrađeno",
+  "@appointmentStatusCompleted": { "description": "Termin je odradjen." },
+
+  "appointmentStatusNoShow": "Nedolazak",
+  "@appointmentStatusNoShow": { "description": "Klijent se nije pojavio." },
+
+  "appointmentStatusUnknown": "Nepoznato",
+  "@appointmentStatusUnknown": { "description": "Status koji ova verzija app-e ne poznaje — v. AppointmentStatus.unknown." },
+
+  "appointmentCancelledBySalon": "Otkazao salon",
+  "@appointmentCancelledBySalon": { "description": "Ko je otkazao — vazno je da korisnik zna da nije on." },
+
+  "appointmentCancelledBySystem": "Isteklo je vrijeme za potvrdu",
+  "@appointmentCancelledBySystem": { "description": "Istekao pending, sistemsko otkazivanje." }
 }

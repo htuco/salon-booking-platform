@@ -8,9 +8,9 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 |---|---|---|---|
 | [12](12-auth-provideri.md) 🟡 | Supabase Auth provideri + `AuthConfig` po flavoru ([konzole](12-konzole-checklist.md)) | 13, 14 | 2 dana |
 | [13](13-client-login-ekran.md) 🟡 | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
-| [14](14-identitet-i-klijent-upsert.md) | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
-| [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
-| [16](16-moji-termini-i-otkazivanje.md) | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
+| [14](14-identitet-i-klijent-upsert.md) ✅ | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
+| [15](15-izolacija-klijent-u-dva-salona.md) ✅ | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
+| [16](16-moji-termini-i-otkazivanje.md) ✅ | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
 | [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
 | [22](22-sema-slike-i-staz.md) ✅ | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
 | [18](18-pocetna-i-tab-bar.md) | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
@@ -44,9 +44,12 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [11](../sprint-1/11-booking-flow.md) | `book(...)` nikad nije pozvan protiv prave baze | [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | `409` nije izazvan uživo | [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | ~~Usluge nemaju fotografiju, radnici staž~~ | ✅ [22](22-sema-slike-i-staz.md) |
+| [11](../sprint-1/11-booking-flow.md) | ~~`book(...)` nikad nije pozvan protiv prave baze~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
+| [11](../sprint-1/11-booking-flow.md) | ~~`409` nije izazvan uživo~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
+| [11](../sprint-1/11-booking-flow.md) | Usluge nemaju fotografiju, radnici staž | [22](22-sema-slike-i-staz.md) |
 | [11](../sprint-1/11-booking-flow.md) | Početna nije po handoffu | [18](18-pocetna-i-tab-bar.md) |
-| [08](../sprint-1/08-core-api-repozitoriji.md) | Nema `AppointmentRepository` | [16](16-moji-termini-i-otkazivanje.md) |
-| `security.md` | `customers`/`devices` upis bez validirane funkcije | [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
+| [08](../sprint-1/08-core-api-repozitoriji.md) | ~~Nema `AppointmentRepository`~~ | ✅ [16](16-moji-termini-i-otkazivanje.md) |
+| `security.md` | ~~`customers`~~ ✅ / `devices` upis bez validirane funkcije | ✅ [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
 | `security.md` | Admin `insert` nad `appointments` zaobilazi validaciju slota | [24](24-admin-akcije-nad-terminima.md) |
 
 ## Što **nije** u ovom sprintu
@@ -97,6 +100,49 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > tačno ono što [task 14](14-identitet-i-klijent-upsert.md) zatvara.
 > **Apple i Google nisu odigrani**: traže pakete kojih nema u `pubspec.yaml` i konzole iz taska 12.
 > Detalji: [13-client-login-ekran.md](13-client-login-ekran.md#status-2026-09-12--🟡-email-prijava-radi-i-dokazana-je-nativni-provideri-nisu).
+
+
+> **14 — `AuthIdentity` + `Customer` upsert (✅, 2026-09-12).** `public.ensure_customer` je drugi i
+> zadnji upis iz klijentske app-e, uz `book_appointment`: identitet izvodi iz tokena, salon mora
+> doći iz `x-salon-id`, `on conflict do nothing` da ne prepiše ime koje je salon ispravio.
+> **Termin je prvi put stvarno nastao iz aplikacije** (`pending`, 16.09. 10:00–10:40, Emir), a
+> **`409` je izazvan uživo** — slot zauzet izvana, ekran vraćen na korak 3 sa osvježenom listom.
+> Time padaju i dvije 🟡 stavke iz [taska 11](../sprint-1/11-booking-flow.md).
+> Dokazano: **82 pgTAP testa** (bilo 66), **70 REST asercija** u tri Deno testa, **256 Dart testova**.
+> Tri greške koje su našli testovi i browser, ne čitanje: `not (A and B)` je rupa kad `B` može biti
+> `NULL` (zahtjev bez headera je prolazio kroz guard); `revoke ... from public` ne skida `execute`
+> jer ga Supabase daje `anon`-u direktno kroz `pg_default_acl` (isti propust je stajao na
+> `book_appointment` od taska 05); i „nema klijenta" naspram „još nije stigao" — sinhroni snimak
+> `customerId`-a je davao grešku dok je upsert bio u letu.
+> Detalji: [14-identitet-i-klijent-upsert.md](14-identitet-i-klijent-upsert.md#status-2026-09-12--✅-zatvoren).
+
+
+> **15 — Izolacija klijenta između salona (✅, 2026-09-12).**
+> `rest_cross_salon_isolation.ts` — **22 asercije, tri stvarna JWT-a**. Jedan čovjek se prijavi i
+> rezerviše u oba demo salona; admin salona A ne dobija red salona B ni po `id`, ni po
+> `auth_identity_id` (koji **zna**, jer stoji u njegovom vlastitom redu), ni kroz imenovani embed
+> na `appointments`, ni kad `x-salon-id` postavi na salon B.
+> **Provjereno da test može pasti**: dvije politike pokvarene na dva načina obaraju dvije različite
+> asercije — `staff_manage` bez veze sa salonom reda („admin bilo gdje ⇒ admin svugdje") i
+> `own_customer` bez `client_salon_id()`. Obje vraćene i provjerene naspram migracije.
+> Usput nađeno: kompozitni FK-ovi čine embed dvosmislenim (`PGRST201`, HTTP **300**), pa REST
+> testovi moraju tretirati `300` kao grešku — inače prođe kao uspjeh i test pukne kasnije.
+> Puna suita: **82 pgTAP testa, 92 REST asercije**.
+> Detalji: [15-izolacija-klijent-u-dva-salona.md](15-izolacija-klijent-u-dva-salona.md#status-2026-09-12--✅-zatvoren).
+
+
+> **16 — „Moji termini" + otkazivanje (✅, 2026-09-12).** `/appointments` po handoffu 5h sa dva
+> taba, `AppointmentRepository` (prvi repozitorij nad `appointments`), `AppDialog` u `core_ui` kao
+> modal 5p. `cancel_appointment` uzima rok iz `salon_settings.min_cancel_hours` — **rok vrijedi za
+> klijenta, ne za salon** — i pamti `cancelled_by`. Odigrano u browseru: prijava, rezervacija
+> 22.09. u 13:00, otkazivanje kroz modal; `cancelled_by = customer` i **slot je odmah opet
+> slobodan**, provjereno upitom. Dokazano: **97 pgTAP testova** (bilo 82), **276 Dart testova**
+> (bilo 256).
+> pgTAP je našao da ista NULL rupa iz taska 14 stoji i u `book_appointment` od taska 05 —
+> **nije curenje i nikad nije bilo** (za tuđeg klijenta je `owns_identity` FALSE, a
+> `NULL and FALSE` je FALSE, provjereno pokretanjem), ali je zatvorena; i da moj vlastiti test
+> tvrdi pogrešno: direktan `update` sa klijenta ne baca `42501` nego pogodi nula redova.
+> Detalji: [16-moji-termini-i-otkazivanje.md](16-moji-termini-i-otkazivanje.md#status-2026-09-12--✅-zatvoren).
 
 
 ## Dug koji nije task

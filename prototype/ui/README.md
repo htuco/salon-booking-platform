@@ -61,10 +61,15 @@ finalan. Prototip ostaje samo kao referenca za flow i za rute.
 
 ## Doseg naspram taskova
 
-`SPEC.md` pokriva i ekrane izvan Sprinta 1. Danas su u obimu ekrani `5a`–`5g` (početna, o nama,
-četiri koraka bookinga, zahtjev poslan). `5h`–`5q` (moji termini, usluge, obavijesti, postavke,
-galerija, recenzije, o aplikaciji, pravila, modal otkazivanja, lightbox) su Sprint 2+ —
-v. `tasks/sprint-1/README.md` §Sljedeće.
+`SPEC.md` pokriva i ekrane izvan Sprinta 1. Danas su napravljeni `5a`, `5c`–`5g` (početna, četiri
+koraka bookinga, zahtjev poslan), pa `5h` i `5p` iz taska 16 (moji termini i modal otkazivanja).
+
+Ostaje `5b`, `5i`–`5o` i `5q` (o nama, usluge, obavijesti, postavke, galerija, recenzije, o
+aplikaciji, pravila, lightbox) — v. `tasks/sprint-2/README.md`.
+
+**Tab bar iz `SPEC.md` još ne postoji.** `5h` je napravljen kao *pushed* ekran sa back zaglavljem,
+jer tab bar dolazi u [tasku 18](../../tasks/sprint-2/18-pocetna-i-tab-bar.md) i tek tamo ima pet
+odredišta. Kad stigne, `5h` gubi back strelicu i dobija svoju ćeliju.
 
 ## Fotografije
 
