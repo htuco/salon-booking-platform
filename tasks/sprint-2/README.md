@@ -9,7 +9,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [12](12-auth-provideri.md) 🟡 | Supabase Auth provideri + `AuthConfig` po flavoru ([konzole](12-konzole-checklist.md)) | 13, 14 | 2 dana |
 | [13](13-client-login-ekran.md) 🟡 | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
 | [14](14-identitet-i-klijent-upsert.md) ✅ | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
-| [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
+| [15](15-izolacija-klijent-u-dva-salona.md) ✅ | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
 | [16](16-moji-termini-i-otkazivanje.md) | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
 | [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
 | [22](22-sema-slike-i-staz.md) | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
@@ -101,6 +101,20 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > `book_appointment` od taska 05); i „nema klijenta" naspram „još nije stigao" — sinhroni snimak
 > `customerId`-a je davao grešku dok je upsert bio u letu.
 > Detalji: [14-identitet-i-klijent-upsert.md](14-identitet-i-klijent-upsert.md#status-2026-09-12--✅-zatvoren).
+
+
+> **15 — Izolacija klijenta između salona (✅, 2026-09-12).**
+> `rest_cross_salon_isolation.ts` — **22 asercije, tri stvarna JWT-a**. Jedan čovjek se prijavi i
+> rezerviše u oba demo salona; admin salona A ne dobija red salona B ni po `id`, ni po
+> `auth_identity_id` (koji **zna**, jer stoji u njegovom vlastitom redu), ni kroz imenovani embed
+> na `appointments`, ni kad `x-salon-id` postavi na salon B.
+> **Provjereno da test može pasti**: dvije politike pokvarene na dva načina obaraju dvije različite
+> asercije — `staff_manage` bez veze sa salonom reda („admin bilo gdje ⇒ admin svugdje") i
+> `own_customer` bez `client_salon_id()`. Obje vraćene i provjerene naspram migracije.
+> Usput nađeno: kompozitni FK-ovi čine embed dvosmislenim (`PGRST201`, HTTP **300**), pa REST
+> testovi moraju tretirati `300` kao grešku — inače prođe kao uspjeh i test pukne kasnije.
+> Puna suita: **82 pgTAP testa, 92 REST asercije**.
+> Detalji: [15-izolacija-klijent-u-dva-salona.md](15-izolacija-klijent-u-dva-salona.md#status-2026-09-12--✅-zatvoren).
 
 
 ## Dug koji nije task

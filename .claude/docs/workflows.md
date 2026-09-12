@@ -233,13 +233,14 @@ sa podrazumijevana dva se flow potroši prije nego se vidi.
 ### Cijela suite jednom komandom
 
 ```sh
-./tool/test_supabase.sh              # start + db reset + pgTAP + tri REST testa
+./tool/test_supabase.sh              # start + db reset + pgTAP + cetiri REST testa
 ./tool/test_supabase.sh --no-reset   # baza je već svježa
 supabase stop                        # kad završiš
 ```
 
-Zadnji pun prolaz: **82 pgTAP testa, 24 REST asercije sa dva stvarna JWT-a, 26 asercija javnog
-kataloga bez tokena, 20 asercija upserta klijenta i rezervacije.** Traje oko dvije minute.
+Zadnji pun prolaz: **82 pgTAP testa** i **92 REST asercije** — 24 izolacija sa dva stvarna JWT-a,
+26 javni katalog bez tokena, 20 upsert klijenta i rezervacija, 22 izolacija između salona sa tri
+JWT-a. Traje oko dvije minute.
 
 **Zamka koja košta pola sata:** `supabase start` nad postojećim volumeom diže bazu **iz backupa** i
 migracije se ne primjenjuju. Testovi tada padnu na `relation "public.users" does not exist` i

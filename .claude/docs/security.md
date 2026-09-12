@@ -176,3 +176,25 @@ Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** g
    pretpostavka.
 7. Je li suite prošla lokalno (`supabase start && supabase test db` + dva Deno REST testa)? Na
    `main`-u to ponovi workflow `Supabase tests` iz čistog checkouta — v. `.claude/docs/workflows.md`.
+
+## Čime je izolacija dokazana
+
+Tvrdnje iz ovog dokumenta nisu opis namjere nego opis onoga što suite provjerava. Kad mijenjaš
+politiku, mijenjaj i test — i **provjeri da test pada kad politiku oslabiš**, inače ne testira
+ništa.
+
+| Test | Šta dokazuje |
+|---|---|
+| `001_tenant_isolation.test.sql` | politike na nivou SQL-a, po roli |
+| `002_availability.test.sql` | `book_appointment` i `PT409` na nivou baze |
+| `003_customer_upsert.test.sql` | `ensure_customer` — NULL u guardu, grantovi, idempotentnost |
+| `rest_isolation.ts` | dva stvarna JWT-a; `user_metadata` ne širi pristup |
+| `rest_public_catalog.ts` | katalog radi **bez** tokena, sa kolonama koje `core_api` stvarno šalje |
+| `rest_customer_upsert.ts` | cijeli put app-e: prijava → identitet → klijent → termin → HTTP 409 |
+| `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header |
+
+**Curenje kroz embed i kroz filter je češće od curenja kroz direktan upit.** Admin zna
+`auth_identity_id` — on stoji u njegovom vlastitom redu — pa je filter po njemu prvo što bi
+probao. Isto vrijedi za `select=*,customers(...)`: kompozitni FK-ovi ga čine dvosmislenim
+(`PGRST201`, HTTP **300**), ali to je prepreka koja traži samo da se pročita poruka o grešci.
+Svaki novi REST test zato mora tretirati `300` kao grešku, ne kao uspjeh.

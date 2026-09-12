@@ -1,11 +1,12 @@
 # Trenutni task: nije učitan
 
-Zadnji zatvoreni: **14 — `AuthIdentity` + `Customer` upsert** (✅). Lanac 12 → 13 → 14 je time
-gotov i booking flow radi od početne do termina u bazi.
+Zadnji zatvoreni: **15 — Dokaz izolacije: isti klijent u dva salona** (✅). Lanac 12 → 13 → 14 → 15
+je gotov: booking radi od početne do reda u bazi, i dokazano je da salon ne vidi preko svoje granice.
 
-Sljedeći po redu je [15 — Dokaz izolacije: isti klijent u dva salona](sprint-2/15-izolacija-klijent-u-dva-salona.md);
-učitaj ga sa `/task load 15`. Sprint README ga stavlja **odmah** poslije 14, ne na kraj sprinta —
-izolacija se dokazuje dok je upsert svjež.
+Sljedeći po redu u [Sprintu 2](sprint-2/README.md) je
+[16 — Client: „Moji termini" + otkazivanje](sprint-2/16-moji-termini-i-otkazivanje.md);
+učitaj ga sa `/task load 16`. Alternativa je [22](sprint-2/22-sema-slike-i-staz.md) (pola dana
+migracije) koji tabela traži **prije** 18 i 20.
 
 ## Status
 
@@ -20,6 +21,8 @@ _(prazno — učitaj sljedeći task)_
 _(prazno — učitaj sljedeći task)_
 
 ## Istorija
+
+- **15 — Dokaz izolacije: isti klijent u dva salona** (2026-09-12, ✅) — `rest_cross_salon_isolation.ts`, **22 asercije i tri stvarna JWT-a**: jedan čovjek se prijavi i rezerviše u oba demo salona, pa se mjeri šta ko vidi. Admin salona A ne dobija red salona B ni po `id`, ni po `auth_identity_id` — koji **zna**, jer stoji u njegovom vlastitom redu — ni kroz imenovani embed na `appointments`, ni kad `x-salon-id` postavi na salon B. **Provjereno da test može pasti**: `staff_manage` bez veze sa salonom reda („admin bilo gdje ⇒ admin svugdje") obori aserciju o admin pogledu, `own_customer` bez `client_salon_id()` obori aserciju o klijentu; obje vraćene i provjerene naspram migracije kroz `pg_policy`. Usput nađeno da kompozitni FK-ovi čine embed dvosmislenim (`PGRST201`, HTTP **300**), pa REST testovi moraju tretirati `300` kao grešku — inače prođe kao uspjeh i test pukne kasnije, na mjestu koje ne govori šta je stvarno vraćeno. Puna suita: **82 pgTAP testa, 92 REST asercije**.
 
 - **14 — `AuthIdentity` + `Customer` upsert** (2026-09-12, ✅) — `public.ensure_customer` je drugi i zadnji upis iz klijentske app-e, uz `book_appointment`: identitet izvodi iz tokena (nikad iz argumenta), salon mora doći iz `x-salon-id`, `on conflict do nothing` da drugi poziv ne prepiše ime koje je salon ispravio. **Termin je prvi put stvarno nastao iz aplikacije** — `pending`, 16.09. 10:00–10:40, Emir, Fade — i **`409` je izazvan uživo**: slot zauzet izvana, ekran vraćen na korak 3 sa osvježenom listom u kojoj je zauzeti prozor nestao. Time padaju dvije 🟡 stavke iz [taska 11](sprint-1/11-booking-flow.md). Dokazano: **82 pgTAP testa** (bilo 66), **70 REST asercija** u tri Deno testa, **256 Dart testova**. Tri greške koje testovi i browser nađu a čitanje ne: `not (A and B)` je rupa kad `B` može biti `NULL` — zahtjev bez `x-salon-id` headera je prolazio kroz guard; `revoke ... from public` ne skida `execute` jer ga Supabase daje `anon`-u direktno kroz `pg_default_acl`, i isti propust je stajao na `book_appointment` od taska 05; i sinhroni snimak `customerId`-a je davao grešku dok je upsert bio u letu, jer `null` nije razlikovao „nema klijenta" od „još nije stigao". Zamka zapisana u `workflows.md`: **`supabase db reset` ne učitava `config.toml`**, pa auth template ostaje stari i OTP mail stigne kao engleski magic link.
 
