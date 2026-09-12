@@ -1,38 +1,38 @@
 import 'package:core_api/core_api.dart';
+import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/formatters.dart';
+import '../../core/auth_config_provider.dart';
 import '../../core/router/app_router.dart';
-import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
-import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
-import 'booking_identity.dart';
 import 'booking_submit_provider.dart';
-import 'date_labels.dart';
+import 'widgets/appointment_hold_card.dart';
 import 'widgets/booking_step_scaffold.dart';
 
 /// Korak 4 — prijava (`prototype/ui/screenshots/06-korak4-prijava.png`).
 ///
 /// ## Ovo je ekran prijave, ne ekran sažetka
 ///
-/// Handoff ga zove "Još jedan korak": kartica **"Čuvamo vam 14:30"** koja drži izbor na
+/// Handoff ga zove „Još jedan korak": kartica **„Čuvamo vam 14:30"** koja drži izbor na
 /// oku, pa tri načina prijave i pravna napomena. Nema polja za napomenu i **nema polja za
 /// telefon** (`docs/06 §3.1` — push zamjenjuje i poziv i SMS).
 ///
 /// `docs/06 §1.1`: cijeli flow je javan do ovog trenutka. Guard na `/book/*` bi značio da
 /// korisnik mora imati nalog da bi vidio cijene — odluka koja se ne otvara.
 ///
-/// ## Prijava još ne postoji
+/// ## Šta odlučuje koji se CTA vidi
 ///
-/// Supabase Auth dolazi u Sprintu 2. Do tada dugmad vode na `/auth/login`, koji je
-/// placeholder, a `bookingCustomerIdProvider` je uvijek `null` u pravoj app-i. Kad
-/// identitet postoji (test, demo), isti ekran šalje zahtjev — struktura poziva je već
-/// ista, mijenja se samo ko je popunio `customerId`.
+/// **Prijavljenost, ne `customerId`.** Do taska 13 je gate bio `bookingCustomerIdProvider`
+/// jer prijave nije ni bilo; sada je ona stvarna, pa neprijavljen korisnik vidi dugmad
+/// prijave, a prijavljen dugme koje šalje zahtjev. Klijentski red (`customers`) je
+/// posljednji komad koji fali i donosi ga
+/// [task 14](../../../../../tasks/sprint-2/14-identitet-i-klijent-upsert.md); dok ga nema,
+/// slanje vraća grešku umjesto da dugme tiho ne radi ništa — v. `BookingSubmitNotifier`.
 ///
 /// ## `409` je ishod, ne kvar
 ///
@@ -46,18 +46,14 @@ class DetailsStepScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final flow = ref.watch(bookingFlowProvider);
-    final dateOnly = ref.watch(bookingDateOnlyProvider);
-    final customerId = ref.watch(bookingCustomerIdProvider);
     final slanje = ref.watch(bookingSubmitProvider);
-
-    final prijavljen = customerId != null;
+    final prijavljen = ref.watch(isSignedInProvider);
 
     return BookingStepScaffold(
       step: BookingStep.details,
       title: l10n.bookingLastStepTitle,
       subtitle: l10n.bookingLastStepHint,
-      // Kad je identitet poznat, zadnji korak je jedno dugme koje šalje zahtjev.
+      // Kad je korisnik prijavljen, zadnji korak je jedno dugme koje šalje zahtjev.
       // Dok nije, šalje se kroz prijavu — ista akcija, drugi put do nje.
       cta: prijavljen
           ? AppButton(
@@ -74,10 +70,10 @@ class DetailsStepScreen extends ConsumerWidget {
           AppSpacing.xxl,
         ),
         children: [
-          _KarticaTermina(flow: flow, dateOnly: dateOnly),
+          const AppointmentHoldCard(),
           if (!prijavljen) ...[
             const SizedBox(height: AppSpacing.xxl),
-            _Prijava(onTap: () => context.go(ClientRoute.login.path)),
+            const _Prijava(),
             const SizedBox(height: AppSpacing.lg),
             Text(l10n.bookingLegalNotice, style: theme.textTheme.bodySmall),
           ],
@@ -117,129 +113,51 @@ class DetailsStepScreen extends ConsumerWidget {
   }
 }
 
-/// "Čuvamo vam — 14:30, srijeda 20.05. — Fade šišanje kod Emira".
+/// Načini prijave iz `docs/06 §1.2`, redoslijedom koji propisuje `AuthProvider`.
 ///
-/// Vrijeme je najveći element na ekranu i stoji u serifu: to je jedini podatak zbog kojeg
-/// korisnik ovdje zastane prije nego što se prijavi.
-class _KarticaTermina extends ConsumerWidget {
-  const _KarticaTermina({required this.flow, required this.dateOnly});
-
-  final BookingFlowState flow;
-  final bool dateOnly;
+/// **Telefona nema i neće ga biti** (`docs/06 §3.1`). Lista dolazi iz
+/// `visibleAuthProvidersProvider`, već filtrirana po platformi — Apple je na iOS-u prvi
+/// jer je obavezan kad postoji ijedan drugi social provider (`docs/06 §7.2`), a na
+/// Androidu ga nema uopšte.
+///
+/// Dugmad vode na `/auth/login?from=/book/details`; sam tok prijave je tamo, da ekran
+/// koraka ne nosi i korake OTP-a.
+class _Prijava extends ConsumerWidget {
+  const _Prijava();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final vertical = verticalOf(ref);
+    final provideri = ref.watch(visibleAuthProvidersProvider);
 
-    final services = ref.watch(servicesProvider).valueOrNull;
-    final employees = ref.watch(employeesProvider).valueOrNull;
-
-    final usluga = _nadji(services, flow.serviceId, (s) => s.id);
-    final radnik = _nadji(employees, flow.employeeId, (e) => e.id);
-    final datum = flow.date;
-
-    final opis = [
-      if (usluga != null) usluga.name,
-      if (radnik != null)
-        '${vertical.terms.staffSingular.toLowerCase()}: ${radnik.name}'
-      else
-        l10n.bookingAnyStaff.toLowerCase(),
-    ].join(' · ');
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.bookingHoldingFor, style: theme.textTheme.bodyMedium),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              if (!dateOnly && flow.startTime != null) ...[
-                Text(
-                  flow.startTime!.format(),
-                  style: theme.textTheme.displayMedium,
-                ),
-                const SizedBox(width: AppSpacing.md),
-              ],
-              Expanded(
-                child: Text(
-                  datum == null ? '—' : formatDateWithWeekday(l10n, datum),
-                  style: theme.textTheme.titleSmall,
-                ),
-              ),
-            ],
-          ),
-          if (dateOnly) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(l10n.bookingDateOnlyNote, style: theme.textTheme.bodySmall),
-          ],
-          const SizedBox(height: AppSpacing.md),
-          Text(opis, style: theme.textTheme.bodyMedium),
-          if (usluga != null && vertical.features.prices) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${formatDurationLong(usluga.durationMinutes)} · '
-              '${formatPrice(usluga.price)}',
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Nađi po `id`-u, bez `firstWhere` koji baca kad nema pogotka.
-  T? _nadji<T>(List<T>? lista, String? id, String Function(T) idOf) {
-    if (lista == null || id == null) return null;
-    for (final stavka in lista) {
-      if (idOf(stavka) == id) return stavka;
-    }
-    return null;
-  }
-}
-
-/// Tri načina prijave iz `docs/06 §1.2`, redoslijedom iz handoffa.
-///
-/// **Telefona nema i neće ga biti** (`docs/06 §3.1`). Apple je prvi jer je na iOS-u
-/// obavezan kad postoji ijedan drugi social provider (`docs/06 §7.2`).
-class _Prijava extends StatelessWidget {
-  const _Prijava({required this.onTap});
-
-  /// Do Sprinta 2 sva tri dugmeta vode na isti placeholder ekran prijave.
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final ruta = Uri(
+      path: ClientRoute.login.path,
+      queryParameters: {'from': ClientRoute.bookDetails.path},
+    ).toString();
 
     return Column(
       children: [
-        AppButton(
-          label: l10n.bookingContinueApple,
-          icon: LucideIcons.apple,
-          onPressed: onTap,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppButton(
-          label: l10n.bookingContinueGoogle,
-          variant: AppButtonVariant.outline,
-          onPressed: onTap,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppButton(
-          label: l10n.bookingContinueEmail,
-          icon: LucideIcons.atSign,
-          variant: AppButtonVariant.outline,
-          onPressed: onTap,
-        ),
+        for (final provider in provideri) ...[
+          AppButton(
+            label: switch (provider) {
+              AuthProvider.apple => l10n.bookingContinueApple,
+              AuthProvider.google => l10n.bookingContinueGoogle,
+              AuthProvider.facebook => l10n.bookingContinueFacebook,
+              AuthProvider.email => l10n.bookingContinueEmail,
+            },
+            icon: switch (provider) {
+              AuthProvider.apple => LucideIcons.apple,
+              AuthProvider.email => LucideIcons.atSign,
+              // Lucide nema brand ikone — ni Google ni Facebook.
+              AuthProvider.google || AuthProvider.facebook => null,
+            },
+            variant: provider == AuthProvider.apple
+                ? AppButtonVariant.primary
+                : AppButtonVariant.outline,
+            onPressed: () => context.go(ruta),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
       ],
     );
   }

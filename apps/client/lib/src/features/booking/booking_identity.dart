@@ -1,19 +1,30 @@
+import 'package:core_api/core_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// `customers.id` korisnika koji rezerviše, ili `null` dok nije poznat.
 ///
-/// **Danas je uvijek `null` u pravoj aplikaciji, i to nije privremena rupa nego tačan
-/// opis stanja sistema.** `book_appointment` traži da klijent **već postoji**
-/// (`.claude/docs/security.md`, "Šta još nije zatvoreno"), a upis u `customers` nema
-/// validiranu funkciju dok ne stigne auth (Sprint 2). Uz to je sama funkcija grantovana
-/// samo roli `authenticated`, pa bi poziv bez tokena vratio `NotFoundError` — RLS
-/// odbijanje je namjerno neraspoznatljivo od nepostojećeg reda.
+/// ## Šta se ovdje stvarno dešava
 ///
-/// Zato zadnji korak flowa **ne šalje zahtjev bez ovoga**, nego vodi na prijavu
-/// (`docs/06 §1.1`: login se traži tek na kraju). Kad Sprint 2 donese `AuthIdentity` i
-/// upsert klijenta, ovaj provider dobije pravu implementaciju i **nijedan ekran se ne
-/// mijenja** — struktura poziva je već ista.
+/// Od taska 13 ovo nije konstanta nego **upit u bazu**: `CustomerRepository` čita
+/// `customers` red prijavljenog korisnika pod politikom `own_customer`, koja ga presijeca
+/// po identitetu iz JWT-a i po `x-salon-id` headeru. Neprijavljen korisnik nema red i
+/// dobija `null` — isto kao prijavljen kojem red još nije napravljen.
 ///
-/// Override-uje ga test (da bi 409 putanja uopšte mogla da se izazove) i `demo_main.dart`
+/// **Red pravi [task 14](../../../../../tasks/sprint-2/14-identitet-i-klijent-upsert.md)**,
+/// kroz `security definer` funkciju; `insert` sa klijenta ne postoji i neće postojati
+/// (`.claude/docs/security.md`). Do tada je odgovor redovno `null`, ali to je izmjereno
+/// stanje baze, a ne zaglavljena vrijednost: isti kod počne vraćati `id` čim upsert stigne,
+/// bez izmjene ijednog ekrana.
+///
+/// ## Zašto sinhroni `String?`, a ne `AsyncValue`
+///
+/// Pozivalac je `BookingSubmitNotifier`, koji identitet čita **u trenutku slanja**, ne
+/// dok crta ekran. `AsyncValue` bi ga natjerao da bira između čekanja i pretpostavke usred
+/// jedinog upisa u sistem. Asinhroni izvor je [currentCustomerIdProvider] u `core_api`;
+/// ovdje se čita njegova zadnja poznata vrijednost, koju prijava i odjava same osvježavaju.
+///
+/// Override-uje ga test (da bi `409` putanja uopšte mogla da se izazove) i `demo_main.dart`
 /// (da bi se flow mogao vidjeti i snimiti bez backenda).
-final bookingCustomerIdProvider = Provider<String?>((ref) => null);
+final bookingCustomerIdProvider = Provider<String?>(
+  (ref) => ref.watch(currentCustomerIdProvider).valueOrNull,
+);

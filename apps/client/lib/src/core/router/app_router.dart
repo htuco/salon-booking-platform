@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/login_screen.dart';
 import '../../features/booking/booking_success_screen.dart';
 import '../../features/booking/details_step_screen.dart';
 import '../../features/booking/employee_step_screen.dart';
@@ -16,8 +17,13 @@ import '../../features/placeholder/placeholder_screen.dart';
 /// kroz imperativni `Navigator`, web verzija ostane bez URL-a i to se otkrije kasno — kad
 /// već postoji petnaest ekrana napisanih po tom uzoru.
 ///
-/// Od taska 10 `/` ima pravo tijelo (`HomeScreen`), od taska 11 i svih pet `/book/*`
-/// ruta. Ostalo (prijava, moji termini, račun) su i dalje placeholderi — Sprint 2.
+/// Od taska 10 `/` ima pravo tijelo (`HomeScreen`), od taska 11 svih pet `/book/*` ruta, a
+/// od taska 13 i `/auth/login`. Ostalo (moji termini, račun) su i dalje placeholderi.
+///
+/// **Nema `redirect` guarda ni na jednoj ruti.** `docs/06 §1.1`: cijeli katalog i izbor
+/// termina su javni, a prijava se traži tek na kraju flowa — odluka koja se ne otvara.
+/// Povratak nakon prijave zato ne ide kroz `redirect` nego kroz `?from=`, koji login ekran
+/// čita i na koji vraća korisnika.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     // **Bez `initialLocation`.** Na webu `initialLocation` nadjačava URL iz adresne trake,
@@ -41,6 +47,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ClientRoute.bookSlot => const SlotStepScreen(),
             ClientRoute.bookDetails => const DetailsStepScreen(),
             ClientRoute.bookSuccess => const BookingSuccessScreen(),
+            // `?from=` nosi rutu povratka nakon prijave. Ekran je provjerava naspram
+            // `ClientRoute` liste — na webu je to vrijednost iz adresne trake, pa
+            // neprovjerena bi pretvorila prijavu u preusmjerenje na tuđi sajt.
+            ClientRoute.login => LoginScreen(
+              from: state.uri.queryParameters['from'],
+            ),
             _ => PlaceholderScreen(title: route.title, path: state.uri.path),
           },
         ),
