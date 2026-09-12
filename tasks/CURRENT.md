@@ -1,7 +1,7 @@
 # Trenutni task: 12 — Supabase Auth provideri + `AuthConfig` po flavoru
 
 Puni task: [`tasks/sprint-2/12-auth-provideri.md`](sprint-2/12-auth-provideri.md) · **U toku** ·
-Učitano: 2026-09-12 · Grana: `feat/auth-provideri`
+Učitano: 2026-09-12 · Grana: `feat/auth-provideri`, PR [#20](https://github.com/htuco/salon-booking-platform/pull/20)
 
 ## Status
 
@@ -14,24 +14,48 @@ Zavisnost ([07 — app plumbing](sprint-1/07-app-plumbing.md)) je ✅: `bootstra
 
 ## Ciljevi
 
+Kod je gotov i dokazan. **Ostalo je samo ono što traži tuđe konzole** — v.
+[`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
+
 - [ ] Provideri uključeni u Supabase konzoli: **Apple, Google, Email OTP** (bez lozinke)
-- [ ] `AuthProvider` enum + `AuthConfig` sa filtriranjem po platformi — **prvo odlučiti gdje živi**,
-      v. Napomene
-- [ ] `AuthRepository` ugovor u `core_api` po [`docs/06 §6.3`](../docs/06-auth-login-flow.md) —
-      Supabase tipovi ne smiju iscuriti iznad tog sloja
-- [ ] Google client ID **po flavoru** kao `--dart-define` kroz `build_tenant.sh`, uz postojeća tri
-- [ ] Redirect URL po flavoru (`ba.nasadomena.<flavor>://login-callback`) registrovan za oba demo tenanta
-- [ ] `supabase/config.toml` — lokalni auth podešen tako da `supabase start` može testirati OTP
-- [ ] Unit test: na iOS-u lista sadrži Apple, na Androidu ne
-- [ ] Nijedna tajna u repou — client ID ide u GitHub `vars`, secret u `secrets`
+      — čeka tebe, checklist §3
+- [ ] Google/Apple client ID-evi upisani u Supabase i u GitHub `vars` — checklist §1, §2, §4
+- [x] `AuthProvider` enum + `AuthConfig` sa filtriranjem po platformi — **odlučeno: `core_domain`
+      sa vlastitim `AuthPlatform` enumom**, [ADR-0007](../docs/adr/0007-authconfig-u-core-domain.md)
+- [x] `AuthRepository` ugovor u `core_api` po [`docs/06 §6.3`](../docs/06-auth-login-flow.md) —
+      nijedan Supabase tip ne prelazi granicu; vraća `AuthSession`, greške su `ApiError`
+- [x] Google client ID **po flavoru** kao `--dart-define` kroz `build_tenant.sh`, uz postojeća tri
+- [x] Redirect URL po flavoru (`ba.nasadomena.<flavor>://login-callback`) — u `config.toml`,
+      dokazano u pokrenutom stacku; u konzoli hostovanog projekta ostaje tebi
+- [x] `supabase/config.toml` — lokalni auth podešen tako da `supabase start` može testirati OTP
+- [x] Unit test: na iOS-u lista sadrži Apple, na Androidu ne
+- [x] Nijedna tajna u repou — client ID ide u GitHub `vars`, secret u `secrets`
+
+**Dokazano:** 238 testova PASS (bilo 215), generator pada na pokvarenom `auth.providers`,
+`build_tenant.sh` u sve tri grane, i **email OTP odigran do kraja** na lokalnom stacku — kod bez
+linka u mailu, `verify` vraća sesiju, `auth_identities` dobija red. Puni dokaz:
+[status blok taska 12](sprint-2/12-auth-provideri.md).
+
+**Nije dokazano:** Apple i Google prijava — traže tuđe naloge i **pravi uređaj**, ne mogu se odigrati
+ni lokalno ni u simulatoru. `SupabaseAuthRepository` je [task 13](sprint-2/13-client-login-ekran.md);
+ovdje je samo ugovor.
 
 ## Napomene
+
+**Potvrđeno 2026-09-12:** trigger iz taska 02 **radi** — prva stvarna prijava (email OTP na lokalnom
+stacku) je upisala red u `public.auth_identities` sa `providers = {email}` i `last_login_at`. Za
+[task 14](sprint-2/14-identitet-i-klijent-upsert.md) stvarno preostaje samo `customers` upsert.
 
 **Dio posla je već u repou, iz taska 02.** `supabase/migrations/20260910090500_auth_identity.sql`
 ima trigger `private.sync_auth_identity()` nad `auth.users` koji **već radi upsert u
 `auth_identities`** — providere, email, `is_anonymous`, `last_login_at`. To znači da je polovina
 onoga što [task 14](sprint-2/14-identitet-i-klijent-upsert.md) nosi u naslovu već gotova; tamo
 stvarno preostaje samo `customers` upsert. Provjeriti prije nego se 14 otvori.
+
+**Odlučeno (2026-09-12): `AuthConfig` ide u `core_domain` sa vlastitim enumom platforme.**
+Obrazloženje i odbačene opcije: [ADR-0007](../docs/adr/0007-authconfig-u-core-domain.md).
+`docs/06 §6.2` je ispravljen u istoj promjeni. Originalni tekst dileme ostaje ispod, jer objašnjava
+zašto DoD taska i `docs/06` nisu govorili isto.
 
 **`docs/06 §6.2` skica se ne može kompajlirati kako je napisana.** Stavlja `AuthConfig` u
 `core_domain` i filtrira po `TargetPlatform` — ali `core_domain` je od [taska 06](06-vertical-pack.md)

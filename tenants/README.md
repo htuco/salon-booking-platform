@@ -21,7 +21,7 @@ Generator iz `tenant.yaml` pravi:
 | Android `productFlavors` | `apps/client/android/app/build.gradle.kts` (blok između `BEGIN/END GENERATED FLAVORS`) |
 | `google-services.json` placeholder | `apps/client/android/app/src/<flavor>/` |
 | iOS `xcconfig` | `apps/client/ios/flavors/<flavor>.xcconfig` |
-| Dart registar | `apps/client/lib/src/generated/tenants.g.dart` |
+| Dart registar (uklj. `auth.providers`) | `apps/client/lib/src/generated/tenants.g.dart` |
 
 Nijedan od tih fajlova se ne edituje ručno — sljedeće pokretanje ih prepisuje.
 `dart run tool/gen_flavors.dart --check` pada ako su zastarjeli (koristi se u CI).
@@ -39,13 +39,25 @@ Nijedan od tih fajlova se ne edituje ručno — sljedeće pokretanje ih prepisuj
   kad se raziđu, baza je u pravu, ali korisnik vidi treptaj boje pri startu.
 - **`branding.theme`** je `modern_barber` (tamna), `elegant_beauty` (svijetla) ili `clinical_calm`;
   bira svjetlinu i neutralnu paletu. Nepoznato ime pada na `modern_barber` umjesto da sruši app.
+- **`auth.providers` prima samo `apple`, `google`, `facebook`, `email`**, i svaka vrijednost mora
+  biti `true` ili `false`. Nepoznat ključ ili vrijednost tipa `"da"` **obore generisanje** — tipfeler
+  u konfiguraciji se tako vidi u CI-ju, a ne kao login ekran bez dugmeta kod korisnika. Tenant bez
+  `auth:` bloka dobija Apple, Google i email.
+- **`apple: true` na Androidu se ignoriše, ne pada.** Filtriranje po platformi radi `AuthConfig`
+  ([ADR-0007](../docs/adr/0007-authconfig-u-core-domain.md)), pa ista lista vrijedi za oba builda.
 
 ## Build
 
 ```sh
-flutter build apk --flavor <flavor> --dart-define=SALON_ID=<uuid>
+tool/build_tenant.sh <flavor> apk release
 ```
 
-`SALON_ID` je jedini `--dart-define` koji build prosljeđuje. Ime, vertikala i
-fallback boje se traže u generisanom registru po tom UUID-u, pa se ne prosljeđuje
-svako polje posebno.
+`SALON_ID` je jedini `--dart-define` koji opisuje **tenanta**: ime, vertikala, fallback boje i lista
+auth providera se traže u generisanom registru po tom UUID-u, pa se ne prosljeđuje svako polje
+posebno.
+
+Uz njega idu define-ovi koji opisuju **okruženje**, i oni nikad nisu u repou:
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `API_URL`, te `GOOGLE_WEB_CLIENT_ID` i `GOOGLE_IOS_CLIENT_ID`.
+Google client ID je **po flavoru** — skripta traži prvo `GOOGLE_WEB_CLIENT_ID_<FLAVOR>`, pa tek onda
+zajednički. Detalji i hodogram kroz konzole:
+[`tasks/sprint-2/12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md).

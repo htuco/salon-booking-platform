@@ -6,7 +6,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 
 | # | Task | Blokira | Procjena |
 |---|---|---|---|
-| [12](12-auth-provideri.md) 🟡 | Supabase Auth provideri + `AuthConfig` po flavoru | 13, 14 | 2 dana |
+| [12](12-auth-provideri.md) 🟡 | Supabase Auth provideri + `AuthConfig` po flavoru ([konzole](12-konzole-checklist.md)) | 13, 14 | 2 dana |
 | [13](13-client-login-ekran.md) | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
 | [14](14-identitet-i-klijent-upsert.md) | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
 | [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
@@ -60,6 +60,20 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 - **Drugi dizajn za beauty i ostale vertikale.** Barber je 1:1 sa `prototype/ui/`; ostale vertikale
   dobijaju svoj handoff, koji još ne postoji.
 
+## Status
+
+> **12 — Auth provideri (🟡, 2026-09-12).** Kod je gotov i dokazan; blokiran je samo na tuđim
+> konzolama. `AuthConfig`/`AuthProvider`/`AuthPlatform`/`AuthSession` u `core_domain`,
+> `AuthRepository` ugovor u `core_api`, `auth:` blok u `tenant.yaml` sa validacijom u generatoru,
+> Google client ID po flavoru kroz `build_tenant.sh`, redirect URL-ovi i OTP template u
+> `supabase/config.toml`. **238 testova PASS** (bilo 215) i **email OTP odigran do kraja** na
+> lokalnom stacku — mail nosi šestocifreni kod bez linka, `verify` vraća sesiju.
+> Usput je prvi put dokazan i trigger iz taska 02: `auth_identities` dobija red na stvarnu prijavu,
+> pa [task 14](14-identitet-i-klijent-upsert.md) nosi manje nego što naslov kaže.
+> **Apple i Google nisu odigrani nijednom** — traže tvoje naloge i pravi uređaj; hodogram je
+> [12-konzole-checklist.md](12-konzole-checklist.md). Detalji:
+> [12-auth-provideri.md](12-auth-provideri.md#status-2026-09-12--🟡-kod-gotov-konzole-čekaju).
+
 ## Dug koji nije task
 
 Sitno, ali ne smije se izgubiti:
@@ -68,3 +82,8 @@ Sitno, ali ne smije se izgubiti:
   generisanu scheme i time zaprlja radno stablo; `gen_flavors --check` tu razliku ne vidi.
   Nađeno u tasku 11, detalji u njegovom status bloku.
 - **Zlatna brand boja naspram monohromnog handoffa.** Odluka odgođena — v. `tasks/CURRENT.md`.
+- **iOS potpisivanje nije postavljeno.** Mašina nema nijedan razvojni certifikat
+  (`security find-identity` → `0 valid identities found`), a `Runner.xcodeproj` nema
+  `DEVELOPMENT_TEAM` — pa se na **fizički iPhone** ne može instalirati ništa, samo u simulator.
+  Kad se Apple nalog prijavi u Xcode, Team ID ide kroz `tenant.yaml` i generator u `xcconfig`, ne
+  ručno u `Runner.xcodeproj`. Otvoreno iz taska 04, zajedno sa Android keystoreom.

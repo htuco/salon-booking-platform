@@ -366,37 +366,50 @@ Gost unosi **samo ime**. Backend kreira anonimni `AuthIdentity` (`isAnonymous: t
 Isto pravilo kao za vertikale ([05 §2](05-vertical-packs.md)): **koji provideri se prikazuju nije hardkodirano u ekranu.**
 
 ```dart
-// packages/core_domain/lib/auth_config.dart
+// packages/core_domain/lib/src/auth/auth_config.dart
 class AuthConfig {
   final Set<AuthProvider> enabled;   // iz tenant.yaml + runtime override
   final bool allowGuest;             // iz SalonSettings
 
   /// Filtrira po platformi — Apple samo na iOS, itd.
-  List<AuthProvider> forPlatform(TargetPlatform p) { ... }
+  List<AuthProvider> forPlatform(AuthPlatform p) { ... }
 }
 
 enum AuthProvider { apple, google, facebook, email }
+enum AuthPlatform { ios, android, web }
 ```
 
 Login ekran renderuje `authConfig.forPlatform(...)` i ništa ne zna o tome koji provideri postoje. Isključivanje Facebooka za jednog tenanta je promjena configa, ne builda.
 
+> **Zašto `AuthPlatform`, a ne Flutterov `TargetPlatform`.** Ova skica je do taska 12 stajala sa `TargetPlatform` i **nije se mogla kompajlirati**: `core_domain` je od [taska 06](../tasks/06-vertical-pack.md) čist Dart, bez `package:flutter` ([ADR-0006](adr/0006-modeli-u-core-domain.md)). Domen zato nosi vlastiti enum, a mapiranje `TargetPlatform → AuthPlatform` radi jedna funkcija u `core_api` (`authPlatformOf`), gdje Flutter ionako postoji. Obrazloženje: [ADR-0007](adr/0007-authconfig-u-core-domain.md).
+
+**Odakle `enabled` dolazi:** iz `auth.providers` bloka u `tenant.yaml` (§7.6), kroz generisani registar `tenants.g.dart`, pa kroz `AuthConfig.fromNames`. Nepoznato ime providera **obori generator** (`dart run tool/gen_flavors.dart`), a ne app na uređaju — isti obrazac kao validacija heks boja.
+
+U aplikaciji to spaja `authConfigProvider`, a ekran čita `visibleAuthProvidersProvider` — već filtriran po platformi, da `forPlatform` ne bi završio kao `if` u widgetu.
+
 ### 6.3 Repository sloj
 
 ```dart
-abstract class AuthRepository {
-  Stream<AuthState> get authState;
-  Future<AuthResult> signInWithApple();
-  Future<AuthResult> signInWithGoogle();
-  Future<AuthResult> signInWithFacebook();
+// packages/core_api/lib/src/auth/auth_repository.dart
+abstract interface class AuthRepository {
+  Stream<AuthSession?> get sessionChanges;
+  AuthSession? get currentSession;
+  Future<AuthSession> signInWithApple();
+  Future<AuthSession> signInWithGoogle();
+  Future<AuthSession> signInWithFacebook();
   Future<void> requestEmailOtp(String email);
-  Future<AuthResult> verifyEmailOtp(String email, String code);
-  Future<AuthResult> continueAsGuest({required String name});
+  Future<AuthSession> verifyEmailOtp({required String email, required String code});
+  Future<AuthSession> continueAsGuest({required String name});
   Future<void> signOut();
   Future<void> deleteAccount();          // obavezno, v. §8.2
 }
 ```
 
-Supabase tipovi **ne smiju** procuriti iznad ovog sloja. Ako kasnije pređeš na .NET backend sa vlastitim JWT-om, mijenjaš implementaciju, ne app.
+Supabase tipovi **ne smiju** procuriti iznad ovog sloja. Ako kasnije pređeš na .NET backend sa vlastitim JWT-om, mijenjaš implementaciju, ne app. Zato metode vraćaju `AuthSession` iz `core_domain`, a ne Supabaseov `User` ni njegov `AuthState`.
+
+**Greške izlaze kao `ApiError`, ne kao `AuthResult`.** Skica je ranije imala `Future<AuthResult>`; u `core_api` svaki repozitorij već signalizira grešku bacanjem `ApiError`, pa bi drugi način signalizacije u istom paketu značio da ekran mora znati koji repozitorij koristi koji. Otkazivanje od strane korisnika (zatvoren Apple/Google dijalog) nije kvar nego očekivan ishod i ima vlastiti tip, `AuthCancelledError` — bez njega svaki korisnik koji se predomisli dobije crvenu poruku o grešci.
+
+`currentSession` postoji uz `sessionChanges` zbog prvog frejma: router mora sinhrono znati smije li pustiti zaštićenu rutu, a `await` na stream bi prijavljenom korisniku dao treptaj login ekrana.
 
 ### 6.4 Backend autorizacija
 
@@ -492,11 +505,24 @@ auth:
     email: true
     facebook: false      # default off — v. §7.4
   allowGuestBooking: false
-
-  # per-tenant, ako se ide scenario "FB App po flavoru"
-  facebookAppId: ""
-  facebookClientToken: ""
 ```
+
+Implementirano u tasku 12. Generator (`tool/gen_flavors.dart`) validira ključeve i prenosi listu u
+`tenants.g.dart`; nepoznat provider ili vrijednost koja nije `true`/`false` obori generisanje, pa i
+CI (`dart run tool/gen_flavors.dart --check`). Tenant bez `auth:` bloka dobija isto što i
+`AuthConfig.fallback` — Apple, Google, email.
+
+`allowGuestBooking` je ovdje samo **fallback dok backend ne odgovori**; izvor istine je
+`salon_settings.allow_guest_booking`, koji vlasnik mijenja bez novog builda.
+
+`facebookAppId`/`facebookClientToken` **nisu** implementirani — dodaju se u
+[tasku 26](../tasks/sprint-2/26-gost-i-facebook.md), i to samo ako se ide scenario "FB App po
+flavoru".
+
+**Client ID-evi ne idu u `tenant.yaml`.** Oni se mijenjaju po okruženju i ne pripadaju fajlu koji
+stoji u gitu — prosljeđuje ih `tool/build_tenant.sh` kao `--dart-define`, tražeći prvo
+`GOOGLE_WEB_CLIENT_ID_<FLAVOR>` pa tek onda zajednički `GOOGLE_WEB_CLIENT_ID`. Hodogram kroz
+konzole: [`tasks/sprint-2/12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md).
 
 ---
 

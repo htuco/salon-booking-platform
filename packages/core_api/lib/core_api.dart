@@ -17,6 +17,8 @@
 /// `book_appointment` iz taska 05. Nema `insert` sa klijenta; v. `.claude/docs/security.md`.
 library;
 
+export 'src/auth/auth_platform_mapper.dart';
+export 'src/auth/auth_repository.dart';
 export 'src/booking/booking_repository.dart';
 export 'src/catalog/employee_repository.dart';
 export 'src/catalog/salon_repository.dart';

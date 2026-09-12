@@ -1,0 +1,166 @@
+import 'package:core_domain/core_domain.dart';
+import 'package:test/test.dart';
+
+void main() {
+  group('AuthProvider', () {
+    test('wireName prati imena iz Supabasea i tenant.yaml', () {
+      expect(AuthProvider.values.map((p) => p.wireName), [
+        'apple',
+        'google',
+        'facebook',
+        'email',
+      ]);
+    });
+
+    test('fromWire vraća null za nepoznato, ne baca', () {
+      expect(AuthProvider.fromWire('google'), AuthProvider.google);
+      expect(AuthProvider.fromWire('passkey'), isNull);
+      expect(AuthProvider.fromWire(null), isNull);
+      expect(AuthProvider.fromWire(''), isNull);
+    });
+
+    test('Apple ima implementaciju samo na iOS-u', () {
+      expect(AuthProvider.apple.isAvailableOn(AuthPlatform.ios), isTrue);
+      expect(AuthProvider.apple.isAvailableOn(AuthPlatform.android), isFalse);
+      expect(AuthProvider.apple.isAvailableOn(AuthPlatform.web), isFalse);
+    });
+  });
+
+  group('AuthConfig.forPlatform', () {
+    // DoD taska 12: na iOS-u lista sadrži Apple, na Androidu ne.
+    test('iOS nudi Apple, Android ne — isti config', () {
+      const config = AuthConfig.fallback;
+
+      expect(config.forPlatform(AuthPlatform.ios), [
+        AuthProvider.apple,
+        AuthProvider.google,
+        AuthProvider.email,
+      ]);
+      expect(config.forPlatform(AuthPlatform.android), [
+        AuthProvider.google,
+        AuthProvider.email,
+      ]);
+      expect(
+        config.forPlatform(AuthPlatform.android),
+        isNot(contains(AuthProvider.apple)),
+      );
+    });
+
+    test('tenant ne može uključiti Apple na Androidu', () {
+      const config = AuthConfig(
+        enabled: {AuthProvider.apple},
+        allowGuest: false,
+      );
+
+      expect(config.forPlatform(AuthPlatform.android), isEmpty);
+      expect(config.forPlatform(AuthPlatform.ios), [AuthProvider.apple]);
+    });
+
+    test('platforma ne uvodi provider koji tenant nije uključio', () {
+      const config = AuthConfig(
+        enabled: {AuthProvider.email},
+        allowGuest: false,
+      );
+
+      expect(config.forPlatform(AuthPlatform.ios), [AuthProvider.email]);
+      expect(
+        config.forPlatform(AuthPlatform.ios),
+        isNot(contains(AuthProvider.google)),
+      );
+    });
+
+    test('Apple je prvi na iOS-u — App Review 4.8', () {
+      const config = AuthConfig(
+        enabled: {AuthProvider.google, AuthProvider.email, AuthProvider.apple},
+        allowGuest: false,
+      );
+
+      expect(config.forPlatform(AuthPlatform.ios).first, AuthProvider.apple);
+    });
+
+    test('Facebook je isključen u podrazumijevanom configu', () {
+      expect(
+        AuthConfig.fallback.enabled,
+        isNot(contains(AuthProvider.facebook)),
+      );
+      expect(
+        AuthConfig.fallback.forPlatform(AuthPlatform.android),
+        isNot(contains(AuthProvider.facebook)),
+      );
+    });
+
+    test('web nudi samo email — nativni tokovi tamo nemaju implementaciju', () {
+      const config = AuthConfig(
+        enabled: {
+          AuthProvider.apple,
+          AuthProvider.google,
+          AuthProvider.facebook,
+          AuthProvider.email,
+        },
+        allowGuest: false,
+      );
+
+      expect(config.forPlatform(AuthPlatform.web), [AuthProvider.email]);
+    });
+  });
+
+  group('AuthConfig.fromNames', () {
+    test('mapira imena iz tenant.yaml', () {
+      final config = AuthConfig.fromNames(const [
+        'apple',
+        'google',
+        'email',
+      ], allowGuest: false);
+
+      expect(config, AuthConfig.fallback);
+    });
+
+    test('nepoznato ime se ispušta, ostatak preživi', () {
+      final config = AuthConfig.fromNames(const [
+        'google',
+        'passkey',
+        'email',
+      ], allowGuest: true);
+
+      expect(config.enabled, {AuthProvider.google, AuthProvider.email});
+      expect(config.allowGuest, isTrue);
+    });
+
+    test('prazna lista daje prazan config, ne fallback', () {
+      final config = AuthConfig.fromNames(const [], allowGuest: false);
+
+      expect(config.enabled, isEmpty);
+      expect(config.forPlatform(AuthPlatform.ios), isEmpty);
+    });
+  });
+
+  group('AuthConfig jednakost', () {
+    test('poredi po sadržaju, ne po identitetu skupa', () {
+      const a = AuthConfig(
+        enabled: {AuthProvider.google, AuthProvider.email},
+        allowGuest: false,
+      );
+      const b = AuthConfig(
+        enabled: {AuthProvider.email, AuthProvider.google},
+        allowGuest: false,
+      );
+
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+    });
+
+    test('allowGuest ulazi u jednakost', () {
+      const a = AuthConfig(enabled: {AuthProvider.email}, allowGuest: false);
+      const b = AuthConfig(enabled: {AuthProvider.email}, allowGuest: true);
+
+      expect(a, isNot(b));
+    });
+
+    test('copyWith mijenja samo traženo', () {
+      final config = AuthConfig.fallback.copyWith(allowGuest: true);
+
+      expect(config.enabled, AuthConfig.fallback.enabled);
+      expect(config.allowGuest, isTrue);
+    });
+  });
+}
