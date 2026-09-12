@@ -1,11 +1,11 @@
 # Trenutni task: 18 — Client: Početna po handoffu + bottom tab bar
 
 Puni task: [`tasks/sprint-2/18-pocetna-i-tab-bar.md`](sprint-2/18-pocetna-i-tab-bar.md) ·
-**Nije počet** · Učitano: 2026-09-13
+**U toku** · Učitano: 2026-09-13 · Grana: `feat/pocetna-i-tab-bar`
 
 ## Status
 
-Nije počet.
+U toku od 2026-09-13, grana `feat/pocetna-i-tab-bar` sa svježeg `main`-a.
 
 Zavisnosti su ✅: [11](sprint-1/11-booking-flow.md) (booking flow) i
 [22](sprint-2/22-sema-slike-i-staz.md) (slike usluga, staž radnika). Blokira **19, 20 i 21** — sva
