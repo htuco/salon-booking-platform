@@ -65,3 +65,19 @@ finalan. Prototip ostaje samo kao referenca za flow i za rute.
 četiri koraka bookinga, zahtjev poslan). `5h`–`5q` (moji termini, usluge, obavijesti, postavke,
 galerija, recenzije, o aplikaciji, pravila, modal otkazivanja, lightbox) su Sprint 2+ —
 v. `tasks/sprint-1/README.md` §Sljedeće.
+
+## Fotografije
+
+Šema od taska 22 ima `services.image_url` i `employees.experience_years` — dvije kolone bez kojih
+red usluge nikad ne bi bio 1:1 sa mockupom.
+
+**Obje su nullable, i prazan okvir je predviđeno stanje.** Salon koji nema fotografije mora raditi
+od prvog dana; `PhotoFrame` tada crta prazan kvadrat sa hairline obrubom, tačno kao u handoffu.
+
+`seed.sql` nosi `images.demo.invalid` URL-ove koji se **namjerno ne razrješavaju**. Demo tako
+izgleda onako kako stvarno jeste — bez fotografija — umjesto da tuđim slikama obeća nešto što
+sistem nema. Prave fotografije dolaze sa onboardingom klijenta.
+
+Posljedica za dokazivanje: snimak ekrana sa seed podacima **ne razlikuje** „fotografija radi" od
+„fotografija tiho pada", jer oba daju prazan okvir. Ko dokazuje rad sa slikama mora privremeno
+usmjeriti jedan red na sliku koja stvarno postoji — i ne commitovati taj URL.

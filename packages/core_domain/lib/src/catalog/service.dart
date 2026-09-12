@@ -25,6 +25,16 @@ abstract class Service with _$Service {
     /// `numeric(10,2)` iz baze. Prikazuje se samo ako je `salon_settings.show_prices_in_app`.
     required double price,
     @JsonKey(name: 'duration_minutes') required int durationMinutes,
+
+    /// Fotografija usluge — 1:1 thumb u redu usluge (`SPEC.md`: 76×76).
+    ///
+    /// **Nullable namjerno.** Salon koji nema fotografije mora raditi; prazan okvir je
+    /// predviđeno stanje koje `PhotoFrame` već crta, ne greška. Obavezna kolona bi značila
+    /// da onboarding novog klijenta staje dok neko ne nađe slike.
+    ///
+    /// Uz to: app iz storea je starija od baze, pa red **bez ove kolone** mora proći —
+    /// `String?` bez `required` to i garantuje.
+    @JsonKey(name: 'image_url') String? imageUrl,
   }) = _Service;
 
   factory Service.fromJson(Map<String, dynamic> json) =>

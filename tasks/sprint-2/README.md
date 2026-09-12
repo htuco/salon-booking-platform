@@ -12,7 +12,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
 | [16](16-moji-termini-i-otkazivanje.md) | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
 | [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
-| [22](22-sema-slike-i-staz.md) | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
+| [22](22-sema-slike-i-staz.md) ✅ | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
 | [18](18-pocetna-i-tab-bar.md) | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
 | [19](19-o-nama-i-usluge.md) | Client: "O nama" i "Usluge" | — | 1–2 dana |
 | [20](20-galerija-recenzije.md) | Client: galerija, lightbox, recenzije | — | 2 dana |
@@ -43,7 +43,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 |---|---|---|
 | [11](../sprint-1/11-booking-flow.md) | `book(...)` nikad nije pozvan protiv prave baze | [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | `409` nije izazvan uživo | [14](14-identitet-i-klijent-upsert.md) |
-| [11](../sprint-1/11-booking-flow.md) | Usluge nemaju fotografiju, radnici staž | [22](22-sema-slike-i-staz.md) |
+| [11](../sprint-1/11-booking-flow.md) | ~~Usluge nemaju fotografiju, radnici staž~~ | ✅ [22](22-sema-slike-i-staz.md) |
 | [11](../sprint-1/11-booking-flow.md) | Početna nije po handoffu | [18](18-pocetna-i-tab-bar.md) |
 | [08](../sprint-1/08-core-api-repozitoriji.md) | Nema `AppointmentRepository` | [16](16-moji-termini-i-otkazivanje.md) |
 | `security.md` | `customers`/`devices` upis bez validirane funkcije | [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
@@ -73,6 +73,19 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > **Apple i Google nisu odigrani nijednom** — traže tvoje naloge i pravi uređaj; hodogram je
 > [12-konzole-checklist.md](12-konzole-checklist.md). Detalji:
 > [12-auth-provideri.md](12-auth-provideri.md#status-2026-09-12--🟡-kod-gotov-konzole-čekaju).
+
+> **22 — Šema: fotografije usluga i staž radnika (✅, 2026-09-12).** `services.image_url` i
+> `employees.experience_years`, obje nullable jer su prazan okvir i red bez staža **predviđena
+> stanja** — salon bez fotografija mora raditi od prvog dana. Seed puni obje kolone i namjerno
+> ostavlja po jedan red prazan. `anon` vidi nove kolone (tri nove asercije u
+> `rest_public_catalog.ts`) — grantovi iz init migracije su tabelarni, pa nova kolona ulazi sama;
+> da su bili kolonski, javni katalog bi tiho izgubio fotografije.
+> Na ekranu, iz prave baze: „Barber · 9 godina" i „Barber · 4 godine" — oba bosanska plural oblika.
+> **Zamka:** prvi snimak koraka 1 pokazao je četiri prazna okvira, jer se `images.demo.invalid` ne
+> razrješava — red sa URL-om izgleda isto kao red bez njega. Dokaz je napravljen privremenim
+> usmjeravanjem jednog reda na stvarnu sliku, pa vraćanjem; `seed.sql` nije mijenjan.
+> Detalji: [22-sema-slike-i-staz.md](22-sema-slike-i-staz.md#status-2026-09-12--✅-zatvoren).
+
 
 ## Dug koji nije task
 
