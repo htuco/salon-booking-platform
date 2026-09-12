@@ -137,6 +137,7 @@ Dva pravila za pisanje ovih dokumenata:
 | `/new-tenant` | Novi klijent od `tenant.yaml` do zelenog CI-ja |
 | `/cleanup` | Higijena: drift generisanog, mrtvi TODO, dokumenti van sinhronizacije |
 | `/research` | Istraživanje koje proizvodi dokument, nikad kod |
+| `/continuous-work` | Taskovi redom bez nadzora — task po task, PR po PR, dok ima nezablokiranih |
 
 Subagenti u `.claude/agents/`: `dart-reviewer`, `rls-auditor`, `duplication-scanner`,
 `flutter-ui-reviewer`. Šablon za nove: `.claude/agent-templates/`.

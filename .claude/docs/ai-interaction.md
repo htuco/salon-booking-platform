@@ -48,6 +48,10 @@ mislim da je uzrok. Ne nižem nasumične izmjene i ne "popravljam" tako što ukl
 
 Jedan aktivni task odjednom (`tasks/CURRENT.md`). Jedan task = jedna grana = jedan PR.
 
+`/continuous-work` vozi taj isti ciklus u petlji, task za taskom, kad me ostavljaš bez nadzora:
+isti koraci, bez pauze između taskova, PR-ovi ostaju otvoreni za tebe. Umjesto pitanja kojem nema
+kome da se postavi (§2) ostavlja zapis u status bloku i ide dalje.
+
 ## 4. Grane i PR-ovi — bez izuzetka
 
 **Svaki feature, fix i chore ima svoju granu i svoj otvoren PR protiv `main`. Na `main` se ne
