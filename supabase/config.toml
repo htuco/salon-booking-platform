@@ -160,7 +160,17 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+#
+# Deep link po flavoru (`ba.nasadomena.<flavor>://login-callback`) — ista shema kao
+# `applicationId`/`bundleId` u tenants/<flavor>/tenant.yaml. Lista je *exact match*: novi
+# tenant mora dobiti svoj red i ovdje i u Supabase konzoli (Auth -> URL Configuration),
+# inace prijava zavrsi na "requested path is invalid" umjesto u app-i.
+# Task 12, docs/06 §7. Hodogram za novog klijenta: .claude/docs/tenant-factory.md.
+additional_redirect_urls = [
+  "https://127.0.0.1:3000",
+  "ba.nasadomena.barberstudiovitez://login-callback",
+  "ba.nasadomena.beautystudiotravnik://login-callback",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -196,7 +206,12 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+#
+# Podignuto sa 2 na 100 **samo za lokalni stack**: email OTP je jedini provider koji se moze
+# testirati bez tudih konzola, a sa dva maila na sat se dva pokusaja prijave potrose prije
+# nego se flow uopste vidi. Lokalno mailovi ionako ne izlaze — hvata ih Inbucket na
+# http://127.0.0.1:54324. Na hostovanom projektu ovo ostaje nisko, jer je tamo stvarni SMTP.
+email_sent = 100
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -229,6 +244,10 @@ secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
+#
+# **OTP, nikad magic link** (docs/06 §2.1): link na mobilnom izlazi iz app-a u browser i ne
+# vraca se pouzdano. Klijent zove `signInWithOtp` pa `verifyOTP` i nikad ne otvara link iz
+# maila; sestocifreni kod je ono sto korisnik prepisuje u ekran.
 otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
@@ -242,6 +261,14 @@ otp_expiry = 3600
 # pass = "env(SENDGRID_API_KEY)"
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
+
+# Email OTP: mail nosi sestocifreni kod, ne link (docs/06 §2.1). Bez ovog bloka lokalni
+# stack salje podrazumijevani magic link template i lokalni dokaz ne govori nista o tome
+# sta korisnik stvarno dobije. Hostovani projekat ima istu izmjenu u konzoli —
+# v. tasks/sprint-2/12-konzole-checklist.md §3a.
+[auth.email.template.magic_link]
+subject = "Vaš kod za prijavu"
+content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
@@ -319,8 +346,20 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
+# Apple i Google se lokalno drze **iskljucenim**: oba traze client ID i secret iz tudih
+# konzola (Apple Developer, Google Cloud), a nativni `signInWithIdToken` tok se ionako ne
+# moze odigrati u `supabase start` stacku bez uredjaja. Lokalno se dokazuje email OTP;
+# Apple i Google se dokazuju na hostovanom projektu, na pravom uredjaju.
+#
+# Kad se ukljuce, `client_id` je **comma-separated lista** — jedan Supabase projekat servira
+# N flavora, dodaje se samo novi bundle ID / client ID (docs/06 §7). Za Google **web client
+# ID mora biti prvi u listi**, jer je on `aud` u ID tokenu koji app salje.
+#
+# Secret nikad ne ulazi u repo: `env(...)` cita varijablu iz okoline.
 [auth.external.apple]
 enabled = false
+# Lista bundle ID-eva svih iOS flavora, npr.
+# "ba.nasadomena.barberstudiovitez,ba.nasadomena.beautystudiotravnik"
 client_id = ""
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
@@ -333,6 +372,16 @@ url = ""
 skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
+
+[auth.external.google]
+enabled = false
+# Web client ID **prvi**, pa po jedan iOS/Android client ID po flavoru (docs/06 §7.1).
+client_id = ""
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+redirect_uri = ""
+url = ""
+# Nonce provjera se preskace samo pri lokalnoj Google prijavi, kako sam Supabase dokumentuje.
+skip_nonce_check = false
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.

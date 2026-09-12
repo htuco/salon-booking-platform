@@ -1,0 +1,20 @@
+<!--
+  Email OTP template — kod, NIKAD magic link (docs/06 §2.1).
+
+  Supabase ovaj template zove "magic link" jer isti mail pokriva oba toka; sta ce korisnik
+  dobiti odlucuje iskljucivo sadrzaj ispod. `{{ .ConfirmationURL }}` bi na mobilnom izbacio
+  korisnika iz app-a u browser, odakle se ne vraca pouzdano — zato ovdje stoji samo
+  `{{ .Token }}`, sestocifreni kod koji korisnik prepisuje u ekran.
+
+  Ovaj fajl vrijedi za LOKALNI stack (`supabase start`). Hostovani projekat ima svoju kopiju
+  u konzoli: Authentication -> Emails -> Templates -> Magic Link. Kad se jedno mijenja,
+  mijenja se i drugo — inace lokalni dokaz ne govori nista o produkciji.
+  Hodogram: tasks/sprint-2/12-konzole-checklist.md §3a.
+-->
+<h2>Vaš kod za prijavu</h2>
+
+<p style="font-size: 32px; letter-spacing: 6px; font-weight: 700; margin: 24px 0;">
+  {{ .Token }}
+</p>
+
+<p>Kod vrijedi 60 minuta. Ako prijavu niste tražili vi, slobodno zanemarite ovu poruku.</p>

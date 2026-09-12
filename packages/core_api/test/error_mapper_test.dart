@@ -165,9 +165,11 @@ void main() {
       ConflictError() => 'konflikt',
       ServerError() => 'server',
       MappingError() => 'oblik',
+      AuthCancelledError() => 'odustao',
     };
 
     expect(describe(const NetworkError('x')), 'mreža');
     expect(describe(const ConflictError('x')), 'konflikt');
+    expect(describe(const AuthCancelledError('x')), 'odustao');
   });
 }

@@ -45,6 +45,10 @@ generisano zastarjelo.
   a ne u Dartu na uređaju: neispravan heks bi tamo bio izuzetak pri startu aplikacije, ovdje je pad
   generatora u CI-ju. U registar ulaze kao ARGB `int`, pa app ne parsira boju pri startu.
 
+- **`auth.providers` prima samo `apple`, `google`, `facebook`, `email`**, i samo `true`/`false`.
+  Nepoznat ključ ili `"da"` umjesto `true` obore generisanje. Isti razlog kao kod boja: tipfeler u
+  konfiguraciji mora pasti u CI-ju, a ne završiti kao login ekran kojem fali dugme.
+
 ### Boje u `tenant.yaml` nisu dekoracija
 
 `branding.primaryColor`/`secondaryColor` su **fallback dok backend ne odgovori**, i moraju biti iste
@@ -57,6 +61,33 @@ boji iz `tenant.yaml`, pa skok na boju iz baze. Zato pri promjeni boje mijenjaj 
 `branding.theme` (`modern_barber` | `elegant_beauty` | `clinical_calm`) bira svjetlinu i neutralnu
 paletu. Nepoznato ime **ne ruši app** nego pada na `modern_barber` — tema dodana migracijom poslije
 zadnjeg store submissiona ne smije biti izuzetak. Detalji: `.claude/docs/architecture.md`.
+
+### Auth: lista je u `tenant.yaml`, client ID nije
+
+`auth.providers` ide u `tenant.yaml`, jer je to podatak o tenantu i mijenja se rijetko:
+
+```yaml
+auth:
+  providers: { apple: true, google: true, email: true, facebook: false }
+  allowGuestBooking: false
+```
+
+Generator ga prenosi u `tenants.g.dart`, a `AuthConfig` ga filtrira po platformi — `apple: true` na
+Androidu se **ignoriše, ne pada** ([ADR-0007](../../docs/adr/0007-authconfig-u-core-domain.md)).
+`allowGuestBooking` je fallback; izvor istine je `salon_settings.allow_guest_booking`.
+
+**Google client ID u `tenant.yaml` ne ide.** Mijenja se po okruženju (debug i release imaju različit
+SHA-1, dev i prod različit projekat), pa ne pripada fajlu koji stoji u gitu. Prosljeđuje ga
+`tool/build_tenant.sh` kao `--dart-define`, tražeći prvo vrijednost po flavoru:
+
+```
+GOOGLE_WEB_CLIENT_ID_<FLAVOR>   →   GOOGLE_WEB_CLIENT_ID
+GOOGLE_IOS_CLIENT_ID_<FLAVOR>   →   GOOGLE_IOS_CLIENT_ID
+```
+
+**Client ID je po flavoru, ne po projektu** (`docs/06 §7.1`): jedan zajednički ID znači da korisnik
+u Google dijalogu vidi tuđe ime salona. Skripta ispisuje da li je ID stigao i iz koje varijable, ali
+nikad samu vrijednost.
 
 ## Zamke koje su nas već koštale
 
@@ -111,10 +142,16 @@ Skill `/new-tenant` vodi kroz ovo korak po korak; ovo je referenca šta se sve m
 3. `dart run tool/gen_flavors.dart`
 4. `dart run tool/gen_placeholder_icons.dart` pa `dart run flutter_launcher_icons` (u `apps/client`).
 5. Ako je `targets.ios: true` → `tool/gen_ios_flavors.sh` na macOS-u.
-6. **Dodaj flavor u sve tri CI matrice** u `.github/workflows/flutter-build.yml` —
+6. **Auth po flavoru** — Google OAuth klijenti, Sign In with Apple capability, redirect URL
+   `ba.nasadomena.<flavor>://login-callback` u Supabase konzoli **i** u
+   `supabase/config.toml`, pa `gh variable set GOOGLE_*_CLIENT_ID_<FLAVOR>`. Hodogram kroz konzole:
+   [`tasks/sprint-2/12-konzole-checklist.md`](../../tasks/sprint-2/12-konzole-checklist.md).
+   Redirect lista je *exact match* — flavor koji nije dobio svoj red završi na "requested path is
+   invalid" umjesto u app-i.
+7. **Dodaj flavor u sve tri CI matrice** u `.github/workflows/flutter-build.yml` —
    `build-flavors`, `build-ios` i `release-artifacts` imaju **eksplicitne liste**, ne izvedene iz
    `tenants/`. Tenant koji nije u matrici se nikad ne buildа na CI-ju, a `--check` to ne hvata.
-7. Build i provjeri na artefaktu (v. `/verify`).
+8. Build i provjeri na artefaktu (v. `/verify`).
 
 ## Šta ide u `tenant.yaml`, a šta ne
 
@@ -123,6 +160,9 @@ Pitanje na koje se svodi svaka dilema: **može li se ovo promijeniti bez novog s
 - **Da** → backend. Logo, cover, boje u app-u, usluge, radnici, radno vrijeme, tekstovi, vertikala
   u radu. Mijenja se kroz super admin konzolu.
 - **Ne** → `tenant.yaml`. Ime aplikacije, ikona, `applicationId`/`bundleId`, splash, verzija.
+- **Ni jedno ni drugo** → okruženje. Ključevi i client ID-evi se mijenjaju po okruženju, a ne po
+  tenantu ni po verziji — idu kao `--dart-define` kroz `tool/build_tenant.sh`, u GitHub `vars` i
+  `secrets`, i nikad u git.
 
 Boje su u oba: u `tenant.yaml` kao **fallback dok backend ne odgovori** (sprječava bijeli flash), u
 bazi kao izvor istine. Moraju biti iste vrijednosti; kad se razilaze, baza je u pravu.

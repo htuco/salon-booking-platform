@@ -71,6 +71,18 @@ final class ServerError extends ApiError {
   const ServerError(super.message, {super.cause});
 }
 
+/// Korisnik je odustao — zatvorio Apple/Google dijalog ili pritisnuo nazad.
+///
+/// **Ovo nije kvar i ne prikazuje se kao greška.** Nativni dijalozi prijave nemaju "otkaži"
+/// koji bi vratio vrijednost; jedini način da se to razlikuje od pale prijave je vlastiti
+/// tip. Bez njega ekran svakom korisniku koji se predomisli pokaže crvenu poruku o grešci.
+///
+/// Baca ga implementacija `AuthRepository`-ja ([task 13](../../../../../tasks/sprint-2/13-client-login-ekran.md)),
+/// ne `mapError` — otkazivanje ne dolazi sa strane baze.
+final class AuthCancelledError extends ApiError {
+  const AuthCancelledError(super.message, {super.cause});
+}
+
 /// Odgovor je stigao, ali nije onog oblika koji model očekuje.
 ///
 /// Skoro uvijek znači da su se šema i model raziđu — kolona preimenovana u migraciji, a

@@ -28,6 +28,10 @@
 /// `docs/05-vertical-packs.md`.
 library;
 
+export 'src/auth/auth_config.dart';
+export 'src/auth/auth_platform.dart';
+export 'src/auth/auth_provider.dart';
+export 'src/auth/auth_session.dart';
 export 'src/catalog/appointment.dart';
 export 'src/catalog/appointment_status.dart';
 export 'src/catalog/available_slot.dart';

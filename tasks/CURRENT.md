@@ -1,100 +1,99 @@
-# Trenutni task: 11 — Client: booking flow (redizajn po `prototype/ui/`)
+# Trenutni task: 12 — Supabase Auth provideri + `AuthConfig` po flavoru
 
-Puni task: [`tasks/sprint-1/11-booking-flow.md`](sprint-1/11-booking-flow.md) · U toku ·
-Grana: `feat/booking-flow-ekrani`, PR [#18](https://github.com/htuco/salon-booking-platform/pull/18)
+Puni task: [`tasks/sprint-2/12-auth-provideri.md`](sprint-2/12-auth-provideri.md) · **U toku** ·
+Učitano: 2026-09-12 · Grana: `feat/auth-provideri`, PR [#20](https://github.com/htuco/salon-booking-platform/pull/20)
 
 ## Status
 
-**Redizajn je gotov i dokazan slikom.** Ostaje ono što je i prije ostajalo: poziv protiv prave
-baze i `409` uživo (Sprint 2), plus dvije sitnice iz napomena ispod.
+Prvi task Sprinta 2 i početak lanca **12 → 13 → 14** koji zatvara ono što task 11 nije mogao:
+`book_appointment` traži `customerId`, a klijent ne postoji dok nema prijave.
 
-<details>
-<summary>Zatečeno stanje na početku ovog prolaza</summary>
-
-**Flow radi, ali ne izgleda kao handoff.** Ekrani su pisani po tekstu iz `prototype/ui/SPEC.md`, a
-ne po slikama iz `prototype/ui/screenshots/` — i razlika nije kozmetička: prototip je uglat sistem
-(radius 0), sa serif naslovima, hairline granicama i drugim rasporedom koraka.
-
-Ovo je drugi prolaz kroz iste ekrane: logika, provideri, rute i testovi ostaju, mijenja se **oblik**.
-Boja i dalje dolazi iz `tenant.yaml`, tekst iz `vertical.terms` — iz handoffa se uzima oblik, ne
-paleta (`prototype/ui/README.md`).
-
-**Odlučeno prije početka:** tokeni se mijenjaju **sistemski u `core_ui`** (ne samo na booking
-ekranima), i fontovi **DM Serif Display + Archivo se pakuju** u `apps/client/assets/fonts/`.
-
-</details>
-
-## Pravilo: barber je 1:1, ostale vertikale nisu
-
-**Odluka (2026-09-12):** barber aplikacija mora biti **1:1 sa `prototype/ui/`, u najsitniji
-detalj**. Beauty i ostale vertikale dobijaju **svoj dizajn**, pa se ne pokušava jedan raspored
-razvući preko svih.
-
-To je obrnulo raniji kompromis: copy i paleta više nisu izvedeni iz vertikale da bi bili tačni
-svuda, nego prepisani iz handoffa. Konkretno:
-
-- Naslov koraka 1 je **"Izaberite uslugu"** (bio: `vertical.terms.servicePlural`).
-- Success naslov je **"Salon vas je vidio"** (bio: "Čekamo potvrdu").
-- `modern_barber` neutrale su **tačne vrijednosti iz `SPEC.md`**, ne približne.
-- Ikone su **Lucide** (`lucide_icons_flutter`), ne Material.
-- Demo podaci nose **placeholder ploče iz handoffa**; produkcija ostavlja okvir prazan.
-
-### Šta još nije 1:1
-
-- **Zlatna brand boja ostaje** iako je handoff monohroman (primarni CTA `#F2F2F3`). Tvoja odluka,
-  odgođena — to je danas jedina razlika u boji.
-- **Usluge nemaju fotografiju.** `services` tabela nema `image_url`, pa red usluge ima prazan
-  okvir dok migracija ne doda kolonu. Handoff traži thumb 1:1, 76 px.
-- **Radnici nemaju godine staža.** Handoff piše "Barber · 9 godina"; `employees` nema to polje.
-- **Ekrani `5a` Početna i `5b` O nama nisu rađeni po handoffu**, a `5h`–`5q` ne postoje.
+Zavisnost ([07 — app plumbing](sprint-1/07-app-plumbing.md)) je ✅: `bootstrap()` diže
+`Supabase.initialize`, `AppEnv` čita define-ove, `build_tenant.sh` već prosljeđuje
+`SUPABASE_URL`/`SUPABASE_ANON_KEY`/`API_URL`.
 
 ## Ciljevi
 
-- [x] **Fontovi** — DM Serif Display + Archivo u `apps/client/assets/fonts/` sa OFL licencama.
-      Archivo je varijabilni (staticki rezovi ne postoje u izvoru), pa tezine idu kroz
-      `FontVariation('wght', …)` — sam `fontWeight` na varijabilnom fontu zna ostati bez efekta
-- [x] **Tokeni u `core_ui`** — `AppRadius.none` je jedina vrijednost (klasa sa jednom konstantom
-      namjerno, da se 8 ne vrati "privremeno"), gutter 22, CTA 60, slot 58, ćelija 44, traka 5
-- [x] **Tipografska skala** u `core_ui/tokens/typography.dart`, vezana u `buildAppTheme`
-- [x] **Komponente**: `PhotoFrame`, `SelectableRow`, `CalendarMonth`, `SpecCard`; `TimeSlotChip`
-      uglat i invertovan; `DateStrip` **obrisan** — bio je pogrešna komponenta za ovaj korak
-- [x] **Korak 1** — izbor više ne vodi odmah dalje; zaključuje ga "Dalje" na dnu
-- [x] **Korak 2** — `?` okvir za "bilo ko od nas", inicijal dok fotografija nema, ✓ kvadratić
-- [x] **Korak 3** — mjesečni kalendar sa ‹ ›, pa "Prijepodne"/"Poslijepodne"
-- [x] **Korak 4** — "Još jedan korak", kartica "Čuvamo vam", tri dugmeta za prijavu, pravna napomena
-- [x] **Success** — hero, kicker, serif naslov, `SpecCard`, "Dodaj u kalendar" (neaktivno do
-      Sprinta 2), CTA "Moji termini". **Konfete uklonjene**, `confetti` izbačen iz `pubspec.yaml`
-- [x] Testovi prilagođeni — **215 PASS**, analiza i format čisti
-- [x] Vizuelni dokaz: svih pet ekrana u Chromiumu na 402×874 (širina handoffa), oba tenanta —
-      `docs/screenshots/task-11-*`
+Kod je gotov i dokazan. **Ostalo je samo ono što traži tuđe konzole** — v.
+[`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
+
+- [ ] Provideri uključeni u Supabase konzoli: **Apple, Google, Email OTP** (bez lozinke)
+      — čeka tebe, checklist §3
+- [ ] Google/Apple client ID-evi upisani u Supabase i u GitHub `vars` — checklist §1, §2, §4
+- [x] `AuthProvider` enum + `AuthConfig` sa filtriranjem po platformi — **odlučeno: `core_domain`
+      sa vlastitim `AuthPlatform` enumom**, [ADR-0007](../docs/adr/0007-authconfig-u-core-domain.md)
+- [x] `AuthRepository` ugovor u `core_api` po [`docs/06 §6.3`](../docs/06-auth-login-flow.md) —
+      nijedan Supabase tip ne prelazi granicu; vraća `AuthSession`, greške su `ApiError`
+- [x] Google client ID **po flavoru** kao `--dart-define` kroz `build_tenant.sh`, uz postojeća tri
+- [x] Redirect URL po flavoru (`ba.nasadomena.<flavor>://login-callback`) — u `config.toml`,
+      dokazano u pokrenutom stacku; u konzoli hostovanog projekta ostaje tebi
+- [x] `supabase/config.toml` — lokalni auth podešen tako da `supabase start` može testirati OTP
+- [x] Unit test: na iOS-u lista sadrži Apple, na Androidu ne
+- [x] Nijedna tajna u repou — client ID ide u GitHub `vars`, secret u `secrets`
+
+**Dokazano:** 238 testova PASS (bilo 215), generator pada na pokvarenom `auth.providers`,
+`build_tenant.sh` u sve tri grane, i **email OTP odigran do kraja** na lokalnom stacku — kod bez
+linka u mailu, `verify` vraća sesiju, `auth_identities` dobija red. Puni dokaz:
+[status blok taska 12](sprint-2/12-auth-provideri.md).
+
+**Nije dokazano:** Apple i Google prijava — traže tuđe naloge i **pravi uređaj**, ne mogu se odigrati
+ni lokalno ni u simulatoru. `SupabaseAuthRepository` je [task 13](sprint-2/13-client-login-ekran.md);
+ovdje je samo ugovor.
 
 ## Napomene
 
-**Prototip i raniji izvori se na tri mjesta ne slažu — prototip je jači** (`CLAUDE.md`,
-`prototype/CLAUDE.md`):
+**Potvrđeno 2026-09-12:** trigger iz taska 02 **radi** — prva stvarna prijava (email OTP na lokalnom
+stacku) je upisala red u `public.auth_identities` sa `providers = {email}` i `last_login_at`. Za
+[task 14](sprint-2/14-identitet-i-klijent-upsert.md) stvarno preostaje samo `customers` upsert.
 
-1. **Korak 3 nije traka datuma nego mjesečni kalendar.** `docs/02 §16` traži `DateStrip`;
-   `05-korak3-vrijeme.png` crta mrežu 7×N sa ‹ › navigacijom po mjesecu. `DateStrip` iz prvog
-   prolaza time postaje pogrešna komponenta.
-2. **Korak 4 je ekran prijave, ne sažetak sa napomenom.** Prototip nema polje za napomenu; ima
-   karticu "Čuvamo vam" i tri dugmeta za prijavu. Polje za napomenu iz prvog prolaza ispada.
-3. **Success ekran nema konfete.** DoD ih traži "kao u prototipu", a prototip ih nema — ima hero
-   fotografiju, kicker i tabelu. `confetti` zavisnost time postaje suvišna.
+**Dio posla je već u repou, iz taska 02.** `supabase/migrations/20260910090500_auth_identity.sql`
+ima trigger `private.sync_auth_identity()` nad `auth.users` koji **već radi upsert u
+`auth_identities`** — providere, email, `is_anonymous`, `last_login_at`. To znači da je polovina
+onoga što [task 14](sprint-2/14-identitet-i-klijent-upsert.md) nosi u naslovu već gotova; tamo
+stvarno preostaje samo `customers` upsert. Provjeriti prije nego se 14 otvori.
 
-**Screenshot `05-korak3-vrijeme.png` je polupokvaren** — izvoz nije izrenderovao petlje, pa u njemu
-stoje `{{ d.num }}` i `{{ t.label }}`. Struktura se čita iz `screens-flat.html`, ne iz te slike.
+**Odlučeno (2026-09-12): `AuthConfig` ide u `core_domain` sa vlastitim enumom platforme.**
+Obrazloženje i odbačene opcije: [ADR-0007](../docs/adr/0007-authconfig-u-core-domain.md).
+`docs/06 §6.2` je ispravljen u istoj promjeni. Originalni tekst dileme ostaje ispod, jer objašnjava
+zašto DoD taska i `docs/06` nisu govorili isto.
 
-**Ranija zabuna je razriješena:** `SPEC.md` tabela za 5f spominje "phone sign-in", ali sam ekran
-nudi samo Apple / Google / email. To se slaže sa `docs/06 §3.1` — telefon se ne traži nigdje.
+**`docs/06 §6.2` skica se ne može kompajlirati kako je napisana.** Stavlja `AuthConfig` u
+`core_domain` i filtrira po `TargetPlatform` — ali `core_domain` je od [taska 06](06-vertical-pack.md)
+**čist Dart** (`freezed_annotation`, `json_annotation`, `meta`; bez Fluttera), a `TargetPlatform`
+je Flutterov tip. Dvije izlazne opcije:
 
-**Fotografije su placeholderi** (`assets/ph1–6.png`, čelik/ugalj plate). Svih 45 slotova čeka prave
-slike; do tada `PhotoFrame` crta praznu površinu sa hairline granicom, ne prazan prostor.
+1. `AuthConfig` ostaje u `core_domain`, ali prima **vlastiti enum platforme**; mapiranje
+   `TargetPlatform → AuthPlatform` radi sloj iznad. Čuva sloj, košta jedan mali tip.
+2. `AuthConfig` seli u `core_api` (ima Flutter). Brže, ali konfiguracija prelazi u sloj koji je do
+   sada bio samo transport.
 
-**Šta se ne dira:** provideri, `BookingRepository`, `BookingFlowState`, rute, `409` putanja i
-guard. Sve to je dokazano u prvom prolazu i ostaje.
+Preporuka je (1) — isti razlog zbog kojeg je `core_domain` uopšte preveden na čist Dart. Bilo koja
+se bira, **`docs/06` se ispravlja u istoj promjeni**, jer je danas netačan.
+
+**`AuthRepository` ugovor iz `docs/06 §6.3` je širi od ovog taska** — nosi i `continueAsGuest`
+([task 26](sprint-2/26-gost-i-facebook.md)) i `deleteAccount`
+([task 17](sprint-2/17-moj-racun-i-brisanje.md)). Ovdje se piše **ugovor**, a implementiraju samo
+metode koje 12 i 13 trebaju; ostalo baca `UnimplementedError` sa imenom taska koji ga zatvara.
+
+**Native, ne web-view OAuth** (`docs/06 §6.1`): `signInWithIdToken` uzima nativni ID token od
+Applea/Googlea. Web-view flow radi, ali Apple ga ne voli i izgleda jeftino.
+
+**Apple je obavezan na iOS-u** čim postoji ijedan drugi social provider — bez njega App Review
+odbija build po pravilu 4.8 (`docs/06 §7.2`).
+
+**Tajne.** `SUPABASE_URL` i `SUPABASE_ANON_KEY` i dalje nisu postavljeni ni lokalno ni u CI-ju
+(otvoreno od [taska 04](04-ci-pipeline.md)). Ovaj task dodaje još jednu vrijednost tog tipa —
+Google client ID — pa je to trenutak da se kanal za tajne konačno postavi, a ne zaobiđe.
+
+**CI ne može ništa potvrditi** dok naplata na `htuco` nalogu blokira workflowove; dokaz ide lokalno
+(`./tool/verify_clean.sh`, `./tool/test_supabase.sh`).
+
+**Procjena ostaje 2 dana**, ali **zavisi od tuđih konzola** — Apple Developer i Google Cloud nalozi
+nisu u mojim rukama. Dio DoD-a neće moći biti dokazan bez tebe.
 
 ## Istorija
 
+- **11 — Client: booking flow** (2026-09-12, 🟡) — pet ekrana pod `/book/*`, dva prolaza: prvi po tekstu iz `SPEC.md`, drugi **po slikama iz `prototype/ui/`**. Prototip je usput oborio tri odluke: korak 3 je mjesečni kalendar (ne traka datuma, `DateStrip` obrisan), korak 4 je ekran prijave (ne sažetak sa napomenom), success nema konfete. Uz to **odluka da je barber 1:1 sa handoffom** — paleta prepisana znak po znak, copy doslovan, Lucide ikone, pakovani DM Serif Display + Archivo; ostale vertikale dobijaju svoj dizajn. Tokeni promijenjeni **sistemski** (`AppRadius.none` je jedina vrijednost). Dokazano: 215 testova PASS, svih pet ekrana u Chromiumu na 402×874 za oba tenanta, korak 1 i guard na iOS simulatoru ([PR #19](https://github.com/htuco/salon-booking-platform/pull/19)). Slike su našle dvije greške koje testovi nisu mogli: korak 2 je u demou prikazivao grešku (`employeeServiceLinksProvider` bez override-a), a beauty success prazan red (demo termin sa barberovim `serviceId`). **Ostaje 🟡**: `book(...)` nikad nije pozvan protiv prave baze i `409` nije izazvan uživo — oboje traži `Customer` upsert, delegirano u [task 14](sprint-2/14-identitet-i-klijent-upsert.md); fotografije usluga u [22](sprint-2/22-sema-slike-i-staz.md), Početna po handoffu u [18](sprint-2/18-pocetna-i-tab-bar.md).
 - **01 — Skeleton repozitorija** (2026-08) — melos workspace, `apps/client`, `apps/admin`, `packages/core_*`, `supabase init`. `melos bootstrap`/`analyze`/`test` prolaze.
 - **02 — Supabase šema + RLS** (2026-09-10) — 15 tabela, RLS na svakoj, `private.*` autorizacioni helperi, seed sa dva demo salona i tri vertikale. Dokazano na CI-ju: 38 pgTAP testova + 24 REST asercije sa dva stvarna JWT-a.
 - **03 — Flavor sistem** (2026-09-10) — Android i iOS flavori za dva demo tenanta, ikone po flavoru, generatori u `tool/`. Dokazano na artefaktima: `aapt2 dump badging`, oba APK-a na istom emulatoru istovremeno, `CFBundleIdentifier`/`CFBundleDisplayName`/ikona iz gotovog iOS bundlea.

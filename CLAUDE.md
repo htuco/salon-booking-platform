@@ -94,7 +94,9 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - Flutter: feature-first folderi (`lib/src/features/<feature>/`), zajedničko u `packages/core_*`.
 - Riverpod za state i DI, `go_router` za rute, `freezed` za modele, `supabase_flutter` za backend.
 - Supabase: `snake_case` u bazi, migracija po promjeni, `private.*` helperi za autorizaciju.
-- `SALON_ID` je jedini `--dart-define` koji build prosljeđuje; ostalo se traži u generisanom registru.
+- `SALON_ID` je jedini `--dart-define` koji opisuje **tenanta** — ostalo o njemu se traži u
+  generisanom registru. Okruženje (`SUPABASE_*`, `GOOGLE_*_CLIENT_ID`) ide zasebnim define-ovima
+  kroz `build_tenant.sh` i nikad nije u repou.
 
 ## Drži ove dokumente u sinhronizaciji
 

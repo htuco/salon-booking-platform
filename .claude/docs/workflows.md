@@ -162,8 +162,26 @@ BUILD_NUMBER=57 tool/build_tenant.sh barberstudiovitez aab release
 `flutter build` komande — inače lokalni i CI build tiho odlutaju.
 
 Okolina (sve opciono): `BUILD_NUMBER` nadjačava `versionCode`/`buildNumber` iz `tenant.yaml`
-(koristi ga CI); `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` idu kao `--dart-define` ako su
-postavljeni.
+(koristi ga CI); `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_WEB_CLIENT_ID` i
+`GOOGLE_IOS_CLIENT_ID` idu kao `--dart-define` ako su postavljeni.
+
+**Google client ID se traži prvo po flavoru.** Skripta gleda `GOOGLE_WEB_CLIENT_ID_<FLAVOR>` (flavor
+velikim slovima), pa tek onda zajednički `GOOGLE_WEB_CLIENT_ID`:
+
+```sh
+GOOGLE_WEB_CLIENT_ID_BARBERSTUDIOVITEZ="...apps.googleusercontent.com" \
+GOOGLE_IOS_CLIENT_ID_BARBERSTUDIOVITEZ="...apps.googleusercontent.com" \
+tool/build_tenant.sh barberstudiovitez apk debug
+```
+
+Razlog je `docs/06 §7.1`: jedan zajednički ID znači da korisnik u Google dijalogu vidi tuđe ime
+salona. Skripta u zaglavlju builda ispisuje **da li** je ID stigao i iz koje varijable, ali nikad
+samu vrijednost — build log je artefakt koji se čuva. Kad ID nedostaje, build prolazi i ispisuje
+upozorenje: app bez Googlea i dalje ima Apple i email OTP, pa je login ekran bez jednog dugmeta
+bolji od builda koji pada.
+
+U CI-ju vrijednosti stoje u GitHub `vars` (client ID nije tajna, ali se mijenja po tenantu);
+postavljanje: `tasks/sprint-2/12-konzole-checklist.md` §4.
 
 > Release se trenutno potpisuje **debug ključem** iz Flutterovog šablona — AAB iz ovog lanca nije za
 > store dok se ne postavi keystore (Sprint 3, v. `tasks/04-ci-pipeline.md`).
@@ -190,6 +208,27 @@ deno run --allow-env --allow-net supabase/tests/rest_isolation.ts
 
 Skripta odbija remote host, pravi dva stvarna Auth korisnika, uzima dva JWT-a i briše samo svoje
 fixture.
+
+### Email OTP lokalno
+
+Jedini provider prijave koji se može dokazati bez tuđih konzola — Apple i Google traže naloge i
+pravi uređaj. Mail ne izlazi napolje; hvata ga Inbucket/Mailpit na <http://127.0.0.1:54324>.
+
+```sh
+eval "$(supabase status -o env)"
+curl -s -X POST "$API_URL/auth/v1/otp" -H "apikey: $ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","create_user":true}'
+# kod iz maila:
+curl -s -X POST "$API_URL/auth/v1/verify" -H "apikey: $ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"email","email":"test@example.com","token":"<kod>"}'
+```
+
+Mail mora nositi **šestocifreni kod, ne link** (`docs/06 §2.1`). To osigurava
+`supabase/templates/magic_link.html` sa `{{ .Token }}`; hostovani projekat ima istu izmjenu u
+konzoli, pa se mijenjaju u paru. Rate limit je za lokalni stack podignut na 100 mailova na sat —
+sa podrazumijevana dva se flow potroši prije nego se vidi.
 
 ### Cijela suite jednom komandom
 

@@ -10,6 +10,11 @@ import 'dart:io';
 import 'package:yaml/yaml.dart';
 
 const _marker = 'GENERISANO — ne editovati ručno';
+
+/// Imena koja `AuthProvider.fromWire` u `core_domain` poznaje. Redoslijed je redoslijed
+/// prikaza na login ekranu (Apple prvi — App Review 4.8, v. docs/06 §7.2).
+const _poznatiProvideri = ['apple', 'google', 'facebook', 'email'];
+const _podrazumijevaniProvideri = ['apple', 'google', 'email'];
 const _beginFlavors = '    // >>> BEGIN GENERATED FLAVORS';
 const _endFlavors = '    // <<< END GENERATED FLAVORS';
 
@@ -145,6 +150,8 @@ class Tenant {
     required this.iosBuildNumber,
     required this.android,
     required this.ios,
+    required this.authProviders,
+    required this.allowGuestBooking,
   });
 
   factory Tenant.fromYaml(YamlMap yaml, String dirName) {
@@ -186,6 +193,33 @@ class Tenant {
       return vrijednost.toUpperCase();
     }
 
+    // Provideri se validiraju ovdje, a ne u Dartu na uredjaju: nepoznat kljuc u
+    // `auth.providers` je tipfeler u konfiguraciji, pa je pad generatora u CI-ju jedino
+    // mjesto gdje se vidi prije nego stigne do korisnika. Isti razlog kao za heks boje.
+    final auth = yaml['auth'] as YamlMap? ?? YamlMap();
+    final provideri = auth['providers'] as YamlMap? ?? YamlMap();
+    for (final kljuc in provideri.keys) {
+      if (!_poznatiProvideri.contains(kljuc)) {
+        stderr.writeln(
+          '$flavor: auth.providers."$kljuc" nije poznat provider. '
+          'Dozvoljeni: ${_poznatiProvideri.join(', ')}.',
+        );
+        exit(1);
+      }
+    }
+    final ukljuceni = <String>[];
+    for (final kljuc in _poznatiProvideri) {
+      final vrijednost = provideri[kljuc];
+      if (vrijednost == null) continue;
+      if (vrijednost is! bool) {
+        stderr.writeln(
+          '$flavor: auth.providers.$kljuc mora biti true ili false, a ne "$vrijednost".',
+        );
+        exit(1);
+      }
+      if (vrijednost) ukljuceni.add(kljuc);
+    }
+
     return Tenant(
       flavor: flavor,
       salonId: salonId,
@@ -202,6 +236,10 @@ class Tenant {
       iosBuildNumber: app['iosBuildNumber'] as int,
       android: targets['android'] as bool? ?? true,
       ios: targets['ios'] as bool? ?? false,
+      // Bez `auth:` bloka tenant dobija isto sto i AuthConfig.fallback — Apple, Google,
+      // email. Postojeci tenant.yaml tako ne mora biti dopunjen da bi prijava radila.
+      authProviders: auth.isEmpty ? _podrazumijevaniProvideri : ukljuceni,
+      allowGuestBooking: auth['allowGuestBooking'] as bool? ?? false,
     );
   }
 
@@ -220,6 +258,11 @@ class Tenant {
   final int iosBuildNumber;
   final bool android;
   final bool ios;
+
+  /// Imena providera ukljucenih u `auth.providers`, u redoslijedu `_poznatiProvideri`.
+  /// Parsira se u `AuthProvider` tek u app-u (`AuthConfig.fromNames`).
+  final List<String> authProviders;
+  final bool allowGuestBooking;
 }
 
 /// Zamjenjuje samo blok između markera — ostatak gradle fajla (signing,
@@ -382,6 +425,8 @@ String _renderDart(List<Tenant> tenants) {
     ..writeln('    required this.primaryColor,')
     ..writeln('    required this.secondaryColor,')
     ..writeln('    required this.themeName,')
+    ..writeln('    required this.authProviders,')
+    ..writeln('    required this.allowGuestBooking,')
     ..writeln('  });')
     ..writeln()
     ..writeln('  final String flavor;')
@@ -400,6 +445,19 @@ String _renderDart(List<Tenant> tenants) {
     )
     ..writeln('  /// i neutralnu paletu dok backend ne odgovori.')
     ..writeln('  final String themeName;')
+    ..writeln()
+    ..writeln(
+      '  /// Provideri iz `auth.providers` u `tenant.yaml`, kao imena koja',
+    )
+    ..writeln(
+      '  /// `AuthProvider.fromWire` poznaje. Parsira se u `AuthConfig.fromNames`;',
+    )
+    ..writeln('  /// filtriranje po platformi radi `AuthConfig.forPlatform`.')
+    ..writeln('  final List<String> authProviders;')
+    ..writeln()
+    ..writeln('  /// Fallback dok backend ne odgovori — izvor istine je')
+    ..writeln('  /// `salon_settings.allow_guest_booking`.')
+    ..writeln('  final bool allowGuestBooking;')
     ..writeln('}')
     ..writeln()
     ..writeln(
@@ -416,6 +474,11 @@ String _renderDart(List<Tenant> tenants) {
       ..writeln('    primaryColor: ${_argb(tenant.primaryColor)},')
       ..writeln('    secondaryColor: ${_argb(tenant.secondaryColor)},')
       ..writeln("    themeName: '${tenant.themeName}',")
+      ..writeln(
+        '    authProviders: <String>['
+        '${tenant.authProviders.map((p) => "'$p'").join(', ')}],',
+      )
+      ..writeln('    allowGuestBooking: ${tenant.allowGuestBooking},')
       ..writeln('  ),');
   }
   buffer.writeln('};');

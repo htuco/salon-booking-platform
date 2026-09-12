@@ -268,6 +268,16 @@ u istoj transakciji. Uz njega `AvailableSlot` u `core_domain` i `BookingFlowStat
 `apps/client/lib/src/features/booking/` — jedan provider za sva četiri koraka, bez keširane liste
 slotova.
 
+Od taska 12: auth konfiguracija — `AuthConfig`, `AuthProvider`, `AuthPlatform` i `AuthSession` u
+`core_domain`, `AuthRepository` ugovor i `authPlatformOf` u `core_api`, `authConfigProvider` i
+`visibleAuthProvidersProvider` u klijentu. **Ugovor, ne implementacija**: `SupabaseAuthRepository`
+piše task 13, i do tada se niko ne može prijaviti iz app-e.
+
+Lista providera je podatak iz `tenant.yaml` (`auth.providers`), koji kroz generator ulazi u
+`tenants.g.dart`, pa kroz `AuthConfig.fromNames` do ekrana. Domen nosi **vlastiti** enum platforme
+umjesto Flutterovog `TargetPlatform`, jer je `core_domain` čist Dart —
+[ADR-0007](../../docs/adr/0007-authconfig-u-core-domain.md).
+
 **Availability logika ostaje isključivo u bazi.** Dart ne filtrira slotove, ne sabira buffer i ne
 računa trajanje; `BookingRepository` samo mapira gotov odgovor. Metoda koja bi primila listu
 termina i vratila slobodna vremena ovdje ne postoji i neće — to je druga implementacija pravila
