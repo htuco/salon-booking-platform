@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../tokens/spacing.dart';
 
-/// Chip slobodnog termina — grid 4 po redu na 390 px (`docs/02 §14`).
+/// Chip slobodnog termina — `SPEC.md` §Recurring components, "Time slot".
 ///
 /// Namjerno chip, a ne dropdown: `docs/02 §14` izričito zabranjuje dropdown sa trideset
 /// vremena. Korisnik bira vrijeme pogledom po mreži, ne skrolanjem kroz listu.
+///
+/// Visina je 58 px, znatno iznad minimalne dodirne mete, jer se po mreži termina bira brzo
+/// i prstom u pokretu. Izabrani chip je **invertovan** (ispuna u boji teksta, tekst u boji
+/// podloge), ne obojen brendom: mreža od dvadeset brand-obojenih polja proguta CTA ispod
+/// sebe.
 class TimeSlotChip extends StatelessWidget {
   const TimeSlotChip({
     required this.label,
@@ -30,13 +35,13 @@ class TimeSlotChip extends StatelessWidget {
     final zauzet = onTap == null;
 
     final pozadina = selected
-        ? scheme.primary
+        ? scheme.onSurface
         : zauzet
         ? scheme.surfaceContainerHighest
         : Colors.transparent;
 
     final tekst = selected
-        ? scheme.onPrimary
+        ? scheme.surface
         : zauzet
         // Zauzeto je prigušeno, ali i dalje iznad AA praga: `onSurfaceVariant` je
         // mjeren u temi, za razliku od `withOpacity(0.4)` koje pada ispod.
@@ -49,15 +54,15 @@ class TimeSlotChip extends StatelessWidget {
       enabled: !zauzet,
       child: Material(
         color: pozadina,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.zero,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.sm),
+          borderRadius: BorderRadius.zero,
           child: AnimatedContainer(
             duration: AppDuration.fast,
             constraints: const BoxConstraints(
-              // 44 px u oba smjera — donja granica dodirne mete iz `docs/02 §14`.
-              minHeight: AppSize.touchTarget,
+              // `SPEC.md`: 58–64 px. Iznad donje granice dodirne mete iz `docs/02 §14`.
+              minHeight: AppSize.timeSlot,
               minWidth: AppSize.touchTarget,
             ),
             alignment: Alignment.center,
@@ -66,15 +71,15 @@ class TimeSlotChip extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderRadius: BorderRadius.zero,
               border: Border.all(
-                color: selected ? scheme.primary : scheme.outline,
+                color: selected ? scheme.onSurface : scheme.outline,
                 width: selected ? 2 : 1,
               ),
             ),
             child: Text(
               label,
-              style: theme.textTheme.labelLarge?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
                 color: tekst,
                 decoration: zauzet ? TextDecoration.lineThrough : null,
               ),

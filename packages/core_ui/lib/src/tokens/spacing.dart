@@ -1,44 +1,58 @@
-/// Razmaci i radijusi — skala od 4, po `docs/02 §16`.
+/// Razmaci, radijusi i visine — iz `prototype/ui/SPEC.md` §Design Tokens.
 ///
 /// Postoji da ekran ne piše `EdgeInsets.all(24)` napamet. Kad se gustina rasporeda
 /// mijenja, mijenja se ovdje i mijenja se svuda; literal u ekranu bi ostao.
+///
+/// **Vrijednosti su oblik, ne boja.** Handoff je nacrtan nad jednim brendom, ali razmaci,
+/// visine i uglovi su platformski i vrijede za svaki tenant — v. `prototype/ui/README.md`.
 library;
 
-/// Skala razmaka. Svi razmaci u aplikaciji su jedan od ovih — međuvrijednost znači da
-/// skala nije dobra, ne da je slučaj poseban.
+/// Skala razmaka — ritam iz handoffa (14 / 18 / 20 / 22 / 26 / 34), plus dvije manje
+/// vrijednosti za razmake unutar jednog reda.
+///
+/// Međuvrijednost znači da skala nije dobra, ne da je slučaj poseban.
 abstract final class AppSpacing {
   /// 4 — razmak unutar jednog reda teksta (ikona uz labelu).
   static const double xs = 4;
 
-  /// 8 — razmak između usko vezanih elemenata (naslov i podnaslov kartice).
+  /// 8 — mreža fotografija (`SPEC.md`: grid gap 8px).
   static const double sm = 8;
 
-  /// 12 — unutrašnji padding kompaktnih elemenata (chip, badge).
+  /// 12 — razmak između stavki liste i slotova (`SPEC.md`: 10–12px).
   static const double md = 12;
 
-  /// 16 — podrazumijevani padding kartice i razmak između stavki liste.
-  static const double lg = 16;
+  /// 14 — unutrašnji padding reda sa slikom (service row, staff row).
+  static const double rowPadding = 14;
 
-  /// 24 — horizontalni padding ekrana i razmak između sekcija.
-  static const double xl = 24;
+  /// 18 — blok ritam, manji korak.
+  static const double lg = 18;
 
-  /// 32 — razmak oko praznog stanja i iznad primarnog CTA.
-  static const double xxl = 32;
+  /// 22 — **gutter ekrana**. Isto što i [gutter]; stoji i pod ovim imenom jer je to
+  /// najčešći horizontalni padding u sistemu.
+  static const double xl = 22;
+
+  /// 26 — razmak između sekcija.
+  static const double xxl = 26;
+
+  /// 34 — razmak oko praznog stanja i iznad primarnog CTA.
+  static const double xxxl = 34;
+
+  /// Horizontalni padding svakog ekrana. `SPEC.md`: "screen gutter 22px".
+  static const double gutter = 22;
 }
 
-/// Radijusi. Tri vrijednosti namjerno: više njih se pretvori u nasumičan izbor po ekranu.
+/// Uglovi.
+///
+/// **Sistem je uglat — radius je 0 svuda.** `SPEC.md` to kaže doslovno ("radius 0
+/// everywhere; square corners are the system"), i to nije stilska sitnica nego nosivi dio
+/// izgleda: dubina dolazi iz hairline granica, ne iz zaobljenja i sjenki.
+///
+/// Klasa postoji sa jednom vrijednošću namjerno. Da su ostale `sm`/`md`/`lg` sa nulom,
+/// prva sljedeća komponenta bi "privremeno" vratila 8 i niko to ne bi primijetio dok se ne
+/// pogleda uz handoff.
 abstract final class AppRadius {
-  /// 8 — chip, badge, polje za unos.
-  static const double sm = 8;
-
-  /// 12 — kartica, dugme.
-  static const double md = 12;
-
-  /// 20 — bottom sheet i hero površine.
-  static const double lg = 20;
-
-  /// Puno zaobljenje za pill oblike (`StatusBadge`).
-  static const double pill = 999;
+  /// 0 — jedina vrijednost u sistemu.
+  static const double none = 0;
 }
 
 /// Trajanja animacija. `docs/02 §14`: **max 300 ms**.
@@ -56,14 +70,24 @@ abstract final class AppDuration {
   static const Duration slow = Duration(milliseconds: 300);
 }
 
-/// Dodirne mete. `docs/02 §14`: minimum 44 px, 48 dp na Androidu; primarni CTA 52.
+/// Visine i dodirne mete. `SPEC.md` §Recurring components.
 abstract final class AppSize {
-  /// 44 — apsolutni minimum visine bilo čega što se tapa (slot chip).
+  /// 44 — apsolutni minimum visine bilo čega što se tapa, i strana ćelije kalendara.
   static const double touchTarget = 44;
 
-  /// 48 — Android preporuka; visina standardnog dugmeta.
+  /// 48 — visina standardnog (sekundarnog) dugmeta.
   static const double buttonHeight = 48;
 
-  /// 52 — primarni CTA, full-width.
-  static const double ctaHeight = 52;
+  /// 60 — primarni CTA, full-width (`SPEC.md`: 60–66px).
+  static const double ctaHeight = 60;
+
+  /// 58 — chip slobodnog termina (`SPEC.md`: 58–64px). Znatno viši od minimalne dodirne
+  /// mete, jer se po mreži termina bira brzo i prstom u pokretu.
+  static const double timeSlot = 58;
+
+  /// 76 — strana kvadratne fotografije u redu usluge ili radnika.
+  static const double rowPhoto = 76;
+
+  /// 5 — visina jednog segmenta trake koraka (`SPEC.md`: 4 kolone, 5px, gap 5px).
+  static const double stepBar = 5;
 }

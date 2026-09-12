@@ -11,7 +11,7 @@ import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
 import 'widgets/booking_step_scaffold.dart';
 
-/// Korak 2 — kod koga dolazite (`prototype/ui/SPEC.md` 5d).
+/// Korak 2 — kod koga dolazite (`prototype/ui/screenshots/04-korak2-majstor.png`).
 ///
 /// Lista je **presjek** radnika salona i veza `employee_services` za izabranu uslugu —
 /// `employee_service.dart` postoji upravo zbog toga. To nije availability logika: ko radi
@@ -21,7 +21,9 @@ import 'widgets/booking_step_scaffold.dart';
 /// "Bilo ko od nas" stoji **prvi** kad vertikala ne traži izbor osoblja
 /// (`requireStaffChoice`) — kod frizera je to najčešći izbor, a kod ordinacije ga nema.
 /// Prolazi korak sa `employeeId = null`, što je legitiman izbor, ne izostanak izbora
-/// (v. `BookingFlowState.employeeChosen`).
+/// (v. `BookingFlowState.employeeChosen`). U handoffu taj red nosi `?` u okviru za
+/// fotografiju, jer okvir ne smije ostati prazan — raspored bi poskočio kad stignu prave
+/// slike.
 class EmployeeStepScreen extends ConsumerWidget {
   const EmployeeStepScreen({super.key});
 
@@ -39,8 +41,16 @@ class EmployeeStepScreen extends ConsumerWidget {
 
     return BookingStepScaffold(
       step: BookingStep.employee,
-      title: vertical.terms.staffPlural,
-      subtitle: l10n.bookingPickStaff,
+      title: l10n.bookingPickStaff,
+      subtitle: traziIzbor
+          ? vertical.terms.staffPlural
+          : l10n.bookingAnyStaffHintLine,
+      cta: AppButton(
+        label: l10n.bookingNext,
+        onPressed: flow.employeeChosen
+            ? () => context.go(BookingStep.slot.path)
+            : null,
+      ),
       child: Builder(
         builder: (context) {
           if (greska) {
@@ -72,36 +82,34 @@ class EmployeeStepScreen extends ConsumerWidget {
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
+              AppSpacing.gutter,
               0,
-              AppSpacing.xl,
+              AppSpacing.gutter,
               AppSpacing.xxl,
             ),
             children: [
               if (!traziIzbor) ...[
-                _Radnik(
-                  ime: l10n.bookingAnyStaff,
-                  opis: l10n.bookingAnyStaffHint,
-                  izabran: flow.employeeChosen && flow.employeeId == null,
-                  onTap: () {
-                    ref.read(bookingFlowProvider.notifier).chooseAnyEmployee();
-                    context.go(BookingStep.slot.path);
-                  },
+                SelectableRow(
+                  title: l10n.bookingAnyStaff,
+                  subtitle: l10n.bookingAnyStaffHint,
+                  placeholder: const _Upitnik(),
+                  selected: flow.employeeChosen && flow.employeeId == null,
+                  onTap: () => ref
+                      .read(bookingFlowProvider.notifier)
+                      .chooseAnyEmployee(),
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
               for (final employee in zaUslugu) ...[
-                _Radnik(
-                  ime: employee.name,
-                  opis: employee.role.isEmpty ? null : employee.role,
-                  slika: employee.imageUrl,
-                  izabran: flow.employeeId == employee.id,
-                  onTap: () {
-                    ref
-                        .read(bookingFlowProvider.notifier)
-                        .chooseEmployee(employee.id);
-                    context.go(BookingStep.slot.path);
-                  },
+                SelectableRow(
+                  title: employee.name,
+                  subtitle: employee.role.isEmpty ? null : employee.role,
+                  imageUrl: employee.imageUrl,
+                  placeholder: _Inicijal(ime: employee.name),
+                  selected: flow.employeeId == employee.id,
+                  onTap: () => ref
+                      .read(bookingFlowProvider.notifier)
+                      .chooseEmployee(employee.id),
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
@@ -137,95 +145,42 @@ class EmployeeStepScreen extends ConsumerWidget {
   }
 }
 
-/// Red radnika — avatar, ime, titula.
-///
-/// Ne `ServiceCard`: kartica usluge nosi cijenu i trajanje desno, pa bi ime radnika
-/// stajalo u rasporedu napravljenom za brojeve kojih ovdje nema.
-class _Radnik extends StatelessWidget {
-  const _Radnik({
-    required this.ime,
-    required this.izabran,
-    required this.onTap,
-    this.opis,
-    this.slika,
-  });
-
-  final String ime;
-  final String? opis;
-  final String? slika;
-  final bool izabran;
-  final VoidCallback onTap;
+/// `?` u okviru za "bilo ko od nas" — handoff, red 1 na koraku 2.
+class _Upitnik extends StatelessWidget {
+  const _Upitnik();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Semantics(
-      button: true,
-      selected: izabran,
-      child: Material(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          child: AnimatedContainer(
-            duration: AppDuration.fast,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: izabran ? scheme.primary : scheme.outline,
-                width: izabran ? 2 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: scheme.primaryContainer,
-                  foregroundImage: slika == null || slika!.isEmpty
-                      ? null
-                      : NetworkImage(slika!),
-                  child: Text(
-                    _inicijal(ime),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      // Inicijal stoji na `primaryContainer`, pa se i mjeri prema njemu —
-                      // `onSurface` bi ovdje bio kontrast prema pogrešnoj pozadini.
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(ime, style: theme.textTheme.titleMedium),
-                      if (opis != null) ...[
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          opis!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
-              ],
-            ),
-          ),
-        ),
+    return Text(
+      '?',
+      style: theme.textTheme.headlineSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
       ),
     );
   }
+}
 
-  String _inicijal(String ime) =>
-      ime.trim().isEmpty ? '?' : ime.trim().characters.first.toUpperCase();
+/// Prvo slovo imena dok prave fotografije ne stignu.
+class _Inicijal extends StatelessWidget {
+  const _Inicijal({required this.ime});
+
+  final String ime;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final slovo = ime.trim().isEmpty
+        ? '?'
+        : ime.trim().characters.first.toUpperCase();
+
+    return Text(
+      slovo,
+      style: theme.textTheme.headlineSmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
 }
 
 class _Kostur extends StatelessWidget {
@@ -234,10 +189,10 @@ class _Kostur extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
       itemCount: 3,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (_, _) => const SkeletonLoader(height: 72),
+      itemBuilder: (_, _) => const SkeletonLoader(height: 104),
     );
   }
 }

@@ -10,6 +10,7 @@ import 'package:client/src/features/booking/slot_step_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -36,31 +37,42 @@ void main() {
       await _pumpFlow(tester, repo: repo, ruta: ClientRoute.bookService.path);
 
       expect(find.byType(ServiceStepScreen), findsOneWidget);
+
+      // Tap oznaci red, ali **ne vodi dalje** — korak zakljucuje CTA na dnu
+      // (`SPEC.md`, Interactions). Automatski prelaz bi znacio da poredjenje dvije
+      // usluge trazi dva prolaza kroz flow.
       await tester.tap(find.text('Šišanje'));
+      await tester.pump();
+      expect(find.byType(ServiceStepScreen), findsOneWidget);
+
+      await tester.tap(find.text('Dalje'));
       await tester.pumpAndSettle();
 
       expect(find.byType(EmployeeStepScreen), findsOneWidget);
       // "Bilo ko od nas" stoji prvi jer `requireStaffChoice` nije uključen.
       expect(find.text('Bilo ko od nas'), findsOneWidget);
       await tester.tap(find.text('Amar'));
+      await tester.pump();
+      await tester.tap(find.text('Dalje'));
       await tester.pumpAndSettle();
 
       expect(find.byType(SlotStepScreen), findsOneWidget);
-      await tester.tap(find.text('14').first);
+      await tester.tap(find.text('14'));
       await tester.pump();
       await tester.pump();
 
       await tester.tap(find.text('09:00'));
       await tester.pump();
 
-      await tester.tap(find.text('Nastavi'));
+      await tester.tap(find.text('Dalje'));
       await tester.pumpAndSettle();
 
       expect(find.byType(DetailsStepScreen), findsOneWidget);
-      // Sažetak nosi ono što je izabrano u prethodna tri koraka — povratak nazad i
-      // naprijed ne smije izgubiti izbor.
-      expect(find.text('Šišanje'), findsOneWidget);
-      expect(find.text('Amar'), findsOneWidget);
+      // Kartica "Cuvamo vam" nosi ono sto je izabrano u prethodna tri koraka —
+      // povratak nazad i naprijed ne smije izgubiti izbor.
+      expect(find.text('Čuvamo vam'), findsOneWidget);
+      expect(find.textContaining('Šišanje'), findsWidgets);
+      expect(find.textContaining('Amar'), findsWidgets);
       expect(find.text('09:00'), findsOneWidget);
     });
 
@@ -170,13 +182,13 @@ void main() {
       expect(find.text('Tačno vrijeme vam dodjeljuje salon.'), findsOneWidget);
       expect(find.byType(TimeSlotChip), findsNothing);
 
-      await tester.tap(find.text('14').first);
+      await tester.tap(find.text('14'));
       await tester.pump();
 
       // Sam datum zaključuje korak — u `exact_slot` modu bi dugme još bilo sivo.
       final dugme = tester.widget<AppButton>(find.byType(AppButton));
       expect(dugme.onPressed, isNotNull);
-      expect(dugme.label, 'Nastavi');
+      expect(dugme.label, 'Dalje');
 
       // Nijedan poziv za slotovima: u ovom modu vremena se ni ne traže.
       verifyNever(
@@ -272,14 +284,12 @@ void main() {
         container.read(appRouterProvider).state.uri.path,
         ClientRoute.bookSuccess.path,
       );
-      expect(find.text('Zahtjev poslan'), findsOneWidget);
+      expect(find.text('ZAHTJEV JE POSLAN'), findsOneWidget);
+      expect(find.text('Čekamo potvrdu'), findsOneWidget);
       // `docs/01 §18`: termin nastaje kao `pending`. Lažno "potvrđeno" bi značilo da
       // korisnik dođe u salon koji ga ne očekuje.
       expect(find.text('Na čekanju'), findsOneWidget);
-
-      // Konfete traju 800 ms i drže tajmer; bez ovoga test padne na "A Timer is still
-      // pending" nakon što su sve asercije već prošle.
-      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(AppDuration.slow);
 
       container.dispose();
     });
@@ -428,6 +438,14 @@ Future<ProviderContainer> _pumpFlow(
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
   addTearDown(tester.binding.platformDispatcher.clearDefaultRouteNameTestValue);
+
+  // Visok viewport: korak sa terminima je kalendar **plus** dvije grupe slotova, sto je
+  // duze od podrazumijevanih 600x800. `ListView` gradi lijeno, pa bi sadrzaj ispod ruba
+  // bio "nije pronadjen" — greska u testu koja izgleda kao greska u ekranu.
+  tester.view
+    ..physicalSize = const Size(1200, 3000)
+    ..devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
 
   final container = ProviderContainer(
     overrides: [

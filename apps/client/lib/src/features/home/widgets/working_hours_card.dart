@@ -22,7 +22,7 @@ class WorkingHoursCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: scheme.outline),
       ),
       child: Column(

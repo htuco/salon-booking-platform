@@ -42,15 +42,15 @@ class ServiceCard extends StatelessWidget {
       selected: selected,
       child: Material(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.zero,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderRadius: BorderRadius.zero,
           child: AnimatedContainer(
             duration: AppDuration.fast,
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.md),
+              borderRadius: BorderRadius.zero,
               border: Border.all(
                 // Izabrana kartica se razlikuje i debljinom, ne samo bojom: razlika
                 // koju nosi samo boja nestaje za daltoniste i na jakom suncu.

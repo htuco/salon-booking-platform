@@ -8,11 +8,16 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../booking_flow_provider.dart';
 import '../booking_flow_state.dart';
 
-/// Zajednička kičma sva četiri koraka — nazad, "Korak N od 4", traka napretka, CTA.
+/// Zajednička kičma sva četiri koraka — `prototype/ui/screenshots/03…06`.
 ///
-/// Postoji da chrome koraka bude napisan jednom. Kad svaki ekran nosi svoj `AppBar` i svoj
-/// CTA, razlike se nakupe tiho: treći korak dobije dugme 4 px niže, četvrti izgubi
-/// `SafeArea` na dnu, i to se vidi tek na uređaju sa zarezom.
+/// Zaglavlje je **"← Nazad" lijevo, "Korak N od 4" desno**, pa traka od četiri segmenta
+/// preko pune širine. Nije `AppBar` sa centriranim naslovom: handoff traži riječ uz
+/// strelicu (na dodir je to veća meta od same ikone), a naslov koraka je **serif naslov u
+/// sadržaju**, ne u baru.
+///
+/// Postoji da chrome koraka bude napisan jednom. Kad svaki ekran nosi svoje zaglavlje,
+/// razlike se nakupe tiho: treći korak dobije traku 4 px niže, četvrti izgubi `SafeArea`
+/// na dnu, i to se vidi tek na uređaju sa zarezom.
 ///
 /// **Guard je ovdje, ne u routeru.** `go_router` redirect bi morao čitati stanje flowa iz
 /// providera pri svakoj promjeni rute i vraćati korisnika usred navigacije — a stanje je
@@ -30,14 +35,17 @@ class BookingStepScaffold extends ConsumerWidget {
   });
 
   final BookingStep step;
+
+  /// Serif naslov koraka. Dolazi iz `vertical.terms` ili `.arb`-a, nikad kao literal.
   final String title;
   final String? subtitle;
 
-  /// Sadržaj koraka. Skrolanje je na njemu — liste su različite dužine, a traka datuma
-  /// mora ostati fiksna dok se slotovi skrolaju.
+  /// Sadržaj koraka. Skrolanje je na njemu — liste su različite dužine, a kalendar mora
+  /// ostati na vrhu dok se slotovi skrolaju.
   final Widget child;
 
-  /// Dugme na dnu. `null` na koracima gdje izbor sam vodi dalje (usluga, radnik).
+  /// Dugme na dnu, van skrola. `SPEC.md`: CTA je zalijepljen za dno i onemogućen dok
+  /// izbor ne postoji.
   final Widget? cta;
 
   @override
@@ -51,82 +59,62 @@ class BookingStepScaffold extends ConsumerWidget {
     final dugme = cta;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => _nazad(context)),
-        title: Text(
-          l10n.bookingStepOf(step.index + 1, BookingStep.values.length),
-          style: theme.textTheme.labelLarge,
-        ),
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              0,
-              AppSpacing.xl,
-              AppSpacing.md,
-            ),
-            child: StepProgressBar(
-              totalSteps: BookingStep.values.length,
-              currentStep: step.index + 1,
-              semanticsLabel: l10n.bookingStepOf(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _Zaglavlje(
+              step: step,
+              backLabel: l10n.bookingBack,
+              stepLabel: l10n.bookingStepOf(
                 step.index + 1,
                 BookingStep.values.length,
               ),
+              onBack: () => _nazad(context),
             ),
-          ),
+            if (nedostaje != null)
+              Expanded(
+                child: EmptyState(
+                  message: l10n.bookingMissingStep,
+                  icon: Icons.arrow_back,
+                  actionLabel: l10n.bookingRestart,
+                  onAction: () => context.go(nedostaje.path),
+                ),
+              )
+            else ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.gutter,
+                  AppSpacing.xxl,
+                  AppSpacing.gutter,
+                  AppSpacing.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: theme.textTheme.displaySmall),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(subtitle!, style: theme.textTheme.bodyLarge),
+                    ],
+                  ],
+                ),
+              ),
+              Expanded(child: child),
+            ],
+            if (dugme != null && nedostaje == null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.gutter,
+                  AppSpacing.md,
+                  AppSpacing.gutter,
+                  AppSpacing.lg,
+                ),
+                child: dugme,
+              ),
+          ],
         ),
       ),
-      body: SafeArea(
-        child: nedostaje != null
-            ? EmptyState(
-                message: l10n.bookingMissingStep,
-                icon: Icons.arrow_back,
-                actionLabel: l10n.bookingRestart,
-                onAction: () => context.go(nedostaje.path),
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xl,
-                      AppSpacing.lg,
-                      AppSpacing.xl,
-                      AppSpacing.lg,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(title, style: theme.textTheme.headlineSmall),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            subtitle!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Expanded(child: child),
-                ],
-              ),
-      ),
-      bottomNavigationBar: dugme == null || nedostaje != null
-          ? null
-          : SafeArea(
-              minimum: const EdgeInsets.fromLTRB(
-                AppSpacing.xl,
-                0,
-                AppSpacing.xl,
-                AppSpacing.lg,
-              ),
-              child: dugme,
-            ),
     );
   }
 
@@ -144,17 +132,83 @@ class BookingStepScaffold extends ConsumerWidget {
 
   /// Nazad jedan korak, a sa prvog van flowa.
   ///
-  /// Izbor se **ne briše** pri povratku: `docs/02 §14` traži da korak zapamti izbor, a
+  /// Izbor se **ne briše** pri povratku: `SPEC.md` traži da korak zapamti izbor, a
   /// brisanje pri svakom povratku bi značilo da korisnik koji provjerava cijenu usluge
   /// izgubi već izabran termin.
   void _nazad(BuildContext context) {
     final prethodni = step.index == 0
         ? null
         : BookingStep.values[step.index - 1];
-    if (prethodni == null) {
-      context.go(ClientRoute.home.path);
-      return;
-    }
-    context.go(prethodni.path);
+    context.go(prethodni?.path ?? ClientRoute.home.path);
+  }
+}
+
+/// "← Nazad" lijevo, "Korak N od 4" desno, traka napretka ispod.
+class _Zaglavlje extends StatelessWidget {
+  const _Zaglavlje({
+    required this.step,
+    required this.backLabel,
+    required this.stepLabel,
+    required this.onBack,
+  });
+
+  final BookingStep step;
+  final String backLabel;
+  final String stepLabel;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.gutter,
+        AppSpacing.lg,
+        AppSpacing.gutter,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              // Strelica i riječ su jedna meta. Sama strelica je 22 px — ispod donje
+              // granice iz `docs/02 §14`, i promaši se u hodu.
+              InkWell(
+                onTap: onBack,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.md,
+                    horizontal: AppSpacing.xs,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.arrow_back, size: 22),
+                      const SizedBox(width: AppSpacing.md),
+                      Text(backLabel, style: theme.textTheme.titleSmall),
+                    ],
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Text(
+                stepLabel,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          StepProgressBar(
+            totalSteps: BookingStep.values.length,
+            currentStep: step.index + 1,
+            semanticsLabel: stepLabel,
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -61,3 +61,55 @@ List<LocalDate> daysFrom(LocalDate start, int count) {
   }
   return dani;
 }
+
+/// Kratke oznake dana za zaglavlje kalendara, od ponedjeljka: `P U S Č P S N`.
+///
+/// Prvo slovo punog imena, a ne zasebni `.arb` ključevi: "Ponedjeljak" → "P". Kad se ime
+/// dana promijeni (ili prevod stigne), zaglavlje ide s njim.
+///
+/// `substring`, ne `characters.first`: ovaj fajl namjerno ne uvozi Flutter (`characters`
+/// dolazi kroz njega), a sva slova bosanske abecede su jedna UTF-16 jedinica.
+List<String> weekdayInitials(AppLocalizations l10n) => [
+  for (var dan = DateTime.monday; dan <= DateTime.sunday; dan++)
+    weekdayLong(l10n, dan).substring(0, 1).toUpperCase(),
+];
+
+/// "Maj 2026" — zaglavlje kalendara.
+String formatMonth(AppLocalizations l10n, LocalDate date) =>
+    '${_mjesec(l10n, date.month)} ${date.year}';
+
+String _mjesec(AppLocalizations l10n, int month) => switch (month) {
+  DateTime.january => l10n.monthJanuary,
+  DateTime.february => l10n.monthFebruary,
+  DateTime.march => l10n.monthMarch,
+  DateTime.april => l10n.monthApril,
+  DateTime.may => l10n.monthMay,
+  DateTime.june => l10n.monthJune,
+  DateTime.july => l10n.monthJuly,
+  DateTime.august => l10n.monthAugust,
+  DateTime.september => l10n.monthSeptember,
+  DateTime.october => l10n.monthOctober,
+  DateTime.november => l10n.monthNovember,
+  _ => l10n.monthDecember,
+};
+
+/// Prvi dan mjeseca pomjerenog za [offset] mjeseci od [start].
+///
+/// `DateTime(y, m + offset, 1)` sam normalizuje prelaz godine — decembar + 1 je januar
+/// sljedeće godine, bez ijednog uslova.
+LocalDate monthOffsetFrom(LocalDate start, int offset) {
+  final prvi = DateTime(start.year, start.month + offset);
+  return LocalDate(prvi.year, prvi.month, 1);
+}
+
+/// Svi dani mjeseca kojem [anyDayInMonth] pripada.
+///
+/// Broj dana se ne nabraja tabelom: `DateTime(y, m + 1, 0)` je zadnji dan tekućeg mjeseca,
+/// pa prijestupna godina izlazi sama.
+List<LocalDate> daysOfMonth(LocalDate anyDayInMonth) {
+  final zadnji = DateTime(anyDayInMonth.year, anyDayInMonth.month + 1, 0).day;
+  return [
+    for (var dan = 1; dan <= zadnji; dan++)
+      LocalDate(anyDayInMonth.year, anyDayInMonth.month, dan),
+  ];
+}

@@ -203,3 +203,67 @@ posegnuo za `Supabase.instance`. Widget testovi su ga override-ovali i ništa ni
   Kandidat za prvi sljedeći ekran koji ima unos.
 - **Konfete na svijetloj paleti su jedva vidljive** (roze na bijelom). Kozmetika, ne greška.
 - **CI ne može potvrditi ništa od ovoga** dok naplata na `htuco` nalogu blokira workflowove.
+
+---
+
+## Status — redizajn po `prototype/ui/` (2026-09-12)
+
+Prvi prolaz je ekrane pisao po **tekstu** iz `SPEC.md`; ovaj ih je prepisao po **slikama** iz
+`prototype/ui/screenshots/`. Logika, provideri, rute, `409` putanja i guard su ostali netaknuti —
+mijenjao se oblik.
+
+### Šta je promijenjeno
+
+- **Tokeni sistemski u `core_ui`** (odluka: sistemski, ne samo booking): `AppRadius.none` je jedina
+  vrijednost — `SPEC.md` kaže "radius 0 everywhere; square corners are the system". Klasa sa jednom
+  konstantom je namjerna: da su `sm`/`md`/`lg` ostale sa nulom, prva sljedeća komponenta bi
+  "privremeno" vratila 8. Uz to gutter 22, CTA 60, slot 58, ćelija kalendara 44, traka koraka 5.
+- **Fontovi pakovani** — DM Serif Display + Archivo u `apps/client/assets/fonts/`, sa `OFL-*.txt`.
+  Archivo u `google/fonts` postoji **samo kao varijabilni** font; statičkih rezova nema, pa težine
+  idu kroz `FontVariation('wght', …)`. Sam `fontWeight` na varijabilnom fontu zna ostati bez efekta.
+- **Nove komponente**: `PhotoFrame`, `SelectableRow`, `CalendarMonth`, `SpecCard`. `TimeSlotChip` je
+  uglat i invertovan kad je izabran. **`DateStrip` je obrisan.**
+- **Svih pet ekrana prepisano**, plus `formatDurationLong` ("2 sata i 30 minuta" — bosanski broji u
+  tri oblika, pa "2 minuta" nije opcija).
+
+### Tri mjesta gdje je prototip oborio raniji kod
+
+1. **Korak 3 je mjesečni kalendar, ne traka datuma.** `docs/02 §16` traži `DateStrip`;
+   `05-korak3-vrijeme.png` crta mrežu 7×N sa ‹ › navigacijom. `DateStrip` je bio pogrešna
+   komponenta i obrisan je.
+2. **Korak 4 je ekran prijave, ne sažetak sa napomenom.** Prototip nema polje za napomenu; ima
+   karticu "Čuvamo vam" i tri dugmeta (Apple / Google / email). Polje za napomenu je uklonjeno.
+   Time je razriješena i ranija zabuna: SPEC tabela spominje "phone sign-in", ali sam ekran telefon
+   ne traži — što se slaže sa `docs/06 §3.1`.
+3. **Success nema konfete.** DoD ih traži "kao u prototipu", a `07-zahtjev-poslan.png` ih nema.
+   `confetti` je izbačen iz `pubspec.yaml`; slavlje nad zahtjevom koji salon još nije potvrdio je
+   obećanje koje ekran ne smije dati.
+
+### Svjesne razlike od handoffa
+
+Obje zbog multi-tenanta, obje zapisane u doc komentaru ekrana:
+
+- Naslov koraka 1 je `vertical.terms.servicePlural`, ne "Izaberite uslugu" — akuzativ se razlikuje
+  po vertikali, a `VerticalTerms` nosi samo nominativ.
+- Success naslov je "Čekamo potvrdu", ne "Salon vas je vidio" — ime djelatnosti mijenja rod
+  ("Ordinacija vas je vidjela").
+
+### Dokazano
+
+`melos run analyze` čisto, `dart format` 0 promjena, **`melos run test` — 215 PASS**.
+Vizuelno u Chromiumu na **402×874**, širini handoffa, oba tenanta:
+[`docs/screenshots/task-11-*`](../../docs/screenshots/).
+
+Beauty tenant je usput otkrio grešku u demo podacima: success ekran je pokazivao **prazan red** za
+uslugu, jer je demo termin nosio barberov `serviceId`, kojeg u beauty katalogu nema.
+
+### Ostalo za sljedećeg
+
+- **`book(...)` protiv prave baze i `409` uživo** — nepromijenjeno od prvog prolaza (Sprint 2).
+- **Fotografija nema nijedne.** `PhotoFrame` crta praznu površinu sa granicom; svih 45 slotova iz
+  handoffa čeka prave slike (`prototype/ui/README.md` §Fotografije).
+- **Ikone su Material, ne Lucide.** Handoff traži Lucide stroke-width 1.5; razlika se vidi na
+  strelicama i statusnim ikonama.
+- **"Dodaj u kalendar telefona" je neaktivno dugme** — kalendar uređaja ide uz "Moji termini".
+- **Home ekran nije prepravljen po `01-pocetna.png`.** Naslijedio je nove tokene (uglove, razmake,
+  tipografiju), ali njegov raspored je i dalje iz taska 10.

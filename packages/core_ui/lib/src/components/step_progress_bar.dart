@@ -43,19 +43,21 @@ class StepProgressBar extends StatelessWidget {
       child: Row(
         children: [
           for (var korak = 1; korak <= totalSteps; korak++) ...[
-            if (korak > 1) const SizedBox(width: AppSpacing.xs),
+            if (korak > 1) const SizedBox(width: AppSize.stepBar),
             Expanded(
               child: AnimatedContainer(
                 duration: AppDuration.fast,
-                height: 4,
+                height: AppSize.stepBar,
                 decoration: BoxDecoration(
                   color: korak <= trenutni
-                      ? scheme.primary
+                      // Pređeni korak je u boji teksta, ne brenda: traka stoji uz CTA u
+                      // brand boji, pa bi dvije brand površine na istom ekranu takmičile.
+                      ? scheme.onSurface
                       // Prošli i budući koraci se razlikuju bojom brenda i neutralnom
                       // površinom, ne jačinom iste boje: `withOpacity` na zlatnoj i na
                       // roze daje dva različita kontrasta prema pozadini.
                       : scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  borderRadius: BorderRadius.zero,
                 ),
               ),
             ),

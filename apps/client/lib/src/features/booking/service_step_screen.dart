@@ -12,14 +12,20 @@ import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
 import 'widgets/booking_step_scaffold.dart';
 
-/// Korak 1 — izbor usluge (`prototype/ui/SPEC.md` 5c).
+/// Korak 1 — izbor usluge (`prototype/ui/screenshots/03-korak1-usluga.png`).
+///
+/// **Izbor ne vodi odmah dalje.** Tap označava red, a korak se zaključuje dugmetom
+/// "Dalje" na dnu — `SPEC.md`, Interactions: "CTA is disabled until the step's required
+/// choice exists". Automatski prelaz bi značio da korisnik koji je pogriješio red mora
+/// nazad da se ispravi, i da poređenje dvije usluge traži dva prolaza kroz flow.
 ///
 /// **Čita `?serviceId=` iz rute.** Home ekran vodi na `/book/service?serviceId=<id>` kad
 /// se tapne kartica usluge (task 10); bez čitanja tog parametra preselekcija tiho ne radi
 /// i korisnik bira istu uslugu dvaput, a ekran pri tome izgleda ispravno.
 ///
-/// Preselekcija se radi jednom, u `initState`, a ne u `build`: mijenjanje providera tokom
-/// gradnje widgeta je greška koju Riverpod prijavi tek u runtime-u.
+/// Naslov je `vertical.terms.servicePlural`, a ne prototipovo "Izaberite uslugu": akuzativ
+/// se razlikuje po vertikali ("uslugu", "tretman", "pregled"), a `VerticalTerms` danas nosi
+/// samo nominativ. Množina je jedini oblik koji je tačan u sve tri vertikale.
 class ServiceStepScreen extends ConsumerStatefulWidget {
   const ServiceStepScreen({this.preselectedServiceId, super.key});
 
@@ -56,7 +62,16 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
     return BookingStepScaffold(
       step: BookingStep.service,
       title: vertical.terms.servicePlural,
-      subtitle: l10n.bookingPickOne,
+      subtitle: l10n.bookingPickOneHint,
+      // Labela ostaje "Dalje" i kad je dugme onemoguceno — handoff mijenja tekst samo na
+      // koraku sa terminima, gdje izbor nije ocigledan iz sadrzaja ekrana. Ovdje bi
+      // promjena teksta samo ponovila naslov.
+      cta: AppButton(
+        label: l10n.bookingNext,
+        onPressed: izabrana == null
+            ? null
+            : () => context.go(BookingStep.employee.path),
+      ),
       child: switch (services) {
         AsyncData(:final value) when value.isEmpty => EmptyState(
           message: l10n.bookingEmptyList,
@@ -66,15 +81,14 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
           services: value,
           izabranaId: izabrana,
           prikaziCijene: vertical.features.prices,
-          onIzbor: (service) {
-            ref.read(bookingFlowProvider.notifier).chooseService(service.id);
-            context.go(BookingStep.employee.path);
-          },
+          onIzbor: (service) =>
+              ref.read(bookingFlowProvider.notifier).chooseService(service.id),
         ),
-        AsyncError() => _Greska(
+        AsyncError() => EmptyState(
           message: l10n.bookingServicesUnavailable,
-          retryLabel: l10n.retry,
-          onRetry: () => ref.invalidate(servicesProvider),
+          icon: Icons.cloud_off,
+          actionLabel: l10n.retry,
+          onAction: () => ref.invalidate(servicesProvider),
         ),
         _ => const _Kostur(),
       },
@@ -99,20 +113,19 @@ class _Lista extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
+        AppSpacing.gutter,
         0,
-        AppSpacing.xl,
+        AppSpacing.gutter,
         AppSpacing.xxl,
       ),
       itemCount: services.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         final service = services[index];
-        return ServiceCard(
-          name: service.name,
-          duration: formatDuration(service.durationMinutes),
-          price: prikaziCijene ? formatPrice(service.price) : null,
-          description: service.description.isEmpty ? null : service.description,
+        return SelectableRow(
+          title: service.name,
+          subtitle: formatDurationLong(service.durationMinutes),
+          trailingText: prikaziCijene ? formatPrice(service.price) : null,
           selected: service.id == izabranaId,
           onTap: () => onIzbor(service),
         );
@@ -127,32 +140,10 @@ class _Kostur extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
       itemCount: 4,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (_, _) => SkeletonLoader.card(),
-    );
-  }
-}
-
-class _Greska extends StatelessWidget {
-  const _Greska({
-    required this.message,
-    required this.retryLabel,
-    required this.onRetry,
-  });
-
-  final String message;
-  final String retryLabel;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return EmptyState(
-      message: message,
-      icon: Icons.cloud_off,
-      actionLabel: retryLabel,
-      onAction: onRetry,
+      itemBuilder: (_, _) => const SkeletonLoader(height: 104),
     );
   }
 }

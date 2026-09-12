@@ -60,18 +60,16 @@ class _DemoEkran extends StatelessWidget {
           semanticsLabel: 'Korak 2 od 4',
         ),
         const SizedBox(height: AppSpacing.lg),
-        DateStrip(
+        CalendarMonth(
+          monthLabel: 'Septembar 2026',
+          weekdayLabels: const ['P', 'U', 'S', 'Č', 'P', 'S', 'N'],
+          leadingEmptyCells: 0,
           selectedId: '2026-09-15',
           onSelect: (_) {},
           days: const [
-            DateStripDay(id: '2026-09-14', weekdayLabel: 'Pon', dayLabel: '14'),
-            DateStripDay(id: '2026-09-15', weekdayLabel: 'Uto', dayLabel: '15'),
-            DateStripDay(
-              id: '2026-09-16',
-              weekdayLabel: 'Sri',
-              dayLabel: '16',
-              available: false,
-            ),
+            CalendarDay(id: '2026-09-14', label: '14'),
+            CalendarDay(id: '2026-09-15', label: '15'),
+            CalendarDay(id: '2026-09-16', label: '16', available: false),
           ],
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -231,11 +229,11 @@ void main() {
     expect(brojPoziva, 0);
   });
 
-  testWidgets('DateStrip: pun dan ostaje vidljiv, ali se ne moze tapnuti', (
+  testWidgets('CalendarMonth: pun dan ostaje vidljiv, ali se ne moze tapnuti', (
     tester,
   ) async {
-    // Izbacivanje punih dana pomjeri raspored pod prstom i ostavi korisnika bez
-    // odgovora na pitanje "a sta je sa srijedom".
+    // Izbacivanje punih dana razbilo bi mrezu sedmice i korisnik bi izgubio
+    // orijentaciju u mjesecu.
     final tapnuti = <String>[];
     await tester.pumpWidget(
       MaterialApp(
@@ -245,20 +243,14 @@ void main() {
           themeName: 'modern_barber',
         ),
         home: Scaffold(
-          body: DateStrip(
+          body: CalendarMonth(
+            monthLabel: 'Septembar 2026',
+            weekdayLabels: const ['P', 'U', 'S', 'Č', 'P', 'S', 'N'],
+            leadingEmptyCells: 0,
             onSelect: tapnuti.add,
             days: const [
-              DateStripDay(
-                id: '2026-09-14',
-                weekdayLabel: 'Pon',
-                dayLabel: '14',
-              ),
-              DateStripDay(
-                id: '2026-09-15',
-                weekdayLabel: 'Uto',
-                dayLabel: '15',
-                available: false,
-              ),
+              CalendarDay(id: '2026-09-14', label: '14'),
+              CalendarDay(id: '2026-09-15', label: '15', available: false),
             ],
           ),
         ),

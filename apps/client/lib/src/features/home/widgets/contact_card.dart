@@ -45,7 +45,7 @@ class ContactRow extends StatelessWidget {
       label: label,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.zero,
         // Red kontakta mora ostati dodirna meta od 44 px i kad je tekst jednoredan
         // (`docs/02 §14`).
         child: ConstrainedBox(
@@ -71,7 +71,7 @@ class ContactCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: scheme.outline),
       ),
       child: Column(children: children),

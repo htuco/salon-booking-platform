@@ -73,7 +73,9 @@ Future<void> main() async {
         // Success ekran čita zadnji termin. Slanje u demou ne postoji — `book(...)`
         // traži prijavljenog korisnika (Sprint 2) — pa se `/book/success` otvara
         // direktno preko URL-a, sa ovim terminom.
-        lastBookingProvider.overrideWith(_DemoZadnjiTermin.new),
+        lastBookingProvider.overrideWith(
+          () => _DemoZadnjiTermin(demo.services.first.id),
+        ),
       ],
       child: const SalonClientApp(),
     ),
@@ -120,11 +122,17 @@ List<LocalDate> _demoDatumi(DateRangeQuery query) {
 
 /// Zadnji termin za demo success ekran — `pending`, kako ga baza i pravi.
 class _DemoZadnjiTermin extends LastBookingNotifier {
+  _DemoZadnjiTermin(this.serviceId);
+
+  /// Usluga **ovog** tenanta. Fiksni id je ranije znacio da beauty success ekran
+  /// prikaze prazan red: termin je nosio barberovu uslugu, koje u beauty katalogu nema.
+  final String serviceId;
+
   @override
   Appointment? build() => Appointment(
     id: '40000000-0000-4000-8000-000000000001',
     salonId: ref.watch(currentSalonIdProvider),
-    serviceId: '10000000-0000-4000-8000-000000000001',
+    serviceId: serviceId,
     customerId: '30000000-0000-4000-8000-000000000001',
     customerName: 'Demo',
     date: _demoDatum(),
