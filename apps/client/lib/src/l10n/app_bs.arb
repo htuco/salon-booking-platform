@@ -97,6 +97,156 @@
     "description": "Greška na home ekranu kad podaci salona ne stignu — ide uz retry dugme."
   },
 
+  "dayShortMonday": "Pon",
+  "@dayShortMonday": { "description": "Kratko ime dana u traci datuma (DateStrip)." },
+
+  "dayShortTuesday": "Uto",
+  "@dayShortTuesday": { "description": "Kratko ime dana u traci datuma." },
+
+  "dayShortWednesday": "Sri",
+  "@dayShortWednesday": { "description": "Kratko ime dana u traci datuma." },
+
+  "dayShortThursday": "Čet",
+  "@dayShortThursday": { "description": "Kratko ime dana u traci datuma." },
+
+  "dayShortFriday": "Pet",
+  "@dayShortFriday": { "description": "Kratko ime dana u traci datuma." },
+
+  "dayShortSaturday": "Sub",
+  "@dayShortSaturday": { "description": "Kratko ime dana u traci datuma." },
+
+  "dayShortSunday": "Ned",
+  "@dayShortSunday": { "description": "Kratko ime dana u traci datuma." },
+
+  "bookingStepOf": "Korak {current} od {total}",
+  "@bookingStepOf": {
+    "description": "Oznaka koraka iznad trake napretka u booking flowu (prototype/ui/SPEC.md 5c-5f).",
+    "placeholders": {
+      "current": { "type": "int", "example": "2" },
+      "total": { "type": "int", "example": "4" }
+    }
+  },
+
+  "bookingPickOne": "Izaberite jednu stavku",
+  "@bookingPickOne": {
+    "description": "Podnaslov prvog koraka. Ne imenuje uslugu — ime dolazi iz vertical.terms.servicePlural u naslovu, jer se padez razlikuje po vertikali."
+  },
+
+  "bookingPickStaff": "Kod koga dolazite?",
+  "@bookingPickStaff": {
+    "description": "Podnaslov drugog koraka (SPEC 5d)."
+  },
+
+  "bookingAnyStaff": "Bilo ko od nas",
+  "@bookingAnyStaff": {
+    "description": "Izbor bez radnika, prvi u listi kad vertikala ne trazi izbor osoblja."
+  },
+
+  "bookingAnyStaffHint": "Dodijelit ćemo vam prvog slobodnog",
+  "@bookingAnyStaffHint": {
+    "description": "Objasnjenje uz 'Bilo ko od nas' — radnika dodjeljuje book_appointment pri re-validaciji."
+  },
+
+  "bookingPickTime": "Izaberite vrijeme",
+  "@bookingPickTime": {
+    "description": "Naslov treceg koraka (SPEC 5e) i labela CTA dugmeta dok vrijeme nije izabrano."
+  },
+
+  "bookingPickDate": "Izaberite dan",
+  "@bookingPickDate": {
+    "description": "Naslov treceg koraka u date_only modu — klijent bira samo datum (docs/05 §4.1)."
+  },
+
+  "bookingDateOnlyNote": "Tačno vrijeme vam dodjeljuje salon.",
+  "@bookingDateOnlyNote": {
+    "description": "Objasnjenje u date_only modu, da izostanak izbora vremena ne izgleda kao greska."
+  },
+
+  "bookingEmptyList": "Ovdje trenutno nema nijedne stavke.",
+  "@bookingEmptyList": {
+    "description": "Prazna lista usluga ili radnika u booking flowu — podaci su stigli, ali ih nema. Razlicito od greske."
+  },
+
+  "bookingDayFull": "Ovaj dan je popunjen.",
+  "@bookingDayFull": {
+    "description": "Prazno stanje liste slotova. Ne imenuje termin — vertikale ga zovu razlicito, a genitiv mnozine se ne da sastaviti iz vertical.terms."
+  },
+
+  "bookingNoDates": "Nema slobodnih dana u narednom periodu.",
+  "@bookingNoDates": {
+    "description": "Prazno stanje trake datuma — nijedan dan u rasponu nema slobodan termin."
+  },
+
+  "bookingContinue": "Nastavi",
+  "@bookingContinue": {
+    "description": "CTA treceg koraka kad je termin izabran. Prije izbora dugme nosi bookingPickTime i onemoguceno je (prototype/ui/SPEC.md, Interactions)."
+  },
+
+  "bookingSummaryTitle": "Pregled i potvrda",
+  "@bookingSummaryTitle": {
+    "description": "Naslov cetvrtog koraka (SPEC 5f)."
+  },
+
+  "bookingNoteOptional": "Opcionalno",
+  "@bookingNoteOptional": {
+    "description": "Oznaka uz polje za napomenu; labela polja dolazi iz vertical.terms.noteLabel."
+  },
+
+  "bookingConflict": "Ovaj termin je upravo zauzet. Izaberite drugi.",
+  "@bookingConflict": {
+    "description": "409 iz book_appointment — slot je otisao izmedu prikaza i potvrde. Ekran uz ovu poruku vraca korisnika na osvjezenu listu."
+  },
+
+  "bookingLoginRequired": "Prijavite se da pošaljete zahtjev.",
+  "@bookingLoginRequired": {
+    "description": "Cetvrti korak bez prijavljenog korisnika — login se trazi tek ovdje (docs/06 §1.1)."
+  },
+
+  "bookingLoginCta": "Prijavi se i pošalji zahtjev",
+  "@bookingLoginCta": {
+    "description": "CTA cetvrtog koraka dok korisnik nije prijavljen."
+  },
+
+  "bookingSubmit": "Pošalji zahtjev",
+  "@bookingSubmit": {
+    "description": "CTA koji zove book_appointment. Namjerno 'zahtjev', ne 'rezervisi' — termin nastaje kao pending (docs/01 §18)."
+  },
+
+  "bookingSuccessTitle": "Zahtjev poslan",
+  "@bookingSuccessTitle": {
+    "description": "Naslov success ekrana (SPEC 5g). Ne 'Termin potvrden' — potvrda je na salonu."
+  },
+
+  "bookingSuccessBody": "Salon još nije potvrdio termin. Obavijestit ćemo vas čim odgovori.",
+  "@bookingSuccessBody": {
+    "description": "Objasnjenje pending statusa na success ekranu."
+  },
+
+  "bookingStatusPending": "Na čekanju",
+  "@bookingStatusPending": {
+    "description": "Status badge na success ekranu i u listi termina."
+  },
+
+  "bookingBackHome": "Nazad na početnu",
+  "@bookingBackHome": {
+    "description": "Izlaz sa success ekrana; usput cisti stanje flowa."
+  },
+
+  "bookingRestart": "Krenite ispočetka",
+  "@bookingRestart": {
+    "description": "Akcija u praznom stanju kad izbor iz prethodnog koraka vise ne vazi."
+  },
+
+  "bookingMissingStep": "Nedostaje izbor iz prethodnog koraka.",
+  "@bookingMissingStep": {
+    "description": "Guard kad korisnik otvori /book/slot deep linkom bez izabrane usluge."
+  },
+
+  "bookingServicesUnavailable": "Lista trenutno nije dostupna.",
+  "@bookingServicesUnavailable": {
+    "description": "Greska pri ucitavanju usluga ili radnika u booking flowu — ide uz retry."
+  },
+
   "dayMondayFriday": "Ponedjeljak – Petak",
   "@dayMondayFriday": {
     "description": "Sažeti raspon dana kad su ponedjeljak do petak isti."

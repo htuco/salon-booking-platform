@@ -95,6 +95,19 @@ class BookingFlowState {
     note: note,
   );
 
+  /// Briše **samo izabrano vrijeme** — usluga, radnik, dan i napomena ostaju.
+  ///
+  /// Postoji zbog `409`: kad slot ode između prikaza i potvrde, zauzeto je vrijeme, a ne
+  /// dan. `clearFrom(BookingStep.slot)` bi oborio i datum i napomenu, pa bi korisnik
+  /// nakon tuđe brže ruke izgubio i ono što je i dalje važeće.
+  BookingFlowState withoutStartTime() => BookingFlowState(
+    serviceId: serviceId,
+    employeeId: employeeId,
+    employeeChosen: employeeChosen,
+    date: date,
+    note: note,
+  );
+
   /// Briše izbor na zadanom koraku i na svim koracima nakon njega.
   ///
   /// Promjena usluge mora oboriti i radnika i termin: druga usluga ima drugo trajanje i

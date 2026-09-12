@@ -64,3 +64,6 @@ apps/*/lib/src/l10n/generated/
 # Izuzetak: tenants.g.dart NIJE codegen iz anotacija nego izlaz iz tool/gen_flavors.dart
 # nad tenants/*/tenant.yaml, i CI ga provjerava sa `--check`. Mora ostati u gitu.
 !apps/client/lib/src/generated/tenants.g.dart
+
+# Izlaz playwright MCP servera (snapshotovi, screenshotovi) — alat, ne repo.
+.playwright-mcp/

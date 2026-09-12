@@ -111,24 +111,32 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 > i tap na uslugu vodi na `/book/service?serviceId=<id>`, koji task 11 mora pročitati, inače
 > preselekcija usluge tiho ne radi. Detalji:
 > [10-client-home-runtime-branding.md](10-client-home-runtime-branding.md#status-2026-09-11--✅-gotovo).
-> **Task 11 je u toku** (🟡) — **ne-UI sloj je gotov, ekrani nisu.** `BookingRepository` je prvi
-> repozitorij koji piše u bazu: sve tri metode na `rpc`, nijedna na `from(...)`, jer se slobodni
-> termini ne mogu pročitati bez gledanja tuđih termina, a rezervacija mora re-validirati slot u
-> istoj transakciji. Uz njega `AvailableSlot` u `core_domain` i `BookingFlowState` u klijentu —
-> jedan `autoDispose` provider za sva četiri koraka, **bez keširane liste slotova**. Dokazano
-> lokalno: 205 testova PASS (bilo 165), analiza čista; **CI još nije potvrdio**.
+> **Task 11 je u toku** (🟡) — **ekrani su gotovi, ostaje dokaz protiv prave baze.** Nakon ne-UI
+> sloja (PR #17) stigao je i UI: pet ekrana pod `/book/*`, `BookingStepScaffold` kao zajednička
+> kičma koraka, `BookingSubmitNotifier` za slanje, i `DateStrip`/`StepProgressBar` u `core_ui`.
+> Grana `feat/booking-flow-ekrani`, PR [#18](https://github.com/htuco/salon-booking-platform/pull/18).
 >
-> **Nađena greška koju bi ekran otkrio tek u produkciji:** `book_appointment` diže konflikt sa
-> `errcode = 'PT409'`, a `mapError` je mapirao samo `409`/`23P01`/`23505`. Postgres klasu `PT`
-> prevodi u HTTP **status**, ali `PostgrestException.code` zadržava `PT409` — konflikt bi ispao
-> `ServerError` i `switch` nad `sealed ApiError` to ne bi prijavio, jer je `ConflictError`
-> obrađen, samo se nikad ne bi desio.
+> Dokazano lokalno: **215 testova PASS** (bilo 205), analiza i format čisti, `gen_flavors --check`
+> ažuran, i `./tool/verify_clean.sh` prolazi **iz čistog klona** — dokaz koji je ranije davao CI.
+> Uz to **vizuelni dokaz u Chromiumu za oba tenanta**, svih pet ekrana:
+> [`docs/screenshots/task-11-*`](../../docs/screenshots/). Isti kod, drugi `SALON_ID` — zlatna
+> tamna naspram roze svijetle, i "Usluga/Barber" naspram "Tretman/Stilistica".
 >
-> Ostaje za sljedećeg: **sva četiri ekrana + success**, `DateStrip` i `StepProgressBar` u
-> `core_ui`, `flutter_animate`/`confetti` u `pubspec.yaml`. Uz to **`book(...)` nije nijednom
-> stvarno pozvan** (traži `authenticated` rolu i `customerId` koji nema odakle doći do Sprinta 2),
-> a **409 putanja nije izazvana uživo** — dokazano je mapiranje, ne ponašanje ekrana. Detalji:
-> [11-booking-flow.md](11-booking-flow.md#status--djelimično-ne-ui-sloj-gotov).
+> **Screenshot je i ovaj put našao grešku koju je zelena suita propustila** (treći put, nakon 07 i
+> 10): korak 2 je u demo buildu prikazivao "Lista trenutno nije dostupna" umjesto radnika, jer
+> `demo_main.dart` nije override-ovao `employeeServiceLinksProvider` pa je provider posegnuo za
+> `Supabase.instance`.
+>
+> **Odluka koju ne treba ponovo otvarati:** korak 4 nema polje za telefon, iako ga
+> `prototype/ui/SPEC.md` 5f crta — `docs/06 §3.1` je izričit. Gdje se SPEC i docs ne slažu oko
+> *flowa*, docs je jači; SPEC ostaje izvor istine za oblik.
+>
+> Ostaje za sljedećeg: **`book(...)` nije nijednom pozvan protiv prave baze** i **`409` nije
+> izazvan uživo** (dva zahtjeva na isti slot) — oboje traži Supabase vrijednosti i prijavljenog
+> korisnika, a `book_appointment` je grantovan samo roli `authenticated`. App **jeste** pokrenut na
+> iOS simulatoru (home i prvi korak), ali kroz flow se tamo nije kliktalo i na fizičkom uređaju nije
+> pokrenuto ništa. Detalji:
+> [11-booking-flow.md](11-booking-flow.md#status--ui-sloj-2026-09-12).
 
 ## Redoslijed koji nije očigledan
 

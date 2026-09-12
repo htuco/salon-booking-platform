@@ -18,10 +18,12 @@
 library;
 
 export 'src/components/app_button.dart';
+export 'src/components/date_strip.dart';
 export 'src/components/empty_state.dart';
 export 'src/components/service_card.dart';
 export 'src/components/skeleton_loader.dart';
 export 'src/components/status_badge.dart';
+export 'src/components/step_progress_bar.dart';
 export 'src/components/time_slot_chip.dart';
 export 'src/theme/app_theme.dart';
 export 'src/theme/contrast.dart';

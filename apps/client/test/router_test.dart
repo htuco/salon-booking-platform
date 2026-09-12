@@ -1,6 +1,7 @@
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
 import 'package:client/src/core/router/app_router.dart';
+import 'package:client/src/features/booking/slot_step_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -105,7 +106,10 @@ void main() {
         ClientRoute.bookSlot.path,
         reason: 'deep link mora preziviti podizanje app-e',
       );
-      expect(find.text(ClientRoute.bookSlot.title), findsNWidgets(2));
+      // Od taska 11 `/book/slot` ima pravo tijelo, pa se vise ne trazi naslov
+      // placeholdera. Flow je pri deep linku prazan, pa ekran ispravno prikaze
+      // prazno stanje umjesto liste termina za uslugu koja nije izabrana.
+      expect(find.byType(SlotStepScreen), findsOneWidget);
     });
   });
 
@@ -130,7 +134,7 @@ void main() {
         ClientRoute.bookSlot.path,
         reason: 'URL prati ekran, ne samo widget stablo',
       );
-      expect(find.text(ClientRoute.bookSlot.title), findsNWidgets(2));
+      expect(find.byType(SlotStepScreen), findsOneWidget);
     });
 
     testWidgets('ruta sa parametrom zadrzava konkretan id u URL-u', (

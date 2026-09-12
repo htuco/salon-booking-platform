@@ -11,16 +11,16 @@
 Klijent od izbora usluge do potvrđenog zahtjeva, bez prijave do zadnjeg koraka, i **bez ijedne linije availability logike u Dartu**.
 
 ## Definicija gotovog
-- [ ] Četiri koraka po [01 §12](../../docs/01-mvp-spec.md#12-screens): `/book/service` → `/book/employee` → `/book/slot` → `/book/details`, pa `/book/success`
-- [ ] Izbor radnika nudi i **"bilo koji"** kad `requireStaffChoice` nije uključen za vertikalu
-- [ ] Slotovi dolaze **isključivo** iz backend availability funkcije (task 05). Nula filtriranja, sabiranja buffera ili računanja trajanja u aplikaciji — provjereno pretragom, ne pretpostavkom
-- [ ] `bookingGranularity: date_only` podržan: klijent bira samo datum, salon dodjeljuje vrijeme ([05 §4](../../docs/05-vertical-packs.md))
-- [ ] Stanje flowa živi u jednom Riverpod provideru; povratak nazad ne gubi izbor, a "restart" ga čisti
-- [ ] Slanje ide kroz **validiranu RPC/Edge funkciju**, nikad direktan `insert` sa klijenta
-- [ ] **`409 Conflict` je prvoklasno stanje**, ne generička greška: poruka "Ovaj termin je upravo zauzet. Izaberite drugi." i automatski povratak na osvježenu listu slotova
-- [ ] Termin nastaje kao `pending`; success ekran to jasno kaže — zahtjev poslan, salon potvrđuje ([01 §18](../../docs/01-mvp-spec.md#18-ključne-odluke))
-- [ ] Svi tekstovi kroz `vertical.terms.*` i `.arb`; success ekran koristi `flutter_animate`/`confetti` kao u prototipu
-- [ ] Widget testovi: prelaz kroz korake, `409` putanja, `date_only` grana, prazan dan (nema slobodnih termina)
+- [x] Četiri koraka po [01 §12](../../docs/01-mvp-spec.md#12-screens): `/book/service` → `/book/employee` → `/book/slot` → `/book/details`, pa `/book/success`
+- [x] Izbor radnika nudi i **"bilo koji"** kad `requireStaffChoice` nije uključen za vertikalu
+- [x] Slotovi dolaze **isključivo** iz backend availability funkcije (task 05). Nula filtriranja, sabiranja buffera ili računanja trajanja u aplikaciji — provjereno pretragom, ne pretpostavkom
+- [x] `bookingGranularity: date_only` podržan: klijent bira samo datum, salon dodjeljuje vrijeme ([05 §4](../../docs/05-vertical-packs.md))
+- [x] Stanje flowa živi u jednom Riverpod provideru; povratak nazad ne gubi izbor, a "restart" ga čisti
+- [~] Slanje ide kroz **validiranu RPC/Edge funkciju**, nikad direktan `insert` sa klijenta — put je takav u kodu i pokriven testom, ali `book_appointment` nije nijednom pozvan protiv prave baze
+- [~] **`409 Conflict` je prvoklasno stanje**, ne generička greška: poruka "Ovaj termin je upravo zauzet. Izaberite drugi." i automatski povratak na osvježenu listu slotova — dokazano testom ekrana, **nije izazvano uživo** (korak 4 iz Koraka)
+- [x] Termin nastaje kao `pending`; success ekran to jasno kaže — zahtjev poslan, salon potvrđuje ([01 §18](../../docs/01-mvp-spec.md#18-ključne-odluke))
+- [x] Svi tekstovi kroz `vertical.terms.*` i `.arb`; success ekran koristi `flutter_animate`/`confetti` kao u prototipu
+- [x] Widget testovi: prelaz kroz korake, `409` putanja, `date_only` grana, prazan dan (nema slobodnih termina)
 
 ## Koraci
 1. Router + provider stanja flowa prije prvog ekrana — inače svaki korak nosi svoje parametre kroz konstruktor i četvrti postane neodrživ
@@ -113,3 +113,93 @@ Nije posljedica ove promjene: run na `main`-u u 19:36 pao je isto, a zadnji zele
 `gh run rerun` na PR-u [#12](https://github.com/htuco/salon-booking-platform/pull/12).
 
 Dok to ne prođe, za ovu granu **ne postoji CI dokaz** — vrijedi samo lokalnih 205 testova.
+
+---
+
+## Status — UI sloj (2026-09-12)
+
+Grana `feat/booking-flow-ekrani`, PR [#18](https://github.com/htuco/salon-booking-platform/pull/18).
+Nastavak na ne-UI sloj ispod (PR #17).
+
+### Šta je gotovo
+
+- **Pet ekrana** u `apps/client/lib/src/features/booking/`: `service`, `employee`, `slot`,
+  `details`, `success`, uz `BookingStepScaffold` kao zajedničku kičmu (nazad, "Korak N od 4",
+  traka napretka, CTA). Router više ne vodi `/book/*` na `PlaceholderScreen`.
+- **`BookingSubmitNotifier`** — slanje, mapiranje ishoda i invalidacija liste nakon konflikta.
+- **`DateStrip` i `StepProgressBar`** u `core_ui`, dodani u postojeći `_DemoEkran` pa prolaze
+  iste provjere kontrasta i dodirne mete u obje palete kao i ostale komponente.
+- **`BookingFlowState.withoutStartTime()`** — jedina izmjena ne-UI sloja; trebala je za `409`.
+
+### Dokazano
+
+Lokalno: `melos run analyze` čisto (5/5 paketa), `dart format --set-exit-if-changed` 0 promjena,
+`dart run tool/gen_flavors.dart --check` ažurno, **`melos run test` — 215 testova PASS** (bilo 205).
+`./tool/verify_clean.sh` prolazi **iz čistog klona** — dokaz koji je ranije davao CI job.
+
+Osam novih widget testova: prelaz kroz korake, guard na deep linku, preselekcija iz `?serviceId=`,
+prazan dan, `date_only` grana, `409` putanja i success ekran.
+
+**Vizuelni dokaz u pravom Chromiumu**, oba tenanta, `demo_main.dart` web build —
+[`docs/screenshots/task-11-*`](../../docs/screenshots/):
+
+| Šta se vidi | Barber (zlatna tamna) | Beauty (roze svijetla) |
+|---|---|---|
+| Korak 1, preselektovana usluga | `task-11-korak1-usluga-barber.png` | `task-11-korak1-usluga-beauty.png` |
+| Korak 2, "Bilo ko od nas" prvi | `task-11-korak2-radnik-barber.png` | — |
+| Korak 3, traka datuma + slotovi | `task-11-korak3-termin-barber.png` | `task-11-korak3-termin-beauty.png` |
+| Korak 4, sažetak | `task-11-korak4-sazetak-barber.png` | `task-11-korak4-sazetak-beauty.png` |
+| Success, "Na čekanju" | `task-11-success-barber.png` | `task-11-success-beauty.png` |
+
+**Pokrenuto i na iOS simulatoru** (iPhone 17, iOS 26.3) iz flavor builda
+`ba.nasadomena.barberstudiovitez`: home i prvi korak flowa se iscrtavaju u brand temi, sa ikonom
+flavora na springboardu — `task-11-ios-sim-home-barber.png`, `task-11-ios-sim-korak1-barber.png`.
+Time pada stavka "ništa nije pokrenuto na uređaju ni emulatoru", otvorena od taska 09.
+
+Browser je potvrdio četiri stvari koje widget test ne može: **preselekcija iz `?serviceId=` stvarno
+radi** (kartica je označena bez drugog tapa), **nedjelja je u traci prigušena i ne prima tap**,
+**`distinctTimes` radi** (demo vraća dva radnika po vremenu, mreža pokazuje svaki termin jednom), i
+**terminologija se mijenja po vertikali** — "Usluga/Barber" naspram "Tretman/Stilistica" na istom
+kodu.
+
+**Screenshot je našao grešku koju je zelena suita propustila** — treći put u ovom projektu, nakon
+taskova 07 i 10. Korak 2 je u demo buildu prikazivao "Lista trenutno nije dostupna" umjesto
+radnika: `demo_main.dart` nije override-ovao `employeeServiceLinksProvider`, pa je provider
+posegnuo za `Supabase.instance`. Widget testovi su ga override-ovali i ništa nisu prijavili.
+
+### Odluke
+
+- **Guard je u ekranu, ne `go_router` redirect.** Redirect bi morao čitati `autoDispose` stanje pri
+  svakoj promjeni rute i vraćati korisnika usred navigacije. Deep link na `/book/slot` bez izabrane
+  usluge zato prikaže prazno stanje sa izlazom na prvi nepopunjen korak.
+- **Korak 4 nema polja za telefon, iako ga `prototype/ui/SPEC.md` 5f crta.** `docs/06 §3.1` je
+  izričit da se telefon ne traži nigdje. Gdje se SPEC i docs ne slažu oko *flowa*, docs je jači;
+  SPEC ostaje izvor istine za oblik. Ako se ovo mijenja, to je ADR, ne izmjena koda.
+- **CTA bez identiteta vodi na prijavu, ne šalje.** `bookingCustomerIdProvider` je danas uvijek
+  `null` u pravoj app-i — `book_appointment` traži postojećeg klijenta, a upsert klijenta dolazi
+  sa auth radom (Sprint 2). Struktura poziva je već ista.
+- **`409` zadržava dan, briše samo vrijeme.** `clearFrom(BookingStep.slot)` bi oborio i datum i
+  napomenu, a zauzeto je vrijeme — ne dan.
+
+### Ostalo za sljedećeg
+
+- **`book(...)` i dalje nije nijednom pozvan protiv prave baze.** Testovi gađaju mock repozitorij;
+  RPC je dokazan samo pgTAP-om iz taska 05. Traži Supabase vrijednosti i prijavljenog korisnika.
+- **`409` nije izazvan uživo** — dva stvarna zahtjeva na isti slot. Dokazano je ponašanje ekrana na
+  `ConflictError`, ne da ga baza digne u utrci.
+- **Kroz flow se na simulatoru nije kliktalo.** App je pokrenut i ekrani se iscrtavaju, ali
+  automatizacija tapova nad Simulatorom traži accessibility dozvolu za terminal, koju dajem samo ja
+  ručno. Prelaz kroz korake je dokazan u Chromiumu i widget testovima. Na **fizičkom uređaju** nije
+  pokrenuto ništa.
+- **Generator iOS schema gubi Flutterov `PreActions` blok.** `Runner.xcscheme` (Flutterov, nije
+  generisan) ima "Run Prepare Flutter Framework Script"; generisani `barberstudiovitez.xcscheme` i
+  `beautystudiotravnik.xcscheme` ga nemaju, pa ga `flutter run` sam ubaci i time zaprlja radno
+  stablo. Vratio sam izmjenu — generisani fajl se ne edituje rukom — ali drift se vraća pri svakom
+  `flutter run` na svježem klonu. **Popravka je u `tool/gen_ios_flavors.rb`**: neka prenese
+  `PreActions` iz `Runner.xcscheme`. Usput: `gen_flavors --check` ovu razliku **ne vidi**, pa je
+  i to rupa u provjeri. Nađeno pokretanjem na simulatoru, nije dio ovog taska.
+
+- **`AppTextField` iz `docs/02 §16` i dalje ne postoji**; napomena u koraku 4 je goli `TextField`.
+  Kandidat za prvi sljedeći ekran koji ima unos.
+- **Konfete na svijetloj paleti su jedva vidljive** (roze na bijelom). Kozmetika, ne greška.
+- **CI ne može potvrditi ništa od ovoga** dok naplata na `htuco` nalogu blokira workflowove.

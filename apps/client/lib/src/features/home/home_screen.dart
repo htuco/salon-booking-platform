@@ -8,8 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
+import '../../core/formatters.dart';
 import '../../l10n/generated/app_localizations.dart';
-import 'formatters.dart';
 import 'salon_schedule.dart';
 import 'widgets/contact_card.dart';
 import 'widgets/home_section.dart';

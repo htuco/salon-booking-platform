@@ -81,6 +81,11 @@ class BookingFlowNotifier extends AutoDisposeNotifier<BookingFlowState> {
     );
   }
 
+  /// Briše samo izabrano vrijeme, zadržava dan — v. [BookingFlowState.withoutStartTime].
+  void clearStartTime() {
+    state = state.withoutStartTime();
+  }
+
   /// Briše korak i sve nakon njega — koristi ga povratak nazad kad izbor prestane važiti.
   void clearFrom(BookingStep step) {
     state = state.clearFrom(step);
@@ -105,6 +110,16 @@ final bookingDateOnlyProvider = Provider.autoDispose<bool>((ref) {
 final bookingRequiresStaffChoiceProvider = Provider.autoDispose<bool>((ref) {
   final vertical = ref.watch(verticalProvider).valueOrNull;
   return vertical?.rules.requireStaffChoice ?? false;
+});
+
+/// Današnji dan u zidnom vremenu — početak raspona koji nudi traka datuma.
+///
+/// Provider, a ne `DateTime.now()` u ekranu, iz jednog razloga: test koji podiže korak sa
+/// terminima mora znati koji su dani na ekranu. Sa direktnim pozivom bi isti test prolazio
+/// danas a padao prvog u mjesecu.
+final bookingTodayProvider = Provider<LocalDate>((ref) {
+  final sada = DateTime.now();
+  return LocalDate(sada.year, sada.month, sada.day);
 });
 
 /// Argument za upit slobodnih termina — usluga, datum i (opciono) radnik.
