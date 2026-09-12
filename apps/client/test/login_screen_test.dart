@@ -433,10 +433,14 @@ Future<ProviderContainer> _pump(
     ],
   );
 
-  // Pretplata prije prvog `read`-a — `bookingFlowProvider` je `autoDispose` i bez
-  // slušaoca zakaže brisanje tajmerom koji obori test na "A Timer is still pending".
+  // Pretplata postoji **samo dok se flow puni**, i zatvara se čim app preuzme slušanje.
+  //
+  // Ovo nije sitnica u podešavanju testa nego uslov da test mjeri ono što tvrdi.
+  // `bookingFlowProvider` je `autoDispose`; pretplata koja traje cijeli test drži izbor
+  // živim bez obzira na to da li ga ekran drži, pa bi test prolazio i nad app-om koja
+  // izbor gubi. Tako je prvo izdanje ovog testa i prolazilo, a prolaz kroz browser je
+  // pokazao prazan korak 4 nakon prijave.
   final pretplata = container.listen(bookingFlowProvider, (_, _) {});
-  addTearDown(pretplata.close);
 
   if (pocetniFlow != null) {
     pocetniFlow(container.read(bookingFlowProvider.notifier));
@@ -449,6 +453,11 @@ Future<ProviderContainer> _pump(
     ),
   );
   await tester.pump();
+  await tester.pump();
+
+  // App je sada jedini slušalac. Od ove tačke izbor preživljava samo ako ga ekrani
+  // stvarno drže.
+  pretplata.close();
   await tester.pump();
 
   return container;

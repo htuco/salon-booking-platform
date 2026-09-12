@@ -10,6 +10,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/auth_config_provider.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../booking/booking_flow_provider.dart';
 import '../booking/widgets/appointment_hold_card.dart';
 import 'login_controller.dart';
 
@@ -66,6 +67,17 @@ class LoginScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final stanje = ref.watch(loginControllerProvider);
+
+    // **Ovo drži izbor iz flowa živim, i mora stajati ovdje, a ne u kartici.**
+    // `bookingFlowProvider` je `autoDispose`: briše se čim ostane bez slušaoca. Kartica
+    // „Čuvamo vam" se crta samo u fazi izbora providera, pa je prelazak na unos emaila
+    // skidao zadnjeg slušaoca i korisnik se nakon uspješne prijave vraćao na prazan
+    // korak 4 — greška koju su widget testovi propustili, a prvi prolaz kroz browser
+    // našao (v. status blok taska 13).
+    //
+    // Vezivanje za vidljivi widget je zato pogrešan mehanizam: sljedeći ko sakrije
+    // karticu u jednoj fazi ponovo obara flow, a ekran i dalje izgleda ispravno.
+    if (_izFlowa) ref.watch(bookingFlowProvider);
 
     // Prijavljen korisnik nema šta raditi na login ekranu. Desi se pri povratku nazad
     // nakon uspješne prijave i pri deep linku sa živom sesijom.
@@ -370,6 +382,7 @@ class _UnosEmailaState extends ConsumerState<_UnosEmaila> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
+          key: const ValueKey('login-email'),
           controller: _polje,
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.done,
@@ -406,6 +419,16 @@ class _UnosEmailaState extends ConsumerState<_UnosEmaila> {
     });
     if (!ispravna) return;
 
+    // **Odfokusiraj prije prelaza na korak sa kodom.** Flutter web drži jedan DOM
+    // `<input>` za fokusirano polje i ne čisti mu vrijednost kad ga preuzme drugi
+    // `TextField` — korisnik bi u polju za kod zatekao svoju email adresu. Dart kontroler
+    // je pri tome prazan, pa nijedan widget test to ne vidi; našao je prvi prolaz kroz
+    // browser (v. status blok taska 13). `ValueKey` na poljima nije dovoljan, jer
+    // vrijednost ne dolazi iz Flutterovog stabla nego iz DOM-a.
+    //
+    // Na mobilnom je ovo usput i ispravno ponašanje: tastatura se sklanja kad zahtjev ode.
+    FocusScope.of(context).unfocus();
+
     ref.read(loginControllerProvider.notifier).posaljiKod(adresa);
   }
 }
@@ -438,7 +461,21 @@ class _UnosKodaState extends ConsumerState<_UnosKoda> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // **Otvoreno, samo na webu i samo uz čitač ekrana:** Flutter web ponovo koristi
+        // isti semantics `<input>` za oba polja, pa mu `aria-label` postane „Šestocifreni
+        // kod" a vrijednost ostane upisani email. Vidljivo polje na canvasu je prazno
+        // (Dart kontroler je prazan — potvrđeno porukom „Kod ima šest cifara" na pokušaj
+        // potvrde), pa sighted korisnik ovo ne vidi; čitač ekrana pročita tuđu vrijednost.
+        //
+        // Probani i **odbačeni** kao nedjelotvorni: `ValueKey` po polju (ostaje, jer je
+        // ispravan sam po sebi), `FocusScope.unfocus()` prije prelaza (ostaje, jer sklanja
+        // tastaturu na mobilnom), i `AutofillGroup` po koraku (uklonjen — ništa nije
+        // promijenio, a dodavao je gniježđenje). Detalji u status bloku taska 13.
+        //
+        // Web nije store target nijednog tenanta (`targets.web` u `tenant.yaml`), pa ovo
+        // ne blokira task — ali se ne piše kao riješeno.
         TextField(
+          key: const ValueKey('login-code'),
           controller: _polje,
           keyboardType: TextInputType.number,
           textInputAction: TextInputAction.done,
@@ -482,6 +519,8 @@ class _UnosKodaState extends ConsumerState<_UnosKoda> {
           : AppLocalizations.of(context).loginInvalidCode;
     });
     if (kod.length != 6) return;
+
+    FocusScope.of(context).unfocus();
 
     // Router se uzima prije `await`-a: uspjeh navigira, a `GoRouter.of(context)` bi
     // nakon toga gađao element koji je već otišao sa stabla.
