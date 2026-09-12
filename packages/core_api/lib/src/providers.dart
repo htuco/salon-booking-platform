@@ -2,6 +2,9 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'auth/auth_repository.dart';
+import 'auth/customer_repository.dart';
+import 'auth/supabase_auth_repository.dart';
 import 'booking/booking_repository.dart';
 import 'catalog/employee_repository.dart';
 import 'catalog/salon_repository.dart';
@@ -72,6 +75,60 @@ final verticalRepositoryProvider = Provider<VerticalRepository>(
 final bookingRepositoryProvider = Provider<BookingRepository>(
   (ref) => BookingRepository(ref.watch(supabaseClientProvider)),
 );
+
+// ---------------------------------------------------------------------------
+// Prijava. Task 13 — `docs/06 §6.3`.
+// ---------------------------------------------------------------------------
+
+/// Implementacija prijave. Test je override-uje lažnom i nikad ne dodirne mrežu.
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => SupabaseAuthRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Sesija kroz vrijeme — `null` znači odjavljen.
+///
+/// **Stream sa početnom vrijednošću iz `currentSession`**, a ne goli stream: `GoTrueClient`
+/// emituje prvo stanje tek kad završi vraćanje sesije sa diska, pa bi ekran do tada vidio
+/// `AsyncLoading` i prijavljenom korisniku bi treptao login. Sinhrono čitanje zatvara taj
+/// prvi frejm (`docs/06 §6.3`), stream ga nakon toga ispravlja ako se raziđu.
+final authSessionProvider = StreamProvider<AuthSession?>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+  return repository.sessionChanges;
+});
+
+/// Sesija bez čekanja — ono što ekran i router čitaju.
+///
+/// Spaja sinhroni `currentSession` i stream: dok stream nema vrijednost, važi sinhrona.
+/// Provider, a ne `valueOrNull` po ekranima, da svako mjesto ne bi ponavljalo isti fallback
+/// i da se ne bi razišli kad jedno zaboravi.
+final currentAuthSessionProvider = Provider<AuthSession?>((ref) {
+  final iz = ref.watch(authSessionProvider);
+  return iz.valueOrNull ?? ref.watch(authRepositoryProvider).currentSession;
+});
+
+/// Da li je iko prijavljen. Gost (`isAnonymous`) se ovdje računa kao prijavljen — on ima
+/// sesiju i `customers` red; razlika ga tek tiče kod brisanja naloga (task 17).
+final isSignedInProvider = Provider<bool>(
+  (ref) => ref.watch(currentAuthSessionProvider) != null,
+);
+
+/// Klijent prijavljenog korisnika u ovom salonu.
+final customerRepositoryProvider = Provider<CustomerRepository>(
+  (ref) => CustomerRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// `customers.id` prijavljenog korisnika, ili `null` dok red ne postoji.
+///
+/// Ovisi o [currentAuthSessionProvider] namjerno: prijava i odjava moraju ponovo pitati
+/// bazu. Bez te veze bi korisnik koji se prijavio nakon prvog pokušaja zadržao `null` do
+/// restarta app-e.
+final currentCustomerIdProvider = FutureProvider<String?>((ref) async {
+  if (ref.watch(currentAuthSessionProvider) == null) return null;
+
+  return ref
+      .watch(customerRepositoryProvider)
+      .currentCustomerId(ref.watch(currentSalonIdProvider));
+});
 
 // ---------------------------------------------------------------------------
 // Podaci. Keširanje je Riverpodovo — nema ručnog cache sloja.
