@@ -61,16 +61,18 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - **Ne commituj tajne.** Izlaz `supabase status -o env`, service role ključ, pravi
   `google-services.json`, `.env`, iOS potpisni materijal. Generisani `google-services.json` u repou
   je placeholder i takav ostaje dok se ne uvede sigurno ubacivanje pravog u CI-ju.
-- **Na razvojnoj mašini nema Dockera, pa `supabase start` ne radi lokalno.** Promjene u `supabase/`
-  se dokazuju kroz CI workflow `Supabase tests`, ne lokalno. Ne tvrdi da RLS radi dok taj job nije
-  zelen — napisana politika nije dokazana politika.
-- **`prototype/ui/` je vizuelni izvor istine, `prototype/` je zamrznut.** Ekran se piše po `prototype/ui/SPEC.md`.
-  Prototip u `prototype/wireframe/` ostaje referenca za flow i rute; tamo se ne dodaje ni ekran ni popravka.
-  Gdje se njih dvoje ne slažu, `prototype/ui/` je jači.
-- **Iz `prototype/ui/` se uzima oblik, ne boja.** Spacing, tipografska skala, radius 0, hairline granice i
-  oblik komponenti su platformski i idu u `core_ui`. Hex iz handoffa je paleta *jednog* brenda —
-  boja dolazi iz `tenant.yaml` kroz `buildAppTheme()`, tekst iz `vertical.terms`. Hardkodiran hex u
-  ekranu je greška koja se vidi tek na drugom tenantu.
+- **RLS se dokazuje pokretanjem, lokalno pa na `main`-u.** `supabase start && supabase test db`
+  plus dva Deno REST testa rade na razvojnoj mašini (Docker je tu). Ne tvrdi da RLS radi dok ta
+  suite nije prošla — napisana politika nije dokazana politika. CI workflow `Supabase tests` ide
+  **na PR i na push u `main`** — tuđi PR ne smije ući nedokazan — i dodaje ono što lokalno ne
+  može: dokaz iz čistog checkouta.
+- **`prototype/ui/` je vizuelni izvor istine, `prototype/wireframe/` je zamrznut.** Ekran se piše po
+  `prototype/ui/SPEC.md`. Prototip u `prototype/wireframe/` ostaje referenca za flow i rute; tamo se
+  ne dodaje ni ekran ni popravka. Gdje se njih dvoje ne slažu, `prototype/ui/` je jači.
+- **Iz `prototype/ui/` se uzima oblik, ne boja.** Spacing, tipografska skala, radius 0, hairline
+  granice i oblik komponenti su platformski i idu u `core_ui`. Hex iz handoffa je paleta *jednog*
+  brenda — boja dolazi iz `tenant.yaml` kroz `buildAppTheme()`, tekst iz `vertical.terms`.
+  Hardkodiran hex u ekranu je greška koja se vidi tek na drugom tenantu.
 - **Testovi su uski.** Postoje widget/unit testovi (`apps/client/test/`, `packages/*/test/`) i
   SQL/REST testovi tenant izolacije. Nema E2E, nema integration testa booking flowa. Prolazna
   `melos run test` suite ne govori ništa o ekranu ni o upitu — to se dokazuje pokretanjem

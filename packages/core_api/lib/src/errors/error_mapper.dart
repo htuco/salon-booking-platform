@@ -49,15 +49,24 @@ ApiError mapError(Object error, [StackTrace? stackTrace]) {
 /// Zato se gleda oboje: `23P01` je exclusion constraint (`appointments_no_overlap` iz taska
 /// 05), `23505` je unique violation — oba su "neko te pretekao" iz ugla korisnika. `409`
 /// stiže kad `book_appointment` sam digne konflikt.
+///
+/// **`PT409` je oblik u kojem konflikt stvarno stiže.** `book_appointment` ga diže
+/// eksplicitno (`raise exception ... using errcode = 'PT409'`), na oba mjesta: kad
+/// re-validacija slota ne nađe slobodnog radnika i kad utrku uhvati `exclusion_violation`.
+/// Postgres klasu `PT` tretira kao "prenesi HTTP status iz zadnja tri znaka", pa PostgREST
+/// odgovori statusom `409` — ali u tijelu odgovora, a time i u `PostgrestException.code`,
+/// ostaje `PT409`. Bez ovog koda bi konflikt ispao `ServerError` i korisnik bi na zauzet
+/// termin dobio "nešto nije u redu" umjesto osvježene liste slotova.
 ApiError _mapPostgrest(PostgrestException error) {
   final code = error.code;
 
-  if (code == '23P01' || code == '23505' || code == '409') {
+  if (code == 'PT409' || code == '23P01' || code == '23505' || code == '409') {
     return ConflictError('Termin je u međuvremenu zauzet', cause: error);
   }
 
   // PGRST116: "Results contain 0 rows" — `.single()` nad praznim rezultatom.
-  if (code == 'PGRST116' || code == '404') {
+  // PT404: `book_appointment` kad usluga ne postoji ili nije aktivna.
+  if (code == 'PGRST116' || code == 'PT404' || code == '404') {
     return NotFoundError('Traženi zapis ne postoji', cause: error);
   }
 

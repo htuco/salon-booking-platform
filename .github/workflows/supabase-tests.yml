@@ -1,7 +1,23 @@
 name: Supabase tests
 
+# Ide i na PR i na push u main. Ovo je job zbog kojeg CI uopste postoji:
+# tenant izolacija je jedino mjesto gdje greska curi tude podatke, pa tudi
+# PR ne smije uci u main nedokazan. Ubuntu-only, ~3,6 naplativih minuta —
+# skup je bio macOS iOS build, ne ovo.
+#
+# Lokalno se ista suite pokrene sa ./tool/test_supabase.sh (~2 min).
+# v. .claude/docs/workflows.md.
 on:
   pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/seed.sql'
+      - 'supabase/tests/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase-tests.yml'
+      - 'packages/core_api/**'
+  push:
+    branches: [main]
     paths:
       - 'supabase/migrations/**'
       - 'supabase/seed.sql'
@@ -11,14 +27,7 @@ on:
       # Kolone koje rest_public_catalog.ts salje su kopija onih iz repozitorija —
       # promjena u core_api mora ponoviti ovaj dokaz.
       - 'packages/core_api/**'
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
-      - 'supabase/seed.sql'
-      - 'supabase/tests/**'
-      - 'supabase/config.toml'
-      - 'packages/core_api/**'
+  workflow_dispatch:
 
 concurrency:
   group: supabase-tests-${{ github.ref }}

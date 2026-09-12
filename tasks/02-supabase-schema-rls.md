@@ -50,6 +50,7 @@ Workflow [`.github/workflows/supabase-tests.yml`](../.github/workflows/supabase-
 ponavlja isti dokaz na svaki PR koji dira `supabase/migrations/**`, `seed.sql`,
 `tests/**` ili `config.toml`, pa regresija u izolaciji pada na PR-u, ne u produkciji.
 
-Napomena za lokalni rad: na razvojnoj mašini nema Docker daemona, pa se `supabase start`
+Napomena za lokalni rad *(zastarjelo — Docker Desktop je instaliran 12.09.2026., v. `.claude/docs/workflows.md`)*:
+u vrijeme ovog taska na razvojnoj mašini nije bilo Docker daemona, pa se `supabase start`
 ne može pokrenuti lokalno. Dok se Docker Desktop ne instalira, CI je jedini način da se
 promjene u šemi dokažu — ne mergaj `supabase/` promjene bez zelenog run-a.

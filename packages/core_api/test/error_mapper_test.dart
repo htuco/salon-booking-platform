@@ -40,6 +40,34 @@ void main() {
       expect(error, isA<ConflictError>());
     });
 
+    test('PT409 je konflikt — oblik u kojem book_appointment stvarno javi zauzet slot', () {
+      // Ovo je kod koji funkcija iz taska 05 diže (`using errcode = 'PT409'`), na oba
+      // mjesta: kad re-validacija ne nađe slobodnog radnika i kad utrku uhvati
+      // exclusion_violation. Postgres klasu `PT` prevodi u HTTP status iz zadnja tri
+      // znaka, pa odgovor ima status 409 — ali `code` u tijelu ostaje `PT409`.
+      // Bez ovog mapiranja korisnik na zauzet termin dobije "nešto nije u redu"
+      // umjesto osvježene liste slotova.
+      final error = mapError(
+        const PostgrestException(
+          message: 'Termin je upravo zauzet',
+          code: 'PT409',
+        ),
+      );
+
+      expect(error, isA<ConflictError>());
+    });
+
+    test('PT404 (usluga ne postoji ili nije aktivna) je NotFound', () {
+      final error = mapError(
+        const PostgrestException(
+          message: 'Usluga ne postoji ili nije aktivna',
+          code: 'PT404',
+        ),
+      );
+
+      expect(error, isA<NotFoundError>());
+    });
+
     test('PGRST116 (nula redova) je NotFound', () {
       final error = mapError(
         const PostgrestException(

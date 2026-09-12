@@ -30,6 +30,7 @@ library;
 
 export 'src/catalog/appointment.dart';
 export 'src/catalog/appointment_status.dart';
+export 'src/catalog/available_slot.dart';
 export 'src/catalog/employee.dart';
 export 'src/catalog/employee_service.dart';
 export 'src/catalog/local_date.dart';

@@ -98,6 +98,12 @@ exclusion constraint `appointments_no_overlap` na nivou tabele. Oboje je namjern
 upisa ne pomaže kad dva zahtjeva stignu istovremeno, a constraint sam ne zna za radno vrijeme.
 Konflikt izlazi kao `PT409`, što PostgREST prevodi u HTTP `409`.
 
+Na Dart strani ovu funkciju zove **isključivo** `BookingRepository.book(...)` (task 11) — jedini
+upis u cijeloj aplikaciji. `PostgrestException.code` tada nosi `PT409`, **ne** `409`: status se
+prevodi, kod u tijelu odgovora ne. `mapError` zato mapira oba (v. `error_mapper.dart`); da mapira
+samo `409`, konflikt bi ispao `ServerError` i korisnik bi na zauzet termin dobio generičku grešku
+umjesto osvježene liste. Isto vrijedi za `PT404` iz iste funkcije.
+
 `get_available_slots` i `get_available_dates` su takođe `security definer` jer čitaju
 `appointments` i `blocked_slots`, koje `anon` ne smije vidjeti. Izlaz su samo izvedena slobodna
 vremena — nijedan podatak o klijentu. Pregled slobodnih termina zato ne traži prijavu, a
@@ -138,5 +144,5 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
    koji je promišljen: izvedena vremena, bez podataka o klijentu.)
 6. Je li dodan pgTAP test koji **pada** ako se politika ukloni? Politika bez negativnog testa je
    pretpostavka.
-7. Je li workflow `Supabase tests` zelen na PR-u? Lokalno se ne može pokrenuti bez Dockera — v.
-   `.claude/docs/workflows.md`.
+7. Je li suite prošla lokalno (`supabase start && supabase test db` + dva Deno REST testa)? Na
+   `main`-u to ponovi workflow `Supabase tests` iz čistog checkouta — v. `.claude/docs/workflows.md`.
