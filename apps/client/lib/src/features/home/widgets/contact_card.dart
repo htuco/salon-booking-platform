@@ -1,5 +1,6 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Jedan red kontakta: ikona, tekst i akcija koja ga otvara.
 ///
@@ -33,7 +34,11 @@ class ContactRow extends StatelessWidget {
           const SizedBox(width: AppSpacing.md),
           Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
           if (onTap != null)
-            Icon(Icons.chevron_right, size: 20, color: scheme.onSurfaceVariant),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 20,
+              color: scheme.onSurfaceVariant,
+            ),
         ],
       ),
     );
@@ -45,7 +50,7 @@ class ContactRow extends StatelessWidget {
       label: label,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.zero,
         // Red kontakta mora ostati dodirna meta od 44 px i kad je tekst jednoredan
         // (`docs/02 §14`).
         child: ConstrainedBox(
@@ -71,7 +76,7 @@ class ContactCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.zero,
         border: Border.all(color: scheme.outline),
       ),
       child: Column(children: children),

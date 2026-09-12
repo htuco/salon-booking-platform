@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 
 import '../tokens/spacing.dart';
 import '../tokens/status_colors.dart';
+import '../tokens/typography.dart';
 import 'app_theme.dart';
 import 'contrast.dart';
 
@@ -74,11 +75,20 @@ ThemeData buildAppTheme({
     surface: neutrals.surface,
     onSurface: neutrals.textPrimary,
     surfaceContainerHighest: neutrals.surfaceContainer,
+    // Podloga okvira za fotografiju. `SPEC.md` je razdvaja od kartice (`#1A1D20`
+    // naspram `#151719`) da se prazan okvir vidi kao okvir, a ne kao rupa.
+    surfaceContainerLowest: neutrals.photoGround,
     onSurfaceVariant: neutrals.textMuted,
     outline: neutrals.outline,
+    // Razdjelnik unutar grupe redova je **tanji** od granice kartice. Ista boja za oboje
+    // pretvorila bi `SpecCard` u mrežu.
+    outlineVariant: neutrals.hairline,
   );
 
-  final textTheme = _textTheme(neutrals);
+  final textTheme = buildTextTheme(
+    primary: neutrals.textPrimary,
+    muted: neutrals.textMuted,
+  );
 
   return ThemeData(
     useMaterial3: true,
@@ -109,7 +119,7 @@ ThemeData buildAppTheme({
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.zero,
         side: BorderSide(color: neutrals.outline),
       ),
     ),
@@ -118,24 +128,25 @@ ThemeData buildAppTheme({
       style: FilledButton.styleFrom(
         backgroundColor: primary,
         foregroundColor: onPrimary,
+        // `SPEC.md` daje tacne vrijednosti za onemoguceno stanje; Material bi inace
+        // uzeo `onSurface` sa 12%/38% opacity, sto na ovoj pozadini ispadne mutno.
+        disabledBackgroundColor: neutrals.disabledFill,
+        disabledForegroundColor: neutrals.textDisabled,
         // Minimalna visina je token, ne procjena: `docs/02 §14` trazi 48 dp.
         minimumSize: const Size(0, AppSize.buttonHeight),
         textStyle: textTheme.labelLarge,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
     ),
 
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: primaryNaPozadini,
+        foregroundColor: neutrals.textPrimary,
+        disabledForegroundColor: neutrals.textDisabled,
         minimumSize: const Size(0, AppSize.buttonHeight),
         textStyle: textTheme.labelLarge,
         side: BorderSide(color: neutrals.outline),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       ),
     ),
 
@@ -152,26 +163,24 @@ ThemeData buildAppTheme({
       fillColor: neutrals.surfaceContainer,
       hintStyle: textTheme.bodyMedium?.copyWith(color: neutrals.textMuted),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.zero,
         borderSide: BorderSide(color: neutrals.outline),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.zero,
         borderSide: BorderSide(color: neutrals.outline),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.zero,
         borderSide: BorderSide(color: primaryNaPozadini, width: 2),
       ),
     ),
 
-    dividerTheme: DividerThemeData(color: neutrals.outline, space: 1),
+    dividerTheme: DividerThemeData(color: neutrals.hairline, space: 1),
 
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: neutrals.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     ),
 
     // `docs/02 §14`: max 300 ms. Fade je najkraci prelaz koji jos citljivo povezuje ekrane.
@@ -202,56 +211,6 @@ Color _citljivoNaObje(Color brand, Color surface, Color container) {
       ? surface
       : container;
   return readableOn(brand, teza, target: kWcagAa + 1.0);
-}
-
-/// Tipografska skala iz `docs/02 §16`.
-///
-/// Body je 16, a ne Flutterov default 14: `docs/02 §14` trazi **minimum 15 sp**, jer se
-/// app koristi jednom rukom, u salonu, cesto starijoj populaciji.
-TextTheme _textTheme(AppNeutrals neutrals) {
-  final primary = neutrals.textPrimary;
-  final muted = neutrals.textMuted;
-  return TextTheme(
-    // Naziv salona na hero povrsini.
-    displayLarge: TextStyle(
-      fontSize: 32,
-      fontWeight: FontWeight.w700,
-      height: 1.15,
-      color: primary,
-    ),
-    // Naslov ekrana.
-    titleLarge: TextStyle(
-      fontSize: 22,
-      fontWeight: FontWeight.w600,
-      height: 1.25,
-      color: primary,
-    ),
-    // Naslov sekcije i naslov kartice.
-    titleMedium: TextStyle(
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-      height: 1.3,
-      color: primary,
-    ),
-    // Glavni tekst.
-    bodyLarge: TextStyle(fontSize: 16, height: 1.45, color: primary),
-    // Opis, sekundarni tekst.
-    bodyMedium: TextStyle(fontSize: 15, height: 1.45, color: muted),
-    // Dugmad.
-    labelLarge: TextStyle(
-      fontSize: 16,
-      fontWeight: FontWeight.w600,
-      height: 1.2,
-      color: primary,
-    ),
-    // Badge i meta podatak. Najmanji tekst u sistemu — ispod ovoga se ne ide.
-    labelSmall: TextStyle(
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-      height: 1.2,
-      color: muted,
-    ),
-  );
 }
 
 /// Brand boje pomjerene tako da su citljive **kao tekst** na pozadini teme.

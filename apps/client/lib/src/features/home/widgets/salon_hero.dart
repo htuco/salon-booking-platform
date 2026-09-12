@@ -98,7 +98,7 @@ class _ZiviStatus extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(AppRadius.pill),
+        borderRadius: BorderRadius.zero,
       ),
       child: Text(
         label,

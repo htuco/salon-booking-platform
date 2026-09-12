@@ -38,11 +38,11 @@ dependencies:
   # Logo i cover salona se ucitavaju sa svakim otvaranjem ekrana; bez kesa to je
   # isti download na svakom hladnom startu i vidljiv prazan okvir umjesto brenda.
   cached_network_image: ^3.4.1
-  # Success ekran (`docs/02 §16`, `prototype/ui/SPEC.md` 5g) je jedini trenutak u flowu
-  # koji smije slaviti. Konfete i ulazna animacija su tu namjerno kratke — `AppDuration`
-  # gore granicu drzi na 300 ms.
-  confetti: ^0.8.0
   cupertino_icons: ^1.0.8
+  # Ulazna animacija success ekrana. Kratka je namjerno — `AppDuration` gornju granicu
+  # drzi na 300 ms. `confetti` je bio dodan pa uklonjen: DoD ga trazi "kao u prototipu",
+  # a prototip (`07-zahtjev-poslan.png`) konfeta nema, i slavlje nad nepotvrdjenim
+  # zahtjevom je obecanje koje ekran ne smije dati.
   flutter_animate: ^4.5.2
   core_api:
     path: ../../packages/core_api
@@ -61,6 +61,7 @@ dependencies:
   # `tel:`, `mailto:`, mape i profili na drustvenim mrezama sa home ekrana
   # (`docs/02 §3`). Bez ovoga je sekcija kontakta spisak teksta koji se ne moze pozvati.
   url_launcher: ^6.3.1
+  lucide_icons_flutter: ^3.1.19
 
 dev_dependencies:
   flutter_test:
@@ -89,6 +90,30 @@ flutter:
 
   # `flutter pub get` i build pokrecu gen-l10n; konfiguracija je u l10n.yaml.
   generate: true
+
+  # Placeholder ploce iz handoffa (`prototype/ui/assets/ph*.png`). **Koristi ih samo
+  # `demo_main.dart`**, da screenshot bude 1:1 sa mockupom; produkcijski build ostavlja
+  # okvir prazan dok ne stignu prave fotografije salona. Lazne fotografije u storeu su
+  # gore od praznog okvira.
+  assets:
+    - assets/demo/
+
+  # Tipografija iz `prototype/ui/SPEC.md`: DM Serif Display za naslove, Archivo za tijelo.
+  # **Pakuju se uz aplikaciju, ne ucitavaju se sa mreze** — handoff to izricito trazi, i
+  # font koji stigne preko mreze znaci prvi frame u pogresnom pismu (ili bez njega).
+  #
+  # Archivo je **varijabilni** font (osi `wdth`/`wght`); staticki rezovi ne postoje u
+  # google/fonts izvoru. Tezine se zato biraju kroz `FontVariation('wght', …)` u
+  # `core_ui` tipografiji, ne kroz zasebne fajlove po tezini.
+  #
+  # Licence stoje uz fajlove (`OFL-*.txt`) — oba su SIL Open Font License 1.1.
+  fonts:
+    - family: DM Serif Display
+      fonts:
+        - asset: assets/fonts/DMSerifDisplay-Regular.ttf
+    - family: Archivo
+      fonts:
+        - asset: assets/fonts/Archivo[wdth,wght].ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -11,13 +11,13 @@ class SkeletonLoader extends StatefulWidget {
   const SkeletonLoader({
     required this.height,
     this.width = double.infinity,
-    this.radius = AppRadius.sm,
+    this.radius = AppRadius.none,
     super.key,
   });
 
   /// Kartica usluge u listi — tri reda visine kartice.
   factory SkeletonLoader.card({Key? key}) =>
-      SkeletonLoader(key: key, height: 96, radius: AppRadius.md);
+      SkeletonLoader(key: key, height: 96, radius: AppRadius.none);
 
   /// Jedan red teksta.
   factory SkeletonLoader.text({Key? key, double width = 160}) =>

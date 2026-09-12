@@ -97,6 +97,42 @@
     "description": "Greška na home ekranu kad podaci salona ne stignu — ide uz retry dugme."
   },
 
+  "monthJanuary": "Januar",
+  "@monthJanuary": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthFebruary": "Februar",
+  "@monthFebruary": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthMarch": "Mart",
+  "@monthMarch": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthApril": "April",
+  "@monthApril": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthMay": "Maj",
+  "@monthMay": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthJune": "Juni",
+  "@monthJune": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthJuly": "Juli",
+  "@monthJuly": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthAugust": "August",
+  "@monthAugust": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthSeptember": "Septembar",
+  "@monthSeptember": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthOctober": "Oktobar",
+  "@monthOctober": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthNovember": "Novembar",
+  "@monthNovember": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
+  "monthDecember": "Decembar",
+  "@monthDecember": { "description": "Ime mjeseca u zaglavlju kalendara." },
+
   "dayShortMonday": "Pon",
   "@dayShortMonday": { "description": "Kratko ime dana u traci datuma (DateStrip)." },
 
@@ -127,9 +163,14 @@
     }
   },
 
+  "bookingPickServiceTitle": "Izaberite uslugu",
+  "@bookingPickServiceTitle": {
+    "description": "Serif naslov prvog koraka, doslovno iz prototype/ui (03-korak1-usluga.png). Barber aplikacija je 1:1 sa handoffom; druge vertikale dobijaju svoj dizajn i svoj copy."
+  },
+
   "bookingPickOne": "Izaberite jednu stavku",
   "@bookingPickOne": {
-    "description": "Podnaslov prvog koraka. Ne imenuje uslugu — ime dolazi iz vertical.terms.servicePlural u naslovu, jer se padez razlikuje po vertikali."
+    "description": "Kratka labela izbora; koristi se gdje puni naslov ne stane."
   },
 
   "bookingPickStaff": "Kod koga dolazite?",
@@ -142,7 +183,7 @@
     "description": "Izbor bez radnika, prvi u listi kad vertikala ne trazi izbor osoblja."
   },
 
-  "bookingAnyStaffHint": "Dodijelit ćemo vam prvog slobodnog",
+  "bookingAnyStaffHint": "Najviše slobodnih termina",
   "@bookingAnyStaffHint": {
     "description": "Objasnjenje uz 'Bilo ko od nas' — radnika dodjeljuje book_appointment pri re-validaciji."
   },
@@ -162,6 +203,85 @@
     "description": "Objasnjenje u date_only modu, da izostanak izbora vremena ne izgleda kao greska."
   },
 
+  "bookingBack": "Nazad",
+  "@bookingBack": {
+    "description": "Labela uz strelicu nazad u zaglavlju koraka (prototype/ui 5c-5f). Prototip pise rijec, ne samo strelicu."
+  },
+
+  "bookingPickOneHint": "Dodirnite jednu uslugu, pa „Dalje\".",
+  "@bookingPickOneHint": {
+    "description": "Podnaslov prvog koraka. Ne imenuje uslugu — ime nosi naslov iz vertical.terms, jer se padez razlikuje po vertikali."
+  },
+
+  "bookingAnyStaffHintLine": "Ako vam nije važno, izaberite „Bilo ko od nas\".",
+  "@bookingAnyStaffHintLine": {
+    "description": "Podnaslov drugog koraka kad vertikala ne trazi izbor osoblja."
+  },
+
+  "bookingPickTimeHint": "Prvo dan, onda slobodno vrijeme.",
+  "@bookingPickTimeHint": {
+    "description": "Podnaslov treceg koraka — redoslijed izbora, da mreza slotova ne izgleda prazna prije izbora dana."
+  },
+
+  "bookingMorning": "Prijepodne",
+  "@bookingMorning": {
+    "description": "Grupa slotova prije 12:00 (prototype/ui 5e)."
+  },
+
+  "bookingAfternoon": "Poslijepodne",
+  "@bookingAfternoon": {
+    "description": "Grupa slotova od 12:00 nadalje."
+  },
+
+  "bookingLastStepTitle": "Još jedan korak",
+  "@bookingLastStepTitle": {
+    "description": "Naslov cetvrtog koraka (prototype/ui 5f). Prijava je zadnje sto se trazi, docs/06 §1.1."
+  },
+
+  "bookingLastStepHint": "Prijavite se da sačuvamo termin. Nema lozinke.",
+  "@bookingLastStepHint": {
+    "description": "Podnaslov cetvrtog koraka. 'Nema lozinke' je tacno — svi provideri su OTP ili social (docs/06 §2.1)."
+  },
+
+  "bookingHoldingFor": "Čuvamo vam",
+  "@bookingHoldingFor": {
+    "description": "Oznaka iznad vremena u kartici sazetka na cetvrtom koraku."
+  },
+
+  "bookingContinueApple": "Nastavi sa Apple",
+  "@bookingContinueApple": { "description": "Prijava preko Apple ID-a (iOS, docs/06 §7)." },
+
+  "bookingContinueGoogle": "Nastavi sa Google",
+  "@bookingContinueGoogle": { "description": "Prijava preko Google naloga." },
+
+  "bookingContinueEmail": "Nastavi sa emailom",
+  "@bookingContinueEmail": { "description": "Prijava preko email OTP koda." },
+
+  "bookingLegalNotice": "Prijavom prihvatate Uslove i Politiku privatnosti.",
+  "@bookingLegalNotice": {
+    "description": "Pravna napomena ispod dugmadi za prijavu (prototype/ui 5f)."
+  },
+
+  "bookingSuccessKicker": "ZAHTJEV JE POSLAN",
+  "@bookingSuccessKicker": {
+    "description": "Verzalni kicker iznad naslova success ekrana (prototype/ui 5g)."
+  },
+
+  "bookingSuccessHeadline": "Salon vas je vidio",
+  "@bookingSuccessHeadline": {
+    "description": "Serif naslov success ekrana. Prototip pise 'Salon vas je vidio'; ime djelatnosti se ovdje ne umece jer se rod razlikuje po vertikali ('Ordinacija vas je vidjela')."
+  },
+
+  "bookingAddToCalendar": "Dodaj u kalendar telefona",
+  "@bookingAddToCalendar": {
+    "description": "Sekundarna akcija na success ekranu (prototype/ui 5g)."
+  },
+
+  "bookingStatusLabel": "Status",
+  "@bookingStatusLabel": {
+    "description": "Labela reda sa statusom u tabeli termina."
+  },
+
   "bookingEmptyList": "Ovdje trenutno nema nijedne stavke.",
   "@bookingEmptyList": {
     "description": "Prazna lista usluga ili radnika u booking flowu — podaci su stigli, ali ih nema. Razlicito od greske."
@@ -175,6 +295,11 @@
   "bookingNoDates": "Nema slobodnih dana u narednom periodu.",
   "@bookingNoDates": {
     "description": "Prazno stanje trake datuma — nijedan dan u rasponu nema slobodan termin."
+  },
+
+  "bookingNext": "Dalje",
+  "@bookingNext": {
+    "description": "CTA koji vodi na sljedeci korak (prototype/ui 5c-5e). Prije izbora dugme je onemoguceno i nosi tekst koji kaze sta fali."
   },
 
   "bookingContinue": "Nastavi",
@@ -217,7 +342,7 @@
     "description": "Naslov success ekrana (SPEC 5g). Ne 'Termin potvrden' — potvrda je na salonu."
   },
 
-  "bookingSuccessBody": "Salon još nije potvrdio termin. Obavijestit ćemo vas čim odgovori.",
+  "bookingSuccessBody": "Termin još nije potvrđen. Javit ćemo vam obavještenjem čim salon potvrdi.",
   "@bookingSuccessBody": {
     "description": "Objasnjenje pending statusa na success ekranu."
   },

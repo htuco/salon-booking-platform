@@ -73,7 +73,9 @@ Future<void> main() async {
         // Success ekran čita zadnji termin. Slanje u demou ne postoji — `book(...)`
         // traži prijavljenog korisnika (Sprint 2) — pa se `/book/success` otvara
         // direktno preko URL-a, sa ovim terminom.
-        lastBookingProvider.overrideWith(_DemoZadnjiTermin.new),
+        lastBookingProvider.overrideWith(
+          () => _DemoZadnjiTermin(demo.services.first.id),
+        ),
       ],
       child: const SalonClientApp(),
     ),
@@ -120,11 +122,17 @@ List<LocalDate> _demoDatumi(DateRangeQuery query) {
 
 /// Zadnji termin za demo success ekran — `pending`, kako ga baza i pravi.
 class _DemoZadnjiTermin extends LastBookingNotifier {
+  _DemoZadnjiTermin(this.serviceId);
+
+  /// Usluga **ovog** tenanta. Fiksni id je ranije znacio da beauty success ekran
+  /// prikaze prazan red: termin je nosio barberovu uslugu, koje u beauty katalogu nema.
+  final String serviceId;
+
   @override
   Appointment? build() => Appointment(
     id: '40000000-0000-4000-8000-000000000001',
     salonId: ref.watch(currentSalonIdProvider),
-    serviceId: '10000000-0000-4000-8000-000000000001',
+    serviceId: serviceId,
     customerId: '30000000-0000-4000-8000-000000000001',
     customerName: 'Demo',
     date: _demoDatum(),
@@ -228,12 +236,14 @@ final _demoPodaci = <String, _Demo>{
         salonId: _barberId,
         name: 'Emir',
         role: 'Barber',
+        imageUrl: 'assets/demo/ph1.png',
       ),
       Employee(
         id: '20000000-0000-4000-8000-000000000002',
         salonId: _barberId,
         name: 'Amar',
         role: 'Barber',
+        imageUrl: 'assets/demo/ph2.png',
       ),
     ],
     hours: _radnoVrijeme(_barberId),
@@ -286,12 +296,14 @@ final _demoPodaci = <String, _Demo>{
         salonId: _beautyId,
         name: 'Amina',
         role: 'Stilistica',
+        imageUrl: 'assets/demo/ph3.png',
       ),
       Employee(
         id: '20000000-0000-4000-8000-000000000004',
         salonId: _beautyId,
         name: 'Lejla',
         role: 'Stilistica',
+        imageUrl: 'assets/demo/ph4.png',
       ),
     ],
     hours: _radnoVrijeme(_beautyId),

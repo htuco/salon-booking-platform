@@ -1,6 +1,7 @@
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,16 +12,19 @@ import 'booking_flow_state.dart';
 import 'date_labels.dart';
 import 'widgets/booking_step_scaffold.dart';
 
-/// Korak 3 — kada (`prototype/ui/SPEC.md` 5e).
+/// Korak 3 — kada (`prototype/ui/screenshots/05-korak3-vrijeme.png`).
 ///
 /// ## Ovdje se ne računa ništa
 ///
-/// Traka datuma prikazuje raspon koji dozvoljava `maxAdvanceBookingDays`, a **koji su od
-/// tih dana slobodni kaže `get_available_dates`**. Mreža vremena je ono što je vratio
-/// `get_available_slots`, bez ijednog filtera iznad toga: nema oduzimanja buffera, nema
-/// izbacivanja prošlih vremena, nema `minAdvanceBookingHours` provjere. Sve je to već
-/// primijenjeno u funkciji (task 05), i kad bi se ponovilo ovdje, ponovilo bi se pogrešno
-/// prvi put kad se pravilo promijeni u migraciji.
+/// Kalendar prikazuje mjesec, a **koji su dani slobodni kaže `get_available_dates`**.
+/// Mreža vremena je ono što je vratio `get_available_slots`, bez ijednog filtera iznad
+/// toga: nema oduzimanja buffera, nema izbacivanja prošlih vremena, nema
+/// `minAdvanceBookingHours` provjere. Sve je to već primijenjeno u funkciji (task 05), i
+/// kad bi se ponovilo ovdje, ponovilo bi se pogrešno prvi put kad se pravilo promijeni u
+/// migraciji.
+///
+/// Podjela na "Prijepodne" i "Poslijepodne" je **prikaz, ne pravilo** — granica je podne i
+/// služi da mreža od dvadeset chipova ima dvije tačke oslonca.
 ///
 /// ## Dva moda
 ///
@@ -28,11 +32,20 @@ import 'widgets/booking_step_scaffold.dart';
 /// vrijeme dodjeljuje salon, pa mreža vremena ne postoji i korak se završava izborom dana.
 /// Razlika dolazi iz vertikale kroz `bookingDateOnlyProvider`, ne iz konstante: isti build
 /// služi i frizera i ordinaciju.
-class SlotStepScreen extends ConsumerWidget {
+class SlotStepScreen extends ConsumerStatefulWidget {
   const SlotStepScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SlotStepScreen> createState() => _SlotStepScreenState();
+}
+
+class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
+  /// Koji je mjesec prikazan. Pomjera ga korisnik strelicama; nije dio stanja flowa, jer
+  /// listanje mjeseca nije izbor — izbor je dan.
+  int _pomakMjeseci = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final vertical = verticalOf(ref);
     final flow = ref.watch(bookingFlowProvider);
@@ -51,7 +64,9 @@ class SlotStepScreen extends ConsumerWidget {
     }
 
     final spreman = flow.isStepComplete(BookingStep.slot, dateOnly: dateOnly);
+    final mjesec = monthOffsetFrom(danas, _pomakMjeseci);
     final raspon = daysFrom(danas, vertical.rules.maxAdvanceBookingDays);
+
     final dostupniDani = ref.watch(
       availableDatesProvider(
         DateRangeQuery(
@@ -66,70 +81,76 @@ class SlotStepScreen extends ConsumerWidget {
     return BookingStepScaffold(
       step: BookingStep.slot,
       title: dateOnly ? l10n.bookingPickDate : l10n.bookingPickTime,
-      subtitle: dateOnly ? l10n.bookingDateOnlyNote : null,
-      // Labela dugmeta govori šta fali dok fali, a šta radi kad ne fali — `SPEC.md`,
-      // Interactions: "CTA is disabled until the step's required choice exists".
-      // Onemogućeno dugme bez objašnjenja je najčešći način da korisnik zapne na koraku.
+      subtitle: dateOnly ? l10n.bookingDateOnlyNote : l10n.bookingPickTimeHint,
       cta: AppButton(
         label: spreman
-            ? l10n.bookingContinue
+            ? l10n.bookingNext
             : dateOnly
             ? l10n.bookingPickDate
             : l10n.bookingPickTime,
         onPressed: spreman ? () => context.go(BookingStep.details.path) : null,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.gutter,
+          0,
+          AppSpacing.gutter,
+          AppSpacing.xxl,
+        ),
         children: [
-          _TrakaDatuma(
-            dani: raspon,
+          _Kalendar(
+            mjesec: mjesec,
             dostupni: dostupniDani,
             izabran: flow.date,
+            // Unazad se ne ide ispod tekućeg mjeseca — prošli dani ionako nisu
+            // dostupni, a prazan mjesec izgleda kao kvar.
+            onPrethodni: _pomakMjeseci > 0
+                ? () => setState(() => _pomakMjeseci--)
+                : null,
+            onSljedeci: () => setState(() => _pomakMjeseci++),
             onIzbor: (datum) =>
                 ref.read(bookingFlowProvider.notifier).chooseDate(datum),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          if (!dateOnly)
-            Expanded(
-              child: _Vremena(serviceId: serviceId, flow: flow),
-            )
-          else
-            const Spacer(),
+          if (!dateOnly) ...[
+            const SizedBox(height: AppSpacing.xxl),
+            _Vremena(serviceId: serviceId, flow: flow),
+          ],
         ],
       ),
     );
   }
 }
 
-/// Traka dana. Dani bez slobodnog termina ostaju vidljivi, ali se ne mogu tapnuti.
-class _TrakaDatuma extends ConsumerWidget {
-  const _TrakaDatuma({
-    required this.dani,
+/// Mjesečna mreža dana. Dani bez slobodnog termina ostaju vidljivi, ali se ne tapaju.
+class _Kalendar extends ConsumerWidget {
+  const _Kalendar({
+    required this.mjesec,
     required this.dostupni,
     required this.izabran,
     required this.onIzbor,
+    required this.onPrethodni,
+    required this.onSljedeci,
   });
 
-  final List<LocalDate> dani;
+  final LocalDate mjesec;
   final AsyncValue<List<LocalDate>> dostupni;
   final LocalDate? izabran;
   final ValueChanged<LocalDate> onIzbor;
+  final VoidCallback? onPrethodni;
+  final VoidCallback onSljedeci;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
 
     if (dostupni.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-        child: SkeletonLoader(height: 76, radius: AppRadius.md),
-      );
+      return const SkeletonLoader(height: 320);
     }
 
     if (dostupni.hasError) {
       return EmptyState(
         message: l10n.bookingServicesUnavailable,
-        icon: Icons.cloud_off,
+        icon: LucideIcons.cloudOff,
         actionLabel: l10n.retry,
         onAction: () => ref.invalidate(availableDatesProvider),
       );
@@ -137,18 +158,28 @@ class _TrakaDatuma extends ConsumerWidget {
 
     final slobodni = (dostupni.valueOrNull ?? const <LocalDate>[]).toSet();
     if (slobodni.isEmpty) {
-      return EmptyState(message: l10n.bookingNoDates, icon: Icons.event_busy);
+      return EmptyState(
+        message: l10n.bookingNoDates,
+        icon: LucideIcons.calendarX,
+      );
     }
 
-    return DateStrip(
+    final daniMjeseca = daysOfMonth(mjesec);
+
+    return CalendarMonth(
+      monthLabel: formatMonth(l10n, mjesec),
+      weekdayLabels: weekdayInitials(l10n),
+      // Prvi u mjesecu mora pasti na svoj dan u sedmici, inače mreža laže o datumu.
+      leadingEmptyCells: daniMjeseca.first.weekday - DateTime.monday,
       selectedId: izabran?.format(),
       onSelect: (id) => onIzbor(LocalDate.parse(id)),
+      onPreviousMonth: onPrethodni,
+      onNextMonth: onSljedeci,
       days: [
-        for (final dan in dani)
-          DateStripDay(
+        for (final dan in daniMjeseca)
+          CalendarDay(
             id: dan.format(),
-            weekdayLabel: weekdayShort(l10n, dan.weekday),
-            dayLabel: dan.day.toString(),
+            label: dan.day.toString(),
             available: slobodni.contains(dan),
           ),
       ],
@@ -156,7 +187,7 @@ class _TrakaDatuma extends ConsumerWidget {
   }
 }
 
-/// Mreža slobodnih vremena za izabrani dan.
+/// Slobodna vremena za izabrani dan, u dvije grupe.
 class _Vremena extends ConsumerWidget {
   const _Vremena({required this.serviceId, required this.flow});
 
@@ -169,7 +200,10 @@ class _Vremena extends ConsumerWidget {
     final datum = flow.date;
 
     if (datum == null) {
-      return EmptyState(message: l10n.bookingPickDate, icon: Icons.event);
+      return EmptyState(
+        message: l10n.bookingPickDate,
+        icon: LucideIcons.calendar,
+      );
     }
 
     final upit = SlotQuery(
@@ -182,12 +216,12 @@ class _Vremena extends ConsumerWidget {
     return switch (slotovi) {
       AsyncData(:final value) when value.isEmpty => EmptyState(
         message: l10n.bookingDayFull,
-        icon: Icons.event_busy,
+        icon: LucideIcons.calendarX,
       ),
-      AsyncData(:final value) => _Mreza(
-        // `distinctTimes` svodi redove na vremena: kad radnik nije izabran, funkcija
-        // vrati isto vrijeme po svakom slobodnom radniku, pa bi korisnik bez ovoga
-        // vidio "09:00" tri puta.
+      // `distinctTimes` svodi redove na vremena: kad radnik nije izabran, funkcija
+      // vrati isto vrijeme po svakom slobodnom radniku, pa bi korisnik bez ovoga
+      // vidio "09:00" tri puta.
+      AsyncData(:final value) => _Grupe(
         vremena: value.distinctTimes,
         izabrano: flow.startTime,
         onIzbor: (vrijeme) => ref
@@ -196,17 +230,18 @@ class _Vremena extends ConsumerWidget {
       ),
       AsyncError() => EmptyState(
         message: l10n.bookingServicesUnavailable,
-        icon: Icons.cloud_off,
+        icon: LucideIcons.cloudOff,
         actionLabel: l10n.retry,
         onAction: () => ref.invalidate(availableSlotsProvider(upit)),
       ),
-      _ => const _KosturVremena(),
+      _ => const SkeletonLoader(height: 200),
     };
   }
 }
 
-class _Mreza extends StatelessWidget {
-  const _Mreza({
+/// "Prijepodne" i "Poslijepodne", svaka sa svojom mrežom chipova.
+class _Grupe extends StatelessWidget {
+  const _Grupe({
     required this.vremena,
     required this.izabrano,
     required this.onIzbor,
@@ -218,49 +253,85 @@ class _Mreza extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl,
-        0,
-        AppSpacing.xl,
-        AppSpacing.xxl,
-      ),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        // Četiri po redu na 390 px (`docs/02 §14`), a na širem ekranu više — bez fiksnog
-        // broja kolona, koji na tabletu razvuče chip preko pola ekrana.
-        maxCrossAxisExtent: 96,
-        mainAxisExtent: AppSize.touchTarget,
-        crossAxisSpacing: AppSpacing.sm,
-        mainAxisSpacing: AppSpacing.sm,
-      ),
-      itemCount: vremena.length,
-      itemBuilder: (context, index) {
-        final vrijeme = vremena[index];
-        return TimeSlotChip(
-          label: vrijeme.format(),
-          selected: vrijeme == izabrano,
-          onTap: () => onIzbor(vrijeme),
-        );
-      },
+    final l10n = AppLocalizations.of(context);
+    final prije = [
+      for (final v in vremena)
+        if (v.hour < 12) v,
+    ];
+    final poslije = [
+      for (final v in vremena)
+        if (v.hour >= 12) v,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (prije.isNotEmpty)
+          _Grupa(
+            naslov: l10n.bookingMorning,
+            vremena: prije,
+            izabrano: izabrano,
+            onIzbor: onIzbor,
+          ),
+        if (prije.isNotEmpty && poslije.isNotEmpty)
+          const SizedBox(height: AppSpacing.xxl),
+        if (poslije.isNotEmpty)
+          _Grupa(
+            naslov: l10n.bookingAfternoon,
+            vremena: poslije,
+            izabrano: izabrano,
+            onIzbor: onIzbor,
+          ),
+      ],
     );
   }
 }
 
-class _KosturVremena extends StatelessWidget {
-  const _KosturVremena();
+class _Grupa extends StatelessWidget {
+  const _Grupa({
+    required this.naslov,
+    required this.vremena,
+    required this.izabrano,
+    required this.onIzbor,
+  });
+
+  final String naslov;
+  final List<LocalTime> vremena;
+  final LocalTime? izabrano;
+  final ValueChanged<LocalTime> onIzbor;
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 96,
-        mainAxisExtent: AppSize.touchTarget,
-        crossAxisSpacing: AppSpacing.sm,
-        mainAxisSpacing: AppSpacing.sm,
-      ),
-      itemCount: 8,
-      itemBuilder: (_, _) => const SkeletonLoader(height: AppSize.touchTarget),
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(naslov, style: theme.textTheme.titleSmall),
+        const SizedBox(height: AppSpacing.md),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            // Tri po redu na 402 px (`prototype/ui` 5e), a na širem ekranu više — bez
+            // fiksnog broja kolona, koji na tabletu razvuče chip preko pola ekrana.
+            maxCrossAxisExtent: 130,
+            mainAxisExtent: AppSize.timeSlot,
+            crossAxisSpacing: AppSpacing.md,
+            mainAxisSpacing: AppSpacing.md,
+          ),
+          itemCount: vremena.length,
+          itemBuilder: (context, index) {
+            final vrijeme = vremena[index];
+            return TimeSlotChip(
+              label: vrijeme.format(),
+              selected: vrijeme == izabrano,
+              onTap: () => onIzbor(vrijeme),
+            );
+          },
+        ),
+      ],
     );
   }
 }

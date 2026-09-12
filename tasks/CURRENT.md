@@ -1,111 +1,97 @@
-# Trenutni task: 11 — Client: booking flow (4 koraka + success)
+# Trenutni task: 11 — Client: booking flow (redizajn po `prototype/ui/`)
 
 Puni task: [`tasks/sprint-1/11-booking-flow.md`](sprint-1/11-booking-flow.md) · U toku ·
-Učitano ponovo: 2026-09-12 · Grana: `feat/booking-flow-ekrani`, draft PR [#18](https://github.com/htuco/salon-booking-platform/pull/18)
-(ne-UI sloj je stigao ranije kroz PR #17 i mergovan je)
+Grana: `feat/booking-flow-ekrani`, PR [#18](https://github.com/htuco/salon-booking-platform/pull/18)
 
 ## Status
 
-**Ekrani su gotovi i dokazani lokalno i slikom. Ostaje dokaz protiv prave baze.**
-
-Ne-UI sloj je stigao ranije (PR #17). Ovaj rad je UI iznad njega: pet ekrana, slanje, dvije nove
-`core_ui` komponente. 215 testova PASS, čist checkout prolazi, oba tenanta snimljena u Chromiumu.
-
-Ono što **nije** dokazano i drži task na 🟡: `book(...)` nije nijednom pozvan protiv prave baze i
-`409` nije izazvan uživo — oboje traži Supabase vrijednosti i prijavljenog korisnika (Sprint 2).
+**Redizajn je gotov i dokazan slikom.** Ostaje ono što je i prije ostajalo: poziv protiv prave
+baze i `409` uživo (Sprint 2), plus dvije sitnice iz napomena ispod.
 
 <details>
-<summary>Zatečeno stanje na početku (provjereno u repou)</summary>
+<summary>Zatečeno stanje na početku ovog prolaza</summary>
 
-**Ne-UI sloj je bio gotov i na `origin/main`; UI sloj nije bio počet.** Task 11 je jedini otvoren task —
-Sprint 1 nema ničega iza njega, a Sprint 2 nije raspisan. "Iduće po redu" je zato ostatak ovog
-taska: četiri ekrana i success.
+**Flow radi, ali ne izgleda kao handoff.** Ekrani su pisani po tekstu iz `prototype/ui/SPEC.md`, a
+ne po slikama iz `prototype/ui/screenshots/` — i razlika nije kozmetička: prototip je uglat sistem
+(radius 0), sa serif naslovima, hairline granicama i drugim rasporedom koraka.
 
-Provjereno u repou, ne prepisano iz statusa:
+Ovo je drugi prolaz kroz iste ekrane: logika, provideri, rute i testovi ostaju, mijenja se **oblik**.
+Boja i dalje dolazi iz `tenant.yaml`, tekst iz `vertical.terms` — iz handoffa se uzima oblik, ne
+paleta (`prototype/ui/README.md`).
 
-- `packages/core_api/lib/src/booking/booking_repository.dart` ima `availableSlots`,
-  `availableDates`, `book` — sve tri na `rpc`.
-- `apps/client/lib/src/features/booking/` ima `booking_flow_state.dart` i
-  `booking_flow_provider.dart` (`bookingFlowProvider`, `availableSlotsProvider`,
-  `availableDatesProvider`, `bookingDateOnlyProvider`, `bookingRequiresStaffChoiceProvider`).
-- `apps/client/lib/src/core/router/app_router.dart` — svih pet `/book/*` ruta postoji kao
-  `ClientRoute` enum, ali svaka vodi na `PlaceholderScreen`.
-- `packages/core_ui/lib/src/components/` — šest komponenti; `date_strip` i `step_progress_bar`
-  **ne postoje**.
-- `apps/client/pubspec.yaml` — nema ni `flutter_animate` ni `confetti`.
+**Odlučeno prije početka:** tokeni se mijenjaju **sistemski u `core_ui`** (ne samo na booking
+ekranima), i fontovi **DM Serif Display + Archivo se pakuju** u `apps/client/assets/fonts/`.
 
 </details>
 
+## Pravilo: barber je 1:1, ostale vertikale nisu
+
+**Odluka (2026-09-12):** barber aplikacija mora biti **1:1 sa `prototype/ui/`, u najsitniji
+detalj**. Beauty i ostale vertikale dobijaju **svoj dizajn**, pa se ne pokušava jedan raspored
+razvući preko svih.
+
+To je obrnulo raniji kompromis: copy i paleta više nisu izvedeni iz vertikale da bi bili tačni
+svuda, nego prepisani iz handoffa. Konkretno:
+
+- Naslov koraka 1 je **"Izaberite uslugu"** (bio: `vertical.terms.servicePlural`).
+- Success naslov je **"Salon vas je vidio"** (bio: "Čekamo potvrdu").
+- `modern_barber` neutrale su **tačne vrijednosti iz `SPEC.md`**, ne približne.
+- Ikone su **Lucide** (`lucide_icons_flutter`), ne Material.
+- Demo podaci nose **placeholder ploče iz handoffa**; produkcija ostavlja okvir prazan.
+
+### Šta još nije 1:1
+
+- **Zlatna brand boja ostaje** iako je handoff monohroman (primarni CTA `#F2F2F3`). Tvoja odluka,
+  odgođena — to je danas jedina razlika u boji.
+- **Usluge nemaju fotografiju.** `services` tabela nema `image_url`, pa red usluge ima prazan
+  okvir dok migracija ne doda kolonu. Handoff traži thumb 1:1, 76 px.
+- **Radnici nemaju godine staža.** Handoff piše "Barber · 9 godina"; `employees` nema to polje.
+- **Ekrani `5a` Početna i `5b` O nama nisu rađeni po handoffu**, a `5h`–`5q` ne postoje.
+
 ## Ciljevi
 
-- [x] Grana sa svježeg `origin/main` — `feat/booking-flow-ekrani`; draft PR ide uz prvi commit
-- [x] `DateStrip` i `StepProgressBar` u `core_ui` — oba u `_DemoEkran`-u, pa prolaze postojeće
-      provjere kontrasta i dodirne mete u obje palete
-- [x] `flutter_animate` + `confetti` u `apps/client/pubspec.yaml`
-- [x] `/book/service` — čita `?serviceId=`; pokriveno testom (regresija iz taska 10)
-- [x] `/book/employee` — "bilo ko od nas" prvi; lista je presjek sa `employee_services`
-- [x] `/book/slot` — datumi i slotovi iz providera; `date_only` grana pokrivena testom
-- [x] `/book/details` — sažetak, napomena i slanje; bez polja za telefon
-- [x] `/book/success` — `StatusBadge` "Na čekanju", konfete u brand bojama
-- [x] `409` kao prvoklasno stanje: poruka, `ref.invalidate`, povratak na korak 3 sa zadržanim danom
-- [x] Svaki ekran ima prazno / greška / učitavanje stanje
-- [x] Svi tekstovi kroz `vertical.terms.*` i `app_bs.arb`
-- [x] Widget testovi: 8 novih — prelaz, guard, preselekcija, prazan dan, `date_only`, `409`, success.
-      **215 testova PASS** (bilo 205), analiza čista, format čist, `gen_flavors --check` ažurno
-- [x] Vizuelni dokaz kroz `lib/demo_main.dart` za oba tenanta — svih pet ekrana u Chromiumu,
-      `docs/screenshots/task-11-*`. **Našao grešku koju suita nije:** korak 2 je u demou
-      prikazivao grešku jer `employeeServiceLinksProvider` nije bio override-ovan
-- [x] Pokrenuto na **iOS simulatoru** (iPhone 17, iOS 26.3) iz flavor builda — home i prvi korak,
-      `docs/screenshots/task-11-ios-sim-*`
-- [x] `./tool/verify_clean.sh` prolazi iz čistog checkouta — 84 client testa iz praznog klona
+- [x] **Fontovi** — DM Serif Display + Archivo u `apps/client/assets/fonts/` sa OFL licencama.
+      Archivo je varijabilni (staticki rezovi ne postoje u izvoru), pa tezine idu kroz
+      `FontVariation('wght', …)` — sam `fontWeight` na varijabilnom fontu zna ostati bez efekta
+- [x] **Tokeni u `core_ui`** — `AppRadius.none` je jedina vrijednost (klasa sa jednom konstantom
+      namjerno, da se 8 ne vrati "privremeno"), gutter 22, CTA 60, slot 58, ćelija 44, traka 5
+- [x] **Tipografska skala** u `core_ui/tokens/typography.dart`, vezana u `buildAppTheme`
+- [x] **Komponente**: `PhotoFrame`, `SelectableRow`, `CalendarMonth`, `SpecCard`; `TimeSlotChip`
+      uglat i invertovan; `DateStrip` **obrisan** — bio je pogrešna komponenta za ovaj korak
+- [x] **Korak 1** — izbor više ne vodi odmah dalje; zaključuje ga "Dalje" na dnu
+- [x] **Korak 2** — `?` okvir za "bilo ko od nas", inicijal dok fotografija nema, ✓ kvadratić
+- [x] **Korak 3** — mjesečni kalendar sa ‹ ›, pa "Prijepodne"/"Poslijepodne"
+- [x] **Korak 4** — "Još jedan korak", kartica "Čuvamo vam", tri dugmeta za prijavu, pravna napomena
+- [x] **Success** — hero, kicker, serif naslov, `SpecCard`, "Dodaj u kalendar" (neaktivno do
+      Sprinta 2), CTA "Moji termini". **Konfete uklonjene**, `confetti` izbačen iz `pubspec.yaml`
+- [x] Testovi prilagođeni — **215 PASS**, analiza i format čisti
+- [x] Vizuelni dokaz: svih pet ekrana u Chromiumu na 402×874 (širina handoffa), oba tenanta —
+      `docs/screenshots/task-11-*`
 
 ## Napomene
 
-**Grana u task fajlu je zastarjela.** `feat/booking-repozitorij-availability` je mergovan (PR #17),
-kao i `chore/reorganizacija-dizajn-handoff` (PR #16). Lokalni `main` je iza — `git fetch` pa
-`git switch main && git pull` prije nego što se otvori nova grana. Radna kopija je trenutno na
-`chore/reorganizacija-dizajn-handoff`, jedan commit iza `origin/main`.
+**Prototip i raniji izvori se na tri mjesta ne slažu — prototip je jači** (`CLAUDE.md`,
+`prototype/CLAUDE.md`):
 
-**Dizajn handoff je premješten.** Ekrani 5c–5g su sada u `prototype/ui/SPEC.md` (ne više u
-`design/`), `prototype/wireframe/` je zamrznuti React prototip. Task fajl još pokazuje na
-`prototype/wireframe/src/app/pages/BookingFlow.tsx` — to je referenca za flow, ne za izgled.
+1. **Korak 3 nije traka datuma nego mjesečni kalendar.** `docs/02 §16` traži `DateStrip`;
+   `05-korak3-vrijeme.png` crta mrežu 7×N sa ‹ › navigacijom po mjesecu. `DateStrip` iz prvog
+   prolaza time postaje pogrešna komponenta.
+2. **Korak 4 je ekran prijave, ne sažetak sa napomenom.** Prototip nema polje za napomenu; ima
+   karticu "Čuvamo vam" i tri dugmeta za prijavu. Polje za napomenu iz prvog prolaza ispada.
+3. **Success ekran nema konfete.** DoD ih traži "kao u prototipu", a prototip ih nema — ima hero
+   fotografiju, kicker i tabelu. `confetti` zavisnost time postaje suvišna.
 
-**`prototype/ui/SPEC.md` i `docs/06` se ne slažu oko koraka 4.** SPEC 5f crta "Apple / Google /
-phone sign-in"; `docs/06 §3.1` i `docs/06 §1.1` kažu da se **broj telefona ne traži nigdje**
-(push zamjenjuje SMS), a auth u cjelini dolazi tek u Sprintu 2. **Docs pobjeđuje na flowu**,
-SPEC na obliku. Korak 4 je do Sprinta 2 sažetak + slanje sa guest/mock identitetom, bez
-polja za telefon.
+**Screenshot `05-korak3-vrijeme.png` je polupokvaren** — izvoz nije izrenderovao petlje, pa u njemu
+stoje `{{ d.num }}` i `{{ t.label }}`. Struktura se čita iz `screens-flat.html`, ne iz te slike.
 
-**SPEC 5e crta mjesečni kalendar, task traži `DateStrip`.** Uzmi oblik iz SPEC-a (grupisanje
-AM/PM, hit target ≥ 44px, prošli dani neselektabilni), ali komponenta ide u `core_ui` sa
-tokenima — hex iz handoffa je paleta jednog brenda.
+**Ranija zabuna je razriješena:** `SPEC.md` tabela za 5f spominje "phone sign-in", ali sam ekran
+nudi samo Apple / Google / email. To se slaže sa `docs/06 §3.1` — telefon se ne traži nigdje.
 
-**`customerId` još nema odakle doći.** `book(...)` ga traži, upis u `customers` nema validiranu
-funkciju, a `book_appointment` je grantovan samo roli `authenticated`. Do Sprinta 2 zadnji korak
-ide guest/mock putanjom — **struktura poziva ostaje ista**.
+**Fotografije su placeholderi** (`assets/ph1–6.png`, čelik/ugalj plate). Svih 45 slotova čeka prave
+slike; do tada `PhotoFrame` crta praznu površinu sa hairline granicom, ne prazan prostor.
 
-**CI je blokiran naplatom na `htuco` nalogu do 29.09.2026.** Crven CI nije greška u kodu. Dokaz
-ide lokalno: `melos run analyze`, `melos run test`, `./tool/verify_clean.sh` (čist checkout,
-hvata necommitovan fajl i codegen drift) i `./tool/test_supabase.sh` za bazu.
-
-**Zamke koje su već platili raniji taskovi:**
-
-- **Nula availability logike u Dartu.** Iskušenje je "privremeno" filtrirati slotove; task 05
-  postoji da to spriječi. DoD traži provjeru `grep`-om, ne pretpostavkom.
-- **Konflikt stiže kao `PT409`**, ne `409` — mapiranje je ispravljeno u ne-UI sloju, ali
-  **ponašanje ekrana na 409 još nije izazvano uživo** (korak 4 iz Koraka taska).
-- **Home tap već vodi na `/book/service?serviceId=<id>`.** Ako prvi korak ne pročita taj query
-  parametar, preselekcija tiho ne radi i korisnik bira uslugu dvaput.
-- **`pumpAndSettle` ne radi na ekranu sa skeletonom** — puls se ponavlja, test istekne i kad je
-  ekran ispravan. Koristi `pump()`.
-- **Svaki widget test koji podiže app mora override-ovati podatkovne providere**, inače
-  repozitorij posegne za `Supabase.instance` kojeg u testu nema.
-- **Screenshot nalazi ono što testovi ne mogu** — task 10 (plavi badge preko zlatnog brenda) i
-  task 07 (prazna bijela stranica). Vizuelna provjera ide kroz `lib/demo_main.dart`.
-- **Ekran zove providere, ne repozitorij.** Osvježavanje liste je `ref.invalidate(...)`; stanje
-  flowa namjerno **ne** nosi listu slotova.
-
-**Procjena ostatka: 2–3 dana** od izvornih 3–4 (ne-UI sloj je pojeo oko jedan dan).
+**Šta se ne dira:** provideri, `BookingRepository`, `BookingFlowState`, rute, `409` putanja i
+guard. Sve to je dokazano u prvom prolazu i ostaje.
 
 ## Istorija
 
