@@ -29,7 +29,7 @@ Status blok sadrži, tim redom:
 1. **Stanje jednom rečenicom** — ✅ zatvoreno, 🟡 dijelom, ⛔ blokirano.
 2. **Šta je dokazano i čime.** Komanda + stvaran (skraćen) izlaz, ili link na CI run. Bez ovoga
    sljedeća osoba ponavlja tvoj posao da bi se uvjerila.
-3. **Šta je napisano ali nije dokazano**, i zašto (nema Dockera, nema macOS-a, nema uređaja).
+3. **Šta je napisano ali nije dokazano**, i zašto (nema macOS-a, nema uređaja, nema naloga).
    Ovo je najvrjedniji dio predaje i najčešće se izostavi.
 4. **Ostalo za sljedećeg** — konkretni koraci, sa komandom kojom se počinje.
 5. **Zamke** koje si našao. Onu koja se ponavlja ne piši samo ovdje nego i u kod/dokument gdje se
