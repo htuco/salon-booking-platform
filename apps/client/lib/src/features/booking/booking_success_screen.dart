@@ -21,6 +21,9 @@ import 'date_labels.dart';
 /// korisnik dođe u salon koji ga ne očekuje. Zato kicker kaže **"ZAHTJEV JE POSLAN"**, a
 /// status u tabeli stoji kao "Na čekanju".
 ///
+/// Copy je **doslovno iz handoffa** ("Salon vas je vidio"). Barber je 1:1; druge vertikale
+/// dobijaju svoj dizajn, pa se rod djelatnosti ("Ordinacija vas je vidjela") rješava tamo.
+///
 /// **Nema konfeta.** Prvi prolaz ih je imao, jer ih DoD taska spominje "kao u prototipu";
 /// sam prototip ih nema — ima hero površinu, kicker, serif naslov i tabelu. Slavlje nad
 /// zahtjevom koji salon još nije potvrdio je obećanje koje ekran ne smije dati.

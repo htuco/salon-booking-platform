@@ -42,7 +42,7 @@ class PhotoFrame extends StatelessWidget {
       width: size,
       height: size / aspectRatio,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
+        color: scheme.surfaceContainerLowest,
         border: Border.all(color: scheme.outline),
       ),
       clipBehavior: Clip.hardEdge,

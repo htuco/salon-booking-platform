@@ -285,7 +285,7 @@ void main() {
         ClientRoute.bookSuccess.path,
       );
       expect(find.text('ZAHTJEV JE POSLAN'), findsOneWidget);
-      expect(find.text('Čekamo potvrdu'), findsOneWidget);
+      expect(find.text('Salon vas je vidio'), findsOneWidget);
       // `docs/01 §18`: termin nastaje kao `pending`. Lažno "potvrđeno" bi značilo da
       // korisnik dođe u salon koji ga ne očekuje.
       expect(find.text('Na čekanju'), findsOneWidget);

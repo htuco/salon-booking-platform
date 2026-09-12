@@ -48,10 +48,11 @@ class SpecCard extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: header,
             ),
-            if (rows.isNotEmpty) Divider(height: 1, color: scheme.outline),
+            if (rows.isNotEmpty)
+              Divider(height: 1, color: scheme.outlineVariant),
           ],
           for (var i = 0; i < rows.length; i++) ...[
-            if (i > 0) Divider(height: 1, color: scheme.outline),
+            if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
             Container(
               constraints: const BoxConstraints(minHeight: 60),
               padding: const EdgeInsets.symmetric(

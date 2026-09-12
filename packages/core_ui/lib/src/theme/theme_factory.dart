@@ -75,8 +75,14 @@ ThemeData buildAppTheme({
     surface: neutrals.surface,
     onSurface: neutrals.textPrimary,
     surfaceContainerHighest: neutrals.surfaceContainer,
+    // Podloga okvira za fotografiju. `SPEC.md` je razdvaja od kartice (`#1A1D20`
+    // naspram `#151719`) da se prazan okvir vidi kao okvir, a ne kao rupa.
+    surfaceContainerLowest: neutrals.photoGround,
     onSurfaceVariant: neutrals.textMuted,
     outline: neutrals.outline,
+    // Razdjelnik unutar grupe redova je **tanji** od granice kartice. Ista boja za oboje
+    // pretvorila bi `SpecCard` u mrežu.
+    outlineVariant: neutrals.hairline,
   );
 
   final textTheme = buildTextTheme(
@@ -122,6 +128,10 @@ ThemeData buildAppTheme({
       style: FilledButton.styleFrom(
         backgroundColor: primary,
         foregroundColor: onPrimary,
+        // `SPEC.md` daje tacne vrijednosti za onemoguceno stanje; Material bi inace
+        // uzeo `onSurface` sa 12%/38% opacity, sto na ovoj pozadini ispadne mutno.
+        disabledBackgroundColor: neutrals.disabledFill,
+        disabledForegroundColor: neutrals.textDisabled,
         // Minimalna visina je token, ne procjena: `docs/02 §14` trazi 48 dp.
         minimumSize: const Size(0, AppSize.buttonHeight),
         textStyle: textTheme.labelLarge,
@@ -131,7 +141,8 @@ ThemeData buildAppTheme({
 
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: primaryNaPozadini,
+        foregroundColor: neutrals.textPrimary,
+        disabledForegroundColor: neutrals.textDisabled,
         minimumSize: const Size(0, AppSize.buttonHeight),
         textStyle: textTheme.labelLarge,
         side: BorderSide(color: neutrals.outline),
@@ -165,7 +176,7 @@ ThemeData buildAppTheme({
       ),
     ),
 
-    dividerTheme: DividerThemeData(color: neutrals.outline, space: 1),
+    dividerTheme: DividerThemeData(color: neutrals.hairline, space: 1),
 
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: neutrals.surface,

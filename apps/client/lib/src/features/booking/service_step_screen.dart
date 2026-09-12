@@ -23,9 +23,9 @@ import 'widgets/booking_step_scaffold.dart';
 /// se tapne kartica usluge (task 10); bez čitanja tog parametra preselekcija tiho ne radi
 /// i korisnik bira istu uslugu dvaput, a ekran pri tome izgleda ispravno.
 ///
-/// Naslov je `vertical.terms.servicePlural`, a ne prototipovo "Izaberite uslugu": akuzativ
-/// se razlikuje po vertikali ("uslugu", "tretman", "pregled"), a `VerticalTerms` danas nosi
-/// samo nominativ. Množina je jedini oblik koji je tačan u sve tri vertikale.
+/// Naslov je **doslovno iz handoffa** — "Izaberite uslugu". Barber aplikacija je 1:1 sa
+/// `prototype/ui/`; ostale vertikale dobijaju svoj dizajn i svoj copy, pa se akuzativ
+/// ("tretman", "pregled") ne rješava ovdje nego tamo.
 class ServiceStepScreen extends ConsumerStatefulWidget {
   const ServiceStepScreen({this.preselectedServiceId, super.key});
 
@@ -61,7 +61,7 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
 
     return BookingStepScaffold(
       step: BookingStep.service,
-      title: vertical.terms.servicePlural,
+      title: l10n.bookingPickServiceTitle,
       subtitle: l10n.bookingPickOneHint,
       // Labela ostaje "Dalje" i kad je dugme onemoguceno — handoff mijenja tekst samo na
       // koraku sa terminima, gdje izbor nije ocigledan iz sadrzaja ekrana. Ovdje bi
