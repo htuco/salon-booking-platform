@@ -254,6 +254,11 @@ Obje zbog multi-tenanta, obje zapisane u doc komentaru ekrana:
 Vizuelno u Chromiumu na **402×874**, širini handoffa, oba tenanta:
 [`docs/screenshots/task-11-*`](../../docs/screenshots/).
 
+**Pokrenuto i na iOS simulatoru** (iPhone 17, iOS 26.3) iz flavor builda: korak 1 u redizajnu
+(`task-11-ios-sim-korak1-barber.png`) i guard na deep linku bez izabrane usluge
+(`task-11-ios-sim-guard-barber.png`). Prethodni screenshot home ekrana je uklonjen — prikazivao je
+stanje prije redizajna, a kao dokaz dizajna bi lagao.
+
 Beauty tenant je usput otkrio grešku u demo podacima: success ekran je pokazivao **prazan red** za
 uslugu, jer je demo termin nosio barberov `serviceId`, kojeg u beauty katalogu nema.
 
