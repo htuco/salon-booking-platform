@@ -1,12 +1,12 @@
 # Trenutni task: nije učitan
 
-Zadnji zatvoreni: **15 — Dokaz izolacije: isti klijent u dva salona** (✅). Lanac 12 → 13 → 14 → 15
-je gotov: booking radi od početne do reda u bazi, i dokazano je da salon ne vidi preko svoje granice.
+Zadnji zatvoreni: **16 — „Moji termini" + otkazivanje** (✅). Klijentska aplikacija time ima
+zaokružen životni ciklus termina: pregled → rezervacija → prijava → lista → otkazivanje.
 
 Sljedeći po redu u [Sprintu 2](sprint-2/README.md) je
-[16 — Client: „Moji termini" + otkazivanje](sprint-2/16-moji-termini-i-otkazivanje.md);
-učitaj ga sa `/task load 16`. Alternativa je [22](sprint-2/22-sema-slike-i-staz.md) (pola dana
-migracije) koji tabela traži **prije** 18 i 20.
+[17 — „Moj račun" + brisanje računa](sprint-2/17-moj-racun-i-brisanje.md); učitaj ga sa
+`/task load 17`. Alternativa je [22](sprint-2/22-sema-slike-i-staz.md) — pola dana migracije koju
+tabela traži **prije** 18 i 20.
 
 ## Status
 
@@ -21,6 +21,8 @@ _(prazno — učitaj sljedeći task)_
 _(prazno — učitaj sljedeći task)_
 
 ## Istorija
+
+- **16 — Client: „Moji termini" + otkazivanje** (2026-09-12, ✅) — `/appointments` po handoffu 5h: dva taba, kartica sa statusom, otkazivanje kroz modal 5p (`AppDialog` u `core_ui` — blur, scrim, destruktivna akcija gore). `AppointmentRepository` postoji prvi put, jer klijent do auth rada nije mogao pročitati nijedan `appointments` red. `cancel_appointment` uzima rok iz `salon_settings.min_cancel_hours` i pamti `cancelled_by`; **rok vrijedi za klijenta, ne za salon** — salon otkazuje kad mora. Odigrano u browseru protiv živog stacka: prijava, rezervacija 22.09. u 13:00, otkazivanje; `cancelled_by = customer`, termin prešao u „Prošle", i **slot odmah opet slobodan** — provjereno `get_available_slots` upitom, ne pretpostavkom. Dokazano: **97 pgTAP testova** (bilo 82), **276 Dart testova** (bilo 256), 12 novih widget testova. pgTAP je usput našao da ista NULL rupa iz taska 14 stoji i u `book_appointment` od taska 05 — **nije curenje i nikad nije bilo**, jer je `owns_identity` FALSE za tuđeg klijenta a `NULL and FALSE` je FALSE (provjereno pokretanjem), ali je zatvorena kroz `create or replace` nad doslovnim tijelom iz taska 05. I da je moj vlastiti test tvrdio pogrešno: direktan `update` sa klijenta ne baca `42501` nego RLS pogodi nula redova, što u Postgresu nije greška.
 
 - **15 — Dokaz izolacije: isti klijent u dva salona** (2026-09-12, ✅) — `rest_cross_salon_isolation.ts`, **22 asercije i tri stvarna JWT-a**: jedan čovjek se prijavi i rezerviše u oba demo salona, pa se mjeri šta ko vidi. Admin salona A ne dobija red salona B ni po `id`, ni po `auth_identity_id` — koji **zna**, jer stoji u njegovom vlastitom redu — ni kroz imenovani embed na `appointments`, ni kad `x-salon-id` postavi na salon B. **Provjereno da test može pasti**: `staff_manage` bez veze sa salonom reda („admin bilo gdje ⇒ admin svugdje") obori aserciju o admin pogledu, `own_customer` bez `client_salon_id()` obori aserciju o klijentu; obje vraćene i provjerene naspram migracije kroz `pg_policy`. Usput nađeno da kompozitni FK-ovi čine embed dvosmislenim (`PGRST201`, HTTP **300**), pa REST testovi moraju tretirati `300` kao grešku — inače prođe kao uspjeh i test pukne kasnije, na mjestu koje ne govori šta je stvarno vraćeno. Puna suita: **82 pgTAP testa, 92 REST asercije**.
 

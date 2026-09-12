@@ -18,6 +18,7 @@
 library;
 
 export 'src/components/app_button.dart';
+export 'src/components/app_dialog.dart';
 export 'src/components/calendar_month.dart';
 export 'src/components/empty_state.dart';
 export 'src/components/photo_frame.dart';

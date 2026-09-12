@@ -293,6 +293,16 @@ Od taska 14: `public.ensure_customer` — **drugi i zadnji upis iz klijentske ap
 veže za sesiju. Identitet izvodi baza iz JWT-a; klijent šalje samo salon, koji se mora poklopiti
 sa `x-salon-id` headerom (`.claude/docs/security.md`).
 
+Od taska 16: `AppointmentRepository` u `core_api` — **prvi repozitorij nad `appointments`**, jer
+klijent do auth rada nije mogao pročitati nijedan red. Čitanje je `from(...)` (ograničava ga RLS),
+otkazivanje je `rpc` (`cancel_appointment`, treći i zadnji upis iz app-e). `AppDialog` u `core_ui`
+je modal 5p; `features/appointments/` nosi ekran i razvrstavanje.
+
+**Razvrstavanje na „predstojeće" i „prošle" je u aplikaciji, ne u upitu.** Granica je *sada*, koje
+se pomjera između dva otvaranja ekrana, a upit koji bi vraćao samo buduće bi morao znati zonu
+salona. Uz to zatvoren termin (`cancelled`, `completed`, `no_show`) ide u „prošle" bez obzira na
+datum — korisnik na njega ne dolazi.
+
 `bookingCustomerIdProvider` je zbog toga **`FutureProvider`, ne sinhroni snimak**. Kao snimak je
 `null` značio dvije stvari — „nema klijenta" i „zahtjev je još u letu" — pa je korisnik koji
 dodirne „Pošalji zahtjev" odmah nakon prijave dobijao grešku iako je red već nastao. Slanje sada

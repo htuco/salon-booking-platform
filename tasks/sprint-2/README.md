@@ -10,7 +10,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [13](13-client-login-ekran.md) 🟡 | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
 | [14](14-identitet-i-klijent-upsert.md) ✅ | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
 | [15](15-izolacija-klijent-u-dva-salona.md) ✅ | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
-| [16](16-moji-termini-i-otkazivanje.md) | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
+| [16](16-moji-termini-i-otkazivanje.md) ✅ | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
 | [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
 | [22](22-sema-slike-i-staz.md) | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
 | [18](18-pocetna-i-tab-bar.md) | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
@@ -45,7 +45,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [11](../sprint-1/11-booking-flow.md) | ~~`409` nije izazvan uživo~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | Usluge nemaju fotografiju, radnici staž | [22](22-sema-slike-i-staz.md) |
 | [11](../sprint-1/11-booking-flow.md) | Početna nije po handoffu | [18](18-pocetna-i-tab-bar.md) |
-| [08](../sprint-1/08-core-api-repozitoriji.md) | Nema `AppointmentRepository` | [16](16-moji-termini-i-otkazivanje.md) |
+| [08](../sprint-1/08-core-api-repozitoriji.md) | ~~Nema `AppointmentRepository`~~ | ✅ [16](16-moji-termini-i-otkazivanje.md) |
 | `security.md` | ~~`customers`~~ ✅ / `devices` upis bez validirane funkcije | ✅ [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
 | `security.md` | Admin `insert` nad `appointments` zaobilazi validaciju slota | [24](24-admin-akcije-nad-terminima.md) |
 
@@ -115,6 +115,20 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > testovi moraju tretirati `300` kao grešku — inače prođe kao uspjeh i test pukne kasnije.
 > Puna suita: **82 pgTAP testa, 92 REST asercije**.
 > Detalji: [15-izolacija-klijent-u-dva-salona.md](15-izolacija-klijent-u-dva-salona.md#status-2026-09-12--✅-zatvoren).
+
+
+> **16 — „Moji termini" + otkazivanje (✅, 2026-09-12).** `/appointments` po handoffu 5h sa dva
+> taba, `AppointmentRepository` (prvi repozitorij nad `appointments`), `AppDialog` u `core_ui` kao
+> modal 5p. `cancel_appointment` uzima rok iz `salon_settings.min_cancel_hours` — **rok vrijedi za
+> klijenta, ne za salon** — i pamti `cancelled_by`. Odigrano u browseru: prijava, rezervacija
+> 22.09. u 13:00, otkazivanje kroz modal; `cancelled_by = customer` i **slot je odmah opet
+> slobodan**, provjereno upitom. Dokazano: **97 pgTAP testova** (bilo 82), **276 Dart testova**
+> (bilo 256).
+> pgTAP je našao da ista NULL rupa iz taska 14 stoji i u `book_appointment` od taska 05 —
+> **nije curenje i nikad nije bilo** (za tuđeg klijenta je `owns_identity` FALSE, a
+> `NULL and FALSE` je FALSE, provjereno pokretanjem), ali je zatvorena; i da moj vlastiti test
+> tvrdi pogrešno: direktan `update` sa klijenta ne baca `42501` nego pogodi nula redova.
+> Detalji: [16-moji-termini-i-otkazivanje.md](16-moji-termini-i-otkazivanje.md#status-2026-09-12--✅-zatvoren).
 
 
 ## Dug koji nije task
