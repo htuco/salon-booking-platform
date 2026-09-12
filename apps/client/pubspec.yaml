@@ -61,6 +61,7 @@ dependencies:
   # `tel:`, `mailto:`, mape i profili na drustvenim mrezama sa home ekrana
   # (`docs/02 §3`). Bez ovoga je sekcija kontakta spisak teksta koji se ne moze pozvati.
   url_launcher: ^6.3.1
+  lucide_icons_flutter: ^3.1.19
 
 dev_dependencies:
   flutter_test:
@@ -89,6 +90,13 @@ flutter:
 
   # `flutter pub get` i build pokrecu gen-l10n; konfiguracija je u l10n.yaml.
   generate: true
+
+  # Placeholder ploce iz handoffa (`prototype/ui/assets/ph*.png`). **Koristi ih samo
+  # `demo_main.dart`**, da screenshot bude 1:1 sa mockupom; produkcijski build ostavlja
+  # okvir prazan dok ne stignu prave fotografije salona. Lazne fotografije u storeu su
+  # gore od praznog okvira.
+  assets:
+    - assets/demo/
 
   # Tipografija iz `prototype/ui/SPEC.md`: DM Serif Display za naslove, Archivo za tijelo.
   # **Pakuju se uz aplikaciju, ne ucitavaju se sa mreze** — handoff to izricito trazi, i

@@ -2,6 +2,7 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -75,7 +76,7 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
       child: switch (services) {
         AsyncData(:final value) when value.isEmpty => EmptyState(
           message: l10n.bookingEmptyList,
-          icon: Icons.event_busy,
+          icon: LucideIcons.calendarX,
         ),
         AsyncData(:final value) => _Lista(
           services: value,
@@ -86,7 +87,7 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
         ),
         AsyncError() => EmptyState(
           message: l10n.bookingServicesUnavailable,
-          icon: Icons.cloud_off,
+          icon: LucideIcons.cloudOff,
           actionLabel: l10n.retry,
           onAction: () => ref.invalidate(servicesProvider),
         ),

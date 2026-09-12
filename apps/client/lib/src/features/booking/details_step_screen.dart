@@ -1,6 +1,7 @@
 import 'package:core_api/core_api.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -223,7 +224,7 @@ class _Prijava extends StatelessWidget {
       children: [
         AppButton(
           label: l10n.bookingContinueApple,
-          icon: Icons.apple,
+          icon: LucideIcons.apple,
           onPressed: onTap,
         ),
         const SizedBox(height: AppSpacing.md),
@@ -235,7 +236,7 @@ class _Prijava extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         AppButton(
           label: l10n.bookingContinueEmail,
-          icon: Icons.alternate_email,
+          icon: LucideIcons.atSign,
           variant: AppButtonVariant.outline,
           onPressed: onTap,
         ),

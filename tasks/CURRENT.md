@@ -24,15 +24,29 @@ ekranima), i fontovi **DM Serif Display + Archivo se pakuju** u `apps/client/ass
 
 </details>
 
-## Svjesne razlike od handoffa
+## Pravilo: barber je 1:1, ostale vertikale nisu
 
-Obje su posljedica multi-tenanta, i obje su zapisane u doc komentarima ekrana:
+**Odluka (2026-09-12):** barber aplikacija mora biti **1:1 sa `prototype/ui/`, u najsitniji
+detalj**. Beauty i ostale vertikale dobijaju **svoj dizajn**, pa se ne pokušava jedan raspored
+razvući preko svih.
 
-1. **Naslov koraka 1 je `vertical.terms.servicePlural` ("Usluge"), ne "Izaberite uslugu".**
-   Akuzativ se razlikuje po vertikali (uslugu / tretman / pregled), a `VerticalTerms` danas nosi
-   samo nominativ. Množina je jedini oblik tačan u sve tri vertikale.
-2. **Success naslov je "Čekamo potvrdu", ne "Salon vas je vidio".** Ime djelatnosti mijenja rod —
-   "Ordinacija vas je **vidjela**" — pa umetanje `businessSingular` u rečenicu lomi gramatiku.
+To je obrnulo raniji kompromis: copy i paleta više nisu izvedeni iz vertikale da bi bili tačni
+svuda, nego prepisani iz handoffa. Konkretno:
+
+- Naslov koraka 1 je **"Izaberite uslugu"** (bio: `vertical.terms.servicePlural`).
+- Success naslov je **"Salon vas je vidio"** (bio: "Čekamo potvrdu").
+- `modern_barber` neutrale su **tačne vrijednosti iz `SPEC.md`**, ne približne.
+- Ikone su **Lucide** (`lucide_icons_flutter`), ne Material.
+- Demo podaci nose **placeholder ploče iz handoffa**; produkcija ostavlja okvir prazan.
+
+### Šta još nije 1:1
+
+- **Zlatna brand boja ostaje** iako je handoff monohroman (primarni CTA `#F2F2F3`). Tvoja odluka,
+  odgođena — to je danas jedina razlika u boji.
+- **Usluge nemaju fotografiju.** `services` tabela nema `image_url`, pa red usluge ima prazan
+  okvir dok migracija ne doda kolonu. Handoff traži thumb 1:1, 76 px.
+- **Radnici nemaju godine staža.** Handoff piše "Barber · 9 godina"; `employees` nema to polje.
+- **Ekrani `5a` Početna i `5b` O nama nisu rađeni po handoffu**, a `5h`–`5q` ne postoje.
 
 ## Ciljevi
 

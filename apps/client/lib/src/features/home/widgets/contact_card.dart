@@ -1,5 +1,6 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Jedan red kontakta: ikona, tekst i akcija koja ga otvara.
 ///
@@ -33,7 +34,11 @@ class ContactRow extends StatelessWidget {
           const SizedBox(width: AppSpacing.md),
           Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
           if (onTap != null)
-            Icon(Icons.chevron_right, size: 20, color: scheme.onSurfaceVariant),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 20,
+              color: scheme.onSurfaceVariant,
+            ),
         ],
       ),
     );

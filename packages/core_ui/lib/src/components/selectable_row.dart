@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../tokens/spacing.dart';
 import 'photo_frame.dart';
@@ -124,7 +125,7 @@ class _Kvacica extends StatelessWidget {
       height: 34,
       alignment: Alignment.center,
       color: scheme.onSurface,
-      child: Icon(Icons.check, size: 20, color: scheme.surface),
+      child: Icon(LucideIcons.check, size: 20, color: scheme.surface),
     );
   }
 }

@@ -20,7 +20,12 @@ class PhotoFrame extends StatelessWidget {
     super.key,
   });
 
-  /// URL fotografije. `null` ili prazno → crta se [placeholder].
+  /// Fotografija. Podrzana su dva oblika:
+  ///
+  /// - `http(s)://…` — slika sa mreze (`salons`/`employees.image_url`)
+  /// - `assets/…` — slika spakovana uz app; koristi je demo ulaz sa placeholder plocama
+  ///
+  /// `null` ili prazno → crta se [placeholder].
   final String? imageUrl;
 
   /// Šta stoji u okviru dok slike nema (inicijal, `?`, ikona).
@@ -48,8 +53,10 @@ class PhotoFrame extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       alignment: Alignment.center,
       child: imaSliku
-          ? Image.network(
-              url,
+          ? Image(
+              image: url.startsWith('assets/')
+                  ? AssetImage(url) as ImageProvider<Object>
+                  : NetworkImage(url),
               fit: BoxFit.cover,
               width: size,
               height: size / aspectRatio,

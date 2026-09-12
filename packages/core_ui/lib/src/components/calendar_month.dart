@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../tokens/spacing.dart';
 
@@ -82,9 +83,9 @@ class CalendarMonth extends StatelessWidget {
             Expanded(
               child: Text(monthLabel, style: theme.textTheme.headlineSmall),
             ),
-            _Strelica(icon: Icons.chevron_left, onTap: onPreviousMonth),
+            _Strelica(icon: LucideIcons.chevronLeft, onTap: onPreviousMonth),
             const SizedBox(width: AppSpacing.sm),
-            _Strelica(icon: Icons.chevron_right, onTap: onNextMonth),
+            _Strelica(icon: LucideIcons.chevronRight, onTap: onNextMonth),
           ],
         ),
         const SizedBox(height: AppSpacing.lg),

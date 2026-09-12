@@ -1,6 +1,7 @@
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -149,7 +150,7 @@ class _Kalendar extends ConsumerWidget {
     if (dostupni.hasError) {
       return EmptyState(
         message: l10n.bookingServicesUnavailable,
-        icon: Icons.cloud_off,
+        icon: LucideIcons.cloudOff,
         actionLabel: l10n.retry,
         onAction: () => ref.invalidate(availableDatesProvider),
       );
@@ -157,7 +158,10 @@ class _Kalendar extends ConsumerWidget {
 
     final slobodni = (dostupni.valueOrNull ?? const <LocalDate>[]).toSet();
     if (slobodni.isEmpty) {
-      return EmptyState(message: l10n.bookingNoDates, icon: Icons.event_busy);
+      return EmptyState(
+        message: l10n.bookingNoDates,
+        icon: LucideIcons.calendarX,
+      );
     }
 
     final daniMjeseca = daysOfMonth(mjesec);
@@ -196,7 +200,10 @@ class _Vremena extends ConsumerWidget {
     final datum = flow.date;
 
     if (datum == null) {
-      return EmptyState(message: l10n.bookingPickDate, icon: Icons.event);
+      return EmptyState(
+        message: l10n.bookingPickDate,
+        icon: LucideIcons.calendar,
+      );
     }
 
     final upit = SlotQuery(
@@ -209,7 +216,7 @@ class _Vremena extends ConsumerWidget {
     return switch (slotovi) {
       AsyncData(:final value) when value.isEmpty => EmptyState(
         message: l10n.bookingDayFull,
-        icon: Icons.event_busy,
+        icon: LucideIcons.calendarX,
       ),
       // `distinctTimes` svodi redove na vremena: kad radnik nije izabran, funkcija
       // vrati isto vrijeme po svakom slobodnom radniku, pa bi korisnik bez ovoga
@@ -223,7 +230,7 @@ class _Vremena extends ConsumerWidget {
       ),
       AsyncError() => EmptyState(
         message: l10n.bookingServicesUnavailable,
-        icon: Icons.cloud_off,
+        icon: LucideIcons.cloudOff,
         actionLabel: l10n.retry,
         onAction: () => ref.invalidate(availableSlotsProvider(upit)),
       ),

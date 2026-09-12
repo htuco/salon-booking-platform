@@ -1,5 +1,6 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -76,7 +77,7 @@ class BookingStepScaffold extends ConsumerWidget {
               Expanded(
                 child: EmptyState(
                   message: l10n.bookingMissingStep,
-                  icon: Icons.arrow_back,
+                  icon: LucideIcons.arrowLeft,
                   actionLabel: l10n.bookingRestart,
                   onAction: () => context.go(nedostaje.path),
                 ),
@@ -185,7 +186,7 @@ class _Zaglavlje extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.arrow_back, size: 22),
+                      const Icon(LucideIcons.arrowLeft, size: 22),
                       const SizedBox(width: AppSpacing.md),
                       Text(backLabel, style: theme.textTheme.titleSmall),
                     ],

@@ -2,6 +2,7 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -56,7 +57,7 @@ class EmployeeStepScreen extends ConsumerWidget {
           if (greska) {
             return EmptyState(
               message: l10n.bookingServicesUnavailable,
-              icon: Icons.cloud_off,
+              icon: LucideIcons.cloudOff,
               actionLabel: l10n.retry,
               onAction: () {
                 ref
@@ -76,7 +77,7 @@ class EmployeeStepScreen extends ConsumerWidget {
           if (zaUslugu.isEmpty && traziIzbor) {
             return EmptyState(
               message: l10n.bookingEmptyList,
-              icon: Icons.person_off,
+              icon: LucideIcons.userX,
             );
           }
 
