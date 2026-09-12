@@ -38,22 +38,27 @@ values
 ('550e8400-e29b-41d4-a716-446655440001',10,15,4,45,12,6)
 on conflict(salon_id) do nothing;
 
-insert into public.services(id,salon_id,name,category,price,duration_minutes) values
-('10000000-0000-4000-8000-000000000001','550e8400-e29b-41d4-a716-446655440000','Muško šišanje','Šišanje',15,30),
-('10000000-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440000','Brada','Brada',10,20),
-('10000000-0000-4000-8000-000000000003','550e8400-e29b-41d4-a716-446655440000','Šišanje + brada','Paketi',25,45),
-('10000000-0000-4000-8000-000000000004','550e8400-e29b-41d4-a716-446655440000','Fade','Šišanje',20,40),
-('10000000-0000-4000-8000-000000000005','550e8400-e29b-41d4-a716-446655440001','Žensko šišanje','Kosa',25,45),
-('10000000-0000-4000-8000-000000000006','550e8400-e29b-41d4-a716-446655440001','Feniranje','Kosa',20,40),
-('10000000-0000-4000-8000-000000000007','550e8400-e29b-41d4-a716-446655440001','Farbanje','Boja',70,120),
-('10000000-0000-4000-8000-000000000008','550e8400-e29b-41d4-a716-446655440001','Pramenovi','Boja',100,150)
+-- `image_url` je namjerno NULL na dvije usluge (Brada, Pramenovi): prazan okvir je
+-- predvidjeno stanje i mora se vidjeti u demou, inace se otkrije tek kod prvog klijenta
+-- koji nema fotografije.
+insert into public.services(id,salon_id,name,category,price,duration_minutes,image_url) values
+('10000000-0000-4000-8000-000000000001','550e8400-e29b-41d4-a716-446655440000','Muško šišanje','Šišanje',15,30,'https://images.demo.invalid/barber/sisanje.jpg'),
+('10000000-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440000','Brada','Brada',10,20,null),
+('10000000-0000-4000-8000-000000000003','550e8400-e29b-41d4-a716-446655440000','Šišanje + brada','Paketi',25,45,'https://images.demo.invalid/barber/paket.jpg'),
+('10000000-0000-4000-8000-000000000004','550e8400-e29b-41d4-a716-446655440000','Fade','Šišanje',20,40,'https://images.demo.invalid/barber/fade.jpg'),
+('10000000-0000-4000-8000-000000000005','550e8400-e29b-41d4-a716-446655440001','Žensko šišanje','Kosa',25,45,'https://images.demo.invalid/beauty/sisanje.jpg'),
+('10000000-0000-4000-8000-000000000006','550e8400-e29b-41d4-a716-446655440001','Feniranje','Kosa',20,40,'https://images.demo.invalid/beauty/feniranje.jpg'),
+('10000000-0000-4000-8000-000000000007','550e8400-e29b-41d4-a716-446655440001','Farbanje','Boja',70,120,'https://images.demo.invalid/beauty/farbanje.jpg'),
+('10000000-0000-4000-8000-000000000008','550e8400-e29b-41d4-a716-446655440001','Pramenovi','Boja',100,150,null)
 on conflict(id) do nothing;
 
-insert into public.employees(id,salon_id,name,role,bio) values
-('20000000-0000-4000-8000-000000000001','550e8400-e29b-41d4-a716-446655440000','Emir','Barber','Precizno šišanje i oblikovanje brade.'),
-('20000000-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440000','Amar','Barber','Klasični stilovi i moderni fade.'),
-('20000000-0000-4000-8000-000000000003','550e8400-e29b-41d4-a716-446655440001','Amina','Stilistica','Njega kose i boje prilagođene vama.'),
-('20000000-0000-4000-8000-000000000004','550e8400-e29b-41d4-a716-446655440001','Lejla','Stilistica','Frizure za svaki dan i posebne prilike.')
+-- Lejla namjerno nema `experience_years`: red bez staza mora izgledati uredno, a ne kao
+-- red kojem fali podatak.
+insert into public.employees(id,salon_id,name,role,bio,experience_years) values
+('20000000-0000-4000-8000-000000000001','550e8400-e29b-41d4-a716-446655440000','Emir','Barber','Precizno šišanje i oblikovanje brade.',9),
+('20000000-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440000','Amar','Barber','Klasični stilovi i moderni fade.',4),
+('20000000-0000-4000-8000-000000000003','550e8400-e29b-41d4-a716-446655440001','Amina','Stilistica','Njega kose i boje prilagođene vama.',12),
+('20000000-0000-4000-8000-000000000004','550e8400-e29b-41d4-a716-446655440001','Lejla','Stilistica','Frizure za svaki dan i posebne prilike.',null)
 on conflict(id) do nothing;
 
 insert into public.employee_services(salon_id,employee_id,service_id)

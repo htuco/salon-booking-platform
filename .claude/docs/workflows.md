@@ -238,9 +238,9 @@ sa podrazumijevana dva se flow potroši prije nego se vidi.
 supabase stop                        # kad završiš
 ```
 
-Zadnji pun prolaz: **97 pgTAP testova** i **92 REST asercije** — 24 izolacija sa dva stvarna JWT-a,
-26 javni katalog bez tokena, 20 upsert klijenta i rezervacija, 22 izolacija između salona sa tri
-JWT-a. Traje oko dvije minute.
+Zadnji pun prolaz: **97 pgTAP testova** i **95 REST asercija** — 24 izolacija sa dva stvarna
+JWT-a, 29 javni katalog bez tokena, 20 upsert klijenta i rezervacija, 22 izolacija između salona
+sa tri JWT-a. Traje oko dvije minute.
 
 **Zamka koja košta pola sata:** `supabase start` nad postojećim volumeom diže bazu **iz backupa** i
 migracije se ne primjenjuju. Testovi tada padnu na `relation "public.users" does not exist` i

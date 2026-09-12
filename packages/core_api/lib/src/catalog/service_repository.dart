@@ -15,7 +15,7 @@ class ServiceRepository {
   final SupabaseClient _client;
 
   static const _columns =
-      'id, salon_id, name, description, category, price, duration_minutes';
+      'id, salon_id, name, description, category, price, duration_minutes, image_url';
 
   /// Sve aktivne usluge salona, sortirane po kategoriji pa po imenu — isti redoslijed koji
   /// ekran prikazuje, da se ne sortira ponovo na klijentu.

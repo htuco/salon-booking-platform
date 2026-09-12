@@ -70,6 +70,13 @@ Migracija na svakoj od 15 tabela radi `enable row level security`, pa
 ono što treba: `select` javnog kataloga za `anon` i `authenticated`, i uži `insert/update/delete` set
 za `authenticated`.
 
+**Nova kolona je druga priča od nove tabele.** Grantovi su pisani tabelarno
+(`grant select on public.services to anon, authenticated`), ne kolonski, pa nova kolona ulazi u
+postojeći grant sama, a politika je `using(...)` nad redom i ne nabraja kolone. To je udobno, ali
+znači i da se **ne vidi iz migracije** — da su grantovi ikad postali kolonski, nova kolona bi bila
+nevidljiva `anon`-u i javni katalog bi tiho izgubio podatak. Zato svaka nova kolona u javnom
+katalogu dobija aserciju u `rest_public_catalog.ts`, koja je traži **bez tokena** (task 22).
+
 Zato **nova tabela nije automatski dostupna** i **mora dobiti i grant i politiku**. Tabela sa
 politikom bez granta je nevidljiva; tabela sa grantom bez politike je nevidljiva dok neko ne doda
 politiku koja je previše široka. `config.toml` namjerno ne postavlja `auto_expose_new_tables`.

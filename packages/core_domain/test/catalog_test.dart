@@ -8,6 +8,7 @@ import 'package:test/test.dart';
 /// PostgREST vraća `time` kao `HH:mm:ss`, `date` kao `yyyy-MM-dd`, a `numeric` kao broj —
 /// zato su vrijednosti ovdje u tom obliku, ne u Dart tipovima.
 void main() {
+  _task22();
   group('Salon', () {
     // seed.sql:25
     final row = <String, dynamic>{
@@ -288,6 +289,70 @@ void main() {
 
       expect(appointment.pendingExpiresAt, isNotNull);
       expect(appointment.pendingExpiresAt!.toUtc().hour, 8);
+    });
+  });
+}
+
+/// Task 22: dvije kolone koje handoff traži, a šema ih do sada nije imala.
+///
+/// Obje su nullable **namjerno** — salon bez fotografija i radnik bez unesenog staža su
+/// uredna stanja, ne nepotpuni podaci. Uz to: app iz storea je starija od baze, pa red
+/// **bez tih kolona** mora proći kroz `fromJson`, inače jedan stariji build pada na svakom
+/// odgovoru servera.
+void _task22() {
+  group('Service.imageUrl', () {
+    test('fotografija se čita kad postoji', () {
+      final s = Service.fromJson(const {
+        'id': 's1',
+        'salon_id': 'sa1',
+        'name': 'Fade',
+        'price': 20,
+        'duration_minutes': 40,
+        'image_url': 'https://images.demo.invalid/barber/fade.jpg',
+      });
+
+      expect(s.imageUrl, 'https://images.demo.invalid/barber/fade.jpg');
+    });
+
+    test('red bez kolone i red sa `null` su oba uredni', () {
+      const bez = {
+        'id': 's2',
+        'salon_id': 'sa1',
+        'name': 'Brada',
+        'price': 10,
+        'duration_minutes': 20,
+      };
+
+      expect(Service.fromJson(bez).imageUrl, isNull);
+      expect(Service.fromJson({...bez, 'image_url': null}).imageUrl, isNull);
+    });
+  });
+
+  group('Employee.experienceYears', () {
+    test('staž se čita i `hasExperience` ga potvrđuje', () {
+      final e = Employee.fromJson(const {
+        'id': 'e1',
+        'salon_id': 'sa1',
+        'name': 'Emir',
+        'role': 'Barber',
+        'experience_years': 9,
+      });
+
+      expect(e.experienceYears, 9);
+      expect(e.hasExperience, isTrue);
+    });
+
+    test('radnik bez staža nije radnik sa nulom', () {
+      // Razlika je vidljiva na ekranu: `null` znači „ne prikazuj ništa", a `0` bi bilo
+      // „Barber · 0 godina" — rečenica koju niko ne bi svjesno napisao.
+      const bez = {'id': 'e2', 'salon_id': 'sa1', 'name': 'Lejla'};
+
+      expect(Employee.fromJson(bez).experienceYears, isNull);
+      expect(Employee.fromJson(bez).hasExperience, isFalse);
+      expect(
+        Employee.fromJson({...bez, 'experience_years': 0}).hasExperience,
+        isFalse,
+      );
     });
   });
 }

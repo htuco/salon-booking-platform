@@ -126,6 +126,9 @@ class _Lista extends StatelessWidget {
         return SelectableRow(
           title: service.name,
           subtitle: formatDurationLong(service.durationMinutes),
+          // Prazan okvir kad fotografije nema je **predviđeno stanje**, ne rupa: salon
+          // bez slika mora raditi od prvog dana (task 22). `PhotoFrame` ga crta sam.
+          imageUrl: service.imageUrl,
           trailingText: prikaziCijene ? formatPrice(service.price) : null,
           selected: service.id == izabranaId,
           onTap: () => onIzbor(service),

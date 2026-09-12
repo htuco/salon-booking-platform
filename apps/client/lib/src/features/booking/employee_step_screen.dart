@@ -104,7 +104,7 @@ class EmployeeStepScreen extends ConsumerWidget {
               for (final employee in zaUslugu) ...[
                 SelectableRow(
                   title: employee.name,
-                  subtitle: employee.role.isEmpty ? null : employee.role,
+                  subtitle: _titulaISstaz(l10n, employee),
                   imageUrl: employee.imageUrl,
                   placeholder: _Inicijal(ime: employee.name),
                   selected: flow.employeeId == employee.id,
@@ -196,4 +196,17 @@ class _Kostur extends StatelessWidget {
       itemBuilder: (_, _) => const SkeletonLoader(height: 104),
     );
   }
+}
+
+/// „Barber · 9 godina", ili samo ono što postoji.
+///
+/// Staž se prikazuje **samo kad postoji** (`experience_years` je nullable): red bez njega
+/// mora izgledati uredno, a ne kao red kojem fali podatak. Kad nema ni titule ni staža,
+/// podnaslov je `null` i `SelectableRow` ga uopšte ne crta.
+String? _titulaISstaz(AppLocalizations l10n, Employee employee) {
+  final dijelovi = [
+    if (employee.role.isNotEmpty) employee.role,
+    if (employee.hasExperience) l10n.experienceYears(employee.experienceYears!),
+  ];
+  return dijelovi.isEmpty ? null : dijelovi.join(' · ');
 }

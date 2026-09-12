@@ -71,6 +71,21 @@ aplikaciji, pravila, lightbox) — v. `tasks/sprint-2/README.md`.
 jer tab bar dolazi u [tasku 18](../../tasks/sprint-2/18-pocetna-i-tab-bar.md) i tek tamo ima pet
 odredišta. Kad stigne, `5h` gubi back strelicu i dobija svoju ćeliju.
 
+## Fotografije
+
+Šema od taska 22 ima `services.image_url` i `employees.experience_years` — dvije kolone bez kojih
+red usluge nikad ne bi bio 1:1 sa mockupom.
+
+**Obje su nullable, i prazan okvir je predviđeno stanje.** Salon koji nema fotografije mora raditi
+od prvog dana; `PhotoFrame` tada crta prazan kvadrat sa hairline obrubom, tačno kao u handoffu.
+
+`seed.sql` nosi `images.demo.invalid` URL-ove koji se **namjerno ne razrješavaju**. Demo tako
+izgleda onako kako stvarno jeste — bez fotografija — umjesto da tuđim slikama obeća nešto što
+sistem nema. Prave fotografije dolaze sa onboardingom klijenta.
+
+Posljedica za dokazivanje: snimak ekrana sa seed podacima **ne razlikuje** „fotografija radi" od
+„fotografija tiho pada", jer oba daju prazan okvir. Ko dokazuje rad sa slikama mora privremeno
+usmjeriti jedan red na sliku koja stvarno postoji — i ne commitovati taj URL.
 ### Ekrani koje handoff nema
 
 **Koraci OTP prijave (`/auth/login`, unos emaila i unos koda) nisu nacrtani.** Handoff ima korak 4

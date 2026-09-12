@@ -21,8 +21,19 @@ abstract class Employee with _$Employee {
     @Default('') String role,
     @Default('') String bio,
     @JsonKey(name: 'image_url') String? imageUrl,
+
+    /// Godine staža — handoff piše „Barber · 9 godina" (`SPEC.md`, staff row).
+    ///
+    /// Nullable iz istog razloga kao [Service.imageUrl]: red bez staža mora izgledati
+    /// uredno, a ne kao red kojem fali podatak. Ekran ga prikazuje **samo kad postoji**.
+    @JsonKey(name: 'experience_years') int? experienceYears,
   }) = _Employee;
+
+  const Employee._();
 
   factory Employee.fromJson(Map<String, dynamic> json) =>
       _$EmployeeFromJson(json);
+
+  /// Da li se uz titulu ima šta dopisati.
+  bool get hasExperience => (experienceYears ?? 0) > 0;
 }

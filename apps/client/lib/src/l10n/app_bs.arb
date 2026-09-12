@@ -403,6 +403,12 @@
   "daySunday": "Nedjelja",
   "@daySunday": { "description": "Dan u sedmici, lista radnog vremena." },
 
+  "experienceYears": "{count, plural, one{{count} godina} few{{count} godine} other{{count} godina}}",
+  "@experienceYears": {
+    "description": "Staz radnika uz titulu — handoff: 'Barber · 9 godina'. Bosanski ima tri oblika: 1 godina, 2-4 godine, 5+ godina; ICU 'few' pokriva 2-4 po CLDR pravilima za bs.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
   "loginTitle": "Prijava",
   "@loginTitle": {
     "description": "Naslov /auth/login kad se otvori van booking flowa. Unutar flowa naslov ostaje bookingLastStepTitle."

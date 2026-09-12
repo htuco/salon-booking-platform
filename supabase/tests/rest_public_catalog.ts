@@ -65,8 +65,8 @@ async function serviceRequest(path: string, options: RequestInit = {}) {
 // PostgREST answers an unknown column with 400, not with a null field.
 const SALON_COLUMNS =
   "id,name,slug,description,logo_url,cover_image_url,primary_color,secondary_color,theme,address,city,phone,email,instagram_url,facebook_url,vertical_pack_key";
-const SERVICE_COLUMNS = "id,salon_id,name,description,category,price,duration_minutes";
-const EMPLOYEE_COLUMNS = "id,salon_id,name,role,bio,image_url";
+const SERVICE_COLUMNS = "id,salon_id,name,description,category,price,duration_minutes,image_url";
+const EMPLOYEE_COLUMNS = "id,salon_id,name,role,bio,image_url,experience_years";
 const EMPLOYEE_SERVICE_COLUMNS = "id,salon_id,employee_id,service_id";
 const WORKING_HOURS_COLUMNS =
   "id,salon_id,employee_id,day_of_week,start_time,end_time,break_start_time,break_end_time,is_closed";
@@ -90,8 +90,25 @@ try {
     "duration_minutes must come back as a number — the model reads it as int.",
   );
 
+  // Task 22: the new columns must reach `anon`. Grants in the init migration are
+  // table-wide, not column-wide, so a new column joins the existing grant on its own — but
+  // "should" is not "does". A column-level grant would make these invisible and the public
+  // catalog would quietly lose its photos.
+  assert(
+    services.some((row) => typeof row.image_url === "string"),
+    "services.image_url must be readable without a login — the catalog shows thumbnails.",
+  );
+  assert(
+    services.some((row) => row.image_url === null),
+    "A service without a photo must come back as null, not be filtered out — an empty frame is a designed state.",
+  );
+
   const employees = await anonRows("employees", EMPLOYEE_COLUMNS, "&salon_id=eq." + activeSalon);
   assert(employees.length === 2, `Seeded barber salon has 2 employees, got ${employees.length}.`);
+  assert(
+    employees.every((row) => typeof row.experience_years === "number"),
+    "employees.experience_years must be readable without a login — the staff row reads '9 godina'.",
+  );
 
   const links = await anonRows(
     "employee_services",

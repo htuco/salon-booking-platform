@@ -14,7 +14,8 @@ class EmployeeRepository {
 
   final SupabaseClient _client;
 
-  static const _columns = 'id, salon_id, name, role, bio, image_url';
+  static const _columns =
+      'id, salon_id, name, role, bio, image_url, experience_years';
 
   /// Svi aktivni radnici salona, po imenu.
   ///
