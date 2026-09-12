@@ -1,0 +1,52 @@
+# `prototype/` — vizuelne reference, nijedna nije production kod
+
+Dva foldera, dvije uloge. Root pravila važe — v. `../CLAUDE.md`.
+
+| Folder | Šta je | Status |
+|---|---|---|
+| `ui/` | Dizajnerski handoff: 17 ekrana u punoj vjernosti, finalni copy, tokeni, komponente | **Vizuelni izvor istine** |
+| `wireframe/` | Stariji React/Vite prototip sa svojim toolchainom | **Zamrznut** |
+
+**Gdje se njih dvoje ne slažu, `ui/` je jači.** Vjernost je viša i copy je finalan.
+`wireframe/` ostaje referenca samo za **flow i rute** (`wireframe/src/app/routes.tsx` prati
+`docs/01 §12`) i kao istorijski zapis.
+
+## `ui/` — kako se čita
+
+`ui/SPEC.md` je specifikacija (ekrani, komponente, tokeni, ponašanje, stanja); `ui/README.md`
+objašnjava kako se prevodi u ovaj repo. Ukratko, jer je to pravilo koje se najlakše prekrši:
+
+- **Oblik se uzima** — tipografska skala, spacing ritam, radius 0, hairline granice umjesto sjenki,
+  dodirne mete ≥44px, oblik komponenti. Živi u `core_ui`.
+- **Boja se ne uzima.** Hex u handoffu je paleta *jednog* brenda (Barber Studio Vitez). Boja dolazi
+  iz `tenant.yaml` kroz `buildAppTheme()`.
+- **Tekst se ne uzima.** "Majstori", "Kod koga dolazite?" su barber terminologija; dolaze iz
+  `vertical.terms`.
+
+Hardkodiran hex ili naziv usluge u ekranu prolazi test i prolazi pregled screenshota — padne tek na
+drugom tenantu ili drugoj vertikali.
+
+`ui/canvas/` se **ne portuje** (handoff to izričito kaže) i `Salon App v2.dc.html` ne radi offline
+jer mu fali `_ds` bundle iz izvoza. Za gledanje služe `ui/screens-flat.html` i `ui/screenshots/`.
+
+## `wireframe/` — zamrznut
+
+Ovdje se **ne razvija**: ne dodaje se ekran, ne popravlja se vizual, ne prati se dizajn. Ako ti se
+čini da nešto treba promijeniti ovdje, to je znak da promjena pripada Flutteru (`apps/client/`) ili
+dizajnu (`prototype/ui/`).
+
+Ako ga ipak treba pokrenuti:
+
+```bash
+cd prototype/wireframe && npm install && npm run dev    # ili: npm run build
+```
+
+Dokaz je "flow se vidi i klika", ne testovi. Testova ovdje nema i ne pišu se.
+
+- **Root `package.json` je nešto drugo** — drži samo `lefthook` (git hookovi za cijeli repo).
+  `wireframe/package.json` je toolchain prototipa. Ne spajaju se nazad.
+- Nema eslint/prettier konfiguracije i neće je dobiti; hook se dodaje kad stigne pravi `web/`
+  (Next.js konzola, `docs/07 §1`).
+- Ikone su `lucide-react`, isti jezik ikona kao u `ui/` i u Flutteru.
+- Mrtva težina (`@mui/*`, `@emotion/*` bez ijednog importa) je uklonjena pri premještanju iz roota;
+  `docs/07 §2` je time zatvoren.

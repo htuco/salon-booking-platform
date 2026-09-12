@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/industry-ca1d490c-673b-4b30-97bd-02123e0cbcb1/styles.css">
+<script src="_ds/industry-ca1d490c-673b-4b30-97bd-02123e0cbcb1/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;1,6..96,400&family=Archivo:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Instrument+Serif:ital@0;1&family=Big+Shoulders+Display:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+body{margin:0;background:#f2f2f3;font-family:"Barlow",system-ui,sans-serif}
+a{color:#416180}a:hover{color:#2c455d}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(29,31,32,.12)}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 22px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1d1f20;color:#fff;border-radius:2px;text-decoration:none}
+.dv-tname{font:600 14px/1.2 "Barlow Condensed",sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#1d1f20}
+.dv-opts{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(29,31,32,.1);color:#1d1f20;border-radius:2px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 12px/1.3 "Barlow",sans-serif;color:#5d5d60}
+.dv-opt:target .dv-oid{background:#5980a6;color:#fff}
+.dv-next{margin:26px 0 0;font:13px/1.6 "Barlow",sans-serif;color:#5d5d60}
+</style>
+</helmet>
+<section class="dv-turn" id="t5" style="background:#17181a">
+<div class="dv-thd"><a class="dv-tid" href="#t5" style="background:#f2f2f3;color:#10161c">5</a><span class="dv-tname" style="color:#fff">Studio smjer — DM Serif Display naslovi + Archivo, fotografije kroz cijeli flow, donja navigacija</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="5a"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5a" style="background:rgba(255,255,255,.16);color:#fff">5a</a>Početna — fotografija i jedna radnja</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="flex:1;overflow:auto"><div style="position:relative;height:430px"><div style="position:relative;position:absolute;inset:0;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="m2-hero" shape="rect" fit="cover" placeholder="Fotografija salona"></image-slot></div><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,16,18,.6) 0%,rgba(15,16,18,.15) 34%,rgba(15,16,18,.8) 62%,rgba(15,16,18,.98) 86%,#0f1012 100%);pointer-events:none"></div><div style="position:absolute;bottom:24px;left:22px;right:22px;pointer-events:none"><h1 style="margin:0;font:400 52px/1 'DM Serif Display';color:#fff">Zakažite termin</h1><div style="margin-top:14px;display:inline-flex;align-items:center;gap:9px;border:1px solid #fff;padding:8px 13px"><span style="width:9px;height:9px;background:#fff;display:block"></span><span style="font:600 15px 'Archivo';color:#fff">Otvoreno danas do 20:00</span></div></div></div><div style="padding:14px 22px 0"><div style="background:#f2f2f3;height:68px;display:flex;align-items:center;justify-content:center;font:700 21px 'Archivo';color:#10161c">Zakaži termin</div></div><div style="padding:34px 22px 0"><div style="font:400 32px 'DM Serif Display';color:#fff;margin-bottom:14px">Cjenovnik</div><div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="home-svc1" shape="rect" fit="cover" placeholder="Muško šišanje"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Muško šišanje</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">30 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">15 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="home-svc2" shape="rect" fit="cover" placeholder="Fade šišanje"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Fade šišanje</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">40 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">20 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph4.png" style="position:absolute;inset:0" id="home-svc3" shape="rect" fit="cover" placeholder="Šišanje + brada"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Šišanje + brada</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">45 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">25 KM</div></div></div><div style="margin-top:12px;border:1px solid #6b7176;padding:17px;text-align:center;font:600 17px 'Archivo';color:#fff">Prikaži svih 8 usluga</div></div><div style="padding:34px 22px 0"><div style="font:400 32px 'DM Serif Display';color:#fff;margin-bottom:14px">Majstori</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><div><div style="position:relative;aspect-ratio:3/4;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph5.png" style="position:absolute;inset:0" id="m2-emir" shape="rect" fit="cover" placeholder="Emir"></image-slot></div><div style="font:600 19px 'Archivo';color:#fff;margin-top:9px">Emir</div><div style="font:400 16px 'Archivo';color:#c3c9ce">Barber</div></div><div><div style="position:relative;aspect-ratio:3/4;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph6.png" style="position:absolute;inset:0" id="m2-amar" shape="rect" fit="cover" placeholder="Amar"></image-slot></div><div style="font:600 19px 'Archivo';color:#fff;margin-top:9px">Amar</div><div style="font:400 16px 'Archivo';color:#c3c9ce">Barber</div></div></div></div>
+<div style="padding:34px 22px 0"><div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div style="font:400 32px 'DM Serif Display';color:#fff">Galerija</div><div style="font:600 16px 'Archivo';color:#fff">Sve slike ›</div></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="home-gal1" shape="rect" fit="cover" placeholder="Rad 1"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="home-gal2" shape="rect" fit="cover" placeholder="Rad 2"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="home-gal3" shape="rect" fit="cover" placeholder="Rad 3"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph4.png" style="position:absolute;inset:0" id="home-gal4" shape="rect" fit="cover" placeholder="Rad 4"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph5.png" style="position:absolute;inset:0" id="home-gal5" shape="rect" fit="cover" placeholder="Rad 5"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph6.png" style="position:absolute;inset:0" id="home-gal6" shape="rect" fit="cover" placeholder="Rad 6"></image-slot></div></div></div></div>
+<div style="padding:34px 22px 0"><div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px"><div style="font:400 32px 'DM Serif Display';color:#fff">Recenzije</div><div style="font:600 16px 'Archivo';color:#fff">Sve ›</div></div>
+<div style="border:1px solid #454b50;padding:18px"><div style="display:flex;align-items:center;gap:14px"><div style="font:400 44px/1 'DM Serif Display';color:#fff">4,8</div><div><div style="font:400 18px 'Archivo';color:#fff;letter-spacing:.14em">★★★★★</div><div style="font:400 15px 'Archivo';color:#c3c9ce;margin-top:3px">142 ocjene</div></div></div>
+<p style="margin:14px 0 0;font:400 17px/1.5 'Archivo';color:#c3c9ce">„Fade je uvijek isti, tačno kako tražim." — Nedim H.</p></div></div>
+<div style="height:34px"></div></div><div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #33383c;background:#0b0c0d;padding:0 0 26px"><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 12"/><path d="M18 3 6 15"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Usluge</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Termini</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#fff"><div style="position:absolute;top:0;left:16%;right:16%;height:3px;background:#f2f2f3"></div><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font:600 12px 'Archivo';color:#fff">Početna</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Obavijesti</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Postavke</span></div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5b"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5b" style="background:rgba(255,255,255,.16);color:#fff">5b</a>O nama — landing sa fotografijom</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="flex:1;overflow:auto"><div style="position:relative;height:480px"><div style="position:relative;position:absolute;inset:0;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="m2-about" shape="rect" fit="cover" placeholder="Portret / atmosfera salona"></image-slot></div><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,16,18,.7) 0%,rgba(15,16,18,.18) 32%,rgba(15,16,18,.82) 62%,rgba(15,16,18,.98) 86%,#0f1012 100%);pointer-events:none"></div><div style="position:absolute;top:64px;left:0;right:0;text-align:center;pointer-events:none"><div style="font:400 36px 'DM Serif Display';color:#fff">Barber Studio Vitez</div><div style="font:400 17px 'Archivo';color:#e3e7ea;margin-top:4px">brijačnica od 2014.</div></div><div style="position:absolute;bottom:26px;left:22px;right:22px;pointer-events:none"><div style="border:1px solid #fff;height:60px;display:flex;align-items:center;justify-content:center;font:600 16px 'Archivo';letter-spacing:.22em;text-transform:uppercase;color:#fff">Rezerviši</div></div></div><div style="padding:26px 22px 0;text-align:center"><div style="font:400 16px 'Archivo';color:#c3c9ce">O nama</div><div style="font:400 40px 'DM Serif Display';color:#fff;margin-top:4px">Ko smo mi?</div><p style="margin:14px 0 0;font:400 17px/1.6 'Archivo';color:#c3c9ce">Barber Studio Vitez već devet godina radi na jednom mjestu, sa istom ekipom. Klasično šišanje, fade i njega brade — bez čekanja u redu.</p></div><div style="padding:26px 22px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="m2-ab1" shape="rect" fit="cover" placeholder="Detalj salona"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="m2-ab2" shape="rect" fit="cover" placeholder="Detalj salona"></image-slot></div></div><div style="padding:26px 22px 0"><div style="border:1px solid #454b50"><div style="padding:16px 18px;border-bottom:1px solid #33383c;display:flex;justify-content:space-between"><span style="font:400 17px 'Archivo';color:#c3c9ce">Adresa</span><span style="font:600 17px 'Archivo';color:#fff">Trg Slobode 15</span></div><div style="padding:16px 18px;border-bottom:1px solid #33383c;display:flex;justify-content:space-between"><span style="font:400 17px 'Archivo';color:#c3c9ce">Radno vrijeme</span><span style="font:600 17px 'Archivo';color:#fff">09:00 – 20:00</span></div><div style="padding:16px 18px;border-bottom:1px solid #33383c;display:flex;justify-content:space-between"><span style="font:400 17px 'Archivo';color:#c3c9ce">Telefon</span><span style="font:600 17px 'Archivo';color:#fff">+387 62 123 456</span></div>
+<div style="padding:16px 18px;border-bottom:1px solid #33383c;display:flex;justify-content:space-between"><span style="font:400 17px 'Archivo';color:#c3c9ce">Instagram</span><span style="font:600 17px 'Archivo';color:#fff">@barberstudiovitez</span></div>
+<div style="padding:16px 18px;display:flex;justify-content:space-between"><span style="font:400 17px 'Archivo';color:#c3c9ce">Facebook</span><span style="font:600 17px 'Archivo';color:#fff">/barberstudiovitez</span></div></div></div><div style="height:32px"></div></div><div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #33383c;background:#0b0c0d;padding:0 0 26px"><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 12"/><path d="M18 3 6 15"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Usluge</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Termini</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#fff"><div style="position:absolute;top:0;left:16%;right:16%;height:3px;background:#f2f2f3"></div><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font:600 12px 'Archivo';color:#fff">Početna</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Obavijesti</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Postavke</span></div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5c"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5c" style="background:rgba(255,255,255,.16);color:#fff">5c</a>Korak 1 — usluga sa slikama</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:66px 22px 0"><div style="display:flex;align-items:center;justify-content:space-between;min-height:48px"><div style="display:flex;align-items:center;gap:10px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>Nazad</div><div style="font:600 16px 'Archivo';color:#c3c9ce">Korak 1 od 4</div></div><div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px"><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#3a3f44"></div><div style="height:5px;background:#3a3f44"></div><div style="height:5px;background:#3a3f44"></div></div><h1 style="margin:22px 0 8px;font:400 42px/1.05 'DM Serif Display';color:#fff">Izaberite uslugu</h1><p style="margin:0;font:400 18px/1.5 'Archivo';color:#c3c9ce">Dodirnite jednu uslugu, pa „Dalje".</p></div><div style="flex:1;overflow:auto;padding:22px 22px 0"><div style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph4.png" style="position:absolute;inset:0" id="st-svc1" shape="rect" fit="cover" placeholder="Muško šišanje"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Muško šišanje</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">30 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">15 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:2px solid #f2f2f3;background:rgba(242,242,243,.1)"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph5.png" style="position:absolute;inset:0" id="st-svc2" shape="rect" fit="cover" placeholder="Fade šišanje"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Fade šišanje</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">40 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">20 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph6.png" style="position:absolute;inset:0" id="st-svc3" shape="rect" fit="cover" placeholder="Šišanje + brada"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Šišanje + brada</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">45 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">25 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="st-svc4" shape="rect" fit="cover" placeholder="Uređivanje brade"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Uređivanje brade</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">20 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">10 KM</div></div></div><div style="height:22px"></div></div><div style="padding:14px 22px 30px;border-top:1px solid #33383c"><div style="background:#f2f2f3;height:66px;display:flex;align-items:center;justify-content:center;font:700 20px 'Archivo';color:#10161c">Dalje</div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5d"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5d" style="background:rgba(255,255,255,.16);color:#fff">5d</a>Korak 2 — majstor sa portretima</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:66px 22px 0"><div style="display:flex;align-items:center;justify-content:space-between;min-height:48px"><div style="display:flex;align-items:center;gap:10px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>Nazad</div><div style="font:600 16px 'Archivo';color:#c3c9ce">Korak 2 od 4</div></div><div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px"><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#3a3f44"></div><div style="height:5px;background:#3a3f44"></div></div><h1 style="margin:22px 0 8px;font:400 42px/1.05 'DM Serif Display';color:#fff">Kod koga dolazite?</h1><p style="margin:0;font:400 18px/1.5 'Archivo';color:#c3c9ce">Ako vam nije važno, izaberite „Bilo ko od nas".</p></div><div style="flex:1;overflow:auto;padding:22px 22px 0"><div style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50"><div style="width:76px;height:76px;flex:0 0 76px;border:1px solid #454b50;display:flex;align-items:center;justify-content:center;font:400 30px 'DM Serif Display';color:#fff">?</div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Bilo ko od nas</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">Najviše slobodnih termina</div></div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:2px solid #f2f2f3;background:rgba(242,242,243,.1)"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="st-emir" shape="rect" fit="cover" placeholder="Emir"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Emir</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">Barber · 9 godina</div></div><div style="width:30px;height:30px;background:#f2f2f3;color:#10161c;display:flex;align-items:center;justify-content:center;font:700 17px 'Archivo'">✓</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="st-amar" shape="rect" fit="cover" placeholder="Amar"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Amar</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">Barber · 4 godine</div></div></div></div></div><div style="padding:14px 22px 30px;border-top:1px solid #33383c"><div style="background:#f2f2f3;height:66px;display:flex;align-items:center;justify-content:center;font:700 20px 'Archivo';color:#10161c">Dalje</div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5e"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5e" style="background:rgba(255,255,255,.16);color:#fff">5e</a>Korak 3 — mali kalendar pa vremena</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:66px 22px 0"><div style="display:flex;align-items:center;justify-content:space-between;min-height:48px"><div style="display:flex;align-items:center;gap:10px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>Nazad</div><div style="font:600 16px 'Archivo';color:#c3c9ce">Korak 3 od 4</div></div><div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px"><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#3a3f44"></div></div><h1 style="margin:22px 0 8px;font:400 42px/1.05 'DM Serif Display';color:#fff">Izaberite vrijeme</h1><p style="margin:0;font:400 18px/1.5 'Archivo';color:#c3c9ce">Prvo dan, onda slobodno vrijeme.</p></div><div style="flex:1;overflow:auto;padding:20px 22px 0"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font:400 26px 'DM Serif Display';color:#fff">Maj 2026</div><div style="display:flex;gap:8px"><div style="width:44px;height:44px;border:1px solid #454b50;display:flex;align-items:center;justify-content:center;font:600 18px 'Archivo';color:#fff">‹</div><div style="width:44px;height:44px;border:1px solid #454b50;display:flex;align-items:center;justify-content:center;font:600 18px 'Archivo';color:#fff">›</div></div></div><div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:8px"><div style="text-align:center;font:400 13px 'Archivo';color:#9aa1a7">P</div><div style="text-align:center;font:400 13px 'Archivo';color:#9aa1a7">U</div><div style="text-align:center;font:400 13px 'Archivo';color:#9aa1a7">S</div><div style="text-align:center;font:400 13px 'Archivo';color:#9aa1a7">Č</div><div style="text-align:center;font:400 13px 'Archivo';color:#9aa1a7">P</div><div style="text-align:center;font:400 13px 'Archivo';color:#9aa1a7">S</div><div style="text-align:center;font:400 13px 'Archivo';color:#9aa1a7">N</div></div><div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px"><sc-for list="{{ calDays }}" as="d" hint-placeholder-count="35"><div onClick="{{ d.pick }}" style="{{ d.style }}">{{ d.num }}</div></sc-for></div><div style="margin-top:24px;font:600 16px 'Archivo';color:#fff;margin-bottom:10px">Prijepodne</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px"><sc-for list="{{ typeAm }}" as="t" hint-placeholder-count="6"><div onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</div></sc-for></div><div style="margin-top:22px;font:600 16px 'Archivo';color:#fff;margin-bottom:10px">Poslijepodne</div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px"><sc-for list="{{ typePm }}" as="t" hint-placeholder-count="6"><div onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</div></sc-for></div><div style="height:24px"></div></div><div style="padding:14px 22px 30px;border-top:1px solid #33383c"><div style="{{ typeSlotCta }}">{{ typeSlotLabel }}</div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5f"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5f" style="background:rgba(255,255,255,.16);color:#fff">5f</a>Korak 4 — prijava (sa progress barom)</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:66px 22px 0"><div style="display:flex;align-items:center;justify-content:space-between;min-height:48px"><div style="display:flex;align-items:center;gap:10px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>Nazad</div><div style="font:600 16px 'Archivo';color:#c3c9ce">Korak 4 od 4</div></div><div style="margin-top:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px"><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#f2f2f3"></div><div style="height:5px;background:#f2f2f3"></div></div><h1 style="margin:22px 0 8px;font:400 42px/1.05 'DM Serif Display';color:#fff">Još jedan korak</h1><p style="margin:0;font:400 18px/1.5 'Archivo';color:#c3c9ce">Prijavite se da sačuvamo termin. Nema lozinke.</p></div><div style="flex:1;overflow:auto;padding:20px 22px 0"><div style="border:1px solid #454b50;background:#151719;padding:18px"><div style="font:400 14px 'Archivo';color:#c3c9ce">Čuvamo vam</div><div style="display:flex;align-items:flex-end;gap:12px;margin-top:6px"><div style="font:400 46px/.9 'DM Serif Display';color:#fff">14:30</div><div style="padding-bottom:5px;font:600 17px 'Archivo';color:#fff">srijeda, 20. maj</div></div><div style="font:400 17px 'Archivo';color:#c3c9ce;margin-top:8px">Fade šišanje kod Emira</div></div><div style="margin-top:20px;display:flex;flex-direction:column;gap:12px"><div style="height:64px;background:#f2f2f3;display:flex;align-items:center;justify-content:center;gap:10px;font:600 19px 'Archivo';color:#10161c"><span style="font-size:20px">&#63743;</span>Nastavi sa Apple</div><div style="height:64px;border:1px solid #6b7176;display:flex;align-items:center;justify-content:center;gap:10px;font:600 19px 'Archivo';color:#fff"><span style="width:24px;height:24px;border:1px solid #6b7176;display:inline-flex;align-items:center;justify-content:center;font:600 14px 'Archivo'">G</span>Nastavi sa Google</div><div style="height:64px;border:1px solid #6b7176;display:flex;align-items:center;justify-content:center;gap:10px;font:600 19px 'Archivo';color:#fff"><span style="width:24px;height:24px;border:1px solid #6b7176;display:inline-flex;align-items:center;justify-content:center;font:600 14px 'Archivo'">@</span>Nastavi sa emailom</div></div><p style="margin:20px 0 0;font:400 16px/1.5 'Archivo';color:#c3c9ce">Prijavom prihvatate <a href="#5f" style="color:#fff">Uslove</a> i <a href="#5f" style="color:#fff">Politiku privatnosti</a>.</p><div style="height:24px"></div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5g"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5g" style="background:rgba(255,255,255,.16);color:#fff">5g</a>Poslano — bez lažne potvrde</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="flex:1;overflow:auto"><div style="position:relative;height:270px"><div style="position:relative;position:absolute;inset:0;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph4.png" style="position:absolute;inset:0" id="m2-done" shape="rect" fit="cover" placeholder="Detalj iz salona"></image-slot></div><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,16,18,.55) 0%,rgba(15,16,18,.35) 30%,rgba(15,16,18,.9) 74%,#0f1012 96%);pointer-events:none"></div><div style="position:absolute;bottom:20px;left:22px;right:22px;pointer-events:none"><div style="font:600 14px 'Archivo';letter-spacing:.18em;text-transform:uppercase;color:#fff;margin-bottom:8px">Zahtjev je poslan</div><h1 style="margin:0;font:400 40px/1.05 'DM Serif Display';color:#fff">Salon vas je vidio</h1></div></div><div style="padding:18px 22px 0"><p style="margin:0;font:400 18px/1.5 'Archivo';color:#c3c9ce">Termin još nije potvrđen. Javit ćemo vam obavještenjem čim salon potvrdi.</p><div style="margin-top:20px;border:1px solid #454b50"><div style="display:flex;align-items:flex-end;gap:12px;padding:20px 18px;border-bottom:1px solid #33383c"><div style="font:400 54px/.85 'DM Serif Display';color:#fff">14:30</div><div style="padding-bottom:5px;font:600 18px 'Archivo';color:#fff">srijeda, 20.05.</div></div><div style="padding:16px 18px;display:flex;justify-content:space-between;border-bottom:1px solid #33383c"><span style="font:400 17px 'Archivo';color:#c3c9ce">Usluga</span><span style="font:600 17px 'Archivo';color:#fff">Fade šišanje · 20 KM</span></div><div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center"><span style="font:400 17px 'Archivo';color:#c3c9ce">Status</span><span style="border:1px solid #fff;padding:6px 11px;font:600 15px 'Archivo';color:#fff">Na čekanju</span></div></div><div style="margin-top:14px;border:1px solid #6b7176;height:62px;display:flex;align-items:center;justify-content:center;font:600 18px 'Archivo';color:#fff">Dodaj u kalendar telefona</div></div><div style="height:26px"></div></div><div style="padding:14px 22px 30px;border-top:1px solid #33383c"><div style="background:#f2f2f3;height:66px;display:flex;align-items:center;justify-content:center;font:700 20px 'Archivo';color:#10161c">Moji termini</div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5h"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5h" style="background:rgba(255,255,255,.16);color:#fff">5h</a>Moji termini</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:72px 22px 0"><h1 style="margin:0 0 18px;font:400 42px/1.05 'DM Serif Display';color:#fff">Moji termini</h1><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid #454b50"><div style="padding:15px 0;text-align:center;background:#f2f2f3;color:#10161c;font:600 17px 'Archivo'">Naredni (1)</div><div style="padding:15px 0;text-align:center;color:#fff;font:400 17px 'Archivo'">Prošli (6)</div></div></div><div style="flex:1;overflow:auto;padding:20px 22px 0"><div style="border:1px solid #454b50;background:#151719"><div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #33383c"><div style="display:flex;align-items:center;gap:9px"><span style="width:10px;height:10px;background:#fff;display:block"></span><span style="font:600 16px 'Archivo';color:#fff">Potvrđeno</span></div><div style="font:400 16px 'Archivo';color:#c3c9ce">za 2 dana</div></div><div style="padding:22px 18px"><div style="display:flex;align-items:flex-end;gap:14px"><div style="font:400 58px/.85 'DM Serif Display';color:#fff">14:30</div><div style="padding-bottom:6px;font:600 18px 'Archivo';color:#fff">srijeda,<br>20. maj</div></div><div style="margin-top:20px;border-top:1px solid #33383c;padding-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px"><div><div style="font:400 14px 'Archivo';color:#c3c9ce">Usluga</div><div style="font:600 18px 'Archivo';color:#fff;margin-top:3px">Fade šišanje</div></div><div><div style="font:400 14px 'Archivo';color:#c3c9ce">Majstor</div><div style="font:600 18px 'Archivo';color:#fff;margin-top:3px">Emir</div></div><div><div style="font:400 14px 'Archivo';color:#c3c9ce">Trajanje</div><div style="font:600 18px 'Archivo';color:#fff;margin-top:3px">40 minuta</div></div><div><div style="font:400 14px 'Archivo';color:#c3c9ce">Cijena</div><div style="font:600 18px 'Archivo';color:#fff;margin-top:3px">20 KM</div></div></div></div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid #33383c"><div style="padding:19px;text-align:center;font:600 17px 'Archivo';color:#fff;border-right:1px solid #33383c">U kalendar</div><div style="padding:19px;text-align:center;font:600 17px 'Archivo';color:#fff">Otkaži</div></div></div><div style="margin-top:16px;padding:18px;border:1px solid #454b50;font:400 17px/1.5 'Archivo';color:#c3c9ce">Podsjetnik stiže dan prije i tri sata prije termina.</div><div style="height:24px"></div></div><div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #33383c;background:#0b0c0d;padding:0 0 26px"><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 12"/><path d="M18 3 6 15"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Usluge</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#fff"><div style="position:absolute;top:0;left:16%;right:16%;height:3px;background:#f2f2f3"></div><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span style="font:600 12px 'Archivo';color:#fff">Termini</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Početna</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Obavijesti</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Postavke</span></div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5i"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5i" style="background:rgba(255,255,255,.16);color:#fff">5i</a>Sve usluge</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:72px 22px 0"><h1 style="margin:0 0 6px;font:400 42px/1.05 'DM Serif Display';color:#fff">Usluge</h1><p style="margin:0 0 4px;font:400 17px 'Archivo';color:#c3c9ce">Dodirnite uslugu za direktno zakazivanje.</p></div><div style="flex:1;overflow:auto;padding:18px 22px 0"><div style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph5.png" style="position:absolute;inset:0" id="all-svc1" shape="rect" fit="cover" placeholder="Muško šišanje"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Muško šišanje</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">30 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">15 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph6.png" style="position:absolute;inset:0" id="all-svc2" shape="rect" fit="cover" placeholder="Fade šišanje"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Fade šišanje</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">40 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">20 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="all-svc3" shape="rect" fit="cover" placeholder="Šišanje + brada"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Šišanje + brada</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">45 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">25 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50;background:transparent"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="all-svc4" shape="rect" fit="cover" placeholder="Uređivanje brade"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Uređivanje brade</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">20 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">10 KM</div></div><div style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid #454b50"><div style="position:relative;width:76px;height:76px;flex:0 0 76px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="all-svc5" shape="rect" fit="cover" placeholder="Dječije šišanje"></image-slot></div><div style="flex:1"><div style="font:600 20px 'Archivo';color:#fff">Dječije šišanje</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:4px">20 minuta</div></div><div style="font:400 24px 'DM Serif Display';color:#fff">10 KM</div></div></div><div style="height:24px"></div></div><div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #33383c;background:#0b0c0d;padding:0 0 26px"><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#fff"><div style="position:absolute;top:0;left:16%;right:16%;height:3px;background:#f2f2f3"></div><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 12"/><path d="M18 3 6 15"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg><span style="font:600 12px 'Archivo';color:#fff">Usluge</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Termini</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Početna</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Obavijesti</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Postavke</span></div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5j"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5j" style="background:rgba(255,255,255,.16);color:#fff">5j</a>Obavijesti</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:72px 22px 0"><h1 style="margin:0 0 16px;font:400 42px/1.05 'DM Serif Display';color:#fff">Obavijesti</h1></div><div style="flex:1;overflow:auto;padding:6px 22px 0"><div style="display:flex;flex-direction:column;gap:12px"><div style="border:1px solid #f2f2f3;padding:18px"><div style="font:600 15px 'Archivo';color:#fff;margin-bottom:6px">Danas · 09:12</div><div style="font:600 19px 'Archivo';color:#fff">Termin je potvrđen</div><div style="font:400 17px/1.5 'Archivo';color:#c3c9ce;margin-top:4px">Fade šišanje kod Emira, srijeda 20.05. u 14:30.</div></div><div style="border:1px solid #454b50;padding:18px"><div style="font:600 15px 'Archivo';color:#c3c9ce;margin-bottom:6px">Jučer · 18:40</div><div style="font:600 19px 'Archivo';color:#fff">Podsjetnik</div><div style="font:400 17px/1.5 'Archivo';color:#c3c9ce;margin-top:4px">Sutra u 14:30 imate termin.</div></div><div style="border:1px solid #454b50;padding:18px"><div style="font:600 15px 'Archivo';color:#c3c9ce;margin-bottom:6px">12.04.</div><div style="font:600 19px 'Archivo';color:#fff">Novo radno vrijeme subotom</div><div style="font:400 17px/1.5 'Archivo';color:#c3c9ce;margin-top:4px">Od maja radimo subotom do 18:00.</div></div></div><div style="height:24px"></div></div><div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #33383c;background:#0b0c0d;padding:0 0 26px"><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 12"/><path d="M18 3 6 15"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Usluge</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Termini</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Početna</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#fff"><div style="position:absolute;top:0;left:16%;right:16%;height:3px;background:#f2f2f3"></div><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span style="font:600 12px 'Archivo';color:#fff">Obavijesti</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Postavke</span></div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5k"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5k" style="background:rgba(255,255,255,.16);color:#fff">5k</a>Postavke i račun</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:72px 22px 0"><h1 style="margin:0 0 16px;font:400 42px/1.05 'DM Serif Display';color:#fff">Postavke</h1></div><div style="flex:1;overflow:auto;padding:6px 22px 0"><div style="border:1px solid #454b50;padding:18px;display:flex;align-items:center;gap:14px"><div style="position:relative;width:64px;height:64px;flex:0 0 64px;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph4.png" style="position:absolute;inset:0" id="set-avatar" shape="rect" fit="cover" placeholder="Vaša slika"></image-slot></div><div><div style="font:600 20px 'Archivo';color:#fff">Adnan Kovač</div><div style="font:400 17px 'Archivo';color:#c3c9ce">adnan@email.ba</div></div></div><div style="margin-top:16px;border:1px solid #454b50"><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Moj račun</span><span style="font:400 18px 'Archivo';color:#9aa1a7">›</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Obavijesti</span><span style="font:400 18px 'Archivo';color:#9aa1a7">›</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Jezik · Bosanski</span><span style="font:400 18px 'Archivo';color:#9aa1a7">›</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">O aplikaciji</span><span style="font:400 18px 'Archivo';color:#9aa1a7">›</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;"><span style="font:500 18px 'Archivo';color:#fff">Politika privatnosti</span><span style="font:400 18px 'Archivo';color:#9aa1a7">›</span></div></div><div style="margin-top:16px;border:1px solid #6b7176;padding:18px;text-align:center;font:600 18px 'Archivo';color:#fff">Odjavi se</div><div style="margin-top:16px;border:1px solid #7a3a45;padding:18px;text-align:center;font:600 18px 'Archivo';color:#e9a3ad">Izbriši račun</div><div style="height:26px"></div></div><div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #33383c;background:#0b0c0d;padding:0 0 26px"><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 12"/><path d="M18 3 6 15"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="19" r="3"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Usluge</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16"/><path d="M8 3v4M16 3v4M3 11h18"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Termini</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Početna</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#9aa1a7"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg><span style="font:400 12px 'Archivo';color:#9aa1a7">Obavijesti</span></div><div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 0 8px;color:#fff"><div style="position:absolute;top:0;left:16%;right:16%;height:3px;background:#f2f2f3"></div><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></svg><span style="font:600 12px 'Archivo';color:#fff">Postavke</span></div></div></div>
+</x-import>
+</div>
+<div class="dv-opt" id="5l"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5l" style="background:rgba(255,255,255,.16);color:#fff">5l</a>Galerija — grid</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:64px 22px 0"><div style="display:flex;align-items:center;gap:10px;min-height:48px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>Početna</div><h1 style="margin:10px 0 6px;font:400 42px/1.05 'DM Serif Display';color:#fff">Galerija</h1><p style="margin:0 0 18px;font:400 17px 'Archivo';color:#c3c9ce">Naši radovi iz zadnjih mjeseci.</p></div><div style="flex:1;overflow:auto;padding:0 22px 0"><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph5.png" style="position:absolute;inset:0" id="gal1" shape="rect" fit="cover" placeholder="Rad 1"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph6.png" style="position:absolute;inset:0" id="gal2" shape="rect" fit="cover" placeholder="Rad 2"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="gal3" shape="rect" fit="cover" placeholder="Rad 3"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="gal4" shape="rect" fit="cover" placeholder="Rad 4"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="gal5" shape="rect" fit="cover" placeholder="Rad 5"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph4.png" style="position:absolute;inset:0" id="gal6" shape="rect" fit="cover" placeholder="Rad 6"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph5.png" style="position:absolute;inset:0" id="gal7" shape="rect" fit="cover" placeholder="Rad 7"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph6.png" style="position:absolute;inset:0" id="gal8" shape="rect" fit="cover" placeholder="Rad 8"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="gal9" shape="rect" fit="cover" placeholder="Rad 9"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="gal10" shape="rect" fit="cover" placeholder="Rad 10"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="gal11" shape="rect" fit="cover" placeholder="Rad 11"></image-slot></div><div style="position:relative;aspect-ratio:1;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph4.png" style="position:absolute;inset:0" id="gal12" shape="rect" fit="cover" placeholder="Rad 12"></image-slot></div></div><div style="height:24px"></div></div><div style="height:34px;background:#0f1012"></div></div></div>
+</x-import>
+</div>
+<div class="dv-opt" id="5m"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5m" style="background:rgba(255,255,255,.16);color:#fff">5m</a>Recenzije — ocjene klijenata</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:64px 22px 0"><div style="display:flex;align-items:center;gap:10px;min-height:48px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>Početna</div><h1 style="margin:10px 0 14px;font:400 42px/1.05 'DM Serif Display';color:#fff">Recenzije</h1><div style="border:1px solid #454b50;padding:18px;display:flex;align-items:center;gap:18px"><div><div style="font:400 54px/1 'DM Serif Display';color:#fff">4,8</div><div style="font:400 15px 'Archivo';color:#c3c9ce;margin-top:4px">od 5</div></div><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font:400 13px 'Archivo';color:#c3c9ce;width:10px">5</span><div style="flex:1;height:6px;background:#33383c"><div style="width:86%;height:6px;background:#fff"></div></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font:400 13px 'Archivo';color:#c3c9ce;width:10px">4</span><div style="flex:1;height:6px;background:#33383c"><div style="width:10%;height:6px;background:#fff"></div></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font:400 13px 'Archivo';color:#c3c9ce;width:10px">3</span><div style="flex:1;height:6px;background:#33383c"><div style="width:3%;height:6px;background:#fff"></div></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font:400 13px 'Archivo';color:#c3c9ce;width:10px">2</span><div style="flex:1;height:6px;background:#33383c"><div style="width:1%;height:6px;background:#fff"></div></div></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font:400 13px 'Archivo';color:#c3c9ce;width:10px">1</span><div style="flex:1;height:6px;background:#33383c"><div style="width:0%;height:6px;background:#fff"></div></div></div><div style="font:400 14px 'Archivo';color:#c3c9ce;margin-top:6px">142 ocjene</div></div></div></div><div style="flex:1;overflow:auto;padding:18px 22px 0"><div style="display:flex;flex-direction:column;gap:12px"><div style="border:1px solid #454b50;padding:18px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 19px 'Archivo';color:#fff">Nedim H.</div><div style="font:400 15px 'Archivo';color:#c3c9ce">prije 3 dana</div></div><div style="font:400 17px 'Archivo';color:#fff;letter-spacing:.14em;margin-top:6px">★★★★★</div><p style="margin:8px 0 0;font:400 17px/1.5 'Archivo';color:#c3c9ce">Fade je uvijek isti, tačno kako tražim. Nikad čekanja kad se zakaže preko aplikacije.</p></div><div style="border:1px solid #454b50;padding:18px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 19px 'Archivo';color:#fff">Amar S.</div><div style="font:400 15px 'Archivo';color:#c3c9ce">prije 2 sedmice</div></div><div style="font:400 17px 'Archivo';color:#fff;letter-spacing:.14em;margin-top:6px">★★★★★</div><p style="margin:8px 0 0;font:400 17px/1.5 'Archivo';color:#c3c9ce">Emir zna posao. Brada uređena za 20 minuta, cijena poštena.</p></div><div style="border:1px solid #454b50;padding:18px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 19px 'Archivo';color:#fff">Haris M.</div><div style="font:400 15px 'Archivo';color:#c3c9ce">prije mjesec</div></div><div style="font:400 17px 'Archivo';color:#fff;letter-spacing:.14em;margin-top:6px">★★★★☆</div><p style="margin:8px 0 0;font:400 17px/1.5 'Archivo';color:#c3c9ce">Sve super, jedino subotom zna biti gužva pa termin uzmite ranije.</p></div></div><div style="margin-top:16px;border:1px solid #6b7176;padding:18px;text-align:center;font:600 18px 'Archivo';color:#fff">Ostavi recenziju</div><div style="height:24px"></div></div><div style="height:34px;background:#0f1012"></div></div></div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="5n"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5n" style="background:rgba(255,255,255,.16);color:#fff">5n</a>O aplikaciji — pomoćni ekran</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:64px 22px 0"><div style="display:flex;align-items:center;gap:10px;min-height:48px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>Postavke</div><h1 style="margin:10px 0 6px;font:400 42px/1.05 'DM Serif Display';color:#fff">O aplikaciji</h1><p style="margin:0;font:400 17px/1.5 'Archivo';color:#c3c9ce">Zakazivanje termina u Barber Studiju Vitez — bez poziva i bez čekanja.</p></div>
+<div style="flex:1;overflow:auto;padding:20px 22px 0">
+<div style="border:1px solid #454b50;padding:20px 18px;display:flex;align-items:center;gap:16px"><div style="width:62px;height:62px;flex:0 0 62px;border:1px solid #454b50;display:flex;align-items:center;justify-content:center;font:400 30px 'DM Serif Display';color:#fff">BV</div><div><div style="font:600 20px 'Archivo';color:#fff">Barber Studio Vitez</div><div style="font:400 16px 'Archivo';color:#c3c9ce;margin-top:3px">Verzija 1.0.4 (240)</div></div></div>
+<div style="margin-top:20px;font:400 26px 'DM Serif Display';color:#fff;margin-bottom:12px">Kako radi</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="border:1px solid #454b50;padding:16px 18px;display:flex;gap:16px"><div style="font:400 26px/1 'DM Serif Display';color:#fff;width:26px">1</div><div><div style="font:600 18px 'Archivo';color:#fff">Pošaljete zahtjev</div><div style="font:400 16px/1.5 'Archivo';color:#c3c9ce;margin-top:3px">Izaberete uslugu, majstora i vrijeme.</div></div></div>
+<div style="border:1px solid #454b50;padding:16px 18px;display:flex;gap:16px"><div style="font:400 26px/1 'DM Serif Display';color:#fff;width:26px">2</div><div><div style="font:600 18px 'Archivo';color:#fff">Salon potvrdi</div><div style="font:400 16px/1.5 'Archivo';color:#c3c9ce;margin-top:3px">Obično u roku od nekoliko minuta, u radno vrijeme.</div></div></div>
+<div style="border:1px solid #454b50;padding:16px 18px;display:flex;gap:16px"><div style="font:400 26px/1 'DM Serif Display';color:#fff;width:26px">3</div><div><div style="font:600 18px 'Archivo';color:#fff">Dobijete podsjetnik</div><div style="font:400 16px/1.5 'Archivo';color:#c3c9ce;margin-top:3px">Dan prije i sat prije termina.</div></div></div>
+</div>
+<div style="margin-top:22px;border:1px solid #454b50"><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Pravila korištenja</span><span style="font:400 17px 'Archivo';color:#9aa1a7">›</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Politika privatnosti</span><span style="font:400 17px 'Archivo';color:#9aa1a7">›</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Ocijenite aplikaciju</span><span style="font:400 17px 'Archivo';color:#9aa1a7">›</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box"><span style="font:500 18px 'Archivo';color:#fff">Prijavite problem</span><span style="font:400 17px 'Archivo';color:#9aa1a7">›</span></div></div>
+<div style="margin-top:22px;border:1px solid #454b50"><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Telefon salona</span><span style="font:400 17px 'Archivo';color:#9aa1a7">030 711 220</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box;border-bottom:1px solid #33383c"><span style="font:500 18px 'Archivo';color:#fff">Adresa</span><span style="font:400 17px 'Archivo';color:#9aa1a7">Stjepana Radića 4</span></div><div style="padding:18px;display:flex;justify-content:space-between;align-items:center;min-height:60px;box-sizing:border-box"><span style="font:500 18px 'Archivo';color:#fff">Instagram</span><span style="font:400 17px 'Archivo';color:#9aa1a7">@barberstudiovitez</span></div></div>
+<p style="margin:22px 0 0;font:400 15px/1.5 'Archivo';color:#8b9298">© 2026 Barber Studio Vitez. Napravljeno u Bosni i Hercegovini.</p>
+<div style="height:36px"></div></div><div style="height:34px;background:#0f1012"></div></div>
+</x-import>
+</div>
+<div class="dv-opt" id="5o"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5o" style="background:rgba(255,255,255,.16);color:#fff">5o</a>Pravila korištenja</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;background:#0f1012"><div style="padding:64px 22px 0"><div style="display:flex;align-items:center;gap:10px;min-height:48px;font:600 18px 'Archivo';color:#fff"><span style="font-size:22px;line-height:1">←</span>O aplikaciji</div><h1 style="margin:10px 0 6px;font:400 40px/1.05 'DM Serif Display';color:#fff">Pravila korištenja</h1><div style="font:400 16px 'Archivo';color:#9aa1a7">Zadnja izmjena: 1. maj 2026.</div></div>
+<div style="flex:1;overflow:auto;padding:16px 22px 0">
+<div style="border-top:1px solid #33383c;padding:20px 0 4px"><div style="font:600 14px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:#9aa1a7;margin-bottom:6px">01</div><div style="font:400 26px 'DM Serif Display';color:#fff;margin-bottom:10px">Zakazivanje</div><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Zahtjev za termin nije potvrda. Termin je potvrđen tek kad salon prihvati zahtjev i kad dobijete obavještenje u aplikaciji.</p></div>
+<div style="border-top:1px solid #33383c;padding:20px 0 4px"><div style="font:600 14px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:#9aa1a7;margin-bottom:6px">02</div><div style="font:400 26px 'DM Serif Display';color:#fff;margin-bottom:10px">Otkazivanje</div><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Termin možete otkazati najkasnije 2 sata prije početka. Kasnije otkazivanje ili nedolazak salon može evidentirati.</p><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Tri nedolaska u šest mjeseci mogu ograničiti online zakazivanje — u tom slučaju termin zakazujete telefonom.</p></div>
+<div style="border-top:1px solid #33383c;padding:20px 0 4px"><div style="font:600 14px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:#9aa1a7;margin-bottom:6px">03</div><div style="font:400 26px 'DM Serif Display';color:#fff;margin-bottom:10px">Kašnjenje</div><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Ako kasnite više od 10 minuta, salon može skratiti uslugu ili ponuditi prvi sljedeći slobodan termin.</p></div>
+<div style="border-top:1px solid #33383c;padding:20px 0 4px"><div style="font:600 14px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:#9aa1a7;margin-bottom:6px">04</div><div style="font:400 26px 'DM Serif Display';color:#fff;margin-bottom:10px">Cijene</div><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Cijene u aplikaciji su informativne i važe za standardnu izvedbu usluge. Konačna cijena se dogovara u salonu.</p></div>
+<div style="border-top:1px solid #33383c;padding:20px 0 4px"><div style="font:600 14px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:#9aa1a7;margin-bottom:6px">05</div><div style="font:400 26px 'DM Serif Display';color:#fff;margin-bottom:10px">Vaši podaci</div><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Čuvamo ime, broj telefona i historiju termina — samo zbog zakazivanja i podsjetnika. Podatke ne prodajemo i ne dijelimo trećim stranama.</p><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Brisanje računa i svih podataka možete zatražiti u Postavkama.</p></div>
+<div style="border-top:1px solid #33383c;padding:20px 0 4px"><div style="font:600 14px 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:#9aa1a7;margin-bottom:6px">06</div><div style="font:400 26px 'DM Serif Display';color:#fff;margin-bottom:10px">Kontakt</div><p style="margin:0 0 14px;font:400 16px/1.6 'Archivo';color:#c3c9ce">Za sve nejasnoće: 030 711 220 ili info@barberstudiovitez.ba.</p></div>
+<div style="height:40px"></div></div><div style="height:34px;background:#0f1012"></div></div>
+</x-import>
+</div>
+<div class="dv-opt" id="5p"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5p" style="background:rgba(255,255,255,.16);color:#fff">5p</a>Modal — otkazivanje termina</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="position:relative;height:100%;background:#0f1012"><div style="height:100%;display:flex;flex-direction:column;filter:blur(1.5px)"><div style="padding:72px 22px 0"><h1 style="margin:0 0 18px;font:400 42px/1.05 'DM Serif Display';color:#fff">Moji termini</h1></div><div style="flex:1;padding:0 22px"><div style="border:1px solid #454b50;background:#151719;padding:22px 18px"><div style="display:flex;align-items:flex-end;gap:14px"><div style="font:400 58px/.85 'DM Serif Display';color:#fff">14:30</div><div style="padding-bottom:6px;font:600 18px 'Archivo';color:#fff">srijeda,<br>20. maj</div></div><div style="margin-top:16px;font:400 17px 'Archivo';color:#c3c9ce">Fade šišanje kod Emira</div></div></div></div>
+<div style="position:absolute;inset:0;background:rgba(6,7,8,.72)"></div>
+<div style="position:absolute;left:20px;right:20px;bottom:120px;border:1px solid #6b7176;background:#141618;padding:24px 22px 22px"><div style="font:600 14px 'Archivo';letter-spacing:.18em;text-transform:uppercase;color:#9aa1a7">Otkazivanje</div><div style="margin-top:8px;font:400 34px/1.1 'DM Serif Display';color:#fff">Otkazati termin u 14:30?</div><p style="margin:12px 0 0;font:400 17px/1.5 'Archivo';color:#c3c9ce">Fade šišanje kod Emira, srijeda 20.05. Mjesto se odmah oslobađa i ne možemo ga garantovati kasnije.</p>
+<div style="margin-top:22px;display:flex;flex-direction:column;gap:10px"><div style="height:62px;background:#f2f2f3;display:flex;align-items:center;justify-content:center;font:600 19px 'Archivo';color:#10161c">Otkaži termin</div><div style="height:62px;border:1px solid #6b7176;display:flex;align-items:center;justify-content:center;font:600 19px 'Archivo';color:#fff">Zadrži termin</div></div></div></div>
+</x-import>
+</div>
+<div class="dv-opt" id="5q"><div class="dv-olabel" style="color:rgba(255,255,255,.75)"><a class="dv-oid" href="#5q" style="background:rgba(255,255,255,.16);color:#fff">5q</a>Lightbox galerije</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" dark="{{ true }}" hint-size="402px,874px">
+<div style="position:relative;height:100%;background:#07080a"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="position:relative;width:100%;aspect-ratio:3/4;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph5.png" style="position:absolute;inset:0" id="lb-1" shape="rect" fit="contain" placeholder="Rad 4"></image-slot></div></div>
+<div style="position:absolute;top:0;left:0;right:0;padding:58px 18px 14px;background:linear-gradient(180deg,rgba(7,8,10,.9),rgba(7,8,10,0));display:flex;align-items:center;justify-content:space-between"><div style="width:44px;height:44px;border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font:400 20px 'Archivo';color:#fff">✕</div><div style="font:600 16px 'Archivo';color:#fff">4 / 18</div><div style="width:44px;height:44px;border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font:400 20px 'Archivo';color:#fff">⤴</div></div>
+<div style="position:absolute;bottom:0;left:0;right:0;padding:22px 18px 34px;background:linear-gradient(0deg,rgba(7,8,10,.96),rgba(7,8,10,0))"><div style="display:flex;gap:8px;overflow:auto"><div style="position:relative;flex:0 0 56px;height:56px;border:2px solid #f2f2f3;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph6.png" style="position:absolute;inset:0" id="lb-t1" shape="rect" fit="cover" placeholder=""></image-slot></div><div style="position:relative;flex:0 0 56px;height:56px;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph1.png" style="position:absolute;inset:0" id="lb-t2" shape="rect" fit="cover" placeholder=""></image-slot></div><div style="position:relative;flex:0 0 56px;height:56px;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph2.png" style="position:absolute;inset:0" id="lb-t3" shape="rect" fit="cover" placeholder=""></image-slot></div><div style="position:relative;flex:0 0 56px;height:56px;border:1px solid #454b50;background:#1a1d20;color:#9aa1a7"><image-slot src="assets/ph3.png" style="position:absolute;inset:0" id="lb-t4" shape="rect" fit="cover" placeholder=""></image-slot></div></div></div></div>
+</x-import>
+</div>
+</div>
+<p class="dv-next">Sljedeće: „napravi svijetlu verziju" · „dodaj ekran za osoblje" · „ubaci prave fotografije" (prevuci slike u okvire)</p>
+</section>
+
+
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const INK = '#1d1f20', LINE = 'rgba(29,31,32,.16)', ACC = '#5980a6';
+
+class Component extends DCLogic {
+  state = { svc: 1, emp: 0, day: 2, slot: '14:30', tab: 'upcoming', otp: '481', cancelOpen: false,
+    dsvc: 1, dday: 20, dslot: '14:30' };
+
+  row(selected) {
+    return {
+      display: 'flex', alignItems: 'center', gap: '14px', padding: '16px',
+      minHeight: '72px', boxSizing: 'border-box', cursor: 'pointer',
+      border: selected ? `2px solid ${ACC}` : `1px solid ${LINE}`,
+      background: selected ? '#eef6ff' : '#fff',
+    };
+  }
+  dot(selected) {
+    return {
+      width: '24px', height: '24px', flexShrink: 0,
+      border: selected ? `7px solid ${ACC}` : `1px solid rgba(29,31,32,.4)`,
+      background: '#fff', boxSizing: 'border-box',
+    };
+  }
+  cta(enabled, label) {
+    return {
+      height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      font: "600 22px 'Barlow Condensed'", letterSpacing: '.1em', textTransform: 'uppercase',
+      background: enabled ? ACC : '#e7e7ea', color: enabled ? '#fff' : '#98989b',
+    };
+  }
+  tab(active) {
+    return {
+      padding: '16px 0', textAlign: 'center', cursor: 'pointer',
+      font: "600 18px 'Barlow'", background: active ? INK : '#fff',
+      color: active ? '#fff' : '#424244',
+    };
+  }
+
+  darkRow(sel) {
+    return {
+      display: 'flex', alignItems: 'center', gap: '16px', padding: '20px 18px',
+      cursor: 'pointer', boxSizing: 'border-box',
+      border: sel ? '1px solid #94bce3' : '1px solid rgba(255,255,255,.2)',
+      background: sel ? 'rgba(148,188,227,.14)' : 'transparent',
+    };
+  }
+  darkCtaStyle(enabled) {
+    return {
+      height: '66px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      font: "700 24px 'Barlow Condensed'", letterSpacing: '.14em', textTransform: 'uppercase',
+      background: enabled ? '#94bce3' : 'rgba(255,255,255,.12)',
+      color: enabled ? '#10161c' : 'rgba(255,255,255,.45)',
+    };
+  }
+  darkSlot(sel) {
+    return {
+      height: '62px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      cursor: 'pointer', font: "700 24px 'Barlow Condensed'", letterSpacing: '.04em',
+      border: sel ? '1px solid #94bce3' : '1px solid rgba(255,255,255,.2)',
+      background: sel ? '#94bce3' : 'transparent',
+      color: sel ? '#10161c' : '#fff',
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const dsv = [
+      { name: 'Muško šišanje', dur: '30 min · mašinica i škare', price: '15 KM' },
+      { name: 'Fade šišanje', dur: '40 min · prelaz po želji', price: '20 KM' },
+      { name: 'Šišanje + brada', dur: '45 min · komplet', price: '25 KM' },
+    ].map((x, i) => ({
+      ...x, idx: '0' + (i + 1),
+      style: this.darkRow(s.dsvc === i),
+      num: {
+        font: "600 14px 'Barlow'", letterSpacing: '.1em',
+        color: s.dsvc === i ? '#94bce3' : 'rgba(255,255,255,.45)', width: '24px',
+      },
+      markLabel: s.dsvc === i ? 'izabrano' : '',
+      mark: {
+        font: "600 12px 'Barlow'", letterSpacing: '.16em', textTransform: 'uppercase',
+        color: '#94bce3', marginTop: '4px', minHeight: '14px',
+      },
+      pick: () => this.setState({ dsvc: i }),
+    }));
+
+    const ddays = [
+      { dow: 'PON', num: '18', free: '6 slobodnih' },
+      { dow: 'UTO', num: '19', free: '2 slobodna' },
+      { dow: 'SRI', num: '20', free: '9 slobodnih' },
+      { dow: 'ČET', num: '21', free: '5 slobodnih' },
+      { dow: 'PET', num: '22', free: '1 slobodan' },
+      { dow: 'SUB', num: '23', free: '4 slobodna' },
+    ].map((d, i) => ({
+      ...d,
+      pick: () => this.setState({ dday: i }),
+      style: {
+        flex: '0 0 auto', width: '86px', padding: '14px 0 12px', textAlign: 'center',
+        cursor: 'pointer', boxSizing: 'border-box',
+        border: s.dday === i ? '1px solid #94bce3' : '1px solid rgba(255,255,255,.2)',
+        background: s.dday === i ? '#94bce3' : 'transparent',
+        color: s.dday === i ? '#10161c' : '#fff',
+      },
+    }));
+
+    const dmk = (t) => ({
+      label: t, style: this.darkSlot(s.dslot === t),
+      pick: () => this.setState({ dslot: t }),
+    });
+
+    const services = [
+      { name: 'Žensko šišanje', meta: '45 min · 25 KM' },
+      { name: 'Feniranje', meta: '40 min · 20 KM' },
+      { name: 'Farbanje', meta: '120 min · 70 KM' },
+      { name: 'Pramenovi', meta: '150 min · 100 KM' },
+    ].map((x, i) => ({
+      ...x, style: this.row(s.svc === i), dot: this.dot(s.svc === i),
+      pick: () => this.setState({ svc: i }),
+    }));
+
+    const staff = [
+      { name: 'Bilo ko od nas', role: 'Najviše slobodnih termina', initials: '★' },
+      { name: 'Amira', role: 'Stilista', initials: 'A' },
+      { name: 'Lejla', role: 'Kolorista', initials: 'L' },
+      { name: 'Maja', role: 'Stilista', initials: 'M' },
+    ].map((x, i) => ({
+      ...x, style: this.row(s.emp === i), dot: this.dot(s.emp === i),
+      avatar: {
+        width: '48px', height: '48px', flexShrink: 0, background: '#e7e7ea',
+        border: `1px solid ${LINE}`,
+      },
+      pick: () => this.setState({ emp: i }),
+    }));
+
+    const days = ['PON 18', 'UTO 19', 'SRI 20', 'ČET 21', 'PET 22', 'SUB 23', 'NED 24'].map((d, i) => {
+      const [dow, num] = d.split(' ');
+      const closed = i === 6;
+      const sel = s.day === i;
+      return {
+        dow, num,
+        pick: closed ? () => {} : () => this.setState({ day: i }),
+        style: {
+          padding: '10px 0', textAlign: 'center', cursor: closed ? 'default' : 'pointer',
+          border: sel ? `1px solid ${ACC}` : `1px solid ${LINE}`,
+          background: sel ? ACC : '#fff',
+          color: sel ? '#fff' : (closed ? '#b7b7ba' : INK),
+        },
+      };
+    });
+
+    const slotStyle = (t) => ({
+      height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      cursor: 'pointer', font: "600 20px 'Barlow'",
+      border: s.slot === t ? `2px solid ${ACC}` : `1px solid ${LINE}`,
+      background: s.slot === t ? ACC : '#fff',
+      color: s.slot === t ? '#fff' : INK,
+    });
+    const mk = (t) => ({ label: t, style: slotStyle(t), pick: () => this.setState({ slot: t }) });
+
+    const otpCells = Array.from({ length: 6 }, (_, i) => ({
+      ch: s.otp[i] || '',
+      style: {
+        height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        font: "600 30px 'Barlow Condensed'", color: INK,
+        border: i === s.otp.length ? `2px solid ${ACC}` : `1px solid ${LINE}`,
+        background: '#fff',
+      },
+    }));
+
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map((k) => ({
+      label: k,
+      style: {
+        height: '58px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        font: "600 24px 'Barlow'", color: k ? INK : 'transparent',
+        border: k ? `1px solid ${LINE}` : 'none', cursor: k ? 'pointer' : 'default',
+        background: '#fff',
+      },
+      press: () => {
+        if (!k) return;
+        if (k === '⌫') this.setState({ otp: s.otp.slice(0, -1) });
+        else if (s.otp.length < 6) this.setState({ otp: s.otp + k });
+      },
+    }));
+
+    const tsv = [
+      { name: 'Muško šišanje', dur: '30 minuta', price: '15 KM' },
+      { name: 'Fade šišanje', dur: '40 minuta', price: '20 KM' },
+      { name: 'Šišanje + brada', dur: '45 minuta', price: '25 KM' },
+    ].map((x, i) => ({
+      ...x,
+      tickChar: s.dsvc === i ? '✓' : '',
+      pick: () => this.setState({ dsvc: i }),
+      style: {
+        display: 'flex', alignItems: 'center', gap: '16px', padding: '20px 18px',
+        cursor: 'pointer', boxSizing: 'border-box', minHeight: '92px',
+        border: s.dsvc === i ? '2px solid #f2f2f3' : '1px solid #454b50',
+        background: s.dsvc === i ? 'rgba(242,242,243,.1)' : 'transparent',
+      },
+      tick: {
+        width: '30px', height: '30px', flexShrink: 0, boxSizing: 'border-box',
+        border: s.dsvc === i ? '2px solid #f2f2f3' : '2px solid #767c81',
+        background: s.dsvc === i ? '#f2f2f3' : 'transparent', color: '#10161c',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        font: "700 17px 'Archivo'",
+      },
+      nameStyle: { font: "600 21px 'Archivo'", color: '#fff' },
+    }));
+
+    const tdays = [
+      { dow: 'Pon', num: '18', free: '6 termina' },
+      { dow: 'Uto', num: '19', free: '2 termina' },
+      { dow: 'Sri', num: '20', free: '9 termina' },
+      { dow: 'Čet', num: '21', free: '5 termina' },
+      { dow: 'Pet', num: '22', free: '1 termin' },
+      { dow: 'Sub', num: '23', free: '4 termina' },
+    ].map((d, i) => ({
+      ...d,
+      pick: () => this.setState({ dday: i }),
+      style: {
+        flex: '0 0 auto', width: '96px', padding: '14px 0 12px', textAlign: 'center',
+        cursor: 'pointer', boxSizing: 'border-box',
+        border: s.dday === i ? '2px solid #f2f2f3' : '1px solid #454b50',
+        background: s.dday === i ? '#f2f2f3' : 'transparent',
+        color: s.dday === i ? '#10161c' : '#fff',
+      },
+      numStyle: { font: "400 34px/1 'Instrument Serif'", marginTop: '6px' },
+    }));
+
+    const tmk = (t) => ({
+      label: t,
+      pick: () => this.setState({ dslot: t }),
+      style: {
+        height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', font: "500 22px 'Archivo'",
+        border: s.dslot === t ? '2px solid #f2f2f3' : '1px solid #454b50',
+        background: s.dslot === t ? '#f2f2f3' : 'transparent',
+        color: s.dslot === t ? '#10161c' : '#fff',
+      },
+    });
+
+    const calDays = [];
+    for (let b = 0; b < 4; b++) calDays.push({ num: '', pick: () => {}, style: { height: '44px' } });
+    for (let n = 1; n <= 31; n++) {
+      const past = n < 18;
+      const sel = s.dday === n;
+      calDays.push({
+        num: String(n),
+        pick: past ? () => {} : () => this.setState({ dday: n }),
+        style: {
+          height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          font: "500 17px 'Archivo'", cursor: past ? 'default' : 'pointer',
+          border: sel ? '2px solid #f2f2f3' : '1px solid #33383c',
+          background: sel ? '#f2f2f3' : 'transparent',
+          color: sel ? '#10161c' : (past ? '#5f666b' : '#fff'),
+        },
+      });
+    }
+
+    const typeCta = (enabled) => ({
+      height: '66px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      font: "600 19px 'Archivo'",
+      background: enabled ? '#f2f2f3' : '#2a2e32',
+      color: enabled ? '#10161c' : '#8b9298',
+    });
+
+    return {
+      calDays, typeServices: tsv, typeDays: tdays,
+      typeAm: ['09:00', '09:40', '10:20', '11:00', '11:40', '12:20'].map(tmk),
+      typePm: ['13:00', '13:40', '14:30', '15:10', '16:30', '17:10'].map(tmk),
+      typeCta: typeCta(s.dsvc !== null),
+      typeSlotCta: typeCta(!!s.dslot),
+      typeSlotLabel: s.dslot ? `Dalje · ${s.dslot}` : 'Izaberite vrijeme',
+      darkServices: dsv, darkDays: ddays,
+      darkAm: ['09:00', '09:40', '10:20', '11:00', '11:40', '12:20'].map(dmk),
+      darkPm: ['13:00', '13:40', '14:30', '15:10', '16:30', '17:10'].map(dmk),
+      darkCta: this.darkCtaStyle(s.dsvc !== null),
+      darkSlotCta: this.darkCtaStyle(!!s.dslot),
+      darkSlotLabel: s.dslot ? `Potvrdi ${s.dslot}` : 'Izaberite vrijeme',
+      services, staff, days, otpCells, keys,
+      slotsAm: ['09:00', '09:40', '10:20', '11:00', '11:40'].map(mk),
+      slotsPm: ['13:00', '13:40', '14:30', '15:10', '16:30', '17:10'].map(mk),
+      ctaStyle: this.cta(s.svc !== null),
+      slotCtaStyle: this.cta(!!s.slot),
+      slotCtaLabel: s.slot ? `Nastavi · ${s.slot}` : 'Izaberite vrijeme',
+      tabUpcoming: this.tab(s.tab === 'upcoming'),
+      tabPast: this.tab(s.tab === 'past'),
+      isUpcoming: s.tab === 'upcoming',
+      isPast: s.tab === 'past',
+      showUpcoming: () => this.setState({ tab: 'upcoming' }),
+      showPast: () => this.setState({ tab: 'past' }),
+      cancelOpen: s.cancelOpen,
+      askCancel: () => this.setState({ cancelOpen: true }),
+      closeCancel: () => this.setState({ cancelOpen: false }),
+    };
+  }
+}
+</script>
+</body>
+</html>

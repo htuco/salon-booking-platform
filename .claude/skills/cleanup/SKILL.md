@@ -33,7 +33,7 @@ Provjeri, tim redom — prve tri su specifične za ovaj repo i najčešće nešt
 11. **Tajne i artefakti u gitu**: `.env`, izlaz `supabase status`, pravi `google-services.json`,
     `build/` folderi, `.DS_Store`.
 12. **Mrtve zavisnosti** u `package.json` — poznati slučaj su `@mui/*` i `@emotion/*` bez ijednog
-    importa u `src/` (`docs/07 §2`).
+    importa u `prototype/wireframe/src/` (`docs/07 §2` — zatvoreno 12.09.2026).
 
 ## `check`
 

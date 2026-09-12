@@ -741,4 +741,4 @@ Detaljno: [05 §10](05-vertical-packs.md).
 8. Sprint 2: auth + admin + push
 9. Demo pravom salonu u Vitezu
 
-> Wireframe demo u `src/app/` je React/web — to je **prototip za validaciju flowa i vizuala**, ne production kod. Mapiranje ekrana na Flutter screenove je u [02, §1.1](02-user-flows-wireframes.md).
+> Wireframe demo u `prototype/wireframe/src/app/` je React/web — to je **prototip za validaciju flowa**, ne production kod, i zamrznut je otkako vizual nosi [`prototype/ui/`](../prototype/ui/README.md). Mapiranje ekrana na Flutter screenove je u [02, §1.1](02-user-flows-wireframes.md).

@@ -55,7 +55,7 @@ graph TB
 
 ## 2. Mapiranje: React mockup → Flutter screen
 
-Mockup u `src/app/` je **prototip za validaciju**, ne production kod. Ovo je mapiranje:
+Mockup u `prototype/wireframe/src/app/` je **prototip za validaciju**, ne production kod (i zamrznut je — vizual nosi `prototype/ui/`). Ovo je mapiranje:
 
 | React mockup | Flutter screen | App |
 |---|---|---|
@@ -1283,4 +1283,4 @@ flowchart TD
 3. `core_ui` design system po §16 — **prije** prvog ekrana
 4. Sprint 0–1 iz [01 §17](01-mvp-spec.md)
 
-> Interaktivni mockup u `src/app/` je React/web prototip. Njegova svrha je da vidiš flow i vizuelni jezik prije nego napišeš prvi Dart fajl. Mapiranje: §2.
+> Interaktivni mockup u `prototype/wireframe/src/app/` je React/web prototip. Njegova svrha je da vidiš flow i vizuelni jezik prije nego napišeš prvi Dart fajl. Mapiranje: §2.

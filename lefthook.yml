@@ -1,9 +1,11 @@
 # Git hook runner — v. docs/07-tech-architecture.md §6.
 # Instalacija (jednom, nakon `npm i`): npx lefthook install
 #
-# Web dio (`src/`, buduci `web/`) nema eslint/prettier konfigurisan još —
-# hook za to se dodaje kad taj toolchain stvarno postoji (docs/07 §4),
-# ne prije, da se ne blokira svaki commit na alatu koji ne radi.
+# Ovaj package.json u rootu postoji samo zbog lefthooka. Toolchain wireframe
+# prototipa je u prototype/ i ima svoj package.json.
+#
+# prototype/ je zamrznut, pa za njega nema ni eslint/prettier ni hooka. Kad
+# stigne pravi `web/` (Next.js konzola, docs/07 §1), hook se dodaje tad.
 pre-commit:
   parallel: true
   commands:
