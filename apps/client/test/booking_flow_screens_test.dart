@@ -13,7 +13,10 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:mocktail/mocktail.dart';
+
+import 'support/fake_auth_repository.dart';
 
 /// Booking flow kroz sva četiri koraka.
 ///
@@ -434,6 +437,7 @@ Future<ProviderContainer> _pumpFlow(
   required String ruta,
   Vertical vertical = Vertical.fallback,
   String? customerId,
+  AuthSession? sesija,
   void Function(BookingFlowNotifier notifier)? pocetniFlow,
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
@@ -462,6 +466,18 @@ Future<ProviderContainer> _pumpFlow(
       bookingRepositoryProvider.overrideWithValue(repo),
       bookingTodayProvider.overrideWithValue(_danas),
       bookingCustomerIdProvider.overrideWithValue(customerId),
+      // Prijava odlučuje koji CTA zadnji korak prikazuje (task 13), a `customerId` samo
+      // da li slanje može proći. Test koji zada `customerId` zadaje i sesiju — bez nje
+      // bi „prijavljen korisnik bez klijenta" bio jedino stanje koje se može testirati.
+      authRepositoryProvider.overrideWithValue(
+        FakeAuthRepository(
+          pocetnaSesija:
+              sesija ??
+              (customerId == null
+                  ? null
+                  : FakeAuthRepository.sesijaNakonPrijave),
+        ),
+      ),
     ],
   );
 

@@ -7,7 +7,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | # | Task | Blokira | Procjena |
 |---|---|---|---|
 | [12](12-auth-provideri.md) 🟡 | Supabase Auth provideri + `AuthConfig` po flavoru ([konzole](12-konzole-checklist.md)) | 13, 14 | 2 dana |
-| [13](13-client-login-ekran.md) | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
+| [13](13-client-login-ekran.md) 🟡 | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
 | [14](14-identitet-i-klijent-upsert.md) | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
 | [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
 | [16](16-moji-termini-i-otkazivanje.md) | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
@@ -73,6 +73,20 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > **Apple i Google nisu odigrani nijednom** — traže tvoje naloge i pravi uređaj; hodogram je
 > [12-konzole-checklist.md](12-konzole-checklist.md). Detalji:
 > [12-auth-provideri.md](12-auth-provideri.md#status-2026-09-12--🟡-kod-gotov-konzole-čekaju).
+
+> **13 — Client: login ekran (🟡, 2026-09-12).** `/auth/login` ima pravo tijelo:
+> `SupabaseAuthRepository` u `core_api`, `LoginScreen` sa tri faze (provideri → email → kod),
+> `AppointmentHoldCard` izvučena iz koraka 4, `?from=` povratak provjeren naspram `ClientRoute`
+> liste. **253 testa PASS** (bilo 238), i **email OTP odigran do kraja u browseru protiv živog
+> stacka** — četiri prijave, četiri `auth_identities` reda, mail bez linka.
+> Prolaz kroz browser je našao grešku koju testovi nisu mogli: prijava je brisala izbor iz flowa
+> (`autoDispose` bez slušaoca u fazi unosa emaila), a sam test je držao vlastitu pretplatu pa bi
+> prolazio i nad pokvarenom app-om. Oboje popravljeno i provjereno da test može pasti.
+> **`customers` je i dalje 0** — `bookingCustomerIdProvider` vraća `null` jer reda nema, i to je
+> tačno ono što [task 14](14-identitet-i-klijent-upsert.md) zatvara.
+> **Apple i Google nisu odigrani**: traže pakete kojih nema u `pubspec.yaml` i konzole iz taska 12.
+> Detalji: [13-client-login-ekran.md](13-client-login-ekran.md#status-2026-09-12--🟡-email-prijava-radi-i-dokazana-je-nativni-provideri-nisu).
+
 
 ## Dug koji nije task
 

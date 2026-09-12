@@ -57,9 +57,22 @@ class BookingSubmitNotifier extends AutoDisposeAsyncNotifier<void> {
     final dateOnly = ref.read(bookingDateOnlyProvider);
     final customerId = ref.read(bookingCustomerIdProvider);
 
-    // Guard, ne validacija: ekran ovdje ne smije stići. Kad stigne, tiho slanje sa
-    // polovičnim izborom bi napravilo termin koji korisnik nije birao.
-    if (customerId == null || !flow.isReadyToSubmit(dateOnly: dateOnly)) {
+    // Polovičan izbor je guard, ne validacija: ekran ovdje ne smije stići. Kad stigne,
+    // tiho slanje bi napravilo termin koji korisnik nije birao.
+    if (!flow.isReadyToSubmit(dateOnly: dateOnly)) return false;
+
+    // Prijavljen korisnik bez `customers` reda je **stvarno stanje sistema** dok upsert
+    // iz taska 14 ne postoji — a ne greška u ekranu. Vraća se greška, a ne tiho `false`:
+    // dugme koje na dodir ne uradi ništa i ne kaže ništa je gore od poruke, jer korisnik
+    // ne zna da li čeka ili je pokvareno.
+    if (customerId == null) {
+      state = AsyncValue<void>.error(
+        const NotFoundError(
+          'Prijavljeni korisnik nema `customers` red u ovom salonu — upsert '
+          'dolazi u tasku 14 (tasks/sprint-2/14-identitet-i-klijent-upsert.md)',
+        ),
+        StackTrace.current,
+      );
       return false;
     }
 

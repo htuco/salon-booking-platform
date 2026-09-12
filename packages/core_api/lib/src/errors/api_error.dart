@@ -91,3 +91,26 @@ final class AuthCancelledError extends ApiError {
 final class MappingError extends ApiError {
   const MappingError(super.message, {super.cause});
 }
+
+/// Prijava je odbijena — kod nije tačan, istekao je, ili nalog ne postoji.
+///
+/// **Odvojeno od [ServerError] jer je ovo korisnikova greška, ne kvar sistema.** Pogrešno
+/// prekucana šesta cifra i pala politika na bazi nisu isti događaj: prvo se rješava
+/// ponovnim unosom i poruka to mora reći, drugo se rješava pozivom nama. Kad bi oboje
+/// izlazilo kao `ServerError`, korisnik koji je promašio cifru dobio bi "pokušajte
+/// kasnije" i zatvorio app.
+///
+/// Baca ga implementacija `AuthRepository`-ja kroz `mapError`
+/// ([task 13](../../../../../tasks/sprint-2/13-client-login-ekran.md)).
+final class AuthRejectedError extends ApiError {
+  const AuthRejectedError(super.message, {super.cause});
+}
+
+/// Previše zahtjeva u kratkom vremenu — Supabase Auth ograničava slanje OTP mailova.
+///
+/// Vlastiti tip, a ne [ServerError], iz istog razloga kao [AuthRejectedError]: jedina
+/// ispravna akcija je **čekanje**, pa ekran mora moći reći koliko, a ne ponuditi dugme
+/// "pokušaj ponovo" koje će odmah pasti isto.
+final class RateLimitError extends ApiError {
+  const RateLimitError(super.message, {super.cause});
+}

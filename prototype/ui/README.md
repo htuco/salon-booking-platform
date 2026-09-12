@@ -65,3 +65,16 @@ finalan. Prototip ostaje samo kao referenca za flow i za rute.
 četiri koraka bookinga, zahtjev poslan). `5h`–`5q` (moji termini, usluge, obavijesti, postavke,
 galerija, recenzije, o aplikaciji, pravila, modal otkazivanja, lightbox) su Sprint 2+ —
 v. `tasks/sprint-1/README.md` §Sljedeće.
+
+### Ekrani koje handoff nema
+
+**Koraci OTP prijave (`/auth/login`, unos emaila i unos koda) nisu nacrtani.** Handoff ima korak 4
+(`5f`) kao ekran prijave sa tri dugmeta, ali nijedan ekran iza „Nastavi sa emailom" — a
+`docs/06 §2.1` traži šestocifreni kod.
+
+Ta dva koraka su zato **izvedena iz tokena**, ne izmišljena: isti gutter i ritam kao ostatak flowa,
+hairline granica, `AppRadius.none`, `AppButton` i `inputDecorationTheme` iz `core_ui`, bez ijedne
+nove vrijednosti. Kartica „Čuvamo vam" stoji i na prijavi, jer je prijava dio koraka 4.
+
+Kad handoff dobije te ekrane, mjerodavan je on — ovo je popuna, ne odluka.
+Kako izgledaju danas: [`docs/screenshots/task-13-otp-kod.png`](../../docs/screenshots/task-13-otp-kod.png).

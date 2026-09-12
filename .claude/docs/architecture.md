@@ -270,8 +270,26 @@ slotova.
 
 Od taska 12: auth konfiguracija — `AuthConfig`, `AuthProvider`, `AuthPlatform` i `AuthSession` u
 `core_domain`, `AuthRepository` ugovor i `authPlatformOf` u `core_api`, `authConfigProvider` i
-`visibleAuthProvidersProvider` u klijentu. **Ugovor, ne implementacija**: `SupabaseAuthRepository`
-piše task 13, i do tada se niko ne može prijaviti iz app-e.
+`visibleAuthProvidersProvider` u klijentu. **Ugovor, ne implementacija** — implementaciju donosi
+task 13.
+
+Od taska 13: `SupabaseAuthRepository` i `CustomerRepository` u `core_api`, `features/auth/` u
+klijentu (`LoginScreen` + `LoginController` sa tri faze: provideri → email → kod). Prijava je
+**dio booking flowa, ne zaseban ekran** — handoff nema login ekran nego korak 4, pa `/auth/login`
+nosi istu karticu „Čuvamo vam" i vraća korisnika na `?from=`.
+
+Dvije posljedice koje se ne vide iz potpisa:
+
+- **Login ekran mora sam držati `bookingFlowProvider`** (`ref.watch` na nivou ekrana). Provider je
+  `autoDispose`; kad je jedini slušalac bio vidljivi widget, prelazak na unos emaila je brisao
+  izbor i korisnik se vraćao na prazan korak 4. Isto vrijedi za svaki sljedeći ekran koji flow
+  napusti pa se u njega vrati.
+- **Iz `core_api` ne izlazi nijedan `AuthException`.** `mapError` ga razlaže na `AuthRejectedError`
+  (pogrešan ili istekao kod), `RateLimitError` (čekanje) i `NetworkError` — razlika je ono što
+  korisnik može uraditi, a `sealed ApiError` čini `switch` u ekranu iscrpnim.
+
+Upis u `customers` i dalje ne postoji: `CustomerRepository` samo **čita** pod politikom
+`own_customer`, a red pravi `security definer` funkcija iz taska 14.
 
 Lista providera je podatak iz `tenant.yaml` (`auth.providers`), koji kroz generator ulazi u
 `tenants.g.dart`, pa kroz `AuthConfig.fromNames` do ekrana. Domen nosi **vlastiti** enum platforme
