@@ -1,0 +1,70 @@
+# Taskovi — Sprint 2: auth, admin, push i ostatak handoffa
+
+Nastavak [Sprinta 1](../sprint-1/). Redoslijed prati [01 §17](../../docs/01-mvp-spec.md#17-build-order)
+korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koje handoff traži
+(task 22), a `prototype/ui/` ima deset ekrana koje niko nije raspisao (18–21).
+
+| # | Task | Blokira | Procjena |
+|---|---|---|---|
+| [12](12-auth-provideri.md) | Supabase Auth provideri + `AuthConfig` po flavoru | 13, 14 | 2 dana |
+| [13](13-client-login-ekran.md) | Client: login na kraju booking flowa | 14, 16, 17 | 1–2 dana |
+| [14](14-identitet-i-klijent-upsert.md) | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
+| [15](15-izolacija-klijent-u-dva-salona.md) | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
+| [16](16-moji-termini-i-otkazivanje.md) | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
+| [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
+| [22](22-sema-slike-i-staz.md) | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
+| [18](18-pocetna-i-tab-bar.md) | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
+| [19](19-o-nama-i-usluge.md) | Client: "O nama" i "Usluge" | — | 1–2 dana |
+| [20](20-galerija-recenzije.md) | Client: galerija, lightbox, recenzije | — | 2 dana |
+| [21](21-obavijesti-i-pravni-ekrani.md) | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
+| [23](23-admin-login-i-lista.md) | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
+| [24](24-admin-akcije-nad-terminima.md) | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
+| [25](25-push-notifikacije.md) | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
+| [26](26-gost-i-facebook.md) | Guest flow + Facebook iza flaga | — | 1–2 dana |
+
+**Ukupno: ~23–30 radnih dana.**
+
+## Redoslijed koji nije očigledan
+
+- **12 → 13 → 14 je lanac i ide prvi.** Dok `Customer` upsert ne postoji, `book_appointment` nema
+  `customerId` — booking flow iz [taska 11](../sprint-1/11-booking-flow.md) je napisan, ali
+  **nijednom nije izvršen protiv prave baze**. Task 14 je jedini koji to zatvara.
+- **15 odmah poslije 14, ne na kraju sprinta.** Izolacija se dokazuje dok je upsert svjež; kad se
+  na njega naslone admin i push, ispravka je skuplja.
+- **22 prije 18 i 20.** Pola dana migracije, a bez nje red usluge ima prazan okvir i Početna se
+  piše dvaput.
+- **18 prije 19–21.** Tab bar je jedina zajednička komponenta koju `SPEC.md` traži da se gradi
+  prva; četiri ekrana ispod nje su lakša kad ona postoji.
+- **23 → 24 → 25.** Push se okida na admin akcije; bez njih nema šta slati.
+
+## Šta ovaj sprint zatvara iz prethodnih
+
+| Otvoreno u | Šta | Zatvara |
+|---|---|---|
+| [11](../sprint-1/11-booking-flow.md) | `book(...)` nikad nije pozvan protiv prave baze | [14](14-identitet-i-klijent-upsert.md) |
+| [11](../sprint-1/11-booking-flow.md) | `409` nije izazvan uživo | [14](14-identitet-i-klijent-upsert.md) |
+| [11](../sprint-1/11-booking-flow.md) | Usluge nemaju fotografiju, radnici staž | [22](22-sema-slike-i-staz.md) |
+| [11](../sprint-1/11-booking-flow.md) | Početna nije po handoffu | [18](18-pocetna-i-tab-bar.md) |
+| [08](../sprint-1/08-core-api-repozitoriji.md) | Nema `AppointmentRepository` | [16](16-moji-termini-i-otkazivanje.md) |
+| `security.md` | `customers`/`devices` upis bez validirane funkcije | [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
+| `security.md` | Admin `insert` nad `appointments` zaobilazi validaciju slota | [24](24-admin-akcije-nad-terminima.md) |
+
+## Što **nije** u ovom sprintu
+
+Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
+
+- **Admin CRUD nad uslugama, radnicima i radnim vremenom** — Sprint 3, korak 25.
+- **Podsjetnici D-1 / H-3** — Sprint 3, traže scheduler i `NotificationLog` iz taska 25.
+- **Super admin web konzola** i **store submission** — Sprint 3.
+- **Dentalna vertikala** — Sprint 4, i tek nakon tri zadovoljna beauty klijenta.
+- **Drugi dizajn za beauty i ostale vertikale.** Barber je 1:1 sa `prototype/ui/`; ostale vertikale
+  dobijaju svoj handoff, koji još ne postoji.
+
+## Dug koji nije task
+
+Sitno, ali ne smije se izgubiti:
+
+- **`tool/gen_ios_flavors.rb` gubi Flutterov `PreActions` blok.** `flutter run` ga sam vrati u
+  generisanu scheme i time zaprlja radno stablo; `gen_flavors --check` tu razliku ne vidi.
+  Nađeno u tasku 11, detalji u njegovom status bloku.
+- **Zlatna brand boja naspram monohromnog handoffa.** Odluka odgođena — v. `tasks/CURRENT.md`.

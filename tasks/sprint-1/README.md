@@ -144,16 +144,11 @@ Nastavak [Sprinta 0](../README.md). Redoslijed prati [01 §17](../../docs/01-mvp
 - **06 prije 10.** Prvi ekran koji ima tekst je prvi ekran koji može hardkodirati terminologiju.
 - **05 prije 11.** Availability logika koja "privremeno" sklizne u Dart tamo i ostane.
 
-## Sljedeće (Sprint 2 — nije raspisano)
+## Sljedeće — Sprint 2 je raspisan
 
-Namjerno: taskovi se pišu jedan sprint unaprijed, jer detaljna specifikacija napisana tri sprinta ranije zastari prije nego što je iko otvori. Redoslijed i obim su u [01 §17](../../docs/01-mvp-spec.md#17-build-order), koraci 12–24:
+Petnaest taskova u [`tasks/sprint-2/`](../sprint-2/): auth lanac (12–15), klijentski ekrani koji
+fale (16–22), admin (23–24), push (25) i guest/Facebook (26). Tabela, redoslijed i obrazloženje
+su tamo.
 
-- Supabase Auth provideri (Apple, Google, Email OTP) + login ekran na kraju booking flowa
-- `AuthIdentity` upsert i `Customer` upsert po `(salonId, authIdentityId)` kroz validiranu funkciju
-- **Test izolacije: isti klijent u dva salona** — poslovni rizik, ne tehnička formalnost
-- **"Moj račun" + brisanje računa** — bez toga iOS submission pada
-- Admin app: login, dashboard, lista termina, confirm/reject/cancel
-- FCM po flavoru + `Device` registracija vezana na `AuthIdentity`
-- Client: "Moji termini" + otkazivanje
-
-Kad Sprint 1 bude gotov, ovi se raspisuju u `tasks/sprint-2/` sa nastavkom numeracije.
+Sprint 2 usput zatvara ono što je Sprint 1 ostavio otvorenim — prije svega `book(...)` koji
+nijednom nije pozvan protiv prave baze, jer `Customer` upsert do sada nije postojao.

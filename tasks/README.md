@@ -87,6 +87,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 - Ne otvaraj task 05/06 dok 01–04 nisu gotovi — zavisnosti nisu formalnost, availability engine testovi trebaju stvarnu šemu (02), a CI (04) treba flavor sistem (03) da ima šta da builda.
 - Sprint 1 je raspisan u [`sprint-1/`](sprint-1/) (taskovi 07–11: plumbing, `core_api`, `core_ui`,
   home ekran, booking flow). Ne dopisuj ih ovdje — ovaj fajl ostaje indeks Sprinta 0.
-- Taskovi se pišu **jedan sprint unaprijed**. Sprint 2 (auth, admin, push) ima redoslijed u
-  [01 §17](../docs/01-mvp-spec.md#17-build-order), ali se raspisuje tek kad Sprint 1 bude gotov —
-  specifikacija napisana tri sprinta ranije zastari prije nego što je iko otvori.
+- Sprint 2 je raspisan u [`sprint-2/`](sprint-2/) (taskovi 12–26: auth, klijentski ekrani iz
+  handoffa, admin, push). Sprint 3 i dalje nisu — redoslijed im stoji u
+  [01 §17](../docs/01-mvp-spec.md#17-build-order), a raspisuju se kad Sprint 2 bude pri kraju.
+  Specifikacija napisana tri sprinta ranije zastari prije nego što je iko otvori.
