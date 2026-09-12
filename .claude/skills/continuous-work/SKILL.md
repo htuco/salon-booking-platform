@@ -107,6 +107,40 @@ Petlja nema kome postaviti pitanje, pa umjesto pitanja ostavlja **zapis**:
 
 Nijedan od ovih slučajeva ne zaustavlja petlju — zaustavljaju je samo uslovi ispod.
 
+## Kontekst i kompaktiranje
+
+Petlja je napisana da preživi kraj context windowa — ali preživljava samo ono što je **u repou**,
+ne ono što je u chatu. Zato se kontekst ne čeka da pukne, nego se pripremi.
+
+**Kompaktiranje ne pokrećem ja.** Nema alata kojim bih ga zvao; `/compact` je komanda koju kuca
+korisnik, a Claude Code ionako sam kompaktira kad prozor dođe do kraja. Ono što je u mojim rukama
+je da taj trenutak ne košta ništa: da se stanje uvijek može rekonstruisati iz `git`-a i
+`tasks/`, bez ijedne rečenice iz chata.
+
+**Znakovi da je trenutak blizu:** prošao je cijeli task, upravo je otvoren ili zatvoren PR,
+`melos run test` je odrađen i dokaz je zapisan, ili se u istoj sesiji već prošlo kroz dva-tri
+taska.
+
+**Šta se tada radi — checkpoint, redom:**
+
+1. Sve što je urađeno je commitovano i **pushovano**. Nedovršen korak ide kao `wip:` commit na
+   granu, ne ostaje u radnom stablu.
+2. `tasks/CURRENT.md` opisuje stvarno stanje: koji task, koja grana, koji PR, šta je dokazano i
+   šta je sljedeći korak. Piše se za nekoga ko **nije vidio ovu sesiju** — jer nakon
+   kompaktiranja to je tačan opis mene.
+3. Dokaz koji je pokrenut u ovoj sesiji (izlaz `melos run test`, `./tool/verify_clean.sh`) ide u
+   status blok taska ili u PR opis. Izlaz komande koji postoji samo u chatu nestaje sa chatom, a
+   tvrdnja bez izlaza više nije dokaz.
+4. Jedna rečenica korisniku: gdje je stalo i koji task ide sljedeći.
+
+Nakon kompaktiranja se **ne nastavlja po sjećanju** — radi se „Orijentacija" sa vrha ovog
+dokumenta: `tasks/CURRENT.md`, `git branch --show-current`, `git log --oneline -5`,
+`gh pr list --state open`, pa tabela sprinta. Stanje je u repou; chat je bio samo put do njega.
+
+Ako je posao takav da checkpoint ne stane između koraka (migracija napola, generator u toku),
+završi taj korak pa checkpoint — polovična migracija u `wip:` commitu je gora od jednog koraka
+više.
+
 ## Kad petlja staje
 
 - Nema više nezablokiranih taskova u redu.
@@ -125,4 +159,6 @@ Pri stajanju napiši kratak izvještaj: zatvoreni taskovi sa brojevima PR-ova, t
 - **Ne commituju se tajne**, ni „privremeno da testiram".
 - **Ne izmišlja se dokaz.** Komanda koja nije pokrenuta nije dokaz, a „kod izgleda ispravno" nije
   verifikacija. Nedokazano se piše kao nedokazano.
+- **Ne oslanja se na chat kao na skladište stanja.** Sve što sljedeća iteracija treba mora biti
+  u repou prije nego što kontekst pukne — v. „Kontekst i kompaktiranje".
 - **Nema potpisa AI-ja** u commitu ni u PR opisu.
