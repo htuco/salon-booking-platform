@@ -31,6 +31,53 @@
     "description": "errorBuilder u go_routeru — nepoznat URL, najčešće na webu."
   },
 
+  "navHome": "Početna",
+  "@navHome": {
+    "description": "Ćelija donje navigacije. Ime ekrana, ne domenski pojam — isto je i kod barbera i kod zubara, pa stoji ovdje a ne u terminologiji vertikale."
+  },
+
+  "navAppointments": "Termini",
+  "@navAppointments": {
+    "description": "Ćelija donje navigacije za listu termina. Kratak plural — `myAppointments` (\"Moji termini\") ne stane u petinu širine ekrana. Dentalna vertikala će tražiti \"Pregledi\" i time ovaj ključ preseliti u VerticalTerms."
+  },
+
+  "navNotifications": "Obavijesti",
+  "@navNotifications": {
+    "description": "Ćelija donje navigacije. Ekran pravi task 21."
+  },
+
+  "navSettings": "Postavke",
+  "@navSettings": {
+    "description": "Ćelija donje navigacije. Širi ekran od \"Moj račun\" (/account) — profil, notifikacije, jezik, odjava."
+  },
+
+  "homePriceList": "Cjenovnik",
+  "@homePriceList": {
+    "description": "Naslov sekcije sa cijenama na Početnoj (prototype/ui 5a). Namjerno nije `servicePlural`: sekcija pokazuje isječak cjenovnika, a puna lista je zaseban ekran koji se i zove Usluge. Kad vertikala ne prikazuje cijene, naslov pada na `servicePlural`."
+  },
+
+  "homeShowAllServices": "{count, plural, one{Prikaži svih {count} uslugu} few{Prikaži svih {count} usluge} other{Prikaži svih {count} usluga}}",
+  "@homeShowAllServices": {
+    "description": "Dugme ispod tri usluge na Početnoj — handoff: 'Prikaži svih 8 usluga'. Prikazuje se tek kad usluga ima više od tri.",
+    "placeholders": { "count": { "type": "int", "example": "8" } }
+  },
+
+  "homeGallery": "Galerija",
+  "@homeGallery": {
+    "description": "Naslov sekcije sa fotografijama salona. Sekcija se ne prikazuje kad salon nema nijednu sliku."
+  },
+
+  "homeReviews": "Recenzije",
+  "@homeReviews": {
+    "description": "Naslov sekcije sa ocjenom salona. Sekcija se ne prikazuje dok ocjena ne postoji."
+  },
+
+  "homeRatingCount": "{count, plural, one{{count} ocjena} few{{count} ocjene} other{{count} ocjena}}",
+  "@homeRatingCount": {
+    "description": "Broj ocjena uz prosjek — handoff: '142 ocjene'.",
+    "placeholders": { "count": { "type": "int", "example": "142" } }
+  },
+
   "workingHours": "Radno vrijeme",
   "@workingHours": {
     "description": "Naslov sekcije sa radnim vremenom. Isto u svakoj vertikali — radno vrijeme je radno vrijeme i kod barbera i kod zubara."

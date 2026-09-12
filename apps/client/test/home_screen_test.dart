@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
+import 'package:client/src/core/router/app_router.dart';
+import 'package:client/src/features/home/salon_rating.dart';
+import 'package:client/src/features/home/widgets/gallery_grid.dart';
+import 'package:client/src/features/home/widgets/rating_summary.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
@@ -12,6 +16,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// Home ekran je prvi pravi ekran i šablon za ostale, pa ono što se ovdje dokaže postaje
 /// pravilo: podaci iz providera, terminologija iz vertikale, tri stanja prije sretnog
 /// slučaja.
+///
+/// Od taska 18 raspored prati `prototype/ui/` `01-pocetna.png` — hero, CTA, Cjenovnik,
+/// Majstori, Galerija, Recenzije — i ekran stoji **unutar `ClientShell`-a**, pa je tab bar
+/// dio svakog stabla koje ovi testovi podignu. To je razlog zašto se naslov sekcije
+/// ("Cjenovnik") razlikuje od labele ćelije ("Usluge"): da su isti, nijedan `findsOneWidget`
+/// na tom tekstu ne bi značio ništa.
 ///
 /// Nigdje `pumpAndSettle`: skeleton pulsira dok je vidljiv, pa bi istekao i na ispravnom
 /// ekranu. Umjesto toga dva `pump`-a (dovoljno da `FutureProvider` isporuči vrijednost) i,
@@ -32,18 +42,23 @@ void main() {
       );
     });
 
-    testWidgets('CTA je vidljiv i dok salon stiže — ne iskače naknadno', (
+    testWidgets('skeleton drži mjesto CTA-a, pa sadržaj ne poskoči', (
       tester,
     ) async {
-      // Dugme koje se pojavi tek nakon ucitavanja pomjeri sadrzaj pod prstom koji vec
-      // ide ka njemu. Zato je vidljivo od prvog framea, samo onemoguceno.
+      // Do taska 18 je CTA bio zalijepljen za dno i vidljiv od prvog framea. Sada je u
+      // sadrzaju, gdje ga handoff i ima, pa istu ulogu nosi skeleton: dugme koje se
+      // pojavi tek nakon ucitavanja pomjeri sve ispod prsta koji vec ide ka njemu.
       await tester.pumpWidget(_app(salon: Completer<Salon>().future));
       await tester.pump();
 
-      expect(find.byType(AppButton), findsOneWidget);
+      final visine = tester
+          .widgetList<SkeletonLoader>(find.byType(SkeletonLoader))
+          .map((s) => s.height)
+          .toList();
       expect(
-        tester.widget<AppButton>(find.byType(AppButton)).onPressed,
-        isNull,
+        visine,
+        contains(AppSize.ctaHeight),
+        reason: 'kostur mora rezervisati tacnu visinu CTA dugmeta',
       );
     });
 
@@ -90,7 +105,7 @@ void main() {
     });
 
     testWidgets(
-      'salon bez usluga sakriva sekciju, ne prikazuje prazan naslov',
+      'salon bez usluga sakriva cjenovnik, ne prikazuje prazan naslov',
       (tester) async {
         await tester.pumpWidget(_app(services: const []));
         await tester.pump();
@@ -98,7 +113,7 @@ void main() {
 
         expect(find.text('Barber Studio Vitez'), findsOneWidget);
         expect(
-          find.text(VerticalTerms.fallback.servicePlural),
+          find.text('Cjenovnik'),
           findsNothing,
           reason: 'docs/02 §3: sekcija bez sadrzaja se sakriva',
         );
@@ -129,10 +144,186 @@ void main() {
 
       expect(find.text('Barber Studio Vitez'), findsOneWidget);
       expect(
-        tester.widget<AppButton>(find.byType(AppButton)).onPressed,
+        tester.widget<AppButton>(find.byType(AppButton).first).onPressed,
         isNotNull,
       );
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('raspored po handoffu', () {
+    testWidgets('hero nosi ime salona, pa živi status, pa CTA', (tester) async {
+      // **Salon zatvoren svaki dan**, a ne otvoren 09–20: status se racuna iz
+      // `DateTime.now()`, pa bi test sa radnim vremenom prolazio ili padao zavisno od
+      // toga u koliko sati se pokrene. Ista zamka je jednom vec upala u suitu (task 16,
+      // `7d1b44a`). Zatvoren salon daje isti tekst u svakom trenutku.
+      await tester.pumpWidget(
+        _app(
+          hours: [
+            for (var d = 1; d <= 7; d++)
+              WorkingHour(
+                id: 'wh-$d',
+                salonId: _salonId,
+                dayOfWeek: d,
+                startTime: const LocalTime(9, 0),
+                endTime: const LocalTime(20, 0),
+                isClosed: true,
+              ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      final ime = tester.getRect(find.text('Barber Studio Vitez'));
+      final status = tester.getRect(find.text('Danas zatvoreno'));
+      final cta = tester.getRect(find.text('Zakaži termin'));
+
+      expect(status.top, greaterThan(ime.top));
+      expect(
+        cta.top,
+        greaterThan(status.top),
+        reason: '`01-pocetna.png`: naslov, pa status, pa dugme',
+      );
+    });
+
+    testWidgets('cjenovnik pokazuje tri usluge i put do ostalih', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(services: _osamUsluga));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Usluga 1'), findsOneWidget);
+      expect(find.text('Usluga 3'), findsOneWidget);
+      expect(
+        find.text('Usluga 4'),
+        findsNothing,
+        reason: 'Pocetna je izlog, ne katalog — cetvrta usluga je iza dugmeta',
+      );
+      expect(find.text('Prikaži svih 8 usluga'), findsOneWidget);
+    });
+
+    testWidgets('tri usluge ili manje ne dobijaju dugme "Prikaži svih"', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_app(services: _osamUsluga.take(3).toList()));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.textContaining('Prikaži svih'), findsNothing);
+    });
+
+    testWidgets('"Prikaži svih" vodi na /services', (tester) async {
+      final container = _container();
+      await tester.pumpWidget(_appOd(container));
+      await tester.pump();
+      await tester.pump();
+
+      // `ensureVisible`, a ne `scrollUntilVisible`: ovaj drugi staje čim finder **nađe**
+      // widget, a `CustomScrollView` gradi i komad izvan vidljivog dijela (`cacheExtent`).
+      // Dugme je tako postojalo na y≈853 u viewportu visine 600, tap nije pogodio ništa,
+      // i test je tvrdio da ruta ne radi.
+      await tester.ensureVisible(find.text('Prikaži svih 8 usluga'));
+      await tester.pump();
+      await tester.tap(find.text('Prikaži svih 8 usluga'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        ClientRoute.services.path,
+      );
+    });
+
+    testWidgets('galerija se ne prikazuje kad salon nema nijednu sliku', (
+      tester,
+    ) async {
+      // Oba demo salona su danas tacno takva — `gallery_urls` im je prazan. Prazna
+      // mreza bi tvrdila da slike postoje pa se nisu ucitale.
+      await tester.pumpWidget(_app(gallery: const []));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Galerija'), findsNothing);
+      expect(find.byType(GalleryGrid), findsNothing);
+    });
+
+    testWidgets('galerija se prikazuje čim slika ima', (tester) async {
+      await tester.pumpWidget(
+        _app(gallery: const ['https://primjer.test/1.jpg']),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.scrollUntilVisible(
+        find.text('Galerija'),
+        200,
+        scrollable: _vertikalniSkrol,
+      );
+
+      expect(find.byType(GalleryGrid), findsOneWidget);
+    });
+
+    testWidgets('recenzije se ne prikazuju dok ocjene nema', (tester) async {
+      // Sema nema tabelu `reviews` — pravi je task 20. Do tada je ovo trajno stanje.
+      await tester.pumpWidget(_app());
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Recenzije'), findsNothing);
+      expect(find.byType(RatingSummary), findsNothing);
+    });
+
+    testWidgets('recenzije izađu čim ocjena postoji — bez dirania ekrana', (
+      tester,
+    ) async {
+      // Ovo je jedini test koji dokazuje da task 20 mijenja **provider**, ne Pocetnu.
+      await tester.pumpWidget(
+        _app(
+          rating: const SalonRating(
+            average: 4.8,
+            count: 142,
+            quote: 'Fade je uvijek isti, tačno kako tražim.',
+            author: 'Nedim H.',
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.scrollUntilVisible(
+        find.text('Recenzije'),
+        200,
+        scrollable: _vertikalniSkrol,
+      );
+
+      expect(find.text('4,8'), findsOneWidget, reason: 'zarez, ne tacka');
+      expect(find.text('142 ocjene'), findsOneWidget);
+      expect(find.textContaining('Fade je uvijek isti'), findsOneWidget);
+    });
+
+    testWidgets('radno vrijeme i kontakt više nisu na Početnoj', (
+      tester,
+    ) async {
+      // `SPEC.md` 5b ih drzi na "O nama" (task 19). Widgeti (`WorkingHoursCard`,
+      // `ContactCard`) su ostavljeni netaknuti da ih taj ekran preuzme.
+      await tester.pumpWidget(
+        _app(
+          hours: [
+            WorkingHour(
+              id: 'wh-1',
+              salonId: _salonId,
+              dayOfWeek: 1,
+              startTime: const LocalTime(9, 0),
+              endTime: const LocalTime(17, 0),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Ponedjeljak'), findsNothing);
+      expect(find.text('Radno vrijeme'), findsNothing);
     });
   });
 
@@ -157,15 +348,16 @@ void main() {
       await tester.pump();
 
       expect(find.text('Fade šišanje'), findsOneWidget);
-      expect(find.text('40 min'), findsOneWidget);
+      expect(find.text('40 minuta'), findsOneWidget);
       expect(find.text('20 KM'), findsOneWidget);
     });
 
     testWidgets('vertikala bez cijena ne prikazuje cjenovnik', (tester) async {
       // Stomatolog ne objavljuje cijenu pregleda na pocetnoj (`VerticalFeatures.prices`).
+      // Sekcija tada nije cjenovnik, pa se ni ne zove tako — naslov pada na `servicePlural`.
       await tester.pumpWidget(
         _app(
-          vertical: _vertical(prices: false),
+          vertical: _vertical(prices: false, servicePlural: 'Tretmani'),
           services: const [
             Service(
               id: 's1',
@@ -182,48 +374,45 @@ void main() {
 
       expect(find.text('Pregled'), findsOneWidget);
       expect(find.text('50 KM'), findsNothing);
+      expect(find.text('Cjenovnik'), findsNothing);
+      // Jednom kao naslov sekcije, jednom kao labela celije u traci.
+      expect(find.text('Tretmani'), findsNWidgets(2));
     });
 
-    testWidgets('salon bez logotipa dobije inicijale, ne prazan krug', (
+    testWidgets('radnik nosi titulu i staž spojene u jedan red', (
       tester,
     ) async {
-      await tester.pumpWidget(_app());
-      await tester.pump();
-      await tester.pump();
-
-      expect(find.text('BS'), findsOneWidget);
-    });
-
-    testWidgets('radno vrijeme ima svih sedam dana', (tester) async {
       await tester.pumpWidget(
         _app(
-          hours: [
-            for (var d = 1; d <= 7; d++)
-              WorkingHour(
-                id: 'wh-$d',
-                salonId: _salonId,
-                dayOfWeek: d,
-                startTime: const LocalTime(9, 0),
-                endTime: const LocalTime(17, 0),
-                isClosed: d == 7,
-              ),
+          employees: const [
+            Employee(
+              id: 'e1',
+              salonId: _salonId,
+              name: 'Emir',
+              role: 'Barber',
+              experienceYears: 9,
+            ),
+            // Radnik bez staza je **predvidjeno stanje** (task 22) — red mora izgledati
+            // uredno, bez visece tacke.
+            Employee(
+              id: 'e2',
+              salonId: _salonId,
+              name: 'Lejla',
+              role: 'Barber',
+            ),
           ],
         ),
       );
       await tester.pump();
       await tester.pump();
-      // Sekcija radnog vremena je ispod pregiba, a `CustomScrollView` gradi samo ono sto
-      // je vidljivo — bez skrola je test ne bi nasao ni kad je ispravna.
       await tester.scrollUntilVisible(
-        find.text('Ponedjeljak'),
+        find.text('Emir'),
         200,
         scrollable: _vertikalniSkrol,
       );
 
-      expect(find.text('Ponedjeljak'), findsOneWidget);
-      expect(find.text('Nedjelja'), findsOneWidget);
-      expect(find.text('Zatvoreno'), findsOneWidget);
-      expect(find.text('09:00 – 17:00'), findsNWidgets(6));
+      expect(find.text('Barber · 9 godina'), findsOneWidget);
+      expect(find.text('Barber'), findsOneWidget);
     });
   });
 
@@ -257,10 +446,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('Tretmani'), findsOneWidget);
-      // CTA je sticky, pa je vidljiv bez skrola; sekcija tima je ispod pregiba.
       expect(find.text('Zakaži pregled'), findsOneWidget);
       expect(find.text('Zakaži termin'), findsNothing);
+      // Celija trake uzima isti `servicePlural`; naslov sekcije je "Cjenovnik".
+      expect(find.text('Tretmani'), findsOneWidget);
 
       await tester.scrollUntilVisible(
         find.text('Naši doktori'),
@@ -289,8 +478,7 @@ void main() {
   });
 }
 
-/// Vertikalni skrol ekrana. Mora se imenovati jer je na ekranu i horizontalni
-/// (`TeamRow`), pa `scrollUntilVisible` bez ovoga ne zna koji da pomjeri.
+/// Vertikalni skrol ekrana.
 final _vertikalniSkrol = find.byType(Scrollable).first;
 
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
@@ -301,6 +489,17 @@ const _salon = Salon(
   slug: 'barberstudiovitez',
   city: 'Vitez',
 );
+
+final _osamUsluga = [
+  for (var i = 1; i <= 8; i++)
+    Service(
+      id: 's$i',
+      salonId: _salonId,
+      name: 'Usluga $i',
+      price: 15,
+      durationMinutes: 30,
+    ),
+];
 
 Vertical _vertical({
   String servicePlural = 'Usluge',
@@ -322,9 +521,9 @@ Vertical _vertical({
 
 /// Podiže cijelu app-u na `/`, sa svakim podatkom pod kontrolom testa.
 ///
-/// Cijela app, a ne samo `HomeScreen`: ekran zavisi od teme i lokalizacije koje
-/// `MaterialApp` postavlja, a `HomeScreen` u golom `MaterialApp`-u ne bi dokazao da lanac
-/// radi u stvarnom stablu.
+/// Cijela app, a ne samo `HomeScreen`: ekran zavisi od teme, lokalizacije i — od taska 18
+/// — od `ClientShell`-a koji nosi tab bar. `HomeScreen` u golom `MaterialApp`-u ne bi
+/// dokazao da lanac radi u stvarnom stablu.
 Widget _app({
   Future<Salon>? salon,
   Future<Salon> Function()? salonBuilder,
@@ -342,27 +541,69 @@ Widget _app({
     Employee(id: 'e1', salonId: _salonId, name: 'Emir', role: 'Barber'),
   ],
   List<WorkingHour> hours = const [],
+  List<String> gallery = const [],
+  SalonRating? rating,
   Vertical? vertical,
-}) => ProviderScope(
-  overrides: [
-    appEnvProvider.overrideWithValue(
-      const AppEnv(
-        salonId: _salonId,
-        supabaseUrl: '',
-        supabaseAnonKey: '',
-        apiUrl: '',
-      ),
-    ),
-    currentSalonIdProvider.overrideWithValue(_salonId),
-    salonProvider.overrideWith(
-      (ref) => salonBuilder?.call() ?? salon ?? Future.value(_salon),
-    ),
-    servicesProvider.overrideWith(
-      (ref) => servicesBuilder?.call() ?? Future.value(services),
-    ),
-    employeesProvider.overrideWith((ref) async => employees),
-    workingHoursProvider.overrideWith((ref) async => hours),
-    verticalProvider.overrideWith((ref) async => vertical ?? _vertical()),
-  ],
+}) => _appOd(
+  _container(
+    salon: salon,
+    salonBuilder: salonBuilder,
+    services: services,
+    servicesBuilder: servicesBuilder,
+    employees: employees,
+    hours: hours,
+    gallery: gallery,
+    rating: rating,
+    vertical: vertical,
+  ),
+);
+
+Widget _appOd(ProviderContainer container) => UncontrolledProviderScope(
+  container: container,
   child: const SalonClientApp(),
 );
+
+ProviderContainer _container({
+  Future<Salon>? salon,
+  Future<Salon> Function()? salonBuilder,
+  List<Service>? services,
+  Future<List<Service>> Function()? servicesBuilder,
+  List<Employee> employees = const [
+    Employee(id: 'e1', salonId: _salonId, name: 'Emir', role: 'Barber'),
+  ],
+  List<WorkingHour> hours = const [],
+  List<String> gallery = const [],
+  SalonRating? rating,
+  Vertical? vertical,
+}) {
+  final container = ProviderContainer(
+    overrides: [
+      appEnvProvider.overrideWithValue(
+        const AppEnv(
+          salonId: _salonId,
+          supabaseUrl: '',
+          supabaseAnonKey: '',
+          apiUrl: '',
+        ),
+      ),
+      currentSalonIdProvider.overrideWithValue(_salonId),
+      salonProvider.overrideWith(
+        (ref) => salonBuilder?.call() ?? salon ?? Future.value(_salon),
+      ),
+      servicesProvider.overrideWith(
+        (ref) =>
+            servicesBuilder?.call() ?? Future.value(services ?? _osamUsluga),
+      ),
+      employeesProvider.overrideWith((ref) async => employees),
+      workingHoursProvider.overrideWith((ref) async => hours),
+      salonGalleryProvider.overrideWith((ref) async => gallery),
+      salonRatingProvider.overrideWith((ref) async => rating),
+      verticalProvider.overrideWith((ref) async => vertical ?? _vertical()),
+      // Tab Termini je pravi ekran i cita da li je korisnik prijavljen; bez override-a
+      // posegne za `Supabase.instance` kojeg u testu nema.
+      isSignedInProvider.overrideWithValue(false),
+    ],
+  );
+  addTearDown(container.dispose);
+  return container;
+}

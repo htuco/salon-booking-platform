@@ -400,6 +400,11 @@ Na `Salon` dodaj: `verticalPackKey` · `terminologyOverride` (JSONB, nullable)
 
 ### Client app (`apps/client`)
 
+Zadnja dva reda dolaze iz dizajnerskog handoffa (`prototype/ui/SPEC.md` 5j i 5k), ne iz prve
+verzije ove tabele: donja navigacija ima pet ćelija, pa Obavijesti i Postavke moraju imati
+svoju rutu. "Postavke" je širi ekran od "Moj račun" — `/account` ostaje zaseban i otvara se
+iz njega.
+
 | Screen | Ruta | Prioritet |
 |---|---|---|
 | Home / salon landing | `/` | Must |
@@ -416,6 +421,8 @@ Na `Salon` dodaj: `verticalPackKey` · `terminologyOverride` (JSONB, nullable)
 | Tim / radnici | `/team` | Should |
 | Galerija | `/gallery` | Later |
 | O salonu / kontakt | `/about` | Should |
+| Obavijesti | `/notifications` | Should |
+| Postavke | `/settings` | Should |
 
 ### Admin app (`apps/admin`)
 

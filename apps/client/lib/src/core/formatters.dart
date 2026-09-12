@@ -76,3 +76,14 @@ _Oblik _oblik(int n) {
     _ => _Oblik.mnogo,
   };
 }
+
+/// Prosječna ocjena: "4,8".
+///
+/// Zarez, ne tačka — bosanski decimalni razdjelnik. `toStringAsFixed` uvijek daje tačku,
+/// pa se mijenja ovdje, a ne u widgetu: ekran bi to zaboravio na drugom mjestu gdje se
+/// ocjena pojavi.
+///
+/// Uvijek jedna decimala, i kad je nula: "5,0" a ne "5". Kolona brojeva iste širine se
+/// čita kao ocjena, a "5" pored "4,8" se čita kao druga vrsta podatka.
+String formatRating(double rating) =>
+    rating.toStringAsFixed(1).replaceAll('.', ',');

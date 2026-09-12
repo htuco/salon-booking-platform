@@ -90,4 +90,26 @@ abstract final class AppSize {
 
   /// 5 — visina jednog segmenta trake koraka (`SPEC.md`: 4 kolone, 5px, gap 5px).
   static const double stepBar = 5;
+
+  // --- Donja navigacija (`SPEC.md` §Bottom tab bar) ---
+  //
+  // Pet vrijednosti stoji ovdje, a ne u `AppSpacing`, jer nisu ritam nego mjere jedne
+  // komponente: 11/5 nisu koraci skale i ne smiju se pojaviti nigdje drugdje. Skala bi
+  // sa njima prestala biti skala.
+
+  /// 23 — strana ikone u ćeliji taba.
+  static const double navIcon = 23;
+
+  /// 11 — gornji padding ćelije. Donji je `AppSpacing.sm` (8), kako handoff i traži.
+  static const double navCellTopPadding = 11;
+
+  /// 5 — razmak između ikone i labele.
+  static const double navLabelGap = 5;
+
+  /// 3 — visina trake iznad aktivne ćelije.
+  static const double navIndicator = 3;
+
+  /// 0.16 — uvlaka trake s obje strane, kao **udio širine ćelije**. Fiksna vrijednost bi
+  /// na uskom telefonu progutala traku, a na tabletu je pretvorila u crticu.
+  static const double navIndicatorInset = 0.16;
 }

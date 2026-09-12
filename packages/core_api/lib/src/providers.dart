@@ -154,6 +154,16 @@ final salonProvider = FutureProvider<Salon>(
       .byId(ref.watch(currentSalonIdProvider)),
 );
 
+/// Fotografije salona — `salons.gallery_urls`.
+///
+/// Zaseban provider, a ne polje na [salonProvider]: v. `SalonRepository.galleryUrls`.
+/// Prazna lista je uredno stanje i znači "sakrij sekciju", ne "greška".
+final salonGalleryProvider = FutureProvider<List<String>>(
+  (ref) => ref
+      .watch(salonRepositoryProvider)
+      .galleryUrls(ref.watch(currentSalonIdProvider)),
+);
+
 /// Katalog usluga aktivnog salona.
 final servicesProvider = FutureProvider<List<Service>>(
   (ref) => ref

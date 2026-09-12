@@ -4,20 +4,24 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
-import '../../core/formatters.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'salon_rating.dart';
 import 'salon_schedule.dart';
-import 'widgets/contact_card.dart';
+import 'widgets/gallery_grid.dart';
+import 'widgets/home_hero.dart';
 import 'widgets/home_section.dart';
-import 'widgets/salon_hero.dart';
-import 'widgets/team_row.dart';
-import 'widgets/working_hours_card.dart';
+import 'widgets/rating_summary.dart';
+import 'widgets/staff_grid.dart';
 
 /// Home ekran — prvi pravi ekran i šablon za sve ostale (`docs/02 §3`).
+///
+/// Raspored je iz handoffa (`prototype/ui/` `01-pocetna.png`), odozgo: hero fotografija sa
+/// imenom salona i živim statusom, primarni CTA, **Cjenovnik** (tri usluge i put do svih),
+/// **Majstori**, **Galerija**, **Recenzije**.
 ///
 /// ## Tri pravila koja se odavde kopiraju
 ///
@@ -30,6 +34,17 @@ import 'widgets/working_hours_card.dart';
 ///    `docs/02 §14`. Redoslijed nije stilski: ekran napisan "prvo sretan slučaj" dobije
 ///    spinner preko bijele površine, i to ostane.
 ///
+/// ## Sekcija bez podataka se sakriva
+///
+/// Cjenovnik, Majstori, Galerija i Recenzije nestaju kad iza njih nema reda. To je pravilo
+/// iz DoD-a taska 20 (red 19) i vrijedi za sve četiri: **Početna crta ono što postoji i
+/// ćuti o ostalom.** Prazna mreža sa naslovom iznad izgleda kao app koji nije učitao
+/// podatke, a salonu koji nema galeriju je to trajno stanje, ne trenutak.
+///
+/// Radno vrijeme i kontakt su od ovog taska **na "O nama"** (`SPEC.md` 5b), gdje ih
+/// handoff i drži; ekran pravi task 19, a `working_hours_card.dart` i `contact_card.dart`
+/// stoje spremni.
+///
 /// Radi **bez prijave** (`docs/06 §1.1`): javni katalog ima `anon` politiku, pa nijedan
 /// provider na ovom ekranu ne traži korisnički token.
 class HomeScreen extends ConsumerWidget {
@@ -41,6 +56,9 @@ class HomeScreen extends ConsumerWidget {
     final salon = ref.watch(salonProvider);
 
     return Scaffold(
+      // **Bez `bottomNavigationBar`.** Do taska 18 je tu stajao sticky CTA; sada ispod
+      // ekrana stoji tab bar iz `ClientShell`, a CTA je u sadržaju, odmah ispod heroja —
+      // tako ga handoff i ima. Dva zalijepljena elementa bi pojela trećinu ekrana.
       body: switch (salon) {
         AsyncData(:final value) => _Ucitan(salon: value),
         AsyncError() => _Greska(
@@ -50,18 +68,13 @@ class HomeScreen extends ConsumerWidget {
         ),
         _ => const _Kostur(),
       },
-      // CTA stoji van `switch`-a i van skrola: `docs/02 §3` ga zove jedinim razlogom
-      // postojanja ovog ekrana. Onemogućen je dok salon ne stigne, ali je **vidljiv** —
-      // dugme koje iskoči nakon učitavanja pomjeri sadržaj pod prstom koji već ide ka
-      // njemu.
-      bottomNavigationBar: _StickyCta(enabled: salon.hasValue),
     );
   }
 }
 
 /// Sretan slučaj — salon je tu, ostatak stiže svaki svojim tempom.
 ///
-/// Usluge, tim i radno vrijeme se čitaju zasebno i **ne blokiraju ekran**: salon koji
+/// Usluge, tim, galerija i ocjena se čitaju zasebno i **ne blokiraju ekran**: salon koji
 /// se prikazao, a čeka listu usluga, je upotrebljiv; salon koji čeka sve odjednom je
 /// prazan ekran onoliko dugo koliko traje najsporiji upit.
 class _Ucitan extends ConsumerWidget {
@@ -76,49 +89,51 @@ class _Ucitan extends ConsumerWidget {
     final services = ref.watch(servicesProvider);
     final employees = ref.watch(employeesProvider);
     final hours = ref.watch(workingHoursProvider);
+    final gallery = ref.watch(salonGalleryProvider);
+    final rating = ref.watch(salonRatingProvider);
 
     final schedule = SalonSchedule.fromHours(
       hours.valueOrNull ?? const <WorkingHour>[],
     );
+    final status = schedule.statusAt(DateTime.now());
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: SalonHero(
+          child: HomeHero(
             salon: salon,
-            tagline: salon.description,
-            status: _statusTekst(l10n, schedule),
+            status: _statusTekst(l10n, status),
+            otvoren: status is SalonOpen,
           ),
         ),
-        if (salon.description.isEmpty)
-          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
         SliverToBoxAdapter(
-          child: _UslugeSekcija(
-            naslov: vertical.terms.servicePlural,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.gutter,
+              0,
+              AppSpacing.gutter,
+              AppSpacing.xxxl,
+            ),
+            child: _Cta(),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: _CjenovnikSekcija(
             services: services,
             prikaziCijene: vertical.features.prices,
+            naslovBezCijena: vertical.terms.servicePlural,
           ),
         ),
         if (vertical.features.team)
           SliverToBoxAdapter(
-            child: _TimSekcija(
+            child: _MajstoriSekcija(
               naslov: vertical.terms.staffPlural,
               employees: employees,
             ),
           ),
-        SliverToBoxAdapter(
-          child: _RadnoVrijemeSekcija(
-            schedule: schedule,
-            loading: hours.isLoading,
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: _KontaktSekcija(
-            salon: salon,
-            prikaziDrustvene: vertical.features.socialLinks,
-          ),
-        ),
-        // Zadnja sekcija bi inače završila tačno ispod sticky CTA — razmak je da se
+        SliverToBoxAdapter(child: _GalerijaSekcija(urls: gallery)),
+        SliverToBoxAdapter(child: _RecenzijeSekcija(rating: rating)),
+        // Zadnja sekcija bi inače završila tačno ispod tab bara — razmak je da se
         // posljednji red može pročitati kad se skrol dovede do dna.
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
       ],
@@ -127,28 +142,52 @@ class _Ucitan extends ConsumerWidget {
 }
 
 /// Živi status iz `docs/02 §3`, računat iz `WorkingHour`-a, ne napisan.
-String _statusTekst(AppLocalizations l10n, SalonSchedule schedule) =>
-    switch (schedule.statusAt(DateTime.now())) {
+String _statusTekst(AppLocalizations l10n, SalonStatus status) =>
+    switch (status) {
       SalonOpen(:final until) => l10n.openUntil(until.format()),
       SalonOpensLater(:final at) => l10n.closedOpensAt(at.format()),
       SalonClosedToday() => l10n.closedToday,
     };
 
-class _UslugeSekcija extends StatelessWidget {
-  const _UslugeSekcija({
-    required this.naslov,
+/// Primarni CTA — jedini razlog postojanja ovog ekrana (`docs/02 §3`).
+///
+/// Tekst je `terms.bookCta`, ne `.arb`: "Zakaži termin" kod barbera je "Zakaži pregled"
+/// kod stomatologa, a to je razlika koju nosi vertikala, ne jezik.
+class _Cta extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vertical = verticalOf(ref);
+
+    return AppButton(
+      label: vertical.terms.bookCta,
+      onPressed: () => context.go(ClientRoute.bookService.path),
+    );
+  }
+}
+
+/// Cjenovnik — tri usluge i put do ostalih (`01-pocetna.png`).
+class _CjenovnikSekcija extends StatelessWidget {
+  const _CjenovnikSekcija({
     required this.services,
     required this.prikaziCijene,
+    required this.naslovBezCijena,
   });
 
-  final String naslov;
   final AsyncValue<List<Service>> services;
 
   /// `VerticalFeatures.prices` — stomatolog ne objavljuje cjenovnik na home ekranu.
   final bool prikaziCijene;
 
+  /// Naslov kad cijena nema. Sekcija bez cijena nije cjenovnik, pa se i ne zove tako.
+  final String naslovBezCijena;
+
+  /// Koliko usluga stane na Početnu prije "Prikaži svih N" (`01-pocetna.png`: tri).
+  static const int _naPocetnoj = 3;
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     // Salon bez usluga sakriva sekciju umjesto da prikaže prazan naslov (`docs/02 §3`).
     // Isto vrijedi za grešku: lista usluga koja ne stigne ne smije oboriti ekran čija
     // je glavna svrha dugme "Zakaži".
@@ -157,21 +196,35 @@ class _UslugeSekcija extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final prikazane = lista?.take(_naPocetnoj).toList();
+    final ukupno = lista?.length ?? 0;
+
     return HomeSection(
-      title: naslov,
-      child: lista == null
+      title: prikaziCijene ? l10n.homePriceList : naslovBezCijena,
+      action: ukupno > _naPocetnoj
+          ? AppButton(
+              label: l10n.homeShowAllServices(ukupno),
+              variant: AppButtonVariant.outline,
+              onPressed: () => context.go(ClientRoute.services.path),
+            )
+          : null,
+      child: prikazane == null
           ? const _KosturListe()
           : Column(
               children: [
-                for (final (index, service) in lista.indexed) ...[
+                for (final (index, service) in prikazane.indexed) ...[
                   if (index > 0) const SizedBox(height: AppSpacing.md),
-                  ServiceCard(
-                    name: service.name,
-                    duration: formatDuration(service.durationMinutes),
-                    price: prikaziCijene ? formatPrice(service.price) : null,
-                    description: service.description,
+                  SelectableRow(
+                    title: service.name,
+                    subtitle: formatDurationLong(service.durationMinutes),
+                    // Prazan okvir kad fotografije nema je predviđeno stanje, ne rupa
+                    // (task 22). `PhotoFrame` ga crta sam.
+                    imageUrl: service.imageUrl,
+                    trailingText: prikaziCijene
+                        ? formatPrice(service.price)
+                        : null,
                     // Tap vodi direktno u booking sa preselektovanom uslugom
-                    // (`docs/02 §3`) — task 11 prima `serviceId` iz query parametra.
+                    // (`docs/02 §3`) — korak 1 prima `serviceId` iz query parametra.
                     onTap: () => context.go(
                       '${ClientRoute.bookService.path}?serviceId=${service.id}',
                     ),
@@ -183,14 +236,15 @@ class _UslugeSekcija extends StatelessWidget {
   }
 }
 
-class _TimSekcija extends StatelessWidget {
-  const _TimSekcija({required this.naslov, required this.employees});
+class _MajstoriSekcija extends StatelessWidget {
+  const _MajstoriSekcija({required this.naslov, required this.employees});
 
   final String naslov;
   final AsyncValue<List<Employee>> employees;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final lista = employees.valueOrNull;
     if (employees.hasError || (lista != null && lista.isEmpty)) {
       return const SizedBox.shrink();
@@ -199,151 +253,73 @@ class _TimSekcija extends StatelessWidget {
     return HomeSection(
       title: naslov,
       child: lista == null
-          ? const SizedBox(height: 132, child: _KosturListe())
-          : TeamRow(employees: lista),
-    );
-  }
-}
-
-class _RadnoVrijemeSekcija extends StatelessWidget {
-  const _RadnoVrijemeSekcija({required this.schedule, required this.loading});
-
-  final SalonSchedule schedule;
-  final bool loading;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    if (schedule.isEmpty && !loading) return const SizedBox.shrink();
-
-    final danas = DateTime.now().weekday;
-
-    return HomeSection(
-      title: l10n.workingHours,
-      child: loading && schedule.isEmpty
           ? const _KosturListe()
-          : WorkingHoursCard(
-              rows: [
-                for (final day in schedule.week)
-                  rowFor(
-                    day,
-                    label: _imeDana(l10n, day.weekday),
-                    closedLabel: l10n.closed,
-                    isToday: day.weekday == danas,
-                  ),
-              ],
+          : StaffGrid(
+              employees: lista,
+              subtitleOf: (employee) => _titulaIStaz(l10n, employee),
             ),
     );
   }
 }
 
-String _imeDana(AppLocalizations l10n, int weekday) => switch (weekday) {
-  DateTime.monday => l10n.dayMonday,
-  DateTime.tuesday => l10n.dayTuesday,
-  DateTime.wednesday => l10n.dayWednesday,
-  DateTime.thursday => l10n.dayThursday,
-  DateTime.friday => l10n.dayFriday,
-  DateTime.saturday => l10n.daySaturday,
-  _ => l10n.daySunday,
-};
+/// „Barber · 9 godina", ili samo ono što postoji.
+///
+/// Staž se prikazuje **samo kad postoji** (`experience_years` je nullable): red bez njega
+/// mora izgledati uredno, a ne kao red kojem fali podatak.
+String _titulaIStaz(AppLocalizations l10n, Employee employee) => [
+  if (employee.role.isNotEmpty) employee.role,
+  if (employee.hasExperience) l10n.experienceYears(employee.experienceYears!),
+].join(' · ');
 
-class _KontaktSekcija extends StatelessWidget {
-  const _KontaktSekcija({required this.salon, required this.prikaziDrustvene});
+/// Galerija — tri kolone, i ništa kad slika nema.
+///
+/// `gallery_urls` je prazan u oba demo salona, pa se sekcija u demou **ne vidi**. To je
+/// tačno ono što se traži: prazna mreža bi tvrdila da slike postoje pa se nisu učitale.
+class _GalerijaSekcija extends StatelessWidget {
+  const _GalerijaSekcija({required this.urls});
 
-  final Salon salon;
-  final bool prikaziDrustvene;
+  final AsyncValue<List<String>> urls;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final lista = urls.valueOrNull;
 
-    final redovi = <Widget>[
-      if (salon.address.isNotEmpty)
-        ContactRow(
-          icon: Icons.place_outlined,
-          label: '${salon.address}, ${salon.city}',
-          onTap: () => _otvori(
-            Uri.parse(
-              'geo:0,0?q=${Uri.encodeComponent('${salon.address}, ${salon.city}')}',
-            ),
-          ),
-        ),
-      if (salon.phone != null && salon.phone!.isNotEmpty)
-        ContactRow(
-          icon: Icons.call_outlined,
-          label: salon.phone!,
-          onTap: () => _otvori(Uri.parse('tel:${salon.phone}')),
-        ),
-      if (salon.email != null && salon.email!.isNotEmpty)
-        ContactRow(
-          icon: Icons.mail_outline,
-          label: salon.email!,
-          onTap: () => _otvori(Uri.parse('mailto:${salon.email}')),
-        ),
-      if (prikaziDrustvene && _neprazno(salon.instagramUrl))
-        ContactRow(
-          icon: Icons.camera_alt_outlined,
-          label: l10n.instagram,
-          onTap: () => _otvori(Uri.parse(salon.instagramUrl!)),
-        ),
-      if (prikaziDrustvene && _neprazno(salon.facebookUrl))
-        ContactRow(
-          icon: Icons.thumb_up_outlined,
-          label: l10n.facebook,
-          onTap: () => _otvori(Uri.parse(salon.facebookUrl!)),
-        ),
-    ];
-
-    if (redovi.isEmpty) return const SizedBox.shrink();
+    // Dok lista nije stigla, sekcija se ne najavljuje skeletonom: galerija je ukras, a
+    // sivi kvadrati koji se pretvore u ništa pomjere sve ispod sebe.
+    if (lista == null || lista.isEmpty) return const SizedBox.shrink();
 
     return HomeSection(
-      title: l10n.contact,
-      child: ContactCard(children: redovi),
+      title: l10n.homeGallery,
+      // Bez "Sve slike ›": ekran galerije i lightbox su task 20, a link koji vodi na
+      // `errorBuilder` je gori od linka kojeg nema.
+      child: GalleryGrid(urls: lista),
     );
   }
 }
 
-bool _neprazno(String? value) => value != null && value.isNotEmpty;
-
-/// Otvara `tel:`, `mailto:`, `geo:` ili profil na mreži.
+/// Recenzije — prosjek, zvjezdice i jedan citat.
 ///
-/// Greška se guta namjerno: uređaj bez aplikacije za pozive ili mape nije stanje koje
-/// korisnik može popraviti, a izuzetak iz `onTap`-a bi srušio ekran.
-Future<void> _otvori(Uri uri) async {
-  try {
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } catch (_) {
-    // Namjerno bez poruke — v. dokumentaciju iznad.
-  }
-}
+/// Sekcija danas **nikad ne izađe**, jer `salonRatingProvider` vraća `null` dok šema nema
+/// tabelu `reviews` (task 20). Napisana je i pokrivena testom da task 20 mijenja jedan
+/// provider, a ne ekran.
+class _RecenzijeSekcija extends ConsumerWidget {
+  const _RecenzijeSekcija({required this.rating});
 
-/// Primarni CTA, uvijek vidljiv (`docs/02 §3`).
-///
-/// Tekst je `terms.bookCta`, ne `.arb`: "Zakaži termin" kod barbera je "Zakaži pregled"
-/// kod stomatologa, a to je razlika koju nosi vertikala, ne jezik.
-class _StickyCta extends ConsumerWidget {
-  const _StickyCta({required this.enabled});
-
-  final bool enabled;
+  final AsyncValue<SalonRating?> rating;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final vertical = verticalOf(ref);
-    final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final vrijednost = rating.valueOrNull;
+    if (vrijednost == null) return const SizedBox.shrink();
 
-    return Container(
-      color: scheme.surface,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: AppButton(
-            label: vertical.terms.bookCta,
-            onPressed: enabled
-                ? () => context.go(ClientRoute.bookService.path)
-                : null,
-          ),
-        ),
+    return HomeSection(
+      title: l10n.homeReviews,
+      child: RatingSummary(
+        rating: vrijednost,
+        averageLabel: formatRating(vrijednost.average),
+        countLabel: l10n.homeRatingCount(vrijednost.count),
       ),
     );
   }
@@ -360,12 +336,17 @@ class _Kostur extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          const SkeletonLoader(height: 220, radius: 0),
+          const SkeletonLoader(height: 320, radius: 0),
           const SizedBox(height: AppSpacing.xl),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+            child: SkeletonLoader(height: AppSize.ctaHeight),
+          ),
+          const SizedBox(height: AppSpacing.xxl),
           SkeletonLoader.text(width: 200),
           const SizedBox(height: AppSpacing.lg),
           const Padding(
-            padding: EdgeInsets.all(AppSpacing.xl),
+            padding: EdgeInsets.all(AppSpacing.gutter),
             child: _KosturListe(),
           ),
         ],

@@ -40,7 +40,10 @@ void main() {
       // zapravo 8:1. To je mjerenje u pogresnom trenutku, ne greska u temi.
       await tester.pump(const Duration(milliseconds: 400));
 
-      final theme = Theme.of(tester.element(find.byType(Scaffold)));
+      // `.first`, ne `find.byType(Scaffold)`: od taska 18 ih je dva ugnijezdena —
+      // `ClientShell` nosi tab bar, ekran nosi svoj sadrzaj. Oba dijele istu temu, pa
+      // je vanjski jednako dobar izvor, ali `element` nad dva pogotka baca.
+      final theme = Theme.of(tester.element(find.byType(Scaffold).first));
 
       for (final element in find.byType(Text).evaluate()) {
         final text = element.widget as Text;

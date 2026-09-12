@@ -76,6 +76,15 @@ void main() {
             scheme.surfaceContainerHighest,
           ),
           ('onError', scheme.onError, scheme.error),
+          // Donja navigacija stoji na `surfaceDim`, koja je tamnija (svjetlija u
+          // svijetloj temi) od pozadine ekrana. Bez ova dva reda labela taba je
+          // jedini tekst u sistemu koji niko ne mjeri.
+          ('onSurface na traci', scheme.onSurface, scheme.surfaceDim),
+          (
+            'onSurfaceVariant na traci',
+            scheme.onSurfaceVariant,
+            scheme.surfaceDim,
+          ),
         ]) {
           expect(
             contrastRatio(boja, pozadina),
