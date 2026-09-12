@@ -1,15 +1,22 @@
 # Trenutni task: 11 — Client: booking flow (4 koraka + success)
 
-Puni task: [`tasks/sprint-1/11-booking-flow.md`](sprint-1/11-booking-flow.md) · Sljedeći na redu · Grana: još nije otvorena
+Puni task: [`tasks/sprint-1/11-booking-flow.md`](sprint-1/11-booking-flow.md) · U toku · Grana: `feat/booking-repozitorij-availability`
 
 ## Status
 
-Task 10 je gotov; PR [#11](https://github.com/htuco/salon-booking-platform/pull/11) čeka merge —
-v. Istoriju. **Task 11 još nije počet**: `/task start` otvara granu sa svježeg `main`-a, nakon što
-PR #11 uđe.
+Task 10 je gotov i mergovan (PR #11). **Task 11 je u toku — ne-UI sloj je gotov, ekrani nisu.**
 
 Ovo je **najveći ekranski task sprinta** i jedini koji piše u bazu. Sve do sada je bilo čitanje;
 ovdje prvi put ide `book_appointment` i prvi put postoji utrka za isti termin.
+
+Urađen je sloj ispod ekrana: `BookingRepository` (sve tri metode `rpc`, nijedna `from(...)`),
+`AvailableSlot` u `core_domain`, i `BookingFlowState`/`BookingFlowNotifier` kao jedan
+`autoDispose` provider za sva četiri koraka. 205 testova PASS lokalno (bilo 165), analiza čista;
+**CI još nije potvrdio**. Puni status i lista šta je ostalo: status blok u task fajlu.
+
+**Sljedeće je UI**: četiri ekrana + success, uz `DateStrip` i `StepProgressBar` u `core_ui`.
+Stanje, upiti i 409 mapiranje ih čekaju gotovi — ekran zove `bookingFlowProvider` i
+`availableSlotsProvider`, ne repozitorij.
 
 ## Šta je spremno, a šta nije
 
@@ -17,8 +24,14 @@ ovdje prvi put ide `book_appointment` i prvi put postoji utrka za isti termin.
 `get_available_dates`, `book_appointment` i exclusion constraint `appointments_no_overlap`.
 Availability logika je isključivo u bazi; Dart je ne smije ni dotaknuti.
 
-**`core_api` nema `AppointmentRepository`** i nema nijedan upis. Ovaj task ga uvodi — poziv ide na
-RPC funkciju, nikad `insert` sa klijenta (`.claude/docs/security.md`).
+**`core_api` sada ima `BookingRepository`** — uveden u ovom tasku, prvi i jedini upis. Poziv ide
+na RPC funkciju, nikad `insert` sa klijenta (`.claude/docs/security.md`). Ekran ga **ne zove
+direktno**: `availableSlotsProvider(SlotQuery(...))` i `availableDatesProvider(...)` su `family`
+provideri, a osvježavanje liste je `ref.invalidate(...)` — nema lokalne kopije.
+
+**`book(...)` traži `customerId`, koji još nema odakle doći.** Upis u `customers` nema validiranu
+funkciju, a sama funkcija je grantovana samo roli `authenticated` — auth je Sprint 2. Do tada
+zadnji korak ide guest putanjom ili mock identitetom, ali struktura poziva ostaje ista.
 
 **Home ekran je uspostavio šablon** koji ovaj task nasljeđuje: podaci iz providera, tekst kroz
 `vertical.terms` i `.arb`, tri stanja prije sretnog slučaja. Detalji su u doc komentaru
@@ -37,8 +50,10 @@ pišu se u `core_ui` sa tokenima, ne kao ad-hoc widgeti u ekranu.
 postoji da spriječi. DoD traži provjeru pretragom, ne pretpostavkom.
 
 **`409 Conflict` je prvoklasno stanje**, ne generička greška — poruka i automatski povratak na
-osvježenu listu slotova. `ApiError` već ima `ConflictError`; `switch` nad `sealed` tipom će oboriti
-build tamo gdje nije obrađen.
+osvježenu listu slotova. Mapiranje je sada ispravno: konflikt stiže kao **`PT409`**, ne `409`
+(Postgres prevodi status, ne kod u tijelu), a `mapError` je prije mapirao samo `409` — konflikt bi
+tiho ispao `ServerError`. `switch` to ne bi prijavio, jer je `ConflictError` obrađen, samo se
+nikad ne bi desio. **Ostaje dokazati uživo**: dva zahtjeva na isti slot još nisu izazvana.
 
 **Home tap na uslugu već vodi na `/book/service?serviceId=<id>`.** Ruta postoji i URL je ispravan,
 ali tijelo je `PlaceholderScreen`. Ako prvi korak ne pročita taj query parametar, preselekcija

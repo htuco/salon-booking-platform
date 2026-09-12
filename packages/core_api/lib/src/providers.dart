@@ -2,6 +2,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'booking/booking_repository.dart';
 import 'catalog/employee_repository.dart';
 import 'catalog/salon_repository.dart';
 import 'catalog/service_repository.dart';
@@ -61,6 +62,15 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 
 final verticalRepositoryProvider = Provider<VerticalRepository>(
   (ref) => VerticalRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Slobodni termini i rezervacija. Jedini repozitorij koji piše u bazu.
+///
+/// Nema pripadajući `FutureProvider` ovdje: slobodni termini zavise od izbora korisnika
+/// (usluga, datum, radnik), pa provider mora biti `family` i živi uz booking flow u
+/// aplikaciji. Provider bez argumenata bi morao pogoditi za šta pita.
+final bookingRepositoryProvider = Provider<BookingRepository>(
+  (ref) => BookingRepository(ref.watch(supabaseClientProvider)),
 );
 
 // ---------------------------------------------------------------------------
