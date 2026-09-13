@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
 import 'package:client/src/core/router/app_router.dart';
+import 'package:client/src/features/about/about_sections.dart';
 import 'package:client/src/features/home/salon_rating.dart';
 import 'package:client/src/features/home/widgets/gallery_grid.dart';
 import 'package:client/src/features/home/widgets/rating_summary.dart';
@@ -348,11 +349,12 @@ void main() {
       expect(find.textContaining('Fade je uvijek isti'), findsOneWidget);
     });
 
-    testWidgets('radno vrijeme i kontakt više nisu na Početnoj', (
+    testWidgets('„O nama" je na Početnoj — priča, radno vrijeme i kontakt', (
       tester,
     ) async {
-      // `SPEC.md` 5b ih drzi na "O nama" (task 19). Widgeti (`WorkingHoursCard`,
-      // `ContactCard`) su ostavljeni netaknuti da ih taj ekran preuzme.
+      // Ovo je regresija koju je task 18 uveo i koju 19 zatvara: radno vrijeme i kontakt
+      // su tada skinuti sa Pocetne na ekran 5b koji nije postojao, pa ih aplikacija nije
+      // imala **nigdje**. Vracaju se inline, ne za jedan tap dalje.
       await tester.pumpWidget(
         _app(
           hours: [
@@ -369,8 +371,48 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.text('Ponedjeljak'), findsNothing);
-      expect(find.text('Radno vrijeme'), findsNothing);
+      await tester.scrollUntilVisible(
+        find.text('Radno vrijeme'),
+        200,
+        scrollable: _vertikalniSkrol,
+      );
+
+      expect(find.text('Ko smo mi?'), findsOneWidget);
+      expect(find.text('Ponedjeljak'), findsOneWidget);
+      expect(find.text('09:00 – 17:00'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Kontakt'),
+        200,
+        scrollable: _vertikalniSkrol,
+      );
+      expect(find.text('Trg Slobode 15, Vitez'), findsOneWidget);
+      expect(find.text('+387 62 123 456'), findsOneWidget);
+    });
+
+    testWidgets('„O nama" na Početnoj nema foto par — Galerija ga već crta', (
+      tester,
+    ) async {
+      // Par uzima prve dvije slike iz iste `gallery_urls` liste koju Galerija odmah
+      // iznad crta u mrezi. Na ovom ekranu bi to bile iste dvije fotografije dvaput.
+      await tester.pumpWidget(
+        _app(
+          gallery: const [
+            'https://primjer.test/1.jpg',
+            'https://primjer.test/2.jpg',
+            'https://primjer.test/3.jpg',
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.scrollUntilVisible(
+        find.text('Ko smo mi?'),
+        200,
+        scrollable: _vertikalniSkrol,
+      );
+
+      expect(find.byType(AboutPhotoPair), findsNothing);
     });
   });
 
@@ -534,7 +576,12 @@ const _salon = Salon(
   id: _salonId,
   name: 'Barber Studio Vitez',
   slug: 'barberstudiovitez',
+  // Opis, adresa i telefon su popunjeni od taska 19: sekcije „O nama" su sada na ovom
+  // ekranu, pa prazan salon vise ne bi dokazao nista osim da se sekcija sakriva.
+  description: 'Barber Studio Vitez vec devet godina radi na jednom mjestu.',
+  address: 'Trg Slobode 15',
   city: 'Vitez',
+  phone: '+387 62 123 456',
 );
 
 final _osamUsluga = [

@@ -4,12 +4,12 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../about/about_sections.dart';
 import 'salon_rating.dart';
 import 'salon_schedule.dart';
 import 'widgets/gallery_grid.dart';
@@ -42,9 +42,16 @@ import 'widgets/staff_grid.dart';
 /// ćuti o ostalom.** Prazna mreža sa naslovom iznad izgleda kao app koji nije učitao
 /// podatke, a salonu koji nema galeriju je to trajno stanje, ne trenutak.
 ///
-/// Radno vrijeme i kontakt su od ovog taska **na "O nama"** (`SPEC.md` 5b), gdje ih
-/// handoff i drži; ekran pravi task 19, a `working_hours_card.dart` i `contact_card.dart`
-/// stoje spremni.
+/// ## „O nama" je na ovom ekranu, ne iza chevrona — odstupanje od handoffa
+///
+/// `SPEC.md` priču salona, par fotografija, radno vrijeme i kontakt drži na zasebnom
+/// ekranu 5b (`02-o-nama.png`). Task 18 ih je po tome skinuo sa Početne, pa ih aplikacija
+/// nekoliko commitova **nije imala nigdje** — salon nije imao gdje pokazati kad radi.
+///
+/// Task 19 ih vraća ovdje, inline, umjesto da ih ostavi za jedan tap dalje: to su podaci
+/// zbog kojih se salon i otvara na telefonu, a ekran koji handoff nijednim nacrtanim
+/// ekranom ne otvara ih ne bi pokazao nikome. Iste sekcije crta i `/about`, koji ostaje
+/// kao ruta i kao deep link; dijele se kroz `about_sections.dart`, pa ne postoje dvaput.
 ///
 /// Radi **bez prijave** (`docs/06 §1.1`): javni katalog ima `anon` politiku, pa nijedan
 /// provider na ovom ekranu ne traži korisnički token.
@@ -134,7 +141,25 @@ class _Ucitan extends ConsumerWidget {
           ),
         SliverToBoxAdapter(child: _GalerijaSekcija(urls: gallery)),
         SliverToBoxAdapter(child: _RecenzijeSekcija(rating: rating)),
-        const SliverToBoxAdapter(child: _ONamaRed()),
+        // „O nama" je **na Početnoj, ne iza chevrona** — v. doc komentar klase. Iste
+        // sekcije crta i `/about`; dijele se kroz `about_sections.dart`.
+        SliverToBoxAdapter(child: AboutStory(opis: salon.description)),
+        // **Bez `AboutPhotoPair` ovdje.** Par uzima prve dvije slike iz iste
+        // `gallery_urls` liste koju Galerija odmah iznad već crta u mreži — na ovom
+        // ekranu bi to bile iste dvije fotografije dvaput, sa pet centimetara razmaka.
+        // Na `/about`, gdje mreže nema, par ostaje.
+        SliverToBoxAdapter(
+          child: WorkingHoursSection(
+            schedule: schedule,
+            ucitava: hours.isLoading,
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: ContactSection(
+            salon: salon,
+            prikaziMreze: vertical.features.socialLinks,
+          ),
+        ),
         // Zadnja sekcija bi inače završila tačno ispod tab bara — razmak je da se
         // posljednji red može pročitati kad se skrol dovede do dna.
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
@@ -322,58 +347,6 @@ class _RecenzijeSekcija extends ConsumerWidget {
         rating: vrijednost,
         averageLabel: formatRating(vrijednost.average),
         countLabel: l10n.homeRatingCount(vrijednost.count),
-      ),
-    );
-  }
-}
-
-/// Jedini ulaz na „O nama" (`/about`).
-///
-/// **Odstupanje od handoffa, i to svjesno.** `SPEC.md` opisuje ekran 5b i daje mu traku
-/// sa Početnom aktivnom, ali ga **nijedan nacrtani ekran ne otvara** — ni `01-pocetna.png`,
-/// ni Postavke. To je rupa u handoffu, ne odluka: ekran bez ulaza je mrtav kod, a radno
-/// vrijeme i kontakt koje 5b nosi su jedini u aplikaciji.
-///
-/// Oblik je „Spec card / list group" sa jednim redom i chevronom — komponenta koju
-/// `SPEC.md` §Recurring components već definiše, pa red ne uvodi ništa novo u sistem.
-class _ONamaRed extends StatelessWidget {
-  const _ONamaRed();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.go(ClientRoute.about.path),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 60),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            decoration: BoxDecoration(
-              border: Border.all(color: scheme.outline),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.aboutLink,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                ),
-                Icon(
-                  LucideIcons.chevronRight,
-                  size: 20,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

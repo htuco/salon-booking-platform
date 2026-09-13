@@ -395,6 +395,11 @@ Tekst ima dva izvora i granica je stroga: ono što se mijenja po vertikali ide k
 `vertical.terms` (CTA, imena sekcija), a ono što je isto u svakoj kroz `.arb` (dani, greške,
 dugmad). Literal u ekranu ne pripada nijednom.
 
+**Sekcija koju crtaju dva ekrana živi izvan oba.** Priču salona, par fotografija, radno vrijeme i
+kontakt nose i Početna (inline) i `/about` — `features/about/about_sections.dart` ih drži kao javne
+widgete, a oba ekrana ih samo slažu. Kopija u drugom ekranu bi se razišla pri prvoj izmjeni, i
+razlika bi se vidjela tek na onom ekranu koji niko nije otvorio.
+
 **Vizuelni dokaz bez backenda**: `apps/client/lib/demo_main.dart` je alternativni entry point koji
 puni iste providere podacima iz `supabase/seed.sql`. Nije production kod — store build ide kroz
 `lib/main.dart` — ali dozvoljava da se ekran otvori i snimi na mašini bez Supabase pristupa
