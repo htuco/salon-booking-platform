@@ -33,7 +33,15 @@ class HomeHero extends StatelessWidget {
   /// Je li salon trenutno otvoren. Nosi ga kvadratić uz status, ne tekst.
   final bool otvoren;
 
-  static const double _visinaSlike = 320;
+  /// **Svjesno odstupanje od handoffa, u njegovom smjeru.** `SPEC.md` („Assets") trazi hero kao
+  /// **portret 3:4**, sto bi na 402 pt sirine bilo 536 pt — a ekran je do sada nosio 320, jer je
+  /// prvi hero crtao brand gradijent, ne fotografiju. Cim je ispod stala stvarna fotografija,
+  /// 320 je izgledalo kao traka, ne kao izlog.
+  ///
+  /// 420 je sredina: fotografija dobija zraka, a CTA i prva usluga i dalje ulaze u prvi ekran
+  /// na telefonu od 812 pt. Naslov i status vise ne zavise od ove vrijednosti — lijepe se za
+  /// dno (v. `Positioned` u `build`) — pa se ovaj broj mijenja sam, bez pomjeranja teksta.
+  static const double _visinaSlike = 420;
 
   @override
   Widget build(BuildContext context) {
@@ -47,20 +55,25 @@ class HomeHero extends StatelessWidget {
           child: _Cover(salon: salon),
         ),
         Positioned.fill(child: _Scrim(visina: _visinaSlike)),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.gutter,
-            _visinaSlike * 0.55,
-            AppSpacing.gutter,
-            0,
-          ),
+        // **Naslov i status se lijepe za dno fotografije, ne za procenat njene visine.**
+        // Ranije je ovo bio `Padding` sa `top: _visinaSlike * 0.55`. Kako je sadrzaj ispod
+        // fiksne visine (~132), svaki piksel dodan heroju isao je pola u razmak iznad teksta
+        // a pola u **praznu traku ispod njega**: na 320 je ta traka bila ~12 px, na 420 je
+        // narasla na ~57 i vidjela se kao rupa izmedju statusa i CTA dugmeta.
+        //
+        // Ovako razmak do dna je konstanta, pa je `_visinaSlike` stvarno jedan broj koji se
+        // mijenja bez posljedica po raspored — sto je ranija verzija obecavala a nije radila.
+        Positioned(
+          left: AppSpacing.gutter,
+          right: AppSpacing.gutter,
+          bottom: AppSpacing.lg,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(salon.name, style: theme.textTheme.displaySmall),
               const SizedBox(height: AppSpacing.lg),
               _ZiviStatus(label: status, otvoren: otvoren),
-              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
