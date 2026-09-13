@@ -119,6 +119,12 @@ class _Celija extends StatelessWidget {
         splashFactory: NoSplash.splashFactory,
         highlightColor: Colors.transparent,
         child: Stack(
+          // **`topCenter`, ne podrazumijevani `topStart`.** `Column` je `MainAxisSize.min`,
+          // pa je uzak koliko i njegov najširi potomak; `Stack` bi ga inače zalijepio uz
+          // lijevu ivicu ćelije. Greška se ne vidi u widget testu — testni font crta svaki
+          // znak kao kvadrat veličine fonta, pa labele ispadnu šire od ćelije i budu
+          // "centrirane" slučajno. Na simulatoru je cijela traka bila pomjerena ulijevo.
+          alignment: Alignment.topCenter,
           children: [
             Padding(
               padding: const EdgeInsets.only(

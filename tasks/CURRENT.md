@@ -35,13 +35,31 @@ tri su tab-level ekrani i nemaju gdje da stoje dok tab bara nema.
 
 ### Dokaz (2026-09-13)
 
-**324 Dart testa PASS** — `admin` 4, `core_domain` 58, `core_api` 67, `core_ui` 54, `client` 141.
+**325 Dart testova PASS** — `admin` 4, `core_domain` 58, `core_api` 67, `core_ui` 55, `client` 141.
 Novo: 14 za traku (`core_ui`), 15 za shell (`client`), 4 za mapiranje galerije (`core_api`); testovi
 Početne prepisani po novom rasporedu. Čista `melos run analyze` i `dart format`.
 
 **Odigrano u Chromiumu na 402 px protiv živog Supabase stacka**, oba tenanta, kroz `lib/main.dart`
 (ne `demo_main.dart`): Početna, `/services`, `/appointments`, `/book/service`. Snimci su u
 `docs/screenshots/task-18-*.png`.
+
+**Pokrenuto na iOS simulatoru** (iPhone 17, iOS 26.3), barber flavor protiv istog živog stacka:
+`docs/screenshots/task-18-home-barber-simulator.png`. Prazni okviri u Cjenovniku su seed stanje
+(`images.demo.invalid` iz taska 22), hero je brand gradijent jer `cover_image_url` nije popunjen.
+
+### Greška koju je našao **samo** simulator
+
+**Sadržaj svake ćelije trake bio je poravnat ulijevo, ne centriran.** `Stack` u `_Celija` je bio na
+podrazumijevanom `topStart`, a `Column` je `MainAxisSize.min` — pa je uzak koliko i najširi
+potomak i lijepio se uz lijevu ivicu. Mjereno: ikone na 21/101/185/270/348 px umjesto
+40/121/201/281/362.
+
+**Nijedan od 14 testova trake to nije vidio, i nije mogao.** Testni font crta svaki znak kao
+kvadrat veličine fonta, pa su labele u testu šire nego u stvarnosti, popune ćeliju i ispadnu
+„centrirane" slučajno. Novi test zato mjeri **ikonu** (fiksnih 23 px, ne zavisi od fonta) i pada
+bez `alignment: Alignment.topCenter` — provjereno vraćanjem greške.
+
+Prije i poslije: `task-18-traka-pomjerena-ulijevo.png` naspram `task-18-home-barber-simulator.png`.
 
 Tri stvari koje su testovi propustili a našle su se pri pisanju i u browseru:
 

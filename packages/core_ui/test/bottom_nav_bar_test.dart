@@ -98,6 +98,33 @@ void main() {
       expect(sirine.length, 5);
     });
 
+    testWidgets('ikona stoji u centru svoje celije', (tester) async {
+      // **Mjeri se ikona, ne labela.** Testni font crta svaki znak kao kvadrat veličine
+      // fonta, pa su labele ovdje šire nego u stvarnosti i popune ćeliju i kad sadržaj
+      // nije centriran. Ikona je fiksnih 23 px bez obzira na font, pa je jedina mjera
+      // koja u testu znači isto što i na uređaju.
+      //
+      // Regresija: `Stack` je bio na podrazumijevanom `topStart`, a `Column` je
+      // `MainAxisSize.min` — cijela traka je na simulatoru bila zalijepljena uz lijevu
+      // ivicu svake ćelije. Nijedan test to nije vidio.
+      await tester.pumpWidget(_traka(tema: _barber()));
+
+      for (final celija in _celije) {
+        final okvir = tester.getRect(
+          find.ancestor(
+            of: find.text(celija.label),
+            matching: find.byType(InkWell),
+          ),
+        );
+        final ikona = tester.getRect(find.byIcon(celija.icon));
+        expect(
+          ikona.center.dx,
+          closeTo(okvir.center.dx, 0.5),
+          reason: '${celija.label}: ikona nije u centru celije',
+        );
+      }
+    });
+
     testWidgets('svaka celija je preko minimalne dodirne mete', (tester) async {
       await tester.pumpWidget(_traka(tema: _barber()));
 
