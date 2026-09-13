@@ -28,6 +28,10 @@ ProviderContainer _container() {
       employeesProvider.overrideWith((ref) async => const <Employee>[]),
       workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
       verticalProvider.overrideWith((ref) async => Vertical.fallback),
+      // Od taska 18 `/appointments/:id` je podruta grane, pa se uz detalj gradi i
+      // korijen taba (`AppointmentsScreen`). On pita da li je korisnik prijavljen, a
+      // taj provider bez override-a posegne za `Supabase.instance` kojeg u testu nema.
+      isSignedInProvider.overrideWithValue(false),
     ],
   );
   addTearDown(container.dispose);
@@ -51,6 +55,9 @@ void main() {
     test('svaka ruta iz specifikacije postoji u routeru', () {
       // Putanje su prepisane iz `docs/01-mvp-spec.md` §12, ne iz `ClientRoute`-a —
       // inace bi test samo potvrdio da je enum jednak sam sebi.
+      //
+      // `/gallery` je jedini red iz §12 kojeg ovdje nema: oznacen je kao Later i ekran
+      // ga dobija u tasku 20. Kad ga dobije, ide i ovdje.
       const izSpecifikacije = {
         '/',
         '/services',
@@ -65,6 +72,8 @@ void main() {
         '/appointments/:id',
         '/team',
         '/about',
+        '/notifications',
+        '/settings',
       };
 
       expect(

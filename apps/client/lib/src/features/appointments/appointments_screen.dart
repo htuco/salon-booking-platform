@@ -52,23 +52,12 @@ class AppointmentsScreen extends ConsumerWidget {
                 AppSpacing.gutter,
                 AppSpacing.lg,
               ),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () => context.go(ClientRoute.home.path),
-                    child: const Padding(
-                      padding: EdgeInsets.all(AppSpacing.sm),
-                      child: Icon(LucideIcons.arrowLeft, size: 22),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      l10n.appointmentsTitle,
-                      style: theme.textTheme.displaySmall,
-                    ),
-                  ),
-                ],
+              // **Bez strelice nazad.** Od taska 18 je ovo korijen taba Termini, ne
+              // pushed ekran — strelica bi vodila na Početnu, koja je susjedna ćelija
+              // u traci ispod, i time tvrdila da postoji istorija koje nema.
+              child: Text(
+                l10n.appointmentsTitle,
+                style: theme.textTheme.displaySmall,
               ),
             ),
             Expanded(

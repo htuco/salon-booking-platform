@@ -1,11 +1,11 @@
 # Trenutni task: 18 — Client: Početna po handoffu + bottom tab bar
 
 Puni task: [`tasks/sprint-2/18-pocetna-i-tab-bar.md`](sprint-2/18-pocetna-i-tab-bar.md) ·
-**Nije počet** · Učitano: 2026-09-13
+**U toku** · Učitano: 2026-09-13 · Grana: `feat/pocetna-i-tab-bar`
 
 ## Status
 
-Nije počet.
+U toku od 2026-09-13, grana `feat/pocetna-i-tab-bar` sa svježeg `main`-a.
 
 Zavisnosti su ✅: [11](sprint-1/11-booking-flow.md) (booking flow) i
 [22](sprint-2/22-sema-slike-i-staz.md) (slike usluga, staž radnika). Blokira **19, 20 i 21** — sva
@@ -13,19 +13,85 @@ tri su tab-level ekrani i nemaju gdje da stoje dok tab bara nema.
 
 ## Ciljevi
 
-- [ ] **Bottom tab bar** u `core_ui`: pet ćelija, redoslijed **Usluge · Termini · Početna ·
-      Obavijesti · Postavke**, Početna namjerno u sredini
-- [ ] Aktivna ćelija: bijela, `weight 600`, traka 3 px na vrhu, inset 16% lijevo/desno
-- [ ] `StatefulShellRoute` u `go_router`-u; pod-ekrani (Galerija, Recenzije, O aplikaciji,
-      Pravila, Lightbox) **nemaju** tab bar
-- [ ] **Dvije rute koje ne postoje**: Obavijesti i Postavke — v. Napomene
-- [ ] Početna po `01-pocetna.png`: hero foto + serif naslov, živi status, CTA, **Cjenovnik**
+- [x] **Bottom tab bar** u `core_ui`: pet ćelija, redoslijed **Usluge · Termini · Početna ·
+      Obavijesti · Postavke**, Početna namjerno u sredini — `AppBottomNav`, redoslijed čitan
+      **sa ekrana**, ne iz ulazne liste (`bottom_nav_bar_test.dart`)
+- [x] Aktivna ćelija: `weight 600`, traka 3 px na vrhu, inset 16% lijevo/desno — uvlaka mjerena
+      naspram širine ćelije, ne fiksna. **Boja nije prepisana:** `#FFFFFF` iz `SPEC.md` je
+      paleta jednog brenda, pa ide `onSurface`; test pada ako se vrati heks
+- [x] `StatefulShellRoute` u `go_router`-u; pod-ekrani **nemaju** tab bar — dokazano po ruti
+      (`client_shell_test.dart`) i u browseru na `/book/service`
+- [x] **Dvije rute koje ne postoje**: `/notifications` i `/settings`; tabela u `docs/01 §12` dopunjena
+- [x] Početna po `01-pocetna.png`: hero foto + serif naslov, živi status, CTA, **Cjenovnik**
       (tri usluge + „Prikaži svih N"), Majstori (2 kolone), Galerija (3 kolone), Recenzije
-- [ ] Tab se vraća na svoj korijen pri ponovnom tapu; prelaz instant, bez cross-fade
-- [ ] Deep linkovi iz taska 07 i dalje rade — `router_test.dart` to čuva
-- [ ] Screenshot uz `01-pocetna.png`
+- [x] Tab se vraća na svoj korijen pri ponovnom tapu — `goBranch(initialLocation: …)`; provjereno
+      i da test **može pasti** (sa `false` pada). Prelaz je instant jer `indexedStack` nema
+      animaciju; to je svojstvo, ne podešavanje, i nije zasebno testirano
+- [x] Deep linkovi iz taska 07 i dalje rade — `router_test.dart` prolazi neizmijenjen u dijelu
+      koji to čuva, plus `/book/service` i `/appointments` otvoreni direktno u Chromiumu
+- [x] Screenshot uz `01-pocetna.png` — `docs/screenshots/task-18-*.png`, oba tenanta
 
 ## Napomene
+
+### Dokaz (2026-09-13)
+
+**325 Dart testova PASS** — `admin` 4, `core_domain` 58, `core_api` 67, `core_ui` 55, `client` 141.
+Novo: 14 za traku (`core_ui`), 15 za shell (`client`), 4 za mapiranje galerije (`core_api`); testovi
+Početne prepisani po novom rasporedu. Čista `melos run analyze` i `dart format`.
+
+**Odigrano u Chromiumu na 402 px protiv živog Supabase stacka**, oba tenanta, kroz `lib/main.dart`
+(ne `demo_main.dart`): Početna, `/services`, `/appointments`, `/book/service`. Snimci su u
+`docs/screenshots/task-18-*.png`.
+
+**Pokrenuto na iOS simulatoru** (iPhone 17, iOS 26.3), barber flavor protiv istog živog stacka:
+`docs/screenshots/task-18-home-barber-simulator.png`. Prazni okviri u Cjenovniku su seed stanje
+(`images.demo.invalid` iz taska 22), hero je brand gradijent jer `cover_image_url` nije popunjen.
+
+### Greška koju je našao **samo** simulator
+
+**Sadržaj svake ćelije trake bio je poravnat ulijevo, ne centriran.** `Stack` u `_Celija` je bio na
+podrazumijevanom `topStart`, a `Column` je `MainAxisSize.min` — pa je uzak koliko i najširi
+potomak i lijepio se uz lijevu ivicu. Mjereno: ikone na 21/101/185/270/348 px umjesto
+40/121/201/281/362.
+
+**Nijedan od 14 testova trake to nije vidio, i nije mogao.** Testni font crta svaki znak kao
+kvadrat veličine fonta, pa su labele u testu šire nego u stvarnosti, popune ćeliju i ispadnu
+„centrirane" slučajno. Novi test zato mjeri **ikonu** (fiksnih 23 px, ne zavisi od fonta) i pada
+bez `alignment: Alignment.topCenter` — provjereno vraćanjem greške.
+
+Prije i poslije: `task-18-traka-pomjerena-ulijevo.png` naspram `task-18-home-barber-simulator.png`.
+
+Tri stvari koje su testovi propustili a našle su se pri pisanju i u browseru:
+
+1. **`freezed` 3.2.5 ne može `List` polje.** Generiše `final` na imenovanom parametru, što Dart
+   odbija. Prvi `List` u ijednom modelu ovog repoa, pa se to do sada nije vidjelo. Galerija zato
+   ide kroz `SalonRepository.galleryUrls`, ne kroz polje na `Salon`-u. Zapisano u `architecture.md`.
+2. **`scrollUntilVisible` staje čim finder *nađe* widget**, a `CustomScrollView` gradi i komad
+   izvan viewporta. Dugme „Prikaži svih" je tako postojalo na y≈853 u viewportu visine 600, tap
+   nije pogodio ništa, i test je tvrdio da ruta ne radi. Ide `ensureVisible`.
+3. **Test kontrasta na dvije palete u jednoj petlji mjeri pola prelaza.** `MaterialApp`
+   interpolira `ThemeData`, pa je drugi `pumpWidget` dao 1.50:1 — barberov svijetli tekst na
+   beauty pozadini. Svaka paleta sada ima svoj test.
+
+Snimak je napravljen **privremenim** usmjeravanjem `cover_image_url`, `gallery_urls` i slika
+radnika na lokalno poslužene ploče iz `prototype/ui/assets/`, pa vraćanjem baze u seed stanje —
+isti postupak kao u tasku 22. `seed.sql` nije mijenjan i baza je vraćena (provjereno `select`-om).
+
+### Ostalo za sljedećeg
+
+- **Recenzije ne izlaze nigdje.** Sekcija i `RatingSummary` su napisani i pokriveni testom, ali
+  `salonRatingProvider` vraća `null` jer šema nema tabelu `reviews`. Task 20 mijenja **provider**,
+  ne ekran — test „recenzije izađu čim ocjena postoji" to čuva.
+- **Galerija u demou ne izlazi**, jer je `gallery_urls` prazan u oba seed salona. Kod je pravi i
+  čita iz baze; sekcija se sakriva, kako DoD taska 20 (red 19) i traži.
+- **Radno vrijeme i kontakt više nisu na Početnoj** — po `SPEC.md` 5b idu na „O nama" (task 19).
+  `working_hours_card.dart` i `contact_card.dart` su ostavljeni netaknuti da ih taj ekran preuzme.
+  Do tada su ta dva podatka **nedostupna u aplikaciji**; ako 19 kasni, vraćaju se u jednoj sekciji.
+- **`terms` nema plural termina.** Labela ćelije „Termini" ide iz `.arb`-a, jer je
+  `appointmentSingular` pogrešan oblik za listu a `myAppointments` predugačak za petinu ekrana.
+  Dentalna vertikala traži „Pregledi" i time ovo postaje `appointmentPlural` u `VerticalTerms`.
+- **Ikone u traci su barberske** (makaze za Usluge). To je odluka iz taska 11 — barber je 1:1 sa
+  handoffom — ali će je druga vertikala otvoriti.
 
 ### Šta već postoji
 

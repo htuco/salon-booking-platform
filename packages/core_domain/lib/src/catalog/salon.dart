@@ -12,6 +12,12 @@ part 'salon.g.dart';
 /// Nisu sva polja iz tabele ovdje. `plan`, `status`, `salon_builds` i identifikatori
 /// buildova su platformske stvari koje klijentski app ne prikazuje; dodaju se kad ih neki
 /// ekran zatraži, a ne unaprijed.
+///
+/// **`gallery_urls` je izuzetak sa drugim razlogom.** Kolona postoji od init migracije i
+/// Početna je crta, ali je ne drži ovaj model: `freezed` 3.2.5 za `List` polje generiše
+/// `final` na imenovanom parametru, što aktuelni Dart ne prihvata (`extraneous_modifier`),
+/// pa nijedan model u ovom paketu ne smije imati listu dok se generator ne podigne na 4.x.
+/// Galerija zato ide kroz `SalonRepository.galleryUrls`.
 @freezed
 abstract class Salon with _$Salon {
   const factory Salon({

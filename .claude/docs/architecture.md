@@ -48,6 +48,12 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
 Poštuj smjer zavisnosti gore: `core_domain` ne smije uvesti `core_api`, a `core_ui` ne smije uvesti
 nijedan repozitorij.
 
+**Nijedan `freezed` model ne smije imati `List` polje.** `freezed` 3.2.5 za takvo polje generiše
+`final` na **imenovanom** parametru konstruktora, što aktuelni Dart odbija (`extraneous_modifier`),
+pa paket prestane da se kompajlira. Vrijedi za svaki oblik — sa `@Default`, bez njega, nullable.
+Dok se generator ne podigne na 4.x, lista ide mimo modela: `salons.gallery_urls` zato čita
+`SalonRepository.galleryUrls`, a ne polje na `Salon`-u.
+
 ### Tema je runtime podatak, ne konstanta
 
 `buildAppTheme(primary, secondary, themeName)` u `core_ui/src/theme/theme_factory.dart` je **jedina**
@@ -340,6 +346,26 @@ Tri odluke koje se ne vide iz potpisa:
   obavezne, web build je padao prije `runApp` i davao praznu bijelu stranicu bez poruke.
 - **Nema `initialLocation`.** Na webu nadjačava URL iz adresne trake, pa deep link tiho ne radi
   dok URL izgleda ispravno. Admin umjesto njega ima redirect sa `/` na `/login`.
+
+### Stablo ruta klijenta ima dva sprata
+
+Od taska 18 `apps/client/lib/src/core/router/app_router.dart` dijeli sve rute na dvije vrste:
+
+- **`StatefulShellRoute.indexedStack`** nosi pet grana donje navigacije — Usluge, Termini,
+  **Početna** (u sredini), Obavijesti, Postavke. Okvir je `ClientShell` (`client_shell.dart`),
+  koji drži `AppBottomNav` iz `core_ui`. Svaka grana ima **svoj `Navigator`**, pa tab pamti gdje
+  je korisnik stao; ponovni tap na aktivnu ćeliju vraća granu na njen korijen
+  (`goBranch(initialLocation: true)`).
+- **Sve izvan shella** je pushed ekran **bez trake**, sa back headerom: cijeli `/book/*`,
+  `/auth/login`, `/account`.
+
+Pod-ekran koji po handoffu zadržava traku ide kao **podruta grane**, ne kao zasebna ruta —
+`/about` i `/team` su djeca `/`, `/appointments/:id` je dijete `/appointments`.
+
+Podjela je u putanjama, a ne u `if`-u unutar ekrana, iz jednog razloga: ekran koji sam odlučuje
+hoće li nacrtati traku je ekran koji će jednom odlučiti pogrešno. Zamka je pri tome ista kao kod
+`initialLocation` — `StatefulShellRoute` mijenja oblik stabla, pa deep link u granu mora ostati
+dokazan (`router_test.dart`, `client_shell_test.dart`).
 
 `x-salon-id` se postavlja **jednom**, na klijentu, a ne u repozitorijima: zaboravljen header ne
 daje grešku nego prazan rezultat. Admin app ga ne šalje — v. `ADR-0003` i `.claude/docs/security.md`.

@@ -43,6 +43,39 @@ phone, email, instagram_url, facebook_url, vertical_pack_key
     }
     return salonFromRow(row);
   });
+
+  /// Galerija salona — `salons.gallery_urls jsonb`, lista URL-ova.
+  ///
+  /// Zaseban upit, a ne kolona u [byId]: `Salon` je `freezed` model, a `freezed` 3.2.5
+  /// za `List` polje generiše kod koji aktuelni Dart odbija (v. `salon.dart`). Dok se
+  /// generator ne podigne, lista stiže mimo modela.
+  ///
+  /// **Prazna lista nije greška.** Salon bez galerije je predviđeno stanje — ekran tada
+  /// sakrije sekciju umjesto da prikaže praznu mrežu. Isto vrijedi za red koji RLS ne
+  /// vrati: prazno, ne izuzetak, jer galerija nije razlog da Početna padne.
+  Future<List<String>> galleryUrls(String salonId) => guard(() async {
+    final row = await _client
+        .from('salons')
+        .select('gallery_urls')
+        .eq('id', salonId)
+        .maybeSingle();
+
+    return galleryUrlsFromRow(row?['gallery_urls']);
+  });
+}
+
+/// Mapira `gallery_urls` u listu URL-ova, preskačući sve što nije neprazan string.
+///
+/// `jsonb` kolona nema šemu — `["a", null, 3, ""]` je validan sadržaj te kolone i doći
+/// će prije ili kasnije, iz admin konzole ili iz ručnog `update`-a. Padati na tome bi
+/// značilo da jedan loš red u bazi obori Početnu.
+@visibleForTesting
+List<String> galleryUrlsFromRow(Object? value) {
+  if (value is! List) return const <String>[];
+  return [
+    for (final item in value)
+      if (item is String && item.isNotEmpty) item,
+  ];
 }
 
 /// Mapira `salons` red na [Salon].

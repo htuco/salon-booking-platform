@@ -32,7 +32,8 @@ codebase, N brendiranih aplikacija iz `tenants/*/tenant.yaml`. Podjela je zato:
 
 - **Oblik je platformski i ide u `core_ui`** — tipografska skala, spacing ritam (22px gutter,
   14/18/20/22/26/34 blok), **radius 0 svuda**, hairline granice umjesto sjenki, visine dodirnih meta
-  (≥44px), raspored tab bara, oblik komponenti (service row, time slot, calendar day, spec card,
+  (≥44px), raspored tab bara (`AppBottomNav`: pet ćelija, Početna u sredini, traka 3px uvučena
+  16% iznad aktivne), oblik komponenti (service row, time slot, calendar day, spec card,
   step progress, photo frame).
 - **Boja je po tenantu i dolazi iz `tenant.yaml`** kroz `buildAppTheme()`. Dark paleta iz `SPEC.md`
   (`#0F1012` podloga, `#F2F2F3` primarni fill, `#C3C9CE` tijelo teksta) je paleta *ovog* brenda,
@@ -86,6 +87,27 @@ sistem nema. Prave fotografije dolaze sa onboardingom klijenta.
 Posljedica za dokazivanje: snimak ekrana sa seed podacima **ne razlikuje** „fotografija radi" od
 „fotografija tiho pada", jer oba daju prazan okvir. Ko dokazuje rad sa slikama mora privremeno
 usmjeriti jedan red na sliku koja stvarno postoji — i ne commitovati taj URL.
+### Gdje Početna namjerno odstupa od `01-pocetna.png`
+
+Tri odstupanja na jednom ekranu, sva tri po pravilima iznad, da se ne ispravljaju kao greške:
+
+- **Serif naslov u heroju je ime salona, ne „Zakažite termin".** Handoff na tom mjestu ima poziv
+  na akciju, a dugme odmah ispod isti taj tekst u drugom licu. `docs/02 §3` traži da klijent u
+  prve dvije sekunde vidi **čiji** je salon, a ime je tenant podatak — jedina stvar na ekranu
+  koja se mijenja bez builda. Poziv na akciju ostaje na dugmetu, gdje ga handoff i ima.
+- **Naslov sekcije radnika je „Naš tim", ne „Majstori".** Tekst dolazi iz `vertical.terms`
+  (`docs/05 §3`), a ne sa slike — isto pravilo koje je gore imenovano baš tim primjerom.
+- **CTA je u brand boji, ne `#F2F2F3`.** Boja dolazi iz `tenant.yaml`; na beauty tenantu je roze.
+
+„Cjenovnik" je pri tome **doslovno sa slike** i stoji u `.arb`-u, ne u terminologiji: sekcija je
+isječak cjenovnika, a puna lista je zaseban ekran koji se i zove „Usluge". Kad vertikala ne
+prikazuje cijene (`VerticalFeatures.prices`), naslov pada na `servicePlural` — sekcija bez cijena
+nije cjenovnik.
+
+Sekcija bez podataka se **sakriva**, ne crta prazna: salon bez galerije nema praznu mrežu, nego
+nema sekciju. Kako to izgleda danas: [`docs/screenshots/task-18-home-barber.png`](../../docs/screenshots/task-18-home-barber.png)
+i [`task-18-home-beauty.png`](../../docs/screenshots/task-18-home-beauty.png) — isti build, dva brenda.
+
 ### Ekrani koje handoff nema
 
 **Koraci OTP prijave (`/auth/login`, unos emaila i unos koda) nisu nacrtani.** Handoff ima korak 4

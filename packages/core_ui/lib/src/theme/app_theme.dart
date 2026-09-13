@@ -50,6 +50,7 @@ enum AppTheme {
       surface: Color(0xFF0F1012),
       surfaceContainer: Color(0xFF151719),
       photoGround: Color(0xFF1A1D20),
+      navSurface: Color(0xFF0B0C0D),
       outline: Color(0xFF454B50),
       hairline: Color(0xFF33383C),
       strongOutline: Color(0xFF6B7176),
@@ -62,6 +63,7 @@ enum AppTheme {
       surface: Color(0xFFFFFBFB),
       surfaceContainer: Color(0xFFF6EDED),
       photoGround: Color(0xFFF0E4E4),
+      navSurface: Color(0xFFF9F1F1),
       outline: Color(0xFFE0D3D3),
       hairline: Color(0xFFEBDEDE),
       strongOutline: Color(0xFFBFA9A9),
@@ -74,6 +76,7 @@ enum AppTheme {
       surface: Color(0xFFFBFCFD),
       surfaceContainer: Color(0xFFEDF2F5),
       photoGround: Color(0xFFE4EBEF),
+      navSurface: Color(0xFFF2F6F8),
       outline: Color(0xFFD2DCE2),
       hairline: Color(0xFFE3EAEE),
       strongOutline: Color(0xFFA9B7C0),
@@ -92,6 +95,7 @@ class AppNeutrals {
     required this.surface,
     required this.surfaceContainer,
     required this.photoGround,
+    required this.navSurface,
     required this.outline,
     required this.hairline,
     required this.strongOutline,
@@ -110,6 +114,14 @@ class AppNeutrals {
   /// Podloga okvira za fotografiju. `SPEC.md`: `#1A1D20` — tamnija od kartice, da se
   /// prazan okvir vidi kao okvir, a ne kao rupa u kartici.
   final Color photoGround;
+
+  /// Podloga donje navigacije. `SPEC.md` je razdvaja od pozadine ekrana (`#0B0C0D`
+  /// naspram `#0F1012`) — traka je **udubljena**, ne izdignuta, jer sistem nema sjenki
+  /// pa dubinu nosi samo razlika tona i hairline iznad nje.
+  ///
+  /// U svijetlim temama razlika ide u suprotnom smjeru: pozadina je već skoro bijela, pa
+  /// traka mora biti nijansu tamnija da se uopšte vidi kao zasebna ploha.
+  final Color navSurface;
 
   /// Granica kartice i reda koji se bira. `SPEC.md`: `#454B50`.
   final Color outline;

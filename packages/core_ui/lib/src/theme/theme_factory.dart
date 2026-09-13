@@ -78,6 +78,9 @@ ThemeData buildAppTheme({
     // Podloga okvira za fotografiju. `SPEC.md` je razdvaja od kartice (`#1A1D20`
     // naspram `#151719`) da se prazan okvir vidi kao okvir, a ne kao rupa.
     surfaceContainerLowest: neutrals.photoGround,
+    // Donja navigacija. `surfaceDim` je jedina uloga u `ColorScheme`-u koja znaci
+    // "ploha udubljena u odnosu na pozadinu", a to je tacno ono sto traka jeste.
+    surfaceDim: neutrals.navSurface,
     onSurfaceVariant: neutrals.textMuted,
     outline: neutrals.outline,
     // Razdjelnik unutar grupe redova je **tanji** od granice kartice. Ista boja za oboje

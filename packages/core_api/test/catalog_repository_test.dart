@@ -40,6 +40,36 @@ void main() {
     });
   });
 
+  group('galleryUrlsFromRow', () {
+    test('mapira listu URL-ova iz jsonb kolone', () {
+      expect(
+        galleryUrlsFromRow(['https://primjer.test/1.jpg', 'https://a/2.jpg']),
+        ['https://primjer.test/1.jpg', 'https://a/2.jpg'],
+      );
+    });
+
+    test('prazna kolona je prazna lista, ne greska', () {
+      // `gallery_urls jsonb not null default '[]'` — oba demo salona su danas takva.
+      // Salon bez galerije je predvidjeno stanje, pa ekran sakrije sekciju.
+      expect(galleryUrlsFromRow(const <dynamic>[]), isEmpty);
+    });
+
+    test('smece u koloni ne obara Pocetnu', () {
+      // `jsonb` nema semu: `["a", null, 3, ""]` je validan sadrzaj te kolone i doci ce
+      // iz admin konzole ili rucnog `update`-a. Padati na tome znaci da jedan los red
+      // u bazi obori ekran.
+      expect(galleryUrlsFromRow(['https://ok.test/1.jpg', null, 3, '', true]), [
+        'https://ok.test/1.jpg',
+      ]);
+    });
+
+    test('vrijednost koja uopste nije lista daje praznu listu', () {
+      expect(galleryUrlsFromRow(null), isEmpty);
+      expect(galleryUrlsFromRow('nije lista'), isEmpty);
+      expect(galleryUrlsFromRow(const {'a': 1}), isEmpty);
+    });
+  });
+
   group('servicesFromRows', () {
     test('mapira listu usluga', () {
       final services = servicesFromRows([
