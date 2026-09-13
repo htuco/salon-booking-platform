@@ -621,5 +621,83 @@
   "@address": { "description": "Labela reda sa adresom salona u kontakt kartici (02-o-nama.png). Razlikuje se od `location`, koji je naslov sekcije." },
 
   "phone": "Telefon",
-  "@phone": { "description": "Labela reda sa telefonom salona u kontakt kartici (02-o-nama.png)." }
+  "@phone": { "description": "Labela reda sa telefonom salona u kontakt kartici (02-o-nama.png)." },
+
+  "settingsTitle": "Postavke",
+  "@settingsTitle": { "description": "Naslov ekrana /settings (prototype/ui 11-postavke.png)." },
+
+  "settingsAccount": "Moj račun",
+  "@settingsAccount": { "description": "Red koji vodi na /account. Handoff crta ekran Moj račun, ali mu ulaz daje tek ovaj red — bez njega je brisanje naloga nedostupno, a to pada na Apple reviewu." },
+
+  "settingsNotifications": "Obavijesti",
+  "@settingsNotifications": { "description": "Red koji vodi na /notifications (ekran pravi task 21)." },
+
+  "settingsLanguage": "Jezik · {jezik}",
+  "@settingsLanguage": {
+    "description": "Red sa trenutnim jezikom (11-postavke.png). Jezik je zasad jedan, pa red ne vodi nigdje.",
+    "placeholders": { "jezik": { "type": "String", "example": "Bosanski" } }
+  },
+
+  "settingsLanguageCurrent": "Bosanski",
+  "@settingsLanguageCurrent": { "description": "Ime trenutnog jezika, na tom jeziku." },
+
+  "settingsAboutApp": "O aplikaciji",
+  "@settingsAboutApp": { "description": "Red koji vodi na /about-app (ekran pravi task 21)." },
+
+  "settingsPrivacy": "Politika privatnosti",
+  "@settingsPrivacy": { "description": "Red koji vodi na politiku privatnosti. Po docs/06 §8.3 ona mora imati javni URL — ekran u app-i je ne zamjenjuje." },
+
+  "settingsSignOut": "Odjavi se",
+  "@settingsSignOut": { "description": "Odjava sa ekrana Postavke (11-postavke.png)." },
+
+  "settingsSignedOutNotice": "Odjavljeni ste.",
+  "@settingsSignedOutNotice": { "description": "Potvrda nakon odjave. Bez nje ekran samo promijeni izgled i korisnik ne zna je li se išta desilo." },
+
+  "settingsGuestTitle": "Niste prijavljeni",
+  "@settingsGuestTitle": { "description": "Zaglavlje kartice profila kad nema sesije. Handoff crta samo prijavljeno stanje; odjavljeno postoji jer je Postavke ćelija trake i otvara se bez prijave." },
+
+  "settingsGuestBody": "Prijavite se da vidite svoje termine i račun.",
+  "@settingsGuestBody": { "description": "Objašnjenje uz praznu karticu profila." },
+
+  "settingsSignIn": "Prijavi se",
+  "@settingsSignIn": { "description": "CTA na kartici profila kad nema sesije." },
+
+  "accountTitle": "Moj račun",
+  "@accountTitle": { "description": "Naslov ekrana /account." },
+
+  "accountEmail": "Email",
+  "@accountEmail": { "description": "Labela reda sa email adresom naloga." },
+
+  "accountSignedInWith": "Prijava",
+  "@accountSignedInWith": { "description": "Labela reda koji kaže kojim providerom je korisnik prijavljen." },
+
+  "accountProviderEmail": "Email kod",
+  "@accountProviderEmail": { "description": "Ime email OTP providera, kako ga korisnik vidi." },
+
+  "accountNoEmail": "Bez email adrese",
+  "@accountNoEmail": { "description": "Nalog bez maila — Apple private relay i gost. Ne prazan red, jer prazan red izgleda kao greška učitavanja." },
+
+  "accountDelete": "Izbriši račun",
+  "@accountDelete": { "description": "Destruktivna akcija, na Postavkama i na Mom računu (11-postavke.png). Apple traži da brisanje bude u aplikaciji, ne link na mail podrške." },
+
+  "accountDeleteKicker": "Nepovratno",
+  "@accountDeleteKicker": { "description": "Verzalni kicker iznad naslova dijaloga za brisanje (oblik modala 5p)." },
+
+  "accountDeleteTitle": "Izbrisati račun?",
+  "@accountDeleteTitle": { "description": "Naslov dijaloga za potvrdu brisanja." },
+
+  "accountDeleteBody": "Vaše ime i kontakt se brišu, a budući termini otkazuju. Salon zadržava zapis o obavljenim terminima, bez vaših podataka. Ovo se ne može poništiti.",
+  "@accountDeleteBody": { "description": "Objašnjenje šta brisanje radi. DoD taska 17 traži da dijalog kaže šta OSTAJE, ne samo 'jeste li sigurni' — zato se zapis salona spominje izričito." },
+
+  "accountDeleteConfirm": "Izbriši račun",
+  "@accountDeleteConfirm": { "description": "Potvrda u dijalogu. Kaže šta radi, ne 'U redu'." },
+
+  "accountDeleteCancel": "Zadrži račun",
+  "@accountDeleteCancel": { "description": "Odustajanje u dijalogu. Imenuje ishod, ne radnju." },
+
+  "accountDeletedNotice": "Vaš račun je izbrisan.",
+  "@accountDeletedNotice": { "description": "Potvrda nakon brisanja, prikazana na Početnoj u javnom stanju." },
+
+  "accountDeleteFailed": "Brisanje nije uspjelo. Pokušajte ponovo.",
+  "@accountDeleteFailed": { "description": "Fallback poruka kad greška nema svoju. Korisnik ostaje prijavljen i može pokušati ponovo." }
 }

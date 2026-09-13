@@ -95,11 +95,44 @@ class SupabaseAuthRepository implements AuthRepository {
         'Tok gosta nije implementiran — task 26 (tasks/sprint-2/26-gost-i-facebook.md)',
       );
 
+  /// Brisanje naloga kroz Edge Function `delete-account` (task 17).
+  ///
+  /// **Ne zove se `auth.admin.deleteUser` odavde, i nikad neće.** To je admin API koji radi
+  /// samo sa service role ključem, a taj ključ zaobilazi RLS u potpunosti i ne smije
+  /// postojati u app-i (`.claude/docs/security.md`, „Tajne"). Funkcija na serveru radi oba
+  /// koraka: RPC `delete_my_account` pod korisnikovim tokenom, pa `auth.admin.deleteUser`
+  /// pod servisnim.
+  ///
+  /// **Odjava je dio brisanja, ne poseban korak koji ekran smije zaboraviti.** Bez nje
+  /// `supabase_flutter` zadrži sesiju u lokalnom storageu, pa bi sljedeće otvaranje app-e
+  /// izgledalo kao prijava — sa tokenom koji više nema identitet iza sebe. Korisnik bi
+  /// vidio prijavljeno stanje u kojem ništa ne radi. DoD taska to zove „bez zaostalog
+  /// tokena", i ovo je jedino mjesto gdje se to može garantovati za svakog pozivaoca.
+  ///
+  /// Odjava ide i kad brisanje padne? **Ne.** Neuspjelo brisanje mora ostaviti korisnika
+  /// prijavljenim, da može pokušati ponovo — odjava bi mu oduzela jedini token kojim to
+  /// može, i nalog bi ostao neobrisan zauvijek.
   @override
-  Future<void> deleteAccount() => throw ServerError(
-    'Brisanje naloga nije implementirano — task 17 '
-    '(tasks/sprint-2/17-moj-racun-i-brisanje.md)',
-  );
+  Future<void> deleteAccount() => guard(() async {
+    await _client.functions.invoke('delete-account');
+
+    // **Odjava se namjerno ne pušta da obori uspješno brisanje.**
+    //
+    // `auth.users` red je u ovom trenutku već obrisan, pa GoTrue na `POST /auth/v1/logout`
+    // vraća **403** — vidi se u konzoli i pri dokazivanju u browseru. Danas ga
+    // `supabase_flutter` proguta i svejedno očisti lokalnu sesiju, pa sve radi. Ali to je
+    // ponašanje biblioteke, ne ugovor: kad bi sljedeća verzija počela bacati, korisnik
+    // čiji je nalog **stvarno obrisan** dobio bi poruku da brisanje nije uspjelo, i
+    // pokušao bi ponovo sa tokenom iza kojeg više nema naloga.
+    //
+    // Zato se greška odjave guta ovdje, svjesno i na jednom mjestu. Lokalna sesija se ne
+    // gubi time što je zahtjev pao — `signOut` je briše prije nego što mrežu i dotakne.
+    try {
+      await _auth.signOut();
+    } on Object catch (_) {
+      // Namjerno prazno: brisanje je prošlo, a odjava nema šta da spasi.
+    }
+  });
 
   /// Greška sa imenom paketa koji fali, umjesto `UnimplementedError`.
   ///

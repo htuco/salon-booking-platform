@@ -18,6 +18,11 @@ ApiError mapError(Object error, [StackTrace? stackTrace]) {
   // AuthException nasljeduje vlastitu hijerarhiju, ne PostgrestException.
   if (error is AuthException) return _mapAuth(error);
 
+  // Edge Function (task 17, `delete-account`). Bez ovog reda bi greska iz funkcije pala u
+  // fallback na dnu i izasla kao "Neocekivana greska: Instance of 'FunctionException'" —
+  // tekst koji korisnik vidi, a koji ne kaze nista ni njemu ni onome ko cita prijavu.
+  if (error is FunctionException) return _mapFunction(error);
+
   if (error is SocketException || error is HttpException) {
     return NetworkError('Nema veze sa serverom', cause: error);
   }
@@ -120,6 +125,29 @@ ApiError _mapPostgrest(PostgrestException error) {
     error.message.isEmpty
         ? 'Greška baze (${code ?? 'bez koda'})'
         : error.message,
+    cause: error,
+  );
+}
+
+/// `FunctionException` nosi HTTP status i tijelo odgovora Edge Function-a.
+///
+/// Status se cita iz `status`, a poruka iz tijela — funkcije u ovom repou vracaju
+/// `{"error": "..."}`, pa se ta poruka koristi kad postoji. `details` je `dynamic`: kad
+/// funkcija padne prije nego sto stigne odgovoriti JSON-om, tu je goli tekst.
+ApiError _mapFunction(FunctionException error) {
+  final tijelo = error.details;
+  final poruka = tijelo is Map && tijelo['error'] is String
+      ? tijelo['error'] as String
+      : null;
+
+  // 401/403 iz funkcije znaci "nisi to smio" — isto znacenje kao `42501` iz baze, pa
+  // dobija isti tip greske. Ekran ih time obradjuje na jednom mjestu.
+  if (error.status == 401 || error.status == 403) {
+    return AuthRejectedError(poruka ?? 'Zahtjev nije dozvoljen', cause: error);
+  }
+
+  return ServerError(
+    poruka ?? 'Greška servera (${error.status})',
     cause: error,
   );
 }

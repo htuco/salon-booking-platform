@@ -423,6 +423,8 @@ iz njega.
 | O salonu / kontakt | `/about` | Should |
 | Obavijesti | `/notifications` | Should |
 | Postavke | `/settings` | Should |
+| O aplikaciji | `/about-app` | Should |
+| Pravila korištenja | `/terms` | Must |
 
 ### Admin app (`apps/admin`)
 
@@ -439,6 +441,8 @@ iz njega.
 | Radno vrijeme | `/working-hours` | Should |
 | Blokiraj vrijeme (modal) | `/calendar/block` | Should |
 | Postavke | `/settings` | Should |
+| O aplikaciji | `/about-app` | Should |
+| Pravila korištenja | `/terms` | Must |
 
 ### Super admin (Next.js konzola — `web/app/super-admin`)
 

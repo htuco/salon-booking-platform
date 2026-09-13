@@ -62,6 +62,7 @@ Future<ProviderContainer> pumpEkran(
   List<WorkingHour> radnoVrijeme = const [],
   List<String> galerija = const [],
   Vertical? vertical,
+  AuthRepository? authRepository,
   bool pumpaj = true,
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
@@ -101,7 +102,15 @@ Future<ProviderContainer> pumpEkran(
       verticalProvider.overrideWith((ref) async => vertical ?? vertikala()),
       // Tab Termini je pravi ekran i čita je li korisnik prijavljen; bez override-a
       // posegne za `Supabase.instance` kojeg u testu nema.
-      isSignedInProvider.overrideWithValue(false),
+      isSignedInProvider.overrideWithValue(
+        authRepository?.currentSession != null,
+      ),
+      // Postavke i „Moj račun" (task 17) čitaju sesiju kroz repozitorij, ne kroz
+      // `isSignedInProvider`. Override ide na **repozitorij**, ne na izvedene providere:
+      // tako `currentAuthSessionProvider` i `authSessionProvider` ostaju pravi kod, pa
+      // test mjeri i to da odjava i brisanje stvarno pomjere stream.
+      if (authRepository != null)
+        authRepositoryProvider.overrideWithValue(authRepository),
     ],
   );
   addTearDown(container.dispose);
