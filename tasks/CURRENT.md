@@ -11,11 +11,11 @@ U toku. Grana `feat/o-nama-i-usluge`, otvorena sa svježeg `main`-a.
 mergeovan 2026-09-13, pa `/about` i `/services` postoje na `main`-u kao `PlaceholderScreen`. Blok
 koji je ovdje stajao — „18 nije mergeovan, kreni sa njegove grane" — bio je zastario i obrisan je.
 
-**Prije nego što se piše `/services`, treba mergeovati
-[PR #30](https://github.com/htuco/salon-booking-platform/pull/30).** Popravka sortiranja
-(`.order(ascending: true)`) je izvađena u svoj PR i **nije u ovoj grani**. Dok ne uđe, katalog
-stiže silazno i grupisanje po kategoriji će izgledati slomljeno bez razloga — tačno zamka koju su
-Napomene ispod predviđale. Kad #30 uđe: `git rebase origin/main`.
+**Popravka sortiranja je u grani.** [PR #30](https://github.com/htuco/salon-booking-platform/pull/30)
+je mergeovan 2026-09-13 i ova grana je rebasovana na njega (`8547447`), pa katalog stiže uzlazno i
+grupisanje po kategoriji se može suditi po onome što se vidi. Rebase je imao jedan konflikt —
+tabela sprinta, redovi 18 i 19 su susjedni i svaka grana je dirala svoj — riješen uzimanjem oba
+(18 ✅, 19 🟡).
 
 **Tenant Studio Maestro je u stashu**, ne u grani: `git stash list` → „tenant Studio Maestro —
 cijeli flavor, assets, seed i assets/ podrška u heroju (čeka svoj PR)". Tu je i jedina stvar koja
@@ -72,7 +72,7 @@ Ono što task ne kaže, a našlo se pri pravljenju tenanta Studio Maestro:
 - **`.order()` u `postgrest`-u podrazumijeva SILAZNO.** Tri repozitorija su ga zvala bez
   `ascending:`, pa je katalog stizao naopako. Popravljeno u
   [PR #30](https://github.com/htuco/salon-booking-platform/pull/30) — dokazano protiv živog stacka
-  (radno vrijeme je vraćalo `[7,6,5,4,3,2,1]`). **Nije u ovoj grani dok se #30 ne mergeuje.**
+  (radno vrijeme je vraćalo `[7,6,5,4,3,2,1]`) — i **mergeovano; ova grana ga ima.**
 - **Ni ispravan redoslijed nije dobar redoslijed** — sada i izmjereno. Uzlazno po kategoriji pa
   imenu, Studio Maestro počinje sa „Brada · Brijanje britvom", „Brada · Oblikovanje brade" i
   „Njega · Pranje i styling"; salon bi u izlog htio „Šišanje". **`services` nema kolonu za ručni
