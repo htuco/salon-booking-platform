@@ -11,7 +11,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [14](14-identitet-i-klijent-upsert.md) ✅ | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
 | [15](15-izolacija-klijent-u-dva-salona.md) ✅ | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
 | [16](16-moji-termini-i-otkazivanje.md) ✅ | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
-| [17](17-moj-racun-i-brisanje.md) 🟡 | Client: **Postavke (5k)**, "Moj račun" + **brisanje računa** | store submission | 2–3 dana |
+| [17](17-moj-racun-i-brisanje.md) ✅ | Client: **Postavke (5k)**, "Moj račun" + **brisanje računa** | store submission | 2–3 dana |
 | [22](22-sema-slike-i-staz.md) ✅ | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
 | [18](18-pocetna-i-tab-bar.md) ✅ | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
 | [19](19-o-nama-i-usluge.md) ✅ | Client: "O nama" i "Usluge" | — | 1–2 dana |
