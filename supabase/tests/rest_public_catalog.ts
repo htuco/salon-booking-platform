@@ -18,6 +18,8 @@ const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVI
 if (!anon || !service) throw new Error("Set local Supabase anon and service-role keys.");
 
 const activeSalon = "550e8400-e29b-41d4-a716-446655440000";
+// Beauty salon: the only place left that seeds a service without a photo.
+const beautySalon = "550e8400-e29b-41d4-a716-446655440001";
 const otherSalon = "550e8400-e29b-41d4-a716-446655440001";
 let assertions = 0;
 
@@ -98,8 +100,16 @@ try {
     services.some((row) => typeof row.image_url === "string"),
     "services.image_url must be readable without a login — the catalog shows thumbnails.",
   );
+  // The null case moved salons, so this assertion follows it. Task 22 left "Brada" without a
+  // photo in the barber salon and asserted here; `e431229` ("fotografije za Barber Studio
+  // Vitez") then gave every barber service a real photo, and this assertion had been failing
+  // ever since — unnoticed, because CI is blocked and nobody reran the suite. The claim is
+  // still worth making: an empty frame is a designed state, and a filtered-out row would mean
+  // a salon with no photos loses its catalog. It just has to be made where the null actually
+  // lives, which is now the beauty salon ("Pramenovi").
+  const beautyServices = await anonRows("services", SERVICE_COLUMNS, "&salon_id=eq." + beautySalon);
   assert(
-    services.some((row) => row.image_url === null),
+    beautyServices.some((row) => row.image_url === null),
     "A service without a photo must come back as null, not be filtered out — an empty frame is a designed state.",
   );
 

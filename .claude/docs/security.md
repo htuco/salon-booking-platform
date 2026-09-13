@@ -293,6 +293,17 @@ ništa.
 | `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
 | `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header |
 | `005_delete_my_account.test.sql` | brisanje naloga — anonimizacija u **oba** salona, otkazivanje budućih termina, gašenje pristupa, trigger ne uskrsava nalog |
+| `rest_delete_account.ts` | brisanje kroz Edge Function sa pravim JWT-om; obrisan identitet dobija **`200` sa praznom listom**, ne `401` — pristup gasi `deleted_at`, ne istek tokena |
+
+> **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
+> dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao
+> poslije 09:30 (pomjerao je `start_time` a ostavljao `end_time`, pa je padao na
+> `check(end_time > start_time)` i obarao cijeli fajl), `002` je padao svakog ponedjeljka
+> (`mon - 7` je početak *tekuće* sedmice, dakle ponedjeljkom danas), a `rest_public_catalog`
+> je padao od trenutka kad je barber salon dobio sve fotografije. Nijedan se nije vidio, jer
+> je CI blokiran, pa suitu niko nije pokrenuo van jednog doba dana. Kad test zavisi od
+> `now()`, biraj vrijednost koja je **uvijek** na pravoj strani granice, i provjeri da ne
+> prolazi iz drugog razloga (zatvoren dan umjesto prošlog datuma).
 
 **Curenje kroz embed i kroz filter je češće od curenja kroz direktan upit.** Admin zna
 `auth_identity_id` — on stoji u njegovom vlastitom redu — pa je filter po njemu prvo što bi
