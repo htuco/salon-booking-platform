@@ -14,7 +14,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
 | [22](22-sema-slike-i-staz.md) ✅ | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
 | [18](18-pocetna-i-tab-bar.md) ✅ | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
-| [19](19-o-nama-i-usluge.md) 🟡 | Client: "O nama" i "Usluge" | — | 1–2 dana |
+| [19](19-o-nama-i-usluge.md) ✅ | Client: "O nama" i "Usluge" | — | 1–2 dana |
 | [20](20-galerija-recenzije.md) | Client: galerija, lightbox, recenzije | — | 2 dana |
 | [21](21-obavijesti-i-pravni-ekrani.md) | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
 | [23](23-admin-login-i-lista.md) | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
@@ -158,3 +158,27 @@ Sitno, ali ne smije se izgubiti:
   `DEVELOPMENT_TEAM` — pa se na **fizički iPhone** ne može instalirati ništa, samo u simulator.
   Kad se Apple nalog prijavi u Xcode, Team ID ide kroz `tenant.yaml` i generator u `xcconfig`, ne
   ručno u `Runner.xcodeproj`. Otvoreno iz taska 04, zajedno sa Android keystoreom.
+
+> **19 — Client: „O nama" i „Usluge" (✅, 2026-09-13).** `/services` je pun cjenovnik **grupisan po
+> `category`**, a zaglavlja se crtaju samo kad ima šta da se grupiše — jedna kategorija (ili
+> nijedna) daje ravnu listu, tačno kao `09-usluge.png`. Razvrstavanje radi čista funkcija
+> `groupByCategory`, koja **ne sortira ponovo**: `ServiceRepository.forSalon` već vraća uzlazno, a
+> drugo sortiranje bi bilo dva izvora istine za isti poredak.
+> **`SPEC.md` 5b ne završava na `/about`.** Prvi prolaz je ekran napisao po handoffu i ostavio ga
+> iza reda „O nama ›" na dnu Početne; u simulatoru se vidjelo šta to znači — priča, radno vrijeme i
+> kontakt stoje jedan tap dalje, na ekranu kojem handoff **nijednim nacrtanim ekranom ne daje
+> ulaz**. Sadržaj je zato inline na Početnoj, `/about` ostaje kao ruta i kao oblik iz handoffa, a
+> sekcije dijele obje strane (`features/about/about_sections.dart`).
+> Time je zatvorena i rupa iz taska 18: radno vrijeme i kontakt su od njega bili **nedostupni u
+> cijeloj aplikaciji**, a `WorkingHoursCard`/`ContactCard` su stajali bez ijednog korisnika.
+> **Radno vrijeme je puna sedmica, ne jedan red iz handoffa** — iz prave baze: subota do 14:00,
+> nedjelja zatvoreno. Jedan red je tačan samo za salon koji svaki dan radi isto.
+> Dokazano: **361 test PASS** (bilo 326), 35 novih; app dignuta na **iOS simulatoru** protiv živog
+> Supabase stacka, i sva tri ekrana snimljena u Chromiumu uz referentne PNG-ove
+> (`docs/screenshots/task-19-*`).
+> **Zamka koju je našao browser, a testovi nisu mogli:** foto par i Galerija su na Početnoj crtali
+> iste dvije fotografije jedna ispod druge — obje sekcije ispravne, obje sa zelenim testom, vidi se
+> tek kad stoje na istom ekranu. Par je ostao samo na `/about`, koji mreže nema.
+> **Ostaje otvoreno, ali ne blokira:** `services` nema kolonu za ručni redoslijed (`sort_order`
+> migracija, vlastiti task), a tapovi na `tel:`, mape i Instagram traže pravi uređaj.
+> Detalji: [19-o-nama-i-usluge.md](19-o-nama-i-usluge.md#status-2026-09-13--✅-zatvoren).

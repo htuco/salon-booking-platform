@@ -63,14 +63,22 @@ finalan. Prototip ostaje samo kao referenca za flow i za rute.
 ## Doseg naspram taskova
 
 `SPEC.md` pokriva i ekrane izvan Sprinta 1. Danas su napravljeni `5a`, `5c`–`5g` (početna, četiri
-koraka bookinga, zahtjev poslan), pa `5h` i `5p` iz taska 16 (moji termini i modal otkazivanja).
+koraka bookinga, zahtjev poslan), `5h` i `5p` iz taska 16 (moji termini i modal otkazivanja), te
+`5b` i `5i` iz taska 19 (o nama, usluge).
 
-Ostaje `5b`, `5i`–`5o` i `5q` (o nama, usluge, obavijesti, postavke, galerija, recenzije, o
-aplikaciji, pravila, lightbox) — v. `tasks/sprint-2/README.md`.
+Ostaje `5j`–`5o` i `5q` (obavijesti, postavke, galerija, recenzije, o aplikaciji, pravila,
+lightbox) — v. `tasks/sprint-2/README.md`.
 
-**Tab bar iz `SPEC.md` još ne postoji.** `5h` je napravljen kao *pushed* ekran sa back zaglavljem,
-jer tab bar dolazi u [tasku 18](../../tasks/sprint-2/18-pocetna-i-tab-bar.md) i tek tamo ima pet
-odredišta. Kad stigne, `5h` gubi back strelicu i dobija svoju ćeliju.
+### Dva odstupanja od handoffa na `5b`, oba svjesna
+
+- **Radno vrijeme je puna sedmica, ne jedan red.** `02-o-nama.png` ga svodi na „Radno vrijeme ·
+  09:00 – 20:00", što je tačno samo za salon koji svaki dan radi isto. Demo barber radi subotom
+  do 14:00 i nedjeljom ne radi — jedan red bi lagao, i to bi se otkrilo pred zatvorenim vratima.
+- **Sadržaj `5b` je i na Početnoj, inline.** Handoff ekran 5b opisuje, ali mu **nijedan nacrtani
+  ekran ne daje ulaz** — ni `5a`, ni Postavke. Priča, radno vrijeme i kontakt su podaci zbog kojih
+  se salon otvara na telefonu, pa stoje na `5a`; `/about` ostaje kao ruta i kao oblik iz handoffa.
+  Sekcije dijele obje strane (`features/about/about_sections.dart`), pa ne postoje dvaput. Foto par
+  je pri tome **samo na `/about`**: na Početnoj bi ponovio prve dvije slike iz Galerije iznad njega.
 
 ## Fotografije
 

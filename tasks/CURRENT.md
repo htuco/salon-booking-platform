@@ -1,96 +1,79 @@
 # Trenutni task: 19 — Client: „O nama" i „Usluge"
 
 Puni task: [`tasks/sprint-2/19-o-nama-i-usluge.md`](sprint-2/19-o-nama-i-usluge.md) ·
-**U toku** · Učitano: 2026-09-13 · Pokrenuto: 2026-09-13
+**Gotovo, čeka merge** · Učitano: 2026-09-13 · Zatvoreno: 2026-09-13
 
 ## Status
 
-U toku. Grana `feat/o-nama-i-usluge`, otvorena sa svježeg `main`-a.
+Grana `feat/o-nama-i-cjenovnik`, [PR #33](https://github.com/htuco/salon-booking-platform/pull/33).
 
-**Zavisnost 18 je zatvorena.** [PR #29](https://github.com/htuco/salon-booking-platform/pull/29) je
-mergeovan 2026-09-13, pa `/about` i `/services` postoje na `main`-u kao `PlaceholderScreen`. Blok
-koji je ovdje stajao — „18 nije mergeovan, kreni sa njegove grane" — bio je zastario i obrisan je.
+> **Pazi na istoriju prije nego išta zaključiš.**
+> [PR #31](https://github.com/htuco/salon-booking-platform/pull/31) je pod naslovom
+> „feat(client): o nama i cjenovnik" mergeovan **sa samo bookkeepingom** — status blokovi,
+> nijedan ekran. Zato je 19 u tabeli ostao 🟡 i zato je `CURRENT.md` danas ujutro još pisao
+> „U toku". Stvarni rad je u ovoj grani.
 
-**Popravka sortiranja je u grani.** [PR #30](https://github.com/htuco/salon-booking-platform/pull/30)
-je mergeovan 2026-09-13 i ova grana je rebasovana na njega (`8547447`), pa katalog stiže uzlazno i
-grupisanje po kategoriji se može suditi po onome što se vidi. Rebase je imao jedan konflikt —
-tabela sprinta, redovi 18 i 19 su susjedni i svaka grana je dirala svoj — riješen uzimanjem oba
-(18 ✅, 19 🟡).
+Oba ekrana su napisana i dokazana **protiv živog Supabase stacka**, ne protiv `demo_main.dart`.
+
+## Šta je isporučeno
+
+- **`/services`** — pun cjenovnik grupisan po `category`; zaglavlja samo kad ima šta da se
+  grupiše. Tap vodi u `/book/service?serviceId=`.
+- **`/about`** — hero, outline CTA, priča, foto par, radno vrijeme, kontakt.
+- **Sadržaj „O nama" je i na Početnoj, inline** — v. odjeljak ispod.
+- **`about_sections.dart`** — četiri javne sekcije koje slažu oba ekrana.
+
+## Odluka koju ne otvaraj ponovo bez novog podatka
+
+**`SPEC.md` 5b ne završava na `/about`.** Prvi prolaz je ekran napisao po handoffu i ostavio ga
+iza reda „O nama ›" na dnu Početne. U simulatoru se vidjelo šta to znači: priča salona, radno
+vrijeme i kontakt — podaci zbog kojih se salon otvara na telefonu — stoje jedan tap dalje, na
+ekranu kojem handoff **nijednim nacrtanim ekranom ne daje ulaz** (ni `01-pocetna.png`, ni
+Postavke).
+
+Sadržaj je zato inline na Početnoj; `/about` ostaje kao ruta, deep link i oblik iz handoffa.
+Sekcije dijele obje strane, pa ne postoje dvaput.
+
+**Foto par je izuzetak i stoji samo na `/about`.** Uzima prve dvije slike iz iste `gallery_urls`
+liste koju Galerija na Početnoj već crta u mreži — tamo bi to bile iste dvije fotografije dvaput.
+
+## Dokaz koji stoji
+
+`melos format` / `melos analyze` / `melos test` — **SUCCESS, 361 test PASS** (bilo 326):
+
+```
+[core_domain]: 00:00 +58: All tests passed!
+[core_api]:    00:00 +67: All tests passed!
+[core_ui]:     00:03 +55: All tests passed!
+[admin]:       00:02  +4: All tests passed!
+[client]:      00:14 +177 ~1: All tests passed!
+```
+
+- **iOS simulator** (iPhone 17, flavor `barberstudiovitez`, `SUPABASE_URL=127.0.0.1:54321`) — app
+  se builda, diže i čita pravi katalog.
+- **Chromium 402 px** — `docs/screenshots/task-19-*`: Početna, `/services` (Brada · Paketi ·
+  Šišanje), `/about` uz `02-o-nama.png`.
+
+CI je crven i **to nije nalaz** — GitHub Actions kvota je blokirana do 29.09.2026.
+
+## Ostalo za sljedećeg
+
+- **`services` nema kolonu za ručni redoslijed.** Uzlazno po kategoriji pa imenu je predvidivo,
+  ne dobro: Početna pokazuje tri usluge, pa u izlog ide „Brada" umjesto „Šišanja". `sort_order`
+  migracija i vlastiti task.
+- **Tapovi na `tel:`, mape i Instagram nisu odigrani** — traže pravi uređaj.
+- **Sljedeći task po tabeli: [17](sprint-2/17-moj-racun-i-brisanje.md)** — „Moj račun" i brisanje
+  naloga. Blokira store submission.
+
+## Ostalo iz ranijih sesija
 
 **Tenant Studio Maestro je u stashu**, ne u grani: `git stash list` → „tenant Studio Maestro —
-cijeli flavor, assets, seed i assets/ podrška u heroju (čeka svoj PR)". Tu je i jedina stvar koja
-`assets/…` fotografije pušta u hero. Ne primjenjuj ga u ovoj grani; ima svoj PR.
-
-Ovaj task **ne blokira nikoga**, ali nosi rupu koju je 18 napravio — v. Ciljevi.
-
-## Ciljevi
-
-- [ ] `/services` po `09-usluge.png`: pun cjenovnik, **grupisan po `category`**, tap vodi pravo u
-      booking sa preselektovanom uslugom
-- [ ] `/about` po `02-o-nama.png`: priča salona, par fotografija, radno vrijeme, kontakt, mreže
-- [ ] **Vratiti radno vrijeme i kontakt u aplikaciju** — danas ih nema nigdje (v. Napomene)
-- [ ] Oba ekrana rade bez prijave
-- [ ] Screenshot uz oba referentna PNG-a
-
-## Napomene
-
-### Rupa koju je ostavio task 18 — ovo je pravi razlog zašto 19 ide sljedeći
-
-Task 18 je **skinuo radno vrijeme i kontakt sa Početne**, jer ih `SPEC.md` 5b drži na „O nama".
-Taj ekran ne postoji, pa su ta dva podatka **trenutno nedostupna u cijeloj aplikaciji** — salon
-nema gdje pokazati kad radi ni gdje se nalazi. To nije stilska zaostavština nego regresija koju je
-18 svjesno uveo uz obećanje da je 19 zatvara.
-
-Ako 19 kasni, jeftina zakrpa je vratiti jednu sekciju na Početnu; skuplja je pustiti da stoji.
-
-### Šta već postoji, a šta je obrisano
-
-**Postoji i čeka:**
-
-- **Rute su tu.** `/services` je ćelija tab bara (Usluge aktivna), `/about` je podruta Početne
-  (`SPEC.md` 5b: „tab bar, Početna active"). Oba su danas `PlaceholderScreen`.
-- **`working_hours_card.dart` i `contact_card.dart`** su netaknuti — ali su **bez ijednog
-  korisnika** otkad ih je 18 skinuo sa Početne. Analizator ne viče jer su javni widgeti.
-- **`SalonSchedule`** (`features/home/salon_schedule.dart`) računa sedmicu i živi status.
-- **`SelectableRow`** je tačan oblik reda cjenovnika (76 px foto, naziv, trajanje, cijena u serifu).
-- **`?serviceId=` preselekcija je već podržana** u routeru od taska 11 — `/services` samo treba
-  `context.go('/book/service?serviceId=…')`.
-- **Svi `.arb` stringovi**: `dayMonday`…`daySunday`, `dayMondayFriday`, `workingHours`, `contact`,
-  `location`, `call`, `openInMaps`, `instagram`, `facebook`, `closed`.
-
-**Obrisano i mora se pisati ponovo:** logika sekcija je bila u `home_screen.dart` i otišla je sa
-prepisom — koji kontakt red se crta, `vertical.features.socialLinks` gating, mapiranje broja dana u
-ime, grupisanje „Ponedjeljak – Petak". Widgeti su ostali, **pamet nije**.
-
-### Grupisanje po kategoriji — zamka koju task fajl spominje, plus jedna koju ne
-
-Task kaže: kategorija je **slobodan tekst, ne enum** — salon je mijenja iz admina, pa sortiranje
-mora podnijeti praznu i nepoznatu vrijednost.
-
-Ono što task ne kaže, a našlo se pri pravljenju tenanta Studio Maestro:
-
-- **`.order()` u `postgrest`-u podrazumijeva SILAZNO.** Tri repozitorija su ga zvala bez
-  `ascending:`, pa je katalog stizao naopako. Popravljeno u
-  [PR #30](https://github.com/htuco/salon-booking-platform/pull/30) — dokazano protiv živog stacka
-  (radno vrijeme je vraćalo `[7,6,5,4,3,2,1]`) — i **mergeovano; ova grana ga ima.**
-- **Ni ispravan redoslijed nije dobar redoslijed** — sada i izmjereno. Uzlazno po kategoriji pa
-  imenu, Studio Maestro počinje sa „Brada · Brijanje britvom", „Brada · Oblikovanje brade" i
-  „Njega · Pranje i styling"; salon bi u izlog htio „Šišanje". **`services` nema kolonu za ručni
-  redoslijed.** Za `/services` je to podnošljivo (vidi se cijela lista), ali je isti podatak
-  presudan na Početnoj, koja pokazuje samo tri. Ako se rješava, to je `sort_order` migracija.
-
-### Fotografije za „par fotografija" na `/about`
-
-`02-o-nama.png` traži par slika. Podaci postoje: `salonGalleryProvider` (task 18) čita
-`salons.gallery_urls`. Oba demo salona ga imaju prazan, pa se sekcija **sakriva** — isto pravilo
-kao na Početnoj. Studio Maestro ima dvije slike, pa se na njemu i vidi.
-
-### Procjena
-
-Task kaže 1–2 dana i to stoji. `/services` je kraći i prvi (dokazuje grupisanje); `/about` je
-uglavnom sastavljanje komponenti koje već postoje.
+cijeli flavor, assets, seed i assets/ podrška u heroju (čeka svoj PR)". Ne primjenjuj ga u ovoj
+grani; ima svoj PR.
 
 ## Istorija
+
+- **19 — Client: „O nama" i „Usluge"** (2026-09-13, ✅) — v. gore.
 
 - **22 — Šema: fotografije usluga i staž radnika** (2026-09-12, ✅) — `services.image_url` i `employees.experience_years`, obje nullable jer su prazan okvir i red bez staža **predviđena stanja**: salon bez fotografija mora raditi od prvog dana. Seed puni obje kolone i namjerno ostavlja po jedan red prazan (Brada bez slike, Lejla bez staža), da se to stanje vidi u demou a ne tek kod prvog klijenta. Korak 1 prosljeđuje `imageUrl`, korak 2 spaja titulu i staž kroz ICU plural — iz prave baze: „Barber · 9 godina" i „Barber · 4 godine", oba bosanska oblika tačna. Dokazano: **29 asercija javnog kataloga bez tokena** (bilo 26; grantovi su tabelarni pa nova kolona ulazi sama, ali to se ne vidi iz migracije — vidi se iz poziva bez tokena), 66 pgTAP testova, 242 Dart testa. **Zamka koju je našao browser:** prvi snimak koraka 1 je pokazao četiri prazna okvira, jer se `images.demo.invalid` ne razrješava — red sa URL-om izgleda isto kao red bez njega, pa taj snimak ne dokazuje ništa. Dokaz je napravljen privremenim usmjeravanjem jednog reda na sliku koja stvarno postoji, pa vraćanjem; `seed.sql` nije mijenjan.
 
