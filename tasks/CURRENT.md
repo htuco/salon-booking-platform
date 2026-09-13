@@ -1,79 +1,122 @@
-# Trenutni task: 19 — Client: „O nama" i „Usluge"
+# Trenutni task: 17 — Client: „Moj račun", postavke i brisanje računa
 
-Puni task: [`tasks/sprint-2/19-o-nama-i-usluge.md`](sprint-2/19-o-nama-i-usluge.md) ·
-**Gotovo, čeka merge** · Učitano: 2026-09-13 · Zatvoreno: 2026-09-13
+Puni task: [`tasks/sprint-2/17-moj-racun-i-brisanje.md`](sprint-2/17-moj-racun-i-brisanje.md) ·
+**U toku** · Učitano: 2026-09-13 · Grana: `feat/moj-racun-i-brisanje`
 
 ## Status
 
-Grana `feat/o-nama-i-cjenovnik`, [PR #33](https://github.com/htuco/salon-booking-platform/pull/33).
+U toku. Grana `feat/moj-racun-i-brisanje` otvorena sa svježeg `main`-a.
 
-> **Pazi na istoriju prije nego išta zaključiš.**
-> [PR #31](https://github.com/htuco/salon-booking-platform/pull/31) je pod naslovom
-> „feat(client): o nama i cjenovnik" mergeovan **sa samo bookkeepingom** — status blokovi,
-> nijedan ekran. Zato je 19 u tabeli ostao 🟡 i zato je `CURRENT.md` danas ujutro još pisao
-> „U toku". Stvarni rad je u ovoj grani.
+**Zavisnost 13 je 🟡, ali ne blokira.** Traži je task fajl, a 13 je otvoren samo zbog Apple i
+Google prijave; email OTP radi i dokazan je uživo. Za „Moj račun" je to dovoljno — ekran treba
+prijavljenog korisnika, ne određenog providera. **Jedan izuzetak: Apple token revoke** (`docs/06`
+§8.2) se ne može ni napisati ni dokazati dok Apple prijave nema. To ide u 🟡, ne u „gotovo".
 
-Oba ekrana su napisana i dokazana **protiv živog Supabase stacka**, ne protiv `demo_main.dart`.
+**Task 19 je mergeovan** ([PR #33](https://github.com/htuco/salon-booking-platform/pull/33)) —
+ovo nije stacked grana. Jedan njegov commit (`e91c6b6`, osvježeni snimci i status blok) je ostao
+van `main`-a jer je napisan nakon mergea; ide zasebnim PR-om, ne kroz ovaj task.
 
-## Šta je isporučeno
+## Odluka na početku: 17 uzima i `/settings`
 
-- **`/services`** — pun cjenovnik grupisan po `category`; zaglavlja samo kad ima šta da se
-  grupiše. Tap vodi u `/book/service?serviceId=`.
-- **`/about`** — hero, outline CTA, priča, foto par, radno vrijeme, kontakt.
-- **Sadržaj „O nama" je i na Početnoj, inline** — v. odjeljak ispod.
-- **`about_sections.dart`** — četiri javne sekcije koje slažu oba ekrana.
+Donesena prije prve izmjene, jer mijenja doseg i procjenu. Detalji u Napomenama, „Rupa koju task
+fajl ne vidi".
 
-## Odluka koju ne otvaraj ponovo bez novog podatka
+`/settings` (handoff 5k) **ulazi u ovaj task**. Bez njega `/account` nema ulaz iz aplikacije, a
+ekran za brisanje naloga koji se ne može otvoriti ne prolazi Apple review — što je jedini razlog
+zašto task postoji. Uz to 5k ionako nosi „odjavu" koju DoD traži.
 
-**`SPEC.md` 5b ne završava na `/about`.** Prvi prolaz je ekran napisao po handoffu i ostavio ga
-iza reda „O nama ›" na dnu Početne. U simulatoru se vidjelo šta to znači: priča salona, radno
-vrijeme i kontakt — podaci zbog kojih se salon otvara na telefonu — stoje jedan tap dalje, na
-ekranu kojem handoff **nijednim nacrtanim ekranom ne daje ulaz** (ni `01-pocetna.png`, ni
-Postavke).
+**Procjena 1–2 dana iz task fajla time pada.** Task nosi RPC, Edge Function i dva ekrana.
 
-Sadržaj je zato inline na Početnoj; `/about` ostaje kao ruta, deep link i oblik iz handoffa.
-Sekcije dijele obje strane, pa ne postoje dvaput.
+## Ciljevi
 
-**Foto par je izuzetak i stoji samo na `/about`.** Uzima prve dvije slike iz iste `gallery_urls`
-liste koju Galerija na Početnoj već crta u mreži — tamo bi to bile iste dvije fotografije dvaput.
+- [ ] RPC za brisanje: soft-delete identiteta (`deleted_at`) + anonimizacija `customers` reda
+- [ ] `auth.admin.deleteUser` kroz Edge Function — klijent nema service role ključ
+- [ ] **Ekran `/settings` po `11-postavke.png`** (5k): profil, obavijesti, jezik, o aplikaciji,
+      odjava, i red „Moj račun ›" — ovo je ulaz do `/account`
+- [ ] Ekran `/account`: podaci identiteta i brisanje naloga
+- [ ] Brisanje traži potvrdu koja **objašnjava šta ostaje**, ne samo „jeste li sigurni"
+- [ ] Nakon brisanja app se vraća u javno stanje, bez zaostalog tokena
+- [ ] Deno test: obrisan identitet više ne može čitati svoje termine
+- [ ] Budući `confirmed` termini se otkazuju (push vlasniku je task 25)
+- [ ] Ispravi komentar u `app_router.dart` uz `settings` — tvrdi da ekran pravi task 21, a ne pravi
 
-## Dokaz koji stoji
+## Napomene
 
-`melos format` / `melos analyze` / `melos test` — **SUCCESS, 361 test PASS** (bilo 326):
+### Šema je već napola uradila ovaj task
 
-```
-[core_domain]: 00:00 +58: All tests passed!
-[core_api]:    00:00 +67: All tests passed!
-[core_ui]:     00:03 +55: All tests passed!
-[admin]:       00:02  +4: All tests passed!
-[client]:      00:14 +177 ~1: All tests passed!
-```
+Ovo je nalaz koji mijenja procjenu. `auth_identities.deleted_at` **postoji od init migracije**
+(task 02), i — što je važnije — **gate je već ušiven na svim mjestima**:
 
-- **iOS simulator** (iPhone 17, flavor `barberstudiovitez`, `SUPABASE_URL=127.0.0.1:54321`) — app
-  se builda, diže i čita pravi katalog.
-- **Chromium 402 px** — `docs/screenshots/task-19-*`: Početna, `/services` (Brada · Paketi ·
-  Šišanje), `/about` uz `02-o-nama.png`.
+| Gdje | Šta radi |
+|---|---|
+| `private.owns_identity` | `... and deleted_at is null` |
+| politika `own_identity` (`auth_identities`) | `... and deleted_at is null` |
+| politika `own_customer` (`customers`) | kroz `owns_identity` |
+| politika `own_appointments` (`appointments`) | kroz `owns_identity` |
+| trigger `auth_identity` (`20260910090500`) | upsert samo `where deleted_at is null` |
+| `public.ensure_customer` (task 14) | `ai.deleted_at is null` |
 
-CI je crven i **to nije nalaz** — GitHub Actions kvota je blokirana do 29.09.2026.
+Posljedica: **sam upis `deleted_at` gasi pristup svemu.** DoD stavka „obrisan identitet više ne
+može čitati svoje termine" bi trebala proći bez ijedne nove politike — ali to je **hipoteza dok
+Deno test ne prođe**, a ne razlog da se test preskoči. Trigger je ovdje najzanimljiviji: bez
+`where deleted_at is null` bi sljedeća prijava istim mailom uskrsnula obrisani nalog.
 
-## Ostalo za sljedećeg
+### Ugovor postoji, tijelo ne
 
-- **`services` nema kolonu za ručni redoslijed.** Uzlazno po kategoriji pa imenu je predvidivo,
-  ne dobro: Početna pokazuje tri usluge, pa u izlog ide „Brada" umjesto „Šišanja". `sort_order`
-  migracija i vlastiti task.
-- **Tapovi na `tel:`, mape i Instagram nisu odigrani** — traže pravi uređaj.
-- **Sljedeći task po tabeli: [17](sprint-2/17-moj-racun-i-brisanje.md)** — „Moj račun" i brisanje
-  naloga. Blokira store submission.
+`AuthRepository.deleteAccount()` je deklarisan od taska 12, a `SupabaseAuthRepository` ga baca kao
+`ServerError` sa porukom koja pokazuje na ovaj task
+(`supabase_auth_repository.dart:99`). Ekran ga smije zvati odmah — greška je već `ApiError`, ne
+`UnimplementedError`, pa ne ruši ekran.
 
-## Ostalo iz ranijih sesija
+### Rupa koju task fajl ne vidi: `/account` nema ulaz
 
-**Tenant Studio Maestro je u stashu**, ne u grani: `git stash list` → „tenant Studio Maestro —
-cijeli flavor, assets, seed i assets/ podrška u heroju (čeka svoj PR)". Ne primjenjuj ga u ovoj
-grani; ima svoj PR.
+Isto što je task 19 našao za `/about`, i ovdje stoji. **Riješeno odlukom gore: 5k ulazi u 17.**
+
+- Task fajl kaže „`/account` po handoffu **5k**". **5k je Postavke, ne Moj račun.** Router iz taska
+  18 ih razdvaja: `settings('/settings', 'Postavke')` je ćelija trake i nosi 5k, a
+  `account('/account', 'Moj račun')` je pushed ekran ispod njega.
+- **`/settings` je `PlaceholderScreen`** i **nijedan task ga ne preuzima**. Provjereno, ne
+  pretpostavljeno: komentar u `app_router.dart:226` tvrdi „Ekran pravi task 21", ali DoD taska 21
+  nabraja samo `/notifications`, `/about-app` i `/terms` — Postavki nema. Komentar je pogrešan i
+  ispravlja se u ovom tasku.
+- Dok `/settings` ne postoji, `/account` je nedostupan iz aplikacije. Ekran za brisanje naloga koji
+  se ne može otvoriti **ne prolazi Apple review** — a to je jedini razlog zašto ovaj task postoji.
+
+### `auth.admin.deleteUser` traži Edge Function
+
+`docs/06` §8.2 traži `auth.admin.deleteUser`, a to je admin API: radi samo sa service role ključem,
+koji **nikad ne smije u klijentsku app**. Znači Edge Function. Obrazac već postoji —
+`supabase/functions/` ima `expire-pending`, `send-push`, `send-reminders`, `dental-recall`.
+
+Redoslijed koji ima smisla: **RPC prvi** (soft-delete + anonimizacija, `security definer`, identitet
+iz tokena — obrazac je `ensure_customer`), pa Edge Function koja ga zove i tek onda briše
+`auth.users` red. Obrnuto ostavlja siroče ako drugi korak padne.
+
+### Šta se anonimizira, a šta ostaje
+
+`customers` nosi `name text not null`, `phone`, `note`. Brisanje naloga **nije** brisanje podataka
+salona — termin je i salonov zapis. Anonimizuju se `name`, `phone` i `note`; red, `visit_count`,
+`no_show_count` i svi `appointments` ostaju.
+
+Zamka: `name` je `not null`, pa anonimizacija mora upisati nešto (npr. „Obrisan klijent"), ne
+`NULL`. I `unique(salon_id, phone)` znači da `phone` mora ići na `NULL`, a ne na neku konstantu —
+druga anonimizacija u istom salonu bi pala na unique.
+
+### Apple token revoke ostaje 🟡
+
+`docs/06` §8.2 ga izričito traži. Apple prijava nije implementirana (task 12 🟡, traži pakete i
+konzole), pa se revoke ne može ni napisati ni dokazati. Piše se kao nedokazano, sa pokazivačem na
+[`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
+
+### Procjena
+
+Task fajl kaže 1–2 dana. **Ne stoji** — `/settings` je odlukom ušao u doseg, a Edge Function i
+drugi ekran nisu bili u toj računici. Šema je dala više nego što task pretpostavlja (gate je
+ušiven), ali to ne pokriva razliku.
 
 ## Istorija
 
-- **19 — Client: „O nama" i „Usluge"** (2026-09-13, ✅) — v. gore.
+- **19 — Client: „O nama" i „Usluge"** (2026-09-13, ✅) — `/services` je pun cjenovnik **grupisan po `category`**, sa zaglavljima samo kad ima šta da se grupiše: jedna kategorija (ili nijedna) daje ravnu listu, tačno kao `09-usluge.png`. Razvrstavanje radi čista funkcija `groupByCategory`, koja **ne sortira ponovo** — `ServiceRepository.forSalon` već vraća uzlazno, a drugo sortiranje bi bilo dva izvora istine za isti poredak. **`SPEC.md` 5b ne završava na `/about`:** prvi prolaz je ekran napisao po handoffu i ostavio ga iza reda „O nama ›" na dnu Početne, a pregled na simulatoru je pokazao šta to znači — priča, radno vrijeme i kontakt stoje jedan tap dalje, na ekranu kojem handoff **nijednim nacrtanim ekranom ne daje ulaz**. Sadržaj je zato inline na Početnoj (priča iznad cjenovnika, radno vrijeme i kontakt na dnu), `/about` ostaje kao ruta i oblik iz handoffa, a sekcije dijele obje strane kroz `about_sections.dart`. Time je zatvorena i rupa iz taska 18: radno vrijeme i kontakt su od njega bili nedostupni u cijeloj aplikaciji. **Radno vrijeme je puna sedmica, ne jedan red iz handoffa** — iz prave baze: subota do 14:00, nedjelja zatvoreno. **Kontakt je izašao iz uokvirene tabele i dobio ikone**; labela nije nestala nego je otišla u `Semantics`, jer ikona čitaču ekrana ne znači ništa. Dokazano: **363 testa PASS** (bilo 326), app dignuta na iOS simulatoru i **instalirana na pravi iPhone** protiv živog Supabasea preko LAN-a (Kong log: `salons`, `services?order=category.asc`, `employees`, `working_hours` — sve 200, `Dart/3.13 (dart:io)`). **Zamka koju je našao browser, a testovi nisu mogli:** foto par i Galerija su na Početnoj crtali iste dvije fotografije jedna ispod druge — obje sekcije ispravne, obje sa zelenim testom, vidi se tek kad stoje na istom ekranu. Ostalo otvoreno: `services` nema `sort_order` kolonu, tapovi na `tel:`/mape/Instagram nisu odigrani. [PR #33](https://github.com/htuco/salon-booking-platform/pull/33).
 
 - **22 — Šema: fotografije usluga i staž radnika** (2026-09-12, ✅) — `services.image_url` i `employees.experience_years`, obje nullable jer su prazan okvir i red bez staža **predviđena stanja**: salon bez fotografija mora raditi od prvog dana. Seed puni obje kolone i namjerno ostavlja po jedan red prazan (Brada bez slike, Lejla bez staža), da se to stanje vidi u demou a ne tek kod prvog klijenta. Korak 1 prosljeđuje `imageUrl`, korak 2 spaja titulu i staž kroz ICU plural — iz prave baze: „Barber · 9 godina" i „Barber · 4 godine", oba bosanska oblika tačna. Dokazano: **29 asercija javnog kataloga bez tokena** (bilo 26; grantovi su tabelarni pa nova kolona ulazi sama, ali to se ne vidi iz migracije — vidi se iz poziva bez tokena), 66 pgTAP testova, 242 Dart testa. **Zamka koju je našao browser:** prvi snimak koraka 1 je pokazao četiri prazna okvira, jer se `images.demo.invalid` ne razrješava — red sa URL-om izgleda isto kao red bez njega, pa taj snimak ne dokazuje ništa. Dokaz je napravljen privremenim usmjeravanjem jednog reda na sliku koja stvarno postoji, pa vraćanjem; `seed.sql` nije mijenjan.
 
