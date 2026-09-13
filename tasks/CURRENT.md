@@ -1,163 +1,94 @@
-# Trenutni task: 18 — Client: Početna po handoffu + bottom tab bar
+# Trenutni task: 19 — Client: „O nama" i „Usluge"
 
-Puni task: [`tasks/sprint-2/18-pocetna-i-tab-bar.md`](sprint-2/18-pocetna-i-tab-bar.md) ·
-**U toku** · Učitano: 2026-09-13 · Grana: `feat/pocetna-i-tab-bar`
+Puni task: [`tasks/sprint-2/19-o-nama-i-usluge.md`](sprint-2/19-o-nama-i-usluge.md) ·
+**U toku** · Učitano: 2026-09-13 · Pokrenuto: 2026-09-13
 
 ## Status
 
-U toku od 2026-09-13, grana `feat/pocetna-i-tab-bar` sa svježeg `main`-a.
+U toku. Grana `feat/o-nama-i-usluge`, otvorena sa svježeg `main`-a.
 
-Zavisnosti su ✅: [11](sprint-1/11-booking-flow.md) (booking flow) i
-[22](sprint-2/22-sema-slike-i-staz.md) (slike usluga, staž radnika). Blokira **19, 20 i 21** — sva
-tri su tab-level ekrani i nemaju gdje da stoje dok tab bara nema.
+**Zavisnost 18 je zatvorena.** [PR #29](https://github.com/htuco/salon-booking-platform/pull/29) je
+mergeovan 2026-09-13, pa `/about` i `/services` postoje na `main`-u kao `PlaceholderScreen`. Blok
+koji je ovdje stajao — „18 nije mergeovan, kreni sa njegove grane" — bio je zastario i obrisan je.
+
+**Prije nego što se piše `/services`, treba mergeovati
+[PR #30](https://github.com/htuco/salon-booking-platform/pull/30).** Popravka sortiranja
+(`.order(ascending: true)`) je izvađena u svoj PR i **nije u ovoj grani**. Dok ne uđe, katalog
+stiže silazno i grupisanje po kategoriji će izgledati slomljeno bez razloga — tačno zamka koju su
+Napomene ispod predviđale. Kad #30 uđe: `git rebase origin/main`.
+
+**Tenant Studio Maestro je u stashu**, ne u grani: `git stash list` → „tenant Studio Maestro —
+cijeli flavor, assets, seed i assets/ podrška u heroju (čeka svoj PR)". Tu je i jedina stvar koja
+`assets/…` fotografije pušta u hero. Ne primjenjuj ga u ovoj grani; ima svoj PR.
+
+Ovaj task **ne blokira nikoga**, ali nosi rupu koju je 18 napravio — v. Ciljevi.
 
 ## Ciljevi
 
-- [x] **Bottom tab bar** u `core_ui`: pet ćelija, redoslijed **Usluge · Termini · Početna ·
-      Obavijesti · Postavke**, Početna namjerno u sredini — `AppBottomNav`, redoslijed čitan
-      **sa ekrana**, ne iz ulazne liste (`bottom_nav_bar_test.dart`)
-- [x] Aktivna ćelija: `weight 600`, traka 3 px na vrhu, inset 16% lijevo/desno — uvlaka mjerena
-      naspram širine ćelije, ne fiksna. **Boja nije prepisana:** `#FFFFFF` iz `SPEC.md` je
-      paleta jednog brenda, pa ide `onSurface`; test pada ako se vrati heks
-- [x] `StatefulShellRoute` u `go_router`-u; pod-ekrani **nemaju** tab bar — dokazano po ruti
-      (`client_shell_test.dart`) i u browseru na `/book/service`
-- [x] **Dvije rute koje ne postoje**: `/notifications` i `/settings`; tabela u `docs/01 §12` dopunjena
-- [x] Početna po `01-pocetna.png`: hero foto + serif naslov, živi status, CTA, **Cjenovnik**
-      (tri usluge + „Prikaži svih N"), Majstori (2 kolone), Galerija (3 kolone), Recenzije
-- [x] Tab se vraća na svoj korijen pri ponovnom tapu — `goBranch(initialLocation: …)`; provjereno
-      i da test **može pasti** (sa `false` pada). Prelaz je instant jer `indexedStack` nema
-      animaciju; to je svojstvo, ne podešavanje, i nije zasebno testirano
-- [x] Deep linkovi iz taska 07 i dalje rade — `router_test.dart` prolazi neizmijenjen u dijelu
-      koji to čuva, plus `/book/service` i `/appointments` otvoreni direktno u Chromiumu
-- [x] Screenshot uz `01-pocetna.png` — `docs/screenshots/task-18-*.png`, oba tenanta
+- [ ] `/services` po `09-usluge.png`: pun cjenovnik, **grupisan po `category`**, tap vodi pravo u
+      booking sa preselektovanom uslugom
+- [ ] `/about` po `02-o-nama.png`: priča salona, par fotografija, radno vrijeme, kontakt, mreže
+- [ ] **Vratiti radno vrijeme i kontakt u aplikaciju** — danas ih nema nigdje (v. Napomene)
+- [ ] Oba ekrana rade bez prijave
+- [ ] Screenshot uz oba referentna PNG-a
 
 ## Napomene
 
-### Dokaz (2026-09-13)
+### Rupa koju je ostavio task 18 — ovo je pravi razlog zašto 19 ide sljedeći
 
-**325 Dart testova PASS** — `admin` 4, `core_domain` 58, `core_api` 67, `core_ui` 55, `client` 141.
-Novo: 14 za traku (`core_ui`), 15 za shell (`client`), 4 za mapiranje galerije (`core_api`); testovi
-Početne prepisani po novom rasporedu. Čista `melos run analyze` i `dart format`.
+Task 18 je **skinuo radno vrijeme i kontakt sa Početne**, jer ih `SPEC.md` 5b drži na „O nama".
+Taj ekran ne postoji, pa su ta dva podatka **trenutno nedostupna u cijeloj aplikaciji** — salon
+nema gdje pokazati kad radi ni gdje se nalazi. To nije stilska zaostavština nego regresija koju je
+18 svjesno uveo uz obećanje da je 19 zatvara.
 
-**Odigrano u Chromiumu na 402 px protiv živog Supabase stacka**, oba tenanta, kroz `lib/main.dart`
-(ne `demo_main.dart`): Početna, `/services`, `/appointments`, `/book/service`. Snimci su u
-`docs/screenshots/task-18-*.png`.
+Ako 19 kasni, jeftina zakrpa je vratiti jednu sekciju na Početnu; skuplja je pustiti da stoji.
 
-**Pokrenuto na iOS simulatoru** (iPhone 17, iOS 26.3), barber flavor protiv istog živog stacka:
-`docs/screenshots/task-18-home-barber-simulator.png`. Prazni okviri u Cjenovniku su seed stanje
-(`images.demo.invalid` iz taska 22), hero je brand gradijent jer `cover_image_url` nije popunjen.
+### Šta već postoji, a šta je obrisano
 
-### Greška koju je našao **samo** simulator
+**Postoji i čeka:**
 
-**Sadržaj svake ćelije trake bio je poravnat ulijevo, ne centriran.** `Stack` u `_Celija` je bio na
-podrazumijevanom `topStart`, a `Column` je `MainAxisSize.min` — pa je uzak koliko i najširi
-potomak i lijepio se uz lijevu ivicu. Mjereno: ikone na 21/101/185/270/348 px umjesto
-40/121/201/281/362.
+- **Rute su tu.** `/services` je ćelija tab bara (Usluge aktivna), `/about` je podruta Početne
+  (`SPEC.md` 5b: „tab bar, Početna active"). Oba su danas `PlaceholderScreen`.
+- **`working_hours_card.dart` i `contact_card.dart`** su netaknuti — ali su **bez ijednog
+  korisnika** otkad ih je 18 skinuo sa Početne. Analizator ne viče jer su javni widgeti.
+- **`SalonSchedule`** (`features/home/salon_schedule.dart`) računa sedmicu i živi status.
+- **`SelectableRow`** je tačan oblik reda cjenovnika (76 px foto, naziv, trajanje, cijena u serifu).
+- **`?serviceId=` preselekcija je već podržana** u routeru od taska 11 — `/services` samo treba
+  `context.go('/book/service?serviceId=…')`.
+- **Svi `.arb` stringovi**: `dayMonday`…`daySunday`, `dayMondayFriday`, `workingHours`, `contact`,
+  `location`, `call`, `openInMaps`, `instagram`, `facebook`, `closed`.
 
-**Nijedan od 14 testova trake to nije vidio, i nije mogao.** Testni font crta svaki znak kao
-kvadrat veličine fonta, pa su labele u testu šire nego u stvarnosti, popune ćeliju i ispadnu
-„centrirane" slučajno. Novi test zato mjeri **ikonu** (fiksnih 23 px, ne zavisi od fonta) i pada
-bez `alignment: Alignment.topCenter` — provjereno vraćanjem greške.
+**Obrisano i mora se pisati ponovo:** logika sekcija je bila u `home_screen.dart` i otišla je sa
+prepisom — koji kontakt red se crta, `vertical.features.socialLinks` gating, mapiranje broja dana u
+ime, grupisanje „Ponedjeljak – Petak". Widgeti su ostali, **pamet nije**.
 
-Prije i poslije: `task-18-traka-pomjerena-ulijevo.png` naspram `task-18-home-barber-simulator.png`.
+### Grupisanje po kategoriji — zamka koju task fajl spominje, plus jedna koju ne
 
-Tri stvari koje su testovi propustili a našle su se pri pisanju i u browseru:
+Task kaže: kategorija je **slobodan tekst, ne enum** — salon je mijenja iz admina, pa sortiranje
+mora podnijeti praznu i nepoznatu vrijednost.
 
-1. **`freezed` 3.2.5 ne može `List` polje.** Generiše `final` na imenovanom parametru, što Dart
-   odbija. Prvi `List` u ijednom modelu ovog repoa, pa se to do sada nije vidjelo. Galerija zato
-   ide kroz `SalonRepository.galleryUrls`, ne kroz polje na `Salon`-u. Zapisano u `architecture.md`.
-2. **`scrollUntilVisible` staje čim finder *nađe* widget**, a `CustomScrollView` gradi i komad
-   izvan viewporta. Dugme „Prikaži svih" je tako postojalo na y≈853 u viewportu visine 600, tap
-   nije pogodio ništa, i test je tvrdio da ruta ne radi. Ide `ensureVisible`.
-3. **Test kontrasta na dvije palete u jednoj petlji mjeri pola prelaza.** `MaterialApp`
-   interpolira `ThemeData`, pa je drugi `pumpWidget` dao 1.50:1 — barberov svijetli tekst na
-   beauty pozadini. Svaka paleta sada ima svoj test.
+Ono što task ne kaže, a našlo se pri pravljenju tenanta Studio Maestro:
 
-Snimak je napravljen **privremenim** usmjeravanjem `cover_image_url`, `gallery_urls` i slika
-radnika na lokalno poslužene ploče iz `prototype/ui/assets/`, pa vraćanjem baze u seed stanje —
-isti postupak kao u tasku 22. `seed.sql` nije mijenjan i baza je vraćena (provjereno `select`-om).
+- **`.order()` u `postgrest`-u podrazumijeva SILAZNO.** Tri repozitorija su ga zvala bez
+  `ascending:`, pa je katalog stizao naopako. Popravljeno u
+  [PR #30](https://github.com/htuco/salon-booking-platform/pull/30) — dokazano protiv živog stacka
+  (radno vrijeme je vraćalo `[7,6,5,4,3,2,1]`). **Nije u ovoj grani dok se #30 ne mergeuje.**
+- **Ni ispravan redoslijed nije dobar redoslijed** — sada i izmjereno. Uzlazno po kategoriji pa
+  imenu, Studio Maestro počinje sa „Brada · Brijanje britvom", „Brada · Oblikovanje brade" i
+  „Njega · Pranje i styling"; salon bi u izlog htio „Šišanje". **`services` nema kolonu za ručni
+  redoslijed.** Za `/services` je to podnošljivo (vidi se cijela lista), ali je isti podatak
+  presudan na Početnoj, koja pokazuje samo tri. Ako se rješava, to je `sort_order` migracija.
 
-### Ostalo za sljedećeg
+### Fotografije za „par fotografija" na `/about`
 
-- **Recenzije ne izlaze nigdje.** Sekcija i `RatingSummary` su napisani i pokriveni testom, ali
-  `salonRatingProvider` vraća `null` jer šema nema tabelu `reviews`. Task 20 mijenja **provider**,
-  ne ekran — test „recenzije izađu čim ocjena postoji" to čuva.
-- **Galerija u demou ne izlazi**, jer je `gallery_urls` prazan u oba seed salona. Kod je pravi i
-  čita iz baze; sekcija se sakriva, kako DoD taska 20 (red 19) i traži.
-- **Radno vrijeme i kontakt više nisu na Početnoj** — po `SPEC.md` 5b idu na „O nama" (task 19).
-  `working_hours_card.dart` i `contact_card.dart` su ostavljeni netaknuti da ih taj ekran preuzme.
-  Do tada su ta dva podatka **nedostupna u aplikaciji**; ako 19 kasni, vraćaju se u jednoj sekciji.
-- **`terms` nema plural termina.** Labela ćelije „Termini" ide iz `.arb`-a, jer je
-  `appointmentSingular` pogrešan oblik za listu a `myAppointments` predugačak za petinu ekrana.
-  Dentalna vertikala traži „Pregledi" i time ovo postaje `appointmentPlural` u `VerticalTerms`.
-- **Ikone u traci su barberske** (makaze za Usluge). To je odluka iz taska 11 — barber je 1:1 sa
-  handoffom — ali će je druga vertikala otvoriti.
-
-### Šta već postoji
-
-- **Početna postoji od [taska 10](sprint-1/10-client-home.md)**: hero, usluge, tim, radno vrijeme,
-  kontakt, sticky CTA. Naslijedila je nove tokene, ali joj je **raspored stariji od dizajna** —
-  sekcije nisu one iz `5a`. Providerski vod, tema, skeleton i kontrast testovi ostaju; mijenja se
-  raspored i sadržaj sekcija.
-- **Jedan od pet tabova je već pun**: `/appointments` je pravi ekran od
-  [taska 16](sprint-2/16-moji-termini-i-otkazivanje.md). Danas je *pushed* ekran sa strelicom
-  nazad — sa tab barom gubi strelicu i dobija svoju ćeliju.
-- **`core_ui` ima sve gradivne komponente**: `PhotoFrame`, `ServiceCard`, `SelectableRow`,
-  `StatusBadge`, `SkeletonLoader`, `EmptyState`, `AppDialog`. Tab bar je jedina koja fali.
-- **Slike usluga i staž rade** ([22](sprint-2/22-sema-slike-i-staz.md)) — Cjenovnik i Majstori
-  imaju šta prikazati.
-
-### Tri rupe u podacima koje task fajl ne spominje
-
-Nađene poređenjem DoD-a sa šemom, ne čitanjem taska:
-
-1. **Recenzije nemaju tabelu.** Šema ima 15 tabela i nijedna nije `reviews` — nju pravi
-   [task 20](sprint-2/20-galerija-recenzije.md) (njegov DoD, red 17). Sekcija „Recenzije sa
-   ocjenom" sa `5a` se **ne može napuniti pravim podacima u ovom tasku**.
-2. **Galerija ima kolonu, ali je niko ne koristi.** `salons.gallery_urls jsonb` postoji od init
-   migracije, ali je **nema u seedu, nema u `SalonRepository._columns`, i nema u `Salon` modelu.**
-   Ili se ta tri mjesta dopune (sitno), ili sekcija ostaje skrivena.
-3. **Seed ne puni `logo_url` ni `cover_image_url`.** Zato Početna danas prikazuje zlatni gradijent
-   sa inicijalima „BS", a ne hero fotografiju kakvu `5a` traži. Isto pravilo kao u tasku 22: demo
-   nema prave fotografije i **ne smije se praviti da ima**.
-
-**Izlaz koji je već dogovoren:** DoD taska 20, red 19, kaže da salon bez galerije **sakrije sekciju
-na Početnoj**, ne da pokaže praznu mrežu. To je pravilo za sve tri rupe — Početna crta ono što
-postoji i ćuti o ostalom. Sekcije se pale kad task 20 donese podatke.
-
-Ako se to prihvati, DoD stavka „Galerija (3 kolone), Recenzije" u ovom tasku znači **napisane
-sekcije koje se same sakriju**, ne sekcije sa sadržajem. To treba reći u status bloku, da sljedeći
-ne pomisli da su zaboravljene.
-
-### Rute kojih nema
-
-Tab bar traži pet odredišta; `ClientRoute` danas ima:
-
-| Ćelija | Ruta | Stanje |
-|---|---|---|
-| Usluge | `/services` | placeholder — pravi ekran je [19](sprint-2/19-o-nama-i-usluge.md) |
-| Termini | `/appointments` | ✅ pravi ekran (task 16) |
-| Početna | `/` | ✅ postoji, mijenja se u ovom tasku |
-| Obavijesti | — | **ne postoji**; ekran je [21](sprint-2/21-obavijesti-i-pravni-ekrani.md) |
-| Postavke | — | **ne postoji**; `/account` je „Moj račun" (task [17](sprint-2/17-moj-racun-i-brisanje.md)), a `5k` „Postavke" je širi ekran |
-
-Dvije ćelije će zato voditi na placeholder. To je uredno — tab bar postoji da ekrani ispod njega
-imaju gdje da stanu — ali placeholder mora izgledati namjerno, ne kao pad.
-
-### Zamke
-
-- **`StatefulShellRoute` mijenja oblik rutiranja.** Deep linkovi iz [taska 07](sprint-1/07-app-plumbing.md)
-  moraju i dalje raditi; `router_test.dart` je napisan da to uhvati. Na webu je ovo već jednom
-  puklo tiho (task 07: `initialLocation` + `usePathUrlStrategy`).
-- **Boja iz `tenant.yaml`, ne iz handoffa.** Aktivna ćelija je u `SPEC.md` bijela `#FFFFFF`; to je
-  paleta *jednog* brenda. Ide kroz temu, inače se greška vidi tek na drugom tenantu.
-- **Tab bar je jedina komponenta koju `SPEC.md` traži da se gradi prva** — doslovno tako piše.
+`02-o-nama.png` traži par slika. Podaci postoje: `salonGalleryProvider` (task 18) čita
+`salons.gallery_urls`. Oba demo salona ga imaju prazan, pa se sekcija **sakriva** — isto pravilo
+kao na Početnoj. Studio Maestro ima dvije slike, pa se na njemu i vidi.
 
 ### Procjena
 
-Task kaže 2–3 dana i to stoji, **pod uslovom da se prihvati skrivanje praznih sekcija**. Ako se
-traži da Početna prikaže recenzije sa stvarnim podacima, ispred ovog taska ide dio taska 20
-(tabela `reviews` + seed + RLS) i procjena raste za oko pola dana.
+Task kaže 1–2 dana i to stoji. `/services` je kraći i prvi (dokazuje grupisanje); `/about` je
+uglavnom sastavljanje komponenti koje već postoje.
 
 ## Istorija
 
