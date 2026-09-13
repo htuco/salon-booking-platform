@@ -187,6 +187,53 @@ void main() {
       );
     });
 
+    testWidgets('hero drzi status prilijepljen uz CTA, bez prazne trake', (
+      tester,
+    ) async {
+      // **Ovo je regresioni test, ne ukras.** Naslov i status su nekad stajali na
+      // `_visinaSlike * 0.55` — na fiksnom procentu visine fotografije — dok im je sadrzaj
+      // fiksne visine. Svako povecanje heroja je zato pola piksela slalo iznad teksta a pola
+      // u praznu traku ispod njega: na 320 je bila ~12 px, na 420 je narasla na ~57 i vidjela
+      // se golim okom kao rupa izmedju statusa i dugmeta.
+      //
+      // Test mjeri **razmak**, ne redoslijed — redoslijed je prolazio i sa rupom. Pada ako se
+      // sadrzaj heroja ikad vrati na racunanje iz procenta visine.
+      await tester.pumpWidget(
+        _app(
+          hours: [
+            for (var d = 1; d <= 7; d++)
+              WorkingHour(
+                id: 'wh-$d',
+                salonId: _salonId,
+                dayOfWeek: d,
+                startTime: const LocalTime(9, 0),
+                endTime: const LocalTime(20, 0),
+                isClosed: true,
+              ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      final status = tester.getRect(find.text('Danas zatvoreno'));
+      final cta = tester.getRect(find.text('Zakaži termin'));
+      final razmak = cta.top - status.bottom;
+
+      // Prag stoji **izmedju dvije izmjerene vrijednosti**, ne na okruglom broju: sa
+      // prilijepljenim dnom razmak je 49.5 px, sa starim racunanjem iz procenta 73.5 px.
+      // Provjereno vracanjem greske, ne procjenom. Brojevi su veci nego na ekranu jer testni
+      // font crta svaki znak kao kvadrat velicine fonta — bitna je razlika, ne apsolutna
+      // vrijednost.
+      expect(
+        razmak,
+        lessThan(60),
+        reason:
+            'izmedju statusa i CTA stoji $razmak px (ocekivano ~49.5) — sadrzaj heroja se '
+            'opet racuna iz procenta visine umjesto da bude prilijepljen za dno',
+      );
+    });
+
     testWidgets('cjenovnik pokazuje tri usluge i put do ostalih', (
       tester,
     ) async {

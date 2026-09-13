@@ -80,16 +80,26 @@ red usluge nikad ne bi bio 1:1 sa mockupom.
 **Obje su nullable, i prazan okvir je predviđeno stanje.** Salon koji nema fotografije mora raditi
 od prvog dana; `PhotoFrame` tada crta prazan kvadrat sa hairline obrubom, tačno kao u handoffu.
 
-`seed.sql` nosi `images.demo.invalid` URL-ove koji se **namjerno ne razrješavaju**. Demo tako
-izgleda onako kako stvarno jeste — bez fotografija — umjesto da tuđim slikama obeća nešto što
-sistem nema. Prave fotografije dolaze sa onboardingom klijenta.
+**Od 2026-09-13 su dva demo salona namjerno u različitim stanjima**, jer jedan seed ne može
+istovremeno pokazati pun ekran i prazan okvir:
 
-Posljedica za dokazivanje: snimak ekrana sa seed podacima **ne razlikuje** „fotografija radi" od
-„fotografija tiho pada", jer oba daju prazan okvir. Ko dokazuje rad sa slikama mora privremeno
-usmjeriti jedan red na sliku koja stvarno postoji — i ne commitovati taj URL.
+- **Barber Studio Vitez je pun.** Hero, galerija od šest slika, portret oba majstora i fotografija
+  na svakoj usluzi — sve Unsplash URL-ovi (licenca dozvoljava komercijalnu upotrebu bez
+  atribucije). Uz to adresa, telefon, mail i mreže, **svi izmišljeni**; ne pripadaju nikome i ne
+  zovu se. Ovaj salon postoji da se Početna može vidjeti onako kako je salon vidi.
+- **Beauty Studio Travnik je prazan** i tu ostaje. `Pramenovi` nemaju `image_url`, Amina i Lejla
+  nemaju fotografiju. Prazan okvir je **predviđeno stanje** i mora biti vidljivo u demou, inače se
+  otkrije tek kod prvog klijenta bez fotografija.
+
+Fotografije stoje kao **daljinski URL-ovi, ne kao spakovani assets**: Flutter nema asset po
+flavoru, pa bi trinaest fotografija jednog demo salona ušlo u build svakog tenanta. Cijena je da
+demo bez interneta pokazuje prazne okvire — isto stanje koje salon bez fotografija ionako ima.
+
+Posljedica za dokazivanje, sada uža nego prije: **na beautyju** snimak ekrana i dalje ne razlikuje
+„fotografija radi" od „fotografija tiho pada", jer oba daju prazan okvir. Na barberu razlikuje.
 ### Gdje Početna namjerno odstupa od `01-pocetna.png`
 
-Tri odstupanja na jednom ekranu, sva tri po pravilima iznad, da se ne ispravljaju kao greške:
+Četiri odstupanja na jednom ekranu, sva po pravilima iznad, da se ne ispravljaju kao greške:
 
 - **Serif naslov u heroju je ime salona, ne „Zakažite termin".** Handoff na tom mjestu ima poziv
   na akciju, a dugme odmah ispod isti taj tekst u drugom licu. `docs/02 §3` traži da klijent u
@@ -98,6 +108,16 @@ Tri odstupanja na jednom ekranu, sva tri po pravilima iznad, da se ne ispravljaj
 - **Naslov sekcije radnika je „Naš tim", ne „Majstori".** Tekst dolazi iz `vertical.terms`
   (`docs/05 §3`), a ne sa slike — isto pravilo koje je gore imenovano baš tim primjerom.
 - **CTA je u brand boji, ne `#F2F2F3`.** Boja dolazi iz `tenant.yaml`; na beauty tenantu je roze.
+- **Hero je visok 420 pt, ne 320.** Ovo je odstupanje **u smjeru** handoffa, ne od njega: `SPEC.md`
+  („Assets") traži hero kao portret 3:4, što bi na 402 pt širine bilo 536 pt. Prvi hero je crtao
+  brand gradijent, pa je 320 prolazilo; čim je ispod stala stvarna fotografija, izgledalo je kao
+  traka a ne kao izlog. 420 je sredina na kojoj CTA i prva usluga i dalje ulaze u prvi ekran.
+
+  Pri tom povećanju se **vidjelo zašto raspored nije smio zavisiti od te vrijednosti**: naslov i
+  status su stajali na `_visinaSlike * 0.55`, dakle na procentu, dok im je sadržaj fiksne visine —
+  pa je svako povećanje pola piksela slalo iznad teksta a pola u praznu traku ispod njega (~12 px
+  na 320, ~57 px na 420). Sada se lijepe za dno heroja i visina je stvarno jedan broj. Čuva ih
+  test koji mjeri razmak, ne redoslijed — redoslijed je prolazio i sa rupom.
 
 „Cjenovnik" je pri tome **doslovno sa slike** i stoji u `.arb`-u, ne u terminologiji: sekcija je
 isječak cjenovnika, a puna lista je zaseban ekran koji se i zove „Usluge". Kad vertikala ne
