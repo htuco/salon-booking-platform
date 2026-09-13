@@ -117,6 +117,16 @@ Kad naiđeš na takvu zamku, zapiši je tu gdje se dešava — ne u commit poruk
   za modele, `mocktail` za testove, `intl` + `.arb` za jezik. Ne uvodi alternativu bez ADR-a.
 - **Nema `get_it`** — Riverpod je i state i DI kontejner.
 - **Nema `Navigator` imperativno** — web build klijent app-e mora imati prave URL-ove po ekranu.
+- **`.order()` u `postgrest`-u sortira SILAZNO ako mu ne kažeš drugačije.** `ascending` je `false`
+  po defaultu (`postgrest 2.9.1`, `postgrest_transform_builder.dart:104`), suprotno i od PostgREST-a
+  i od SQL-a. Tri repozitorija u `core_api` su zbog toga mjesecima vraćala katalog obrnuto — radno
+  vrijeme kao nedjelja→ponedjeljak — a nijedan test to nije uhvatio, jer se ovdje **namjerno ne
+  testira builder lanac** (v. `catalog_repository_test.dart`), pa redoslijed ne dokazuje suita nego
+  pokretanje. Piši smjer uvijek eksplicitno:
+
+  ```dart
+  .order('name', ascending: true)   // ne: .order('name')
+  ```
 - **String koji se razlikuje po vertikali ne smije biti u ekranu.** Ide kroz `Vertical.terms`,
   do kojeg se stiže sa `verticalOf(ref)` (`apps/client/lib/src/core/vertical_provider.dart`):
 
