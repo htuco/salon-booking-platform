@@ -128,7 +128,7 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
 - **Termin bez dodijeljenog radnika nije pokriven constraintom** (`where employee_id is not null`).
   `book_appointment` uvijek dodijeli radnika; takav red može nastati samo ručnim upisom, i
   `get_available_slots` ga zato konzervativno tretira kao zauzeće cijelog salona.
-- **Brisanje/anonimizacija naloga** dolazi u kasnijoj migraciji.
+- ~~**Brisanje/anonimizacija naloga**~~ — **zatvoreno** u tasku 17, v. odjeljak ispod.
 
 ## Upsert klijenta — `public.ensure_customer`
 
@@ -205,6 +205,77 @@ Nepostojeći i tuđi termin vraćaju **istu** grešku (`42501`).
 > pogrešna, ne kod. Asercija ide na **učinak** (red je netaknut). `insert` je druga priča: njega
 > hvata `with check` politike i on stvarno baca.
 
+## Brisanje naloga — `public.delete_my_account`
+
+Četvrti i zadnji upis kojim klijentska app dira bazu. Apple traži da brisanje bude **u
+aplikaciji**, ne link na mail podrške (`docs/06` §8.2) — bez njega iOS submission pada.
+
+**Ovo je jedini upis u repou koji namjerno prelazi granicu salona**, i zato traži da se pročita
+prije nego što se kopira kao obrazac. Sve ostalo je tenant-scoped; identitet nije. Isti čovjek
+može biti klijent u više salona (task 15), a brisanje naloga je odluka o **osobi**. Salon-scoped
+verzija bi obrisala nalog u jednom salonu i ostavila ime u drugom, bez ijednog ekrana s kojeg bi
+korisnik to mogao ponoviti.
+
+Granica je zato pomjerena sa salona na **identitet**: funkcija dira isključivo redove vezane za
+`auth_identities` red pozivaoca. **`x-salon-id` se namjerno ne traži** — ne bi ništa dokazao, a
+sugerisao bi salon-scoped operaciju koja ovo nije. Pravilo „header uvijek ide uz provjeru
+vlasništva" time nije prekršeno: ostala je provjera vlasništva, otpao je izbor konteksta.
+
+Dvokoračno je, i **redoslijed nije kozmetički**:
+
+1. `public.delete_my_account()` — soft-delete identiteta (`deleted_at`) i anonimizacija, pod
+   tokenom korisnika;
+2. Edge Function `delete-account` — `auth.admin.deleteUser` nad `auth.users`, pod service role
+   ključem, koji nikad ne smije u klijentsku app.
+
+Obrnuto bi pad drugog koraka ostavio `customers` red sa punim imenom i telefonom, a korisnikov
+token više ne bi postojao — ne bi imao čime ponoviti brisanje. Ovako je najgori ishod siroče u
+`auth.users`, uz nalog koji je **već neupotrebljiv**.
+
+**Sam `deleted_at` gasi pristup svemu** — gate je ušiven od init migracije (`private.owns_identity`,
+politike `own_identity`/`own_customer`/`own_appointments`, `ensure_customer`, i trigger
+`sync_auth_identity` koji radi `on conflict do update ... where deleted_at is null`). Nijedna nova
+politika nije trebala. Trigger je najvažniji: bez tog `where` bi sljedeća prijava istim mailom
+**uskrsnula** obrisani nalog.
+
+> **Denormalizovani lični podaci su druga polovina brisanja.** `appointments` nosi
+> `customer_name`, `customer_phone` i `customer_note` kao vlastite kolone, ne samo `customer_id`.
+> Anonimizacija koja dira samo `customers` ostavlja puno ime i telefon u svakom terminu tog
+> čovjeka — obrisan nalog čije ime i dalje stoji u salonovoj listi nije obrisan nalog. Svaka
+> sljedeća tabela koja kopira lični podatak mora ući i ovdje.
+
+Šta ostaje, a šta odlazi:
+
+| Ostaje | Odlazi |
+|---|---|
+| `customers` red, `visit_count`, `no_show_count`, `first_seen_at` | `name` → „Obrisan klijent", `phone` → `NULL`, `note` → `NULL` |
+| `appointments` red: datum, vrijeme, usluga, radnik, status | `customer_name`, `customer_phone`, `customer_note` |
+| `auth_identities` red (kao nadgrobni kamen) | `email`, `display_name`, `providers` |
+
+Dvije zamke iz šeme: `customers.name` je `not null` pa mora dobiti tekst, a `unique(salon_id,
+phone)` znači da `phone` mora ići na **`NULL`** — konstanta bi oborila drugu anonimizaciju u istom
+salonu.
+
+**Rok `min_cancel_hours` se ovdje ne primjenjuje.** Budući termini se otkazuju bez obzira na rok:
+nalog koji se ne može obrisati zato što je termin sutra nije nalog koji se može obrisati. Cijena je
+otkazivanje u zadnji čas, pa `cancel_reason` kaže zašto, a `cancelled_by` je `customer` — čovjek je
+to pokrenuo, `system` ostaje scheduleru.
+
+`supabase_user_id` se **zadržava** do drugog koraka: dok `auth.users` red postoji, on je jedino što
+sprječava da trigger napravi novi identitet za istog korisnika. Brisanjem `auth.users` ga FK
+`on delete set null` sam pretvori u `NULL`, pa sljedeća prijava istim mailom dobije čist nalog.
+
+Osoblje je namjerno isključeno (`private.is_client()`): admin nalog je salonov podatak i ne gasi ga
+ekran u klijentskoj app-i. Posljedica koju treba znati — ko je istovremeno `salon_admin` ne može
+obrisati svoj klijentski nalog iz app-e.
+
+> **`update` na `auth_identities` baca, ne filtrira tiho.** Ovo je izuzetak od pravila opisanog kod
+> otkazivanja: `appointments` i `customers` *imaju* `update` grant za `authenticated`, pa ih
+> zaustavlja tek odsustvo politike — nula redova, bez greške. `auth_identities` ima samo
+> `grant select` i samo `for select` politiku, pa update pada na samom grantu (`42501`). Asercija
+> zato ide na **grešku**, ne na učinak. Nađeno pokretanjem: prva verzija testa je očekivala tihi
+> filter i oborila cijeli fajl.
+
 ## Čime je izolacija dokazana
 
 Tvrdnje iz ovog dokumenta nisu opis namjere nego opis onoga što suite provjerava. Kad mijenjaš
@@ -221,6 +292,7 @@ ništa.
 | `rest_customer_upsert.ts` | cijeli put app-e: prijava → identitet → klijent → termin → HTTP 409 |
 | `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
 | `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header |
+| `005_delete_my_account.test.sql` | brisanje naloga — anonimizacija u **oba** salona, otkazivanje budućih termina, gašenje pristupa, trigger ne uskrsava nalog |
 
 **Curenje kroz embed i kroz filter je češće od curenja kroz direktan upit.** Admin zna
 `auth_identity_id` — on stoji u njegovom vlastitom redu — pa je filter po njemu prvo što bi

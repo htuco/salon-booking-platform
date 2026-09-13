@@ -72,17 +72,25 @@ set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440000
 -- Rok iz postavki, ne iz konstante
 -- ---------------------------------------------------------------------------
 reset role;
--- Termin je za manje od `min_cancel_hours` sati (seed: 3).
+-- Termin mora biti **unutar** `min_cancel_hours`, da bi klijentu rok istekao.
 --
--- **Vrijeme se izvodi iz `now()`, ne iz kalendara.** Prva verzija je samo pomjerala datum na
--- danas i oslanjala se na to da je 10:00 vec proslo — pa je prolazila popodne, a padala
--- poslije ponoci, kad je 10:00 opet devet sati u buducnosti. Test je tako mjerio doba dana
--- u kojem je pokrenut, a ne kod. Sat iza `now()` je unutar roka u svakom trenutku, i
--- prelazak ponoci nosi datum sa sobom.
-update public.appointments set
-  date = ((now() at time zone 'Europe/Sarajevo') + interval '1 hour')::date,
-  start_time = ((now() at time zone 'Europe/Sarajevo') + interval '1 hour')::time
-where id = (select id from t1);
+-- **Pomjera se rok, ne termin.** Dvije prethodne verzije su pomjerale termin prema `now()`
+-- i obje su mjerile doba dana u kojem je test pokrenut, a ne kod:
+--
+--   1. prva je pomjerala samo `date` na danas i racunala na to da je 10:00 proslo — pa je
+--      prolazila popodne, a padala poslije ponoci;
+--   2. druga je pomjerala `date` i `start_time` na `now() + 1 sat`, ali je **`end_time`
+--      ostavila na 10:30**. Poslije 09:30 je `start_time` presao `end_time` i upis je
+--      padao na `check(end_time > start_time)` — ne kao neuspjela asercija nego kao greska
+--      koja obori cijeli fajl. Test je tako bio zelen samo ujutro, a to se nije vidjelo jer
+--      ga poslije taska 16 niko nije pokrenuo uvece (CI je blokiran).
+--
+-- Treca verzija ne dira termin uopste. Termin ostaje tamo gdje ga je `book_appointment`
+-- napravio — na `utorak` u 10:00, sa ispravnim `end_time` — a mijenja se **postavka**. To
+-- je usput blize onome sto test tvrdi da mjeri: da rok dolazi iz `salon_settings`, a ne iz
+-- konstante u kodu. Godina dana pokriva svaki `utorak` koji `kfix` moze izabrati.
+update public.salon_settings set min_cancel_hours = 8760
+where salon_id = (select salon from kfix);
 
 set local role authenticated;
 select throws_ok(
@@ -111,6 +119,16 @@ select is(
 -- ---------------------------------------------------------------------------
 -- Srecan put i idempotentnost
 -- ---------------------------------------------------------------------------
+-- Rok nazad na vrijednost iz seeda: t2 se otkazuje **u roku**, pa bi ga godisnji rok
+-- odbio iz pogresnog razloga i asercija ispod bi mjerila postavku umjesto srecnog puta.
+--
+-- Ide **prije** `set local role authenticated`: `salon_settings` nema klijentsku `for
+-- update` politiku, pa bi pod tom rolom RLS filtrirao sve redove i update bi pogodio nula
+-- redova — bez greske (v. `security.md`). Rok bi ostao godisnji, t2 bi pao, i uzrok bi
+-- izgledao kao kvar u `cancel_appointment`.
+update public.salon_settings set min_cancel_hours = 3
+where salon_id = (select salon from kfix);
+
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"dd000000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"providers":["email"]}}';
 
