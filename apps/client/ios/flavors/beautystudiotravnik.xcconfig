@@ -9,3 +9,13 @@ MARKETING_VERSION = 1.0.0
 CURRENT_PROJECT_VERSION = 1
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-beautystudiotravnik
 SALON_ID = 550e8400-e29b-41d4-a716-446655440001
+
+// Sign in with Apple trazi entitlement po flavoru (`docs/06 §7.2`). Fajl je generisan i
+// prazan od tajni — entitlement je izjava sposobnosti, ne potpisni materijal.
+CODE_SIGN_ENTITLEMENTS = flavors/beautystudiotravnik.entitlements
+
+// URL shema kojom se Google vraca u app. Google je zove REVERSED_CLIENT_ID: iOS client ID
+// sa obrnutim segmentima. **Prazno je ispravno stanje** dok konzola ne da ID
+// (`tasks/sprint-2/12-konzole-checklist.md`); Info.plist tada nosi praznu shemu, sto iOS
+// ignorise, a `signInWithGoogle` ionako baca prije dijaloga.
+GOOGLE_REVERSED_CLIENT_ID = 

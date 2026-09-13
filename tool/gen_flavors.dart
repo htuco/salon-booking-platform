@@ -44,6 +44,13 @@ void main(List<String> args) {
       _renderXcconfig(tenant),
       check,
     );
+    // Entitlement po flavoru, jer ga Xcode veze za jedan target i jedan bundle ID.
+    // Sadrzi samo izjavu sposobnosti — nema ni kljuceva ni profila, pa smije u git.
+    stale |= _writeFile(
+      File('${iosDir.path}/${tenant.flavor}.entitlements'),
+      _renderEntitlements(tenant),
+      check,
+    );
     // Xcode build konfiguracija se veže na wrapper, ne na tenant fajl direktno:
     // Flutterov Generated.xcconfig (FLUTTER_ROOT, build mode) mora ostati u
     // lancu, inače build ne zna gdje je SDK. Ime nosi '-<flavor>' jer
@@ -152,6 +159,7 @@ class Tenant {
     required this.ios,
     required this.authProviders,
     required this.allowGuestBooking,
+    required this.googleReversedClientId,
   });
 
   factory Tenant.fromYaml(YamlMap yaml, String dirName) {
@@ -220,6 +228,31 @@ class Tenant {
       if (vrijednost) ukljuceni.add(kljuc);
     }
 
+    // Apple je **obavezan na iOS-u** cim postoji ijedan drugi social provider — App Review
+    // odbija build po pravilu 4.8 (`docs/06 §7.2`). To nije nasa politika nego Appleova, i
+    // jedino mjesto gdje se moze uhvatiti prije submissiona je ovdje.
+    //
+    // Provjera pada samo kad tenant stvarno gradi iOS. Android-only tenant smije imati
+    // Google bez Applea, jer Apple na Androidu nema ni implementaciju (`AuthProvider`).
+    //
+    // Bez ovoga se greska otkriva tek kad Apple odbije build — sedmicama kasnije, i to
+    // ne kao poruka o konfiguraciji nego kao odbijen submission.
+    final gradiIos = (targets['ios'] as bool? ?? false);
+    final socialBezApplea = ukljuceni
+        .where((p) => p != 'email' && p != 'apple')
+        .toList();
+    if (gradiIos &&
+        !ukljuceni.contains('apple') &&
+        socialBezApplea.isNotEmpty) {
+      stderr.writeln(
+        '$flavor: iOS build sa social providerom (${socialBezApplea.join(', ')}) '
+        'mora ukljuciti i apple — App Review pravilo 4.8 (docs/06 §7.2).\n'
+        '  Rjesenje: dodaj `apple: true` u auth.providers, ili iskljuci iOS '
+        '(`targets.ios: false`), ili ostavi samo `email`.',
+      );
+      exit(1);
+    }
+
     return Tenant(
       flavor: flavor,
       salonId: salonId,
@@ -240,6 +273,8 @@ class Tenant {
       // email. Postojeci tenant.yaml tako ne mora biti dopunjen da bi prijava radila.
       authProviders: auth.isEmpty ? _podrazumijevaniProvideri : ukljuceni,
       allowGuestBooking: auth['allowGuestBooking'] as bool? ?? false,
+      // Prazno je ispravno stanje: vecina tenanata jos nema Google klijenta.
+      googleReversedClientId: auth['googleReversedClientId'] as String? ?? '',
     );
   }
 
@@ -263,6 +298,10 @@ class Tenant {
   /// Parsira se u `AuthProvider` tek u app-u (`AuthConfig.fromNames`).
   final List<String> authProviders;
   final bool allowGuestBooking;
+
+  /// Google `REVERSED_CLIENT_ID` za iOS — client ID sa obrnutim segmentima, koji ide u
+  /// `CFBundleURLTypes`. Prazno dok konzola ne da ID; v. `12-konzole-checklist.md`.
+  final String googleReversedClientId;
 }
 
 /// Zamjenjuje samo blok između markera — ostatak gradle fajla (signing,
@@ -342,6 +381,39 @@ MARKETING_VERSION = ${tenant.versionName}
 CURRENT_PROJECT_VERSION = ${tenant.iosBuildNumber}
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-${tenant.flavor}
 SALON_ID = ${tenant.salonId}
+
+// Sign in with Apple trazi entitlement po flavoru (`docs/06 §7.2`). Fajl je generisan i
+// prazan od tajni — entitlement je izjava sposobnosti, ne potpisni materijal.
+CODE_SIGN_ENTITLEMENTS = flavors/${tenant.flavor}.entitlements
+
+// URL shema kojom se Google vraca u app. Google je zove REVERSED_CLIENT_ID: iOS client ID
+// sa obrnutim segmentima. **Prazno je ispravno stanje** dok konzola ne da ID
+// (`tasks/sprint-2/12-konzole-checklist.md`); Info.plist tada nosi praznu shemu, sto iOS
+// ignorise, a `signInWithGoogle` ionako baca prije dijaloga.
+GOOGLE_REVERSED_CLIENT_ID = ${tenant.googleReversedClientId}
+''';
+
+/// `Runner.entitlements` po flavoru — Sign in with Apple (`docs/06 §7.2`).
+///
+/// **Generise se i kad tenant nema Apple u `auth.providers`.** Prazan entitlement fajl bi
+/// bio treci mogucnost koju Xcode konfiguracija mora razlikovati, a korist je nula: bez
+/// odgovarajuce capability na App ID-u u Apple Developer konzoli entitlement svejedno ne
+/// radi, a sa njom ne smeta. Jedan oblik fajla za sve flavore znaci i da ukljucivanje
+/// Applea za jednog tenanta ne trazi novi prolaz kroz generator.
+///
+/// XML je namjerno bez komentara: `plutil` i Xcode ih tolerisu, ali ih prvi `plutil
+/// -convert` izbaci, pa bi fajl odmah bio "izmijenjen" naspram generisanog.
+String _renderEntitlements(Tenant tenant) => '''
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>com.apple.developer.applesignin</key>
+\t<array>
+\t\t<string>Default</string>
+\t</array>
+</dict>
+</plist>
 ''';
 
 String _renderXcconfigWrapper(Tenant tenant, String flutterMode) =>
