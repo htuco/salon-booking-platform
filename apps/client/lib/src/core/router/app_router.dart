@@ -8,8 +8,10 @@ import '../../features/booking/details_step_screen.dart';
 import '../../features/booking/employee_step_screen.dart';
 import '../../features/booking/service_step_screen.dart';
 import '../../features/booking/slot_step_screen.dart';
+import '../../features/about/about_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/placeholder/placeholder_screen.dart';
+import '../../features/services/services_screen.dart';
 import 'client_shell.dart';
 
 /// Rute klijentske app-e, po `docs/01-mvp-spec.md` §12.
@@ -55,8 +57,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ClientRoute.services.path,
                 name: ClientRoute.services.name,
-                builder: (context, state) =>
-                    _placeholder(ClientRoute.services, state),
+                builder: (context, state) => const ServicesScreen(),
               ),
             ],
           ),
@@ -94,8 +95,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: _relative(ClientRoute.about, ClientRoute.home),
                     name: ClientRoute.about.name,
-                    builder: (context, state) =>
-                        _placeholder(ClientRoute.about, state),
+                    builder: (context, state) => const AboutScreen(),
                   ),
                   GoRoute(
                     path: _relative(ClientRoute.team, ClientRoute.home),

@@ -597,5 +597,29 @@
   "@appointmentCancelledBySalon": { "description": "Ko je otkazao — vazno je da korisnik zna da nije on." },
 
   "appointmentCancelledBySystem": "Isteklo je vrijeme za potvrdu",
-  "@appointmentCancelledBySystem": { "description": "Istekao pending, sistemsko otkazivanje." }
+  "@appointmentCancelledBySystem": { "description": "Istekao pending, sistemsko otkazivanje." },
+
+  "servicesHint": "Dodirnite uslugu za direktno zakazivanje.",
+  "@servicesHint": { "description": "Podnaslov ekrana /services (prototype/ui 09-usluge.png) — objašnjava da je red usluge dodirna meta, a ne samo cjenovnik." },
+
+  "servicesEmpty": "Cjenovnik još nije objavljen.",
+  "@servicesEmpty": { "description": "Salon nema nijednu aktivnu uslugu. Uredno stanje tek postavljenog tenanta, ne greška." },
+
+  "servicesUncategorized": "Ostalo",
+  "@servicesUncategorized": { "description": "Naslov grupe za usluge bez kategorije, kad uz njih postoji bar jedna kategorisana grupa. Kad su sve usluge bez kategorije, naslova nema — lista je ravna, kao u handoffu." },
+
+  "aboutKicker": "O nama",
+  "@aboutKicker": { "description": "Verzalni kicker iznad priče salona (prototype/ui 02-o-nama.png)." },
+
+  "aboutHeadline": "Ko smo mi?",
+  "@aboutHeadline": { "description": "Serif naslov sekcije sa pričom salona, doslovno iz handoffa (02-o-nama.png)." },
+
+  "aboutLink": "O nama",
+  "@aboutLink": { "description": "Red na dnu Početne koji vodi na /about. Handoff crta ekran 5b ali mu ne daje ulaz — bez ovog reda je nedostupan." },
+
+  "address": "Adresa",
+  "@address": { "description": "Labela reda sa adresom salona u kontakt kartici (02-o-nama.png). Razlikuje se od `location`, koji je naslov sekcije." },
+
+  "phone": "Telefon",
+  "@phone": { "description": "Labela reda sa telefonom salona u kontakt kartici (02-o-nama.png)." }
 }

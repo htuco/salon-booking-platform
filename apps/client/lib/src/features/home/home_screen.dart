@@ -4,6 +4,7 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
@@ -133,6 +134,7 @@ class _Ucitan extends ConsumerWidget {
           ),
         SliverToBoxAdapter(child: _GalerijaSekcija(urls: gallery)),
         SliverToBoxAdapter(child: _RecenzijeSekcija(rating: rating)),
+        const SliverToBoxAdapter(child: _ONamaRed()),
         // Zadnja sekcija bi inače završila tačno ispod tab bara — razmak je da se
         // posljednji red može pročitati kad se skrol dovede do dna.
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
@@ -320,6 +322,58 @@ class _RecenzijeSekcija extends ConsumerWidget {
         rating: vrijednost,
         averageLabel: formatRating(vrijednost.average),
         countLabel: l10n.homeRatingCount(vrijednost.count),
+      ),
+    );
+  }
+}
+
+/// Jedini ulaz na „O nama" (`/about`).
+///
+/// **Odstupanje od handoffa, i to svjesno.** `SPEC.md` opisuje ekran 5b i daje mu traku
+/// sa Početnom aktivnom, ali ga **nijedan nacrtani ekran ne otvara** — ni `01-pocetna.png`,
+/// ni Postavke. To je rupa u handoffu, ne odluka: ekran bez ulaza je mrtav kod, a radno
+/// vrijeme i kontakt koje 5b nosi su jedini u aplikaciji.
+///
+/// Oblik je „Spec card / list group" sa jednim redom i chevronom — komponenta koju
+/// `SPEC.md` §Recurring components već definiše, pa red ne uvodi ništa novo u sistem.
+class _ONamaRed extends StatelessWidget {
+  const _ONamaRed();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.go(ClientRoute.about.path),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 60),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            decoration: BoxDecoration(
+              border: Border.all(color: scheme.outline),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.aboutLink,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                ),
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
