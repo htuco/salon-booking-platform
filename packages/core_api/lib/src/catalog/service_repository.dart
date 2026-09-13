@@ -17,8 +17,17 @@ class ServiceRepository {
   static const _columns =
       'id, salon_id, name, description, category, price, duration_minutes, image_url';
 
-  /// Sve aktivne usluge salona, sortirane po kategoriji pa po imenu — isti redoslijed koji
-  /// ekran prikazuje, da se ne sortira ponovo na klijentu.
+  /// Sve aktivne usluge salona, sortirane **uzlazno** po kategoriji pa po imenu — isti
+  /// redoslijed koji ekran prikazuje, da se ne sortira ponovo na klijentu.
+  ///
+  /// Smjer se navodi eksplicitno jer `order` u `postgrest`-u podrazumijeva **silazno**
+  /// (`ascending = false`), pa je dokumentovani uzlazni ugovor svih ovih mjeseci bio laž.
+  /// Sa četiri demo usluge to niko nije primijetio.
+  ///
+  /// **Uzlazno nije isto što i ispravno za izlog.** Na salonu sa osam usluga i četiri
+  /// kategorije, uzlazno daje „Brada" i „Njega" na vrh — a Početna pokazuje samo prve tri,
+  /// pa u izlog ide brijanje umjesto šišanja. `services` nema kolonu za ručni redoslijed;
+  /// dok je ne dobije (`sort_order` migracija), ovaj poredak je samo **predvidiv**, ne dobar.
   ///
   /// Prazan salon vraća praznu listu, ne grešku: salon bez usluga je uredno stanje
   /// (tek postavljen tenant), a ekran za to ima prazno stanje.
@@ -27,8 +36,12 @@ class ServiceRepository {
         .from('services')
         .select(_columns)
         .eq('salon_id', salonId)
-        .order('category')
-        .order('name');
+        // **`ascending: true` je obavezan.** `PostgrestTransformBuilder.order` ima
+        // `ascending = false` kao default (postgrest 2.9.1,
+        // `postgrest_transform_builder.dart:104`), pa `.order('category')` šalje
+        // `category.desc` — obrnuto od onoga što dokumentacija iznad obećava.
+        .order('category', ascending: true)
+        .order('name', ascending: true);
 
     return servicesFromRows(rows);
   });

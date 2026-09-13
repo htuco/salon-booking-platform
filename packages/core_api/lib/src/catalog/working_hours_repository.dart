@@ -33,7 +33,10 @@ start_time, end_time, break_start_time, break_end_time, is_closed
         .from('working_hours')
         .select(_columns)
         .eq('salon_id', salonId)
-        .order('day_of_week');
+        // Uzlazno eksplicitno — v. `ServiceRepository.forSalon`: default je silazno.
+        // Ovdje se posljedica ne vidi na Pocetnoj (`SalonSchedule` slaze dane po kljucu
+        // 1–7), ali lista koja stize obrnuto je zamka za svakog sljedeceg potrosaca.
+        .order('day_of_week', ascending: true);
 
     return workingHoursFromRows(rows);
   });

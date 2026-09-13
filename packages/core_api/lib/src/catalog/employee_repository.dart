@@ -25,7 +25,8 @@ class EmployeeRepository {
         .from('employees')
         .select(_columns)
         .eq('salon_id', salonId)
-        .order('name');
+        // Uzlazno eksplicitno — v. `ServiceRepository.forSalon`: default je silazno.
+        .order('name', ascending: true);
 
     return employeesFromRows(rows);
   });
