@@ -16,7 +16,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [18](18-pocetna-i-tab-bar.md) ✅ | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
 | [19](19-o-nama-i-usluge.md) ✅ | Client: "O nama" i "Usluge" | — | 1–2 dana |
 | [20](20-galerija-recenzije.md) ✅ | Client: galerija, lightbox, recenzije | — | 2 dana |
-| [21](21-obavijesti-i-pravni-ekrani.md) 🟡 | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
+| [21](21-obavijesti-i-pravni-ekrani.md) ✅ | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
 | [23](23-admin-login-i-lista.md) | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
 | [24](24-admin-akcije-nad-terminima.md) | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
 | [25](25-push-notifikacije.md) | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
@@ -221,3 +221,27 @@ Sitno, ali ne smije se izgubiti:
 > na telefon je blokirana na Apple nalogu** — certifikat postoji u keychainu, ali Xcode nema
 > prijavljen Apple ID pa ne izdaje provisioning profil.
 > Detalji: [19-o-nama-i-usluge.md](19-o-nama-i-usluge.md#status-2026-09-13--✅-zatvoren).
+
+> **21 — Obavijesti, „O aplikaciji" i pravni ekrani (✅, 2026-09-14).** DoD je tražio tri ekrana,
+> isporučena su **četiri**: `/terms`, `/privacy`, `/about-app` i `/notifications`. `/privacy` task
+> fajl ne spominje, ali store submission ga traži.
+> **Pravila su dvije tabele** — `app_policies` (legal tekst, obavezuje firmu, piše samo platforma) i
+> `salon_policies` (mijenja salon). Jedna tabela sa nullable `salon_id` odbijena: dala bi politici
+> NULL granu, isti oblik koji je u tasku 14 pustio zahtjev bez `x-salon-id`
+> ([ADR 0009](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md)).
+> **Tekst je pisan nanovo, ne prepisan:** handoff tvrdi da se čuva broj telefona, a klijentska app
+> ga nikad ne traži. Brojevi u tekstu su **placeholderi** (`{minCancelHours}` i dr.) koje ekran puni
+> iz živih podataka — inače salon promijeni rok u postavkama, a pravila pišu staru cifru dok
+> `cancel_appointment` provodi drugu.
+> Dokazano: **oba CI joba zelena na `main`** nakon merga, **cijela Dart suite PASS lokalno**
+> (`client` 231 test), i **negativan pgTAP test** koji drži oblik — `salon_admin` ne može pisati po
+> `app_policies`.
+> **`/notifications` je namjerno samo prazno stanje** — `notification_logs` nema klijentsku
+> politiku, pa ekran nema server-side izvor. Lista dolazi sa [25](25-push-notifikacije.md), i tada
+> se mijenja samo tijelo, ne ruta.
+> **Zamka:** lokalna suite pada iz čistog checkouta dok ne pokreneš `build_runner` i `flutter
+> gen-l10n` — greške izgledaju kao pravi bugovi, a nisu.
+> Ostalo, ništa ne blokira: `supportEmail` prazan (red se ne crta), „Ocijenite aplikaciju" neaktivan
+> do objave, naziv pravnog lica, i **pravni pregled prije submissiona**. Javni URL politike
+> privatnosti (korak 29) ostaje Sprint 3.
+> Detalji: [21-obavijesti-i-pravni-ekrani.md](21-obavijesti-i-pravni-ekrani.md#status-2026-09-14--✅-zatvoren).
