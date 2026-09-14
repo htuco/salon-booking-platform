@@ -121,3 +121,131 @@ String statusLabela(AppointmentStatus status) => switch (status) {
   AppointmentStatus.noShow => 'Nisu došli',
   AppointmentStatus.unknown => 'Nepoznato',
 };
+
+/// Akcije nad terminom — potvrdi, odbij, otkaži, no-show, završi.
+///
+/// Odvojeno od `FutureProvider`-a koji čitaju: čitanje se `watch`-uje i osvježava samo,
+/// akcija se `read`-uje jednom iz `onPressed`. Da su na istom mjestu, svaki poziv akcije bi
+/// izgledao kao zavisnost ekrana.
+///
+/// **Svaka akcija osvježava liste na kraju.** `invalidate` umjesto ručnog mijenjanja liste u
+/// memoriji: baza je ta koja odlučuje šta je termin postao (idempotencija, brojači,
+/// `cancelled_by`), pa je ponovno čitanje jedini način da ekran pokaže ono što stvarno piše.
+class AppointmentActions {
+  const AppointmentActions(this._ref);
+
+  final Ref _ref;
+
+  /// Osvježava sve tri liste koje termin dotiče.
+  ///
+  /// I `pendingCount` — potvrda mijenja brojku na dashboardu, a brojka koja ostane stara
+  /// poslije akcije izgleda kao da akcija nije prošla.
+  void _osvjezi() {
+    _ref
+      ..invalidate(filtriraniTerminiProvider)
+      ..invalidate(danasnjiTerminiProvider)
+      ..invalidate(pendingCountProvider);
+  }
+
+  String? get _salonId => _ref.read(adminSalonIdProvider);
+
+  Future<Appointment?> potvrdi(String appointmentId) => _izvrsi(
+    (repo, salonId) =>
+        repo.confirm(salonId: salonId, appointmentId: appointmentId),
+  );
+
+  Future<Appointment?> odbij(String appointmentId, {String? razlog}) => _izvrsi(
+    (repo, salonId) => repo.reject(
+      salonId: salonId,
+      appointmentId: appointmentId,
+      reason: razlog,
+    ),
+  );
+
+  Future<Appointment?> otkazi(String appointmentId, {String? razlog}) =>
+      _izvrsi(
+        (repo, salonId) => repo.cancel(
+          salonId: salonId,
+          appointmentId: appointmentId,
+          reason: razlog,
+        ),
+      );
+
+  Future<Appointment?> nijeDosao(String appointmentId, {String? razlog}) =>
+      _izvrsi(
+        (repo, salonId) => repo.markNoShow(
+          salonId: salonId,
+          appointmentId: appointmentId,
+          reason: razlog,
+        ),
+      );
+
+  Future<Appointment?> zavrsen(String appointmentId) => _izvrsi(
+    (repo, salonId) =>
+        repo.markCompleted(salonId: salonId, appointmentId: appointmentId),
+  );
+
+  /// Zajedničko tijelo: bez salona nema akcije, i lista se osvježava tek po uspjehu.
+  ///
+  /// **Greška se propušta dalje, ne guta.** Ekran je taj koji zna kako je prikazati, a
+  /// akcija koja tiho ne uradi ništa je gora od poruke o grešci.
+  Future<Appointment?> _izvrsi(
+    Future<Appointment> Function(StaffAppointmentRepository, String) poziv,
+  ) async {
+    final salonId = _salonId;
+    if (salonId == null) return null;
+
+    final rezultat = await poziv(
+      _ref.read(staffAppointmentRepositoryProvider),
+      salonId,
+    );
+    _osvjezi();
+    return rezultat;
+  }
+}
+
+final appointmentActionsProvider = Provider<AppointmentActions>(
+  AppointmentActions.new,
+);
+
+// ---------------------------------------------------------------------------
+// Katalog za ručni unos
+// ---------------------------------------------------------------------------
+// **`servicesProvider` i `employeesProvider` iz `core_api` se ovdje ne mogu koristiti.**
+// Oni čitaju `currentSalonIdProvider`, koji klijentska app override-uje iz `SALON_ID`
+// flavora — admin app ga nema i ne smije ga imati, jer je jedna za sve salone (ADR-0003).
+// Neoverride-ovan provider baca `UnimplementedError`, pa bi ekran pukao tek pri otvaranju,
+// a ne pri kompajliranju.
+//
+// Admin salon dolazi iz `adminSalonIdProvider`, tj. iz `StaffMember.salonId` — iz reda u
+// `public.users`, koji je isti podatak na koji se oslanja `private.is_admin()`.
+
+/// Usluge salona kojim admin upravlja.
+final adminServicesProvider = FutureProvider<List<Service>>((ref) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return const [];
+
+  return ref.watch(serviceRepositoryProvider).forSalon(salonId);
+});
+
+/// Radnici salona kojim admin upravlja.
+final adminEmployeesProvider = FutureProvider<List<Employee>>((ref) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return const [];
+
+  return ref.watch(employeeRepositoryProvider).forSalon(salonId);
+});
+
+/// Veze radnik–usluga: koji radnik radi koju uslugu.
+///
+/// Ručni unos ih treba iz istog razloga kao klijentski booking flow — lista radnika za
+/// izabranu uslugu je **presjek**, ne svi radnici. Salon koji ima frizera i kozmetičara ne
+/// smije ponuditi kozmetičara za šišanje.
+final adminEmployeeLinksProvider = FutureProvider<List<EmployeeService>>((
+  ref,
+) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return const [];
+
+  return ref.watch(employeeRepositoryProvider).serviceLinksForSalon(salonId);
+});

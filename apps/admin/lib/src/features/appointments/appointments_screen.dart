@@ -2,9 +2,11 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/router/admin_router.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import 'appointment_actions_bar.dart';
 import 'appointment_tile.dart';
 import 'appointments_providers.dart';
 
@@ -24,6 +26,14 @@ class AdminAppointmentsScreen extends ConsumerWidget {
     return AdminScaffold(
       title: 'Termini',
       aktivna: AdminRoute.appointments,
+      // Ručni unos je jedini ulaz u `/appointments/new` — bez njega ekran postoji ali se do
+      // njega ne može doći iz aplikacije, što je rupa koju je task 17 već jednom našao sa
+      // `/account`.
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.go(AdminRoute.appointmentNew.path),
+        icon: const Icon(Icons.add),
+        label: const Text('Novi termin'),
+      ),
       body: Column(
         children: [
           _FilterTraka(filter: filter),
@@ -48,8 +58,16 @@ class AdminAppointmentsScreen extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: lista.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) =>
+                        // Termin i njegove akcije su jedna stavka liste, ne dvije:
+                        // `separatorBuilder` crta liniju između termina, a ne između
+                        // termina i njegovih dugmadi.
+                        itemBuilder: (context, i) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                             AppointmentTile(termin: lista[i]),
+                            AppointmentActionsBar(termin: lista[i]),
+                          ],
+                        ),
                       ),
                     ),
             ),

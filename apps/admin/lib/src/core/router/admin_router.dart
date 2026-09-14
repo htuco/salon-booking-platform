@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/appointments/appointments_screen.dart';
+import '../../features/appointments/new_appointment_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/placeholder/admin_placeholder_screen.dart';
@@ -58,6 +59,16 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.appointments.name,
         builder: (context, state) => const AdminAppointmentsScreen(),
       ),
+      // **Mora stajati prije `/appointments/:id`**, inače `go_router` pročita „new" kao
+      // vrijednost parametra `id` i otvori detalje termina kojeg nema. Statički segment
+      // uvijek ide ispred parametra — ovdje to drži i petlja ispod, koja placeholdere
+      // dodaje tek na kraju, ali oslanjati se na to znači da promjena redoslijeda u toj
+      // petlji tiho obori ovu rutu.
+      GoRoute(
+        path: AdminRoute.appointmentNew.path,
+        name: AdminRoute.appointmentNew.name,
+        builder: (context, state) => const NewAppointmentScreen(),
+      ),
       // Rute koje jos nemaju tijelo. Ostaju kao placeholderi da ulaz postoji kad task 24 i
       // Sprint 3 dodju do njih; donja navigacija ih namjerno **ne** nudi.
       for (final route in AdminRoute.values)
@@ -78,11 +89,13 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// Rute koje su dobile pravo tijelo u tasku 23.
+/// Rute koje imaju pravo tijelo — ostale dobiju placeholder iz petlje iznad.
 const _napisane = {
   AdminRoute.login,
   AdminRoute.dashboard,
   AdminRoute.appointments,
+  // Task 24.
+  AdminRoute.appointmentNew,
 };
 
 /// Premoscuje Riverpod provider i `Listenable` koji `go_router` ocekuje.
