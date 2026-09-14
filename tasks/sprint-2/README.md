@@ -164,7 +164,8 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > tekstom, prosjek računa sve — zato 25 ocjena i četiri kartice, što nije nesklad.
 > Dokazano: **147 pgTAP** (bilo 124), **43 REST asercije bez tokena** (bilo 33), **419 Dart testova**
 > (bilo 372); sve provjereno da može pasti pa vraćeno. Uživo u Chromiumu i na **iOS simulatoru**,
-> oba tenanta (`docs/screenshots/task-20-*`).
+> oba tenanta (`docs/screenshots/task-20-*`). **CI je zelen** — i to je prvi zeleni CI od 11.09.,
+> kad su potrošene besplatne minute; blokada je prošla prije najavljenog reseta 29.09.
 > **Dvije greške koje je našao ekran, a testovi nisu mogli:** zvjezdica se razlikovala samo bojom
 > (Lucide nema punu — 2,4% razlike u svjetlini, a 3,5 se crtalo identično kao 4,0; sada
 > `CustomPainter`), i naslov je bio u `AppBar`-u umjesto „← Početna" plus serif u tijelu. Zaglavlje

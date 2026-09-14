@@ -82,6 +82,11 @@ svoj Dart test.
 **Uživo**: Chromium 402×874 i **iOS simulator** (iPhone 17 Pro, flavor `barberstudiovitez`) protiv
 lokalnog stacka, oba tenanta. Snimci: `docs/screenshots/task-20-*`.
 
+**CI je zelen** — `Analiza, format i testovi` 2m53s, `Schema, RLS and tenant isolation` 2m08s.
+Ovo je **prvi zeleni CI od 11.09.**, kad su potrošene besplatne minute; blokada je prošla ranije
+nego što je najavljeni reset 29.09. sugerisao. Build jobovi (APK / iOS / AAB) stoje na `skipping`
+po konfiguraciji — idu na push u `main` i na ručni trigger, ne na PR.
+
 ### Dvije greške koje je našao ekran, a testovi nisu mogli
 
 1. **Zvjezdica se razlikovala samo bojom.** Lucide set nema popunjenu zvjezdicu — sve su linijske —
