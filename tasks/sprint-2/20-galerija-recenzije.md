@@ -14,7 +14,9 @@ Salon pokazuje rad i ocjene. Ovo je jedini dio app-e koji prodaje prije nego št
 - [ ] `/gallery` — mreža 3 kolone, kvadrat, `gap 8`, bez naslova i opisa na slikama
 - [ ] Lightbox 5q: preko cijelog ekrana, brojač "4 / 18", zatvaranje, traka sličica
 - [ ] `/reviews` — prosjek u serifu, histogram 5→1, lista recenzija
-- [ ] Tabele `gallery_photos` i `reviews` (migracija + seed + RLS `anon` za čitanje)
+- [ ] Tabela `reviews` (migracija + seed + RLS `anon` za čitanje). **`gallery_photos` ne nastaje** —
+      galerija ostaje na postojećoj `salons.gallery_urls`, v.
+      [ADR-0008](../../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md)
 - [ ] Oba ekrana su **pod-ekrani**: back header, **bez tab bara**
 - [ ] Prazno stanje: salon bez galerije ne pokazuje praznu mrežu nego sakrije sekciju na Početnoj
 

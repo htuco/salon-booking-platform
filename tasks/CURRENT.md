@@ -1,57 +1,93 @@
-# Trenutni task: 12/13 — Apple i Google prijava
+# Trenutni task: 20 — Client: Galerija, lightbox i Recenzije
 
-Puni taskovi: [`tasks/sprint-2/12-auth-provideri.md`](sprint-2/12-auth-provideri.md) ·
-[`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md) ·
-[`13-client-login-ekran.md`](sprint-2/13-client-login-ekran.md)
-**Nije počet** · Učitano: 2026-09-14
+Puni task: [`tasks/sprint-2/20-galerija-recenzije.md`](sprint-2/20-galerija-recenzije.md)
+**U toku** · Učitano: 2026-09-14 · Grana: `feat/galerija-i-recenzije`
 
 ## Status
 
-Nije počet. **Task 17 je zatvoren** — v. Istoriju.
+U toku. Zavisnosti su zatvorene: [18](sprint-2/18-pocetna-i-tab-bar.md) ✅ i
+[22](sprint-2/22-sema-slike-i-staz.md) ✅. Ništa izvan repoa ne blokira — za razliku od
+12/13, koji su ovim skinuti sa `CURRENT.md` jer čekaju tuđe konzole (v. Napomene).
+
+**Odluka o izvoru slika je donesena:** galerija ostaje na `salons.gallery_urls`, tabela
+`gallery_photos` ne nastaje — [ADR-0008](../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md).
+Migracija ovog taska dira samo `reviews`.
 
 ## Ciljevi
 
-- [ ] `sign_in_with_apple` i `google_sign_in` u `pubspec.yaml`
-- [ ] `signInWithApple()` i `signInWithGoogle()` u `SupabaseAuthRepository` (danas bacaju)
-- [ ] iOS: Sign In with Apple entitlement, URL scheme za Google, po flavoru
-- [ ] Android: SHA-1 otisci u Google Cloud, debug i release zasebno
-- [ ] Testovi sa lažnim providerom
-- [ ] 🔒 **Dokaz uživo** — traži konzole, v. Napomene
+- [x] **Odluka o izvoru slika** — `salons.gallery_urls` ostaje, `gallery_photos` ne nastaje
+      ([ADR-0008](../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md))
+- [ ] Migracija + seed + RLS (`anon` select) za `public.reviews`, sa **negativnim** pgTAP testom
+- [ ] `ReviewRepository` u `core_api` + provideri; `features/home/salon_rating.dart` nestaje
+- [ ] Lightbox 5q prije mreže — brojač „4 / 18", ✕, traka sličica (on diktira učitavanje slika)
+- [ ] `/gallery` — mreža 3 kolone, kvadrat, `gap 8`, bez naslova i opisa
+- [ ] `/reviews` — prosjek u serifu, histogram 5→1, lista recenzija; **read-only**
+- [ ] Obje rute **izvan** `StatefulShellRoute` — back header, bez tab bara
+- [ ] Ulaz sa Početne: „Sve slike ›" i red Recenzija; sekcije se i dalje sakriju kad nema podataka
+- [ ] Testovi (widget + pgTAP + REST za javno čitanje) i dokaz u browseru/simulatoru protiv žive baze
 
 ## Napomene
 
-### Šta blokira, i zašto to nije stvar koda
+### Galerija je pola već isporučena — i to stvara jedini pravi sukob u tasku
 
-Kod se može napisati danas. **Dokazati se ne može**, i to je razlika koju repo tretira ozbiljno:
-`supabase/CLAUDE.md` traži da u sažetku piše „napisano, nije pokrenuto" dok suite nije prošla.
+Od taskova 18/19 već postoji cijeli put podataka za galeriju:
+`salons.gallery_urls jsonb` (init migracija) → `SalonRepository.galleryUrls` →
+`salonGalleryProvider` → `GalleryGrid` na Početnoj i `/about`. `PhotoFrame` je u `core_ui`,
+`cached_network_image` je već u `apps/client/pubspec.yaml`, a `GalleryGrid` ima **spreman
+`onTap(index)` hook** koji je danas `null` upravo zato što lightbox pravi ovaj task.
 
-Tri stvari fale, sve izvan repoa:
+DoD (red 17) ipak traži **novu tabelu `gallery_photos`**. Dvije tabele za istu stvar su dva
+izvora istine; treba izabrati jedno prije nego što se napiše migracija:
 
-| Šta | Gdje | Zašto blokira |
-|---|---|---|
-| OAuth client ID-evi (web, Android, iOS) | Google Cloud | bez `serverClientId` prvi poziv padne u Google dijalogu |
-| Sign In with Apple na App ID-u | Apple Developer | bez toga nema ni entitlementa ni tokena |
-| Uključeni provideri + redirect URL-ovi | Supabase | token bez konfigurisanog providera se odbija |
+- ostati na `gallery_urls` (ništa se ne seli, seed već ima šest fotografija za barbera), ili
+- preseliti se na `gallery_photos` (dobija se redoslijed i po-slici metapodatak, ali se mijenja
+  `SalonRepository`, `about_screen`, `home_screen` i njihovi testovi).
 
-Hodogram je već raspisan, korak po korak: [`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
+Šta god se izabere, ide u `docs/adr/` — DoD nije mjesto gdje se ova odluka smije ostaviti
+prećutnom.
 
-### Apple je dvostruko blokiran
+### Recenzije su čista nova gradnja, ali ekran na Početnoj već stoji
 
-Uz Apple Developer nalog, **Xcode nema prijavljen Apple ID** — isto što je u tasku 19 oborilo
-instalaciju na pravi telefon (`No Account for Team "J96U28624S"`). Apple prijava se ne može
-odigrati ni na simulatoru bez potpisanog builda, pa je taj blokator na kritičnom putu i ovdje.
+`RatingSummary` i sekcija „Recenzije" na Početnoj su napisani i pokriveni testom u tasku 18.
+`apps/client/lib/src/features/home/salon_rating.dart` je **namjerni placeholder** koji vraća
+`null` i u svom doc komentaru piše da ga ovaj task zamjenjuje `ReviewRepository`-jem i briše.
+Sekcija se dotad sakriva — to je već traženo ponašanje, ne rupa.
 
-### Šta se ipak može uraditi bez konzola
+U šemi nema **ničega**: ni `reviews`, ni ocjene, ni prosjeka.
 
-Paketi, implementacija obje metode, `AuthConfig` grananje po flavoru, iOS/Android konfiguracija po
-flavoru, i testovi sa lažnim providerom. Ostaje samo zadnji korak — pravi dijalog na pravom
-uređaju.
+### Ni `/gallery` ni `/reviews` ne postoje kao rute
 
-### Google Cloud: release keystore je zasebna rupa
+`ClientRoute` ih nema (`app_router.dart:218`). Obrazac za pod-ekran bez tab bara postoji —
+booking flow i `/account` stoje izvan `StatefulShellRoute`. **Pazi na razliku:** `/about` je
+podruta grane Početne i **zadržava** traku (`SPEC.md` 5b), a 5l/5m/5q je izričito nemaju.
 
-Android traži SHA-1, a **debug i release su različiti** (`docs/06 §7.1` to zove najčešćom
-greškom: Google login radi u debugu i pada u produkciji). Release keystore još ne postoji —
-otvorena stavka iz taska 04. Dok ga nema, prave se samo debug klijenti.
+### Zavisnost koju task fajl ne spominje
+
+`docs/01-mvp-spec.md` §12 daje `/gallery` prioritet **„Later"**, a `/reviews` u toj tabeli
+**nema uopšte**. Task postoji zato što ga traži handoff (`SPEC.md` 5l/5m/5q, screenshotovi
+12/13/17), a `prototype/ui/` je po `CLAUDE.md` jači izvor istine za ekrane. Nesklad je ipak
+vrijedan reda u ADR-u ili ispravke tabele u `docs/01`, da sljedeći čitalac ne pomisli da je
+neko gradio ekran van obima.
+
+### Sitnice koje DoD ne nabraja, a handoff traži
+
+- **Share ⤴ u lightboxu** — `SPEC.md` §Interactions ga navodi uz ✕ i traku sličica; DoD ga nema.
+- **Brojač „4 / 18"** podrazumijeva ~18 fotografija. Seed danas ima **šest** za barbera i
+  **nula** za beauty. Prazno stanje beauty salona je zato besplatan test, ali traka sličica
+  sa šest slika ne dokazuje skrol.
+- **Zastarjeli komentar:** `home_screen.dart:303` tvrdi da je `gallery_urls` „prazan u oba demo
+  salona" — barber ima šest slika od taska 19. Ispraviti usput.
+
+### Procjena
+
+2 dana iz task fajla drže se samo ako se galerija **ne** seli na novu tabelu. Ako se seli,
+računaj pola dana više na migraciju plus prepisivanje `SalonRepository`-ja i tri postojeća testa.
+
+### Šta je ostalo iza 12/13
+
+Ništa nije izgubljeno: kod je u `12-auth-provideri.md`, hodogram u `12-konzole-checklist.md`,
+status blokovi u `tasks/sprint-2/README.md`, a blokada na iOS potpisivanju u odjeljku „Dug koji
+nije task". Oba su 🟡 i čekaju Google Cloud, Apple Developer i prijavljen Apple ID u Xcodeu.
 
 ## Istorija
 
