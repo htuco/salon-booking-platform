@@ -126,6 +126,8 @@ void main() {
     test('TypeError je takođe MappingError, ne ServerError', () {
       // Tipično: kolona preimenovana u migraciji, `@JsonKey` ostao stari.
       try {
+        // Cast je namjerno „nepotreban" — analizator vidi dynamic, u runtime-u je int,
+        // pa baš ovaj `as String` baca TypeError kakav mapError treba da vidi.
         // ignore: unnecessary_cast
         (<String, dynamic>{'x': 1}['x'] as String);
         fail('očekivan TypeError');

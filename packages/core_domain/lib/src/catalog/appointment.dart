@@ -16,7 +16,7 @@ part 'appointment.g.dart';
 ///
 /// **Upisi idu isključivo kroz `book_appointment` RPC.** Nema `insert` sa klijenta: RPC
 /// re-validira slot u istoj transakciji i vraća `409` kad ga je neko pretekao
-/// (v. `tasks/05-availability-engine.md` i `.claude/docs/security.md`).
+/// (v. `tasks/sprint-0/05-availability-engine.md` i `.claude/docs/security.md`).
 ///
 /// Zamka na koju pazi [deviceId]: ovo je FK na `devices.id`, **nije** `devices.device_id`
 /// (instalacioni identifikator koji šalje uređaj). Zamjena prolazi tipove — oba su uuid —
