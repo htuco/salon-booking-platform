@@ -258,7 +258,7 @@ toolchainom prototipa.
 
 Da ne tražiš uzalud: nema Next.js konzole, nema pravog FCM-a i nema nijednog **pravog ekrana** —
 sve rute imaju placeholder tijela dok ih ne napišu taskovi 10 i 11.
-Stanje po tasku: `tasks/README.md`.
+Stanje po tasku: `tasks/sprint-<N>/README.md`, indeks u `tasks/README.md`.
 
 Postoji od taska 06: `Vertical` u `core_domain` i `VerticalRepository` u `core_api`.
 Od taska 07: `AppEnv`/`AdminEnv`, `bootstrapClient()`/`bootstrapAdmin()` sa `Supabase.initialize`,

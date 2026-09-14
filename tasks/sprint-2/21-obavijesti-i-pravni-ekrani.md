@@ -12,17 +12,30 @@ Zadnja tri ekrana iz handoffa. Dva su formalnost bez koje submission pada, jedan
 push notifikacije slijeću.
 
 ## Definicija gotovog
-- [~] `/notifications` po 5j — **samo prazno stanje.** Lista, potvrde, podsjetnici i nepročitano
-      stižu sa [taskom 25](25-push-notifikacije.md); prije njega nema izvora podataka (v. Status)
-- [x] `/about-app` po 5n: verzija, "Kako radi" u tri koraka, pravni redovi
-- [x] `/terms` po 5o: šest numerisanih sekcija (zakazivanje, otkazivanje, kašnjenje, cijene,
-      podaci, kontakt)
-- [x] Tekst pravila dolazi **po tenantu** (`salons` kolona ili `settings`), ne kao literal u app-i
+
+> DoD je **prekrojen 2026-09-14** po odlukama iz [ADR-0009](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md).
+> Prva verzija je tražila šest zakucanih sekcija i tekst iz `salons`/`settings`; oba su odbijena.
+
+- [~] `/notifications` po 5j — **samo prazno stanje**, sa iskrenim tekstom da obavijesti stižu kad
+      salon potvrdi termin. Lista dolazi sa [25](25-push-notifikacije.md), ne odavde
+- [x] `/about-app` po 5n: verzija iz `package_info_plus`, monogram iz inicijala, "Kako radi" u tri
+      koraka, kontakt redovi iz `salons`
+- [x] `/about-app` pravni redovi: "Pravila korištenja" → `/terms`, "Politika privatnosti" →
+      `/privacy`, **"Ocijenite aplikaciju" vidljiv ali neaktivan** dok app nije u prodavnici,
+      "Prijavite problem" → mail developeru
+- [x] `/terms` po 5o: **dinamična** lista, numerisana `01..NN` redom kojim sekcije stignu — bez
+      šest sekcija zakucanih u kodu
+- [x] `/privacy` — politika privatnosti, pisana za **App Privacy i Data Safety** formulare.
+      Nova ruta koju prva verzija DoD-a nije nabrajala, a `14-o-aplikaciji.png` je traži
+- [x] Tekst dolazi iz **dvije tabele**, ne iz literala i ne iz `salons`: `app_policies` (bez
+      `salon_id`, legal tekst piše samo platforma) i `salon_policies` (`salon_id`, salon uređuje
+      svoje). Obrazloženje i odbijena alternativa: [ADR-0009](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md)
 - [x] Verzija se čita iz `package_info_plus`, ne iz konstante koja zastari
 
 ## Koraci
 1. Pravila i "O aplikaciji" prvo — statični su i otključavaju submission
-2. Obavijesti nakon taska 25, da imaju šta prikazati
+2. Obavijesti idu **sad, kao prazno stanje** — ekran bez liste je iskren, a ruta iz taska 18 već
+   vodi na njega. Lista dolazi sa [25](25-push-notifikacije.md)
 3. Commit: `feat(client): obavijesti i pravni ekrani`
 
 ## Zamke
@@ -33,38 +46,52 @@ push notifikacije slijeću.
 
 ## Status (2026-09-14) — ✅ zatvoren
 
-Sva četiri ekrana su napisana i mergovana ([PR #38](https://github.com/htuco/salon-booking-platform/pull/38),
-`21c62f9`). Task je narastao preko naslova: DoD je tražio tri ekrana, a isporučena su **četiri** —
-`/privacy` je nova ruta koju task fajl ne spominje, a store submission je traži.
+PR [#38](https://github.com/htuco/salon-booking-platform/pull/38) mergovan 14.09.2026.
 
-**Pravila su dvije tabele, ne jedna.** `app_policies` (bez `salon_id`, legal tekst koji obavezuje
-firmu) i `salon_policies` (`salon_id`, pravila koja mijenja salon). Jedna tabela sa nullable
-`salon_id` je odbijena jer bi politika dobila NULL granu — isti oblik koji je u tasku 14 pustio
-zahtjev bez `x-salon-id` headera. Obrazloženje:
-[ADR 0009](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md).
+**Tekst pravila dolazi iz dvije tabele, ne iz `salons`.** Handoff 5o ima šest sekcija, ali nisu
+iste vrste: Zakazivanje, Cijene i "Vaši podaci" obavezuju **firmu** i iste su u svakoj brandiranoj
+app-i; Otkazivanje, Kašnjenje i Kontakt obavezuju **salon**. Otud `app_policies` (bez `salon_id`,
+kao `vertical_packs`) i `salon_policies` (`salon_id`). Jedna tabela sa nullable `salon_id` je
+odbijena: politika bi dobila NULL granu, a upravo je NULL u guardu pustio zahtjev bez
+`x-salon-id` headera u tasku 14. Negativan test koji ovo drži je `salon_admin` nad `app_policies` —
+`insert` mora pasti. Obrazloženje: [ADR-0009](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md).
 
-**Tekst pravila je pisan nanovo, ne prepisan.** Handoff `15-pravila-koristenja.png` tvrdi da se
-čuva „ime, **broj telefona** i historija termina" — klijentska app telefon **nikad ne traži**:
-`ensure_customer` upisuje samo ime, booking ekran nema polje, i `docs/01` to vodi kao donesenu
-odluku. Prepisan handoff bi lagao u prvoj rečenici pravno obavezujuće sekcije. Generički template
-ima istu bolest u drugom obliku — tvrdi kolačiće, plaćanja i lokaciju, čega ovdje nema.
+**Handoff copy nije prepisan jer tvrdi neistinu.** Sekcija "Vaši podaci" na
+`15-pravila-koristenja.png` piše da čuvamo i **broj telefona**; klijentska app ga nikad ne traži
+(`ensure_customer` upisuje samo ime, booking ekran nema polje, `docs/01` to vodi kao donesenu
+odluku). Prepisan handoff bi lagao u prvoj rečenici pravno obavezujuće sekcije, pa su oba
+dokumenta **napisana nanovo**, po stvarnom inventaru podataka i za App Privacy / Data Safety
+formulare.
 
-**Brojevi u tekstu se ne kucaju, nego se popunjavaju.** Tijelo sekcije nosi placeholdere
-(`{minCancelHours}`, `{phone}`, `{email}`, `{appointmentSingular}`) koje ekran puni iz živih
-podataka. Bez toga salon promijeni `min_cancel_hours` u postavkama, a pravila i dalje pišu staru
-cifru — app bi lagala korisniku na ekranu koji ga pravno obavezuje, dok `cancel_appointment`
-provodi drugi broj.
+**Dvije greške koje je našao ekran, a testovi nisu mogli** (commit `2884a7e`):
 
-### Dokazano
+- **Politika privatnosti je išla naopako** — "Kontakt" je bio `01`, a "Ko obrađuje podatke" `09`.
+  `PostgrestTransformBuilder.order` ima `ascending = false` kao default, pa je `.order('sort_order')`
+  vraćao dokument obrnuto. Ista zamka je već zapisana u `service_repository.dart`. `privacy()` sad
+  ide kroz `mergePolicySections`, pa poredak ima **jedan izvor** za oba dokumenta. Asercija je u
+  `rest_public_catalog.ts`, protiv pravog PostgREST-a: unit test koji mapira red ne vidi redoslijed
+  kojim redovi stižu, a widget test ne vidi ni to, jer ekran ne sortira.
+- **"Zadnja izmjena: 14.09.2026.."** — `formatDate` već nosi tačku, a `.arb` je dodavao još jednu.
+  Dupla se vidi samo na ekranu; test koji traži podniz bi je propustio, pa novi traži cijeli string.
 
-- **`Supabase tests` i `Flutter` zeleni na `main`** nakon merga
-  ([run 34848488626](https://github.com/htuco/salon-booking-platform/actions/runs/34848488626),
-  [34848488591](https://github.com/htuco/salon-booking-platform/actions/runs/34848488591)).
-- **Cijela Dart suite lokalno PASS** — `core_domain`, `core_api` i `client`, zadnji sa **231 testom**
-  (`dart run melos exec --dir-exists=test -- flutter test`).
-- **`007_policies.test.sql`** nosi negativan test koji drži oblik: `salon_admin` **ne može** pisati
-  po `app_policies`, i sekcije neaktivnog salona su nevidljive.
-- Novi Deno asertovi u `rest_public_catalog.ts` — `anon` čita pravila bez prijave.
+Uz to `run_tenant.sh` sad prosljeđuje `--build-name`/`--build-number` iz `tenant.yaml`: bez toga
+`flutter run` uzima `1.0.0+1` iz `apps/client/pubspec.yaml`, pa jedini ekran koji verziju prikazuje
+u razvoju pokazuje drugi broj nego store build.
+
+**Dokazano pokretanjem** (ponovo provjereno 14.09. nakon mergea): **460 Dart testova** PASS
+(admin 4, client 231, core_api 90, core_domain 68, core_ui 67 — bilo 419 na tasku 20),
+**176 pgTAP** u 7 fajlova (bilo 147) i **123 REST asercije** (24 izolacija + 57 javni katalog +
+20 upsert/rezervacija + 22 dva salona). `melos run analyze` čist u svih pet paketa,
+`dart format` 0 izmijenjenih. Uživo na **iOS simulatoru** (iPhone 17 Pro, `barberstudiovitez`)
+protiv lokalnog stacka: `/terms` numerisan `01..06` sa `3 h` iz `salon_settings` i `030 711 000`
+iz `salons` — dakle iz baze, ne `2 sata` i `030 711 220` iz handoffa; `/about-app` sa monogramom
+"BV" i verzijom iz `package_info_plus` (`docs/screenshots/task-21-o-aplikaciji.png`).
+
+**Ostaje otvoreno, ali ne blokira:** `/notifications` je namjerno **samo prazno stanje** — lista
+dolazi sa [25](25-push-notifikacije.md), i to je odluka, ne dug. "Ocijenite aplikaciju" stoji
+vidljiv ali neaktivan dok app nije u prodavnici. Javni URL politike privatnosti
+([01 §17](../../docs/01-mvp-spec.md#17-build-order) korak 29) i dalje traži hosting — ekran u
+app-i ga ne zamjenjuje.
 
 ### Zamka za sljedećeg
 
@@ -80,23 +107,3 @@ cd apps/client && flutter gen-l10n
 `apps/client/lib/src/l10n/generated/` **nije u repou** — otud `git status` ostaje čist nakon
 `gen-l10n`.
 
-### Ostalo za sljedećeg — ništa ne blokira
-
-Tri stringa na jednom mjestu, svi namjerno prazni jer podatak nije dat:
-
-- **`supportEmail`** u [about_app_screen.dart:20](../../apps/client/lib/src/features/legal/about_app_screen.dart#L20)
-  je prazan, pa se red „Prijavite problem" **ne crta**. Mail ide **developeru**, ne salonu — zato
-  se ne uzima `store.supportEmail` iz `tenant.yaml`, koji je adresa za store listing.
-- **„Ocijenite aplikaciju"** stoji vidljiv ali `disabled` (45% po `SPEC.md`) i ne prima tap, jer
-  aplikacije nisu u prodavnicama. Kad odu, mijenja se `storeListingUrl` u `tenant.yaml`, ne ekran.
-- **Naziv pravnog lica** u footeru — zasad `© <godina> <ime salona>`.
-
-**Pravni pregled teksta prije submissiona ostaje obavezan.** Tekst je tačan naspram koda i pisan za
-App Privacy / Data Safety formulare, ali **nije pravni savjet** — posebno oko GDPR-a.
-
-**Javna URL politika privatnosti po tenantu ([01 §17](../../docs/01-mvp-spec.md#17-build-order)
-korak 29) i dalje stoji otvorena** — ekran u app-i je ne zamjenjuje. Ide sa Sprintom 3; isti
-`app_policies` red servira i nju, pa se tekst ne piše dvaput.
-
-Lista obavijesti i nepročitano stanje dolaze sa [taskom 25](25-push-notifikacije.md) — tada se
-mijenja **samo tijelo** `/notifications`, ne ruta ni ulaz.

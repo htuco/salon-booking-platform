@@ -11,7 +11,7 @@ macOS bez Dockera). Kontekst se ne prenosi između sesija — prenosi se **kroz 
 piše i čita tu predaju.
 
 Kanonsko mjesto predaje je **status blok**: `## Status (YYYY-MM-DD)` na dnu task fajla, plus
-skraćena verzija u `tasks/README.md` ispod tabele. Ne pravi nove "handoff" fajlove — dva mjesta
+skraćena verzija u `tasks/sprint-<N>/README.md` ispod tabele. Ne pravi nove "handoff" fajlove — dva mjesta
 koja se čitaju su bolja od pet koja zastarijevaju.
 
 Režim: **$ARGUMENTS** (bez argumenta → `write`).
@@ -38,7 +38,7 @@ Status blok sadrži, tim redom:
 
 Zatim:
 
-- Ažuriraj oznaku taska u tabeli `tasks/README.md` (✅ / 🟡) i njegov kratki blok ispod.
+- Ažuriraj oznaku taska u tabeli `tasks/sprint-<N>/README.md` (✅ / 🟡) i njegov kratki blok ispod.
 - Prođi tabelu sinhronizacije iz `CLAUDE.md`; dokument koji je promjena dotakla ide u istu predaju.
 - Na kraju ispiši **kratku poruku za PR/chat** (5–8 redova): stanje, dokaz, sljedeći korak. To je
   ono što kolega stvarno pročita prije nego otvori repo.
@@ -54,7 +54,7 @@ Prije nego dotakneš ijedan fajl:
 
 1. **`git status` i `git log --oneline -10`.** Rad na grani je često necommitan; provjeri prije
    bilo čega destruktivnog (`checkout`, `reset`, `stash`, `clean`).
-2. Pročitaj `tasks/README.md` (tabela + status blokovi), pa cijeli task fajl na kojem se stalo.
+2. Pročitaj `tasks/sprint-<N>/README.md` (tabela + status blokovi), pa cijeli task fajl na kojem se stalo.
 3. Pročitaj `CLAUDE.md` i dokumente koje task dodiruje — ne kreni od koda.
 4. **Provjeri tvrdnje predaje, ne vjeruj im.** Pokreni `dart run tool/gen_flavors.dart --check`,
    `melos run analyze`, i pogledaj zadnji CI run za granu. Predaja stara sedam dana opisuje repo

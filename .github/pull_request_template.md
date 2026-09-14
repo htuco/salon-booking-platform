@@ -50,7 +50,7 @@ traži tuđi nalog ili tajnu.
 - [ ] `.claude/docs/workflows.md` — komanda, CI job, env varijabla
 - [ ] `CONTEXT.md` — domenski pojam
 - [ ] `docs/adr/` — odluka koja se ne vidi iz koda
-- [ ] `tasks/CURRENT.md`, task fajl i `tasks/README.md` — status i "ostalo za sljedećeg"
+- [ ] `tasks/CURRENT.md`, task fajl i `tasks/sprint-<N>/README.md` — status i "ostalo za sljedećeg"
 - [ ] Ništa od navedenog nije dotaknuto
 
 ## Provjere

@@ -24,8 +24,9 @@ enum AppTheme {
 
   /// Svijetla, hladna neutralna paleta za `dental`/`health`.
   ///
-  /// TODO(task-12): dentalna vertikala traži i veći body font (17 sp, `docs/02 §14`) —
-  /// to je promjena tipografije, ne samo palete, pa ide uz taj task.
+  /// TODO(dental-tipografija): dentalna vertikala traži i veći body font (17 sp, `docs/02 §14`) —
+  /// to je promjena tipografije, ne samo palete. Ide uz task koji uvede `dental` vertikalu;
+  /// ona je odgođena u `tasks/sprint-0/06-vertical-pack.md` i nema svoj task.
   clinicalCalm('clinical_calm', Brightness.light);
 
   const AppTheme(this.key, this.brightness);

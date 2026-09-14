@@ -5,14 +5,14 @@
 | **Procjena** | 2–3 dana |
 | **Zavisi od** | [02 — schema + RLS](02-supabase-schema-rls.md) (treba `VerticalPack` tabelu), [01 — repo skeleton](01-repo-skeleton.md) (treba `core_domain` paket) |
 | **Blokira** | svaki ekran koji prikazuje tekst — doslovno prvi ekran u Sprint 1 |
-| **Reference** | [01 §10](../docs/01-mvp-spec.md#10-customization--white-label) · [05 vertical-packs.md](../docs/05-vertical-packs.md) |
+| **Reference** | [01 §10](../../docs/01-mvp-spec.md#10-customization--white-label) · [05 vertical-packs.md](../../docs/05-vertical-packs.md) |
 
 ## Cilj
 Terminologija (frizer/beautician/doktor, "termin"/"pregled", radna pravila po vertikali) je **config koji se čita u runtime-u**, nikad hardkodiran string u widgetu — postavljeno prije prvog ekrana, jer je popravka poslije prepisivanje svakog ekrana koji je već napisan.
 
 ## Definicija gotovog
 - [x] `packages/core_domain/lib/src/vertical/vertical.dart` definiše `Vertical` klasu: `key`, `terms` (mapa termina: `appointmentLabel`, `providerLabel`, `serviceLabel`, ...), `defaultSettings`, `defaultTheme`
-- [x] Seed podaci za `barber` i `beauty` vertikale (bar te dvije za MVP, [05 §2](../docs/05-vertical-packs.md))
+- [x] Seed podaci za `barber` i `beauty` vertikale (bar te dvije za MVP, [05 §2](../../docs/05-vertical-packs.md))
 - [x] `VerticalPack` tabela u Supabase (iz taska 02) ima `key`, `terminology` (JSONB), `defaultSettings` (JSONB), `defaultTheme`, `defaultServices` (JSONB) popunjenu seed migracijom
 - [x] `core_api` repozitorij učitava `VerticalPack` za dati `salonId` i mapira ga na `Vertical` iz `core_domain`
 - [x] Mehanizam (provider/inherited widget) koji čini `vertical.terms.*` dostupnim kroz cijelo stablo widgeta u `apps/client`
@@ -22,7 +22,7 @@ Terminologija (frizer/beautician/doktor, "termin"/"pregled", radna pravila po ve
 
 ## Koraci
 1. Definiši `Vertical` i `VerticalTerms` klase u `core_domain` (freezed, immutable)
-2. Popuni seed za `barber` (frizer, termin, usluga) i `beauty` (beautician, termin, tretman) — v. [05 §2](../docs/05-vertical-packs.md) za tačnu terminologiju
+2. Popuni seed za `barber` (frizer, termin, usluga) i `beauty` (beautician, termin, tretman) — v. [05 §2](../../docs/05-vertical-packs.md) za tačnu terminologiju
 3. Dodaj `VerticalPack` seed red u `supabase/seed.sql` (nastavak taska 02) za oba demo salona
 4. Napiši `VerticalRepository` u `core_api` koji čita `VerticalPack` po `salonId`, primjenjuje `Salon.terminologyOverride` preko default-a
 5. Napravi Riverpod provider (`verticalProvider`) koji izlaže trenutni `Vertical` cijeloj app-i nakon što se salon učita
@@ -31,7 +31,7 @@ Terminologija (frizer/beautician/doktor, "termin"/"pregled", radna pravila po ve
 8. Commit: "feat(domain): VerticalPack — runtime terminology, barber + beauty seed"
 
 ## Zašto ovo prije prvog pravog ekrana
-[01 §17](../docs/01-mvp-spec.md#17-build-order) ovo eksplicitno naziva "2–3 dana rada koje, ako se odgode, znače kasnije prepisivanje svakog ekrana" — čak i ako je prvi klijent frizer i "za sada" nema potrebe za vertikalama, cijena odgađanja je veća od cijene rađenja odmah, jer svaki naredni ekran koji ne prati ovu konvenciju je dug koji se plaća pri prvom dentalnom ili beauty klijentu.
+[01 §17](../../docs/01-mvp-spec.md#17-build-order) ovo eksplicitno naziva "2–3 dana rada koje, ako se odgode, znače kasnije prepisivanje svakog ekrana" — čak i ako je prvi klijent frizer i "za sada" nema potrebe za vertikalama, cijena odgađanja je veća od cijene rađenja odmah, jer svaki naredni ekran koji ne prati ovu konvenciju je dug koji se plaća pri prvom dentalnom ili beauty klijentu.
 
 ---
 
@@ -78,10 +78,10 @@ terminologijom na ekranu.
 **Ostalo za sljedećeg**
 
 - **Ekran još ne čita živu bazu** — `Supabase.initialize` dolazi u
-  [tasku 07](sprint-1/07-app-plumbing.md). Dotad `verticalProvider` u testu ide preko override-a,
+  [tasku 07](../sprint-1/07-app-plumbing.md). Dotad `verticalProvider` u testu ide preko override-a,
   a u aplikaciji bi pao na `Vertical.fallback`. Lanac je dokazan do repozitorija, ne kroz mrežu.
 - **`dental` i `health` nisu u seedu** — namjerno: nose recall, kartoteku i pristanke
-  ([05 §6](../docs/05-vertical-packs.md), §7), što je zaseban task.
+  ([05 §6](../../docs/05-vertical-packs.md), §7), što je zaseban task.
 - **`freezed` nije upotrijebljen** iako ga korak 1 spominje; `==`/`hashCode` su ručno pisani da se
   `build_runner` ne uvodi u sloj bez ijednog drugog generisanog fajla. Ako paket poraste, ovo je
   prvo mjesto za ponovnu procjenu.

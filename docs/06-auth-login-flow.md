@@ -381,7 +381,7 @@ enum AuthPlatform { ios, android, web }
 
 Login ekran renderuje `authConfig.forPlatform(...)` i ništa ne zna o tome koji provideri postoje. Isključivanje Facebooka za jednog tenanta je promjena configa, ne builda.
 
-> **Zašto `AuthPlatform`, a ne Flutterov `TargetPlatform`.** Ova skica je do taska 12 stajala sa `TargetPlatform` i **nije se mogla kompajlirati**: `core_domain` je od [taska 06](../tasks/06-vertical-pack.md) čist Dart, bez `package:flutter` ([ADR-0006](adr/0006-modeli-u-core-domain.md)). Domen zato nosi vlastiti enum, a mapiranje `TargetPlatform → AuthPlatform` radi jedna funkcija u `core_api` (`authPlatformOf`), gdje Flutter ionako postoji. Obrazloženje: [ADR-0007](adr/0007-authconfig-u-core-domain.md).
+> **Zašto `AuthPlatform`, a ne Flutterov `TargetPlatform`.** Ova skica je do taska 12 stajala sa `TargetPlatform` i **nije se mogla kompajlirati**: `core_domain` je od [taska 06](../tasks/sprint-0/06-vertical-pack.md) čist Dart, bez `package:flutter` ([ADR-0006](adr/0006-modeli-u-core-domain.md)). Domen zato nosi vlastiti enum, a mapiranje `TargetPlatform → AuthPlatform` radi jedna funkcija u `core_api` (`authPlatformOf`), gdje Flutter ionako postoji. Obrazloženje: [ADR-0007](adr/0007-authconfig-u-core-domain.md).
 
 **Odakle `enabled` dolazi:** iz `auth.providers` bloka u `tenant.yaml` (§7.6), kroz generisani registar `tenants.g.dart`, pa kroz `AuthConfig.fromNames`. Nepoznato ime providera **obori generator** (`dart run tool/gen_flavors.dart`), a ne app na uređaju — isti obrazac kao validacija heks boja.
 

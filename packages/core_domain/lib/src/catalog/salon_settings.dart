@@ -9,7 +9,7 @@ part 'salon_settings.g.dart';
 /// (`get_available_slots`, `book_appointment` iz taska 05). App ih čita da bi znao **šta da
 /// prikaže** — da li nuditi izbor radnika, da li prikazati cijene, koliko unaprijed pustiti
 /// kalendar. Ne da bi sam računao slobodne termine: ta logika je isključivo u bazi i tu
-/// ostaje (v. `tasks/05-availability-engine.md`).
+/// ostaje (v. `tasks/sprint-0/05-availability-engine.md`).
 @freezed
 abstract class SalonSettings with _$SalonSettings {
   const factory SalonSettings({

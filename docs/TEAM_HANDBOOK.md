@@ -52,7 +52,7 @@ opis uloga u `docs/01 §5`.
   hook u `.claude/settings.json` traži potvrdu za svaki `commit`/`push`/`merge` koji cilja `main`
 - PR se otvara **čim postoji prvi commit** (draft), ne tek kad je sve gotovo
 - Imena: `feat/<kratko>`, `fix/<kratko>`, `chore/<kratko>`
-- Ne otvaraj task čije zavisnosti nisu gotove — redoslijed u `tasks/README.md` nije formalnost
+- Ne otvaraj task čije zavisnosti nisu gotove — redoslijed u `tasks/sprint-<N>/README.md` nije formalnost
 
 **Commit poruke i PR-ovi**
 - Conventional Commits sa scopeom (`feat(client):`), naslov na bosanskom u imperativu, tijelo nosi

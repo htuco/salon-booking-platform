@@ -7,7 +7,7 @@ argument-hint: load|start|review|verify|complete|explain
 # Task workflow
 
 Taskovi ovog repoa su fajlovi u `tasks/` (`NN-<slug>.md`), sa ciljem, definicijom gotovog (DoD kao
-checkbox lista) i koracima. `tasks/README.md` je tabela svih taskova plus **status blokovi** koje
+checkbox lista) i koracima. `tasks/sprint-<N>/README.md` je tabela taskova tog sprinta plus **status blokovi** koje
 čita sljedeća osoba koja sjedne za posao. Ta dva mjesta su tracker — nema Jire, nema Linear-a.
 
 Ovaj skill vodi task kroz njegov životni ciklus i, što je važnije, održava ta dva mjesta tačnim.
@@ -19,7 +19,7 @@ Ovaj skill vodi task kroz njegov životni ciklus i, što je važnije, održava t
   `## Napomene` (kontekst i zamke), `## Istorija` (zatvoreni taskovi, dopisuje se na kraj).
   Ovo je fajl koji se čita prvi kad neko sjedne za posao.
 - `tasks/<NN>-<slug>.md` — puni task: cilj, DoD checkboxovi, koraci, `## Status (datum)` na dnu
-- `tasks/README.md` i `tasks/sprint-1/README.md` — tabele (`#`, task, blokira, procjena, ✅/🟡) + status blokovi
+- `tasks/README.md` — indeks sprintova; `tasks/sprint-<N>/README.md` — tabele (`#`, task, blokira, procjena, ✅/🟡) + status blokovi
 - `docs/adr/` — kad task donese odluku koja se ne može pročitati iz koda
 
 `CURRENT.md` je **derivat**, ne izvor: puni task fajl i repo su iznad njega. Kad se raziđu, ispravi
@@ -41,7 +41,7 @@ statusu i koji je sljedeći korak.
 
 ## Pravila koja važe u svakoj akciji
 
-- **Ne otvaraj task čije zavisnosti nisu gotove.** Redoslijed u `tasks/README.md` nije formalnost:
+- **Ne otvaraj task čije zavisnosti nisu gotove.** Redoslijed u `tasks/sprint-<N>/README.md` nije formalnost:
   availability testovi trebaju stvarnu šemu, CI treba flavor sistem da ima šta buildati.
 - **DoD stavka se čekira tek kad postoji dokaz**, ne kad je kod napisan. Dokaz je izlaz komande
   ili zeleni CI job, i ide u `## Status` blok taska.

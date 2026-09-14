@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 2 dana |
-| **Zavisi od** | [01 — skeleton](../01-repo-skeleton.md), [03 — flavor sistem](../03-flavor-system.md) |
+| **Zavisi od** | [01 — skeleton](../sprint-0/01-repo-skeleton.md), [03 — flavor sistem](../sprint-0/03-flavor-system.md) |
 | **Blokira** | svaki ekran u oba app-a — 08, 09, 10, 11 |
 | **Reference** | [07 §3](../../docs/07-tech-architecture.md#3-flutter-paketi--konkretan-izbor) · [07 §8](../../docs/07-tech-architecture.md#8-ključne-odluke) |
 

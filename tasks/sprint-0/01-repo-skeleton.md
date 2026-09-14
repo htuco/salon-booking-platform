@@ -6,7 +6,7 @@
 | **Procjena** | 0.5 dana |
 | **Zavisi od** | ničega — prvi task |
 | **Blokira** | sve ostale taskove |
-| **Reference** | [07 §1](../docs/07-tech-architecture.md#1-puna-struktura-repozitorija) · [04 §2](../docs/04-flutter-tenant-factory.md#2-struktura-repozitorija) |
+| **Reference** | [07 §1](../../docs/07-tech-architecture.md#1-puna-struktura-repozitorija) · [04 §2](../../docs/04-flutter-tenant-factory.md#2-struktura-repozitorija) |
 
 ## Cilj
 Prazan, ali ispravno strukturiran monorepo koji prolazi `melos bootstrap` i `dart analyze` bez greške — temelj na koji se kače svi ostali taskovi.
@@ -40,20 +40,20 @@ Instalirana verzija (Melos 8.3.0) je od verzije 7 prešla na **Dart native pub w
 - Svaki paket u workspace-u ima `resolution: workspace` u svom `pubspec.yaml`
 - `melos bootstrap` više ne generiše `pubspec_overrides.yaml` po paketu (to je bio mehanizam za ≤6.x) — samo pokreće `flutter pub get` u workspace-u
 
-Ažurirano u [07 §6.1](../docs/07-tech-architecture.md#61-melos-7--config-je-u-pubspecyaml-ne-u-melosyaml) i strukturnom dijagramu u [07 §1](../docs/07-tech-architecture.md#1-puna-struktura-repozitorija). Ako se namjerno pinuje Melos ≤6.3.0 (stariji, poznatiji workflow sa `melos.yaml`), to je validna alternativa — ali trenutni skeleton prati aktuelnu (8.x) verziju.
+Ažurirano u [07 §6.1](../../docs/07-tech-architecture.md#61-melos-7--config-je-u-pubspecyaml-ne-u-melosyaml) i strukturnom dijagramu u [07 §1](../../docs/07-tech-architecture.md#1-puna-struktura-repozitorija). Ako se namjerno pinuje Melos ≤6.3.0 (stariji, poznatiji workflow sa `melos.yaml`), to je validna alternativa — ali trenutni skeleton prati aktuelnu (8.x) verziju.
 
 ## Koraci (kako je urađeno)
 1. `flutter create --org ba.nasadomena --project-name client --platforms android,ios,web apps/client` (isto za `admin`)
 2. `flutter create --org ba.nasadomena --template=package packages/core_domain` (isto za `core_api`, `core_ui`)
 3. Root `pubspec.yaml` sa `workspace:` + `melos:` (ne `melos.yaml` — v. napomena gore), `resolution: workspace` dodan u svaki paket
-4. Struktura foldera iz [07 §1](../docs/07-tech-architecture.md#1-puna-struktura-repozitorija) kopirana u `apps/*/lib/src/{features,core,l10n}` i `packages/*/lib/src/*`, svaki prazan folder ima `.gitkeep` sa referencom na task koji ga popunjava
+4. Struktura foldera iz [07 §1](../../docs/07-tech-architecture.md#1-puna-struktura-repozitorija) kopirana u `apps/*/lib/src/{features,core,l10n}` i `packages/*/lib/src/*`, svaki prazan folder ima `.gitkeep` sa referencom na task koji ga popunjava
 5. `supabase init` u rootu; `migrations/`, `tests/`, `functions/*` i `seed.sql` dodani ručno (CLI ih ne generiše)
-6. `tenants/_template/tenant.yaml` (šablon iz [04 §3](../docs/04-flutter-tenant-factory.md#3-tenantyaml--jedini-fajl-koji-pišeš-po-klijentu)) + `tool/.gitkeep`
+6. `tenants/_template/tenant.yaml` (šablon iz [04 §3](../../docs/04-flutter-tenant-factory.md#3-tenantyaml--jedini-fajl-koji-pišeš-po-klijentu)) + `tool/.gitkeep`
 7. `lefthook.yml` + `lefthook` kao `devDependency` u root `package.json` (dijeli se sa Node/Vite prototipom) + `npx lefthook install`
 8. Root `README.md` ažuriran
 
 ## Napomena
-Ovaj task **ne** uvodi state management, routing ni ijedan paket iz [07 §3](../docs/07-tech-architecture.md#3-flutter-paketi--konkretan-izbor) — to dolazi tek u Sprint 1 kad se piše prvi ekran. Cilj ovdje je čista, verifikovana struktura, ne funkcionalnost.
+Ovaj task **ne** uvodi state management, routing ni ijedan paket iz [07 §3](../../docs/07-tech-architecture.md#3-flutter-paketi--konkretan-izbor) — to dolazi tek u Sprint 1 kad se piše prvi ekran. Cilj ovdje je čista, verifikovana struktura, ne funkcionalnost.
 
 ## Sljedeći korak
 [Task 02 — Supabase šema + RLS](02-supabase-schema-rls.md). Prije toga: provjeri `supabase start` lokalno (Docker) da potvrdiš da lokalni stack radi na tvojoj mašini.

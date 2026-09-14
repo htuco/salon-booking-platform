@@ -5,15 +5,15 @@
 | **Procjena** | 2–3 dana |
 | **Zavisi od** | [02 — schema + RLS](02-supabase-schema-rls.md) |
 | **Blokira** | svaki booking ekran u Sprint 1 |
-| **Reference** | [01 §8](../docs/01-mvp-spec.md#8-booking-rules) · [01 §16.1](../docs/01-mvp-spec.md#161-odluka-supabase-ne-firebase-) |
+| **Reference** | [01 §8](../../docs/01-mvp-spec.md#8-booking-rules) · [01 §16.1](../../docs/01-mvp-spec.md#161-odluka-supabase-ne-firebase-) |
 
 ## Cilj
-Logika "koji su slobodni termini" postoji **na backendu**, testirana, prije nego što se napiše ijedan piksel booking flow-a. Ovo je srce proizvoda — [01 §16.1](../docs/01-mvp-spec.md#161-odluka-supabase-ne-firebase-) kaže da je ovo "odlučujući argument" za cijeli izbor Supabase-a nad Firebase-om, pa logika ne smije nikad procuriti u Flutter kod.
+Logika "koji su slobodni termini" postoji **na backendu**, testirana, prije nego što se napiše ijedan piksel booking flow-a. Ovo je srce proizvoda — [01 §16.1](../../docs/01-mvp-spec.md#161-odluka-supabase-ne-firebase-) kaže da je ovo "odlučujući argument" za cijeli izbor Supabase-a nad Firebase-om, pa logika ne smije nikad procuriti u Flutter kod.
 
 ## Definicija gotovog
 - [x] Postgres funkcija (ili Edge Function) `get_available_slots(salon_id, service_id, employee_id?, date)` vraća listu slobodnih termina
 - [x] Uzima u obzir: `WorkingHour` (radno vrijeme + pauze), postojeće `Appointment` zapise (`pending`, `confirmed` blokiraju slot; `cancelled` ne), `BlockedSlot`, `bufferMinutes` i `slotStepMinutes` iz `SalonSettings`
-- [x] Podržava oba moda iz `SalonSettings.bookingGranularity`: `exact_slot` (klijent bira tačan termin) i `date_only` (klijent bira samo datum, salon dodijeli vrijeme — [05 vertical-packs §4](../docs/05-vertical-packs.md))
+- [x] Podržava oba moda iz `SalonSettings.bookingGranularity`: `exact_slot` (klijent bira tačan termin) i `date_only` (klijent bira samo datum, salon dodijeli vrijeme — [05 vertical-packs §4](../../docs/05-vertical-packs.md))
 - [x] Poštuje `minAdvanceBookingHours` i `maxAdvanceBookingDays`
 - [x] `POST /appointments` radi **re-validaciju slota** na serverskoj strani prije upisa (race condition zaštita — dva klijenta ne mogu zauzeti isti slot), vraća `409 Conflict` ako je slot zauzet u međuvremenu
 - [x] Unit testovi (pgTAP ili Deno) pokrivaju: prazan raspored, potpuno zauzet dan, preklapajući buffer, blocked slot, granica `minAdvanceBookingHours`, `date_only` mod
@@ -31,7 +31,7 @@ Logika "koji su slobodni termini" postoji **na backendu**, testirana, prije nego
 8. Commit: "feat(db): availability engine + conflict-safe booking + tests"
 
 ## Zašto prije UI-ja, ne usput
-Ako se ovo piše dok se paralelno pravi Flutter ekran, prirodno je "privremeno" staviti dio logike u Dart (npr. filtriranje slotova u klijentu) da bi se brže vidio rezultat na ekranu — a to "privremeno" ostaje. [01 §8.1](../docs/01-mvp-spec.md#8-booking-rules) je eksplicitna odluka da availability logika nikad ne smije biti u app-u; ovaj task postoji da se ta odluka ispoštuje od prvog reda koda, ne popravi nakon prvog buga sa duplim rezervacijama.
+Ako se ovo piše dok se paralelno pravi Flutter ekran, prirodno je "privremeno" staviti dio logike u Dart (npr. filtriranje slotova u klijentu) da bi se brže vidio rezultat na ekranu — a to "privremeno" ostaje. [01 §8.1](../../docs/01-mvp-spec.md#8-booking-rules) je eksplicitna odluka da availability logika nikad ne smije biti u app-u; ovaj task postoji da se ta odluka ispoštuje od prvog reda koda, ne popravi nakon prvog buga sa duplim rezervacijama.
 
 ---
 
@@ -68,5 +68,5 @@ izolacija sa dva stvarna JWT-a.
 - Ponašanje pod stvarnom konkurencijom (dva paralelna poziva) nije mjereno — dokazana je garancija
   constrainta na sekvencijalnom upisu.
 - Vremenske zone testirane samo za `Europe/Sarajevo` (jedina vrijednost u seedu).
-- Dart strana (repozitorij nad ovim funkcijama) je [task 08](sprint-1/08-core-api-repozitoriji.md).
+- Dart strana (repozitorij nad ovim funkcijama) je [task 08](../sprint-1/08-core-api-repozitoriji.md).
 - Upis `customers` i `devices` i dalje nema validiranu funkciju — v. `.claude/docs/security.md`.

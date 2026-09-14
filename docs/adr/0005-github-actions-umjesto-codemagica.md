@@ -6,7 +6,7 @@ prihvaćen
 
 ## Kontekst
 
-[Task 04](../../tasks/04-ci-pipeline.md) i [04 §8](../04-flutter-tenant-factory.md#8-cicd) ostavljaju izbor otvoren: Codemagic za Flutter build/store matricu, GitHub Actions za `supabase/` i web. Codemagic je specijalizovan za Flutter, ima gotovu store publikaciju i macOS runnere bez podešavanja.
+[Task 04](../../tasks/sprint-0/04-ci-pipeline.md) i [04 §8](../04-flutter-tenant-factory.md#8-cicd) ostavljaju izbor otvoren: Codemagic za Flutter build/store matricu, GitHub Actions za `supabase/` i web. Codemagic je specijalizovan za Flutter, ima gotovu store publikaciju i macOS runnere bez podešavanja.
 
 U praksi je repo već dobio dva GitHub Actions workflowa (`Flutter` i `Supabase tests`) prije nego što je odluka formalno donesena, a oni već rade ono što je najteže: matricu po tenantu, iOS build na `macos-latest`, i provjeru na gotovom artefaktu.
 

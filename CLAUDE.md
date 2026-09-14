@@ -32,7 +32,8 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - `prototype/wireframe/` — React wireframe sa svojim toolchainom. **Zamrznut**, nije production kod.
 - `.claude/settings.json` — `SessionStart` hook i odobreni MCP serveri (`supabase`, `context7`, `playwright`).
 - Root `package.json` drži samo `lefthook` (git hookovi). Web toolchain je u `prototype/wireframe/`.
-- `docs/` — proizvodna specifikacija (01–07). `tasks/` — raspisani taskovi (Sprint 0 + `sprint-1/`);
+- `docs/` — proizvodna specifikacija (01–07). `tasks/` — raspisani taskovi, folder po sprintu
+  (`sprint-0/`, `sprint-1/`, `sprint-2/`), svaki sa tabelom i status blokovima u svom `README.md`;
   `tasks/CURRENT.md` je aktivni task i prvo što treba pročitati.
 
 ## Pročitaj prije nego što djeluješ
@@ -117,7 +118,7 @@ verziju i spomeni to u sažetku, umjesto da preskočiš.
 | Komandu, CI job, env varijablu, način pokretanja | `.claude/docs/workflows.md` (+ `/verify` skill ako mijenja dokaz) |
 | Domenski pojam ili njegovo značenje | `CONTEXT.md` |
 | Odluku koja se ne može pročitati iz koda | novi ADR u `docs/adr/` |
-| Status taska (gotovo / blokirano / ostalo za sljedećeg) | `tasks/CURRENT.md`, task fajl u `tasks/` **i** blok u pripadajućem `README.md` |
+| Status taska (gotovo / blokirano / ostalo za sljedećeg) | `tasks/CURRENT.md`, task fajl u `tasks/sprint-<N>/` **i** blok u `tasks/sprint-<N>/README.md` |
 
 Dva pravila za pisanje ovih dokumenata:
 
