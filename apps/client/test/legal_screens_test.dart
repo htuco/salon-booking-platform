@@ -87,6 +87,25 @@ void main() {
       },
     );
 
+    // Dvostruka tacka („14.09.2026..") je nadjena tek na simulatoru: `formatDate` vec
+    // nosi tacku, a `.arb` je dodavao jos jednu. Test koji trazi podniz je ne bi vidio.
+    testWidgets('datum zadnje izmjene nema duplu tačku', (tester) async {
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.terms.path,
+        pravila: [
+          sekcija(
+            id: 'a1',
+            sortOrder: 10,
+            title: 'Zakazivanje',
+            updatedAt: DateTime.utc(2026, 9, 14, 12),
+          ),
+        ],
+      );
+
+      expect(find.text('Zadnja izmjena: 14.09.2026.'), findsOneWidget);
+    });
+
     testWidgets('prazan dokument daje prazno stanje, ne pad', (tester) async {
       await pumpEkran(tester, ruta: ClientRoute.terms.path, pravila: const []);
 

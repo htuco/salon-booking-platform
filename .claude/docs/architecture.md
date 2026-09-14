@@ -405,3 +405,30 @@ razlika bi se vidjela tek na onom ekranu koji niko nije otvorio.
 puni iste providere podacima iz `supabase/seed.sql`. Nije production kod — store build ide kroz
 `lib/main.dart` — ali dozvoljava da se ekran otvori i snimi na mašini bez Supabase pristupa
 (`flutter run -d chrome -t lib/demo_main.dart --dart-define=SALON_ID=…`).
+
+## Pravni tekst: dvije tabele, jedan ekran, tri sloja (task 21)
+
+`features/legal/` nosi `/terms`, `/privacy` i `/about-app`. Prva dva su **jedan widget**
+(`PolicyDocumentScreen`) sa `PolicyDocument` parametrom: razlikuju se samo naslovom i providerom,
+a dvije kopije bi se razišle pri prvoj izmjeni — na ekranu na kojem se razlika ne primijeti dok je
+neko ne pročita.
+
+Slojevi su uobičajeni, ali podjela posla među njima nije očigledna:
+
+- **`core_domain`** drži `PolicySection`, `PolicyDocument` i `applyPolicyPlaceholders`. Zamjena
+  `{minCancelHours}` je čista funkcija nad stringom, pa se testira bez Fluttera i bez mreže.
+- **`core_api`** ima `PolicyRepository` i `mergePolicySections`. Spajanje dvije tabele u jedan
+  redoslijed živi ovdje, ne u ekranu: PostgREST ne radi `union`, pa su to dva paralelna upita čiji
+  redoslijed dolaska ne smije odlučiti redoslijed sekcija.
+- **`apps/client`** samo numeriše i crta. **Broj sekcije nije podatak** — to je pozicija u listi.
+
+`policyPlaceholdersProvider` je namjerno **sinhron** `Provider` nad `valueOrNull` triju asinhronih
+izvora (salon, postavke, vertikala). Da čeka `Future.wait`, pad jednog upita srušio bi cijeli
+pravni ekran; ovako neriješen izvor ostavi placeholder vidljivim i dopuni tekst kad podatak stigne.
+To je izuzetak od „svaki izvor se čita zasebno" samo naizgled — isto pravilo, primijenjeno na
+provider koji sastavlja, a ne na ekran.
+
+`/notifications` (`features/notifications/`) je **samo prazno stanje** dok task 25 ne donese
+klijentsku politiku nad `notification_logs`. Ruta i ulaz iz trake već postoje, pa se tada mijenja
+samo tijelo.
+

@@ -814,9 +814,9 @@
   "privacyTitle": "Politika privatnosti",
   "@privacyTitle": { "description": "Naslov ekrana /privacy. Ekran u app-i NE zamjenjuje javni URL koji docs/01 korak 29 traži." },
 
-  "policyLastUpdated": "Zadnja izmjena: {datum}.",
+  "policyLastUpdated": "Zadnja izmjena: {datum}",
   "@policyLastUpdated": {
-    "description": "Redak ispod naslova pravnog dokumenta. Datum je najveći updated_at preko svih sekcija, ne datum jedne.",
+    "description": "Redak ispod naslova pravnog dokumenta. Datum je najveći updated_at preko svih sekcija, ne datum jedne. **Bez tačke na kraju** — `formatDate` je već nosi (`14.09.2026.`), pa je dupla („14.09.2026..\") vidljiva samo na ekranu, nikad u testu koji traži podniz.",
     "placeholders": { "datum": { "type": "String" } }
   },
 

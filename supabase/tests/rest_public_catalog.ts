@@ -238,8 +238,22 @@ try {
   const appTerms = await anonRows("app_policies", POLICY_COLUMNS, "&document=eq.terms&order=sort_order");
   assert(appTerms.length === 3, `Anon must read 3 platform terms sections, got ${appTerms.length}.`);
 
-  const privacy = await anonRows("app_policies", POLICY_COLUMNS, "&document=eq.privacy&order=sort_order");
+  // No `order=` on purpose: this asserts what the repository actually sends. Dart's
+  // `PostgrestTransformBuilder.order` defaults to `ascending = false`, so `.order('sort_order')`
+  // returns the document **backwards** — "Kontakt" renders as section 01 and "Ko obrađuje
+  // podatke" as 09. That bug shipped once and no unit test saw it: mapping a row says nothing
+  // about the order rows arrive in. PolicyRepository now sorts in Dart instead, and this
+  // asserts the raw rows are the full set the sort is applied to.
+  const privacy = await anonRows("app_policies", POLICY_COLUMNS, "&document=eq.privacy");
   assert(privacy.length === 9, `Anon must read 9 privacy sections, got ${privacy.length}.`);
+
+  const privacyOrder = [...privacy]
+    .sort((a, b) => Number(a.sort_order) - Number(b.sort_order))
+    .map((row) => row.title);
+  assert(
+    privacyOrder[0] === "Ko obrađuje podatke" && privacyOrder[8] === "Kontakt",
+    `Privacy must run from "Ko obrađuje podatke" to "Kontakt", got: ${privacyOrder.join(" · ")}`,
+  );
 
   const salonTerms = await anonRows(
     "salon_policies",

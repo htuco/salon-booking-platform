@@ -55,7 +55,10 @@ else
 fi
 
 yaml="$root/tenants/$flavor/tenant.yaml"
-salon_id="$(sed -n 's/^[[:space:]]*salonId:[[:space:]]*//p' "$yaml" | head -1 | tr -d "\"'" | sed 's/[[:space:]]*#.*$//')"
+citaj() {
+  sed -n "s/^[[:space:]]*$1:[[:space:]]*//p" "$yaml" | head -1 | tr -d "\"'" | sed 's/[[:space:]]*#.*$//'
+}
+salon_id="$(citaj salonId)"
 [ -n "$salon_id" ] || { echo "tenant.yaml nema salonId" >&2; exit 1; }
 
 # `demo` je prvi opcioni argument; sve ostalo ide ravno flutteru (-d, --profile, ...).
@@ -66,6 +69,12 @@ if [ "${1:-}" = "demo" ]; then
   nacin="demo"
   shift
 fi
+
+# Verzija se cita iz tenant.yaml, kao u build_tenant.sh. Bez ovoga `flutter run` uzme
+# `version:` iz apps/client/pubspec.yaml (1.0.0+1), pa ekran „O aplikaciji" u razvoju
+# pokazuje drugi broj nego store build — a to je jedini ekran koji verziju i prikazuje.
+version_name="$(citaj versionName)"
+ios_build="$(citaj iosBuildNumber)"
 
 defines=(--dart-define="SALON_ID=$salon_id")
 backend="bez backenda (ekrani ostaju na kosturu)"
@@ -103,6 +112,7 @@ fi
 
 echo "== $flavor ($nacin)"
 echo "   salonId  $salon_id"
+echo "   verzija  $version_name ($ios_build)"
 echo "   backend  $backend"
 
 cd "$root/apps/client"
@@ -113,4 +123,6 @@ if [ ! -f "$root/packages/core_domain/lib/src/catalog/salon.freezed.dart" ]; the
   (cd "$root" && dart run melos exec --depends-on=build_runner -- dart run build_runner build >/dev/null)
 fi
 
-exec flutter run -t "${entry[@]}" --flavor "$flavor" "${defines[@]}" "$@"
+exec flutter run -t "${entry[@]}" --flavor "$flavor" \
+  --build-name "$version_name" --build-number "$ios_build" \
+  "${defines[@]}" "$@"

@@ -59,14 +59,22 @@ class PolicyRepository {
   ///
   /// Nema `salonId` parametra namjerno: potpis koji ga traži sugerisao bi da salon može
   /// imati svoju verziju, a `check (document = 'terms')` u bazi to izričito ne dopušta.
+  ///
+  /// **Redoslijed slaže [mergePolicySections], ne PostgREST**, iako je ovdje samo jedna
+  /// lista. Razlog je zamka koju `ServiceRepository` već nosi zapisanu:
+  /// `PostgrestTransformBuilder.order` ima **`ascending = false`** kao default, pa
+  /// `.order('sort_order')` vraća dokument **naopako** — i to se ne vidi ni u jednom testu
+  /// koji mapira redove, nego tek na ekranu, gdje „Kontakt" ispadne sekcija `01`.
+  /// Ovako poredak ima jedan izvor i za `/terms` i za `/privacy`.
   Future<List<PolicySection>> privacy() => guard(() async {
     final rows = await _client
         .from('app_policies')
         .select(_appColumns)
-        .eq('document', PolicyDocument.privacy.wireValue)
-        .order('sort_order');
+        .eq('document', PolicyDocument.privacy.wireValue);
 
-    return [for (final row in rows) policySectionFromRow(row)];
+    return mergePolicySections([
+      for (final row in rows) policySectionFromRow(row),
+    ], const []);
   });
 }
 

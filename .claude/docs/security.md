@@ -19,7 +19,7 @@ sigurnosti nego kao izbor konteksta; ono što ga ograničava su politike u bazi.
 
 | Ko | Kako se prepoznaje | Smije |
 |---|---|---|
-| **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke i **objavljene recenzije** (uz agregat `salon_rating_summary`). **Nema nijedan write grant.** |
+| **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke, **objavljene recenzije** (uz agregat `salon_rating_summary`) i **pravila korištenja sa politikom privatnosti**. **Nema nijedan write grant.** |
 | **klijent** | JWT bez privilegovane uloge (`private.is_client()`) | sve što i anon, plus **svoj** `auth_identities` red, i **svoj** `customers`/`appointments`/`devices` red **u salonu iz `x-salon-id`** |
 | **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` | pun CRUD nad podacima **svog** salona |
 | **super admin** | `app_metadata.role = super_admin` **i** red u `public.users` sa `role='super_admin'` | sve; iznad tenant izolacije |
@@ -100,6 +100,32 @@ ekran recenzija ne čita redove nego **prosjek i histogram**. Taj sažetak daje 
 
 Pravilo koje iz ovoga slijedi: **svaki novi pogled nad tabelom sa RLS-om ide sa
 `security_invoker = true`**, i dobija asercij nad vrijednošću, ne nad brojem redova.
+
+## Tabela bez `salon_id` — `app_policies`
+
+Pravilo „svaka nova tabela nosi `salon_id`" ima dva namjerna izuzetka: `vertical_packs` i, od
+taska 21, **`public.app_policies`**. Oba nose isti oblik politike — `using(true)` za čitanje,
+`private.is_super_admin()` za pisanje — i oba postoje zato što je podatak **platformski**, ne
+tenantski.
+
+Kod pravila razlog nije udobnost nego odgovornost. Šest sekcija sa `15-pravila-koristenja.png`
+nisu iste vrste: Zakazivanje, Cijene i Vaši podaci obavezuju **firmu pod čijim imenom app stoji u
+storeu**; Otkazivanje, Kašnjenje i Kontakt obavezuju salon. Te druge žive u `public.salon_policies`
+(`salon_id`, `private.is_admin(salon_id)` za CRUD, `private.salon_active(salon_id)` za javno
+čitanje). Politika privatnosti je u cijelosti platformska i `check (document = 'terms')` na
+`salon_policies` to provodi u bazi, ne u komentaru.
+
+**Negativan test koji ovo drži je `salon_admin` nad `app_policies`.** `insert` mora pasti na
+`42501`, a `update`/`delete` pogoditi **nula** redova — grant postoji, zaustavlja ga politika, pa
+asercija ide na učinak (v. „`update` sa klijenta ne baca"). Provjereno obaranjem: `super_manage`
+oslabljen na `private.is_admin(...)` ili na `true` obara četiri asercije u
+`007_policies.test.sql`. Kad bi te asercije otišle, tenant bi mogao prepisati izjavu o obradi
+ličnih podataka koju firma ne vidi.
+
+Obrazloženje oblika i odbačene opcije (jedna tabela sa nullable `salon_id`, `jsonb` na
+`salon_settings`, kolona na `salons`): `docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md`.
+Jedna tabela sa nullable `salon_id` je odbijena baš zbog `NULL` grane u guardu — isti oblik koji je
+u tasku 14 pustio zahtjev bez `x-salon-id` headera.
 
 ## Kompozitni strani ključevi — druga brava
 
@@ -190,7 +216,9 @@ Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** g
 
 ## Checklist prije nego što otvoriš PR koji dira `supabase/`
 
-1. Ima li nova tabela `salon_id`, RLS uključen, **i** grant **i** politiku?
+1. Ima li nova tabela `salon_id`, RLS uključen, **i** grant **i** politiku? Ako namjerno nema
+   `salon_id` (kao `vertical_packs` i `app_policies`), stoji li razlog u ADR-u i negativan test
+   da tenant ne može pisati po njoj?
 2. Zove li politika `private.*` helper umjesto da prepisuje uslov?
 3. Je li klijentska politika vezana i za `private.client_salon_id()` **i** za `private.owns_identity()`?
 4. Može li se osoblje jednog salona domoći reda drugog salona kroz join, view ili FK?
@@ -310,6 +338,7 @@ ništa.
 | `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
 | `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header |
 | `005_delete_my_account.test.sql` | brisanje naloga — anonimizacija u **oba** salona, otkazivanje budućih termina, gašenje pristupa, trigger ne uskrsava nalog |
+| `007_policies.test.sql` | pravila i politika privatnosti — `anon` čita bez prijave, **`salon_admin` ne može pisati po `app_policies`**, sekcije neaktivnog salona su nevidljive |
 | `rest_delete_account.ts` | brisanje kroz Edge Function sa pravim JWT-om; obrisan identitet dobija **`200` sa praznom listom**, ne `401` — pristup gasi `deleted_at`, ne istek tokena |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
