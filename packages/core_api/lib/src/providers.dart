@@ -8,6 +8,7 @@ import 'auth/supabase_auth_repository.dart';
 import 'booking/appointment_repository.dart';
 import 'booking/booking_repository.dart';
 import 'catalog/employee_repository.dart';
+import 'catalog/policy_repository.dart';
 import 'catalog/review_repository.dart';
 import 'catalog/salon_repository.dart';
 import 'catalog/service_repository.dart';
@@ -51,6 +52,10 @@ final salonRepositoryProvider = Provider<SalonRepository>(
 
 final reviewRepositoryProvider = Provider<ReviewRepository>(
   (ref) => ReviewRepository(ref.watch(supabaseClientProvider)),
+);
+
+final policyRepositoryProvider = Provider<PolicyRepository>(
+  (ref) => PolicyRepository(ref.watch(supabaseClientProvider)),
 );
 
 final serviceRepositoryProvider = Provider<ServiceRepository>(
@@ -267,3 +272,39 @@ final verticalProvider = FutureProvider<Vertical>(
       .watch(verticalRepositoryProvider)
       .fetchForSalon(ref.watch(currentSalonIdProvider)),
 );
+
+/// Sekcije „Pravila korištenja" — platformske i salonske, spojene i sortirane
+/// (`SPEC.md` 5o).
+///
+/// Radi bez prijave: store review otvara ovaj ekran na svježoj instalaciji.
+final termsProvider = FutureProvider<List<PolicySection>>(
+  (ref) => ref
+      .watch(policyRepositoryProvider)
+      .terms(ref.watch(currentSalonIdProvider)),
+);
+
+/// Sekcije politike privatnosti. Bez `salonId` — dokument je u cijelosti platformski
+/// (ADR-0009).
+final privacyPolicyProvider = FutureProvider<List<PolicySection>>(
+  (ref) => ref.watch(policyRepositoryProvider).privacy(),
+);
+
+/// Vrijednosti kojima se popunjavaju placeholderi u tijelu sekcije.
+///
+/// **Sinhron `Provider` nad `valueOrNull` triju asinhronih izvora, namjerno.** Da čeka
+/// `Future.wait`, pad jednog upita (postavke, vertikala) srušio bi cijeli pravni ekran.
+/// Ovako neriješen izvor znači samo da placeholder ostaje vidljiv kao `{minCancelHours}` —
+/// vidljiv kvar koji neko prijavi, umjesto rečenice bez roka koja izgleda ispravno.
+/// Kad izvor stigne, provider se preračuna i tekst se dopuni.
+final policyPlaceholdersProvider = Provider<PolicyPlaceholders>((ref) {
+  final salon = ref.watch(salonProvider).valueOrNull;
+  final postavke = ref.watch(salonSettingsProvider).valueOrNull;
+  final vertikala = ref.watch(verticalProvider).valueOrNull;
+
+  return PolicyPlaceholders(
+    minCancelHours: postavke?.minCancelHours,
+    phone: salon?.phone,
+    email: salon?.email,
+    appointmentSingular: vertikala?.terms.appointmentSingular,
+  );
+});

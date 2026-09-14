@@ -1,4 +1,3 @@
-import 'package:client/src/features/account/account_rows.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
@@ -81,13 +80,13 @@ void main() {
 
       await pumpEkran(tester, ruta: '/settings', authRepository: repo);
 
-      final jezik = tester.widget<AccountRow>(
-        find.widgetWithText(AccountRow, 'Jezik · Bosanski'),
+      final jezik = tester.widget<LinkRow>(
+        find.widgetWithText(LinkRow, 'Jezik · Bosanski'),
       );
       expect(jezik.onTap, isNull);
 
-      final obavijesti = tester.widget<AccountRow>(
-        find.widgetWithText(AccountRow, 'Obavijesti'),
+      final obavijesti = tester.widget<LinkRow>(
+        find.widgetWithText(LinkRow, 'Obavijesti'),
       );
       expect(obavijesti.onTap, isNotNull);
     });

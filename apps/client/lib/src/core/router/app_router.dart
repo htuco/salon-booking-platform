@@ -1,3 +1,4 @@
+import 'package:core_domain/core_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +15,9 @@ import '../../features/about/about_screen.dart';
 import '../../features/account/account_screen.dart';
 import '../../features/account/settings_screen.dart';
 import '../../features/home/home_screen.dart';
+import '../../features/legal/about_app_screen.dart';
+import '../../features/legal/policy_document_screen.dart';
+import '../../features/notifications/notifications_screen.dart';
 import '../../features/placeholder/placeholder_screen.dart';
 import '../../features/services/services_screen.dart';
 import 'client_shell.dart';
@@ -116,8 +120,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ClientRoute.notifications.path,
                 name: ClientRoute.notifications.name,
-                builder: (context, state) =>
-                    _placeholder(ClientRoute.notifications, state),
+                builder: (context, state) => const NotificationsScreen(),
               ),
             ],
           ),
@@ -189,16 +192,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: ClientRoute.reviews.name,
         builder: (context, state) => const ReviewsScreen(),
       ),
-      // Ekrane pravi task 21; rute su ovdje da redovi Postavki imaju gdje voditi.
       GoRoute(
         path: ClientRoute.aboutApp.path,
         name: ClientRoute.aboutApp.name,
-        builder: (context, state) => _placeholder(ClientRoute.aboutApp, state),
+        builder: (context, state) => const AboutAppScreen(),
       ),
+      // `?from=` nosi **ime ekrana na koji se vraća**, jer se do pravila dolazi sa dva
+      // mjesta: iz Postavki i sa „O aplikaciji". Back header nosi ime roditelja, pa bi
+      // fiksna labela na jednom od ta dva puta lagala. Nepoznata vrijednost pada na
+      // „O aplikaciji", kako handoff i crta (`15-pravila-koristenja.png`).
       GoRoute(
         path: ClientRoute.terms.path,
         name: ClientRoute.terms.name,
-        builder: (context, state) => _placeholder(ClientRoute.terms, state),
+        builder: (context, state) => PolicyDocumentScreen(
+          document: PolicyDocument.terms,
+          from: state.uri.queryParameters['from'],
+        ),
+      ),
+      GoRoute(
+        path: ClientRoute.privacy.path,
+        name: ClientRoute.privacy.name,
+        builder: (context, state) => PolicyDocumentScreen(
+          document: PolicyDocument.privacy,
+          from: state.uri.queryParameters['from'],
+        ),
       ),
     ],
     // Bez ovoga nepoznat URL na webu daje sivi ekran sa stack traceom.
@@ -248,8 +265,9 @@ enum ClientRoute {
   gallery('/gallery', 'Galerija'),
   reviews('/reviews', 'Recenzije'),
 
-  /// Ćelija trake koja nema ekran do taska 21. Ruta postoji prije ekrana namjerno —
-  /// traka sa pet ćelija od kojih dvije nemaju gdje voditi je traka koja pada.
+  /// Peta ćelija trake. Ekran postoji od taska 21, ali **samo kao prazno stanje**: lista
+  /// obavijesti nema server-side izvor dok ne postoji task 25 (politika
+  /// `staff_notification_logs` klijentu ne vraća nijedan red).
   notifications('/notifications', 'Obavijesti'),
 
   /// Širi ekran od [account]: profil, notifikacije, jezik, odjava (`SPEC.md` 5k).
@@ -258,10 +276,17 @@ enum ClientRoute {
   /// nije imao ulaz iz aplikacije, pa ni brisanje naloga nije bilo dostupno.
   settings('/settings', 'Postavke'),
 
-  /// Redovi Postavki koje ekranom pokriva task 21. Rute postoje prije ekrana namjerno,
-  /// isto kao [notifications]: chevron koji ne vodi nigdje je gori od placeholdera.
+  /// Pravni pod-ekrani iz Postavki i sa „O aplikaciji" (`SPEC.md` 5n i 5o). Bez tab bara,
+  /// sa back headerom, kao [gallery] i [reviews].
+  ///
+  /// [privacy] je **nova ruta u tasku 21** — DoD ga ne nabraja, ali `14-o-aplikaciji.png`
+  /// crta red „Politika privatnosti" pored „Pravila korištenja", a Postavke su do tada oba
+  /// reda vodile na isti ekran. Tekst ide u `app_policies` kao zaseban dokument, pa isti
+  /// izvor kasnije servira i javnu stranicu iz Sprinta 3 (`docs/01` korak 29) — ekran u
+  /// app-i je **ne zamjenjuje**.
   aboutApp('/about-app', 'O aplikaciji'),
-  terms('/terms', 'Pravila korištenja');
+  terms('/terms', 'Pravila korištenja'),
+  privacy('/privacy', 'Politika privatnosti');
 
   const ClientRoute(this.path, this.title);
 

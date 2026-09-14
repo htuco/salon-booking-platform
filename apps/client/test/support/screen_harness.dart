@@ -12,6 +12,8 @@ library;
 
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
+import 'package:client/src/features/legal/about_app_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -63,6 +65,10 @@ Future<ProviderContainer> pumpEkran(
   SalonRatingSummary? ocjena,
   List<Review> recenzije = const [],
   Vertical? vertical,
+  List<PolicySection> pravila = const [],
+  List<PolicySection> privatnost = const [],
+  SalonSettings? postavke,
+  PackageInfo? packageInfo,
   AuthRepository? authRepository,
   bool pumpaj = true,
 }) async {
@@ -102,6 +108,27 @@ Future<ProviderContainer> pumpEkran(
       salonRatingProvider.overrideWith((ref) async => ocjena),
       salonReviewsProvider.overrideWith((ref) async => recenzije),
       verticalProvider.overrideWith((ref) async => vertical ?? vertikala()),
+      // Pravni ekrani (task 21) i `policyPlaceholdersProvider` čitaju pravila i postavke.
+      // `salonSettingsProvider` bez override-a posegne za `Supabase.instance`, pa stoji
+      // ovdje čak i za ekrane koji pravila ne crtaju — provider se gradi lijeno, ali
+      // `/about-app` i `/terms` ga traže odmah.
+      termsProvider.overrideWith((ref) async => pravila),
+      privacyPolicyProvider.overrideWith((ref) async => privatnost),
+      salonSettingsProvider.overrideWith(
+        (ref) async =>
+            postavke ?? const SalonSettings(id: 's1', salonId: salonId),
+      ),
+      // `PackageInfo.fromPlatform()` ide na platformski kanal kojeg u testu nema.
+      appPackageInfoProvider.overrideWith(
+        (ref) async =>
+            packageInfo ??
+            PackageInfo(
+              appName: 'Barber Studio Vitez',
+              packageName: 'ba.nasadomena.barberstudiovitez',
+              version: '1.0.4',
+              buildNumber: '240',
+            ),
+      ),
       // Tab Termini je pravi ekran i čita je li korisnik prijavljen; bez override-a
       // posegne za `Supabase.instance` kojeg u testu nema.
       isSignedInProvider.overrideWithValue(
@@ -146,4 +173,23 @@ Service usluga({
   category: category,
   price: price,
   durationMinutes: durationMinutes,
+);
+
+/// Sekcija pravila sa razumnim podrazumijevanim vrijednostima — test imenuje samo ono što
+/// mjeri. [salonId] se **ne** postavlja podrazumijevano: `null` znači platformska sekcija,
+/// što je razlika koja odlučuje redoslijed kod istog `sortOrder`-a.
+PolicySection sekcija({
+  required String id,
+  required int sortOrder,
+  required String title,
+  String body = 'Tijelo sekcije.',
+  String? salon,
+  DateTime? updatedAt,
+}) => PolicySection(
+  id: id,
+  sortOrder: sortOrder,
+  title: title,
+  body: body,
+  salonId: salon,
+  updatedAt: updatedAt ?? DateTime.utc(2026, 9, 14),
 );
