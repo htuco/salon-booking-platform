@@ -1,11 +1,11 @@
 # Trenutni task: 24 — Admin: potvrda, odbijanje, otkazivanje i ručni termin
 
 Puni task: [`tasks/sprint-2/24-admin-akcije-nad-terminima.md`](sprint-2/24-admin-akcije-nad-terminima.md)
-**Nije počet** · Učitano: 2026-09-14 · Grana: —
+**U toku** · Učitano: 2026-09-14 · Počet: 2026-09-14 · Grana: `feat/admin-akcije-nad-terminima`
 
 ## Status
 
-Nije počet. Zavisnost [23](sprint-2/23-admin-login-i-lista.md) je ✅ — admin se prijavljuje i vidi
+U toku. Zavisnost [23](sprint-2/23-admin-login-i-lista.md) je ✅ — admin se prijavljuje i vidi
 listu, ali **ništa u njoj ne može dirati**. Zato termin ostaje `pending` dok ne istekne, i cijeli
 klijentski booking flow visi u zraku.
 

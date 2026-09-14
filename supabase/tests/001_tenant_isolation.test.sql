@@ -55,7 +55,12 @@ set local role authenticated;
 -- crosses over, so that is what it now counts.
 select is((select count(*)::int from public.appointments where salon_id<>'550e8400-e29b-41d4-a716-446655440000'),0,'Owner A sees only salon A even with salon B header');
 select is((select count(*)::int from public.appointments where salon_id='550e8400-e29b-41d4-a716-446655440001'),0,'Owner A cannot SELECT salon B appointments');
-select results_eq($$update public.appointments set customer_name='Compromised' where salon_id='550e8400-e29b-41d4-a716-446655440001' returning id$$,$$select null::uuid where false$$,'Owner A cannot UPDATE salon B appointments');
+-- Task 24 revoked INSERT/UPDATE on appointments for `authenticated`, so this now fails on the
+-- grant before RLS is consulted at all. The claim is unchanged and the proof is strictly
+-- stronger: previously the write was allowed and filtered down to zero rows, now the write
+-- path does not exist. Writes go through book_appointment / set_appointment_status /
+-- cancel_appointment, which check salon ownership themselves.
+select throws_ok($$update public.appointments set customer_name='Compromised' where salon_id='550e8400-e29b-41d4-a716-446655440001'$$,'42501',null,'Owner A cannot UPDATE salon B appointments');
 select results_eq($$delete from public.appointments where salon_id='550e8400-e29b-41d4-a716-446655440001' returning id$$,$$select null::uuid where false$$,'Owner A cannot DELETE salon B appointments');
 select is((select count(*)::int from public.customers where salon_id<>'550e8400-e29b-41d4-a716-446655440000'),0,'Owner A only sees its own customer records');
 -- Kept as a positive check so the assertion above cannot pass on an empty result: zero rows

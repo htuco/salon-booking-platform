@@ -31,3 +31,9 @@ flow visi u zraku.
   napraviti termin koji availability engine nikad ne bi dozvolio.
 - No-show je statistika za kasnije (`vertical.features.noShowTracking`) — polje se puni sada, ekran
   dolazi u Sprintu 3.
+
+## Status (2026-09-14)
+
+🟡 **U toku** — grana `feat/admin-akcije-nad-terminima`, otvorena sa `main`-a na `fcd44e4`.
+
+Krenulo od koraka 1: RPC funkcije i pgTAP prije ekrana, kako task nalaže.

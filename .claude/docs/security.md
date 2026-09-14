@@ -186,12 +186,13 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
 
 - **`devices` upisi** i dalje nemaju validiranu funkciju — dolaze sa push radom (task 25).
   `customers` je **zatvoreno** u tasku 14, v. odjeljak ispod.
-- **Direktan admin `insert`/`update` nad `appointments` zaobilazi validaciju slota.** Exclusion
-  constraint sprječava preklapanje, ali radno vrijeme, blokade i `min_advance_booking_hours` ne
-  provjerava niko na tom putu. Admin ekran mora ići kroz `book_appointment`.
+- ~~**Direktan admin `insert`/`update` nad `appointments` zaobilazi validaciju slota**~~ —
+  **zatvoreno** u tasku 24, v. „Admin akcije" ispod.
 - **Termin bez dodijeljenog radnika nije pokriven constraintom** (`where employee_id is not null`).
-  `book_appointment` uvijek dodijeli radnika; takav red može nastati samo ručnim upisom, i
-  `get_available_slots` ga zato konzervativno tretira kao zauzeće cijelog salona.
+  `book_appointment` uvijek dodijeli radnika; takav red može nastati samo ručnim upisom **kroz
+  `service_role`** (migracija, seed) — od taska 24 `authenticated` više nema `insert` grant, pa iz
+  aplikacije ne može nastati. `get_available_slots` ga i dalje konzervativno tretira kao zauzeće
+  cijelog salona.
 - ~~**Brisanje/anonimizacija naloga**~~ — **zatvoreno** u tasku 17, v. odjeljak ispod.
 
 ## Upsert klijenta — `public.ensure_customer`
@@ -270,6 +271,87 @@ Nepostojeći i tuđi termin vraćaju **istu** grešku (`42501`).
 > Postgresu. Test koji od direktnog `update`-a očekuje `42501` će zato pasti — a tvrdnja je
 > pogrešna, ne kod. Asercija ide na **učinak** (red je netaknut). `insert` je druga priča: njega
 > hvata `with check` politike i on stvarno baca.
+
+## Admin akcije nad terminima — `set_appointment_status` i ručni unos
+
+Task 24. Ovaj odjeljak zatvara rupu koju je gornja lista godinu dana vodila kao otvorenu.
+
+**Rupa nije zatvorena dodavanjem funkcija nego oduzimanjem granta.** Dok je `authenticated` imao
+`insert`/`update` na `appointments`, svaka validirana funkcija bila je konvencija: admin je mogao
+jednim PostgREST pozivom upisati termin u nedjelju u 3 ujutro. Migracija
+`20260914150000_admin_akcije_nad_terminima.sql` zato radi:
+
+```sql
+revoke insert, update on public.appointments from authenticated;
+```
+
+`select` i `delete` ostaju — greškom unesen termin salon mora moći obrisati, a brisanje ne može
+proizvesti nevalidan raspored. `staff_manage` politika (`for all`) ostaje netaknuta: ona brani
+**tuđi salon** i to i dalje radi za `select` i `delete`.
+
+Od tada u `appointments` pišu samo tri `security definer` funkcije:
+
+| Funkcija | Ko | Šta radi |
+|---|---|---|
+| `book_appointment` | admin ili vlasnik `customers` reda | jedini upis novog termina |
+| `set_appointment_status` | admin salona | `confirmed` / `completed` / `no_show` |
+| `cancel_appointment` | admin ili vlasnik | `cancelled`, sa rokom koji vrijedi samo klijentu |
+
+**Otkazivanje namjerno nije u `set_appointment_status`.** Ono nosi rok iz
+`salon_settings.min_cancel_hours` i `cancelled_by`; dvije funkcije koje pišu isti status bile bi
+dva mjesta na kojima se pravilo o roku može razići. `set_appointment_status` zato odbija
+`cancelled` sa `PT400` i uputi na `cancel_appointment`.
+
+### Admin izuzetak vrijedi samo za `min_advance_booking_hours`
+
+`get_available_slots` je dobio peti argument `p_ignore_min_advance`. Salon upisuje klijenta koji
+stoji na vratima, a prag od 2 h to zabranjuje — prag je pravilo **prema klijentu**, ne fizičko
+ograničenje salona. Isti oblik kao `min_cancel_hours`, koji takođe obavezuje klijenta a ne salon.
+
+**Radno vrijeme, pauze, blokade i preklapanje vrijede i za admina.** Izuzetak nulira jedan `where`
+uslov i ništa više; pgTAP to drži sa dvije strane — ručni termin u nedjelju u 3 ujutro je odbijen,
+i lista sa izuzetkom nikad nije kraća ni duža nego što prag opravdava.
+
+**Klijent izuzetak ne može dobiti ni greškom**: `p_ignore_min_advance` nije argument
+`book_appointment` nego izvedena vrijednost iz `private.is_admin(p_salon_id)`. Da je argument,
+klijentska app bi ga mogla poslati.
+
+> **Zamka: `create or replace` sa novim parametrom pravi preopterećenje, ne zamjenu.** Obje verzije
+> ostaju u bazi, obje sa grantom, a PostgREST bira po imenima argumenata iz tijela zahtjeva — poziv
+> bez `p_ignore_min_advance` bi i dalje išao na staru funkciju, onu koja ne zna za izuzetak, pa bi
+> ručni unos tiho radio po starom pravilu. Migracija zato ima `drop function if exists` nad starim
+> potpisom **prije** `create`. Nađeno upitom nad `pg_proc`, ne čitanjem.
+
+### Telefonski klijent — `upsert_walkin_customer`
+
+`ensure_customer` (task 14) je namjerno isključio osoblje: identitet tamo dolazi iz tokena, a
+telefonski klijent nema token. `upsert_walkin_customer` je taj drugi tok — samo admin salona,
+`auth_identity_id` ostaje `null`.
+
+To nije propust nego suština: čovjek koji je salon nazvao telefonom nema nalog. Ako se kasnije
+prijavi u aplikaciji, `ensure_customer` pravi **zaseban** red, jer po telefonu ne može dokazati da
+je to on. Spajanje ta dva reda je odluka salona iz admin ekrana, ne baze koja pogađa po broju.
+
+Za razliku od `ensure_customer`, ovdje je `do update` a ne `do nothing`: tamo bi drugi poziv
+prepisao ime koje je salon ispravio, a **ovdje ispravku piše sam salon**.
+
+### Ručni termin je odmah `confirmed`
+
+`pending` znači „salon još nije odgovorio". Kad salon sam upisuje termin, odgovor je sam upis —
+ostavljen `pending` bi čekao potvrdu od onoga ko ga je već potvrdio i istekao bi kroz
+`pending_expires_at`. Zato admin put daje `confirmed` + `source = 'manual'` + `pending_expires_at
+is null`, i potvrda postojećeg termina takođe skida rok isteka.
+
+### Brojači se pune, prag ne postoji
+
+`no_show` diže `customers.no_show_count`, `completed` diže `visit_count` i `last_visit_at`. Obje
+kolone su do sada bile mrtve. **Prag („tri nedolaska u šest mjeseci") namjerno nije provođen** — on
+je pravilo vertikale (`vertical.features.noShowTracking`) i traži vlastitu odluku u Sprintu 3.
+Brojač se puni sada da statistika ne počne od nule kad ekran dođe.
+
+`cancel_reason` nosi obrazloženje **svake** akcije, ne samo otkazivanja: kolona je imenovana po
+prvom slučaju, a odbijanje („radnik na bolovanju") i no-show („nije se pojavio") su isti podatak —
+zašto termin nije održan.
 
 ## Brisanje naloga — `public.delete_my_account`
 
