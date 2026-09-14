@@ -11,7 +11,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [14](14-identitet-i-klijent-upsert.md) ✅ | Backend: `AuthIdentity` + `Customer` upsert | 15, 16, 23, 25 | 2 dana |
 | [15](15-izolacija-klijent-u-dva-salona.md) ✅ | Dokaz izolacije: isti klijent u dva salona | prvi klijent | 1 dan |
 | [16](16-moji-termini-i-otkazivanje.md) ✅ | Client: "Moji termini" + otkazivanje | 25 | 2 dana |
-| [17](17-moj-racun-i-brisanje.md) | Client: "Moj račun" + **brisanje računa** | store submission | 1–2 dana |
+| [17](17-moj-racun-i-brisanje.md) ✅ | Client: **Postavke (5k)**, "Moj račun" + **brisanje računa** | store submission | 2–3 dana |
 | [22](22-sema-slike-i-staz.md) ✅ | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
 | [18](18-pocetna-i-tab-bar.md) ✅ | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
 | [19](19-o-nama-i-usluge.md) ✅ | Client: "O nama" i "Usluge" | — | 1–2 dana |
@@ -36,6 +36,11 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 - **18 prije 19–21.** Tab bar je jedina zajednička komponenta koju `SPEC.md` traži da se gradi
   prva; četiri ekrana ispod nje su lakša kad ona postoji.
 - **23 → 24 → 25.** Push se okida na admin akcije; bez njih nema šta slati.
+- **17 je uzeo `/settings` (5k), pa je narastao.** Handoff 5k je bio siroče: task fajl 17 ga
+  pominje kao referencu ali gradi `/account`, a komentar u `app_router.dart` ga je pripisao tasku
+  21 — čiji DoD nabraja samo `/notifications`, `/about-app` i `/terms`. Bez 5k `/account` nema ulaz
+  iz aplikacije, a nedostupan ekran za brisanje pada na Apple reviewu. Zato 5k ide u 17, a procjena
+  sa 1–2 raste na 2–3 dana. **21 time ne gubi ništa** — njegov DoD 5k nikad nije ni sadržao.
 
 ## Šta ovaj sprint zatvara iz prethodnih
 

@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/fake_auth_repository.dart';
+
 const _env = AppEnv(
   salonId: '550e8400-e29b-41d4-a716-446655440000',
   supabaseUrl: '',
@@ -32,6 +34,10 @@ ProviderContainer _container() {
       // korijen taba (`AppointmentsScreen`). On pita da li je korisnik prijavljen, a
       // taj provider bez override-a posegne za `Supabase.instance` kojeg u testu nema.
       isSignedInProvider.overrideWithValue(false),
+      // Task 17: `/settings` i `/account` više nisu placeholderi — čitaju sesiju kroz
+      // `authRepositoryProvider`, koji bez override-a posegne za `Supabase.instance`
+      // kojeg u testu nema. Ista zamka opisana u `support/fake_auth_repository.dart`.
+      authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
     ],
   );
   addTearDown(container.dispose);
@@ -58,6 +64,10 @@ void main() {
       //
       // `/gallery` je jedini red iz §12 kojeg ovdje nema: oznacen je kao Later i ekran
       // ga dobija u tasku 20. Kad ga dobije, ide i ovdje.
+      //
+      // `/about-app` i `/terms` su dodani u §12 u tasku 17. Handoff ih crta (5n, 5o) i DoD
+      // taska 21 ih imenuje, ali tabela u specifikaciji ih nije imala — ista rupa kao kod
+      // 5k. Rute postoje prije ekrana, da redovi Postavki imaju gdje voditi.
       const izSpecifikacije = {
         '/',
         '/services',
@@ -74,6 +84,8 @@ void main() {
         '/about',
         '/notifications',
         '/settings',
+        '/about-app',
+        '/terms',
       };
 
       expect(

@@ -7,6 +7,8 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/fake_auth_repository.dart';
+
 /// Donja navigacija u stvarnom stablu aplikacije — `prototype/ui/SPEC.md` §Bottom tab bar.
 ///
 /// `core_ui/test/bottom_nav_bar_test.dart` dokazuje kako traka **izgleda**; ovdje se
@@ -200,6 +202,10 @@ ProviderContainer _container() {
       salonGalleryProvider.overrideWith((ref) async => const <String>[]),
       verticalProvider.overrideWith((ref) async => Vertical.fallback),
       isSignedInProvider.overrideWithValue(false),
+      // Task 17: `/settings` i `/account` više nisu placeholderi — čitaju sesiju kroz
+      // `authRepositoryProvider`, koji bez override-a posegne za `Supabase.instance`
+      // kojeg u testu nema. Ista zamka opisana u `support/fake_auth_repository.dart`.
+      authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
     ],
   );
   addTearDown(container.dispose);

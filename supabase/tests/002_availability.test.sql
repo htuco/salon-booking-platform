@@ -54,9 +54,18 @@ select is(
     (select salon from tfix), (select svc30 from tfix), (select mon from tfix) + 6)),
   0, 'Nedjelja je zatvorena — nema slotova');
 
+-- **`mon - 14`, ne `mon - 7`.** `mon` je ponedjeljak **sljedece** sedmice, pa je `mon - 7`
+-- ponedjeljak tekuce sedmice — a to je ponedjeljkom **danas**, ne proslost. Test je zato
+-- padao svakog ponedjeljka (62 slota umjesto 0) i prolazio ostalih sest dana. Nadjeno
+-- pokretanjem poslije ponoci; CI je blokiran, pa se nije imalo gdje drugo vidjeti.
+--
+-- `mon - 14` je ponedjeljak **prosle** sedmice: uvijek strogo u proslosti, i uvijek radni
+-- dan. Drugi dio je vazan koliko i prvi — da je izabran nedjeljni datum, asercija bi
+-- vracala 0 zato sto je salon zatvoren, a ne zato sto je datum prosao, i prolazila bi i nad
+-- pokvarenom funkcijom.
 select is(
   (select count(*)::int from public.get_available_slots(
-    (select salon from tfix), (select svc30 from tfix), (select mon from tfix) - 7)),
+    (select salon from tfix), (select svc30 from tfix), (select mon from tfix) - 14)),
   0, 'Proslost ne vraca slotove');
 
 select is(

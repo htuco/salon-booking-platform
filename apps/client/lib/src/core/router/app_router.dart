@@ -9,6 +9,8 @@ import '../../features/booking/employee_step_screen.dart';
 import '../../features/booking/service_step_screen.dart';
 import '../../features/booking/slot_step_screen.dart';
 import '../../features/about/about_screen.dart';
+import '../../features/account/account_screen.dart';
+import '../../features/account/settings_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/placeholder/placeholder_screen.dart';
 import '../../features/services/services_screen.dart';
@@ -122,8 +124,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ClientRoute.settings.path,
                 name: ClientRoute.settings.name,
-                builder: (context, state) =>
-                    _placeholder(ClientRoute.settings, state),
+                builder: (context, state) => const SettingsScreen(),
               ),
             ],
           ),
@@ -174,7 +175,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: ClientRoute.account.path,
         name: ClientRoute.account.name,
-        builder: (context, state) => _placeholder(ClientRoute.account, state),
+        builder: (context, state) => const AccountScreen(),
+      ),
+      // Ekrane pravi task 21; rute su ovdje da redovi Postavki imaju gdje voditi.
+      GoRoute(
+        path: ClientRoute.aboutApp.path,
+        name: ClientRoute.aboutApp.name,
+        builder: (context, state) => _placeholder(ClientRoute.aboutApp, state),
+      ),
+      GoRoute(
+        path: ClientRoute.terms.path,
+        name: ClientRoute.terms.name,
+        builder: (context, state) => _placeholder(ClientRoute.terms, state),
       ),
     ],
     // Bez ovoga nepoznat URL na webu daje sivi ekran sa stack traceom.
@@ -223,8 +235,15 @@ enum ClientRoute {
   notifications('/notifications', 'Obavijesti'),
 
   /// Širi ekran od [account]: profil, notifikacije, jezik, odjava (`SPEC.md` 5k).
-  /// Ekran pravi task 21; "Moj račun" ostaje zaseban, pushed iz ovog.
-  settings('/settings', 'Postavke');
+  /// **Ekran pravi task 17, ne 21** — raniji komentar je tvrdio suprotno, a DoD taska 21
+  /// nabraja samo [notifications], [aboutApp] i [terms]. Dok 5k nije postojao, [account]
+  /// nije imao ulaz iz aplikacije, pa ni brisanje naloga nije bilo dostupno.
+  settings('/settings', 'Postavke'),
+
+  /// Redovi Postavki koje ekranom pokriva task 21. Rute postoje prije ekrana namjerno,
+  /// isto kao [notifications]: chevron koji ne vodi nigdje je gori od placeholdera.
+  aboutApp('/about-app', 'O aplikaciji'),
+  terms('/terms', 'Pravila korištenja');
 
   const ClientRoute(this.path, this.title);
 

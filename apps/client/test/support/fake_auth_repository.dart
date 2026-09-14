@@ -16,6 +16,7 @@ class FakeAuthRepository implements AuthRepository {
     AuthSession? pocetnaSesija,
     this.otpGreska,
     this.prijavaGreska,
+    this.brisanjeGreska,
   }) : _sesija = pocetnaSesija {
     _kontroler.add(_sesija);
   }
@@ -35,6 +36,13 @@ class FakeAuthRepository implements AuthRepository {
 
   /// Greška koju baca [verifyEmailOtp], ili `null` za uspjeh.
   final ApiError? prijavaGreska;
+
+  /// Greška koju baca [deleteAccount], ili `null` za uspjeh. Task 17.
+  final ApiError? brisanjeGreska;
+
+  /// Koliko je puta brisanje pozvano — dokaz da dijalog stvarno okine akciju, i da
+  /// odustajanje **ne** okine ništa.
+  int brojBrisanja = 0;
 
   /// Koliko je puta kod zatražen — dokaz da „Pošalji ponovo" stvarno šalje.
   int brojZahtjevaZaKod = 0;
@@ -93,7 +101,16 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthSession> continueAsGuest({required String name}) async =>
       throw const ServerError('Tok gosta je task 26');
 
+  /// Brisanje naloga (task 17).
+  ///
+  /// **Odjava je dio brisanja**, isto kao u `SupabaseAuthRepository` — ekran se oslanja na
+  /// to da nakon uspjeha sesije više nema. Kad brisanje padne, sesija **ostaje**: korisnik
+  /// mora moći pokušati ponovo, a odjava bi mu oduzela jedini token kojim to može.
   @override
-  Future<void> deleteAccount() async =>
-      throw const ServerError('Brisanje naloga je task 17');
+  Future<void> deleteAccount() async {
+    brojBrisanja++;
+    if (brisanjeGreska != null) throw brisanjeGreska!;
+    _sesija = null;
+    _kontroler.add(null);
+  }
 }

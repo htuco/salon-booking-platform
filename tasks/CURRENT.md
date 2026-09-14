@@ -1,79 +1,81 @@
-# Trenutni task: 19 — Client: „O nama" i „Usluge"
+# Trenutni task: 12/13 — Apple i Google prijava
 
-Puni task: [`tasks/sprint-2/19-o-nama-i-usluge.md`](sprint-2/19-o-nama-i-usluge.md) ·
-**Gotovo, čeka merge** · Učitano: 2026-09-13 · Zatvoreno: 2026-09-13
+Puni taskovi: [`tasks/sprint-2/12-auth-provideri.md`](sprint-2/12-auth-provideri.md) ·
+[`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md) ·
+[`13-client-login-ekran.md`](sprint-2/13-client-login-ekran.md)
+**Nije počet** · Učitano: 2026-09-14
 
 ## Status
 
-Grana `feat/o-nama-i-cjenovnik`, [PR #33](https://github.com/htuco/salon-booking-platform/pull/33).
+Nije počet. **Task 17 je zatvoren** — v. Istoriju.
 
-> **Pazi na istoriju prije nego išta zaključiš.**
-> [PR #31](https://github.com/htuco/salon-booking-platform/pull/31) je pod naslovom
-> „feat(client): o nama i cjenovnik" mergeovan **sa samo bookkeepingom** — status blokovi,
-> nijedan ekran. Zato je 19 u tabeli ostao 🟡 i zato je `CURRENT.md` danas ujutro još pisao
-> „U toku". Stvarni rad je u ovoj grani.
+## Ciljevi
 
-Oba ekrana su napisana i dokazana **protiv živog Supabase stacka**, ne protiv `demo_main.dart`.
+- [ ] `sign_in_with_apple` i `google_sign_in` u `pubspec.yaml`
+- [ ] `signInWithApple()` i `signInWithGoogle()` u `SupabaseAuthRepository` (danas bacaju)
+- [ ] iOS: Sign In with Apple entitlement, URL scheme za Google, po flavoru
+- [ ] Android: SHA-1 otisci u Google Cloud, debug i release zasebno
+- [ ] Testovi sa lažnim providerom
+- [ ] 🔒 **Dokaz uživo** — traži konzole, v. Napomene
 
-## Šta je isporučeno
+## Napomene
 
-- **`/services`** — pun cjenovnik grupisan po `category`; zaglavlja samo kad ima šta da se
-  grupiše. Tap vodi u `/book/service?serviceId=`.
-- **`/about`** — hero, outline CTA, priča, foto par, radno vrijeme, kontakt.
-- **Sadržaj „O nama" je i na Početnoj, inline** — v. odjeljak ispod.
-- **`about_sections.dart`** — četiri javne sekcije koje slažu oba ekrana.
+### Šta blokira, i zašto to nije stvar koda
 
-## Odluka koju ne otvaraj ponovo bez novog podatka
+Kod se može napisati danas. **Dokazati se ne može**, i to je razlika koju repo tretira ozbiljno:
+`supabase/CLAUDE.md` traži da u sažetku piše „napisano, nije pokrenuto" dok suite nije prošla.
 
-**`SPEC.md` 5b ne završava na `/about`.** Prvi prolaz je ekran napisao po handoffu i ostavio ga
-iza reda „O nama ›" na dnu Početne. U simulatoru se vidjelo šta to znači: priča salona, radno
-vrijeme i kontakt — podaci zbog kojih se salon otvara na telefonu — stoje jedan tap dalje, na
-ekranu kojem handoff **nijednim nacrtanim ekranom ne daje ulaz** (ni `01-pocetna.png`, ni
-Postavke).
+Tri stvari fale, sve izvan repoa:
 
-Sadržaj je zato inline na Početnoj; `/about` ostaje kao ruta, deep link i oblik iz handoffa.
-Sekcije dijele obje strane, pa ne postoje dvaput.
+| Šta | Gdje | Zašto blokira |
+|---|---|---|
+| OAuth client ID-evi (web, Android, iOS) | Google Cloud | bez `serverClientId` prvi poziv padne u Google dijalogu |
+| Sign In with Apple na App ID-u | Apple Developer | bez toga nema ni entitlementa ni tokena |
+| Uključeni provideri + redirect URL-ovi | Supabase | token bez konfigurisanog providera se odbija |
 
-**Foto par je izuzetak i stoji samo na `/about`.** Uzima prve dvije slike iz iste `gallery_urls`
-liste koju Galerija na Početnoj već crta u mreži — tamo bi to bile iste dvije fotografije dvaput.
+Hodogram je već raspisan, korak po korak: [`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
 
-## Dokaz koji stoji
+### Apple je dvostruko blokiran
 
-`melos format` / `melos analyze` / `melos test` — **SUCCESS, 361 test PASS** (bilo 326):
+Uz Apple Developer nalog, **Xcode nema prijavljen Apple ID** — isto što je u tasku 19 oborilo
+instalaciju na pravi telefon (`No Account for Team "J96U28624S"`). Apple prijava se ne može
+odigrati ni na simulatoru bez potpisanog builda, pa je taj blokator na kritičnom putu i ovdje.
 
-```
-[core_domain]: 00:00 +58: All tests passed!
-[core_api]:    00:00 +67: All tests passed!
-[core_ui]:     00:03 +55: All tests passed!
-[admin]:       00:02  +4: All tests passed!
-[client]:      00:14 +177 ~1: All tests passed!
-```
+### Šta se ipak može uraditi bez konzola
 
-- **iOS simulator** (iPhone 17, flavor `barberstudiovitez`, `SUPABASE_URL=127.0.0.1:54321`) — app
-  se builda, diže i čita pravi katalog.
-- **Chromium 402 px** — `docs/screenshots/task-19-*`: Početna, `/services` (Brada · Paketi ·
-  Šišanje), `/about` uz `02-o-nama.png`.
+Paketi, implementacija obje metode, `AuthConfig` grananje po flavoru, iOS/Android konfiguracija po
+flavoru, i testovi sa lažnim providerom. Ostaje samo zadnji korak — pravi dijalog na pravom
+uređaju.
 
-CI je crven i **to nije nalaz** — GitHub Actions kvota je blokirana do 29.09.2026.
+### Google Cloud: release keystore je zasebna rupa
 
-## Ostalo za sljedećeg
-
-- **`services` nema kolonu za ručni redoslijed.** Uzlazno po kategoriji pa imenu je predvidivo,
-  ne dobro: Početna pokazuje tri usluge, pa u izlog ide „Brada" umjesto „Šišanja". `sort_order`
-  migracija i vlastiti task.
-- **Tapovi na `tel:`, mape i Instagram nisu odigrani** — traže pravi uređaj.
-- **Sljedeći task po tabeli: [17](sprint-2/17-moj-racun-i-brisanje.md)** — „Moj račun" i brisanje
-  naloga. Blokira store submission.
-
-## Ostalo iz ranijih sesija
-
-**Tenant Studio Maestro je u stashu**, ne u grani: `git stash list` → „tenant Studio Maestro —
-cijeli flavor, assets, seed i assets/ podrška u heroju (čeka svoj PR)". Ne primjenjuj ga u ovoj
-grani; ima svoj PR.
+Android traži SHA-1, a **debug i release su različiti** (`docs/06 §7.1` to zove najčešćom
+greškom: Google login radi u debugu i pada u produkciji). Release keystore još ne postoji —
+otvorena stavka iz taska 04. Dok ga nema, prave se samo debug klijenti.
 
 ## Istorija
 
-- **19 — Client: „O nama" i „Usluge"** (2026-09-13, ✅) — v. gore.
+- **17 — Client: Postavke, „Moj račun" i brisanje računa** (2026-09-14, ✅) — brisanje je
+  **dvokoračno**: `delete_my_account()` pod korisnikovim tokenom, pa Edge Function
+  `delete-account` sa `auth.admin.deleteUser` pod service role ključem, koji nikad ne smije u
+  klijentsku app. Tim redom, jer bi obrnuto pad drugog koraka ostavio `customers` red sa punim
+  imenom, a korisnikov token više ne bi postojao. **Nalaz bez kojeg je task bio pozorište:**
+  `appointments` nosi `customer_name`, `customer_phone` i `customer_note` kao **vlastite kolone**,
+  pa anonimizacija samo nad `customers` ostavlja puno ime u svakom terminu — `docs/06` §8.2 to
+  traži doslovno, bio je propust u prenosu u task fajl. **Ovo je jedini upis u repou koji namjerno
+  prelazi granicu salona:** isti čovjek je klijent u više salona, a brisanje naloga je odluka o
+  osobi, pa se `x-salon-id` namjerno ne traži. **5k je ušao u task** jer `/account` bez njega nema
+  ulaz iz aplikacije; komentar u routeru ga je pripisivao tasku 21, čiji DoD ga nema. Dokazano:
+  **124 pgTAP testa** (bilo 97), **33 REST asercije** kroz pravu Edge Function, **372 Dart testa**
+  (bilo 363), i cijeli tok odigran u Chromiumu protiv žive baze — nakon brisanja `deleted_at`
+  upisan, mail i ime `NULL`, `supabase_user_id` pao na `NULL`, nula preostalih `auth.users` redova.
+  Oba testa provjerena da **mogu pasti**. Usput nađena **tri zatečena testa koja su bila zelena
+  samo u dijelu dana ili sedmice** (`004` poslije 09:30, `002` ponedjeljkom, `rest_public_catalog`
+  otkad barber ima sve fotografije) — nijedan se nije vidio jer je CI blokiran. Ostaje 🟡 **Apple
+  token revoke**, koji čeka Apple prijavu. [PR #34](https://github.com/htuco/salon-booking-platform/pull/34).
+
+
+- **19 — Client: „O nama" i „Usluge"** (2026-09-13, ✅) — `/services` je pun cjenovnik **grupisan po `category`**, sa zaglavljima samo kad ima šta da se grupiše: jedna kategorija (ili nijedna) daje ravnu listu, tačno kao `09-usluge.png`. Razvrstavanje radi čista funkcija `groupByCategory`, koja **ne sortira ponovo** — `ServiceRepository.forSalon` već vraća uzlazno, a drugo sortiranje bi bilo dva izvora istine za isti poredak. **`SPEC.md` 5b ne završava na `/about`:** prvi prolaz je ekran napisao po handoffu i ostavio ga iza reda „O nama ›" na dnu Početne, a pregled na simulatoru je pokazao šta to znači — priča, radno vrijeme i kontakt stoje jedan tap dalje, na ekranu kojem handoff **nijednim nacrtanim ekranom ne daje ulaz**. Sadržaj je zato inline na Početnoj (priča iznad cjenovnika, radno vrijeme i kontakt na dnu), `/about` ostaje kao ruta i oblik iz handoffa, a sekcije dijele obje strane kroz `about_sections.dart`. Time je zatvorena i rupa iz taska 18: radno vrijeme i kontakt su od njega bili nedostupni u cijeloj aplikaciji. **Radno vrijeme je puna sedmica, ne jedan red iz handoffa** — iz prave baze: subota do 14:00, nedjelja zatvoreno. **Kontakt je izašao iz uokvirene tabele i dobio ikone**; labela nije nestala nego je otišla u `Semantics`, jer ikona čitaču ekrana ne znači ništa. Dokazano: **363 testa PASS** (bilo 326), app dignuta na iOS simulatoru i **instalirana na pravi iPhone** protiv živog Supabasea preko LAN-a (Kong log: `salons`, `services?order=category.asc`, `employees`, `working_hours` — sve 200, `Dart/3.13 (dart:io)`). **Zamka koju je našao browser, a testovi nisu mogli:** foto par i Galerija su na Početnoj crtali iste dvije fotografije jedna ispod druge — obje sekcije ispravne, obje sa zelenim testom, vidi se tek kad stoje na istom ekranu. Ostalo otvoreno: `services` nema `sort_order` kolonu, tapovi na `tel:`/mape/Instagram nisu odigrani. [PR #33](https://github.com/htuco/salon-booking-platform/pull/33).
 
 - **22 — Šema: fotografije usluga i staž radnika** (2026-09-12, ✅) — `services.image_url` i `employees.experience_years`, obje nullable jer su prazan okvir i red bez staža **predviđena stanja**: salon bez fotografija mora raditi od prvog dana. Seed puni obje kolone i namjerno ostavlja po jedan red prazan (Brada bez slike, Lejla bez staža), da se to stanje vidi u demou a ne tek kod prvog klijenta. Korak 1 prosljeđuje `imageUrl`, korak 2 spaja titulu i staž kroz ICU plural — iz prave baze: „Barber · 9 godina" i „Barber · 4 godine", oba bosanska oblika tačna. Dokazano: **29 asercija javnog kataloga bez tokena** (bilo 26; grantovi su tabelarni pa nova kolona ulazi sama, ali to se ne vidi iz migracije — vidi se iz poziva bez tokena), 66 pgTAP testova, 242 Dart testa. **Zamka koju je našao browser:** prvi snimak koraka 1 je pokazao četiri prazna okvira, jer se `images.demo.invalid` ne razrješava — red sa URL-om izgleda isto kao red bez njega, pa taj snimak ne dokazuje ništa. Dokaz je napravljen privremenim usmjeravanjem jednog reda na sliku koja stvarno postoji, pa vraćanjem; `seed.sql` nije mijenjan.
 
