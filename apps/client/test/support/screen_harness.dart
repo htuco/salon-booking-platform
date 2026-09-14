@@ -12,7 +12,6 @@ library;
 
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
-import 'package:client/src/features/home/salon_rating.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +60,8 @@ Future<ProviderContainer> pumpEkran(
   Future<List<Service>> Function()? uslugeBuilder,
   List<WorkingHour> radnoVrijeme = const [],
   List<String> galerija = const [],
+  SalonRatingSummary? ocjena,
+  List<Review> recenzije = const [],
   Vertical? vertical,
   AuthRepository? authRepository,
   bool pumpaj = true,
@@ -98,7 +99,8 @@ Future<ProviderContainer> pumpEkran(
       ),
       workingHoursProvider.overrideWith((ref) async => radnoVrijeme),
       salonGalleryProvider.overrideWith((ref) async => galerija),
-      salonRatingProvider.overrideWith((ref) async => null),
+      salonRatingProvider.overrideWith((ref) async => ocjena),
+      salonReviewsProvider.overrideWith((ref) async => recenzije),
       verticalProvider.overrideWith((ref) async => vertical ?? vertikala()),
       // Tab Termini je pravi ekran i čita je li korisnik prijavljen; bez override-a
       // posegne za `Supabase.instance` kojeg u testu nema.

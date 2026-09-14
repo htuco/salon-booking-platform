@@ -12,6 +12,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Keširanje slika je po `docs/07 §119` **obavezno**, a ne optimizacija: logo, cover i
+  # galerija se učitavaju sa svakim otvaranjem ekrana, pa bez kesa svaki hladan start
+  # ponovo skida iste fotografije. Stoji ovdje, a ne samo u `apps/client`, jer ih crta
+  # `PhotoFrame` — komponenta koja živi u ovom paketu.
+  cached_network_image: ^3.4.1
   lucide_icons_flutter: ^3.1.19
 
 dev_dependencies:

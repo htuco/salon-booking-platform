@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../tokens/spacing.dart';
@@ -53,17 +54,37 @@ class PhotoFrame extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       alignment: Alignment.center,
       child: imaSliku
-          ? Image(
-              image: url.startsWith('assets/')
-                  ? AssetImage(url) as ImageProvider<Object>
-                  : NetworkImage(url),
-              fit: BoxFit.cover,
-              width: size,
-              height: size / aspectRatio,
-              // Slika koja ne stigne ne smije srušiti red — okvir se vrati na zamjenu.
-              errorBuilder: (context, error, stack) =>
-                  placeholder ?? const SizedBox.shrink(),
-            )
+          ? (url.startsWith('assets/')
+                ? Image.asset(
+                    url,
+                    fit: BoxFit.cover,
+                    width: size,
+                    height: size / aspectRatio,
+                    errorBuilder: (context, error, stack) =>
+                        placeholder ?? const SizedBox.shrink(),
+                  )
+                : CachedNetworkImage(
+                    imageUrl: url,
+                    fit: BoxFit.cover,
+                    width: size,
+                    height: size / aspectRatio,
+                    // **Dekodiranje se ograničava na stvarnu veličinu okvira.** Bez ovoga
+                    // se fotografija 800×800 drži u memoriji u punoj rezoluciji i za
+                    // ćeliju mreže od 110px — dvanaest takvih je desetak megabajta za
+                    // sličice. `maxWidthDiskCache` isto tako čuva promet na mobilnoj.
+                    memCacheWidth:
+                        (size * MediaQuery.devicePixelRatioOf(context)).round(),
+                    maxWidthDiskCache: 1200,
+                    // Slika koja ne stigne ne smije srušiti red — okvir se vrati na
+                    // zamjenu, isto kao kad URL-a nema.
+                    errorWidget: (context, error, stack) =>
+                        placeholder ?? const SizedBox.shrink(),
+                    // Bez spinnera: okvir već ima svoju pozadinu i granicu, pa prazan
+                    // okvir koji se popuni ne poskoči. Spinner u mreži od dvanaest ćelija
+                    // je dvanaest vrtećih krugova.
+                    placeholder: (context, url) =>
+                        placeholder ?? const SizedBox.shrink(),
+                  ))
           : placeholder,
     );
   }

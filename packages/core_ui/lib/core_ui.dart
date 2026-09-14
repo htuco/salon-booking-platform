@@ -27,6 +27,7 @@ export 'src/components/selectable_row.dart';
 export 'src/components/service_card.dart';
 export 'src/components/skeleton_loader.dart';
 export 'src/components/spec_card.dart';
+export 'src/components/star_rating.dart';
 export 'src/components/status_badge.dart';
 export 'src/components/step_progress_bar.dart';
 export 'src/components/time_slot_chip.dart';

@@ -78,6 +78,113 @@
     "placeholders": { "count": { "type": "int", "example": "142" } }
   },
 
+  "homeSeeAll": "Sve",
+  "@homeSeeAll": {
+    "description": "Link desno od naslova sekcije na Početnoj, vodi na puni ekran (Galerija, Recenzije). Handoff ga crta kao 'Sve slike ›'; strelicu crta widget, ne prevod."
+  },
+
+  "galleryTitle": "Galerija",
+  "@galleryTitle": {
+    "description": "Naslov ekrana /gallery (handoff 12-galerija.png). Isti u svakoj vertikali — galerija je galerija i kod barbera i kod zubara."
+  },
+
+  "gallerySubtitle": "Naši radovi iz zadnjih mjeseci.",
+  "@gallerySubtitle": {
+    "description": "Podnaslov ekrana galerije. Namjerno ne pominje vrstu posla, pa vrijedi i za frizera i za ordinaciju."
+  },
+
+  "galleryEmpty": "Salon još nije dodao fotografije.",
+  "@galleryEmpty": {
+    "description": "Prazno stanje /gallery. Ekran je dostupan i bez slika jer do njega vodi direktan link; sekcija na Početnoj se u tom slučaju sakriva."
+  },
+
+  "galleryCounter": "{index} / {total}",
+  "@galleryCounter": {
+    "description": "Brojač u lightboxu (handoff 17: '4 / 18'). Razmaci oko kose crte su iz handoffa.",
+    "placeholders": {
+      "index": { "type": "int", "example": "4" },
+      "total": { "type": "int", "example": "18" }
+    }
+  },
+
+  "galleryClose": "Zatvori",
+  "@galleryClose": {
+    "description": "Semantička labela ✕ dugmeta u lightboxu. Ikona sama čitaču ekrana ne znači nista."
+  },
+
+  "galleryPhotoLabel": "Fotografija {index} od {total}",
+  "@galleryPhotoLabel": {
+    "description": "Semantička labela jedne fotografije u mreži i u lightboxu. Fotografije nemaju naslov ni opis (SPEC: 'No titles or captions'), pa je redni broj jedino što čitač ekrana može ponuditi.",
+    "placeholders": {
+      "index": { "type": "int", "example": "4" },
+      "total": { "type": "int", "example": "18" }
+    }
+  },
+
+  "reviewsTitle": "Recenzije",
+  "@reviewsTitle": {
+    "description": "Naslov ekrana /reviews (handoff 13-recenzije.png)."
+  },
+
+  "reviewsOutOfFive": "od 5",
+  "@reviewsOutOfFive": {
+    "description": "Stoji ispod velikog prosjeka na /reviews — handoff: '4,8' pa 'od 5'."
+  },
+
+  "reviewsEmpty": "Još nema recenzija.",
+  "@reviewsEmpty": {
+    "description": "Prazno stanje /reviews. Nov salon nema ocjene i to nije greška."
+  },
+
+  "reviewsNoText": "Ocjene bez napisane recenzije se broje u prosjeku, ali se ne prikazuju u listi.",
+  "@reviewsNoText": {
+    "description": "Objašnjenje ispod histograma kad salon ima ocjene ali nijednu napisanu recenziju — inače prosjek '142 ocjene' iznad prazne liste izgleda kao greška u učitavanju."
+  },
+
+  "reviewsStarsLabel": "{rating} od 5 zvjezdica",
+  "@reviewsStarsLabel": {
+    "description": "Semantička labela zvjezdica na kartici recenzije. Zvjezdice su ikone i čitač ekrana ih bez ovoga ne moze pročitati.",
+    "placeholders": { "rating": { "type": "int", "example": "5" } }
+  },
+
+  "reviewsHistogramLabel": "{star} zvjezdica: {count}",
+  "@reviewsHistogramLabel": {
+    "description": "Semantička labela jednog reda histograma na /reviews.",
+    "placeholders": {
+      "star": { "type": "int", "example": "5" },
+      "count": { "type": "int", "example": "118" }
+    }
+  },
+
+  "timeAgoDays": "{count, plural, one{prije {count} dan} few{prije {count} dana} other{prije {count} dana}}",
+  "@timeAgoDays": {
+    "description": "Relativan datum recenzije — handoff: 'prije 3 dana'.",
+    "placeholders": { "count": { "type": "int", "example": "3" } }
+  },
+
+  "timeAgoWeeks": "{count, plural, one{prije sedmicu} few{prije {count} sedmice} other{prije {count} sedmica}}",
+  "@timeAgoWeeks": {
+    "description": "Relativan datum recenzije — handoff: 'prije 2 sedmice'. Jednina je 'prije sedmicu', ne 'prije 1 sedmicu'.",
+    "placeholders": { "count": { "type": "int", "example": "2" } }
+  },
+
+  "timeAgoMonths": "{count, plural, one{prije mjesec} few{prije {count} mjeseca} other{prije {count} mjeseci}}",
+  "@timeAgoMonths": {
+    "description": "Relativan datum recenzije — handoff: 'prije mjesec'. Jednina je 'prije mjesec', bez broja.",
+    "placeholders": { "count": { "type": "int", "example": "3" } }
+  },
+
+  "timeAgoYears": "{count, plural, one{prije godinu} few{prije {count} godine} other{prije {count} godina}}",
+  "@timeAgoYears": {
+    "description": "Relativan datum recenzije starije od godinu dana.",
+    "placeholders": { "count": { "type": "int", "example": "2" } }
+  },
+
+  "timeAgoToday": "danas",
+  "@timeAgoToday": {
+    "description": "Relativan datum za recenziju napisanu danas — 'prije 0 dana' nije rečenica."
+  },
+
   "workingHours": "Radno vrijeme",
   "@workingHours": {
     "description": "Naslov sekcije sa radnim vremenom. Isto u svakoj vertikali — radno vrijeme je radno vrijeme i kod barbera i kod zubara."

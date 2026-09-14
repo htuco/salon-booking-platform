@@ -419,7 +419,8 @@ iz njega.
 | Moji termini | `/appointments` | Must |
 | Detalji termina + otkazivanje | `/appointments/:id` | Should |
 | Tim / radnici | `/team` | Should |
-| Galerija | `/gallery` | Later |
+| Galerija + lightbox | `/gallery` | Should |
+| Recenzije | `/reviews` | Should |
 | O salonu / kontakt | `/about` | Should |
 | Obavijesti | `/notifications` | Should |
 | Postavke | `/settings` | Should |
