@@ -180,12 +180,18 @@ select ok(
 set local request.jwt.claims = '{"sub":"aa000000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
 
+-- **Pozivalac je ovdje `salon_admin`, pa je ishod `confirmed`, ne `pending`** (task 24).
+-- `pending` znaci "salon jos nije odgovorio"; kad salon sam upisuje termin, odgovor je sam
+-- upis. Do taska 24 je i admin dobijao `pending`, pa je termin cekao potvrdu od onoga ko ga
+-- je vec potvrdio i istekao bi kroz `pending_expires_at`.
+--
+-- Klijentski `pending` drzi `004_cancel_appointment.test.sql`, gdje rezervise pravi klijent.
 select is(
   (select status::text from public.book_appointment(
     '550e8400-e29b-41d4-a716-446655440000', 'cc000000-0000-4000-8000-000000000001',
     '10000000-0000-4000-8000-000000000001', (select mon from tfix), '11:00',
     '20000000-0000-4000-8000-000000000001')),
-  'pending', 'Rezervacija nastaje kao pending');
+  'confirmed', 'Admin rezervacija nastaje kao confirmed — salon ne ceka potvrdu od sebe');
 
 reset role;
 select is(
@@ -194,10 +200,13 @@ select is(
 select is(
   (select buffer_minutes from public.appointments where date = (select mon from tfix) and start_time = '11:00'),
   5, 'Buffer se pamti na terminu, ne cita se naknadno iz postavki');
+-- Rok isteka nosi samo `pending`. Admin termin je odmah `confirmed`, pa nema sta cekati —
+-- ostavljen `pending_expires_at` bi znacio da ga scheduler iz taska 25 gleda kao kandidata
+-- za istek. Da rok stvarno stoji na klijentskom terminu drzi `004_cancel_appointment`.
 select ok(
-  (select pending_expires_at is not null from public.appointments
+  (select pending_expires_at is null from public.appointments
    where date = (select mon from tfix) and start_time = '11:00'),
-  'pending_expires_at je postavljen iz pending_expiry_hours');
+  'Admin termin nema rok isteka — rok nosi samo pending');
 
 set local role authenticated;
 -- Isti slot, isti radnik: re-validacija ga vise ne nalazi u listi.

@@ -189,16 +189,22 @@ select throws_ok(
 -- ---------------------------------------------------------------------------
 -- Direktan update i anon
 -- ---------------------------------------------------------------------------
--- **`update` sa klijenta ne baca — ne radi nista.** `authenticated` ima `update` grant na
--- `appointments`, ali nijedna klijentska politika nije `for update`, pa RLS filtrira sve
--- redove i `update` pogodi nula redova. Nula redova **nije greska** u Postgresu.
+-- **Do taska 24 je ovaj `update` prolazio bez greske i pogadjao nula redova.** `authenticated`
+-- je imao `update` grant, a zaustavljalo ga je samo odsustvo klijentske `for update` politike:
+-- RLS filtrira sve redove, a nula pogodjenih redova nije greska u Postgresu.
 --
--- Asercija je zato na ucinku, ne na izuzetku. Test koji je ocekivao 42501 je pao, i to
--- je bio ispravan nalaz: tvrdnja je bila pogresna, ne kod. (`insert` bi bacio, jer ga
--- hvata `with check` politike `staff_manage`.)
-select lives_ok($$
+-- Task 24 je **oduzeo `insert` i `update` grant** na `appointments`, jer je isti taj grant
+-- adminu dozvoljavao da zaobidje `book_appointment` i upise termin van radnog vremena
+-- (`security.md`, "Sta jos nije zatvoreno"). Klijent je time dobio i drugu bravu: sada puca
+-- na grantu, prije nego se RLS uopste pita.
+--
+-- Asercija je zato prepisana sa ucinka na izuzetak. Stara tvrdnja nije bila pogresna — bila
+-- je tacna za stanje prije taska 24, i ostaje zapisana ovdje jer objasnjava **zasto** su dvije
+-- brave, a ne jedna.
+select throws_ok($$
   update public.appointments set status = 'cancelled' where id = (select id from t3)
-$$, 'Direktan update ne baca — RLS ga pretvori u nula pogodjenih redova');
+$$, '42501', NULL,
+  'Direktan update baca — insert/update grant je oduzet u tasku 24');
 
 reset role;
 select is(

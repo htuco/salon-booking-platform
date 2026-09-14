@@ -133,7 +133,10 @@ void main() {
     test('termin nastaje kao pending, ne kao confirmed', () {
       // `book_appointment` uvijek upisuje 'pending' — i kad salon radi u auto modu,
       // potvrdu dodjeljuje baza. Success ekran zato kaže "zahtjev poslan" (01 §18).
-      final appointment = appointmentFromRpcRow(row());
+      final appointment = appointmentFromRpcRow(
+        row(),
+        funkcija: 'book_appointment',
+      );
 
       expect(appointment.status, AppointmentStatus.pending);
       expect(appointment.blocksSlot, isTrue);
@@ -142,13 +145,19 @@ void main() {
     test('radnik kojeg je dodijelila baza stiže nazad u odgovoru', () {
       // Kad korisnik izabere "bilo koji", employee_id ide kao null a vraća se popunjen:
       // ekran potvrde tako zna koga je klijent dobio.
-      final appointment = appointmentFromRpcRow(row());
+      final appointment = appointmentFromRpcRow(
+        row(),
+        funkcija: 'book_appointment',
+      );
 
       expect(appointment.employeeId, employeeA);
     });
 
     test('buffer je zapamćen na terminu, ne čitan iz postavki', () {
-      final appointment = appointmentFromRpcRow(row());
+      final appointment = appointmentFromRpcRow(
+        row(),
+        funkcija: 'book_appointment',
+      );
 
       expect(appointment.bufferMinutes, 10);
       expect(appointment.durationMinutes, 30);
@@ -156,15 +165,21 @@ void main() {
 
     test('odgovor u listi od jednog reda se takođe mapira', () {
       // Ako potpis funkcije ikad pređe na `setof`, isti poziv počne vraćati listu.
-      expect(appointmentFromRpcRow([row()]).status, AppointmentStatus.pending);
+      expect(
+        appointmentFromRpcRow([row()], funkcija: 'book_appointment').status,
+        AppointmentStatus.pending,
+      );
     });
 
     test('prazan odgovor je MappingError, ne tihi null', () {
       expect(
-        () => appointmentFromRpcRow(const []),
+        () => appointmentFromRpcRow(const [], funkcija: 'book_appointment'),
         throwsA(isA<MappingError>()),
       );
-      expect(() => appointmentFromRpcRow(null), throwsA(isA<MappingError>()));
+      expect(
+        () => appointmentFromRpcRow(null, funkcija: 'book_appointment'),
+        throwsA(isA<MappingError>()),
+      );
     });
   });
 }

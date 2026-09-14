@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../errors/errors.dart';
+import 'appointment_mapper.dart';
 
 /// Slobodni termini i rezervacija — jedini repozitorij koji **piše** u bazu.
 ///
@@ -131,7 +132,7 @@ class BookingRepository {
       },
     );
 
-    return appointmentFromRpcRow(row);
+    return appointmentFromRpcRow(row, funkcija: 'book_appointment');
   });
 }
 
@@ -178,27 +179,6 @@ List<LocalDate> availableDatesFromRows(dynamic rows) {
   }
 }
 
-/// Mapira izlaz `book_appointment` na [Appointment].
-///
-/// Funkcija je `returns public.appointments` — jedan red, ne lista. PostgREST ga vraća kao
-/// mapu, ali kad se potpis funkcije promijeni u `setof`, isti poziv počne vraćati listu;
-/// zato se oblik provjerava umjesto da se kastuje naslijepo.
-@visibleForTesting
-Appointment appointmentFromRpcRow(dynamic row) {
-  final json = switch (row) {
-    Map<String, dynamic>() => row,
-    List<dynamic>() when row.length == 1 => row.first as Map<String, dynamic>,
-    List<dynamic>() when row.isEmpty => throw MappingError(
-      '`book_appointment` nije vratio termin',
-    ),
-    _ => throw MappingError(
-      '`book_appointment` je vratio neočekivan oblik: ${row.runtimeType}',
-    ),
-  };
-
-  try {
-    return Appointment.fromJson(json);
-  } catch (error) {
-    throw MappingError('Neispravan `appointments` red', cause: error);
-  }
-}
+// `appointmentFromRpcRow` je od taska 24 u `appointment_mapper.dart`: zovu ga i
+// `set_appointment_status` i `cancel_appointment`, pa ime funkcije u poruci greške više ne
+// smije biti zakucano na `book_appointment`.

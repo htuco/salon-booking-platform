@@ -438,3 +438,39 @@ provider koji sastavlja, a ne na ekran.
 klijentsku politiku nad `notification_logs`. Ruta i ulaz iz trake već postoje, pa se tada mijenja
 samo tijelo.
 
+
+## Admin piše u bazu samo kroz `rpc` (task 24)
+
+`StaffAppointmentRepository` je do taska 23 bio namjerno samo čitanje. Task 24 mu je dopisao akcije
+i **sve su `rpc` pozivi** — ne zbog stila nego zato što drugog puta više nema: ista migracija je
+oduzela `insert` i `update` grant roli `authenticated` nad `appointments`. Direktan
+`from('appointments').update(...)` odatle vraća `42501`.
+
+To je razlika u odnosu na `BookingRepository`, koji je bio „jedini repozitorij koji piše": sada
+pišu dva, ali **oba samo kroz validirane funkcije**. Pravilo se time nije oslabilo nego učvrstilo —
+prije je bilo konvencija koju je bilo dovoljno zaboraviti, sada je grant.
+
+Tri funkcije koje pišu termin: `book_appointment` (nov termin, klijent i ručni admin unos),
+`set_appointment_status` (`confirmed` / `completed` / `no_show`) i `cancel_appointment`
+(`cancelled`, sa rokom koji obavezuje klijenta a ne salon). Detalji i granice:
+`.claude/docs/security.md`.
+
+### `Customer` model nastaje tek ovdje
+
+Klijentska app do sada nije trebala ništa osim `customers.id`, pa `CustomerRepository` barata golim
+`String`-om — i to je i dalje ispravno za njega. **Admin je prvi kome treba red, a ne ključ**: pri
+ručnom unosu salon pretražuje svoj adresar po imenu i telefonu i vidi brojače posjeta.
+
+`Customer.isWalkin` (`auth_identity_id == null`) razlikuje telefonskog klijenta od onog sa nalogom.
+Isti čovjek u dva salona su **dva reda** sa odvojenim brojačima, i to je uslov izolacije, ne
+nedostatak.
+
+### Admin ne smije koristiti `servicesProvider` ni `employeesProvider`
+
+Ti provideri čitaju `currentSalonIdProvider`, koji klijentska app override-uje iz `SALON_ID`
+flavora. **Admin app ga nema i ne smije ga imati** — jedna je za sve salone (ADR-0003), a
+neoverride-ovan provider baca `UnimplementedError` tek pri otvaranju ekrana, ne pri kompajliranju.
+
+Zato `apps/admin` ima svoje `adminServicesProvider`, `adminEmployeesProvider` i
+`adminEmployeeLinksProvider`, koji salon uzimaju iz `adminSalonIdProvider` (tj. iz
+`StaffMember.salonId`). Svaki sljedeći admin ekran koji treba katalog ide istim putem.

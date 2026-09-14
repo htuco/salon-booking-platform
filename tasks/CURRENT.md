@@ -1,36 +1,45 @@
 # Trenutni task: 24 — Admin: potvrda, odbijanje, otkazivanje i ručni termin
 
 Puni task: [`tasks/sprint-2/24-admin-akcije-nad-terminima.md`](sprint-2/24-admin-akcije-nad-terminima.md)
-**Nije počet** · Učitano: 2026-09-14 · Grana: —
+**U toku** · Učitano: 2026-09-14 · Počet: 2026-09-14 · Grana: `feat/admin-akcije-nad-terminima`
 
 ## Status
 
-Nije počet. Zavisnost [23](sprint-2/23-admin-login-i-lista.md) je ✅ — admin se prijavljuje i vidi
-listu, ali **ništa u njoj ne može dirati**. Zato termin ostaje `pending` dok ne istekne, i cijeli
-klijentski booking flow visi u zraku.
+🟡 **U toku — sve napisano i dokazano testovima, živi dokaz na ekranu nije odigran.**
+[PR #42](https://github.com/htuco/salon-booking-platform/pull/42), oba CI joba zelena.
 
-**Ovo je backend task sa ekranom na kraju, ne obrnuto.** Korak 1 iz task fajla je izričit: RPC
-funkcije i pgTAP **prije** ekrana.
+Dokazano: **220 pgTAP** (bilo 177, 42 nova) i **508 Dart testova** (bilo 479). Provjereno da mogu
+pasti — vraćanjem `insert`/`update` granta padne sedam asercija u tri fajla.
+
+**Rupu iz `security.md` zatvara oduzimanje granta, ne dodavanje funkcija.** Dok je
+`revoke insert, update on public.appointments` izostajao, validirane funkcije su bile konvencija
+koju je bilo dovoljno zaboraviti.
+
+Ostalo je **samo pokretanje na živom stacku** (oba tenanta): Docker servis je pao usred taska i
+traži administratorske ovlasti koje ova sesija nema. Komanda za nastavak i šta tačno treba vidjeti
+stoje u task fajlu.
 
 ## Ciljevi
 
 ### RPC + pgTAP (prvo)
 
-- [ ] Četiri akcije — **potvrdi / odbij / otkaži / no-show**, svaka kroz RPC sa provjerom vlasništva
-- [ ] `cancel_reason` i `cancelled_by` se popunjavaju na svakoj akciji
-- [ ] pgTAP za sve četiri, plus **negativan** test: odbijanje ručnog termina van radnog vremena
+- [x] Četiri akcije — **potvrdi / odbij / otkaži / no-show**, svaka kroz RPC sa provjerom vlasništva
+- [x] `cancel_reason` i `cancelled_by` se popunjavaju na svakoj akciji
+- [x] pgTAP za sve četiri, plus **negativan** test: odbijanje ručnog termina van radnog vremena
 
 ### Ručni termin — zatvara poznatu rupu
 
-- [ ] Ručno dodavanje termina: pretraga po `Customer` + unos telefonskog klijenta
+- [x] Ručno dodavanje termina: pretraga po `Customer` + unos telefonskog klijenta
       (`auth_identity_id` ostaje `null`)
-- [ ] **Ručni upis prolazi istu validaciju slota kao klijentski** — v. Napomene
+- [x] **Ručni upis prolazi istu validaciju slota kao klijentski** — v. Napomene
 
 ### Ekran
 
-- [ ] Akcije nad terminom u listi/detaljima
-- [ ] Ručni unos
-- [ ] Dokaz na živom stacku, oba tenanta
+- [x] Akcije nad terminom u listi
+- [x] Ručni unos
+- [ ] 🔴 **Dokaz na živom stacku, oba tenanta** — jedino što je ostalo. Docker servis
+      (`com.docker.service`) je pao usred taska i traži administratorske ovlasti; komanda za
+      nastavak je u task fajlu.
 
 ## Napomene
 

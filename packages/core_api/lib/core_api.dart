@@ -22,6 +22,7 @@ export 'src/auth/auth_repository.dart';
 export 'src/auth/customer_repository.dart';
 export 'src/auth/staff_repository.dart';
 export 'src/auth/supabase_auth_repository.dart';
+export 'src/booking/appointment_mapper.dart';
 export 'src/booking/appointment_repository.dart';
 export 'src/booking/booking_repository.dart';
 export 'src/booking/staff_appointment_repository.dart';
