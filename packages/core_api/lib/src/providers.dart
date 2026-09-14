@@ -4,9 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth/auth_repository.dart';
 import 'auth/customer_repository.dart';
+import 'auth/staff_repository.dart';
 import 'auth/supabase_auth_repository.dart';
 import 'booking/appointment_repository.dart';
 import 'booking/booking_repository.dart';
+import 'booking/staff_appointment_repository.dart';
 import 'catalog/employee_repository.dart';
 import 'catalog/policy_repository.dart';
 import 'catalog/review_repository.dart';
@@ -308,3 +310,52 @@ final policyPlaceholdersProvider = Provider<PolicyPlaceholders>((ref) {
     appointmentSingular: vertikala?.terms.appointmentSingular,
   );
 });
+
+// ---------------------------------------------------------------------------
+// Admin aplikacija (task 23).
+//
+// Odvojeni od klijentskih providera jer opisuju **drugog korisnika**: osoblje koje se
+// prijavljuje lozinkom i čiji salon dolazi iz članstva, ne iz `SALON_ID` flavora. Klijentska
+// app ove providere nikad ne čita, i obrnuto.
+
+/// Prijava osoblja i njegovo članstvo u salonu.
+final staffRepositoryProvider = Provider<StaffRepository>(
+  (ref) => StaffRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Termini salona, čitani iz admina.
+final staffAppointmentRepositoryProvider = Provider<StaffAppointmentRepository>(
+  (ref) => StaffAppointmentRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Trenutno prijavljen član osoblja, ili `null`.
+///
+/// Prati [StaffRepository.authStateChanges], pa odjava i istek tokena sami prazne ekran —
+/// jednokratno čitanje bi ostavilo admin listu na ekranu nakon što sesija prestane vrijediti.
+///
+/// **`null` ima dva značenja i ekran ih mora razlikovati:** niko nije prijavljen, ili je
+/// prijavljen neko ko nije osoblje (token ispravan, reda u `public.users` nema). Drugo je
+/// pogrešno postavljen nalog, ne pogrešna lozinka.
+final currentStaffProvider = StreamProvider<StaffMember?>((ref) async* {
+  final repozitorij = ref.watch(staffRepositoryProvider);
+
+  // Prvi frejm ne smije čekati na stream: router mora odmah znati smije li pustiti
+  // `/dashboard`, a `onAuthStateChange` se oglasi tek na promjenu.
+  yield repozitorij.currentSession == null
+      ? null
+      : await repozitorij.membership();
+
+  await for (final _ in repozitorij.authStateChanges) {
+    yield repozitorij.currentSession == null
+        ? null
+        : await repozitorij.membership();
+  }
+});
+
+/// `salon_id` salona kojim prijavljeni admin upravlja; `null` dok nije prijavljen.
+///
+/// **Jedini izvor salona u admin app-i.** Ne postoji ekran koji ga bira niti header koji ga
+/// nosi — v. `StaffMember` i ADR-0003.
+final adminSalonIdProvider = Provider<String?>(
+  (ref) => ref.watch(currentStaffProvider).valueOrNull?.salonId,
+);

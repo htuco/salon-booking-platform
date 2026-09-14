@@ -10,7 +10,7 @@ Sve komande se pokreću iz roota repoa osim gdje ne piše drugačije.
 | JDK 17 | Android build | CI: `temurin` 17 |
 | Node + npm | web prototip i lefthook | `npm i` |
 | Supabase CLI | migracije i testovi | `brew install supabase/tap/supabase` |
-| Deno | dva REST testa izolacije | `brew install deno` |
+| Deno | šest REST testova (izolacija, katalog, upsert, brisanje naloga, admin prijava) | `brew install deno`; na Windowsu `irm https://deno.land/install.ps1 \| iex` |
 | Docker Desktop | lokalni Supabase stack | instaliran i radi — v. `./tool/test_supabase.sh` |
 | Xcode (macOS) | iOS flavori | `xcodeproj` gem dolazi sa CocoaPodsom |
 | Android SDK + emulator | instalacija dva APK-a | system image API 36 x86_64 je verifikovan |
@@ -116,6 +116,46 @@ smije postojati u klijentskom buildu. Bez backenda se app svejedno digne, ali ek
 kosturu; tada služi `demo`.
 
 Na macOS-u skripta digne Simulator ako nijedan ne radi. Uređaj se bira sa `-d`, kao i inače.
+
+## Pokretanje admin aplikacije
+
+**Nema flavora ni `SALON_ID`** — admin je jedna generička app za sve salone, i salon dobija iz
+članstva u `public.users` nakon prijave. Zato ni `run_tenant.sh` ne važi za njega:
+
+```sh
+cd apps/admin
+eval "$(supabase status -o env)"     # NIKAD ne commituj ovaj izlaz
+flutter run -d chrome \
+  --dart-define=SUPABASE_URL="$API_URL" \
+  --dart-define=SUPABASE_ANON_KEY="$ANON_KEY"
+```
+
+Prijava lokalno, iz `seed.sql` (task 23) — **samo lokalni demo, nikad produkcija**:
+
+| email | salon |
+|---|---|
+| `admin@barberstudiovitez.test` | Barber Studio Vitez |
+| `admin@beautystudiotravnik.test` | Beauty Studio Travnik |
+
+Lozinka je `admin123456` za oba. Prijava drugim nalogom je i **najbrži dokaz izolacije**: isti
+build, drugi vlasnik, nijedan tuđi termin.
+
+Bez Supabase define-ova app se svejedno digne, ali prijava ne radi — `AdminEnv.hasSupabase` je
+tada `false` i Supabase klijent se ne inicijalizuje. To je namjerno: pad prije `runApp` bi dao
+bijelu stranicu umjesto ekrana koji kaže šta fali.
+
+**Statički build za dokaz u browseru** (kad `flutter run` smeta, npr. zbog hot reloada tokom
+snimanja):
+
+```sh
+flutter build web --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+npx http-server apps/admin/build/web -p 5599 -a 127.0.0.1 -c-1
+```
+
+`-c-1` gasi keš. Bez njega server servira **stari bundle** nakon rebuilda, pa ispravka izgleda kao
+da nije radila — provjeri `md5sum` posluženog `main.dart.js` naspram onog iz `build/web` prije nego
+posumnjaš u kod. Obični `http-server` uz to nema SPA fallback, pa direktan `/login` vraća 404;
+otvori root i pusti router da preusmjeri.
 
 ## Build
 
@@ -254,14 +294,21 @@ sa podrazumijevana dva se flow potroši prije nego se vidi.
 ### Cijela suite jednom komandom
 
 ```sh
-./tool/test_supabase.sh              # start + db reset + pgTAP + cetiri REST testa
+./tool/test_supabase.sh              # start + db reset + pgTAP + sest REST testova
 ./tool/test_supabase.sh --no-reset   # baza je već svježa
 supabase stop                        # kad završiš
 ```
 
-Zadnji pun prolaz: **97 pgTAP testova** i **95 REST asercija** — 24 izolacija sa dva stvarna
-JWT-a, 29 javni katalog bez tokena, 20 upsert klijenta i rezervacija, 22 izolacija između salona
-sa tri JWT-a. Traje oko dvije minute.
+Zadnji pun prolaz (2026-09-14, task 23): **177 pgTAP testova** i **173 REST asercije** — 24
+izolacija sa dva stvarna JWT-a, 57 javni katalog bez tokena, 20 upsert klijenta i rezervacija, 25
+izolacija između salona sa tri JWT-a, 33 brisanje naloga kroz Edge Function, 14 **admin prijava
+kroz GoTrue**. Traje oko dvije minute.
+
+**Brojke u ovom odjeljku zastarijevaju tiho.** Do taska 23 su pisale „97 pgTAP i 95 REST asercija,
+četiri REST testa", a skripta je u međuvremenu propustila dva testa koja su postojala u repou
+(`rest_delete_account.ts` iz taska 17 i `rest_admin_login.ts`). Dodavanje testa ne djeluje kao
+promjena koja dira ovaj dokument — provjeri `ls supabase/tests/*.ts` naspram `tool/test_supabase.sh`
+kad god dodaješ REST test.
 
 **Zamka koja košta pola sata:** `supabase start` nad postojećim volumeom diže bazu **iz backupa** i
 migracije se ne primjenjuju. Testovi tada padnu na `relation "public.users" does not exist` i
@@ -338,7 +385,7 @@ generisanog registra. Zadnji pun prolaz: **165 testova, 5 paketa, nula grešaka.
 |---|---|---|
 | `Flutter` (`.github/workflows/flutter-build.yml`) | **PR** (samo `analyze`) i **push u `main`** (sve) nad `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · **codegen** · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
 | `Flutter` → job `release-artifacts` | **ručni trigger** (`workflow_dispatch`) | AAB za oba tenanta kroz `build_tenant.sh`, `versionCode` iz `github.run_number`, provjera `applicationId` i `versionCode` kroz `bundletool dump manifest`, artefakt se čuva 30 dana |
-| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | **PR i push u `main`** nad `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) |
+| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | **PR i push u `main`** nad `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) · **prijava seed admina kroz GoTrue** (`rest_admin_login.ts`) |
 
 Oba imaju `concurrency` sa `cancel-in-progress`, pa novi push otkazuje stari run iste grane.
 

@@ -1,98 +1,82 @@
-# Trenutni task: 23 — Admin: login, dashboard i lista termina
+# Trenutni task: 24 — Admin: potvrda, odbijanje, otkazivanje i ručni termin
 
-Puni task: [`tasks/sprint-2/23-admin-login-i-lista.md`](sprint-2/23-admin-login-i-lista.md)
+Puni task: [`tasks/sprint-2/24-admin-akcije-nad-terminima.md`](sprint-2/24-admin-akcije-nad-terminima.md)
 **Nije počet** · Učitano: 2026-09-14 · Grana: —
 
 ## Status
 
-Nije počet. Obje zavisnosti su prohodne:
+Nije počet. Zavisnost [23](sprint-2/23-admin-login-i-lista.md) je ✅ — admin se prijavljuje i vidi
+listu, ali **ništa u njoj ne može dirati**. Zato termin ostaje `pending` dok ne istekne, i cijeli
+klijentski booking flow visi u zraku.
 
-- **[14](sprint-2/14-identitet-i-klijent-upsert.md) ✅** — `ensure_customer` radi, `appointments`
-  imaju prave redove iz aplikacije, pa lista termina ima **šta** prikazati.
-- **[12](sprint-2/12-auth-provideri.md) 🟡 — ne blokira ovaj task.** Otvoren je samo na Apple/Google
-  konzolama, a **admin se prijavljuje email-om**, ne nativnim providerima. Email OTP je dokazan do
-  kraja još u tasku 12.
-
-`apps/admin` je danas **skelet od 8 Dart fajlova**: `main.dart`, bootstrap, router i jedan
-`AdminPlaceholderScreen`. Sve rute iz `AdminRoute` postoje i vode na placeholder — kao što je bio
-slučaj sa klijentskim rutama prije taska 18. Ulazi postoje, tijela ne.
-
-**Ovo je druga polovina proizvoda.** Do sada je sav rad išao u klijentsku app; vlasnik salona još
-nijednom nije vidio šta mu je zakazano.
+**Ovo je backend task sa ekranom na kraju, ne obrnuto.** Korak 1 iz task fajla je izričit: RPC
+funkcije i pgTAP **prije** ekrana.
 
 ## Ciljevi
 
-### Prvo: admin uopšte ne može da se prijavi
+### RPC + pgTAP (prvo)
 
-- [ ] **Seed nema nijednog `salon_admin` korisnika** — provjereno, `supabase/seed.sql` ne dodaje ni
-      red u `public.users` ni korisnika u `auth.users`. Bez toga se nema čime prijaviti ni lokalno
-      testirati. Traži i `app_metadata` (`role`, `salon_id`), ne samo red u tabeli — v. Napomene.
-- [ ] Login ekran za osoblje, odvojen od klijentskog flowa
+- [ ] Četiri akcije — **potvrdi / odbij / otkaži / no-show**, svaka kroz RPC sa provjerom vlasništva
+- [ ] `cancel_reason` i `cancelled_by` se popunjavaju na svakoj akciji
+- [ ] pgTAP za sve četiri, plus **negativan** test: odbijanje ručnog termina van radnog vremena
 
-### Ekrani
+### Ručni termin — zatvara poznatu rupu
 
-- [ ] Lista termina sa filterom po danu i statusu (**prvo**, dashboard je njen sažetak)
-- [ ] Dashboard: današnji termini, broj `pending` zahtjeva
-- [ ] Admin **ne bira salon iz UI-ja** — dobija ga iz svog `users` reda
+- [ ] Ručno dodavanje termina: pretraga po `Customer` + unos telefonskog klijenta
+      (`auth_identity_id` ostaje `null`)
+- [ ] **Ručni upis prolazi istu validaciju slota kao klijentski** — v. Napomene
 
-### Dokaz
+### Ekran
 
-- [ ] Deno test: admin salona A ne čita termine salona B
-- [ ] Dokaz na živom stacku, ne samo widget testovi
+- [ ] Akcije nad terminom u listi/detaljima
+- [ ] Ručni unos
+- [ ] Dokaz na živom stacku, oba tenanta
 
 ## Napomene
 
-### Backend je spreman — ovo je uglavnom Flutter task
+### Ovo zatvara rupu koju `security.md` već vodi kao otvorenu
 
-Za razliku od taska 21, ovdje **migracija vjerovatno ne treba**. Sve stoji od init migracije
-(`20260910090000_init_schema.sql`):
+`.claude/docs/security.md` (§„Šta još nije zatvoreno") bilježi: **direktan admin `insert`/`update`
+nad `appointments` zaobilazi validaciju slota.** Exclusion constraint hvata preklapanje dva termina,
+ali **radno vrijeme, blokade i `min_advance_booking_hours` ne provjerava niko** na tom putu.
 
-- `public.users` (linija 53) — `id`, `salon_id`, `role`, sa `check` koji drži da `super_admin` nema
-  salon a svi ostali moraju imati.
-- `private.is_admin(uuid)` (linija 190) — i to **tačno onako kako DoD traži**:
+Praktično: ako ručni unos ostane `insert` sa klijenta, admin može upisati termin u nedjelju u 3
+ujutro, i baza ga neće zaustaviti. Zato ručni upis mora ići kroz `book_appointment` — istu funkciju
+kojom prolazi klijent.
 
-```sql
-private.is_super_admin() or (
-  auth.jwt()->'app_metadata'->>'role' = 'salon_admin'
-  and auth.jwt()->'app_metadata'->>'salon_id' = p_salon::text
-  and exists(select 1 from public.users where id=auth.uid() and role='salon_admin' and salon_id=p_salon))
-```
+Ista tabela se u `tasks/sprint-2/README.md` vodi kao stavka koju zatvara **baš ovaj task**.
 
-**Oba uslova, JWT i tabela.** DoD stavka „`app_metadata.role` **i** red u `public.users`" je već
-provedena u bazi — ne treba je graditi, treba je **dokazati**.
+### Šta već postoji i ne treba graditi
 
-- `staff_manage` politika nad `appointments`, `customers`, `blocked_slots` (linija ~256) — `for all`
-  sa `using` i `with check` na `is_admin(salon_id)`.
+- **`book_appointment`** (task 05) — validirani upis, `security definer`, provjerava i preklapanje i
+  radno vrijeme. Poznaje `source`: `manual` je već u enumu `appointment_source`.
+- **`cancel_appointment`** (task 16) — otkazivanje sa provjerom vlasništva i roka iz
+  `salon_settings.min_cancel_hours`, plus `cancelled_by` (`customer` / `salon` / `system`). Pisan je
+  za **klijenta**; admin otkazivanje je drugi slučaj (salon otkazuje, rok ga ne obavezuje) — treba
+  provjeriti da li se proširuje ili dobija svoju funkciju.
+- **`staff_manage` politika** nad `appointments` — `for all` za `private.is_admin(salon_id)`. Admin
+  *smije* pisati; pitanje je samo **kuda** pisanje ide.
+- **`StaffAppointmentRepository`** (task 23) je **samo čitanje**, i to namjerno. Akcije se dopisuju
+  u njega, kao `rpc` pozivi.
 
-### Zamka koju DoD imenuje, a lako se promaši
+### Zamka: `no_show` nije isto što i `cancelled`
 
-**`x-salon-id` u adminu nije izvor istine.** Header bira kontekst; članstvo dolazi iz `users` reda.
-Admin koji pošalje tuđi header mora dobiti **prazan rezultat**, ne grešku i ne tuđe termine. To je
-[ADR 0003](../docs/adr/0003-x-salon-id-bira-kontekst-ne-daje-prava.md) i Deno test iz DoD-a postoji
-upravo da to zaključa.
+`AppointmentStatus` već ima oba (`cancelled`, `noShow`, `wireName: 'no_show'`), i `customers`
+nosi `no_show_count`. Ali **prag nigdje nije zapisan ni provođen** — task 21 je to izričito ostavio
+otvorenim („tri nedolaska u šest mjeseci" nema kolonu). Ako ova akcija počne dizati `no_show_count`,
+treba odlučiti da li iko taj broj koristi, ili je to kolona koju niko ne čita.
 
-Klijentska app bira salon iz `SALON_ID` flavora. **Admin je generička app, bez flavora** — jedan
-build za sve salone — pa salon mora doći iz `users` reda nakon prijave. Ovo je stvarna razlika u
-obliku, ne detalj.
+### Push se okida na ove akcije
 
-### Seed: šta tačno nedostaje
-
-Provjereno: `grep salon_admin supabase/seed.sql` ne vraća ništa. Za lokalni rad treba korisnik u
-`auth.users` **sa `raw_app_meta_data`** koji nosi `role` i `salon_id` — jer `is_admin` čita JWT, a
-JWT se puni iz `app_metadata`. Red u `public.users` sam po sebi **nije dovoljan**: funkcija traži
-oba, i to je namjerno.
-
-Isto važi i za testove — pgTAP za admina mora podmetnuti JWT claimove, ne samo ubaciti red.
-
-### Redoslijed iz task fajla nije proizvoljan
-
-„Lista pa dashboard — dashboard je sažetak liste, ne obrnuto." Ako dashboard ide prvi, upit za
-„današnje termine" se piše dvaput: jednom kao sam svoj, pa opet kad lista donese filtere.
+Task 24 blokira [25](sprint-2/25-push-notifikacije.md): potvrda i odbijanje su događaji koje klijent
+treba dobiti kao push. To **ne znači** da 24 nosi push — znači da RPC treba ostaviti mjesto gdje se
+`notification_logs` red kasnije upisuje, bez prepravke funkcije.
 
 ### Procjena
 
-2–3 dana iz task fajla djeluje tačno, **uz seed kao nulti korak** (pola dana, jer traži i
-`app_metadata`, ne samo red). Backend ne nosi migraciju, ali nosi Deno test izolacije.
+2 dana iz task fajla djeluje tačno **ako `book_appointment` primi ručni unos bez prepravke**. Ako ga
+treba proširiti (klijent bez `auth_identity_id`, admin kao pozivalac), računaj dan više — i to je
+migracija, dakle `security.md` se ažurira u istoj promjeni.
 
 ## Istorija
 
@@ -115,6 +99,25 @@ Isto važi i za testove — pgTAP za admina mora podmetnuti JWT claimove, ne sam
   a samo je generisani kod odsutan. Ostalo, ništa ne blokira: `supportEmail` prazan (red se ne
   crta), „Ocijenite aplikaciju" neaktivan do objave, naziv pravnog lica, i **pravni pregled prije
   submissiona**.
+
+- **23 — Admin: login, dashboard i lista termina** (2026-09-14, ✅) — `apps/admin` je prestao biti
+  skelet od osam fajlova. Prijava ide kroz **zaseban `StaffRepository`**, ne kroz klijentski
+  `AuthRepository`: taj ugovor je pisan za Apple, Google, OTP i gosta, i `signInWithPassword` bi u
+  njemu svakom klijentskom ekranu ponudio metodu koju ne smije zvati. `signIn` vraća `StaffMember`,
+  ne samo sesiju, jer `private.is_admin()` traži **oba** uslova — claim u JWT-u i red u
+  `public.users`; ko ima token a nema red prijavi se i ne vidi nijedan red, što na ekranu izgleda
+  kao prazna baza a zapravo je pogrešno postavljen nalog. **Lista prije dashboarda**, kako task
+  nalaže. Dokazano: **479 Dart testova** (bilo 462, `admin` 16 je nov), **177 pgTAP**, **šest Deno
+  testova / 173 asercije**, i **uživo u browseru na oba tenanta** — ista aplikacija, prijava drugim
+  vlasnikom pokazuje samo njegov salon. **Seed je dobio admine i termine:** nije imao nijednog
+  `salon_admin`, pa se nije imalo čime prijaviti, a bez klijenata i termina se **izolacija ne može
+  dokazati** — upit „A ne vidi B" vraća nulu i kad je RLS isključen. **Dvije zamke koje se ne vide
+  u kodu:** nullable text kolone u `auth.users` moraju biti prazan string a ne `NULL` (GoTrue ih
+  skenira u Go `string`, prijava puca sa `500`, a red izgleda ispravno u `psql` i cijela pgTAP suita
+  prolazi — drži je novi `rest_admin_login.ts`), i `order()` u postgrest paketu podrazumijeva
+  `descending`, pa je raspored dana išao unatraške; widget testovi to nisu mogli uhvatiti jer su im
+  lažne liste već bile sortirane, vidjelo se **tek na ekranu**. Ostalo: admin **nije pokrenut na
+  mobilnom uređaju**, dokaz je iz Chromea.
 
 - **20 — Client: Galerija, lightbox i Recenzije** (2026-09-14, ✅) — `/gallery`, lightbox 5q i
   `/reviews` rade iz prave baze na oba tenanta. **`gallery_photos` nije nastao**

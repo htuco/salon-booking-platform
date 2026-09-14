@@ -37,8 +37,14 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
   zna za HTTP i tabele. **Modeli nisu ovdje nego u `core_domain`** i nose `fromJson` — obrazloženje
   i odbačene opcije: [ADR-0006](../../docs/adr/0006-modeli-u-core-domain.md).
 - **`core_ui`** — design system: tokeni, tema, komponente. Ne zna za repozitorije ni za modele —
-  komponente primaju gotove stringove ("45 min", "25 KM"), pa isti paket služi i klijentskoj i
-  admin aplikaciji. Formatiranje zna ekran, koji jedini poznaje jezik i vertikalu.
+  komponente primaju gotove stringove ("45 min", "25 KM"). Formatiranje zna ekran, koji jedini
+  poznaje jezik i vertikalu.
+
+  **`apps/admin` ga namjerno ne uvozi** (provjereno u tasku 23, kad je admin dobio prve ekrane).
+  `core_ui` nosi oblik brandirane klijentske vitrine — serif naslovi, hairline granice, „← Početna"
+  umjesto `AppBar`-a, tema po tenantu iz `tenant.yaml`. Admin je generička alatka za rad, jedan
+  build za sve salone, i koristi obični Material 3 sa `AppBar`-om. Dijeljenje bi značilo da svaka
+  promjena brendiranog oblika povlači admin ekran koji sa brendom nema veze.
 - **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
   (`env`, `router`, `theme`) i `lib/src/l10n/`. Feature folder drži ekran, njegove privatne
   widgete u `widgets/` i logiku koja ne pripada ni domenu ni UI-ju — formatiranje cijene i

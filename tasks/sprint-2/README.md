@@ -17,7 +17,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [19](19-o-nama-i-usluge.md) ✅ | Client: "O nama" i "Usluge" | — | 1–2 dana |
 | [20](20-galerija-recenzije.md) ✅ | Client: galerija, lightbox, recenzije | — | 2 dana |
 | [21](21-obavijesti-i-pravni-ekrani.md) ✅ | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
-| [23](23-admin-login-i-lista.md) | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
+| [23](23-admin-login-i-lista.md) ✅ | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
 | [24](24-admin-akcije-nad-terminima.md) | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
 | [25](25-push-notifikacije.md) | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
 | [26](26-gost-i-facebook.md) | Guest flow + Facebook iza flaga | — | 1–2 dana |
@@ -245,3 +245,29 @@ Sitno, ali ne smije se izgubiti:
 > do objave, naziv pravnog lica, i **pravni pregled prije submissiona**. Javni URL politike
 > privatnosti (korak 29) ostaje Sprint 3.
 > Detalji: [21-obavijesti-i-pravni-ekrani.md](21-obavijesti-i-pravni-ekrani.md#status-2026-09-14--✅-zatvoren).
+
+> **23 — Admin: login, dashboard i lista termina (✅, 2026-09-14).** `apps/admin` je prestao biti
+> skelet od osam fajlova: `/login`, `/appointments` i `/dashboard` imaju pravo tijelo, a vlasnik
+> se prijavi email-om i lozinkom i vidi šta mu je zakazano.
+> **Prijava ide kroz zaseban `StaffRepository`**, ne kroz klijentski `AuthRepository` — taj ugovor
+> je pisan za Apple, Google, OTP i gosta, i `signInWithPassword` bi u njemu svakom klijentskom
+> ekranu ponudio metodu koju ne smije zvati. `signIn` vraća `StaffMember`, ne samo sesiju, jer
+> `private.is_admin()` traži **oba** uslova: claim u JWT-u i red u `public.users`.
+> **Lista je pisana prije dashboarda**, kako task nalaže — dashboard je njen sažetak i dijeli iste
+> repozitorije.
+> Dokazano: **479 Dart testova PASS** (bilo 462; `admin` 16 je nov), **177 pgTAP**, **šest Deno
+> testova / 173 asercije**, i **uživo u browseru protiv živog stacka, oba tenanta** — ista
+> aplikacija, prijava drugim vlasnikom pokazuje samo njegov salon.
+> **Seed je dobio admine i termine.** Nije imao nijednog `salon_admin`, pa se nije imalo čime
+> prijaviti; nije imao ni klijente ni termine, a **izolacija se na praznim tabelama ne može
+> dokazati** — upit „A ne vidi B" vraća nulu i kad je RLS isključen.
+> **Zamka koja se ne vidi u bazi:** nullable text kolone u `auth.users` moraju biti prazan string,
+> ne `NULL` — GoTrue ih skenira u Go `string` i prijava puca sa `500`, dok red izgleda ispravno u
+> `psql` i cijela pgTAP suita prolazi. Drži je novi `rest_admin_login.ts`.
+> **Druga zamka, nađena tek na ekranu:** `order()` u postgrest paketu podrazumijeva `descending`,
+> pa je raspored dana išao unatraške. Widget testovi to nisu mogli uhvatiti jer su im lažne liste
+> već bile sortirane.
+> Ostalo: admin **nije pokrenut na mobilnom uređaju** (dokaz je iz Chromea), a `/calendar`,
+> `/services`, `/employees`, `/working-hours` i `/settings` su i dalje placeholderi koje donja
+> navigacija namjerno ne nudi.
+> Detalji: [23-admin-login-i-lista.md](23-admin-login-i-lista.md#status-2026-09-14--✅-zatvoren).

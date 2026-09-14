@@ -84,6 +84,19 @@ jobs:
           test -n "$SUPABASE_ANON_KEY" || { echo "ANON_KEY missing from supabase status"; exit 1; }
           deno run --allow-env --allow-net supabase/tests/rest_public_catalog.ts
 
+      # Seed admin login: the only test that fails if nobody can sign in to the admin app.
+      # Every pgTAP test fakes JWT claims via set_config and never touches GoTrue, so a
+      # hand-written auth.users row with NULL in a nullable text column looks perfectly fine
+      # in psql, passes the whole SQL suite, and still breaks login with a 500.
+      - name: Run admin login + isolation test
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="${API_URL:-http://127.0.0.1:54321}"
+          export SUPABASE_ANON_KEY="${ANON_KEY:-}"
+          test -n "$SUPABASE_ANON_KEY" || { echo "ANON_KEY missing from supabase status"; exit 1; }
+          deno run --allow-env --allow-net supabase/tests/rest_admin_login.ts
+
       # Upsert klijenta i rezervacija: jedini test koji prolazi cijeli put kojim ide app —
       # prijava, identitet, ensure_customer, book_appointment — i jedini koji dokazuje da
       # konflikt stvarno izlazi kao HTTP 409 kroz PostgREST, a ne samo kao PT409 u bazi.

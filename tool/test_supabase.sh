@@ -53,5 +53,11 @@ deno run --allow-env --allow-net supabase/tests/rest_customer_upsert.ts
 echo "==> Izolacija izmedju salona (isti covjek, dva salona, tri JWT-a)"
 deno run --allow-env --allow-net supabase/tests/rest_cross_salon_isolation.ts
 
+echo "==> Brisanje naloga (Edge Function, oba salona)"
+deno run --allow-env --allow-net supabase/tests/rest_delete_account.ts
+
+echo "==> Admin prijava i izolacija (seed admini kroz GoTrue)"
+deno run --allow-env --allow-net supabase/tests/rest_admin_login.ts
+
 echo
 echo "Sve prolazi. Stack ostaje dignut — 'supabase stop' kad zavrsis."

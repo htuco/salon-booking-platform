@@ -1,8 +1,12 @@
 import 'package:core_domain/core_domain.dart';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../errors/errors.dart';
+// Mapiranje je izvuceno u `appointment_mapper.dart` kad je dobilo drugog korisnika
+// (admin lista termina, task 23). Export stoji da postojeci `import` ovog fajla — i
+// testovi koji ga koriste — nastave raditi bez izmjene.
+import 'appointment_mapper.dart';
+export 'appointment_mapper.dart';
 
 /// Termini prijavljenog klijenta — čitanje i otkazivanje.
 ///
@@ -74,35 +78,4 @@ buffer_minutes, status, source, cancel_reason, cancelled_by, pending_expires_at
 
     return appointmentFromRow(row);
   });
-}
-
-/// Mapira listu redova `appointments` u modele.
-@visibleForTesting
-List<Appointment> appointmentsFromRows(dynamic rows) {
-  if (rows is! List) {
-    throw MappingError(
-      '`appointments` nije vratio listu nego ${rows.runtimeType}',
-    );
-  }
-  return rows
-      .whereType<Map<String, dynamic>>()
-      .map(appointmentFromRow)
-      .toList(growable: false);
-}
-
-/// Mapira jedan `appointments` red.
-///
-/// Nepoznat `status` ne ruši listu nego pada na `AppointmentStatus.unknown` — app u storeu
-/// je uvijek starija od baze, a `alter type ... add value` niko ne prati po verzijama
-/// storea (v. `appointment_status.dart`).
-@visibleForTesting
-Appointment appointmentFromRow(Map<String, dynamic>? row) {
-  if (row == null || row.isEmpty) {
-    throw const MappingError('`appointments` red je prazan');
-  }
-  try {
-    return Appointment.fromJson(row);
-  } catch (error) {
-    throw MappingError('Neispravan `appointments` red', cause: error);
-  }
 }
