@@ -16,7 +16,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [18](18-pocetna-i-tab-bar.md) ✅ | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
 | [19](19-o-nama-i-usluge.md) ✅ | Client: "O nama" i "Usluge" | — | 1–2 dana |
 | [20](20-galerija-recenzije.md) ✅ | Client: galerija, lightbox, recenzije | — | 2 dana |
-| [21](21-obavijesti-i-pravni-ekrani.md) | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
+| [21](21-obavijesti-i-pravni-ekrani.md) 🟡 | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
 | [23](23-admin-login-i-lista.md) | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
 | [24](24-admin-akcije-nad-terminima.md) | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
 | [25](25-push-notifikacije.md) | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
