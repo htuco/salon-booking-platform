@@ -29,6 +29,27 @@ oba traže i claim iz JWT-a **i** postojeći red u `public.users`. Falsifikovan 
 članstva u bazi ne prolazi. `user_metadata` je isključivo prikazni podatak i nikad se ne koristi u
 odluci o pristupu — korisnik ga može mijenjati sam.
 
+### Pisanje admin naloga rukom — dvije zamke
+
+`seed.sql` od taska 23 nosi po jednog `salon_admin` za oba demo salona. Ko bude pisao takav red
+ponovo (novi tenant, test fixture, migracija podataka), tu su dvije stvari koje se **ne vide u
+bazi** nego tek na ekranu za prijavu:
+
+- **Oba uslova moraju postojati istovremeno.** `raw_app_meta_data` sa `role` i `salon_id` (odatle
+  GoTrue puni JWT) **i** red u `public.users`. Samo jedan od njih daje korisnika koji se uspješno
+  prijavi i **ne vidi nijedan red** — na ekranu izgleda kao prazna baza, a zapravo je pogrešno
+  postavljen nalog. Admin app to razlikuje i daje drugu poruku nego za pogrešnu lozinku.
+- **Nullable text kolone u `auth.users` moraju biti prazan string, ne `NULL`.** GoTrue ih skenira u
+  Go `string`, pa `NULL` obara prijavu sa `500 Database error querying schema` — porukom koja ne
+  kaže koja je kolona kriva. Red pritom izgleda ispravno u `psql`, i **cijela pgTAP suita prolazi**,
+  jer pgTAP glumi claimove kroz `set_config` i nikad ne prolazi kroz GoTrue. Kolone su
+  `confirmation_token`, `recovery_token`, `email_change`, `email_change_token_new`,
+  `email_change_token_current`, `phone_change`, `phone_change_token`, `reauthentication_token`;
+  seed ih puni petljom, da nova kolona u budućoj verziji GoTrue-a ne obori prijavu nijemo.
+
+Ovo drži `rest_admin_login.ts` — jedini test u repou koji pada ako se u admin app-i ne može
+prijaviti.
+
 ## `private.*` — gdje živi autorizacija
 
 Sve provjere su `security definer` funkcije u `private` shemi sa `set search_path = ''`. Politike ih
@@ -340,6 +361,7 @@ ništa.
 | `005_delete_my_account.test.sql` | brisanje naloga — anonimizacija u **oba** salona, otkazivanje budućih termina, gašenje pristupa, trigger ne uskrsava nalog |
 | `007_policies.test.sql` | pravila i politika privatnosti — `anon` čita bez prijave, **`salon_admin` ne može pisati po `app_policies`**, sekcije neaktivnog salona su nevidljive |
 | `rest_delete_account.ts` | brisanje kroz Edge Function sa pravim JWT-om; obrisan identitet dobija **`200` sa praznom listom**, ne `401` — pristup gasi `deleted_at`, ne istek tokena |
+| `rest_admin_login.ts` | **seed admin se stvarno prijavi kroz GoTrue** i vidi samo svoj salon; tuđi `x-salon-id` ne mijenja šta vidi, upis u tuđi salon je `403`, `anon` je `401` |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao
