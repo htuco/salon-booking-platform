@@ -33,8 +33,8 @@ Oblik i obrazloženja su u Napomenama — traži svoj ADR.
 - [ ] `/about-app` po 5n: verzija iz `package_info_plus`, monogram iz inicijala, „Kako radi" u tri
       koraka, kontakt redovi iz `salons`
 - [ ] `/about-app` pravni redovi: „Pravila korištenja" → `/terms`; „Politika privatnosti" →
-      `/privacy`; **„Ocijenite aplikaciju" sakriven** dok app nije u prodavnici; „Prijavite problem"
-      → mail developeru
+      `/privacy`; **„Ocijenite aplikaciju" ostaje vidljiv ali neaktivan** dok app nije u
+      prodavnici; „Prijavite problem" → mail developeru
 - [ ] `/privacy` — politika privatnosti, pisana za **App Privacy i Data Safety** formulare
 - [ ] `package_info_plus` u `apps/client/pubspec.yaml` — danas ga nema
 - [ ] Oba su pod-ekrani: `BackHeader` sa labelom „Postavke", serif naslov u tijelu
@@ -126,7 +126,7 @@ razilaze.
 kolonu. `customers.no_show_count` postoji, ali prag nigdje nije zapisan ni provođen. Ili dobijaju
 polja u `salon_settings`, ili se sekcije pišu bez brojeva.
 
-### `/notifications` je blokiran, i to piše u samom tasku
+### `/notifications` nema izvor podataka — zato ide kao prazno stanje
 
 Korak 2 u task fajlu kaže doslovno: *„Obavijesti nakon taska 25, da imaju šta prikazati."*
 Task 25 nije počet. Uz to, provjereno u šemi:
@@ -149,10 +149,31 @@ taskom 25, i tada se mijenja **samo tijelo**, ne ruta ni ulaz.
 - **„Politika privatnosti"** → `/privacy`, **nova ruta u ovom tasku**. Tekst ide u `app_policies`
   kao zaseban dokument, pa isti izvor kasnije servira i javna stranica iz Sprinta 3 (`docs/01`
   korak 29 traži javni URL — ekran u app-i ga **ne zamjenjuje**).
-- **„Ocijenite aplikaciju"** → **sakriven**. Traži App Store / Play ID, a aplikacije nisu
-  objavljene; red se pojavljuje tek nakon prvog deploya u prodavnice.
+- **„Ocijenite aplikaciju"** → **red stoji, ali je neaktivan** (odluka 2026-09-14). Traži App
+  Store / Play ID, a aplikacije nisu objavljene. Crta se u `disabled` stanju iz `SPEC.md`
+  (45% prozirnosti) i **ne prima tap** — prazan tap je gori od reda koji vidljivo čeka. Ispod
+  stoji kratko objašnjenje da se aktivira nakon objave. Kad app ode u prodavnicu, mijenja se
+  samo `storeListingUrl` u `tenant.yaml`, ne ekran.
 - **„Prijavite problem"** → mail **developeru**, ne salonu. Adresa još nije data — dok je nema,
   stoji kao konstanta koju treba popuniti.
+
+### Odluke koje sam uzeo sam (2026-09-14) — za pregled
+
+Hamza je rekao „uradi kako god pa ću pregledati". Skupljeno na jedno mjesto, da pregled bude kratak:
+
+| Šta | Odluka | Zašto |
+|---|---|---|
+| Brojevi u tekstu pravila | tijelo sekcije podržava **placeholdere** (`{minCancelHours}`, `{phone}`, `{email}`, `{appointmentSingular}`), ekran ih puni iz živih podataka | slobodan tekst bi odlutao od onoga što `cancel_appointment` stvarno provodi |
+| Kašnjenje i nedolasci | **bez novih kolona**; sekcije se pišu bez brojeva | ništa u kodu te pragove ne provodi — kolona koju niko ne čita je kolona koja laže |
+| Monogram na `/about-app` | inicijali imena salona, kao tekst | `SPEC.md` §Assets izričito kaže da nije asset |
+| Podnaslov i kontakt redovi | iz `salons` (opis, telefon, adresa, Instagram) | sve već postoji, nema novog polja |
+| Footer | `© <godina> <ime salona>` + „Napravljeno u Bosni i Hercegovini" | naziv pravnog lica nije dat; kad stigne, mijenja se jedan string |
+| „Prijavite problem" | konstanta `supportEmail`, prazna dok ne stigne adresa | ne pretpostavljam tuđi mail; red se sakriva dok je prazna |
+| Jezik pravila | bosanski, isti kao ostatak app-e | `.arb` nema drugi jezik, a pravila su vezana za BiH tržište |
+| Dužina | kratke sekcije, kao handoff — ne zid teksta | pravila koja niko ne pročita ne štite nikoga |
+
+**Ono što ostaje na tebi:** naziv pravnog lica, `supportEmail`, i pravni pregled teksta prije
+submissiona. Ništa od toga ne blokira rad — sve su to stringovi na jednom mjestu.
 
 ### Politika privatnosti nije samo ovaj ekran
 
