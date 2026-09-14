@@ -14,7 +14,7 @@ filtrirala po Flutterovom `TargetPlatform`:
 List<AuthProvider> forPlatform(TargetPlatform p) { ... }
 ```
 
-Ta skica se **ne može kompajlirati**. `core_domain` je u [tasku 06](../../tasks/06-vertical-pack.md)
+Ta skica se **ne može kompajlirati**. `core_domain` je u [tasku 06](../../tasks/sprint-0/06-vertical-pack.md)
 preveden na čist Dart — zavisnosti su mu `freezed_annotation`, `json_annotation` i `meta`, bez
 `package:flutter` ([ADR-0006](0006-modeli-u-core-domain.md)) — a `TargetPlatform` je Flutterov tip.
 

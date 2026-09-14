@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 2–3 dana |
-| **Zavisi od** | [02 — šema + RLS](../02-supabase-schema-rls.md), [07 — plumbing](07-app-plumbing.md) |
+| **Zavisi od** | [02 — šema + RLS](../sprint-0/02-supabase-schema-rls.md), [07 — plumbing](07-app-plumbing.md) |
 | **Blokira** | 10 (home), 11 (booking flow), admin ekrane |
 | **Reference** | [01 §11](../../docs/01-mvp-spec.md#11-database-entities) · [07 §3](../../docs/07-tech-architecture.md#3-flutter-paketi--konkretan-izbor) · [architecture.md](../../.claude/docs/architecture.md) |
 

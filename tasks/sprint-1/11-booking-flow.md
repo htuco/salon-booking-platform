@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 3–4 dana |
-| **Zavisi od** | [05 — availability engine](../05-availability-engine.md), [10 — home](10-client-home-runtime-branding.md) |
+| **Zavisi od** | [05 — availability engine](../sprint-0/05-availability-engine.md), [10 — home](10-client-home-runtime-branding.md) |
 | **Blokira** | Sprint 2 (auth se traži na kraju ovog flowa) |
 | **Reference** | [01 §8](../../docs/01-mvp-spec.md#8-booking-rules) · [01 §9](../../docs/01-mvp-spec.md#9-core-user-flows) · [02](../../docs/02-user-flows-wireframes.md) · [`prototype/ui/SPEC.md`](../../prototype/ui/SPEC.md) ekrani 5c–5g · prototip `prototype/wireframe/src/app/pages/BookingFlow.tsx` |
 
@@ -33,7 +33,7 @@ Klijent od izbora usluge do potvrđenog zahtjeva, bez prijave do zadnjeg koraka,
 ## Zamke
 - **Login se traži tek na kraju** ([06 §1.1](../../docs/06-auth-login-flow.md)); do tada je sve javno. Ne ubacuj guard na `/book/*` — to je odluka koja se ne otvara.
 - **Broj telefona se ne traži.** Ako se pojavi polje za telefon u koraku "podaci", to je greška u razumijevanju flowa ([06 §3.1](../../docs/06-auth-login-flow.md)).
-- Iskušenje ovog taska je "privremeno" filtrirati slotove u Dartu da bi se brže vidio rezultat. To je tačno ono što [task 05](../05-availability-engine.md) postoji da spriječi.
+- Iskušenje ovog taska je "privremeno" filtrirati slotove u Dartu da bi se brže vidio rezultat. To je tačno ono što [task 05](../sprint-0/05-availability-engine.md) postoji da spriječi.
 - Auth dolazi u Sprintu 2; do tada zadnji korak radi sa guest putanjom ili mock identitetom, ali **struktura poziva mora biti ista** kao kad auth stigne.
 
 ---

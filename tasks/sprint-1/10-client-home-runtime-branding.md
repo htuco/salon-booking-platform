@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 1–2 dana |
-| **Zavisi od** | [06 — VerticalPack](../06-vertical-pack.md), [08 — core_api](08-core-api-repozitoriji.md), [09 — core_ui](09-core-ui-theme-factory.md) |
+| **Zavisi od** | [06 — VerticalPack](../sprint-0/06-vertical-pack.md), [08 — core_api](08-core-api-repozitoriji.md), [09 — core_ui](09-core-ui-theme-factory.md) |
 | **Blokira** | 11 (booking flow) |
 | **Reference** | [01 §12](../../docs/01-mvp-spec.md#12-screens) · [02 §2](../../docs/02-user-flows-wireframes.md) · prototip `prototype/wireframe/src/app/pages/LandingPage.tsx` |
 

@@ -245,7 +245,7 @@ U CI-ju vrijednosti stoje u GitHub `vars` (client ID nije tajna, ali se mijenja 
 postavljanje: `tasks/sprint-2/12-konzole-checklist.md` §4.
 
 > Release se trenutno potpisuje **debug ključem** iz Flutterovog šablona — AAB iz ovog lanca nije za
-> store dok se ne postavi keystore (Sprint 3, v. `tasks/04-ci-pipeline.md`).
+> store dok se ne postavi keystore (Sprint 3, v. `tasks/sprint-0/04-ci-pipeline.md`).
 
 `melos run build:client` je stariji ulaz i očekuje `$TENANT`/`$SALON_ID`/`$API_URL` u okolini;
 `melos run build:all` je namjerno još placeholder (`docs/04 §8.1`).

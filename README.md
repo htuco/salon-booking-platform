@@ -26,7 +26,7 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, stomato
 
 ## ✅ Taskovi
 
-**[tasks/](tasks/)** — raspisani taskovi za Sprint 0, jedan `.md` po tasku sa ciljem, definicijom gotovog i koracima. Počni sa [tasks/README.md](tasks/README.md).
+**[tasks/](tasks/)** — raspisani taskovi po sprintovima (`sprint-0/`, `sprint-1/`, `sprint-2/`), jedan `.md` po tasku sa ciljem, definicijom gotovog i koracima. Počni sa [tasks/README.md](tasks/README.md).
 
 ---
 
@@ -54,7 +54,7 @@ opisuje**, i **dokaz je artefakt ili zeleni CI job, nikad "kod izgleda ispravno"
 
 ## 🏗 Flutter monorepo (Sprint 0)
 
-Pub workspace (Dart SDK ^3.13.1) sa Melos-om — [task 01](tasks/01-repo-skeleton.md) je odradio skeleton, ostali taskovi u [tasks/](tasks/) ga popunjavaju.
+Pub workspace (Dart SDK ^3.13.1) sa Melos-om — [task 01](tasks/sprint-0/01-repo-skeleton.md) je odradio skeleton, ostali taskovi u [tasks/](tasks/) ga popunjavaju.
 
 ```bash
 dart pub global activate melos   # jednom

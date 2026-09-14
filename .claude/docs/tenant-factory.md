@@ -101,7 +101,7 @@ nikad samu vrijednost.
 
 ## Zamke koje su nas već koštale
 
-Ove su otkrivene radeći task 03 (`tasks/03-flavor-system.md`) i nijedna se ne vidi bez provjere na
+Ove su otkrivene radeći task 03 (`tasks/sprint-0/03-flavor-system.md`) i nijedna se ne vidi bez provjere na
 artefaktu:
 
 **Android**

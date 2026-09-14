@@ -20,7 +20,7 @@ Provjeri, tim redom — prve tri su specifične za ovaj repo i najčešće nešt
    buildа na CI-ju, a ništa ne pada.
 4. **`workspace:` lista.** Svaki folder u `apps/` i `packages/` sa `pubspec.yaml` mora biti u root
    `pubspec.yaml`. Paket van liste ispada iz `melos exec` i CI-ja tiho.
-5. **Statusi taskova.** Poklapa li se oznaka u tabeli `tasks/README.md` sa `## Status` blokom u
+5. **Statusi taskova.** Poklapa li se oznaka u tabeli `tasks/sprint-<N>/README.md` sa `## Status` blokom u
    samom task fajlu, i odgovaraju li oba stvarnom stanju repoa.
 6. **Dokumenti van sinhronizacije.** Prođi tabelu iz `CLAUDE.md`: opisuje li neki `.claude/docs/`
    fajl ponašanje kojeg više nema (nepostojeća komanda, uklonjena funkcija, promijenjena putanja).

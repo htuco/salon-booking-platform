@@ -7,7 +7,7 @@ Zatvaranje taska. Ne pokreći dok `/task review` i `/task verify` nisu prošli.
    `## Ciljevi` i `## Napomene`, i vrati naslov na `# Trenutni task` dok se ne učita sljedeći.
 2. **Status blok** u task fajlu: `## Status (YYYY-MM-DD) — ✅ zatvoren` ili `🟡` sa tačnim
    "ostalo za sljedećeg" i komandom kojom se nastavlja.
-3. **`tasks/README.md`** (ili `tasks/sprint-N/README.md`): ažuriraj oznaku u tabeli i status blok ispod nje. Taj blok piše se za
+3. **`tasks/sprint-<N>/README.md`**: ažuriraj oznaku u tabeli i status blok ispod nje. Taj blok piše se za
    osobu koja sjeda sutra i ne zna ništa — šta je dokazano, čime, i gdje je sljedeći korak.
 4. **Dokumenti**: prođi tabelu sinhronizacije iz `CLAUDE.md` i ažuriraj sve što je promjena
    dotakla. Ako je task donio odluku koja se ne vidi iz koda → novi ADR u `docs/adr/`.

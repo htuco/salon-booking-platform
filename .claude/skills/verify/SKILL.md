@@ -141,4 +141,4 @@ U `## Status (YYYY-MM-DD)` blok task fajla i u opis PR-a ide:
 3. šta iz toga slijedi,
 4. šta ostaje nedokazano i ko to može dokazati.
 
-Postojeći `tasks/03-flavor-system.md` je uzor kako to izgleda kad je dobro napisano.
+Postojeći `tasks/sprint-0/03-flavor-system.md` je uzor kako to izgleda kad je dobro napisano.

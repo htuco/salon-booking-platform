@@ -12,21 +12,21 @@ jedino mjesto koje se čita kad neko preuzima posao.
   (šta blokira šta), ne po prioritetu feature-a.
 - Svaki task ima: cilj, **definiciju gotovog kao checkbox listu**, korake, i `## Status (YYYY-MM-DD)`
   blok na dnu kad se na njemu radilo.
-- `tasks/README.md` je index: tabela (`#`, task, blokira, procjena, ✅/🟡) plus kratki status blok
+- `tasks/sprint-<N>/README.md` je index sprinta: tabela (`#`, task, blokira, procjena, ✅/🟡) plus kratki status blok
   po tasku ispod nje.
 - Sprint se ne dopisuje u tuđu listu — novi sprint je novi folder (`tasks/sprint-1/`), sa nastavkom
   numeracije (07, 08, …) da `/task load <NN>` ostane jednoznačan.
 
 ## Kad skill kaže "otvori task"
 
-Napravi novi `tasks/<NN>-<slug>.md` po uzoru na postojeće (`tasks/03-flavor-system.md` je najpuniji
-primjer) i dodaj red u tabelu `tasks/README.md`. Broj je sljedeći slobodan, a kolona "blokira"
+Napravi novi `tasks/sprint-<N>/<NN>-<slug>.md` po uzoru na postojeće (`tasks/sprint-0/03-flavor-system.md` je najpuniji
+primjer) i dodaj red u tabelu `tasks/sprint-<N>/README.md`. Broj je sljedeći slobodan, a kolona "blokira"
 mora biti popunjena — red bez zavisnosti je red koji će neko pokrenuti prerano.
 
 ## Kad skill kaže "nađi task"
 
 Korisnik obično da broj (`03`) ili slug. Čitaj **cijeli** fajl plus njegov status blok u
-`tasks/README.md`; ta dva mogu se razilaziti i tad je task fajl detaljniji, a repo iznad oba.
+`tasks/sprint-<N>/README.md`; ta dva mogu se razilaziti i tad je task fajl detaljniji, a repo iznad oba.
 
 ## Stanje
 

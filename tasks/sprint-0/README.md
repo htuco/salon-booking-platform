@@ -1,8 +1,8 @@
 # Taskovi — Sprint 0
 
-Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order), poredani po redoslijedu izvršavanja (ne po prioritetu feature-a — po tome šta blokira šta). Svaki task ima svoj `.md` fajl sa ciljem, definicijom gotovog i koracima.
+Raspisani taskovi za [Sprint 0 iz 01 §17](../../docs/01-mvp-spec.md#17-build-order), poredani po redoslijedu izvršavanja (ne po prioritetu feature-a — po tome šta blokira šta). Svaki task ima svoj `.md` fajl sa ciljem, definicijom gotovog i koracima.
 
-**Zašto ovim redom:** taskovi 1–4 dokazuju da native multi-tenant model uopšte radi (flavor sistem, RLS izolacija, CI) prije nego što se piše ijedan pravi ekran. Taskovi 5–6 su srce proizvoda (availability, vertikale) i moraju postojati prije UI-ja jer je svaka kasnija promjena u njima prepisivanje svih ekrana. Detaljno obrazloženje reda: [01 §17](../docs/01-mvp-spec.md#17-build-order).
+**Zašto ovim redom:** taskovi 1–4 dokazuju da native multi-tenant model uopšte radi (flavor sistem, RLS izolacija, CI) prije nego što se piše ijedan pravi ekran. Taskovi 5–6 su srce proizvoda (availability, vertikale) i moraju postojati prije UI-ja jer je svaka kasnija promjena u njima prepisivanje svih ekrana. Detaljno obrazloženje reda: [01 §17](../../docs/01-mvp-spec.md#17-build-order).
 
 | # | Task | Blokira | Procjena |
 |---|---|---|---|
@@ -34,7 +34,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > Zamke koje su nas koštale (AGP 9 gasi `resValues`, `buildSettings` nadjačava xcconfig, pogrešno
 > ime postavke za ikonu, hardkodiran `CFBundleDisplayName`, xcconfig bez Flutterovog
 > `Generated.xcconfig`) su zapisane u [03-flavor-system.md](03-flavor-system.md#status-2026-09-10)
-> i u [`.claude/docs/tenant-factory.md`](../.claude/docs/tenant-factory.md).
+> i u [`.claude/docs/tenant-factory.md`](../../.claude/docs/tenant-factory.md).
 
 > **Task 04 je 🟡 — sve osim potpisivanja i stvarnih ključeva.** `tool/build_tenant.sh` je jedina
 > ulazna tačka u build (CI ga poziva, ne svoju kopiju `flutter build`), job `release-artifacts` na
@@ -44,8 +44,8 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 >
 > Ostaju dvije stavke koje traže naloge, ne kod: **Android keystore** (release se sad potpisuje
 > debug ključem, pa AAB nije za store) i **stvarne Supabase vrijednosti** u GitHub `vars`/`secrets`.
-> Prvo je Sprint 3, drugo ide uz [task 07](sprint-1/07-app-plumbing.md). Izbor CI providera je
-> zapisan u [ADR-0005](../docs/adr/0005-github-actions-umjesto-codemagica.md).
+> Prvo je Sprint 3, drugo ide uz [task 07](../sprint-1/07-app-plumbing.md). Izbor CI providera je
+> zapisan u [ADR-0005](../../docs/adr/0005-github-actions-umjesto-codemagica.md).
 
 > **Task 05 je zatvoren** (✅) — `get_available_slots`, `get_available_dates`, `book_appointment` i
 > exclusion constraint `appointments_no_overlap`. Dokazano na CI-ju:
@@ -53,7 +53,7 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > 66 pgTAP testova PASS (38 postojećih + 28 novih) plus REST izolacija.
 >
 > Availability i booking pravila su sada **isključivo u bazi**. Kad se piše booking UI
-> ([task 11](sprint-1/11-booking-flow.md)), aplikacija prikazuje listu koju dobije i obrađuje
+> ([task 11](../sprint-1/11-booking-flow.md)), aplikacija prikazuje listu koju dobije i obrađuje
 > `409` — nijedan slot se ne računa u Dartu.
 
 > **Task 06 je zatvoren** (✅) — **Sprint 0 je time gotov.** Terminologija, booking pravila i
@@ -74,20 +74,20 @@ Raspisani taskovi za [Sprint 0 iz 01 §17](../docs/01-mvp-spec.md#17-build-order
 > `.claude/docs/architecture.md` opisuje.
 >
 > Ostaje za Sprint 1: ekran čita **živu** bazu tek kad `Supabase.initialize` uđe u
-> [task 07](sprint-1/07-app-plumbing.md) — lanac je dokazan do repozitorija, ne kroz mrežu.
+> [task 07](../sprint-1/07-app-plumbing.md) — lanac je dokazan do repozitorija, ne kroz mrežu.
 > `dental`/`health` vertikale i mehanički lint protiv literala u ekranu su svjesno odgođeni;
 > detalji u [06-vertical-pack.md](06-vertical-pack.md#status-2026-09-11--✅-zatvoren).
 
 ## Kako koristiti ovaj folder
 
-- **[`CURRENT.md`](CURRENT.md) je aktivni task** — jedan u svakom trenutku. Vodi ga skill `/task`
+- **[`CURRENT.md`](../CURRENT.md) je aktivni task** — jedan u svakom trenutku. Vodi ga skill `/task`
   (`load` ga puni, `start` mijenja status, `complete` ga prazni i dopisuje u `## Istorija`).
   Puni task fajl i repo su iznad njega; kad se raziđu, `CURRENT.md` se ispravlja.
 - Čekiraj DoD stavke u svakom task fajlu kako napreduješ.
 - Ne otvaraj task 05/06 dok 01–04 nisu gotovi — zavisnosti nisu formalnost, availability engine testovi trebaju stvarnu šemu (02), a CI (04) treba flavor sistem (03) da ima šta da builda.
-- Sprint 1 je raspisan u [`sprint-1/`](sprint-1/) (taskovi 07–11: plumbing, `core_api`, `core_ui`,
+- Sprint 1 je raspisan u [`sprint-1/`](../sprint-1/) (taskovi 07–11: plumbing, `core_api`, `core_ui`,
   home ekran, booking flow). Ne dopisuj ih ovdje — ovaj fajl ostaje indeks Sprinta 0.
-- Sprint 2 je raspisan u [`sprint-2/`](sprint-2/) (taskovi 12–26: auth, klijentski ekrani iz
+- Sprint 2 je raspisan u [`sprint-2/`](../sprint-2/) (taskovi 12–26: auth, klijentski ekrani iz
   handoffa, admin, push). Sprint 3 i dalje nisu — redoslijed im stoji u
-  [01 §17](../docs/01-mvp-spec.md#17-build-order), a raspisuju se kad Sprint 2 bude pri kraju.
+  [01 §17](../../docs/01-mvp-spec.md#17-build-order), a raspisuju se kad Sprint 2 bude pri kraju.
   Specifikacija napisana tri sprinta ranije zastari prije nego što je iko otvori.
