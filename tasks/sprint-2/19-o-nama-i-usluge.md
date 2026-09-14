@@ -100,11 +100,57 @@ app se builda, diže i čita pravi katalog — `docs/screenshots/task-19-ios-sim
 iste dvije fotografije jedna ispod druge. Obje sekcije su same za sebe ispravne i obje su imale
 zelen test — vidi se tek kad stoje na istom ekranu.
 
+### Raspored i kontakt nakon pregleda na uređaju
+
+Prvi prolaz je sve sekcije „O nama" stavio na dno, a kontakt u uokvirenu tabelu labela→vrijednost,
+kako ga `02-o-nama.png` i crta. Pregled na simulatoru je oborio oboje:
+
+- **Priča je otišla iznad cjenovnika.** Odgovara na pitanje „gdje sam ja to došao", koje ima samo
+  onaj ko app otvara prvi put; ispod cjenovnika bi je pročitao tek onaj ko je već odlučio. Radno
+  vrijeme i kontakt su ostali na dnu — to su podaci po koje se vraćaš kad si već odlučio da ideš.
+- **Kontakt je izašao iz tabele i dobio ikone.** Tabela radi na papiru, gdje je kontakt pet redova
+  sa labelama iste dužine. U aplikaciji je labela suvišna: riječ „Adresa" pored „Stjepana Radića 12"
+  ne kaže ništa što se već ne vidi, a jede pola širine reda. **Labela nije nestala nego je otišla u
+  `Semantics`** — ikona čitaču ekrana ne znači ništa, pa red i dalje bude pročitan kao
+  „Adresa: Stjepana Radića 12", i test to mjeri (`bySemanticsLabel`).
+
+Lucide nema brand ikone (izbačene zbog licence), pa Instagram nosi `atSign` — što je tačno ono što
+u vrijednosti i piše — a Facebook `globe`.
+
+### Instalacija na pravi telefon — 🟡 blokirano na Apple nalogu
+
+Pokušana je instalacija na `Hamza's iPhone` (iPhone 14 Pro Max, iOS 26.6.1), release build flavora
+`barberstudiovitez` protiv lokalnog Supabasea preko LAN-a (`http://192.168.0.14:54321`, provjereno
+`200` sa `anon` ključem). **Build pada na potpisivanju:**
+
+```
+Automatically signing iOS for device deployment using specified development team: J96U28624S
+Error (Xcode): No Account for Team "J96U28624S". Add a new account in Accounts settings
+Error (Xcode): No profiles for 'ba.nasadomena.barberstudiovitez' were found
+Error: could not code sign the application.
+```
+
+Potpisni certifikat **postoji** u keychainu (`Apple Development: htuco04@icloud.com (J96U28624S)`),
+ali Xcode nema prijavljen Apple ID, pa ne može izdati provisioning profil za taj bundle ID.
+
+**Šta treba unijeti, i gdje:** Xcode → Settings → Accounts → „+" → Apple ID (`htuco04@icloud.com`).
+Nakon toga `Runner` → Signing & Capabilities → Team, pa build prolazi.
+
+**Dvije stvari koje repo namjerno nema, a build za uređaj traži** — obje su za tu priliku
+napravljene privremeno i **vraćene**, nijedna nije commitovana:
+
+- `DEVELOPMENT_TEAM` — vezan je za lični Apple nalog, pa ne pripada repou. Kad se uvede pravi build
+  za uređaje, ide kroz CI secret ili lokalni gitignore-ovan xcconfig, ne u `Runner.xcodeproj`.
+- **ATS izuzetak** (`NSAllowsLocalNetworking`) — lokalni Supabase ide čistim HTTP-om, a iOS to
+  podrazumijevano blokira. U `Info.plist` ne smije ući trajno: to je izuzetak za razvoj, a
+  `Info.plist` ide i u store build.
+
 ### Ostalo za sljedećeg
 
 - **`services` nema kolonu za ručni redoslijed.** Uzlazno po kategoriji pa imenu je predvidivo, ne
   dobro: na `/services` je podnošljivo (vidi se cijela lista), na Početnoj nije, jer pokazuje tri.
   Ako se rješava, to je `sort_order` migracija i vlastiti task.
+- **Instalacija na pravi telefon** — v. blok iznad; čeka prijavu Apple ID-a u Xcode.
 - **Tapovi na kontakt redove nisu odigrani.** `tel:`, mape i Instagram traže pravi uređaj;
   `launchUrl` je pozvan iz `_otvori`, ali nijednom nije otvorio aplikaciju. Greška se guta
   namjerno — v. doc komentar.

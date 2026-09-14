@@ -179,6 +179,12 @@ Sitno, ali ne smije se izgubiti:
 > **Zamka koju je našao browser, a testovi nisu mogli:** foto par i Galerija su na Početnoj crtali
 > iste dvije fotografije jedna ispod druge — obje sekcije ispravne, obje sa zelenim testom, vidi se
 > tek kad stoje na istom ekranu. Par je ostao samo na `/about`, koji mreže nema.
+> Nakon pregleda na simulatoru priča je otišla **iznad cjenovnika** (odgovara na „gdje sam došao",
+> pitanje koje ima samo prvi otvaralac), a kontakt je izašao iz uokvirene tabele i dobio **ikone**:
+> labela „Adresa" pored „Stjepana Radića 12" ne kaže ništa što se već ne vidi, a jede pola širine
+> reda. Labela nije nestala nego je otišla u `Semantics`, i test to mjeri.
 > **Ostaje otvoreno, ali ne blokira:** `services` nema kolonu za ručni redoslijed (`sort_order`
-> migracija, vlastiti task), a tapovi na `tel:`, mape i Instagram traže pravi uređaj.
+> migracija, vlastiti task), tapovi na `tel:`, mape i Instagram traže pravi uređaj, a **instalacija
+> na telefon je blokirana na Apple nalogu** — certifikat postoji u keychainu, ali Xcode nema
+> prijavljen Apple ID pa ne izdaje provisioning profil.
 > Detalji: [19-o-nama-i-usluge.md](19-o-nama-i-usluge.md#status-2026-09-13--✅-zatvoren).
