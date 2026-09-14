@@ -7,6 +7,8 @@ import '../../features/booking/booking_success_screen.dart';
 import '../../features/booking/details_step_screen.dart';
 import '../../features/booking/employee_step_screen.dart';
 import '../../features/booking/service_step_screen.dart';
+import '../../features/gallery/gallery_screen.dart';
+import '../../features/reviews/reviews_screen.dart';
 import '../../features/booking/slot_step_screen.dart';
 import '../../features/about/about_screen.dart';
 import '../../features/account/account_screen.dart';
@@ -177,6 +179,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: ClientRoute.account.name,
         builder: (context, state) => const AccountScreen(),
       ),
+      GoRoute(
+        path: ClientRoute.gallery.path,
+        name: ClientRoute.gallery.name,
+        builder: (context, state) => const GalleryScreen(),
+      ),
+      GoRoute(
+        path: ClientRoute.reviews.path,
+        name: ClientRoute.reviews.name,
+        builder: (context, state) => const ReviewsScreen(),
+      ),
       // Ekrane pravi task 21; rute su ovdje da redovi Postavki imaju gdje voditi.
       GoRoute(
         path: ClientRoute.aboutApp.path,
@@ -229,6 +241,12 @@ enum ClientRoute {
   appointmentDetails('/appointments/:id', 'Detalji termina'),
   team('/team', 'Naš tim'),
   about('/about', 'O nama'),
+
+  /// `SPEC.md` 5l i 5m: pod-ekrani **bez tab bara**, za razliku od [about], koji je
+  /// podruta grane Početne i traku zadržava (5b). Zato stoje izvan `StatefulShellRoute`,
+  /// uz booking flow i [account].
+  gallery('/gallery', 'Galerija'),
+  reviews('/reviews', 'Recenzije'),
 
   /// Ćelija trake koja nema ekran do taska 21. Ruta postoji prije ekrana namjerno —
   /// traka sa pet ćelija od kojih dvije nemaju gdje voditi je traka koja pada.

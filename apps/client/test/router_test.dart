@@ -62,8 +62,12 @@ void main() {
       // Putanje su prepisane iz `docs/01-mvp-spec.md` §12, ne iz `ClientRoute`-a —
       // inace bi test samo potvrdio da je enum jednak sam sebi.
       //
-      // `/gallery` je jedini red iz §12 kojeg ovdje nema: oznacen je kao Later i ekran
-      // ga dobija u tasku 20. Kad ga dobije, ide i ovdje.
+      // `/gallery` je dobio ekran u tasku 20, pa je usao i ovdje — do tada je bio jedini
+      // red iz §12 bez rute, oznacen kao Later.
+      //
+      // `/reviews` je u §12 **dodan** u tasku 20: handoff ga crta (5m) i DoD ga trazi, ali
+      // ga tabela u specifikaciji nije imala. Ista rupa kao kod `/about-app` i `/terms`
+      // ispod, i zatvorena na isti nacin — u specifikaciji, ne samo u routeru.
       //
       // `/about-app` i `/terms` su dodani u §12 u tasku 17. Handoff ih crta (5n, 5o) i DoD
       // taska 21 ih imenuje, ali tabela u specifikaciji ih nije imala — ista rupa kao kod
@@ -82,6 +86,8 @@ void main() {
         '/appointments/:id',
         '/team',
         '/about',
+        '/gallery',
+        '/reviews',
         '/notifications',
         '/settings',
         '/about-app',

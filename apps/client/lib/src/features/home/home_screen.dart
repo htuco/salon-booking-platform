@@ -4,13 +4,13 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../about/about_sections.dart';
-import 'salon_rating.dart';
 import 'salon_schedule.dart';
 import 'widgets/gallery_grid.dart';
 import 'widgets/home_hero.dart';
@@ -99,6 +99,7 @@ class _Ucitan extends ConsumerWidget {
     final hours = ref.watch(workingHoursProvider);
     final gallery = ref.watch(salonGalleryProvider);
     final rating = ref.watch(salonRatingProvider);
+    final reviews = ref.watch(salonReviewsProvider);
 
     final schedule = SalonSchedule.fromHours(
       hours.valueOrNull ?? const <WorkingHour>[],
@@ -140,7 +141,9 @@ class _Ucitan extends ConsumerWidget {
             ),
           ),
         SliverToBoxAdapter(child: _GalerijaSekcija(urls: gallery)),
-        SliverToBoxAdapter(child: _RecenzijeSekcija(rating: rating)),
+        SliverToBoxAdapter(
+          child: _RecenzijeSekcija(rating: rating, reviews: reviews),
+        ),
         // „O nama" je **na Početnoj, ne iza chevrona** — v. doc komentar klase. Iste
         // sekcije crta i `/about`; dijele se kroz `about_sections.dart`.
         SliverToBoxAdapter(child: AboutStory(opis: salon.description)),
@@ -300,8 +303,11 @@ String _titulaIStaz(AppLocalizations l10n, Employee employee) => [
 
 /// Galerija — tri kolone, i ništa kad slika nema.
 ///
-/// `gallery_urls` je prazan u oba demo salona, pa se sekcija u demou **ne vidi**. To je
-/// tačno ono što se traži: prazna mreža bi tvrdila da slike postoje pa se nisu učitale.
+/// Barber u seedu ima dvanaest fotografija, beauty nijednu — pa se ista sekcija u demou
+/// vidi na jednom tenantu i uredno nestaje na drugom. Prazna mreža bi tvrdila da slike
+/// postoje pa se nisu učitale.
+///
+/// Na Početnoj stoji **izlog od šest**; cijelu listu i lightbox nosi `/gallery`.
 class _GalerijaSekcija extends StatelessWidget {
   const _GalerijaSekcija({required this.urls});
 
@@ -318,22 +324,34 @@ class _GalerijaSekcija extends StatelessWidget {
 
     return HomeSection(
       title: l10n.homeGallery,
-      // Bez "Sve slike ›": ekran galerije i lightbox su task 20, a link koji vodi na
-      // `errorBuilder` je gori od linka kojeg nema.
-      child: GalleryGrid(urls: lista),
+      trailing: _SekcijaLink(
+        label: l10n.homeSeeAll,
+        onTap: () => context.push(ClientRoute.gallery.path),
+      ),
+      // Tap na ćeliju vodi na `/gallery`, ne direktno u lightbox: Početna pokazuje šest
+      // od dvanaest, pa bi lightbox otvoren odavde listao krnju listu i brojač bi pisao
+      // „4 / 6" nad galerijom koja ih ima dvanaest.
+      child: GalleryGrid(
+        urls: lista,
+        onTap: (_) => context.push(ClientRoute.gallery.path),
+      ),
     );
   }
 }
 
 /// Recenzije — prosjek, zvjezdice i jedan citat.
 ///
-/// Sekcija danas **nikad ne izađe**, jer `salonRatingProvider` vraća `null` dok šema nema
-/// tabelu `reviews` (task 20). Napisana je i pokrivena testom da task 20 mijenja jedan
-/// provider, a ne ekran.
+/// **Sakriva se kad salon nema nijednu ocjenu**, po istom pravilu kao galerija: agregat
+/// tada nema red (`null`), a ne red sa nulama, pa se „0,0 od 5" nikad ne nacrta. Beauty
+/// salon u seedu je tačno taj slučaj.
+///
+/// Citat je najnovija recenzija **sa tekstom**, a broj iznad njega je broj **svih** ocjena.
+/// Razlika je namjerna i vidi se na `/reviews`: 142 ocjene, tri kartice.
 class _RecenzijeSekcija extends ConsumerWidget {
-  const _RecenzijeSekcija({required this.rating});
+  const _RecenzijeSekcija({required this.rating, required this.reviews});
 
-  final AsyncValue<SalonRating?> rating;
+  final AsyncValue<SalonRatingSummary?> rating;
+  final AsyncValue<List<Review>> reviews;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -343,10 +361,45 @@ class _RecenzijeSekcija extends ConsumerWidget {
 
     return HomeSection(
       title: l10n.homeReviews,
+      trailing: _SekcijaLink(
+        label: l10n.homeSeeAll,
+        onTap: () => context.push(ClientRoute.reviews.path),
+      ),
       child: RatingSummary(
-        rating: vrijednost,
+        summary: vrijednost,
         averageLabel: formatRating(vrijednost.average),
-        countLabel: l10n.homeRatingCount(vrijednost.count),
+        countLabel: l10n.homeRatingCount(vrijednost.total),
+        quote: reviews.valueOrNull?.firstOrNull,
+      ),
+    );
+  }
+}
+
+/// Link desno od naslova sekcije — „Sve ›" (`01-pocetna.png`).
+///
+/// Cijeli red je dodirna meta visine 44px, ne samo tekst: `SPEC.md` traži ≥44px svugdje,
+/// a dvorječni link je inače meta od jedanaest piksela visine.
+class _SekcijaLink extends StatelessWidget {
+  const _SekcijaLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 44),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: theme.textTheme.labelLarge),
+            const Icon(LucideIcons.chevronRight, size: 18),
+          ],
+        ),
       ),
     );
   }

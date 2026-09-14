@@ -4,7 +4,6 @@ import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
 import 'package:client/src/core/router/app_router.dart';
 import 'package:client/src/features/about/about_sections.dart';
-import 'package:client/src/features/home/salon_rating.dart';
 import 'package:client/src/features/home/widgets/gallery_grid.dart';
 import 'package:client/src/features/home/widgets/rating_summary.dart';
 import 'package:core_api/core_api.dart';
@@ -328,12 +327,26 @@ void main() {
       // Ovo je jedini test koji dokazuje da task 20 mijenja **provider**, ne Pocetnu.
       await tester.pumpWidget(
         _app(
-          rating: const SalonRating(
+          rating: const SalonRatingSummary(
+            salonId: _salonId,
             average: 4.8,
-            count: 142,
-            quote: 'Fade je uvijek isti, tačno kako tražim.',
-            author: 'Nedim H.',
+            total: 142,
+            count5: 118,
+            count4: 18,
+            count3: 4,
+            count2: 1,
+            count1: 1,
           ),
+          reviews: [
+            Review(
+              id: 'r1',
+              salonId: _salonId,
+              authorName: 'Nedim H.',
+              rating: 5,
+              comment: 'Fade je uvijek isti, tačno kako tražim.',
+              createdAt: _datumRecenzije,
+            ),
+          ],
         ),
       );
       await tester.pump();
@@ -572,6 +585,9 @@ final _vertikalniSkrol = find.byType(Scrollable).first;
 
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 
+/// Fiksan datum, jer Početna citat ne datira — `timeAgo` se mjeri na `/reviews`.
+final _datumRecenzije = DateTime.utc(2026, 9, 11);
+
 const _salon = Salon(
   id: _salonId,
   name: 'Barber Studio Vitez',
@@ -636,7 +652,8 @@ Widget _app({
   ],
   List<WorkingHour> hours = const [],
   List<String> gallery = const [],
-  SalonRating? rating,
+  SalonRatingSummary? rating,
+  List<Review> reviews = const [],
   Vertical? vertical,
 }) => _appOd(
   _container(
@@ -648,6 +665,7 @@ Widget _app({
     hours: hours,
     gallery: gallery,
     rating: rating,
+    reviews: reviews,
     vertical: vertical,
   ),
 );
@@ -667,7 +685,8 @@ ProviderContainer _container({
   ],
   List<WorkingHour> hours = const [],
   List<String> gallery = const [],
-  SalonRating? rating,
+  SalonRatingSummary? rating,
+  List<Review> reviews = const [],
   Vertical? vertical,
 }) {
   final container = ProviderContainer(
@@ -692,6 +711,7 @@ ProviderContainer _container({
       workingHoursProvider.overrideWith((ref) async => hours),
       salonGalleryProvider.overrideWith((ref) async => gallery),
       salonRatingProvider.overrideWith((ref) async => rating),
+      salonReviewsProvider.overrideWith((ref) async => reviews),
       verticalProvider.overrideWith((ref) async => vertical ?? _vertical()),
       // Tab Termini je pravi ekran i cita da li je korisnik prijavljen; bez override-a
       // posegne za `Supabase.instance` kojeg u testu nema.

@@ -24,6 +24,7 @@ export 'src/auth/supabase_auth_repository.dart';
 export 'src/booking/appointment_repository.dart';
 export 'src/booking/booking_repository.dart';
 export 'src/catalog/employee_repository.dart';
+export 'src/catalog/review_repository.dart';
 export 'src/catalog/salon_repository.dart';
 export 'src/catalog/service_repository.dart';
 export 'src/catalog/settings_repository.dart';

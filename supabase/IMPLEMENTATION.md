@@ -17,7 +17,7 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 
 ## Schema/API contracts
 
-- Public table names and fields are snake_case. All 15 entities exist. Every table has RLS enabled.
+- Public table names and fields are snake_case. All 16 entities exist. Every table has RLS enabled.
 - Deterministic tenants: Barber Studio Vitez = 550e8400-e29b-41d4-a716-446655440000; Beauty Studio Travnik = 550e8400-e29b-41d4-a716-446655440001.
 - Services IDs end in 1..4 (barber) and 5..8 (beauty), prefix 10000000-0000-4000-8000-. Employees end in 1..2 and 3..4, prefix 20000000-0000-4000-8000-.
 - Staff JWTs require app_metadata.role = salon_admin and app_metadata.salon_id, PLUS a matching public.users row. A super_admin needs both its trusted claim and database membership. user_metadata is only display data.
@@ -30,6 +30,8 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Appointment device_id is the UUID FK to devices.id; devices.device_id is the install identifier. appointments.auth_identity_id must match its referenced customer's identity.
 - Working hours use ISO weekdays 1=Monday to 7=Sunday. date/start_time/end_time are salon-local wall times. timezone defaults to Europe/Sarajevo.
 - salon_builds.build_status/build_url are runtime build tracking fields separate from actual store status. No store status is marked live by seed.
+- Reviews are read-only for the client app: anon and authenticated hold `select` only, writes belong to staff via `staff_manage`. `public.salon_rating_summary` is a `security_invoker` view exposing average/total/histogram per salon; a salon without reviews has no row there, never a row of zeroes.
+- Gallery photos stay in `salons.gallery_urls` (jsonb array, array order is display order). There is no `gallery_photos` table — see docs/adr/0008.
 
 ## Assumptions where documentation is incomplete
 

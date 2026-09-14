@@ -27,7 +27,7 @@ on conflict(key) do nothing;
 --
 -- **Fotografije su Unsplash URL-ovi, ne spakovani assets.** Unsplash licenca dozvoljava
 -- komercijalnu upotrebu bez atribucije. Namjerno ostaju daljinski: Flutter nema asset po flavoru
--- (v. `apps/client/pubspec.yaml`), pa bi trinaest fotografija **demo** salona uslo u build svakog
+-- (v. `apps/client/pubspec.yaml`), pa bi devetnaest fotografija **demo** salona uslo u build svakog
 -- tenanta. Cijena je da demo bez interneta pokazuje prazne okvire — isto stanje koje salon bez
 -- fotografija ionako ima.
 insert into public.salons(id,name,slug,description,city,address,phone,email,instagram_url,facebook_url,
@@ -38,7 +38,7 @@ values
  'Stjepana Radića 12','030 711 000','kontakt@barberstudiovitez.ba',
  'https://instagram.com/barberstudiovitez','https://facebook.com/barberstudiovitez',
  'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1200&h=1600&fit=crop&q=80',
- '["https://images.unsplash.com/photo-1536520002442-39764a41e987?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1621645582931-d1d3e6564943?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1599351431613-18ef1fdd27e1?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&h=800&fit=crop&q=80"]'::jsonb,
+ '["https://images.unsplash.com/photo-1536520002442-39764a41e987?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1621645582931-d1d3e6564943?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1599351431613-18ef1fdd27e1?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1493256338651-d82f7acb2b38?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1587909209111-5097ee578ec3?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1567894340315-735d7c361db0?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1621607512022-6aecc4fed814?w=800&h=800&fit=crop&q=80","https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?w=800&h=800&fit=crop&q=80"]'::jsonb,
  '#C6A667','#171717','modern_barber','barber','pro'),
 ('550e8400-e29b-41d4-a716-446655440001','Beauty Studio Travnik','beautystudiotravnik',
  'Vaš trenutak njege, ljepote i opuštanja.','Travnik',
@@ -98,3 +98,62 @@ select s.id,d,'09:00'::time,case when d=6 then '14:00'::time else '17:00'::time 
 from public.salons s cross join generate_series(1,7) d
 where s.id in ('550e8400-e29b-41d4-a716-446655440000','550e8400-e29b-41d4-a716-446655440001')
 on conflict(salon_id,employee_id,day_of_week) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Recenzije (task 20)
+-- ---------------------------------------------------------------------------
+-- **Datumi su relativni na `now()`, ne fiksni.** Ekran pise "prije 3 dana"; sa fiksnim
+-- datumom demo za mjesec dana pise "prije 5 sedmica", a za godinu "prije 11 mjeseci". Task 17
+-- je nasao tri zatecena testa koja su bila zelena samo u dijelu dana ili sedmice — fiksan
+-- datum u seedu je isti rod greske, samo sporiji.
+--
+-- **Raspodjela je namjerno 4,8.** 21x5 + 3x4 + 1x3 = 120 / 25 = 4.8, tacno broj sa
+-- `13-recenzije.png`. Histogram time dobija oblik koji handoff crta: peterka dominira,
+-- cetvorka mala, trojka jedva vidljiva, dvojka i jedinica prazne.
+--
+-- **Vecina ocjena nema tekst, i to nosi histogram.** Handoff pokazuje "142 ocjene" iznad tri
+-- napisane recenzije: ljudi daju zvjezdice bez teksta. Da su sve ocjene i recenzije, prosjek
+-- bi se racunao nad drugim skupom nego sto salon vidi na Googleu.
+--
+-- **Beauty namjerno nema nijednu.** Prazno stanje recenzija mora se vidjeti u demou, isto kao
+-- prazna galerija i prazan okvir usluge (task 22) — inace se otkrije tek kod prvog klijenta.
+insert into public.reviews(salon_id,author_name,rating,comment,created_at) values
+-- Tri napisane recenzije su doslovno one sa `13-recenzije.png`.
+('550e8400-e29b-41d4-a716-446655440000','Nedim H.',5,
+ 'Fade je uvijek isti, tačno kako tražim. Nikad čekanja kad se zakaže preko aplikacije.',
+ now() - interval '3 days'),
+('550e8400-e29b-41d4-a716-446655440000','Amar S.',5,
+ 'Emir zna posao. Brada uređena za 20 minuta, cijena poštena.',
+ now() - interval '14 days'),
+('550e8400-e29b-41d4-a716-446655440000','Haris M.',4,
+ 'Sve super, jedino subotom zna biti gužva pa termin uzmite ranije.',
+ now() - interval '31 days'),
+-- Cetvrta napisana, da lista ima sta skrolati ispod tri iz handoffa.
+('550e8400-e29b-41d4-a716-446655440000','Dženan K.',5,
+ 'Dođem, sjednem, gotovo. Bez dogovaranja preko poruka.',
+ now() - interval '47 days')
+on conflict do nothing;
+
+-- Ocjene bez teksta: 18x5, 2x4, 1x3. Sa cetiri napisane iznad daju 25 ocjena i prosjek 4,8.
+insert into public.reviews(salon_id,author_name,rating,comment,created_at)
+select '550e8400-e29b-41d4-a716-446655440000', o.ime, o.ocjena, null,
+       now() - (o.dana || ' days')::interval
+from (values
+  ('Adnan P.',5,5),   ('Tarik B.',5,8),    ('Mirza D.',5,11),  ('Faruk J.',5,17),
+  ('Vedad S.',5,19),  ('Kenan A.',5,23),   ('Damir L.',5,26),  ('Ismar T.',5,29),
+  ('Edin M.',5,34),   ('Sanjin R.',5,38),  ('Benjamin Ć.',5,41),('Armin N.',5,45),
+  ('Nihad Z.',5,52),  ('Elvir K.',5,58),   ('Muhamed H.',5,63), ('Anel P.',5,70),
+  ('Dino V.',5,77),   ('Alen G.',5,84),
+  ('Emin F.',4,36),   ('Samir O.',4,66),
+  ('Nermin Š.',3,73)
+) as o(ime,ocjena,dana)
+on conflict do nothing;
+
+-- **Jedna sakrivena, i namjerno jedinica.** Dokazuje `is_published` i cini curenje vidljivim
+-- kao broj: ako politika propusti ovaj red, prosjek padne sa 4,8 na 4,7. Test koji mjeri
+-- prosjek zato pada na propuštenoj recenziji, a ne samo na brojanju redova.
+insert into public.reviews(salon_id,author_name,rating,comment,is_published,created_at) values
+('550e8400-e29b-41d4-a716-446655440000','Sakriveni S.',1,
+ 'Sadržaj koji je salon sakrio kroz admin. Ne smije se vidjeti bez tokena osoblja.',
+ false, now() - interval '9 days')
+on conflict do nothing;

@@ -1,59 +1,42 @@
-# Trenutni task: 12/13 — Apple i Google prijava
+# Trenutni task
 
-Puni taskovi: [`tasks/sprint-2/12-auth-provideri.md`](sprint-2/12-auth-provideri.md) ·
-[`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md) ·
-[`13-client-login-ekran.md`](sprint-2/13-client-login-ekran.md)
-**Nije počet** · Učitano: 2026-09-14
+Nema učitanog taska. Pokreni `/task load <NN>` — sljedeći nezablokirani je
+[21](sprint-2/21-obavijesti-i-pravni-ekrani.md) (obavijesti, o aplikaciji, pravila).
 
 ## Status
 
-Nije počet. **Task 17 je zatvoren** — v. Istoriju.
+Gotov. **Task 20 je zatvoren** — v. Istoriju.
 
 ## Ciljevi
 
-- [ ] `sign_in_with_apple` i `google_sign_in` u `pubspec.yaml`
-- [ ] `signInWithApple()` i `signInWithGoogle()` u `SupabaseAuthRepository` (danas bacaju)
-- [ ] iOS: Sign In with Apple entitlement, URL scheme za Google, po flavoru
-- [ ] Android: SHA-1 otisci u Google Cloud, debug i release zasebno
-- [ ] Testovi sa lažnim providerom
-- [ ] 🔒 **Dokaz uživo** — traži konzole, v. Napomene
+_Prazno dok se ne učita sljedeći task._
 
 ## Napomene
 
-### Šta blokira, i zašto to nije stvar koda
-
-Kod se može napisati danas. **Dokazati se ne može**, i to je razlika koju repo tretira ozbiljno:
-`supabase/CLAUDE.md` traži da u sažetku piše „napisano, nije pokrenuto" dok suite nije prošla.
-
-Tri stvari fale, sve izvan repoa:
-
-| Šta | Gdje | Zašto blokira |
-|---|---|---|
-| OAuth client ID-evi (web, Android, iOS) | Google Cloud | bez `serverClientId` prvi poziv padne u Google dijalogu |
-| Sign In with Apple na App ID-u | Apple Developer | bez toga nema ni entitlementa ni tokena |
-| Uključeni provideri + redirect URL-ovi | Supabase | token bez konfigurisanog providera se odbija |
-
-Hodogram je već raspisan, korak po korak: [`12-konzole-checklist.md`](sprint-2/12-konzole-checklist.md).
-
-### Apple je dvostruko blokiran
-
-Uz Apple Developer nalog, **Xcode nema prijavljen Apple ID** — isto što je u tasku 19 oborilo
-instalaciju na pravi telefon (`No Account for Team "J96U28624S"`). Apple prijava se ne može
-odigrati ni na simulatoru bez potpisanog builda, pa je taj blokator na kritičnom putu i ovdje.
-
-### Šta se ipak može uraditi bez konzola
-
-Paketi, implementacija obje metode, `AuthConfig` grananje po flavoru, iOS/Android konfiguracija po
-flavoru, i testovi sa lažnim providerom. Ostaje samo zadnji korak — pravi dijalog na pravom
-uređaju.
-
-### Google Cloud: release keystore je zasebna rupa
-
-Android traži SHA-1, a **debug i release su različiti** (`docs/06 §7.1` to zove najčešćom
-greškom: Google login radi u debugu i pada u produkciji). Release keystore još ne postoji —
-otvorena stavka iz taska 04. Dok ga nema, prave se samo debug klijenti.
+_Prazno dok se ne učita sljedeći task._
 
 ## Istorija
+
+- **20 — Client: Galerija, lightbox i Recenzije** (2026-09-14, ✅) — `/gallery`, lightbox 5q i
+  `/reviews` rade iz prave baze na oba tenanta. **`gallery_photos` nije nastao**
+  ([ADR-0008](../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md)): `salons.gallery_urls`
+  stoji u init migraciji i već je bila spojena do Početne i `/about`, pa bi nova tabela bila drugi
+  izvor istine za istu listu — migracija dira **samo `reviews`**. **Prosjek i histogram računa
+  baza**, pogled `salon_rating_summary` sa `security_invoker = true`: PostgREST reže na
+  `max_rows = 1000`, pa bi salon sa 1200 ocjena u Dartu dao tih i pogrešan prosjek, a bez te opcije
+  pogled zaobilazi RLS tabele ispod. **Curenje je namjerno napravljeno vidljivim kao broj** — seed
+  drži jednu sakrivenu jedinicu, pa je tačan prosjek 4,8 a procurio 4,7; test koji broji redove to
+  ne bi uhvatio. `comment` je nullable jer većina ljudi da zvjezdice bez teksta, pa lista prikazuje
+  samo redove sa tekstom a prosjek računa sve: 25 ocjena i četiri kartice **nije** nesklad.
+  Dokazano: **147 pgTAP** (bilo 124), **43 REST asercije bez tokena** (bilo 33), **419 Dart testova**
+  (bilo 372), sve provjereno da može pasti pa vraćeno; uživo u Chromiumu i na **iOS simulatoru**.
+  **Dvije greške koje je našao ekran, a testovi nisu mogli:** zvjezdica se razlikovala samo bojom
+  (Lucide nema punu — 2,4% razlike u svjetlini, a 3,5 se crtalo identično kao 4,0), i naslov je bio
+  u `AppBar`-u umjesto „← Početna" plus serif u tijelu; zaglavlje je izvučeno u `core_ui` kao
+  `BackHeader`, a **`/account` iz taska 17 je popravljen istim potezom**. **Prvi test za zvjezdicu
+  je bio bezvrijedan** i to je ostavljeno zapisano — poredio je piksele i prolazio nad pokvarenom
+  verzijom; sada mjeri *koliko*. Ostaje 🟡 **share ⤴ u lightboxu**.
+  [PR #37](https://github.com/htuco/salon-booking-platform/pull/37).
 
 - **17 — Client: Postavke, „Moj račun" i brisanje računa** (2026-09-14, ✅) — brisanje je
   **dvokoračno**: `delete_my_account()` pod korisnikovim tokenom, pa Edge Function

@@ -8,6 +8,7 @@ import 'auth/supabase_auth_repository.dart';
 import 'booking/appointment_repository.dart';
 import 'booking/booking_repository.dart';
 import 'catalog/employee_repository.dart';
+import 'catalog/review_repository.dart';
 import 'catalog/salon_repository.dart';
 import 'catalog/service_repository.dart';
 import 'catalog/settings_repository.dart';
@@ -46,6 +47,10 @@ final currentSalonIdProvider = Provider<String>(
 
 final salonRepositoryProvider = Provider<SalonRepository>(
   (ref) => SalonRepository(ref.watch(supabaseClientProvider)),
+);
+
+final reviewRepositoryProvider = Provider<ReviewRepository>(
+  (ref) => ReviewRepository(ref.watch(supabaseClientProvider)),
 );
 
 final serviceRepositoryProvider = Provider<ServiceRepository>(
@@ -182,6 +187,28 @@ final salonGalleryProvider = FutureProvider<List<String>>(
   (ref) => ref
       .watch(salonRepositoryProvider)
       .galleryUrls(ref.watch(currentSalonIdProvider)),
+);
+
+/// Recenzije sa tekstom, najnovije prvo (`SPEC.md` 5m).
+///
+/// Prazna lista je uredno stanje: salon može imati ocjene bez ijedne napisane recenzije.
+/// Tada `/reviews` crta samo prosjek i histogram, a lista ispod izostane.
+final salonReviewsProvider = FutureProvider<List<Review>>(
+  (ref) => ref
+      .watch(reviewRepositoryProvider)
+      .forSalon(ref.watch(currentSalonIdProvider)),
+);
+
+/// Prosjek, ukupan broj i histogram ocjena — jedan red iz `salon_rating_summary`.
+///
+/// **`null` znači „salon nema nijednu ocjenu", ne greška.** Ekran tada sakrije sekciju
+/// umjesto da nacrta „0,0 od 5". Ovaj provider je zamijenio privremeni `salonRatingProvider`
+/// iz `apps/client/features/home/`, koji je do taska 20 uvijek vraćao `null` jer šema nije
+/// imala tabelu.
+final salonRatingProvider = FutureProvider<SalonRatingSummary?>(
+  (ref) => ref
+      .watch(reviewRepositoryProvider)
+      .summaryForSalon(ref.watch(currentSalonIdProvider)),
 );
 
 /// Katalog usluga aktivnog salona.

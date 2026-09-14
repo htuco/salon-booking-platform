@@ -15,7 +15,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [22](22-sema-slike-i-staz.md) ✅ | Šema: slike usluga, staž radnika | 18, 20 | 0.5 dana |
 | [18](18-pocetna-i-tab-bar.md) ✅ | Client: Početna po handoffu + **bottom tab bar** | 19, 20, 21 | 2–3 dana |
 | [19](19-o-nama-i-usluge.md) ✅ | Client: "O nama" i "Usluge" | — | 1–2 dana |
-| [20](20-galerija-recenzije.md) | Client: galerija, lightbox, recenzije | — | 2 dana |
+| [20](20-galerija-recenzije.md) ✅ | Client: galerija, lightbox, recenzije | — | 2 dana |
 | [21](21-obavijesti-i-pravni-ekrani.md) | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
 | [23](23-admin-login-i-lista.md) | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
 | [24](24-admin-akcije-nad-terminima.md) | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
@@ -52,7 +52,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [11](../sprint-1/11-booking-flow.md) | ~~`book(...)` nikad nije pozvan protiv prave baze~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | ~~`409` nije izazvan uživo~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | Usluge nemaju fotografiju, radnici staž | [22](22-sema-slike-i-staz.md) |
-| [11](../sprint-1/11-booking-flow.md) | Početna nije po handoffu | [18](18-pocetna-i-tab-bar.md) |
+| [11](../sprint-1/11-booking-flow.md) | ~~Početna nije po handoffu~~ | ✅ [18](18-pocetna-i-tab-bar.md) |
 | [08](../sprint-1/08-core-api-repozitoriji.md) | ~~Nema `AppointmentRepository`~~ | ✅ [16](16-moji-termini-i-otkazivanje.md) |
 | `security.md` | ~~`customers`~~ ✅ / `devices` upis bez validirane funkcije | ✅ [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
 | `security.md` | Admin `insert` nad `appointments` zaobilazi validaciju slota | [24](24-admin-akcije-nad-terminima.md) |
@@ -149,6 +149,34 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > tvrdi pogrešno: direktan `update` sa klijenta ne baca `42501` nego pogodi nula redova.
 > Detalji: [16-moji-termini-i-otkazivanje.md](16-moji-termini-i-otkazivanje.md#status-2026-09-12--✅-zatvoren).
 
+
+> **20 — Galerija, lightbox i recenzije (✅, 2026-09-14).** `/gallery`, lightbox 5q i `/reviews`
+> rade iz prave baze, na oba tenanta. **`gallery_photos` nije nastao**
+> ([ADR-0008](../../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md)): `salons.gallery_urls`
+> stoji u init migraciji i već je bila spojena do Početne i `/about`, pa bi nova tabela bila drugi
+> izvor istine za istu listu. Migracija zato dira **samo `reviews`**.
+> **Prosjek i histogram računa baza**, pogled `salon_rating_summary` sa `security_invoker = true` —
+> PostgREST ima `max_rows = 1000`, pa bi salon sa 1200 ocjena u Dartu dao tih i pogrešan prosjek, a
+> bez te opcije pogled zaobilazi RLS tabele ispod. **Curenje je namjerno napravljeno vidljivim kao
+> broj:** seed drži jednu sakrivenu jedinicu, pa je tačan prosjek 4,8 a procurio 4,7 — test koji
+> broji redove to ne bi uhvatio.
+> `comment` je nullable jer većina ljudi da zvjezdice bez teksta; lista prikazuje samo redove sa
+> tekstom, prosjek računa sve — zato 25 ocjena i četiri kartice, što nije nesklad.
+> Dokazano: **147 pgTAP** (bilo 124), **43 REST asercije bez tokena** (bilo 33), **419 Dart testova**
+> (bilo 372); sve provjereno da može pasti pa vraćeno. Uživo u Chromiumu i na **iOS simulatoru**,
+> oba tenanta (`docs/screenshots/task-20-*`). **CI je zelen** — i to je prvi zeleni CI od 11.09.,
+> kad su potrošene besplatne minute; blokada je prošla prije najavljenog reseta 29.09.
+> **Dvije greške koje je našao ekran, a testovi nisu mogli:** zvjezdica se razlikovala samo bojom
+> (Lucide nema punu — 2,4% razlike u svjetlini, a 3,5 se crtalo identično kao 4,0; sada
+> `CustomPainter`), i naslov je bio u `AppBar`-u umjesto „← Početna" plus serif u tijelu. Zaglavlje
+> je izvučeno u `core_ui` kao `BackHeader`, a **`/account` iz taska 17 je popravljen istim potezom**
+> jer je bio jedini preostali ekran sa `AppBar`-om.
+> **Prvi test za zvjezdicu je bio bezvrijedan** i to je ostavljeno zapisano: poredio je piksele i
+> prolazio nad pokvarenom verzijom. Sada mjeri *koliko*, prag 5% po zvjezdici.
+> Ostaje 🟡 **share ⤴ u lightboxu** (traži `share_plus`), „Ostavi recenziju" namjerno ne postoji jer
+> klijent nema write grant, a lightbox nije tapnut na simulatoru (nema accessibility dozvole) —
+> odigran je u Chromiumu. Detalji:
+> [20-galerija-recenzije.md](20-galerija-recenzije.md#status-2026-09-14--✅-zatvoren).
 
 ## Dug koji nije task
 
