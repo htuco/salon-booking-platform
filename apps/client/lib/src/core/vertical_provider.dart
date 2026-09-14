@@ -19,6 +19,13 @@ final coreApiOverrides = <Override>[
   currentSalonIdProvider.overrideWith(
     (ref) => ref.watch(appEnvProvider).salonId,
   ),
+  // Google client ID-evi (task 12/13). `core_api` ne zna za `--dart-define`, isto kao ni
+  // za `salonId` — most je ovdje. Prazne vrijednosti su ispravno stanje i znace da ovaj
+  // build nema Google konfiguraciju; `signInWithGoogle` tada baca prije dijaloga.
+  googleClientIdsProvider.overrideWith((ref) {
+    final env = ref.watch(appEnvProvider);
+    return (web: env.googleWebClientId, ios: env.googleIosClientId);
+  }),
 ];
 
 /// Trenutna vertikala — nikad `null`, nikad `throw`.

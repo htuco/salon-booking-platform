@@ -15,9 +15,12 @@ environment:
 dependencies:
   core_domain:
     path: ../core_domain
+  crypto: ^3.0.7
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.6.1
+  google_sign_in: ^7.2.0
+  sign_in_with_apple: ^8.2.0
   supabase_flutter: ^2.8.0
 
 dev_dependencies:

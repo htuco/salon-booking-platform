@@ -81,10 +81,30 @@ final bookingRepositoryProvider = Provider<BookingRepository>(
 // Prijava. Task 13 — `docs/06 §6.3`.
 // ---------------------------------------------------------------------------
 
-/// Implementacija prijave. Test je override-uje lažnom i nikad ne dodirne mrežu.
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => SupabaseAuthRepository(ref.watch(supabaseClientProvider)),
+/// Google OAuth client ID-evi, iz `--dart-define`-ova kroz `build_tenant.sh`.
+///
+/// **Aplikacija ih mora override-ovati**, isto kao [currentSalonIdProvider] i iz istog
+/// razloga: `core_api` ne zna za `--dart-define`. Prazne vrijednosti su ispravno stanje —
+/// znače „Google nije konfigurisan za ovaj build", i tada [AuthRepository.signInWithGoogle]
+/// baca grešku koja to i kaže, umjesto da otvori dijalog koji će pasti.
+///
+/// Dva su, ne jedan (`docs/06 §7.1`):
+/// - `web` je `serverClientId` — ono što Supabase provjerava kao `aud` u ID tokenu, i
+///   **isto je za sve flavore**, jer ga korisnik nikad ne vidi;
+/// - `ios` je client ID te konkretne iOS app-e, **po flavoru**, jer ga Google veže za
+///   bundle ID. Android ga ne traži: tamo ga plugin izvodi iz potpisa APK-a.
+final googleClientIdsProvider = Provider<GoogleClientIds>(
+  (ref) => bezGoogleKlijenata,
 );
+
+/// Implementacija prijave. Test je override-uje lažnom i nikad ne dodirne mrežu.
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final google = ref.watch(googleClientIdsProvider);
+  return SupabaseAuthRepository(
+    ref.watch(supabaseClientProvider),
+    google: google,
+  );
+});
 
 /// Sesija kroz vrijeme — `null` znači odjavljen.
 ///

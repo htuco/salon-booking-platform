@@ -48,6 +48,16 @@ generisano zastarjelo.
 - **`auth.providers` prima samo `apple`, `google`, `facebook`, `email`**, i samo `true`/`false`.
   Nepoznat ključ ili `"da"` umjesto `true` obore generisanje. Isti razlog kao kod boja: tipfeler u
   konfiguraciji mora pasti u CI-ju, a ne završiti kao login ekran kojem fali dugme.
+- **iOS build sa social providerom mora imati `apple: true`.** Generator pada ako ga nema —
+  App Review odbija takav build po pravilu 4.8 (`docs/06 §7.2`), a to je jedino mjesto gdje
+  se greška vidi prije submissiona. Izlazi tri: dodaj `apple`, isključi iOS
+  (`targets.ios: false`), ili ostavi samo `email`. Android-only tenant smije Google bez
+  Applea, jer Apple na Androidu nema ni implementaciju.
+- **`auth.googleReversedClientId`** je Google `REVERSED_CLIENT_ID` za iOS — client ID sa
+  obrnutim segmentima, koji ide u `CFBundleURLTypes` kroz `GOOGLE_REVERSED_CLIENT_ID` u
+  xcconfigu. Prazno je ispravno stanje dok konzola ne da ID
+  (`tasks/sprint-2/12-konzole-checklist.md`); tada je i URL shema prazna, što iOS ignoriše,
+  a `signInWithGoogle` ionako baca prije dijaloga.
 
 ### Boje u `tenant.yaml` nisu dekoracija
 

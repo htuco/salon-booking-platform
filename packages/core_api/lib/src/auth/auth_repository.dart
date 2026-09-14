@@ -23,6 +23,21 @@ import '../errors/errors.dart';
 /// `SupabaseAuthRepository` piše [task 13](../../../../tasks/sprint-2/13-client-login-ekran.md),
 /// koji je prvi koji ga ima gdje pozvati. Metode koje ni 13 ne treba nose oznaku uz sebe —
 /// [continueAsGuest] je task 26, [deleteAccount] task 17.
+/// Google OAuth client ID-evi za jedan build (`docs/06 §7.1`).
+///
+/// Dva su, ne jedan:
+/// - [web] je `serverClientId` — ono što Supabase provjerava kao `aud` u ID tokenu, i
+///   **isto je za sve flavore**, jer ga korisnik nikad ne vidi;
+/// - [ios] je client ID te konkretne iOS app-e, **po flavoru**, jer ga Google veže za
+///   bundle ID. Android ga ne traži: tamo plugin izvodi klijenta iz potpisa APK-a.
+///
+/// Prazne vrijednosti su ispravno stanje — znače „Google nije konfigurisan za ovaj build".
+typedef GoogleClientIds = ({String web, String ios});
+
+/// Build bez Google konfiguracije. Ne baca pri konstrukciji: greška se javlja tek kad
+/// korisnik stvarno pokuša Google prijavu, sa porukom koja imenuje šta fali.
+const GoogleClientIds bezGoogleKlijenata = (web: '', ios: '');
+
 abstract interface class AuthRepository {
   /// Stanje prijave kroz vrijeme; `null` znači odjavljen.
   ///

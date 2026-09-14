@@ -22,6 +22,7 @@ Generator iz `tenant.yaml` pravi:
 | `google-services.json` placeholder | `apps/client/android/app/src/<flavor>/` |
 | iOS `xcconfig` | `apps/client/ios/flavors/<flavor>.xcconfig` |
 | Dart registar (uklj. `auth.providers`) | `apps/client/lib/src/generated/tenants.g.dart` |
+| iOS entitlement (Sign in with Apple) | `apps/client/ios/flavors/<flavor>.entitlements` |
 
 Nijedan od tih fajlova se ne edituje ručno — sljedeće pokretanje ih prepisuje.
 `dart run tool/gen_flavors.dart --check` pada ako su zastarjeli (koristi se u CI).
