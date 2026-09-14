@@ -34,12 +34,24 @@ codebase, N brendiranih aplikacija iz `tenants/*/tenant.yaml`. Podjela je zato:
   14/18/20/22/26/34 blok), **radius 0 svuda**, hairline granice umjesto sjenki, visine dodirnih meta
   (≥44px), raspored tab bara (`AppBottomNav`: pet ćelija, Početna u sredini, traka 3px uvučena
   16% iznad aktivne), oblik komponenti (service row, time slot, calendar day, spec card,
-  step progress, photo frame).
+  step progress, photo frame, star rating).
 - **Boja je po tenantu i dolazi iz `tenant.yaml`** kroz `buildAppTheme()`. Dark paleta iz `SPEC.md`
   (`#0F1012` podloga, `#F2F2F3` primarni fill, `#C3C9CE` tijelo teksta) je paleta *ovog* brenda,
   ne konstanta sistema. Ne kucaj hex u ekran — ni "privremeno".
 - **Tekst je po vertikali.** "Majstori", "Kod koga dolazite?", "Zakažite termin" su barber
   terminologija; dolaze iz `vertical.terms.*`, ne iz stringa u widgetu. V. `docs/05-vertical-packs.md`.
+
+### Zvjezdica je nacrtana, ne ikona
+
+`StarRating` u `core_ui` crta zvjezdicu kroz `CustomPainter`, iako je ostatak ikona Lucide.
+Razlog je što **Lucide nema popunjenu zvjezdicu** — cijeli set je linijski. Prva verzija je zato
+punu od prazne razlikovala samo bojom obrisa, i na živom ekranu su kartica sa peticom i kartica sa
+četvorkom izgledale isto (izmjereno: 2,4% razlike u svjetlini po zvjezdici, a polovina se crtala
+identično kao puna).
+
+Puna je sada **ispunjena površina**, prazna je **obris**. Razlika nošena samo bojom je i WCAG 1.4.1
+problem: ocjena je informacija, a informacija se ne smije prenositi isključivo bojom. Boja i dalje
+dolazi iz teme (`onSurface` / `onSurfaceVariant`), nikad iz palete handoffa.
 
 Praktično: ekran koji čita boju iz `Theme.of(context)` i tekst iz `vertical.terms` je tačan;
 ekran koji izgleda identično screenshotu jer u sebi ima `#F2F2F3` je greška koja se vidi tek na
@@ -91,8 +103,9 @@ od prvog dana; `PhotoFrame` tada crta prazan kvadrat sa hairline obrubom, tačno
 **Od 2026-09-13 su dva demo salona namjerno u različitim stanjima**, jer jedan seed ne može
 istovremeno pokazati pun ekran i prazan okvir:
 
-- **Barber Studio Vitez je pun.** Hero, galerija od šest slika, portret oba majstora i fotografija
-  na svakoj usluzi — sve Unsplash URL-ovi (licenca dozvoljava komercijalnu upotrebu bez
+- **Barber Studio Vitez je pun.** Hero, galerija od dvanaest slika, portret oba majstora,
+  fotografija na svakoj usluzi i 25 ocjena sa četiri napisane recenzije — sve Unsplash URL-ovi
+  (licenca dozvoljava komercijalnu upotrebu bez
   atribucije). Uz to adresa, telefon, mail i mreže, **svi izmišljeni**; ne pripadaju nikome i ne
   zovu se. Ovaj salon postoji da se Početna može vidjeti onako kako je salon vidi.
 - **Beauty Studio Travnik je prazan** i tu ostaje. `Pramenovi` nemaju `image_url`, Amina i Lejla

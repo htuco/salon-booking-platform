@@ -17,14 +17,16 @@ Migracija ovog taska dira samo `reviews`.
 
 - [x] **Odluka o izvoru slika** — `salons.gallery_urls` ostaje, `gallery_photos` ne nastaje
       ([ADR-0008](../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md))
-- [ ] Migracija + seed + RLS (`anon` select) za `public.reviews`, sa **negativnim** pgTAP testom
-- [ ] `ReviewRepository` u `core_api` + provideri; `features/home/salon_rating.dart` nestaje
-- [ ] Lightbox 5q prije mreže — brojač „4 / 18", ✕, traka sličica (on diktira učitavanje slika)
-- [ ] `/gallery` — mreža 3 kolone, kvadrat, `gap 8`, bez naslova i opisa
-- [ ] `/reviews` — prosjek u serifu, histogram 5→1, lista recenzija; **read-only**
-- [ ] Obje rute **izvan** `StatefulShellRoute` — back header, bez tab bara
-- [ ] Ulaz sa Početne: „Sve slike ›" i red Recenzija; sekcije se i dalje sakriju kad nema podataka
-- [ ] Testovi (widget + pgTAP + REST za javno čitanje) i dokaz u browseru/simulatoru protiv žive baze
+- [x] Migracija + seed + RLS (`anon` select) za `public.reviews`, sa **negativnim** pgTAP testom
+      — 147 pgTAP testova (bilo 124), 43 REST asercije bez tokena (bilo 33)
+- [x] `ReviewRepository` u `core_api` + provideri; `features/home/salon_rating.dart` obrisan
+- [x] Lightbox 5q — brojač, ✕, traka sličica; odigran u browseru („1 / 12" → „2 / 12")
+- [x] `/gallery` — mreža 3 kolone, kvadrat, `gap 8`, bez naslova i opisa
+- [x] `/reviews` — prosjek u serifu, histogram 5→1, lista; **read-only**
+- [x] Obje rute **izvan** `StatefulShellRoute` — back header, bez tab bara
+- [x] Ulaz sa Početne: „Sve ›" na obje sekcije; sekcije se i dalje sakriju kad nema podataka
+- [x] Testovi i dokaz uživo — **418 Dart testova** (bilo 372), oba tenanta u Chromiumu
+- [ ] 🟡 **Share ⤴ u lightboxu** — handoff ga crta, DoD ga ne nabraja; traži `share_plus`
 
 ## Napomene
 
