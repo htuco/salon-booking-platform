@@ -806,5 +806,89 @@
   "@accountDeletedNotice": { "description": "Potvrda nakon brisanja, prikazana na Početnoj u javnom stanju." },
 
   "accountDeleteFailed": "Brisanje nije uspjelo. Pokušajte ponovo.",
-  "@accountDeleteFailed": { "description": "Fallback poruka kad greška nema svoju. Korisnik ostaje prijavljen i može pokušati ponovo." }
+  "@accountDeleteFailed": { "description": "Fallback poruka kad greška nema svoju. Korisnik ostaje prijavljen i može pokušati ponovo." },
+
+  "termsTitle": "Pravila korištenja",
+  "@termsTitle": { "description": "Naslov ekrana /terms (handoff 15-pravila-koristenja.png)." },
+
+  "privacyTitle": "Politika privatnosti",
+  "@privacyTitle": { "description": "Naslov ekrana /privacy. Ekran u app-i NE zamjenjuje javni URL koji docs/01 korak 29 traži." },
+
+  "policyLastUpdated": "Zadnja izmjena: {datum}",
+  "@policyLastUpdated": {
+    "description": "Redak ispod naslova pravnog dokumenta. Datum je najveći updated_at preko svih sekcija, ne datum jedne. **Bez tačke na kraju** — `formatDate` je već nosi (`14.09.2026.`), pa je dupla („14.09.2026..\") vidljiva samo na ekranu, nikad u testu koji traži podniz.",
+    "placeholders": { "datum": { "type": "String" } }
+  },
+
+  "policyEmpty": "Tekst trenutno nije dostupan. Pokušajte ponovo za koji trenutak.",
+  "@policyEmpty": { "description": "Prazno stanje pravnog ekrana. Ekran koji pukne je gori od ekrana koji kaže da teksta nema." },
+
+  "aboutAppSubtitle": "Zakazivanje bez poziva i bez čekanja.",
+  "@aboutAppSubtitle": { "description": "Podnaslov ekrana O aplikaciji. Handoff ovdje deklinira ime salona ('u Barber Studiju Vitez'), što se iz podatka ne može izvesti — zato neutralna rečenica koja vrijedi za svaki salon." },
+
+  "aboutAppVersion": "Verzija {verzija} ({build})",
+  "@aboutAppVersion": {
+    "description": "Verzija i build broj iz package_info_plus, ne iz konstante koja zastari.",
+    "placeholders": { "verzija": { "type": "String" }, "build": { "type": "String" } }
+  },
+
+  "aboutAppHowItWorks": "Kako radi",
+  "@aboutAppHowItWorks": { "description": "Naslov sekcije sa tri koraka (14-o-aplikaciji.png)." },
+
+  "aboutAppStep1Title": "Pošaljete zahtjev",
+  "@aboutAppStep1Title": { "description": "Korak 1 sekcije 'Kako radi'." },
+
+  "aboutAppStep1Body": "Izaberete uslugu i slobodno vrijeme.",
+  "@aboutAppStep1Body": { "description": "Bez imenovanja radnika: 'barbera'/'stilisticu' bi tražilo deklinaciju vertical terma, koju podatak ne nosi." },
+
+  "aboutAppStep2Title": "Salon potvrdi",
+  "@aboutAppStep2Title": { "description": "Korak 2. Zahtjev nije potvrda — isto što kaže i prva sekcija pravila." },
+
+  "aboutAppStep2Body": "Obično u roku od nekoliko minuta, u radno vrijeme.",
+  "@aboutAppStep2Body": { "description": "Korak 2, tijelo." },
+
+  "aboutAppStep3Title": "Vidite status",
+  "@aboutAppStep3Title": { "description": "Korak 3. Handoff ovdje piše 'Dobijete podsjetnik', ali podsjetnika nema: send-reminders i send-push su danas samo README (task 25). Ekran u storeu ne smije obećati ono što app ne radi." },
+
+  "aboutAppStep3Body": "Zahtjev, potvrda i otkazivanje stoje u „Moji termini\".",
+  "@aboutAppStep3Body": { "description": "Korak 3, tijelo. Opisuje ono što app danas stvarno radi." },
+
+  "aboutAppRate": "Ocijenite aplikaciju",
+  "@aboutAppRate": { "description": "Pravni red koji ostaje vidljiv ali neaktivan dok app nije u prodavnici." },
+
+  "aboutAppRateNote": "Aktivira se kad aplikacija bude objavljena.",
+  "@aboutAppRateNote": { "description": "Objašnjenje uz onemogućen red. Prozirnost kaže da ne radi, ne i zašto." },
+
+  "aboutAppReportProblem": "Prijavite problem",
+  "@aboutAppReportProblem": { "description": "Mail developeru, ne salonu. Red se krije dok adresa nije postavljena." },
+
+  "aboutAppReportSubject": "Prijava problema — {app}",
+  "@aboutAppReportSubject": {
+    "description": "Naslov mail poruke. Nosi ime app-e da prijava iz dva tenanta ne završi u istoj niti.",
+    "placeholders": { "app": { "type": "String" } }
+  },
+
+  "aboutAppContactPhone": "Telefon salona",
+  "@aboutAppContactPhone": { "description": "Kontakt red na ekranu O aplikaciji. Vrijednost iz salons.phone." },
+
+  "aboutAppContactAddress": "Adresa",
+  "@aboutAppContactAddress": { "description": "Kontakt red. Vrijednost iz salons.address." },
+
+  "aboutAppContactInstagram": "Instagram",
+  "@aboutAppContactInstagram": { "description": "Kontakt red. Handle se izvodi iz salons.instagram_url." },
+
+  "aboutAppFooter": "© {godina} {salon}. Napravljeno u Bosni i Hercegovini.",
+  "@aboutAppFooter": {
+    "description": "Podnožje ekrana O aplikaciji. Naziv pravnog lica nije dat, pa stoji ime salona — kad stigne, mijenja se jedan string.",
+    "placeholders": { "godina": { "type": "String" }, "salon": { "type": "String" } }
+  },
+
+  "notificationsTitle": "Obavijesti",
+  "@notificationsTitle": { "description": "Naslov ekrana /notifications (handoff 10-obavijesti.png)." },
+
+  "notificationsEmpty": "Ovdje će stizati obavijesti o vašim terminima — prvo kad salon potvrdi ili odbije vaš zahtjev.",
+  "@notificationsEmpty": { "description": "Prazno stanje. Lista nema server-side izvor dok ne postoji task 25, pa ekran kaže šta se očekuje umjesto da glumi server koji ne postoji." },
+
+  "notificationsEmptyAction": "Moji termini",
+  "@notificationsEmptyAction": { "description": "Izlaz iz praznog stanja: status termina se do tada vidi na /appointments." }
 }

@@ -64,34 +64,39 @@ class SettingsScreen extends ConsumerWidget {
             // Grupa redova je **jedan okvir sa hairline razdjelnicima**, ne pet zasebnih
             // kartica — tako stoji u handoffu, i tako se čita kao jedna lista a ne kao pet
             // nepovezanih dugmadi.
-            AccountRowGroup(
+            LinkRowGroup(
               rows: [
                 // „Moj račun" ima smisla samo prijavljenom. Neprijavljenom bi vodio na
                 // ekran koji nema šta pokazati.
                 if (prijavljen)
-                  AccountRow(
+                  LinkRow(
                     label: l10n.settingsAccount,
                     onTap: () => context.push(ClientRoute.account.path),
                   ),
-                AccountRow(
+                LinkRow(
                   label: l10n.settingsNotifications,
                   onTap: () => context.go(ClientRoute.notifications.path),
                 ),
                 // Jezik je zasad jedan, pa red **nema** `onTap`. Red koji izgleda dodirno
-                // a ne radi ništa je gori od reda koji to ne glumi; `AccountRow` bez
+                // a ne radi ništa je gori od reda koji to ne glumi; `LinkRow` bez
                 // `onTap` nema chevron i ne prima fokus.
-                AccountRow(
+                LinkRow(
                   label: l10n.settingsLanguage(l10n.settingsLanguageCurrent),
                 ),
-                // Ekrane pravi task 21. Rute postoje od taska 18, pa vode na placeholder
-                // umjesto u prazno — to je i razlog zašto su rute uvedene prije ekrana.
-                AccountRow(
+                LinkRow(
                   label: l10n.settingsAboutApp,
                   onTap: () => context.push(ClientRoute.aboutApp.path),
                 ),
-                AccountRow(
+                // Do taska 21 je ovaj red vodio na `/terms` — jedini pravni ekran koji je
+                // tada postojao. Sada „Politika privatnosti" vodi na politiku privatnosti.
+                //
+                // `?from=settings` mijenja samo labelu back headera: do pravnih ekrana se
+                // dolazi i odavde i sa „O aplikaciji", a header nosi ime ekrana na koji
+                // se vraća.
+                LinkRow(
                   label: l10n.settingsPrivacy,
-                  onTap: () => context.push(ClientRoute.terms.path),
+                  onTap: () =>
+                      context.push('${ClientRoute.privacy.path}?from=settings'),
                 ),
               ],
             ),

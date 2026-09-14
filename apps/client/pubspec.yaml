@@ -57,6 +57,10 @@ dependencies:
     sdk: flutter
   go_router: ^14.6.2
   intl: any
+  # Verzija i build broj na ekranu „O aplikaciji" (5n). Konstanta u kodu bi zastarila prvim
+  # buildom koji je niko ne ažurira — a ekran koji tvrdi pogrešnu verziju je ekran zbog
+  # kojeg prijava greške ide na krivi build.
+  package_info_plus: ^8.1.2
   supabase_flutter: ^2.8.0
   # `tel:`, `mailto:`, mape i profili na drustvenim mrezama sa home ekrana
   # (`docs/02 §3`). Bez ovoga je sekcija kontakta spisak teksta koji se ne moze pozvati.

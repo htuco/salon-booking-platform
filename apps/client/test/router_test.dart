@@ -72,6 +72,10 @@ void main() {
       // `/about-app` i `/terms` su dodani u §12 u tasku 17. Handoff ih crta (5n, 5o) i DoD
       // taska 21 ih imenuje, ali tabela u specifikaciji ih nije imala — ista rupa kao kod
       // 5k. Rute postoje prije ekrana, da redovi Postavki imaju gdje voditi.
+      //
+      // `/privacy` je dodan u §12 u tasku 21, iz istog razloga: `14-o-aplikaciji.png` crta
+      // red „Politika privatnosti" pored „Pravila korištenja", a Postavke su do tada oba
+      // reda vodile na `/terms`.
       const izSpecifikacije = {
         '/',
         '/services',
@@ -92,6 +96,7 @@ void main() {
         '/settings',
         '/about-app',
         '/terms',
+        '/privacy',
       };
 
       expect(

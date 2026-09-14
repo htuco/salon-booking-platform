@@ -172,3 +172,40 @@ nove vrijednosti. Kartica „Čuvamo vam" stoji i na prijavi, jer je prijava dio
 
 Kad handoff dobije te ekrane, mjerodavan je on — ovo je popuna, ne odluka.
 Kako izgledaju danas: [`docs/screenshots/task-13-otp-kod.png`](../../docs/screenshots/task-13-otp-kod.png).
+
+### Tri odstupanja na `5n` („O aplikaciji"), sva iz istog razloga
+
+Ekran u storeu ne smije tvrditi ono što aplikacija ne radi, pa handoff ovdje nije prepisan doslovno:
+
+- **Treći korak „Kako radi" nije „Dobijete podsjetnik" nego „Vidite status".** Podsjetnika nema —
+  `supabase/functions/send-reminders/` i `send-push/` su danas samo `README` (task 25). Kad push
+  stigne, korak se vraća na handoff formulaciju.
+- **„Ocijenite aplikaciju" stoji vidljiv, ali neaktivan.** Traži App Store / Play ID, a aplikacije
+  nisu objavljene. Crta se na 45% prozirnosti (`SPEC.md` §Interactions) i **ne prima dodir**, uz
+  red objašnjenja ispod. Sakriti ga značilo bi da se lista mijenja pod korisnikom kad app ode u
+  store; prazan tap je gori od reda koji vidljivo čeka.
+- **Podnaslov ne imenuje salon.** Handoff piše „Zakazivanje termina u Barber Studiju Vitez", a ta
+  deklinacija se iz podatka ne može izvesti. Rečenica je zato neutralna i vrijedi za svaki tenant.
+
+Monogram **jeste** tekst, kako `SPEC.md` §Assets i traži — ali su to **prva i zadnja riječ** imena
+(„Barber Studio Vitez" → „BV"), ne prve dvije. Srednja riječ je u imenima salona najčešće
+generička („Studio", „Salon"), a zadnja je grad ili prezime i to razlikuje dva salona istog lanca.
+
+### `5o` crta šest sekcija, ekran ih ne zna unaprijed
+
+Broj sekcija dolazi iz baze, a broj uz sekciju (`01`, `02`…) je **pozicija u listi**, ne podatak.
+Salon može dodati svoju sekciju ili nemati nijednu — beauty tenant u seedu ima kraći dokument
+upravo zato da se to vidi u demou. Zato u tekstu sekcije ne smije stajati „v. tačku 3": referenca
+se pomjeri čim neko doda sekciju iznad.
+
+Brojevi u tijelu (rok otkazivanja, telefon) dolaze kroz placeholdere iz živih podataka. Handoff
+piše „2 sata", a baza provodi 3 za barbera i 6 za beauty — v.
+[`docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md`](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md).
+
+### Red liste je `LinkRow` u `core_ui`
+
+Oblik „labela + chevron, grupisano u jedan okvir" sa `11-postavke.png` i `14-o-aplikaciji.png`
+živi u `core_ui` kao `LinkRow`/`LinkRowGroup`, sa tri stanja: sa akcijom (chevron, dodir), bez
+akcije (nosi podatak, bez chevrona i bez fokusa) i onemogućen (chevron ostaje, 45% prozirnosti,
+bez dodira). Do taska 21 je stajao u `apps/client/features/account/`, sa jednim pozivaocem.
+

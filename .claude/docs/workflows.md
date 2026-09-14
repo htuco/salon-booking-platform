@@ -96,6 +96,27 @@ dart run tool/gen_placeholder_icons.dart  # privremene ikone; --force prepisuje 
 
 Redoslijed pri novom tenantu i sve zamke: `.claude/docs/tenant-factory.md`.
 
+## Pokretanje jednog tenanta
+
+```sh
+tool/run_tenant.sh vitez           # barberstudiovitez u simulatoru, lokalni Supabase ako radi
+tool/run_tenant.sh travnik         # beautystudiotravnik
+tool/run_tenant.sh vitez demo      # lib/demo_main.dart — ekran bez backenda
+tool/run_tenant.sh vitez -d chrome # sve iza flavora ide ravno flutteru
+```
+
+Argument je **nadimak ili puni flavor**, i razrješava se iz `tenants/`, ne iz tabele u skripti —
+novi tenant radi bez izmjene skripte. `salonId` se čita iz `tenant.yaml`; demo UUID-evi se
+razlikuju u zadnjoj cifri, pa prepisan iz glave daje pogrešan tenant koji izgleda ispravno dok se
+ne pogleda ime salona u zaglavlju.
+
+Ako lokalni Supabase radi, skripta proslijedi njegov URL i **anon** ključ. `SERVICE_ROLE_KEY` i
+`SECRET_KEY` iz `supabase status -o env` se namjerno ne dodiruju — service role zaobilazi RLS i ne
+smije postojati u klijentskom buildu. Bez backenda se app svejedno digne, ali ekrani ostanu na
+kosturu; tada služi `demo`.
+
+Na macOS-u skripta digne Simulator ako nijedan ne radi. Uređaj se bira sa `-d`, kao i inače.
+
 ## Build
 
 ```sh

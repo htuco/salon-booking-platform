@@ -405,6 +405,11 @@ verzije ove tabele: donja navigacija ima pet ćelija, pa Obavijesti i Postavke m
 svoju rutu. "Postavke" je širi ekran od "Moj račun" — `/account` ostaje zaseban i otvara se
 iz njega.
 
+`/privacy` je dodan u tasku 21. Handoff (`14-o-aplikaciji.png`) crta red "Politika privatnosti"
+pored "Pravila korištenja", a do tada su oba reda vodila na isti ekran. **Ekran u aplikaciji ne
+zamjenjuje javni URL** koji §17 korak 29 traži po tenantu — isti `app_policies` red kasnije
+servira i tu stranicu.
+
 | Screen | Ruta | Prioritet |
 |---|---|---|
 | Home / salon landing | `/` | Must |
@@ -426,6 +431,7 @@ iz njega.
 | Postavke | `/settings` | Should |
 | O aplikaciji | `/about-app` | Should |
 | Pravila korištenja | `/terms` | Must |
+| Politika privatnosti | `/privacy` | Must |
 
 ### Admin app (`apps/admin`)
 

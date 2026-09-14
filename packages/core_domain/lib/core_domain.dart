@@ -39,6 +39,7 @@ export 'src/catalog/employee.dart';
 export 'src/catalog/employee_service.dart';
 export 'src/catalog/local_date.dart';
 export 'src/catalog/local_time.dart';
+export 'src/catalog/policy_section.dart';
 export 'src/catalog/review.dart';
 export 'src/catalog/salon.dart';
 export 'src/catalog/salon_rating_summary.dart';
