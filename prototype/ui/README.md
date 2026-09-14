@@ -34,12 +34,23 @@ codebase, N brendiranih aplikacija iz `tenants/*/tenant.yaml`. Podjela je zato:
   14/18/20/22/26/34 blok), **radius 0 svuda**, hairline granice umjesto sjenki, visine dodirnih meta
   (≥44px), raspored tab bara (`AppBottomNav`: pet ćelija, Početna u sredini, traka 3px uvučena
   16% iznad aktivne), oblik komponenti (service row, time slot, calendar day, spec card,
-  step progress, photo frame, star rating).
+  step progress, photo frame, star rating, back header).
 - **Boja je po tenantu i dolazi iz `tenant.yaml`** kroz `buildAppTheme()`. Dark paleta iz `SPEC.md`
   (`#0F1012` podloga, `#F2F2F3` primarni fill, `#C3C9CE` tijelo teksta) je paleta *ovog* brenda,
   ne konstanta sistema. Ne kucaj hex u ekran — ni "privremeno".
 - **Tekst je po vertikali.** "Majstori", "Kod koga dolazite?", "Zakažite termin" su barber
   terminologija; dolaze iz `vertical.terms.*`, ne iz stringa u widgetu. V. `docs/05-vertical-packs.md`.
+
+### Pushed ekran nosi back header, ne `AppBar`
+
+`SPEC.md` §Bottom tab bar: pushed ekrani imaju „a back header (`←` 22px + 18px/600 label,
+min-height 48px)". To znači **ime ekrana na koji se vraća** pored strelice, a naslov ekrana u
+tijelu kao veliki serif (`displaySmall`) — tako crta i `12-galerija.png` („← Početna", pa
+„Galerija") i `13-recenzije.png`.
+
+Materialov `AppBar` daje mali sans naslov i platformski chevron. Razlika je upola manji naslov i
+tuđa ikona, ne vidi se ni u jednom testu, i vidi se u sekundi kad ekran stoji pored Cjenovnika.
+Komponenta je `BackHeader` u `core_ui`; `AppBar` u ekranu je greška.
 
 ### Zvjezdica je nacrtana, ne ikona
 
