@@ -1,97 +1,42 @@
-# Trenutni task: 20 — Client: Galerija, lightbox i Recenzije
+# Trenutni task
 
-Puni task: [`tasks/sprint-2/20-galerija-recenzije.md`](sprint-2/20-galerija-recenzije.md)
-**U toku** · Učitano: 2026-09-14 · Grana: `feat/galerija-i-recenzije`
+Nema učitanog taska. Pokreni `/task load <NN>` — sljedeći nezablokirani je
+[21](sprint-2/21-obavijesti-i-pravni-ekrani.md) (obavijesti, o aplikaciji, pravila).
 
 ## Status
 
-U toku. Zavisnosti su zatvorene: [18](sprint-2/18-pocetna-i-tab-bar.md) ✅ i
-[22](sprint-2/22-sema-slike-i-staz.md) ✅. Ništa izvan repoa ne blokira — za razliku od
-12/13, koji su ovim skinuti sa `CURRENT.md` jer čekaju tuđe konzole (v. Napomene).
-
-**Odluka o izvoru slika je donesena:** galerija ostaje na `salons.gallery_urls`, tabela
-`gallery_photos` ne nastaje — [ADR-0008](../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md).
-Migracija ovog taska dira samo `reviews`.
+Gotov. **Task 20 je zatvoren** — v. Istoriju.
 
 ## Ciljevi
 
-- [x] **Odluka o izvoru slika** — `salons.gallery_urls` ostaje, `gallery_photos` ne nastaje
-      ([ADR-0008](../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md))
-- [x] Migracija + seed + RLS (`anon` select) za `public.reviews`, sa **negativnim** pgTAP testom
-      — 147 pgTAP testova (bilo 124), 43 REST asercije bez tokena (bilo 33)
-- [x] `ReviewRepository` u `core_api` + provideri; `features/home/salon_rating.dart` obrisan
-- [x] Lightbox 5q — brojač, ✕, traka sličica; odigran u browseru („1 / 12" → „2 / 12")
-- [x] `/gallery` — mreža 3 kolone, kvadrat, `gap 8`, bez naslova i opisa
-- [x] `/reviews` — prosjek u serifu, histogram 5→1, lista; **read-only**
-- [x] Obje rute **izvan** `StatefulShellRoute` — back header, bez tab bara
-- [x] Ulaz sa Početne: „Sve ›" na obje sekcije; sekcije se i dalje sakriju kad nema podataka
-- [x] Testovi i dokaz uživo — **418 Dart testova** (bilo 372), oba tenanta u Chromiumu
-- [ ] 🟡 **Share ⤴ u lightboxu** — handoff ga crta, DoD ga ne nabraja; traži `share_plus`
+_Prazno dok se ne učita sljedeći task._
 
 ## Napomene
 
-### Galerija je pola već isporučena — i to stvara jedini pravi sukob u tasku
-
-Od taskova 18/19 već postoji cijeli put podataka za galeriju:
-`salons.gallery_urls jsonb` (init migracija) → `SalonRepository.galleryUrls` →
-`salonGalleryProvider` → `GalleryGrid` na Početnoj i `/about`. `PhotoFrame` je u `core_ui`,
-`cached_network_image` je već u `apps/client/pubspec.yaml`, a `GalleryGrid` ima **spreman
-`onTap(index)` hook** koji je danas `null` upravo zato što lightbox pravi ovaj task.
-
-DoD (red 17) ipak traži **novu tabelu `gallery_photos`**. Dvije tabele za istu stvar su dva
-izvora istine; treba izabrati jedno prije nego što se napiše migracija:
-
-- ostati na `gallery_urls` (ništa se ne seli, seed već ima šest fotografija za barbera), ili
-- preseliti se na `gallery_photos` (dobija se redoslijed i po-slici metapodatak, ali se mijenja
-  `SalonRepository`, `about_screen`, `home_screen` i njihovi testovi).
-
-Šta god se izabere, ide u `docs/adr/` — DoD nije mjesto gdje se ova odluka smije ostaviti
-prećutnom.
-
-### Recenzije su čista nova gradnja, ali ekran na Početnoj već stoji
-
-`RatingSummary` i sekcija „Recenzije" na Početnoj su napisani i pokriveni testom u tasku 18.
-`apps/client/lib/src/features/home/salon_rating.dart` je **namjerni placeholder** koji vraća
-`null` i u svom doc komentaru piše da ga ovaj task zamjenjuje `ReviewRepository`-jem i briše.
-Sekcija se dotad sakriva — to je već traženo ponašanje, ne rupa.
-
-U šemi nema **ničega**: ni `reviews`, ni ocjene, ni prosjeka.
-
-### Ni `/gallery` ni `/reviews` ne postoje kao rute
-
-`ClientRoute` ih nema (`app_router.dart:218`). Obrazac za pod-ekran bez tab bara postoji —
-booking flow i `/account` stoje izvan `StatefulShellRoute`. **Pazi na razliku:** `/about` je
-podruta grane Početne i **zadržava** traku (`SPEC.md` 5b), a 5l/5m/5q je izričito nemaju.
-
-### Zavisnost koju task fajl ne spominje
-
-`docs/01-mvp-spec.md` §12 daje `/gallery` prioritet **„Later"**, a `/reviews` u toj tabeli
-**nema uopšte**. Task postoji zato što ga traži handoff (`SPEC.md` 5l/5m/5q, screenshotovi
-12/13/17), a `prototype/ui/` je po `CLAUDE.md` jači izvor istine za ekrane. Nesklad je ipak
-vrijedan reda u ADR-u ili ispravke tabele u `docs/01`, da sljedeći čitalac ne pomisli da je
-neko gradio ekran van obima.
-
-### Sitnice koje DoD ne nabraja, a handoff traži
-
-- **Share ⤴ u lightboxu** — `SPEC.md` §Interactions ga navodi uz ✕ i traku sličica; DoD ga nema.
-- **Brojač „4 / 18"** podrazumijeva ~18 fotografija. Seed danas ima **šest** za barbera i
-  **nula** za beauty. Prazno stanje beauty salona je zato besplatan test, ali traka sličica
-  sa šest slika ne dokazuje skrol.
-- **Zastarjeli komentar:** `home_screen.dart:303` tvrdi da je `gallery_urls` „prazan u oba demo
-  salona" — barber ima šest slika od taska 19. Ispraviti usput.
-
-### Procjena
-
-2 dana iz task fajla drže se samo ako se galerija **ne** seli na novu tabelu. Ako se seli,
-računaj pola dana više na migraciju plus prepisivanje `SalonRepository`-ja i tri postojeća testa.
-
-### Šta je ostalo iza 12/13
-
-Ništa nije izgubljeno: kod je u `12-auth-provideri.md`, hodogram u `12-konzole-checklist.md`,
-status blokovi u `tasks/sprint-2/README.md`, a blokada na iOS potpisivanju u odjeljku „Dug koji
-nije task". Oba su 🟡 i čekaju Google Cloud, Apple Developer i prijavljen Apple ID u Xcodeu.
+_Prazno dok se ne učita sljedeći task._
 
 ## Istorija
+
+- **20 — Client: Galerija, lightbox i Recenzije** (2026-09-14, ✅) — `/gallery`, lightbox 5q i
+  `/reviews` rade iz prave baze na oba tenanta. **`gallery_photos` nije nastao**
+  ([ADR-0008](../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md)): `salons.gallery_urls`
+  stoji u init migraciji i već je bila spojena do Početne i `/about`, pa bi nova tabela bila drugi
+  izvor istine za istu listu — migracija dira **samo `reviews`**. **Prosjek i histogram računa
+  baza**, pogled `salon_rating_summary` sa `security_invoker = true`: PostgREST reže na
+  `max_rows = 1000`, pa bi salon sa 1200 ocjena u Dartu dao tih i pogrešan prosjek, a bez te opcije
+  pogled zaobilazi RLS tabele ispod. **Curenje je namjerno napravljeno vidljivim kao broj** — seed
+  drži jednu sakrivenu jedinicu, pa je tačan prosjek 4,8 a procurio 4,7; test koji broji redove to
+  ne bi uhvatio. `comment` je nullable jer većina ljudi da zvjezdice bez teksta, pa lista prikazuje
+  samo redove sa tekstom a prosjek računa sve: 25 ocjena i četiri kartice **nije** nesklad.
+  Dokazano: **147 pgTAP** (bilo 124), **43 REST asercije bez tokena** (bilo 33), **419 Dart testova**
+  (bilo 372), sve provjereno da može pasti pa vraćeno; uživo u Chromiumu i na **iOS simulatoru**.
+  **Dvije greške koje je našao ekran, a testovi nisu mogli:** zvjezdica se razlikovala samo bojom
+  (Lucide nema punu — 2,4% razlike u svjetlini, a 3,5 se crtalo identično kao 4,0), i naslov je bio
+  u `AppBar`-u umjesto „← Početna" plus serif u tijelu; zaglavlje je izvučeno u `core_ui` kao
+  `BackHeader`, a **`/account` iz taska 17 je popravljen istim potezom**. **Prvi test za zvjezdicu
+  je bio bezvrijedan** i to je ostavljeno zapisano — poredio je piksele i prolazio nad pokvarenom
+  verzijom; sada mjeri *koliko*. Ostaje 🟡 **share ⤴ u lightboxu**.
+  [PR #37](https://github.com/htuco/salon-booking-platform/pull/37).
 
 - **17 — Client: Postavke, „Moj račun" i brisanje računa** (2026-09-14, ✅) — brisanje je
   **dvokoračno**: `delete_my_account()` pod korisnikovim tokenom, pa Edge Function
