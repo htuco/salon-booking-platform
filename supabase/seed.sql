@@ -157,3 +157,119 @@ insert into public.reviews(salon_id,author_name,rating,comment,is_published,crea
  'Sadržaj koji je salon sakrio kroz admin. Ne smije se vidjeti bez tokena osoblja.',
  false, now() - interval '9 days')
 on conflict do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Pravila koristenja i politika privatnosti (task 21)
+-- ---------------------------------------------------------------------------
+-- **Tekst je pisan nanovo, ne prepisan iz handoffa.** Sekcija „Vasi podaci" na
+-- `15-pravila-koristenja.png` pise „Cuvamo ime, **broj telefona** i historiju termina", a
+-- klijentska app broj telefona **nikad ne trazi**: `ensure_customer` upisuje samo ime, booking
+-- ekran nema polje, a `docs/01` to vodi kao donesenu odluku. Prepisan handoff bi lagao u prvoj
+-- recenici pravno obavezujuce sekcije.
+--
+-- Generican template bi bio ista greska u drugom obliku — tvrdi kolacice, placanja i lokaciju,
+-- cega ovdje nema.
+--
+-- Stvarni inventar, provjeren u semi i u kodu:
+--   email          -> `auth_identities.email` (Apple / Google / email OTP)
+--   ime            -> `customers.name` (display name providera; salon ga moze ispraviti)
+--   historija      -> `appointments` (usluga, radnik, datum, status)
+--   napomena       -> `appointments.customer_note` (opciono, korisnik je pise)
+--   push token     -> `devices` (**tek sa taskom 25**, zato u tekstu stoji uslovno)
+-- `customers.phone` i `appointments.customer_phone` postoje, ali ih puni salon iz admina.
+--
+-- **Sta se namjerno ne tvrdi:** da neodgovoren zahtjev istekne sam. `pending_expires_at` se
+-- upisuje, ali `supabase/functions/expire-pending/` je danas samo README — funkcije nema. Tekst
+-- koji obecava automatiku koje nema je tekst koji ce prvi korisnik demantovati.
+--
+-- **Ovo nije pravni savjet.** Pisano da bude tacno naspram koda i upotrebljivo za App Privacy i
+-- Data Safety formulare; prije submissiona ga mora pogledati neko ko za to odgovara.
+
+-- Platformske sekcije pravila. `sort_order` je rijedak (10, 40, 50) da salonske sekcije stanu
+-- izmedju njih bez preracunavanja — handoff ih upravo tako i isprepliće.
+insert into public.app_policies(document,sort_order,title,body) values
+('terms',10,'Zakazivanje',
+ 'Zahtjev za termin nije potvrda. {appointmentSingular} je potvrđen tek kad ga salon prihvati i kad o tome dobijete obavijest u aplikaciji.
+
+Dok je zahtjev na čekanju, salon ga može prihvatiti ili odbiti. Do potvrde vrijeme nije rezervisano za vas.'),
+('terms',40,'Cijene',
+ 'Cijene u aplikaciji su informativne i važe za standardnu izvedbu usluge. Konačnu cijenu dogovarate u salonu, prije nego što usluga počne.
+
+Aplikacija ne naplaćuje ništa i ne prima podatke o kartici. Plaćanje ide u salonu.'),
+('terms',50,'Vaši podaci',
+ 'Kad se prijavite, čuvamo vašu email adresu i ime koje stigne od Apple, Google ili email prijave. Uz svaki zahtjev čuvamo uslugu, radnika, datum i status, te napomenu ako je upišete.
+
+Podatke koristimo da salon zna ko dolazi i da vam možemo poslati obavijest o terminu. Ne prodajemo ih i ne dijelimo trećim stranama.
+
+Brisanje računa i svih podataka možete pokrenuti u Postavkama, u samoj aplikaciji. Detalji su u Politici privatnosti.')
+on conflict do nothing;
+
+-- Politika privatnosti — u cijelosti platformska (ADR-0009). Sekcije prate redoslijed pitanja
+-- iz App Privacy i Data Safety formulara: ko, sta, zasto, sta ne, koliko dugo, s kim, prava.
+--
+-- **Nijedna sekcija ne nosi `{email}`, i to je namjerno.** Taj placeholder znaci *salonov* mail,
+-- a pitanja o obradi podataka idu firmi — cija adresa (`supportEmail`) jos nije data. Tekst zato
+-- upucuje na kontakt sa ekrana „O aplikaciji", koji se crta iz `salons` i sam se sakrije kad
+-- podatka nema. Kad `supportEmail` stigne, dodaje se kao `{supportEmail}` u ove tri sekcije —
+-- dok ga nema, raw `{supportEmail}` na pravnom ekranu bi bio vidljiv kvar.
+insert into public.app_policies(document,sort_order,title,body) values
+('privacy',10,'Ko obrađuje podatke',
+ 'Aplikaciju objavljuje i održava razvojna firma, a salon je koristi da vodi svoje termine. Salon vidi podatke o svojim terminima; podatke drugih salona ne vidi.
+
+Za sve u vezi sa podacima obratite se salonu — kontakt stoji na ekranu „O aplikaciji". Upit koji salon ne može riješiti sam prosljeđuje nama.'),
+('privacy',20,'Šta prikupljamo',
+ 'Email adresu i ime — dolaze od prijave preko Apple, Google ili email koda. Lozinku ne čuvamo jer je ni nemamo.
+
+Historiju termina — usluga, radnik, datum, vrijeme i status zahtjeva.
+
+Napomenu uz termin, ako je upišete. Polje je opciono i prazno dok ga sami ne popunite.
+
+Oznaku uređaja za slanje obavijesti, ako obavijesti uključite. Oznaka služi samo za slanje i ne kaže gdje ste.'),
+('privacy',30,'Zašto ih prikupljamo',
+ 'Da salon zna ko dolazi i na koji termin, i da vam možemo javiti kad zahtjev bude prihvaćen, odbijen ili otkazan.
+
+Bez emaila nema prijave, a bez prijave nema načina da vam pokažemo vaše termine i samo vaše.'),
+('privacy',40,'Šta ne prikupljamo',
+ 'Ne tražimo broj telefona. Ako vaš broj postoji u salonovoj evidenciji, upisao ga je salon, ne aplikacija.
+
+Ne pratimo lokaciju, ne čitamo kontakte, ne postavljamo kolačiće za oglašavanje i ne koristimo analitiku trećih strana. Ne obrađujemo podatke o plaćanju jer se plaća u salonu.'),
+('privacy',50,'Koliko dugo ih čuvamo',
+ 'Dok imate račun. Historija termina ostaje salonu kao evidencija posla i nakon brisanja računa, ali bez vašeg imena i kontakta — ostaju samo usluga, datum i status.'),
+('privacy',60,'S kim ih dijelimo',
+ 'Sa salonom čiju aplikaciju koristite, i ni sa kim više. Podatke ne prodajemo i ne ustupamo za oglašavanje.
+
+Tehnički ih čuvamo kod pružaoca usluge hostinga, koji ih obrađuje isključivo po našem nalogu.'),
+('privacy',70,'Vaša prava',
+ 'Možete tražiti uvid u svoje podatke, ispravku netačnog podatka i brisanje računa. Ime koje salon vidi možete promijeniti u salonu.
+
+Zahtjev šaljete salonu, na kontakt sa ekrana „O aplikaciji", i odgovaramo u razumnom roku.'),
+('privacy',80,'Brisanje računa',
+ 'Račun brišete sami, u Postavkama aplikacije. Brisanje ukloni vaše ime, email i napomene, a budući termini se otkazuju.
+
+Brisanje vrijedi za sve salone u kojima ste koristili isti nalog, ne samo za ovaj.'),
+('privacy',90,'Kontakt',
+ 'Pitanja o obradi podataka i pitanja o samom terminu idu na isti kontakt salona — telefon, adresa i mreže stoje na ekranu „O aplikaciji".')
+on conflict do nothing;
+
+-- Salonske sekcije. Rok otkazivanja **nije upisan kao broj** nego kao `{minCancelHours}`, koji
+-- ekran puni iz `salon_settings.min_cancel_hours` — barber 3, beauty 6, a handoff pise 2.
+-- `cancel_appointment` taj rok stvarno provodi, pa bi upisana cifra bila tvrdnja koju baza
+-- demantuje cim salon promijeni postavku.
+--
+-- **Beauty namjerno ima manje sekcija od barbera** i nema „Kontakt": u seedu nema ni telefon ni
+-- mail (prazan string), pa bi sekcija ispala kao recenica sa rupom. Salon bez kontakta ne pise
+-- sekciju o kontaktu — i time se u demou vidi da ekran radi i sa nepotpunim setom.
+insert into public.salon_policies(salon_id,sort_order,title,body) values
+('550e8400-e29b-41d4-a716-446655440000',20,'Otkazivanje',
+ 'Termin možete otkazati u aplikaciji najkasnije {minCancelHours} h prije početka. Poslije toga otkazivanje ide telefonom, na {phone}.
+
+Salon evidentira kasna otkazivanja i nedolaske. Ako se ponavljaju, zakazivanje preko aplikacije može biti ograničeno.'),
+('550e8400-e29b-41d4-a716-446655440000',30,'Kašnjenje',
+ 'Ako kasnite, javite se na {phone}. Salon može skratiti uslugu ili ponuditi prvi sljedeći slobodan termin, jer iza vas najčešće dolazi neko drugi.'),
+('550e8400-e29b-41d4-a716-446655440000',60,'Kontakt',
+ 'Za sve nejasnoće oko termina: {phone} ili {email}.'),
+('550e8400-e29b-41d4-a716-446655440001',20,'Otkazivanje',
+ 'Termin možete otkazati u aplikaciji najkasnije {minCancelHours} h prije početka. Tretmani traju duže i planiraju se unaprijed, pa kasno otkazivanje ostavlja prazan termin koji se teško popuni.'),
+('550e8400-e29b-41d4-a716-446655440001',30,'Kašnjenje',
+ 'Ako kasnite, salon može skratiti tretman ili ga pomjeriti na prvi sljedeći slobodan termin.')
+on conflict do nothing;

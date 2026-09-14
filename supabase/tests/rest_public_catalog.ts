@@ -74,6 +74,8 @@ const WORKING_HOURS_COLUMNS =
   "id,salon_id,employee_id,day_of_week,start_time,end_time,break_start_time,break_end_time,is_closed";
 const REVIEW_COLUMNS = "id,salon_id,author_name,rating,comment,created_at";
 const RATING_COLUMNS = "salon_id,average,total,count_5,count_4,count_3,count_2,count_1";
+const POLICY_COLUMNS = "id,document,sort_order,title,body,updated_at";
+const SALON_POLICY_COLUMNS = "id,salon_id,document,sort_order,title,body,updated_at";
 const SETTINGS_COLUMNS =
   "id,salon_id,booking_mode,booking_granularity,buffer_minutes,slot_step_minutes,min_advance_booking_hours,max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice,show_prices_in_app,allow_guest_booking,timezone,language";
 
@@ -226,7 +228,63 @@ try {
   );
 
   // ---------------------------------------------------------------------------
-  // 3. An inactive salon disappears from the public catalog.
+  // 4. Terms and the privacy policy are readable without a token (task 21).
+  //
+  // This one has to work for anon or the app cannot ship: the store review opens
+  // "Pravila korištenja" and "Politika privatnosti" on a fresh install, before any sign-in.
+  // A policy that only works for a signed-in user fails review, and nothing in the app
+  // itself would reveal it — the developer is always signed in.
+  // ---------------------------------------------------------------------------
+  const appTerms = await anonRows("app_policies", POLICY_COLUMNS, "&document=eq.terms&order=sort_order");
+  assert(appTerms.length === 3, `Anon must read 3 platform terms sections, got ${appTerms.length}.`);
+
+  const privacy = await anonRows("app_policies", POLICY_COLUMNS, "&document=eq.privacy&order=sort_order");
+  assert(privacy.length === 9, `Anon must read 9 privacy sections, got ${privacy.length}.`);
+
+  const salonTerms = await anonRows(
+    "salon_policies",
+    SALON_POLICY_COLUMNS,
+    "&salon_id=eq." + activeSalon + "&order=sort_order",
+  );
+  assert(salonTerms.length === 3, `Anon must read 3 salon sections for the barber, got ${salonTerms.length}.`);
+
+  // The merged order is what the screen numbers 01..06. Asserting it here and not only in
+  // pgTAP is the point: PostgREST is where `order=` is actually applied, and a sort_order
+  // collision between the two tables would show up as a shuffled legal document.
+  const merged = [...appTerms, ...salonTerms]
+    .sort((a, b) => Number(a.sort_order) - Number(b.sort_order))
+    .map((row) => row.title)
+    .join(" · ");
+  assert(
+    merged === "Zakazivanje · Otkazivanje · Kašnjenje · Cijene · Vaši podaci · Kontakt",
+    `Merged terms must follow 15-pravila-koristenja.png, got: ${merged}`,
+  );
+
+  // The body keeps the placeholder; the screen fills it from salon_settings. If a seed ever
+  // hardcodes the number, this fails — and it must, because cancel_appointment enforces 3 for
+  // the barber and 6 for beauty while the handoff text says 2.
+  const cancellation = salonTerms.find((row) => row.title === "Otkazivanje");
+  assert(
+    typeof cancellation?.body === "string" && cancellation.body.includes("{minCancelHours}"),
+    "The cancellation section must carry {minCancelHours}, not a hardcoded number.",
+  );
+
+  // The beauty salon has no "Kontakt" section: no phone and no email in the seed. A shorter
+  // document is a supported state, and it is seeded so the screen is proven against it.
+  const beautyTerms = await anonRows("salon_policies", SALON_POLICY_COLUMNS, "&salon_id=eq." + beautySalon);
+  assert(beautyTerms.length === 2, `Beauty must expose 2 salon sections, got ${beautyTerms.length}.`);
+
+  const policyInsert = await anonRequest("/rest/v1/app_policies", {
+    method: "POST",
+    body: JSON.stringify({ document: "terms", sort_order: 99, title: "Napadac", body: "Tekst." }),
+  });
+  assert(
+    policyInsert.status >= 400,
+    `Anon insert into app_policies must be rejected, got HTTP ${policyInsert.status}.`,
+  );
+
+  // ---------------------------------------------------------------------------
+  // 5. An inactive salon disappears from the public catalog.
   //
   // This is the reason SalonRepository maps "no row" to NotFoundError instead of treating
   // it as a network problem: RLS answers with emptiness, not with a 403.
@@ -243,6 +301,12 @@ try {
     assert(
       hiddenServices.length === 0,
       "Services of an inactive salon must be invisible too — private.salon_active guards them.",
+    );
+
+    const hiddenPolicies = await anonRows("salon_policies", SALON_POLICY_COLUMNS, "&salon_id=eq." + otherSalon);
+    assert(
+      hiddenPolicies.length === 0,
+      "Terms sections of an inactive salon must be invisible — same guard as the rest of the catalog.",
     );
   } finally {
     await serviceRequest("/rest/v1/salons?id=eq." + otherSalon, {
