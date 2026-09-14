@@ -298,7 +298,7 @@ on conflict do nothing;
 -- vidi tek na ekranu za login, ne u bazi.
 --
 -- **Nullable text kolone moraju biti prazan string, ne NULL.** GoTrue ih skenira u Go `string`,
--- pa NULL obara prijavu sa `500 Database error querying schema` â porukom koja ne kaze koja je
+-- pa NULL obara prijavu sa `500 Database error querying schema` — porukom koja ne kaze koja je
 -- kolona kriva. Kolone su nullable, insert prolazi, red izgleda ispravno u `psql`, a greska se
 -- vidi **tek na prijavi**. Zato ide `update` ispod, a ne nabrajanje u `insert`: kolona koju
 -- Supabase doda u nekoj verziji GoTrue-a bila bi opet NULL i opet bi srusila prijavu.

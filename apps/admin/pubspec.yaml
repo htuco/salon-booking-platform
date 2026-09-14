@@ -36,6 +36,13 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  # Repozitoriji i modeli se dijele sa klijentskom app-om. `core_ui` namjerno **nije** tu:
+  # on nosi oblik brandiranog klijentskog ekrana (serif naslovi, hairline granice, tema po
+  # tenantu), a admin je genericka alatka za rad — jedan build za sve salone, bez brenda.
+  core_api:
+    path: ../../packages/core_api
+  core_domain:
+    path: ../../packages/core_domain
   flutter_riverpod: ^2.6.1
   flutter_web_plugins:
     sdk: flutter
