@@ -19,7 +19,7 @@ sigurnosti nego kao izbor konteksta; ono što ga ograničava su politike u bazi.
 
 | Ko | Kako se prepoznaje | Smije |
 |---|---|---|
-| **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme i postavke. **Nema nijedan write grant.** |
+| **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke i **objavljene recenzije** (uz agregat `salon_rating_summary`). **Nema nijedan write grant.** |
 | **klijent** | JWT bez privilegovane uloge (`private.is_client()`) | sve što i anon, plus **svoj** `auth_identities` red, i **svoj** `customers`/`appointments`/`devices` red **u salonu iz `x-salon-id`** |
 | **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` | pun CRUD nad podacima **svog** salona |
 | **super admin** | `app_metadata.role = super_admin` **i** red u `public.users` sa `role='super_admin'` | sve; iznad tenant izolacije |
@@ -65,7 +65,7 @@ ga bira.
 
 ## Grantovi: prvo sve oduzeto, pa vraćeno taksativno
 
-Migracija na svakoj od 15 tabela radi `enable row level security`, pa
+Migracija na svakoj od 16 tabela radi `enable row level security`, pa
 `revoke all ... from anon, authenticated`, pa `grant all to service_role`. Tek onda se vraća tačno
 ono što treba: `select` javnog kataloga za `anon` i `authenticated`, i uži `insert/update/delete` set
 za `authenticated`.
@@ -83,6 +83,23 @@ politiku koja je previše široka. `config.toml` namjerno ne postavlja `auto_exp
 
 Isto važi za funkcije: `revoke all on all functions in schema private from public`, pa eksplicitan
 `grant execute` po funkciji. Nova `private.*` funkcija koju politika treba mora dobiti svoj grant.
+
+## Agregat je isto tako izlaz — `salon_rating_summary`
+
+`public.reviews` nosi običnu politiku (`is_published and private.salon_active(salon_id)`), ali
+ekran recenzija ne čita redove nego **prosjek i histogram**. Taj sažetak daje pogled
+`public.salon_rating_summary`, i pogled je mjesto gdje izolacija najlakše tiho padne:
+
+- **`with (security_invoker = true)` nije opcija nego uslov.** Bez njega pogled radi sa pravima
+  svog vlasnika i zaobilazi RLS tabele ispod — `anon` tada dobije prosjek koji uključuje sakrivene
+  recenzije i neaktivne salone. Ništa ne pukne, samo je broj drugi.
+- **Zato je curenje napravljeno vidljivim kao vrijednost.** Seed drži jednu sakrivenu jedinicu, pa
+  je tačan prosjek `4.8`, a procurio `4.7`. Test koji broji redove ovo ne bi uhvatio; test koji
+  mjeri prosjek hvata. Asercije su u `006_reviews.test.sql` i `rest_public_catalog.ts`, i obje su
+  provjerene tako što je opcija uklonjena i test pao.
+
+Pravilo koje iz ovoga slijedi: **svaki novi pogled nad tabelom sa RLS-om ide sa
+`security_invoker = true`**, i dobija asercij nad vrijednošću, ne nad brojem redova.
 
 ## Kompozitni strani ključevi — druga brava
 

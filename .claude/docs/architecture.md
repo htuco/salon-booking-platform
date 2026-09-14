@@ -142,12 +142,13 @@ odgovora, da nema bijelog flasha.
 
 ## Supabase
 
-15 tabela u `public`, sve sa RLS-om, plus `private` shema sa autorizacionim helperima. Grupe:
+16 tabela u `public`, sve sa RLS-om, plus `private` shema sa autorizacionim helperima. Grupe:
 
 - **Platforma:** `vertical_packs`, `salons`, `salon_builds`, `users`
 - **Katalog salona:** `services`, `employees`, `employee_services`, `working_hours`, `salon_settings`
 - **Ljudi i uređaji:** `auth_identities` (globalno), `customers` (per-salon), `devices`
 - **Rad:** `appointments`, `blocked_slots`, `notification_logs`
+- **Sadržaj salona:** `reviews` (+ pogled `salon_rating_summary`)
 
 Dvije stvari koje se lako previde:
 

@@ -72,6 +72,8 @@ const EMPLOYEE_COLUMNS = "id,salon_id,name,role,bio,image_url,experience_years";
 const EMPLOYEE_SERVICE_COLUMNS = "id,salon_id,employee_id,service_id";
 const WORKING_HOURS_COLUMNS =
   "id,salon_id,employee_id,day_of_week,start_time,end_time,break_start_time,break_end_time,is_closed";
+const REVIEW_COLUMNS = "id,salon_id,author_name,rating,comment,created_at";
+const RATING_COLUMNS = "salon_id,average,total,count_5,count_4,count_3,count_2,count_1";
 const SETTINGS_COLUMNS =
   "id,salon_id,booking_mode,booking_granularity,buffer_minutes,slot_step_minutes,min_advance_booking_hours,max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice,show_prices_in_app,allow_guest_booking,timezone,language";
 
@@ -168,6 +170,59 @@ try {
   assert(
     insert.status >= 400,
     `Anon insert into appointments must be rejected, got HTTP ${insert.status}.`,
+  );
+
+  // ---------------------------------------------------------------------------
+  // 3. Reviews and the rating aggregate are readable without a token (task 20).
+  //
+  // The aggregate is the part worth testing here. `salon_rating_summary` collapses the whole
+  // table into one row, so a policy gap does not show up as an extra row — it shows up as a
+  // different number. The seed keeps one hidden 1-star review precisely so the leak has a
+  // value: 4.8 is correct, 4.7 means anon reached a row it must not see.
+  // ---------------------------------------------------------------------------
+  const reviews = await anonRows("reviews", REVIEW_COLUMNS, "&salon_id=eq." + activeSalon);
+  assert(reviews.length === 25, `Anon must read 25 published reviews, got ${reviews.length}.`);
+  assert(
+    reviews.every((r) => typeof r.author_name === "string" && (r.author_name as string).length > 0),
+    "Every review carries an author name — the screen has no anonymous row.",
+  );
+  assert(
+    reviews.some((r) => r.comment === null),
+    "Ratings without text must come through: they carry the histogram, not the list.",
+  );
+  assert(
+    !reviews.some((r) => (r.author_name as string).startsWith("Sakriveni")),
+    "A review with is_published=false must never reach anon.",
+  );
+
+  const summary = await anonRows("salon_rating_summary", RATING_COLUMNS, "&salon_id=eq." + activeSalon);
+  assert(summary.length === 1, `Anon must read one aggregate row, got ${summary.length}.`);
+  assert(
+    Number(summary[0].average) === 4.8,
+    `Aggregate average must be 4.8 without the hidden review, got ${summary[0].average}. ` +
+      "4.7 means the view bypassed RLS — check security_invoker.",
+  );
+  assert(Number(summary[0].total) === 25, `Aggregate must count 25 ratings, got ${summary[0].total}.`);
+  assert(
+    [5, 4, 3, 2, 1].map((n) => Number(summary[0][`count_${n}`])).join(",") === "21,3,1,0,0",
+    "Histogram must be 21/3/1/0/0, the shape 13-recenzije.png draws.",
+  );
+
+  // The beauty salon seeds no reviews at all. Empty state is a demo fixture, not just a test:
+  // an empty aggregate must be no row, never a row of zeroes that renders as "0,0 od 5".
+  const beautySummary = await anonRows("salon_rating_summary", RATING_COLUMNS, "&salon_id=eq." + beautySalon);
+  assert(
+    beautySummary.length === 0,
+    "A salon without reviews has no aggregate row — the section hides instead of showing 0,0.",
+  );
+
+  const reviewInsert = await anonRequest("/rest/v1/reviews", {
+    method: "POST",
+    body: JSON.stringify({ salon_id: activeSalon, author_name: "Napadac", rating: 5 }),
+  });
+  assert(
+    reviewInsert.status >= 400,
+    `Anon insert into reviews must be rejected, got HTTP ${reviewInsert.status}. The screen is read-only.`,
   );
 
   // ---------------------------------------------------------------------------
