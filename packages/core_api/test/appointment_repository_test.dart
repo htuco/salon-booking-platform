@@ -1,6 +1,9 @@
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Isti obrazac kao ostali repozitoriji: gađa se mapiranje, ne `.from(...)`.
 ///
@@ -30,6 +33,60 @@ void main() {
         'cancelled_by': cancelledBy,
         'pending_expires_at': null,
       };
+
+  group('order smjer', () {
+    // Regresija iz taska 23, nadjena na ekranu a ne u testu: raspored dana se crtao
+    // unatraske (11:30 pa 10:00) iako je server vracao ispravan redoslijed.
+    //
+    // Uzrok je da `order()` u ovom paketu podrazumijeva **descending**, suprotno od SQL-a
+    // i od postgrest-js (`postgrest_transform_builder.dart:71`). Widget testovi to nisu
+    // mogli uhvatiti jer su im lazne liste vec bile sortirane.
+    //
+    // Test gadja **stvarni URL** koji builder posalje, uhvacen kroz `httpClient`. Citanje
+    // internog `_url` polja bi bilo krace, ali bi vezalo test za privatni detalj paketa.
+    test('order() bez ascending salje desc — zato ga svuda pisemo', () async {
+      late Uri poslan;
+      final klijent = SupabaseClient(
+        'http://127.0.0.1:54321',
+        'anon',
+        httpClient: MockClient((zahtjev) async {
+          poslan = zahtjev.url;
+          return http.Response(
+            '[]',
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        }),
+      );
+
+      // Odgovor mocka namjerno nije potpun PostgREST odgovor, pa parsiranje pukne —
+      // nebitno: URL je vec poslan i uhvacen, a to je jedino sto ovaj test tvrdi.
+      Future<void> posalji(Future<Object?> Function() upit) async {
+        try {
+          await upit();
+        } catch (_) {}
+      }
+
+      await posalji(
+        () => klijent.from('appointments').select('id').order('start_time'),
+      );
+      expect(
+        poslan.query,
+        contains('start_time.desc'),
+        reason:
+            'Default se promijenio: provjeri `ascending: true` po repozitorijima, '
+            'jer su komentari uz njih pisani za stari default.',
+      );
+
+      await posalji(
+        () => klijent
+            .from('appointments')
+            .select('id')
+            .order('start_time', ascending: true),
+      );
+      expect(poslan.query, contains('start_time.asc'));
+    });
+  });
 
   group('appointmentFromRow', () {
     test('mapira red kakav vraća PostgREST', () {

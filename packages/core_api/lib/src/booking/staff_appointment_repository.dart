@@ -57,7 +57,11 @@ buffer_minutes, status, source, cancel_reason, cancelled_by, pending_expires_at
         .select(_columns)
         .eq('salon_id', salonId)
         .eq('date', _datum(day))
-        .order('start_time');
+        // `ascending: true` je **obavezan**: u ovom paketu `order()` podrazumijeva
+        // **descending**, suprotno od SQL-a i od postgrest-js. Bez njega raspored dana
+        // ide unatraske, sto na ekranu izgleda kao pogresni podaci, a ne kao propusten
+        // parametar (isti propust je vec zabiljezen u `policy_repository.dart`).
+        .order('start_time', ascending: true);
 
     return appointmentsFromRows(rows);
   });
@@ -88,7 +92,9 @@ buffer_minutes, status, source, cancel_reason, cancelled_by, pending_expires_at
       upit = upit.eq('status', status.wireName);
     }
 
-    final rows = await upit.order('date').order('start_time');
+    final rows = await upit
+        .order('date', ascending: true)
+        .order('start_time', ascending: true);
     return appointmentsFromRows(rows);
   });
 
