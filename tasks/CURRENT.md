@@ -80,25 +80,29 @@ migracija, dakle `security.md` se ažurira u istoj promjeni.
 
 ## Istorija
 
-- **21 — Client: Obavijesti, „O aplikaciji", Pravila i Politika privatnosti** (2026-09-14, ✅) —
-  četiri ekrana umjesto tri: `/privacy` task fajl ne spominje, a store submission ga traži.
-  **Pravila su dvije tabele** — `app_policies` (legal tekst, obavezuje firmu, piše samo platforma) i
-  `salon_policies` (mijenja salon); jedna tabela sa nullable `salon_id` je odbijena jer bi politici
-  dala NULL granu, isti oblik koji je u tasku 14 pustio zahtjev bez `x-salon-id`
-  ([ADR-0009](../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md)). **Tekst je
-  pisan nanovo, ne prepisan:** handoff tvrdi da se čuva broj telefona, a klijentska app ga nikad ne
-  traži — `ensure_customer` upisuje samo ime. Brojevi u tekstu su **placeholderi**
-  (`{minCancelHours}` i dr.) koje ekran puni iz živih podataka, jer bi inače salon promijenio rok u
-  postavkama a pravila bi pisala staru cifru dok `cancel_appointment` provodi drugu.
-  **`/notifications` je namjerno samo prazno stanje** — `notification_logs` nema klijentsku politiku,
-  pa ekran nema server-side izvor; lista dolazi sa taskom 25 i mijenja **samo tijelo**, ne rutu.
-  Dokazano: **oba CI joba zelena na `main`** nakon merga PR #38, **cijela Dart suite PASS lokalno**
-  (`client` 231 test), i **negativan pgTAP** — `salon_admin` ne može pisati po `app_policies`.
-  **Zamka zapisana za sljedećeg:** lokalna suite pada iz čistog checkouta dok se ne pokrenu
-  `build_runner` i `flutter gen-l10n` — greške izgledaju kao pravi bugovi („getter nije definisan"),
-  a samo je generisani kod odsutan. Ostalo, ništa ne blokira: `supportEmail` prazan (red se ne
-  crta), „Ocijenite aplikaciju" neaktivan do objave, naziv pravnog lica, i **pravni pregled prije
-  submissiona**.
+- **21 — Client: Obavijesti, „O aplikaciji" i pravni ekrani** (2026-09-14, ✅) — `/terms`,
+  `/privacy` i `/about-app` rade iz prave baze na oba tenanta; `/notifications` je **namjerno samo
+  prazno stanje** dok [25](sprint-2/25-push-notifikacije.md) ne da listu. **Tekst dolazi iz dvije
+  tabele, ne iz `salons`** ([ADR-0009](../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md)):
+  handoff 5o ima šest sekcija, ali Zakazivanje, Cijene i „Vaši podaci" obavezuju **firmu** i iste su
+  u svakoj brandiranoj app-i, dok Otkazivanje, Kašnjenje i Kontakt obavezuju **salon** — otud
+  `app_policies` (bez `salon_id`) i `salon_policies` (`salon_id`). Jedna tabela sa nullable
+  `salon_id` je odbijena: politika bi dobila NULL granu, a upravo je NULL u guardu pustio zahtjev
+  bez `x-salon-id` headera u tasku 14; negativan test koji to drži je `salon_admin` nad
+  `app_policies`. Sekcije se crtaju **dinamično `01..NN`**, bez šest zakucanih u kodu. **Handoff
+  copy nije prepisan jer tvrdi neistinu** — „Vaši podaci" piše da čuvamo broj telefona, a app ga
+  nikad ne traži; oba dokumenta su napisana nanovo, za App Privacy / Data Safety formulare.
+  **Dvije greške koje je našao ekran, a testovi nisu mogli:** politika privatnosti je išla naopako
+  (`PostgrestTransformBuilder.order` ima `ascending = false` kao **default** — „Kontakt" je bio `01`
+  a „Ko obrađuje podatke" `09`; ista zamka je već bila zapisana u `service_repository.dart`), i
+  „Zadnja izmjena: 14.09.2026**..**", jer `formatDate` već nosi tačku a `.arb` je dodavao još jednu.
+  Prva se hvata samo protiv pravog PostgREST-a — unit test koji mapira red ne vidi redoslijed kojim
+  redovi stižu, a ekran ne sortira; druga samo testom na cijeli string, ne na podniz. Dokazano:
+  **176 pgTAP** (bilo 147), **123 REST asercije**, **460 Dart testova** (bilo 419); čista analiza u
+  svih pet paketa. Uživo na iOS simulatoru — `/terms` numerisan `01..06` sa `3 h` i `030 711 000`
+  **iz baze**, ne `2 sata` i `030 711 220` iz handoffa. Ostaje javni URL politike privatnosti
+  (traži hosting) i „Ocijenite aplikaciju" neaktivan dok app nije u prodavnici.
+  [PR #38](https://github.com/htuco/salon-booking-platform/pull/38).
 
 - **23 — Admin: login, dashboard i lista termina** (2026-09-14, ✅) — `apps/admin` je prestao biti
   skelet od osam fajlova. Prijava ide kroz **zaseban `StaffRepository`**, ne kroz klijentski

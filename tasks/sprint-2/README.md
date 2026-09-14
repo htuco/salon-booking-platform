@@ -46,12 +46,9 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 
 | Otvoreno u | Šta | Zatvara |
 |---|---|---|
-| [11](../sprint-1/11-booking-flow.md) | `book(...)` nikad nije pozvan protiv prave baze | [14](14-identitet-i-klijent-upsert.md) |
-| [11](../sprint-1/11-booking-flow.md) | `409` nije izazvan uživo | [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | ~~Usluge nemaju fotografiju, radnici staž~~ | ✅ [22](22-sema-slike-i-staz.md) |
 | [11](../sprint-1/11-booking-flow.md) | ~~`book(...)` nikad nije pozvan protiv prave baze~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
 | [11](../sprint-1/11-booking-flow.md) | ~~`409` nije izazvan uživo~~ | ✅ [14](14-identitet-i-klijent-upsert.md) |
-| [11](../sprint-1/11-booking-flow.md) | Usluge nemaju fotografiju, radnici staž | [22](22-sema-slike-i-staz.md) |
 | [11](../sprint-1/11-booking-flow.md) | ~~Početna nije po handoffu~~ | ✅ [18](18-pocetna-i-tab-bar.md) |
 | [08](../sprint-1/08-core-api-repozitoriji.md) | ~~Nema `AppointmentRepository`~~ | ✅ [16](16-moji-termini-i-otkazivanje.md) |
 | `security.md` | ~~`customers`~~ ✅ / `devices` upis bez validirane funkcije | ✅ [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
@@ -222,28 +219,35 @@ Sitno, ali ne smije se izgubiti:
 > prijavljen Apple ID pa ne izdaje provisioning profil.
 > Detalji: [19-o-nama-i-usluge.md](19-o-nama-i-usluge.md#status-2026-09-13--✅-zatvoren).
 
-> **21 — Obavijesti, „O aplikaciji" i pravni ekrani (✅, 2026-09-14).** DoD je tražio tri ekrana,
-> isporučena su **četiri**: `/terms`, `/privacy`, `/about-app` i `/notifications`. `/privacy` task
-> fajl ne spominje, ali store submission ga traži.
-> **Pravila su dvije tabele** — `app_policies` (legal tekst, obavezuje firmu, piše samo platforma) i
-> `salon_policies` (mijenja salon). Jedna tabela sa nullable `salon_id` odbijena: dala bi politici
-> NULL granu, isti oblik koji je u tasku 14 pustio zahtjev bez `x-salon-id`
-> ([ADR 0009](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md)).
-> **Tekst je pisan nanovo, ne prepisan:** handoff tvrdi da se čuva broj telefona, a klijentska app
-> ga nikad ne traži. Brojevi u tekstu su **placeholderi** (`{minCancelHours}` i dr.) koje ekran puni
-> iz živih podataka — inače salon promijeni rok u postavkama, a pravila pišu staru cifru dok
-> `cancel_appointment` provodi drugu.
-> Dokazano: **oba CI joba zelena na `main`** nakon merga, **cijela Dart suite PASS lokalno**
-> (`client` 231 test), i **negativan pgTAP test** koji drži oblik — `salon_admin` ne može pisati po
-> `app_policies`.
-> **`/notifications` je namjerno samo prazno stanje** — `notification_logs` nema klijentsku
-> politiku, pa ekran nema server-side izvor. Lista dolazi sa [25](25-push-notifikacije.md), i tada
-> se mijenja samo tijelo, ne ruta.
-> **Zamka:** lokalna suite pada iz čistog checkouta dok ne pokreneš `build_runner` i `flutter
-> gen-l10n` — greške izgledaju kao pravi bugovi, a nisu.
-> Ostalo, ništa ne blokira: `supportEmail` prazan (red se ne crta), „Ocijenite aplikaciju" neaktivan
-> do objave, naziv pravnog lica, i **pravni pregled prije submissiona**. Javni URL politike
-> privatnosti (korak 29) ostaje Sprint 3.
+
+> **21 — Obavijesti, „O aplikaciji" i pravni ekrani (✅, 2026-09-14).** `/terms`, `/privacy` i
+> `/about-app` rade iz prave baze, na oba tenanta; `/notifications` je **namjerno samo prazno
+> stanje** dok [25](25-push-notifikacije.md) ne da lista.
+> **Tekst dolazi iz dvije tabele, ne iz `salons`** ([ADR-0009](../../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md)):
+> handoff 5o ima šest sekcija, ali Zakazivanje, Cijene i „Vaši podaci" obavezuju **firmu** i iste su
+> u svakoj brandiranoj app-i, dok Otkazivanje, Kašnjenje i Kontakt obavezuju **salon**. Otud
+> `app_policies` (bez `salon_id`) i `salon_policies` (`salon_id`). Jedna tabela sa nullable
+> `salon_id` je odbijena — politika bi dobila NULL granu, a upravo je NULL u guardu pustio zahtjev
+> bez `x-salon-id` headera u tasku 14. Negativan test koji to drži je `salon_admin` nad
+> `app_policies`: `insert` mora pasti. Sekcije se crtaju **dinamično `01..NN`**, bez šest zakucanih
+> u kodu.
+> **Handoff copy nije prepisan jer tvrdi neistinu** — „Vaši podaci" na `15-pravila-koristenja.png`
+> piše da čuvamo i broj telefona, a klijentska app ga nikad ne traži (`ensure_customer` upisuje samo
+> ime, booking ekran nema polje). Oba dokumenta su napisana nanovo, po stvarnom inventaru podataka i
+> za App Privacy / Data Safety formulare.
+> **Dvije greške koje je našao ekran, a testovi nisu mogli:** politika privatnosti je išla naopako
+> (`PostgrestTransformBuilder.order` ima `ascending = false` kao **default**, pa je „Kontakt" bio
+> `01` a „Ko obrađuje podatke" `09` — ista zamka je već bila zapisana u `service_repository.dart`);
+> i „Zadnja izmjena: 14.09.2026**..**", jer `formatDate` već nosi tačku a `.arb` je dodavao još
+> jednu. Prva se hvata samo protiv pravog PostgREST-a — unit test koji mapira red ne vidi redoslijed
+> kojim redovi stižu, a ekran ne sortira; druga samo testom na cijeli string, ne na podniz.
+> Dokazano: **460 Dart testova** (bilo 419), **176 pgTAP** (bilo 147), **123 REST asercije**; čista
+> analiza u svih pet paketa. Uživo na iOS simulatoru, `barberstudiovitez` protiv lokalnog stacka —
+> `/terms` numerisan `01..06` sa `3 h` i `030 711 000` **iz baze**, ne `2 sata` i `030 711 220` iz
+> handoffa (`docs/screenshots/task-21-o-aplikaciji.png`).
+> **Ostaje, ali ne blokira:** javni URL politike privatnosti ([01 §17](../../docs/01-mvp-spec.md#17-build-order)
+> korak 29) traži hosting — ekran u app-i ga ne zamjenjuje; „Ocijenite aplikaciju" stoji vidljiv ali
+> neaktivan dok app nije u prodavnici.
 > Detalji: [21-obavijesti-i-pravni-ekrani.md](21-obavijesti-i-pravni-ekrani.md#status-2026-09-14--✅-zatvoren).
 
 > **23 — Admin: login, dashboard i lista termina (✅, 2026-09-14).** `apps/admin` je prestao biti
