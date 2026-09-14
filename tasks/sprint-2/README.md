@@ -52,7 +52,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [11](../sprint-1/11-booking-flow.md) | ~~Početna nije po handoffu~~ | ✅ [18](18-pocetna-i-tab-bar.md) |
 | [08](../sprint-1/08-core-api-repozitoriji.md) | ~~Nema `AppointmentRepository`~~ | ✅ [16](16-moji-termini-i-otkazivanje.md) |
 | `security.md` | ~~`customers`~~ ✅ / `devices` upis bez validirane funkcije | ✅ [14](14-identitet-i-klijent-upsert.md), [25](25-push-notifikacije.md) |
-| `security.md` | Admin `insert` nad `appointments` zaobilazi validaciju slota | [24](24-admin-akcije-nad-terminima.md) |
+| `security.md` | ~~Admin `insert` nad `appointments` zaobilazi validaciju slota~~ | ✅ [24](24-admin-akcije-nad-terminima.md) |
 
 ## Što **nije** u ovom sprintu
 
@@ -66,6 +66,35 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
   dobijaju svoj handoff, koji još ne postoji.
 
 ## Status
+
+> **24 — Admin akcije nad terminima i ručni unos (🟡, 2026-09-14).** Salon prvi put odgovara na
+> zahtjev; do sada je `StaffAppointmentRepository` bio namjerno samo čitanje, pa je termin ostajao
+> `pending` dok ne istekne. **Rupu iz `security.md` zatvara `revoke insert, update on
+> public.appointments`, ne dodavanje funkcija** — dok je grant stajao, validirane funkcije su bile
+> konvencija koju je bilo dovoljno zaboraviti; `select` i `delete` ostaju, jer greškom unesen termin
+> se mora moći obrisati. Termin sada pišu tačno tri funkcije: `book_appointment`,
+> `set_appointment_status` (`confirmed`/`completed`/`no_show`) i `cancel_appointment`. **Otkazivanje
+> namjerno nije u `set_appointment_status`** (vraća `PT400` i upućuje): ono nosi rok iz
+> `min_cancel_hours`, a dvije funkcije koje pišu isti status bile bi dva mjesta gdje se to pravilo
+> može razići. **Admin izuzetak vrijedi samo za `min_advance_booking_hours`** — salon upisuje
+> klijenta koji stoji na vratima, ali radno vrijeme, pauze i blokade vrijede i njemu; klijent ga ne
+> može dobiti ni greškom, jer nije argument nego izvedeno iz `is_admin()`. Ručni termin je odmah
+> `confirmed`, bez `pending_expires_at`: kad salon sam upisuje termin, odgovor je sam upis.
+> `no_show_count` i `visit_count` dobijaju prvog pisca, ali **prag se namjerno ne provodi** — to je
+> pravilo vertikale i traži Sprint 3. Dokazano: **220 pgTAP** (bilo 177, 42 nova) i **508 Dart
+> testova** (bilo 479); vraćanjem granta padne sedam asercija u tri fajla, pa testovi stvarno mogu
+> pasti. **Pet grešaka koje je našlo pokretanje, ne čitanje:** `create or replace` sa novim
+> parametrom pravi **preopterećenje, ne zamjenu** (obje verzije `get_available_slots` su ostale u
+> bazi sa grantom, pa bi poziv bez novog argumenta tiho išao na staru funkciju — nađeno upitom nad
+> `pg_proc`, migracija je prošla čisto); prvi test admin izuzetka je bio zelen samo ujutro, jer je
+> tražio slot „za pola sata" a salon radi do 17:00; `TextEditingController` dispose-ovan dok dijalog
+> još animira zatvaranje; `AlertDialog` prelio se za 99672px; i `MockClient` odgovor bez `request:`
+> puca u `postgrest`-u kao `MappingError` koji izgleda kao razilaženje modela i šeme. **Ostaje 🔴
+> živi dokaz na ekranu** — Docker servis je pao usred taska i traži administratorske ovlasti, pa
+> ručni unos nijednom nije pogodio pravu bazu; i 🟡 **nijedan Deno REST test**, jer `deno` nije
+> instaliran, pa prevod `PT400`/`PT409` u HTTP statuse nije dokazan.
+> [PR #42](https://github.com/htuco/salon-booking-platform/pull/42). Detalji:
+> [24-admin-akcije-nad-terminima.md](24-admin-akcije-nad-terminima.md).
 
 > **12 — Auth provideri (🟡, 2026-09-12).** Kod je gotov i dokazan; blokiran je samo na tuđim
 > konzolama. `AuthConfig`/`AuthProvider`/`AuthPlatform`/`AuthSession` u `core_domain`,
