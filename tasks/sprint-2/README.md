@@ -18,7 +18,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [20](20-galerija-recenzije.md) ✅ | Client: galerija, lightbox, recenzije | — | 2 dana |
 | [21](21-obavijesti-i-pravni-ekrani.md) ✅ | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
 | [23](23-admin-login-i-lista.md) ✅ | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
-| [24](24-admin-akcije-nad-terminima.md) 🟡 | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
+| [24](24-admin-akcije-nad-terminima.md) ✅ | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
 | [25](25-push-notifikacije.md) | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
 | [26](26-gost-i-facebook.md) | Guest flow + Facebook iza flaga | — | 1–2 dana |
 
@@ -67,7 +67,7 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 
 ## Status
 
-> **24 — Admin akcije nad terminima i ručni unos (🟡, 2026-09-14).** Salon prvi put odgovara na
+> **24 — Admin akcije nad terminima i ručni unos (✅, 2026-09-15).** Salon prvi put odgovara na
 > zahtjev; do sada je `StaffAppointmentRepository` bio namjerno samo čitanje, pa je termin ostajao
 > `pending` dok ne istekne. **Rupu iz `security.md` zatvara `revoke insert, update on
 > public.appointments`, ne dodavanje funkcija** — dok je grant stajao, validirane funkcije su bile
@@ -79,20 +79,22 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 > može razići. **Admin izuzetak vrijedi samo za `min_advance_booking_hours`** — salon upisuje
 > klijenta koji stoji na vratima, ali radno vrijeme, pauze i blokade vrijede i njemu; klijent ga ne
 > može dobiti ni greškom, jer nije argument nego izvedeno iz `is_admin()`. Ručni termin je odmah
-> `confirmed`, bez `pending_expires_at`: kad salon sam upisuje termin, odgovor je sam upis.
-> `no_show_count` i `visit_count` dobijaju prvog pisca, ali **prag se namjerno ne provodi** — to je
-> pravilo vertikale i traži Sprint 3. Dokazano: **220 pgTAP** (bilo 177, 42 nova) i **508 Dart
-> testova** (bilo 479); vraćanjem granta padne sedam asercija u tri fajla, pa testovi stvarno mogu
-> pasti. **Pet grešaka koje je našlo pokretanje, ne čitanje:** `create or replace` sa novim
-> parametrom pravi **preopterećenje, ne zamjenu** (obje verzije `get_available_slots` su ostale u
-> bazi sa grantom, pa bi poziv bez novog argumenta tiho išao na staru funkciju — nađeno upitom nad
-> `pg_proc`, migracija je prošla čisto); prvi test admin izuzetka je bio zelen samo ujutro, jer je
-> tražio slot „za pola sata" a salon radi do 17:00; `TextEditingController` dispose-ovan dok dijalog
-> još animira zatvaranje; `AlertDialog` prelio se za 99672px; i `MockClient` odgovor bez `request:`
-> puca u `postgrest`-u kao `MappingError` koji izgleda kao razilaženje modela i šeme. **Ostaje 🔴
-> živi dokaz na ekranu** — Docker servis je pao usred taska i traži administratorske ovlasti, pa
-> ručni unos nijednom nije pogodio pravu bazu; i 🟡 **nijedan Deno REST test**, jer `deno` nije
-> instaliran, pa prevod `PT400`/`PT409` u HTTP statuse nije dokazan.
+> `confirmed`, bez `pending_expires_at`. `no_show_count` i `visit_count` dobijaju prvog pisca, ali
+> **prag se namjerno ne provodi** — pravilo vertikale, Sprint 3. Dokazano: **220 pgTAP** (bilo 177),
+> **515 Dart testova** (bilo 479), i **uživo u browseru na oba tenanta** — sve četiri akcije
+> provjerene `psql` upitom: `manual`/`salon`/„Nema frizera", `visit_count = 1`, `no_show_count = 1`,
+> rok isteka skinut. Ista aplikacija, druga prijava, **nijedan tuđi termin**
+> (`docs/screenshots/task-24-akcije-{barber,beauty}.png`). **Šest grešaka koje je našlo pokretanje,
+> ne čitanje:** `create or replace` sa novim parametrom pravi **preopterećenje, ne zamjenu** (obje
+> verzije `get_available_slots` su ostale u bazi sa grantom, pa bi poziv bez novog argumenta tiho
+> išao na staru funkciju — nađeno upitom nad `pg_proc`); prvi test admin izuzetka je bio zelen samo
+> ujutro; `TextEditingController` dispose-ovan dok dijalog još animira zatvaranje; `AlertDialog`
+> prelio se za 99672px; `MockClient` odgovor bez `request:` puca u `postgrest`-u; i — **tek na
+> ekranu** — ručni unos je crtao duplirana vremena (`09:00 09:00 09:15 09:15…`), jer
+> `get_available_slots` vraća red **po radniku**. `distinctTimes` postoji od taska 11 sa komentarom
+> koji tačno opisuje tu zamku, ali **nije imao nijedan test**; sada ih ima sedam. **Ostaje 🟡**
+> nijedan Deno REST test (`deno` nije instaliran, pa prevod `PT400`/`PT409` u HTTP statuse nije
+> dokazan) i admin **nije pokrenut na mobilnom uređaju**.
 > [PR #42](https://github.com/htuco/salon-booking-platform/pull/42). Detalji:
 > [24-admin-akcije-nad-terminima.md](24-admin-akcije-nad-terminima.md).
 
