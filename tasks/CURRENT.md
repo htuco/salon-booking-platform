@@ -1,202 +1,120 @@
-# Trenutni task: 21 — Client: Obavijesti, „O aplikaciji" i „Pravila korištenja"
+# Trenutni task: 23 — Admin: login, dashboard i lista termina
 
-Puni task: [`tasks/sprint-2/21-obavijesti-i-pravni-ekrani.md`](sprint-2/21-obavijesti-i-pravni-ekrani.md)
-**U toku** · Učitano: 2026-09-14 · Grana: `feat/pravila-i-o-aplikaciji`
+Puni task: [`tasks/sprint-2/23-admin-login-i-lista.md`](sprint-2/23-admin-login-i-lista.md)
+**Nije počet** · Učitano: 2026-09-14 · Grana: —
 
 ## Status
 
-U toku. Zavisnost [18](sprint-2/18-pocetna-i-tab-bar.md) je ✅, i sve tri rute već postoje —
-ali kao placeholderi.
+Nije počet. Obje zavisnosti su prohodne:
 
-**Task nije jedna cjelina.** Dva ekrana su odblokirana i otključavaju store submission; treći
-(`/notifications`) nema odakle povući podatke dok ne postoji [25](sprint-2/25-push-notifikacije.md).
+- **[14](sprint-2/14-identitet-i-klijent-upsert.md) ✅** — `ensure_customer` radi, `appointments`
+  imaju prave redove iz aplikacije, pa lista termina ima **šta** prikazati.
+- **[12](sprint-2/12-auth-provideri.md) 🟡 — ne blokira ovaj task.** Otvoren je samo na Apple/Google
+  konzolama, a **admin se prijavljuje email-om**, ne nativnim providerima. Email OTP je dokazan do
+  kraja još u tasku 12.
 
-**Odluke donesene 2026-09-14:** dvije tabele, dinamične sekcije, legal tekst piše samo platforma.
-Tekst pravila i politike privatnosti piše se **nanovo**, po stvarnom inventaru podataka.
-Oblik i obrazloženja su u Napomenama — traži svoj ADR.
+`apps/admin` je danas **skelet od 8 Dart fajlova**: `main.dart`, bootstrap, router i jedan
+`AdminPlaceholderScreen`. Sve rute iz `AdminRoute` postoje i vode na placeholder — kao što je bio
+slučaj sa klijentskim rutama prije taska 18. Ulazi postoje, tijela ne.
+
+**Ovo je druga polovina proizvoda.** Do sada je sav rad išao u klijentsku app; vlasnik salona još
+nijednom nije vidio šta mu je zakazano.
 
 ## Ciljevi
 
-### Pravila — šema i podaci
+### Prvo: admin uopšte ne može da se prijavi
 
-- [x] **Odluka o obliku** — dvije tabele, legal tekst samo platformski (v. Napomene)
-- [ ] ADR: zašto dvije tabele a ne jsonb na `salon_settings`, i zašto salon ne piše legal tekst
-- [ ] Migracija: `app_policies` (bez `salon_id`) i `salon_policies` (`salon_id`), obje sa
-      `sort_order`, RLS, taksativnim grantom i **negativnim** testom
-- [ ] Seed: **novonapisana** pravila i politika privatnosti, razdvojena na legal i salonska
-      (handoff copy se **ne prepisuje** — v. Napomene)
-- [ ] Repozitorij + provideri u `core_api`
+- [ ] **Seed nema nijednog `salon_admin` korisnika** — provjereno, `supabase/seed.sql` ne dodaje ni
+      red u `public.users` ni korisnika u `auth.users`. Bez toga se nema čime prijaviti ni lokalno
+      testirati. Traži i `app_metadata` (`role`, `salon_id`), ne samo red u tabeli — v. Napomene.
+- [ ] Login ekran za osoblje, odvojen od klijentskog flowa
 
 ### Ekrani
 
-- [ ] `/terms` po 5o: dinamična lista, numerisana `01..NN` redom kojim sekcije stignu
-- [ ] `/about-app` po 5n: verzija iz `package_info_plus`, monogram iz inicijala, „Kako radi" u tri
-      koraka, kontakt redovi iz `salons`
-- [ ] `/about-app` pravni redovi: „Pravila korištenja" → `/terms`; „Politika privatnosti" →
-      `/privacy`; **„Ocijenite aplikaciju" ostaje vidljiv ali neaktivan** dok app nije u
-      prodavnici; „Prijavite problem" → mail developeru
-- [ ] `/privacy` — politika privatnosti, pisana za **App Privacy i Data Safety** formulare
-- [ ] `package_info_plus` u `apps/client/pubspec.yaml` — danas ga nema
-- [ ] Oba su pod-ekrani: `BackHeader` sa labelom „Postavke", serif naslov u tijelu
-- [ ] Testovi + dokaz na simulatoru, oba tenanta
+- [ ] Lista termina sa filterom po danu i statusu (**prvo**, dashboard je njen sažetak)
+- [ ] Dashboard: današnji termini, broj `pending` zahtjeva
+- [ ] Admin **ne bira salon iz UI-ja** — dobija ga iz svog `users` reda
 
-### Odlučeno: `/notifications` ide sad, kao prazno stanje
+### Dokaz
 
-- [ ] `/notifications` po 5j — **samo prazno stanje**, sa iskrenim tekstom da obavijesti stižu kad
-      salon potvrdi termin. Lista dolazi sa [25](sprint-2/25-push-notifikacije.md).
+- [ ] Deno test: admin salona A ne čita termine salona B
+- [ ] Dokaz na živom stacku, ne samo widget testovi
 
 ## Napomene
 
-### Šta stvarno postoji danas
+### Backend je spreman — ovo je uglavnom Flutter task
 
-Sve tri rute su u `ClientRoute` i vode na `PlaceholderScreen`
-([app_router.dart:120, 196, 201](../apps/client/lib/src/core/router/app_router.dart)). Rute su
-namjerno napravljene prije ekrana, još u tasku 18: ćelija trake i red Postavki koji ne vode nigdje
-su gori od placeholdera. Znači: **ništa od sadržaja nije napisano**, ali ulazi postoje i ne treba
-ih praviti.
+Za razliku od taska 21, ovdje **migracija vjerovatno ne treba**. Sve stoji od init migracije
+(`20260910090000_init_schema.sql`):
 
-`package_info_plus` **nije** u `pubspec.yaml`. DoD ga traži izričito („verzija se čita iz
-`package_info_plus`, ne iz konstante koja zastari").
+- `public.users` (linija 53) — `id`, `salon_id`, `role`, sa `check` koji drži da `super_admin` nema
+  salon a svi ostali moraju imati.
+- `private.is_admin(uuid)` (linija 190) — i to **tačno onako kako DoD traži**:
 
-### Pravila: dvije vrste, dinamične sekcije
+```sql
+private.is_super_admin() or (
+  auth.jwt()->'app_metadata'->>'role' = 'salon_admin'
+  and auth.jwt()->'app_metadata'->>'salon_id' = p_salon::text
+  and exists(select 1 from public.users where id=auth.uid() and role='salon_admin' and salon_id=p_salon))
+```
 
-Odlučeno 2026-09-14. Handoff 5o ima šest sekcija, ali **nisu sve iste vrste**:
+**Oba uslova, JWT i tabela.** DoD stavka „`app_metadata.role` **i** red u `public.users`" je već
+provedena u bazi — ne treba je graditi, treba je **dokazati**.
 
-| Sekcija | Čija je |
-|---|---|
-| Zakazivanje, Cijene, Vaši podaci | **platforma** — obavezuje firmu, ista u svakoj brandiranoj app-i |
-| Otkazivanje, Kašnjenje, Kontakt | **salon** — mijenja se po tenantu |
+- `staff_manage` politika nad `appointments`, `customers`, `blocked_slots` (linija ~256) — `for all`
+  sa `using` i `with check` na `is_admin(salon_id)`.
 
-Otud dvije tabele, a ne jedna sa `salon_id IS NULL`:
+### Zamka koju DoD imenuje, a lako se promaši
 
-- **`app_policies`** — bez `salon_id`, kao `vertical_packs`. `anon` čita, piše samo super admin.
-- **`salon_policies`** — `salon_id`, `anon` čita za aktivan salon, `salon_admin` CRUD nad svojim.
+**`x-salon-id` u adminu nije izvor istine.** Header bira kontekst; članstvo dolazi iz `users` reda.
+Admin koji pošalje tuđi header mora dobiti **prazan rezultat**, ne grešku i ne tuđe termine. To je
+[ADR 0003](../docs/adr/0003-x-salon-id-bira-kontekst-ne-daje-prava.md) i Deno test iz DoD-a postoji
+upravo da to zaključa.
 
-Obje nose `sort_order`, naslov i tijelo, pa se sekcije **dodaju dinamično**: ekran crta `01..NN`
-redom kojim stignu, bez šest zakucanih sekcija u kodu.
+Klijentska app bira salon iz `SALON_ID` flavora. **Admin je generička app, bez flavora** — jedan
+build za sve salone — pa salon mora doći iz `users` reda nakon prijave. Ovo je stvarna razlika u
+obliku, ne detalj.
 
-**Jedna tabela sa nullable `salon_id` je odbijena**: politika bi dobila NULL granu, a `security.md`
-već bilježi da je upravo NULL u guardu pustio zahtjev bez `x-salon-id` headera (task 14).
+### Seed: šta tačno nedostaje
 
-**Salon ne smije mijenjati legal tekst.** Tekst o obradi podataka obavezuje firmu, ne salon; app u
-storeu koja tvrdi nešto svoje o podacima je izlaganje koje se ne kontroliše.
+Provjereno: `grep salon_admin supabase/seed.sql` ne vraća ništa. Za lokalni rad treba korisnik u
+`auth.users` **sa `raw_app_meta_data`** koji nosi `role` i `salon_id` — jer `is_admin` čita JWT, a
+JWT se puni iz `app_metadata`. Red u `public.users` sam po sebi **nije dovoljan**: funkcija traži
+oba, i to je namjerno.
 
-### Handoff copy se ne prepisuje — tvrdi neistinu
+Isto važi i za testove — pgTAP za admina mora podmetnuti JWT claimove, ne samo ubaciti red.
 
-Sekcija „Vaši podaci" na `15-pravila-koristenja.png` piše *„Čuvamo ime, **broj telefona** i
-historiju termina"*. **Klijentska app nikad ne traži telefon:** `ensure_customer` upisuje samo ime,
-booking ekran nema polje, a `docs/01` to vodi kao donesenu odluku („Broj telefona se ne traži od
-klijenta — push zamjenjuje poziv i SMS"). Prepisan handoff bi lagao u prvoj rečenici pravno
-obavezujuće sekcije.
+### Redoslijed iz task fajla nije proizvoljan
 
-Zato se tekst piše **nanovo, po stvarnom inventaru**, a ne po generičkom templateu — template tvrdi
-kolačiće, plaćanja i lokaciju, čega ovdje nema, i to je ista greška u drugom obliku.
-
-Stvarno prikupljeno, provjereno u šemi i u kodu:
-
-| Podatak | Odakle | Gdje |
-|---|---|---|
-| Email | Apple / Google / email OTP | `auth_identities.email` |
-| Ime | display name providera, salon može ispraviti | `customers.name` |
-| Historija termina | usluga, radnik, datum, status | `appointments` |
-| Napomena uz termin | korisnik upisuje, opciono | `appointments.customer_note` |
-| Push token | **tek sa taskom 25** | `devices` |
-
-Bez telefona, lokacije, plaćanja i analitike trećih strana. `customers.phone` i
-`appointments.customer_phone` **postoje**, ali ih puni salon iz admina, ne klijent — politika to
-mora razlikovati.
-
-**Ovo nije pravni savjet.** Tekst je napisan da bude tačan naspram koda i upotrebljiv za store
-formulare; prije submissiona ga mora pogledati neko ko za to odgovara, posebno oko GDPR-a.
-
-### Zamka koju ovaj oblik ne rješava sam: brojevi se razilaze
-
-Handoff piše „najkasnije **2 sata** prije početka", a to je `salon_settings.min_cancel_hours` —
-barber ima **3**, beauty **6**. Task 16 je napravio `cancel_appointment`, koji taj rok čita iz
-postavki i **stvarno ga provodi**. Ako sekcija bude slobodan tekst, salon promijeni rok u
-postavkama a pravila i dalje pišu staru cifru — aplikacija tada laže korisniku na pravno
-obavezujućem ekranu.
-
-Prijedlog (nije odlučeno): tijelo sekcije podržava **placeholdere** koje ekran popunjava iz živih
-podataka — `{minCancelHours}`, `{phone}`, `{email}`, `{appointmentSingular}`. Isti razlog vrijedi i
-za kontakt: handoff ima `030 711 220`, seed `030 711 000` — dva izvora za isti podatak već se
-razilaze.
-
-**Još nije riješeno:** „više od 10 minuta" (kašnjenje) i „tri nedolaska u šest mjeseci" nemaju
-kolonu. `customers.no_show_count` postoji, ali prag nigdje nije zapisan ni provođen. Ili dobijaju
-polja u `salon_settings`, ili se sekcije pišu bez brojeva.
-
-### `/notifications` nema izvor podataka — zato ide kao prazno stanje
-
-Korak 2 u task fajlu kaže doslovno: *„Obavijesti nakon taska 25, da imaju šta prikazati."*
-Task 25 nije počet. Uz to, provjereno u šemi:
-
-- `notification_logs` postoji, ali politika `staff_notification_logs` je
-  `using(private.is_admin(salon_id))` — **klijent tu ne vidi nijedan red**. Nema klijentske
-  politike, pa ekran nema server-side izvor.
-- Zamka iz task fajla nudi izlaz: *„Lista obavijesti bez servera je lokalna historija pusheva —
-  reci to u praznom stanju, ne glumi server koji ne postoji."* Ali lokalna historija pusheva
-  pretpostavlja da pushevi postoje, a to je opet task 25.
-
-**Odlučeno: ide sad, kao prazno stanje.** Ćelija trake već postoji i vodi na razvojni placeholder,
-što je gore od iskrenog praznog ekrana. Tekst kaže šta korisnik može očekivati („obavijesti stižu
-kad salon potvrdi termin"), ne glumi server koji ne postoji. Lista i nepročitano stanje dolaze sa
-taskom 25, i tada se mijenja **samo tijelo**, ne ruta ni ulaz.
-
-### Pravni redovi na `/about-app` — stanje svakog
-
-- **„Pravila korištenja"** → `/terms`, ruta postoji.
-- **„Politika privatnosti"** → `/privacy`, **nova ruta u ovom tasku**. Tekst ide u `app_policies`
-  kao zaseban dokument, pa isti izvor kasnije servira i javna stranica iz Sprinta 3 (`docs/01`
-  korak 29 traži javni URL — ekran u app-i ga **ne zamjenjuje**).
-- **„Ocijenite aplikaciju"** → **red stoji, ali je neaktivan** (odluka 2026-09-14). Traži App
-  Store / Play ID, a aplikacije nisu objavljene. Crta se u `disabled` stanju iz `SPEC.md`
-  (45% prozirnosti) i **ne prima tap** — prazan tap je gori od reda koji vidljivo čeka. Ispod
-  stoji kratko objašnjenje da se aktivira nakon objave. Kad app ode u prodavnicu, mijenja se
-  samo `storeListingUrl` u `tenant.yaml`, ne ekran.
-- **„Prijavite problem"** → mail **developeru**, ne salonu. Adresa još nije data — dok je nema,
-  stoji kao konstanta koju treba popuniti.
-
-### Odluke koje sam uzeo sam (2026-09-14) — za pregled
-
-Hamza je rekao „uradi kako god pa ću pregledati". Skupljeno na jedno mjesto, da pregled bude kratak:
-
-| Šta | Odluka | Zašto |
-|---|---|---|
-| Brojevi u tekstu pravila | tijelo sekcije podržava **placeholdere** (`{minCancelHours}`, `{phone}`, `{email}`, `{appointmentSingular}`), ekran ih puni iz živih podataka | slobodan tekst bi odlutao od onoga što `cancel_appointment` stvarno provodi |
-| Kašnjenje i nedolasci | **bez novih kolona**; sekcije se pišu bez brojeva | ništa u kodu te pragove ne provodi — kolona koju niko ne čita je kolona koja laže |
-| Monogram na `/about-app` | inicijali imena salona, kao tekst | `SPEC.md` §Assets izričito kaže da nije asset |
-| Podnaslov i kontakt redovi | iz `salons` (opis, telefon, adresa, Instagram) | sve već postoji, nema novog polja |
-| Footer | `© <godina> <ime salona>` + „Napravljeno u Bosni i Hercegovini" | naziv pravnog lica nije dat; kad stigne, mijenja se jedan string |
-| „Prijavite problem" | konstanta `supportEmail`, prazna dok ne stigne adresa | ne pretpostavljam tuđi mail; red se sakriva dok je prazna |
-| Jezik pravila | bosanski, isti kao ostatak app-e | `.arb` nema drugi jezik, a pravila su vezana za BiH tržište |
-| Dužina | kratke sekcije, kao handoff — ne zid teksta | pravila koja niko ne pročita ne štite nikoga |
-
-**Ono što ostaje na tebi:** naziv pravnog lica, `supportEmail`, i pravni pregled teksta prije
-submissiona. Ništa od toga ne blokira rad — sve su to stringovi na jednom mjestu.
-
-### Politika privatnosti nije samo ovaj ekran
-
-`docs/01` (§605, §617, korak 29) traži **javnu URL politiku privatnosti po tenantu**, koju servira
-Next.js iz Sprinta 3. Ekran u app-i je **ne zamjenjuje** — to piše i u Zamkama task fajla. Ako se
-očekuje da ovaj task otključa submission u cijelosti, ne otključava: otključava samo svoj dio.
-
-### Sitnice iz handoffa
-
-- **`SPEC.md` §Assets:** *„No logo asset yet; the »BV« monogram in 5n is a text placeholder."*
-  Dakle monogram na `/about-app` je tekst, ne slika — ne traži asset po tenantu.
-- Oba ekrana su pushed iz Postavki, pa nose `BackHeader` sa labelom **„Postavke"**, ne „Početna"
-  (obrazac iz taska 20; `AppBar` je greška — v. `prototype/ui/README.md`).
+„Lista pa dashboard — dashboard je sažetak liste, ne obrnuto." Ako dashboard ide prvi, upit za
+„današnje termine" se piše dvaput: jednom kao sam svoj, pa opet kad lista donese filtere.
 
 ### Procjena
 
-1–2 dana iz task fajla je bilo za tri ekrana bez šeme. **Sad je veće:** pravila donose migraciju,
-seed, RLS sa negativnim testom, repozitorij i ADR. Računaj **2–3 dana** za `/terms` + `/about-app`
-sa pravilima. `/notifications` je sada u obimu, ali samo kao prazno stanje — to je sat vremena,
-ne dan. `/privacy` je nova ruta koju task fajl ne spominje; tekst je pisan, ne prepisan, pa
-računaj i vrijeme za to.
+2–3 dana iz task fajla djeluje tačno, **uz seed kao nulti korak** (pola dana, jer traži i
+`app_metadata`, ne samo red). Backend ne nosi migraciju, ali nosi Deno test izolacije.
 
 ## Istorija
+
+- **21 — Client: Obavijesti, „O aplikaciji", Pravila i Politika privatnosti** (2026-09-14, ✅) —
+  četiri ekrana umjesto tri: `/privacy` task fajl ne spominje, a store submission ga traži.
+  **Pravila su dvije tabele** — `app_policies` (legal tekst, obavezuje firmu, piše samo platforma) i
+  `salon_policies` (mijenja salon); jedna tabela sa nullable `salon_id` je odbijena jer bi politici
+  dala NULL granu, isti oblik koji je u tasku 14 pustio zahtjev bez `x-salon-id`
+  ([ADR-0009](../docs/adr/0009-pravila-u-dvije-tabele-legal-tekst-pise-platforma.md)). **Tekst je
+  pisan nanovo, ne prepisan:** handoff tvrdi da se čuva broj telefona, a klijentska app ga nikad ne
+  traži — `ensure_customer` upisuje samo ime. Brojevi u tekstu su **placeholderi**
+  (`{minCancelHours}` i dr.) koje ekran puni iz živih podataka, jer bi inače salon promijenio rok u
+  postavkama a pravila bi pisala staru cifru dok `cancel_appointment` provodi drugu.
+  **`/notifications` je namjerno samo prazno stanje** — `notification_logs` nema klijentsku politiku,
+  pa ekran nema server-side izvor; lista dolazi sa taskom 25 i mijenja **samo tijelo**, ne rutu.
+  Dokazano: **oba CI joba zelena na `main`** nakon merga PR #38, **cijela Dart suite PASS lokalno**
+  (`client` 231 test), i **negativan pgTAP** — `salon_admin` ne može pisati po `app_policies`.
+  **Zamka zapisana za sljedećeg:** lokalna suite pada iz čistog checkouta dok se ne pokrenu
+  `build_runner` i `flutter gen-l10n` — greške izgledaju kao pravi bugovi („getter nije definisan"),
+  a samo je generisani kod odsutan. Ostalo, ništa ne blokira: `supportEmail` prazan (red se ne
+  crta), „Ocijenite aplikaciju" neaktivan do objave, naziv pravnog lica, i **pravni pregled prije
+  submissiona**.
 
 - **20 — Client: Galerija, lightbox i Recenzije** (2026-09-14, ✅) — `/gallery`, lightbox 5q i
   `/reviews` rade iz prave baze na oba tenanta. **`gallery_photos` nije nastao**
