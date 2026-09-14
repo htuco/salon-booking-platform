@@ -56,7 +56,11 @@ void main() {
       );
 
       expect(find.byType(AppBottomNav), findsNothing);
-      expect(find.byType(AppBar), findsOneWidget);
+
+      // Zaglavlje je **`BackHeader`, ne `AppBar`** — v. isti test na drugom ekranu.
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.byType(BackHeader), findsOneWidget);
+      expect(find.text('Početna'), findsOneWidget);
     });
   });
 

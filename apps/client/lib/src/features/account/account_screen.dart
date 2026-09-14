@@ -2,7 +2,9 @@ import 'package:core_api/core_api.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'account_rows.dart';
 import 'delete_account_action.dart';
@@ -41,41 +43,79 @@ class AccountScreen extends ConsumerWidget {
     final sesija = ref.watch(currentAuthSessionProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.accountTitle)),
       body: SafeArea(
-        child: sesija == null
-            // Deep link bez sesije. `EmptyState` umjesto praznog ekrana — prazan ekran se
-            // čita kao app koja se nije učitala.
-            ? EmptyState(message: l10n.settingsGuestBody)
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.xxl,
-                ),
-                children: [
-                  SpecCard(
-                    rows: [
-                      SpecRow(
-                        label: l10n.accountEmail,
-                        // Apple private relay i gost nemaju mail. Tekst umjesto praznog
-                        // reda — prazan red izgleda kao podatak koji se nije učitao.
-                        value: sesija.email ?? l10n.accountNoEmail,
-                      ),
-                      SpecRow(
-                        label: l10n.accountSignedInWith,
-                        value: l10n.accountProviderEmail,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  DeleteAccountButton(
-                    label: l10n.accountDelete,
-                    onPressed: () => obrisiNalog(context, ref),
-                  ),
-                ],
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // **Back header, ne `AppBar`.** Ekran je pushed ispod Postavki, pa nosi isto
+            // zaglavlje kao ostali pushed ekrani (`SPEC.md`): strelica plus ime ekrana na
+            // koji se vraća, a naslov u tijelu kao veliki serif. Do taska 20 je ovdje
+            // stajao `AppBar` — mali sans naslov i platformski chevron, jedini takav
+            // ekran u app-i.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.gutter,
               ),
+              child: BackHeader(
+                label: l10n.settingsTitle,
+                onBack: () => context.canPop()
+                    ? context.pop()
+                    : context.go(ClientRoute.settings.path),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.gutter,
+                AppSpacing.lg,
+                AppSpacing.gutter,
+                AppSpacing.xl,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l10n.accountTitle,
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
+              ),
+            ),
+            Expanded(
+              child: sesija == null
+                  // Deep link bez sesije. `EmptyState` umjesto praznog ekrana — prazan ekran se
+                  // čita kao app koja se nije učitala.
+                  ? EmptyState(message: l10n.settingsGuestBody)
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.gutter,
+                        0,
+                        AppSpacing.gutter,
+                        AppSpacing.xxl,
+                      ),
+                      children: [
+                        SpecCard(
+                          rows: [
+                            SpecRow(
+                              label: l10n.accountEmail,
+                              // Apple private relay i gost nemaju mail. Tekst umjesto praznog
+                              // reda — prazan red izgleda kao podatak koji se nije učitao.
+                              value: sesija.email ?? l10n.accountNoEmail,
+                            ),
+                            SpecRow(
+                              label: l10n.accountSignedInWith,
+                              value: l10n.accountProviderEmail,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        DeleteAccountButton(
+                          label: l10n.accountDelete,
+                          onPressed: () => obrisiNalog(context, ref),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

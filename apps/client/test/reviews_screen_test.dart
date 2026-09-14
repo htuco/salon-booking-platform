@@ -169,8 +169,38 @@ void main() {
       );
 
       expect(find.byType(AppBottomNav), findsNothing);
-      // Ali zaglavlje sa povratkom postoji — inače se sa ekrana ne može otići.
-      expect(find.byType(AppBar), findsOneWidget);
+
+      // Zaglavlje je **`BackHeader`, ne `AppBar`** — handoff crta „← Početna" pa naslov
+      // kao veliki serif u tijelu. `AppBar` je davao mali sans naslov i platformski
+      // chevron; vidjelo se tek na uređaju, pored ekrana koji to rade ispravno.
+      expect(find.byType(AppBar), findsNothing);
+      expect(find.byType(BackHeader), findsOneWidget);
+      expect(find.text('Početna'), findsOneWidget);
+    });
+
+    testWidgets('naslov ekrana je serif u tijelu, ne sitan sans u zaglavlju', (
+      tester,
+    ) async {
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.reviews.path,
+        ocjena: ocjena,
+        recenzije: const [],
+      );
+
+      final naslov = tester.widget<Text>(find.text('Recenzije'));
+      final tema = Theme.of(tester.element(find.text('Recenzije')));
+
+      expect(
+        naslov.style?.fontFamily ?? tema.textTheme.displaySmall?.fontFamily,
+        tema.textTheme.displaySmall?.fontFamily,
+        reason: 'Naslov mora nositi serif porodicu iz displaySmall',
+      );
+      expect(
+        naslov.style?.fontSize ?? tema.textTheme.displaySmall?.fontSize,
+        tema.textTheme.displaySmall?.fontSize,
+        reason: 'Naslov u AppBar-u je bio titleLarge — upola manji od handoffa',
+      );
     });
   });
 }

@@ -3,7 +3,9 @@ import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/formatters.dart';
 import 'time_ago.dart';
@@ -34,19 +36,40 @@ class ReviewsScreen extends ConsumerWidget {
     final reviews = ref.watch(salonReviewsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.reviewsTitle)),
       body: SafeArea(
-        child: switch (summary) {
-          AsyncLoading() => const _Kostur(),
-          AsyncError() => EmptyState(message: l10n.reviewsEmpty),
-          // Salon bez ijedne ocjene nema red u agregatu — `null`, ne red sa nulama.
-          AsyncData(value: null) => EmptyState(message: l10n.reviewsEmpty),
-          AsyncData(:final value?) => _Sadrzaj(
-            summary: value,
-            reviews: reviews.valueOrNull ?? const <Review>[],
-          ),
-          _ => const _Kostur(),
-        },
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // **Back header, ne `AppBar`.** Handoff (`13-recenzije.png`) crta „← Početna"
+            // pa „Recenzije" kao veliki serif u tijelu. `AppBar` daje mali sans naslov i
+            // platformski chevron — isti ekran, ali vizuelno iz druge aplikacije.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.gutter,
+              ),
+              child: BackHeader(
+                label: l10n.navHome,
+                onBack: () => context.canPop()
+                    ? context.pop()
+                    : context.go(ClientRoute.home.path),
+              ),
+            ),
+            Expanded(
+              child: switch (summary) {
+                AsyncLoading() => const _Kostur(),
+                AsyncError() => _Prazno(poruka: l10n.reviewsEmpty),
+                // Salon bez ijedne ocjene nema red u agregatu — `null`, ne red sa nulama.
+                AsyncData(value: null) => _Prazno(poruka: l10n.reviewsEmpty),
+                AsyncData(:final value?) => _Sadrzaj(
+                  summary: value,
+                  reviews: reviews.valueOrNull ?? const <Review>[],
+                ),
+                _ => const _Kostur(),
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -66,11 +89,16 @@ class _Sadrzaj extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.gutter,
-        0,
+        AppSpacing.lg,
         AppSpacing.gutter,
         AppSpacing.xxl,
       ),
       children: [
+        Text(
+          l10n.reviewsTitle,
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        const SizedBox(height: AppSpacing.xl),
         _Sazetak(summary: summary),
         const SizedBox(height: AppSpacing.xl),
         // Salon sa ocjenama a bez ijedne napisane recenzije: prazna lista ispod „142
@@ -247,6 +275,38 @@ class _Kartica extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Prazno stanje pod back headerom — naslov ostaje, jer ekran bez naslova iznad poruke
+/// izgleda kao da se nije učitao.
+class _Prazno extends StatelessWidget {
+  const _Prazno({required this.poruka});
+
+  final String poruka;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.gutter,
+            AppSpacing.lg,
+            AppSpacing.gutter,
+            0,
+          ),
+          child: Text(
+            l10n.reviewsTitle,
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
+        ),
+        Expanded(child: EmptyState(message: poruka)),
+      ],
     );
   }
 }
