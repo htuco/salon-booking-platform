@@ -39,7 +39,12 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
   Service? _usluga;
   Employee? _radnik;
   DateTime _datum = DateTime.now();
-  AvailableSlot? _slot;
+
+  /// **Vrijeme, ne `AvailableSlot`.** Kad radnik nije izabran, `get_available_slots` vrati po
+  /// jedan red za **svakog** slobodnog radnika, pa isto vrijeme dođe više puta — prva verzija
+  /// je crtala sirovu listu i na ekranu se vidjelo „09:00 09:00 09:15 09:15…". Korisnik bira
+  /// vrijeme; koga dobija odlučuje `book_appointment`, kao i u klijentskom flowu.
+  LocalTime? _slot;
   final _napomena = TextEditingController();
   bool _upisujem = false;
 
@@ -170,10 +175,12 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
             customerId: _klijent!.id,
             serviceId: _usluga!.id,
             date: LocalDate(_datum.year, _datum.month, _datum.day),
-            startTime: _slot!.startTime,
-            // Radnik iz slota, ne iz izbora: kad je izabrano „bilo koji", baza je već
-            // odlučila koga daje, i to je onaj za kojeg je slot slobodan.
-            employeeId: _slot!.employeeId,
+            startTime: _slot!,
+            // **Radnik iz izbora, ne iz slota** — i `null` kad je „bilo koji". Isto vrijeme
+            // stiže po jednom redu za svakog slobodnog radnika, pa bi uzimanje radnika iz
+            // prvog reda značilo da ekran tiho bira umjesto korisnika. `book_appointment`
+            // sam dodijeli onoga za kojeg je slot i dalje slobodan u trenutku upisa.
+            employeeId: _radnik?.id,
             note: _napomena.text.trim().isEmpty ? null : _napomena.text.trim(),
           );
 
@@ -568,9 +575,9 @@ class _IzborTermina extends ConsumerStatefulWidget {
   final Service usluga;
   final Employee? radnik;
   final DateTime datum;
-  final AvailableSlot? izabran;
+  final LocalTime? izabran;
   final ValueChanged<DateTime> onDatum;
-  final ValueChanged<AvailableSlot> onSlot;
+  final ValueChanged<LocalTime> onSlot;
 
   @override
   ConsumerState<_IzborTermina> createState() => _IzborTerminaState();
@@ -662,17 +669,21 @@ class _IzborTerminaState extends ConsumerState<_IzborTermina> {
               style: theme.textTheme.bodySmall,
             )
           else
+            // **`distinctTimes`, ne sirova lista.** Kad radnik nije izabran, funkcija vrati
+            // po jedan red za svakog slobodnog radnika, pa je prva verzija crtala
+            // „09:00 09:00 09:15 09:15…" — vidjelo se tek na ekranu, jer je i takva lista
+            // ispravan izlaz iz baze. Isti pomoćnik koristi i klijentski korak 3
+            // (`slot_step_screen.dart`); dvije kopije istog grupisanja bile bi dvije
+            // prilike da se raziđu.
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final slot in slotovi)
+                for (final vrijeme in slotovi.distinctTimes)
                   ChoiceChip(
-                    label: Text(_vrijeme(slot.startTime)),
-                    selected:
-                        widget.izabran?.startTime == slot.startTime &&
-                        widget.izabran?.employeeId == slot.employeeId,
-                    onSelected: (_) => widget.onSlot(slot),
+                    label: Text(_vrijeme(vrijeme)),
+                    selected: widget.izabran == vrijeme,
+                    onSelected: (_) => widget.onSlot(vrijeme),
                   ),
               ],
             ),

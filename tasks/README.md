@@ -11,7 +11,7 @@ njemu urađeno. `CURRENT.md` je **derivat**: kad se raziđe sa task fajlom ili r
 |---|---|---|---|
 | [Sprint 0](sprint-0/) | 01–06 | Native multi-tenant model radi: flavori, RLS izolacija, CI, availability, vertikale | 5 ✅, 1 🟡 |
 | [Sprint 1](sprint-1/) | 07–11 | Prvi ekrani — plumbing, `core_api`, `core_ui` theme factory, home, booking flow | 4 ✅, 1 🟡 |
-| [Sprint 2](sprint-2/) | 12–26 | Auth, identitet, ostatak handoffa, admin i push | 9 ✅, 2 🟡, 4 otvorena |
+| [Sprint 2](sprint-2/) | 12–26 | Auth, identitet, ostatak handoffa, admin i push | 11 ✅, 2 🟡, 2 otvorena |
 
 🟡 znači **djelimično, sa imenovanim ostatkom** — ne „skoro gotovo". Gdje ostatak čeka nešto izvan
 repoa (Apple/Google konzole, keystore, hosting), to je zapisano u status bloku tog taska.

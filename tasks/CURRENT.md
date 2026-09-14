@@ -1,23 +1,24 @@
 # Trenutni task: 24 — Admin: potvrda, odbijanje, otkazivanje i ručni termin
 
 Puni task: [`tasks/sprint-2/24-admin-akcije-nad-terminima.md`](sprint-2/24-admin-akcije-nad-terminima.md)
-**U toku** · Učitano: 2026-09-14 · Počet: 2026-09-14 · Grana: `feat/admin-akcije-nad-terminima`
+**Gotov** · Učitano: 2026-09-14 · Počet: 2026-09-14 · Dokazan uživo: 2026-09-15 · Grana: `feat/admin-akcije-nad-terminima`
 
 ## Status
 
-🟡 **U toku — sve napisano i dokazano testovima, živi dokaz na ekranu nije odigran.**
-[PR #42](https://github.com/htuco/salon-booking-platform/pull/42), oba CI joba zelena.
+✅ **Gotovo i dokazano uživo na oba tenanta.**
+[PR #42](https://github.com/htuco/salon-booking-platform/pull/42).
 
-Dokazano: **220 pgTAP** (bilo 177, 42 nova) i **508 Dart testova** (bilo 479). Provjereno da mogu
-pasti — vraćanjem `insert`/`update` granta padne sedam asercija u tri fajla.
+Dokazano: **220 pgTAP** (bilo 177, 42 nova), **515 Dart testova** (bilo 479), i **browser na oba
+tenanta protiv žive baze** — sve četiri akcije provjerene `psql` upitom, ne pretpostavkom.
 
 **Rupu iz `security.md` zatvara oduzimanje granta, ne dodavanje funkcija.** Dok je
 `revoke insert, update on public.appointments` izostajao, validirane funkcije su bile konvencija
 koju je bilo dovoljno zaboraviti.
 
-Ostalo je **samo pokretanje na živom stacku** (oba tenanta): Docker servis je pao usred taska i
-traži administratorske ovlasti koje ova sesija nema. Komanda za nastavak i šta tačno treba vidjeti
-stoje u task fajlu.
+**Šesta greška je nađena tek na ekranu:** ručni unos je crtao duplirana vremena
+(`09:00 09:00 09:15 09:15…`), jer `get_available_slots` vraća red **po radniku**. `distinctTimes`
+postoji od taska 11 sa komentarom koji tačno opisuje zamku, ali **nije imao nijedan test** — sada
+ima sedam. Ni testovi ni analiza to nisu mogli vidjeti: i duplirana lista je ispravan izlaz iz baze.
 
 ## Ciljevi
 
@@ -37,9 +38,7 @@ stoje u task fajlu.
 
 - [x] Akcije nad terminom u listi
 - [x] Ručni unos
-- [ ] 🔴 **Dokaz na živom stacku, oba tenanta** — jedino što je ostalo. Docker servis
-      (`com.docker.service`) je pao usred taska i traži administratorske ovlasti; komanda za
-      nastavak je u task fajlu.
+- [x] **Dokaz na živom stacku, oba tenanta** — `docs/screenshots/task-24-akcije-{barber,beauty}.png`
 
 ## Napomene
 
