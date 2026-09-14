@@ -273,3 +273,136 @@ Salon evidentira kasna otkazivanja i nedolaske. Ako se ponavljaju, zakazivanje p
 ('550e8400-e29b-41d4-a716-446655440001',30,'Kašnjenje',
  'Ako kasnite, salon može skratiti tretman ili ga pomjeriti na prvi sljedeći slobodan termin.')
 on conflict do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Osoblje: po jedan `salon_admin` za svaki demo salon.
+--
+-- Do taska 23 seed nije imao **nijednog** admina, pa se u admin aplikaciju nije imalo
+-- cime prijaviti. Testovi to nisu otkrivali jer svaki pgTAP fajl pravi svoje korisnike i
+-- rollbackuje ih — fixture nije seed, i prijava kroz GoTrue ih ne vidi.
+--
+-- **`private.is_admin()` trazi oba uslova**, pa ih oba i upisujemo:
+--   1. `raw_app_meta_data` sa `role` i `salon_id` — odatle GoTrue puni JWT claimove,
+--   2. red u `public.users` sa istim `salon_id`.
+-- Samo jedan od njih znaci admina koji se prijavi ali ne vidi nijedan red, sto na ekranu
+-- izgleda kao prazna baza umjesto kao pogresna konfiguracija. Detalji: `.claude/docs/security.md`.
+--
+-- Lozinka je ista za oba i namjerno trivijalna: **ovo je lokalni demo seed**, koji nikad ne
+-- ide na produkciju (`supabase db reset` je lokalna komanda). Pravi salon dobija nalog kroz
+-- poziv iz super admin konzole u Sprintu 3, ne kroz seed.
+--
+--   admin@barberstudiovitez.test / admin@beautystudiotravnik.test — lozinka: `admin123456`
+--
+-- `instance_id`, `aud` i `role` moraju biti popunjeni tacno ovako: GoTrue filtrira po njima
+-- pri prijavi, a red bez njih postoji u tabeli i **ne moze se prijaviti** — greska koja se
+-- vidi tek na ekranu za login, ne u bazi.
+--
+-- **Nullable text kolone moraju biti prazan string, ne NULL.** GoTrue ih skenira u Go `string`,
+-- pa NULL obara prijavu sa `500 Database error querying schema` â porukom koja ne kaze koja je
+-- kolona kriva. Kolone su nullable, insert prolazi, red izgleda ispravno u `psql`, a greska se
+-- vidi **tek na prijavi**. Zato ide `update` ispod, a ne nabrajanje u `insert`: kolona koju
+-- Supabase doda u nekoj verziji GoTrue-a bila bi opet NULL i opet bi srusila prijavu.
+insert into auth.users(
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+values
+('00000000-0000-0000-0000-000000000000','11111111-0000-4000-8000-000000000001','authenticated','authenticated',
+ 'admin@barberstudiovitez.test', extensions.crypt('admin123456', extensions.gen_salt('bf')), now(),
+ '{"provider":"email","providers":["email"],"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}',
+ '{"name":"Vlasnik Barber Studio Vitez"}', now(), now()),
+('00000000-0000-0000-0000-000000000000','11111111-0000-4000-8000-000000000002','authenticated','authenticated',
+ 'admin@beautystudiotravnik.test', extensions.crypt('admin123456', extensions.gen_salt('bf')), now(),
+ '{"provider":"email","providers":["email"],"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440001"}',
+ '{"name":"Vlasnica Beauty Studio Travnik"}', now(), now())
+on conflict (id) do nothing;
+
+-- Prazni stringovi umjesto NULL-a u svim nullable text kolonama koje GoTrue skenira
+-- (`confirmation_token`, `email_change`, `phone_change`, ...). Pisano kao `update` nad
+-- informacijskom shemom, da nova kolona u buducoj verziji GoTrue-a ne obori prijavu nijemo.
+do $$
+declare kolona text;
+begin
+  foreach kolona in array array[
+    'confirmation_token','recovery_token','email_change_token_new','email_change',
+    'phone_change','phone_change_token','email_change_token_current','reauthentication_token']
+  loop
+    execute format(
+      'update auth.users set %I = %L where id in (%L,%L) and %I is null',
+      kolona, '', '11111111-0000-4000-8000-000000000001',
+      '11111111-0000-4000-8000-000000000002', kolona);
+  end loop;
+end $$;
+
+-- Identitet za email prijavu. Bez reda u `auth.identities` GoTrue vraca „Invalid login
+-- credentials" iako lozinka odgovara — provjerava identitet, ne samo `auth.users` red.
+insert into auth.identities(id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
+values
+('11111111-0000-4000-8000-000000000001','11111111-0000-4000-8000-000000000001','11111111-0000-4000-8000-000000000001','email',
+ '{"sub":"11111111-0000-4000-8000-000000000001","email":"admin@barberstudiovitez.test","email_verified":true,"phone_verified":false}',
+ now(), now(), now()),
+('11111111-0000-4000-8000-000000000002','11111111-0000-4000-8000-000000000002','11111111-0000-4000-8000-000000000002','email',
+ '{"sub":"11111111-0000-4000-8000-000000000002","email":"admin@beautystudiotravnik.test","email_verified":true,"phone_verified":false}',
+ now(), now(), now())
+on conflict (id) do nothing;
+
+insert into public.users(id, salon_id, name, email, role) values
+('11111111-0000-4000-8000-000000000001','550e8400-e29b-41d4-a716-446655440000',
+ 'Vlasnik Barber Studio Vitez','admin@barberstudiovitez.test','salon_admin'),
+('11111111-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440001',
+ 'Vlasnica Beauty Studio Travnik','admin@beautystudiotravnik.test','salon_admin')
+on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Klijenti i termini — demo podaci za admin listu (task 23).
+--
+-- Do sada je seed imao usluge i radnike, ali **nijednog klijenta i nijedan termin**:
+-- `customers=0, appointments=0`. Posljedica nije samo prazan ekran — **izolacija se na
+-- praznim tabelama ne moze dokazati.** Upit „admin A ne vidi termine salona B" vraca nula
+-- redova i kad RLS radi i kad je iskljucen, pa test koji broji redove prolazi nad pokvarenom
+-- bazom. Zato oba salona dobijaju podatke, i to **razlicit broj** (A: 3, B: 2) — kad bi broj
+-- bio isti, zamijenjeni token se ne bi vidio u brojacu.
+--
+-- Datumi su relativni na `current_date`, da lista „danas" ima sadrzaj kad god se seed pokrene.
+-- Fiksni datum bi vec sutra dao prazan dashboard i izgledao kao greska u upitu.
+insert into public.customers(id, salon_id, name, phone) values
+('c1111111-0000-4000-8000-000000000001','550e8400-e29b-41d4-a716-446655440000','Adnan Music','+387 61 111 111'),
+('c1111111-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440000','Emir Hodzic','+387 61 222 222'),
+('c1111111-0000-4000-8000-000000000003','550e8400-e29b-41d4-a716-446655440000','Tarik Begic',null),
+('c2222222-0000-4000-8000-000000000001','550e8400-e29b-41d4-a716-446655440001','Lejla Karic','+387 62 333 333'),
+('c2222222-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440001','Amina Sabic',null)
+on conflict (id) do nothing;
+
+-- Statusi su namjerno izmijesani: `pending` je ono sto dashboard broji kao „zahtjevi koji
+-- cekaju", `confirmed` puni „danas", a `cancelled` mora **ostati vidljiv u listi** ali ne
+-- smije uci u brojac — filter po statusu se inace ne moze provjeriti.
+insert into public.appointments(
+  id, salon_id, service_id, employee_id, customer_id, customer_name, customer_phone,
+  customer_note, date, start_time, end_time, buffer_minutes, status, source)
+select
+  v.id, v.salon_id, s.id, e.id, v.customer_id, v.customer_name, v.customer_phone,
+  v.customer_note, v.date, v.start_time, v.end_time, 5, v.status::public.appointment_status,
+  v.source::public.appointment_source
+from (values
+  ('a1111111-0000-4000-8000-000000000001'::uuid,'550e8400-e29b-41d4-a716-446655440000'::uuid,
+   'c1111111-0000-4000-8000-000000000001'::uuid,'Adnan Music','+387 61 111 111',
+   'Kratko sa strane.', current_date, time '10:00', time '10:40','confirmed','app'),
+  ('a1111111-0000-4000-8000-000000000002'::uuid,'550e8400-e29b-41d4-a716-446655440000'::uuid,
+   'c1111111-0000-4000-8000-000000000002'::uuid,'Emir Hodzic','+387 61 222 222',
+   null, current_date, time '11:30', time '12:10','pending','app'),
+  ('a1111111-0000-4000-8000-000000000003'::uuid,'550e8400-e29b-41d4-a716-446655440000'::uuid,
+   'c1111111-0000-4000-8000-000000000003'::uuid,'Tarik Begic',null,
+   null, current_date + 1, time '09:00', time '09:40','cancelled','app'),
+  ('a2222222-0000-4000-8000-000000000001'::uuid,'550e8400-e29b-41d4-a716-446655440001'::uuid,
+   'c2222222-0000-4000-8000-000000000001'::uuid,'Lejla Karic','+387 62 333 333',
+   'Alergija na jedan proizvod — provjeriti.', current_date, time '13:00', time '14:00','confirmed','app'),
+  ('a2222222-0000-4000-8000-000000000002'::uuid,'550e8400-e29b-41d4-a716-446655440001'::uuid,
+   'c2222222-0000-4000-8000-000000000002'::uuid,'Amina Sabic',null,
+   null, current_date, time '15:00', time '16:00','pending','app')
+) as v(id,salon_id,customer_id,customer_name,customer_phone,customer_note,date,start_time,end_time,status,source)
+-- Usluga i radnik se **biraju iz baze**, ne kucaju kao UUID: seed usluga koristi
+-- `gen_random_uuid()`, pa zakucan id ne bi postojao i insert bi pao na FK.
+cross join lateral (
+  select id from public.services where salon_id = v.salon_id and is_active order by name limit 1) s
+cross join lateral (
+  select id from public.employees where salon_id = v.salon_id and is_active order by name limit 1) e
+on conflict (id) do nothing;
