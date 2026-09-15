@@ -179,3 +179,19 @@ bazi kao izvor istine. Moraju biti iste vrijednosti; kad se razilaze, baza je u 
 
 `versionName` je zajednički za sve tenante, `androidVersionCode`/`iosBuildNumber` su po tenantu —
 to direktno utiče na CI matricu (`docs/04 §8.1`).
+## Firebase za push
+
+Pravi `google-services.json` i `GoogleService-Info.plist` ostaju izvan gita. Alat
+`tool/firebase_defines.dart <input> <bundle-id> <novi-output>` provjerava pravi app ID, odbija
+placeholder i pravi privatni JSON za `--dart-define-from-file`. Inicijalizacija koristi
+eksplicitne `FirebaseOptions`; generisani Google placeholder se ne prepisuje.
+
+`tool/build_tenant.sh` čita `FIREBASE_DEFINES_FILE`. Release AAB job ga priprema iz secreta
+`FIREBASE_ANDROID_<FLAVOR>`, bez ispisa sadržaja. Isti format radi za admin, uz njegov Firebase
+app ID. Bez konfiguracije push ostaje isključen. iOS/administratorski signing i release config
+čekaju naloge; detalji u `tasks/sprint-2/25-push-konfiguracija.md`.
+
+Klijentski entitlement se generiše po flavoru i spaja Apple prijavu, push i Keychain. Ruby Xcode
+generator ne nadjačava njegovu putanju iz xcconfiga; samo admin koristi `Runner.entitlements`.
+`PUSH_APS_ENVIRONMENT` je `development` za Debug/Profile, `production` za Release. Postojeće
+scheme pre-actions i LLDB postavke se čuvaju tokom regeneracije.

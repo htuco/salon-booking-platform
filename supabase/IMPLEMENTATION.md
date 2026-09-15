@@ -26,7 +26,7 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Admins read per-salon customers/appointments. Global auth_identities rows cannot be read by staff JWTs. No API lists salons for an identity.
 - Supabase Auth insert/update automatically upserts auth_identities. Account deletion/anonymization and booking/customer RPCs belong to subsequent migrations.
 - Composite tenant foreign keys prevent mixing an employee/service/customer/device from another salon, even when a tenant ID is present in a forged payload.
-- Client appointment writes go through `public.book_appointment` (availability migration): it re-validates the slot in the same transaction, assigns an employee when none was chosen, and raises `PT409` (HTTP 409) on conflict. Overlap is additionally prevented by the `appointments_no_overlap` exclusion constraint. Customer upsert and device writes still lack a validated function. Direct admin table writes bypass slot validation — only overlap is enforced.
+- Client appointment writes go through `public.book_appointment`: it re-validates the slot, assigns an employee, and raises `PT409` on conflict. Task 24 revoked direct admin insert/update. `ensure_customer` validates customer upsert; task 25 adds validated device registration/unregistration.
 - Appointment device_id is the UUID FK to devices.id; devices.device_id is the install identifier. appointments.auth_identity_id must match its referenced customer's identity.
 - Working hours use ISO weekdays 1=Monday to 7=Sunday. date/start_time/end_time are salon-local wall times. timezone defaults to Europe/Sarajevo.
 - salon_builds.build_status/build_url are runtime build tracking fields separate from actual store status. No store status is marked live by seed.
@@ -44,3 +44,18 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Additional notification statuses queued/sending/logged distinguish retry/dedup state and fake delivery from a real sent FCM message. Additional attempts/error/claimed_at fields support a recoverable scheduler.
 - The initial schema stores pending_expires_at and buffer_minutes per appointment to let booking logic preserve expiry and buffer semantics even if salon defaults later change.
 - Staff device ownership uses staff_user_id as well as the per-salon device row. Global Auth identities are not needed by admin push consumers.
+## Push ugovor (task 25)
+
+`register_device(salon, installation_uuid, secret, platform, fcm_token, staff)` vraća
+`devices.id`. Tajna je nasumični niz od 64 hex znaka; hash je u `private.device_credentials`,
+bez app grantova. Identitet/članstvo se izvode iz JWT-a. `unregister_device` uklanja token i
+vezu uz istu tajnu. Anon registracija je RPC izuzetak, bez direktnog table write granta.
+
+Termin smije referencirati samo uređaj vlastitog klijentskog identiteta. Trigger statusa puni
+`notification_logs`; servisni claim preuzima najviše 100 redova uz `SKIP LOCKED` i ponovo
+provjerava primaoca. Cron obrađuje red svake minute kroz Vault HMAC potpis; trajni ključ ne
+stoji u transportnim tabelama. `sent` znači FCM prihvat, ne dokaz prikaza na telefonu.
+`sending` i `failed` se ne ponavljaju automatski zbog mogućeg duplikata nakon timeouta.
+
+Runbook: `tasks/sprint-2/25-push-konfiguracija.md`. Lista klijentskih obavijesti ostaje prazna;
+ova promjena ne otvara `notification_logs` klijentima.

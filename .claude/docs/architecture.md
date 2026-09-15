@@ -174,11 +174,12 @@ Autorizacija, grantovi i ono što još nije zatvoreno: `.claude/docs/security.md
 
 ## Edge Functions i cron
 
-`supabase/functions/<ime>/index.ts`, Deno. Danas su to README stubovi:
+`supabase/functions/<ime>/index.ts`, Deno. `delete-account` i `send-push` imaju implementaciju;
+podsjetnici i ostali planirani poslovi još su stubovi:
 
 | Funkcija | Okidač | Šta radi |
 |---|---|---|
-| `send-push` | poziv iz druge funkcije/trigera | FCM HTTP v1, piše `notification_logs` |
+| `send-push` | `pg_cron`, svake minute, kroz `private.dispatch_push` | FCM HTTP v1, preuzima i ažurira `notification_logs` |
 | `expire-pending` | `pg_cron`, ~15 min | `pending` stariji od `pendingExpiryHours` → `cancelled` |
 | `send-reminders` | `pg_cron`, dnevno + po satu | D-1 i H-3 podsjetnici, provjerava log prije slanja |
 | `dental-recall` | `pg_cron`, sedmično | recall za dentalnu vertikalu |
@@ -474,3 +475,15 @@ neoverride-ovan provider baca `UnimplementedError` tek pri otvaranju ekrana, ne 
 Zato `apps/admin` ima svoje `adminServicesProvider`, `adminEmployeesProvider` i
 `adminEmployeeLinksProvider`, koji salon uzimaju iz `adminSalonIdProvider` (tj. iz
 `StaffMember.salonId`). Svaki sljedeći admin ekran koji treba katalog ide istim putem.
+## Push životni ciklus
+
+`core_api/src/push/` drži registraciju instalacije i FCM životni ciklus, zajednički za oba app-a.
+`DeviceRepository` čuva tajnu u secure storage i piše samo kroz RPC; `PushService` serijalizuje
+token refresh, promjene sesije i odjavu. `bookingDeviceIdProvider` čeka registraciju i vraća
+pravi `devices.id`. Podrazumijevano isključen `PUSH_ENABLED` čuva razvoj bez Firebase konfiguracije.
+
+Firebase Core/Messaging su jedini Firebase pluginovi; Supabase i dalje radi autentikaciju.
+App sluša typed tokove sa salon ID-em i navigira vlastitim routerom na `/appointments`.
+Client koristi build salon, admin članstvo. Worker uzima događaje iz baze i dobija kratkotrajni
+Vault HMAC kroz cron, bez klijentskog pozivanja funkcije za slanje. Operativni ugovor:
+`supabase/functions/send-push/README.md`.

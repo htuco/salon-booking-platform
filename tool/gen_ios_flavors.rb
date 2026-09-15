@@ -82,9 +82,13 @@ flavors.each do |flavor|
   end
 
   # Scheme se zove tacno kao flavor; Flutter ga tako i traži.
-  scheme = Xcodeproj::XCScheme.new
-  scheme.add_build_target(runner)
-  scheme.set_launch_target(runner)
+  scheme_path = File.join(project_path, 'xcshareddata/xcschemes', "#{flavor}.xcscheme")
+  # Flutter dodaje pre-actions i LLDB postavke pri buildu; regeneracija ih cuva.
+  scheme = File.exist?(scheme_path) ? Xcodeproj::XCScheme.new(scheme_path) : Xcodeproj::XCScheme.new
+  unless File.exist?(scheme_path)
+    scheme.add_build_target(runner)
+    scheme.set_launch_target(runner)
+  end
   scheme.build_action.parallelize_buildables = true
   scheme.launch_action.build_configuration = "Debug-#{flavor}"
   scheme.test_action.build_configuration = "Debug-#{flavor}"
@@ -95,5 +99,24 @@ flavors.each do |flavor|
   puts "#{flavor}: konfiguracije #{MODES.map { |m| "#{m}-#{flavor}" }.join(', ')} + scheme"
 end
 
-project.save
-puts "Sacuvano: #{project_path}"
+# Push i Keychain su potrebni oba native targeta; admin nema flavor konfiguracije.
+admin_project = Xcodeproj::Project.open(File.join(root, 'apps/admin/ios/Runner.xcodeproj'))
+[project, admin_project].each do |app_project|
+  app_runner = app_project.targets.find { |target| target.name == 'Runner' }
+  app_runner.build_configurations.each do |config|
+    if app_project.equal?(project)
+      # Klijentski xcconfig vec bira entitlement po flavoru, ukljucujuci Apple prijavu.
+      config.build_settings.delete('CODE_SIGN_ENTITLEMENTS')
+    else
+      config.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'Runner/Runner.entitlements'
+    end
+    config.build_settings['PUSH_APS_ENVIRONMENT'] = config.name.start_with?('Release') ? 'production' : 'development'
+  end
+  attributes = app_project.root_object.attributes['TargetAttributes'] ||= {}
+  target_attributes = attributes[app_runner.uuid] ||= {}
+  capabilities = target_attributes['SystemCapabilities'] ||= {}
+  capabilities['com.apple.Push'] = { 'enabled' => 1 }
+  capabilities['com.apple.Keychain'] = { 'enabled' => 1 }
+  app_project.save
+end
+puts "Sacuvani client flavori i push postavke za client/admin."

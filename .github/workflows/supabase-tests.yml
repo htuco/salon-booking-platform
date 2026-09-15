@@ -13,6 +13,7 @@ on:
       - 'supabase/migrations/**'
       - 'supabase/seed.sql'
       - 'supabase/tests/**'
+      - 'supabase/functions/send-push/**'
       - 'supabase/config.toml'
       - '.github/workflows/supabase-tests.yml'
       - 'packages/core_api/**'
@@ -22,6 +23,7 @@ on:
       - 'supabase/migrations/**'
       - 'supabase/seed.sql'
       - 'supabase/tests/**'
+      - 'supabase/functions/send-push/**'
       - 'supabase/config.toml'
       - '.github/workflows/supabase-tests.yml'
       # Kolone koje rest_public_catalog.ts salje su kopija onih iz repozitorija —
@@ -57,6 +59,20 @@ jobs:
       # pgTAP: tenant isolation runs inside a rollback transaction.
       - name: Run pgTAP tests
         run: supabase test db
+
+      - name: Push worker testovi
+        run: |
+          deno check --config supabase/functions/send-push/deno.json supabase/functions/send-push/index.ts
+          deno test supabase/functions/send-push/handler_test.ts
+
+      - name: Registracija uredjaja kroz REST
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="$API_URL"
+          export SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
 
       # REST level: two real Auth users, two real JWTs, PostgREST + RLS end to end.
       - name: Run REST isolation test

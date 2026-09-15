@@ -27,6 +27,11 @@ Generator iz `tenant.yaml` pravi:
 Nijedan od tih fajlova se ne edituje ručno — sljedeće pokretanje ih prepisuje.
 `dart run tool/gen_flavors.dart --check` pada ako su zastarjeli (koristi se u CI).
 
+Entitlement po flavoru uključuje i push te Keychain; Xcode generator čuva taj izbor iz
+xcconfiga i postojeće Flutter scheme pre-actions. Firebase app konfiguracija je po flavoru i
+platformi, izvan `tenant.yaml` i gita. `tool/firebase_defines.dart` je pretvara u privatni
+`FIREBASE_DEFINES_FILE` za build. Hodogram: `tasks/sprint-2/25-push-konfiguracija.md`.
+
 ## Pravila koja generator provjerava
 
 - **`flavor` mora biti isto kao ime foldera.** Gradle traži `src/<flavor>/`, pa

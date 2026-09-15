@@ -19,7 +19,7 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [21](21-obavijesti-i-pravni-ekrani.md) ✅ | Client: obavijesti, o aplikaciji, pravila | store submission | 1–2 dana |
 | [23](23-admin-login-i-lista.md) ✅ | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
 | [24](24-admin-akcije-nad-terminima.md) ✅ | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
-| [25](25-push-notifikacije.md) | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
+| [25](25-push-notifikacije.md) 🟡 | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
 | [26](26-gost-i-facebook.md) | Guest flow + Facebook iza flaga | — | 1–2 dana |
 
 **Ukupno: ~23–30 radnih dana.**
@@ -66,6 +66,15 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
   dobijaju svoj handoff, koji još ne postoji.
 
 ## Status
+
+> **25 — Push (🟡, 2026-09-15).** Kod i lokalni testovi pripremljeni na
+> `feat/push-notifikacije`, [draft PR #44](https://github.com/htuco/salon-booking-platform/pull/44).
+> Device RPC provjerava tajnu instalacije; status termina puni red koji FCM worker preuzima
+> uz zaključavanje. Cron koristi kratki HMAC, bez trajne tajne u HTTP transportu. Dokazano:
+> **255 pgTAP**, **12 push REST asercija**, **6 worker testova**, Dart suite u svih pet paketa.
+> Firebase/APNs nalog i fizički uređaj nisu spremni, pa isporuka nije dokazana. Puna lokalna
+> REST suite ostaje djelimična zbog demo admin prijave (`invalid_credentials` u postojećoj bazi).
+> Konfiguracija i fizički dokaz: `25-push-konfiguracija.md`.
 
 > **24 — Admin akcije nad terminima i ručni unos (✅, 2026-09-15).** Salon prvi put odgovara na
 > zahtjev; do sada je `StaffAppointmentRepository` bio namjerno samo čitanje, pa je termin ostajao

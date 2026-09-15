@@ -17,6 +17,7 @@ import 'catalog/service_repository.dart';
 import 'catalog/settings_repository.dart';
 import 'catalog/working_hours_repository.dart';
 import 'vertical/vertical_repository.dart';
+import 'push/push_providers.dart';
 
 /// Supabase klijent. `bootstrap()` u aplikaciji ga inicijalizuje prije `runApp`.
 ///
@@ -115,6 +116,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return SupabaseAuthRepository(
     ref.watch(supabaseClientProvider),
     google: google,
+    beforeSignOut: () async => ref.read(pushServiceProvider)?.beforeSignOut(),
   );
 });
 
@@ -320,7 +322,10 @@ final policyPlaceholdersProvider = Provider<PolicyPlaceholders>((ref) {
 
 /// Prijava osoblja i njegovo članstvo u salonu.
 final staffRepositoryProvider = Provider<StaffRepository>(
-  (ref) => StaffRepository(ref.watch(supabaseClientProvider)),
+  (ref) => StaffRepository(
+    ref.watch(supabaseClientProvider),
+    beforeSignOut: () async => ref.read(pushServiceProvider)?.beforeSignOut(),
+  ),
 );
 
 /// Termini salona, čitani iz admina.

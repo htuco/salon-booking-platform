@@ -59,5 +59,9 @@ deno run --allow-env --allow-net supabase/tests/rest_delete_account.ts
 echo "==> Admin prijava i izolacija (seed admini kroz GoTrue)"
 deno run --allow-env --allow-net supabase/tests/rest_admin_login.ts
 
+echo "==> Push registracija i izolacija"
+deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
+deno test supabase/functions/send-push/handler_test.ts
+
 echo
 echo "Sve prolazi. Stack ostaje dignut — 'supabase stop' kad zavrsis."

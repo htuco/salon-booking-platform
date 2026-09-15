@@ -34,7 +34,13 @@ import 'auth_repository.dart';
 /// backend. Granica je u `AuthSession` (`core_domain`) i drži se ovdje, jednom funkcijom
 /// [_sesija] — v. `core_api.dart`, pravilo 2.
 class SupabaseAuthRepository implements AuthRepository {
-  SupabaseAuthRepository(this._client, {this.google = bezGoogleKlijenata});
+  SupabaseAuthRepository(
+    this._client, {
+    this.google = bezGoogleKlijenata,
+    this.beforeSignOut,
+  });
+
+  final Future<void> Function()? beforeSignOut;
 
   final SupabaseClient _client;
 
@@ -91,7 +97,10 @@ class SupabaseAuthRepository implements AuthRepository {
   });
 
   @override
-  Future<void> signOut() => guard(() => _auth.signOut());
+  Future<void> signOut() => guard(() async {
+    await beforeSignOut?.call();
+    await _auth.signOut();
+  });
 
   /// Nativni Sign in with Apple → `signInWithIdToken`.
   ///

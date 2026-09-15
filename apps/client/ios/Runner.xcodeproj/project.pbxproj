@@ -200,6 +200,14 @@
 					97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
+						SystemCapabilities = {
+							com.apple.Keychain = {
+								enabled = 1;
+							};
+							com.apple.Push = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -341,6 +349,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PUSH_APS_ENVIRONMENT = development;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -555,6 +564,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ba.nasadomena.client;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUSH_APS_ENVIRONMENT = development;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -573,6 +583,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PUSH_APS_ENVIRONMENT = production;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -591,6 +602,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PUSH_APS_ENVIRONMENT = development;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -704,6 +716,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PUSH_APS_ENVIRONMENT = development;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -722,6 +735,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PUSH_APS_ENVIRONMENT = production;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -871,6 +885,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ba.nasadomena.client;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUSH_APS_ENVIRONMENT = development;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -893,6 +908,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ba.nasadomena.client;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUSH_APS_ENVIRONMENT = production;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -911,6 +927,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PUSH_APS_ENVIRONMENT = development;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

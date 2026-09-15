@@ -108,7 +108,14 @@ class SettingsScreen extends ConsumerWidget {
                 variant: AppButtonVariant.secondary,
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
-                  await ref.read(authRepositoryProvider).signOut();
+                  try {
+                    await ref.read(authRepositoryProvider).signOut();
+                  } on ApiError {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(l10n.genericError)),
+                    );
+                    return;
+                  }
                   messenger.showSnackBar(
                     SnackBar(content: Text(l10n.settingsSignedOutNotice)),
                   );

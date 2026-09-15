@@ -412,6 +412,12 @@ String _renderEntitlements(Tenant tenant) => '''
 \t<array>
 \t\t<string>Default</string>
 \t</array>
+\t<key>aps-environment</key>
+\t<string>\$(PUSH_APS_ENVIRONMENT)</string>
+\t<key>keychain-access-groups</key>
+\t<array>
+\t\t<string>\$(AppIdentifierPrefix)\$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+\t</array>
 </dict>
 </plist>
 ''';

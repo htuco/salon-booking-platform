@@ -1,3 +1,4 @@
+import 'package:core_api/core_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,6 +34,15 @@ class SalonClientApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tenant = ref.watch(tenantProvider);
+    ref.watch(pushInitializationProvider);
+    ref.listen(pushReceivedProvider, (_, next) {
+      if (next.hasValue) ref.invalidate(myAppointmentsProvider);
+    });
+    ref.listen(pushOpenedProvider, (_, next) {
+      if (!next.hasValue) return;
+      ref.invalidate(myAppointmentsProvider);
+      ref.read(appRouterProvider).go(ClientRoute.appointments.path);
+    });
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,

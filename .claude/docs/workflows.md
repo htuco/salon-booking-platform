@@ -441,3 +441,20 @@ echo '{}' | CLAUDE_PROJECT_DIR="$PWD" bash -c "$cmd" | jq -r '.hookSpecificOutpu
 
 Hookove pregledaš i gasiš kroz `/hooks`. Izmjena `.claude/settings.json` u sesiji koja je počela
 prije nego je fajl postojao ne mora biti pokupljena — otvori `/hooks` jednom ili restartuj sesiju.
+## Push provjere i konfiguracija
+
+`tool/test_supabase.sh` sada uključuje `rest_push_devices.ts` i worker testove. Edge runtime mora
+biti aktivan (`supabase functions serve`) za postojeći test brisanja naloga; ugašen runtime daje
+503. Bez reseta lokalna baza može imati stari seed: `rest_admin_login.ts` tada može pasti na
+demo nalogu, iako testovi koji prave vlastite korisnike prolaze. Ne proglašavati cijelu suite
+zelenom u tom slučaju.
+
+```sh
+deno test supabase/functions/send-push/handler_test.ts
+deno check --config supabase/functions/send-push/deno.json supabase/functions/send-push/index.ts
+```
+
+`Supabase tests` job prati i `supabase/functions/send-push/**` i provjerava worker te novi REST
+test. Firebase i APNs tajne nisu potrebne za te testove. `FCM_SERVICE_ACCOUNT_JSON`,
+`PUSH_WORKER_SECRET` i Vault konfiguracija potrebni su tek za stvarno slanje. Build config,
+CI secret imena i dokaz na uređaju: `tasks/sprint-2/25-push-konfiguracija.md`.

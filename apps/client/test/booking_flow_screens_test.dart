@@ -262,40 +262,54 @@ void main() {
       container.dispose();
     });
 
-    testWidgets('uspjeh vodi na success ekran koji kaže "na čekanju"', (
-      tester,
-    ) async {
-      final repo = _MockBooking()..stubUspjesan();
+    testWidgets(
+      'uspjeh salje registrovani devices.id i vodi na success ekran',
+      (tester) async {
+        final repo = _MockBooking()..stubUspjesan();
 
-      final container = await _pumpFlow(
-        tester,
-        repo: repo,
-        ruta: ClientRoute.bookDetails.path,
-        customerId: _customerId,
-        pocetniFlow: (notifier) => notifier
-          ..chooseService(_usluga.id)
-          ..chooseAnyEmployee()
-          ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
-      );
+        final container = await _pumpFlow(
+          tester,
+          repo: repo,
+          ruta: ClientRoute.bookDetails.path,
+          customerId: _customerId,
+          deviceId: 'registered-device-id',
+          pocetniFlow: (notifier) => notifier
+            ..chooseService(_usluga.id)
+            ..chooseAnyEmployee()
+            ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
+        );
 
-      await tester.pump();
-      await tester.tap(find.text('Pošalji zahtjev'));
-      await tester.pump();
-      await tester.pump();
+        await tester.pump();
+        await tester.tap(find.text('Pošalji zahtjev'));
+        await tester.pump();
+        await tester.pump();
 
-      expect(
-        container.read(appRouterProvider).state.uri.path,
-        ClientRoute.bookSuccess.path,
-      );
-      expect(find.text('ZAHTJEV JE POSLAN'), findsOneWidget);
-      expect(find.text('Salon vas je vidio'), findsOneWidget);
-      // `docs/01 §18`: termin nastaje kao `pending`. Lažno "potvrđeno" bi značilo da
-      // korisnik dođe u salon koji ga ne očekuje.
-      expect(find.text('Na čekanju'), findsOneWidget);
-      await tester.pump(AppDuration.slow);
+        expect(
+          container.read(appRouterProvider).state.uri.path,
+          ClientRoute.bookSuccess.path,
+        );
+        expect(find.text('ZAHTJEV JE POSLAN'), findsOneWidget);
+        verify(
+          () => repo.book(
+            salonId: any(named: 'salonId'),
+            customerId: any(named: 'customerId'),
+            serviceId: any(named: 'serviceId'),
+            date: any(named: 'date'),
+            startTime: any(named: 'startTime'),
+            employeeId: any(named: 'employeeId'),
+            note: any(named: 'note'),
+            deviceId: 'registered-device-id',
+          ),
+        ).called(1);
+        expect(find.text('Salon vas je vidio'), findsOneWidget);
+        // `docs/01 §18`: termin nastaje kao `pending`. Lažno "potvrđeno" bi značilo da
+        // korisnik dođe u salon koji ga ne očekuje.
+        expect(find.text('Na čekanju'), findsOneWidget);
+        await tester.pump(AppDuration.slow);
 
-      container.dispose();
-    });
+        container.dispose();
+      },
+    );
   });
 }
 
@@ -437,6 +451,7 @@ Future<ProviderContainer> _pumpFlow(
   required String ruta,
   Vertical vertical = Vertical.fallback,
   String? customerId,
+  String? deviceId,
   AuthSession? sesija,
   void Function(BookingFlowNotifier notifier)? pocetniFlow,
 }) async {
@@ -466,6 +481,7 @@ Future<ProviderContainer> _pumpFlow(
       bookingRepositoryProvider.overrideWithValue(repo),
       bookingTodayProvider.overrideWithValue(_danas),
       bookingCustomerIdProvider.overrideWith((ref) async => customerId),
+      bookingDeviceIdProvider.overrideWithValue(() async => deviceId),
       // Prijava odlučuje koji CTA zadnji korak prikazuje (task 13), a `customerId` samo
       // da li slanje može proći. Test koji zada `customerId` zadaje i sesiju — bez nje
       // bi „prijavljen korisnik bez klijenta" bio jedino stanje koje se može testirati.
