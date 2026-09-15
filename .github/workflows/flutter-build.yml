@@ -277,6 +277,18 @@ jobs:
       - name: Generisi freezed/json_serializable kod
         run: dart run melos exec --depends-on=build_runner -- dart run build_runner build
 
+      - name: Pripremi Firebase za flavor
+        env:
+          FIREBASE_CONFIG: ${{ secrets[format('FIREBASE_ANDROID_{0}', matrix.flavor)] }}
+        run: |
+          if [ -n "$FIREBASE_CONFIG" ]; then
+            mkdir -p "$RUNNER_TEMP/firebase"
+            printf '%s' "$FIREBASE_CONFIG" > "$RUNNER_TEMP/firebase/google-services.json"
+            dart run tool/firebase_defines.dart "$RUNNER_TEMP/firebase/google-services.json" \
+              "ba.nasadomena.${{ matrix.flavor }}" "$RUNNER_TEMP/firebase/defines.json"
+            echo "FIREBASE_DEFINES_FILE=$RUNNER_TEMP/firebase/defines.json" >> "$GITHUB_ENV"
+          fi
+
       # versionCode mora rasti bez editovanja tenant.yaml. github.run_number je
       # monoton po repou, a Play trazi monotonost po aplikaciji — sto je time
       # zadovoljeno, jer svaki tenant ima svoju listing istoriju.

@@ -184,7 +184,7 @@ rezervacija traži (`grant execute ... to authenticated`).
 
 Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvorene:
 
-- **`devices` upisi** i dalje nemaju validiranu funkciju — dolaze sa push radom (task 25).
+- **`devices` upisi** su zatvoreni validiranim RPC-ovima iz taska 25, v. „Push uređaji" ispod.
   `customers` je **zatvoreno** u tasku 14, v. odjeljak ispod.
 - ~~**Direktan admin `insert`/`update` nad `appointments` zaobilazi validaciju slota**~~ —
   **zatvoreno** u tasku 24, v. „Admin akcije" ispod.
@@ -460,3 +460,41 @@ ništa.
 probao. Isto vrijedi za `select=*,customers(...)`: kompozitni FK-ovi ga čine dvosmislenim
 (`PGRST201`, HTTP **300**), ali to je prepreka koja traži samo da se pročita poruka o grešci.
 Svaki novi REST test zato mora tretirati `300` kao grešku, ne kao uspjeh.
+## Push uređaji — Task 25
+
+`register_device` dozvoljava anonimnu registraciju u aktivnom salonu iz `x-salon-id`, zatim
+vezanje na vlastiti `auth_identities` red iz JWT-a. Gost iz budućeg auth toka takođe ima svoj
+JWT/identitet. `p_staff=true` zahtijeva admin claim i odgovarajući `public.users` red u salonu;
+admin app salon izvodi iz članstva. ID identiteta i vlasnika nisu RPC argumenti.
+
+UUID instalacije nije dokaz vlasništva. Aplikacija čuva zasebnu nasumičnu tajnu od 32 bajta u
+Keychain/secure storage; baza čuva samo SHA-256 hash u `private.device_credentials`, bez
+klijentskih grantova. Postojeći uređaj se mijenja samo uz istu tajnu. Anon/klijent nema direktne
+`insert/update/delete` grantove na `devices`. `unregister_device` provjerava tajnu i salon,
+uklanja token/identitet i gasi `queued` poruke; radi i kada sesija više ne postoji.
+
+Trigger `validate_appointment_device` dodatno provjerava da FK iz termina pripada istom
+klijentskom identitetu, uz postojeći kompozitni FK za salon. Sam salon nije dovoljan za vezanje
+tuđeg uređaja. Promjena naloga gasi poruke koje čekaju, a claim ponovo provjerava aktivan salon,
+identitet koji nije obrisan i postojeće staff članstvo.
+
+`notification_logs` se puni triggerom promjene termina. Samo `service_role` smije pozvati
+`claim_push_notifications`; korisnik ne bira ni primaoca ni sadržaj slanja. Unique ključ i
+`FOR UPDATE SKIP LOCKED` sprečavaju ponovno preuzimanje istog događaja. Klijentski SELECT nad
+logovima nije uveden; `/notifications` je i dalje prazno stanje.
+
+Cron čita Vault i šalje HMAC nad `send-push:<unix-sekunde>`, valjan 60 sekundi. **Trajna tajna
+ne ide kroz `pg_net`**: njegove objekte posjeduje `supabase_admin`, a lokalni `postgres` ne može
+oduzeti sve postojeće grantove. Worker odbija obični anon/korisnički JWT. Kratki replay može
+samo pokrenuti idempotentno preuzimanje već postojećeg reda.
+
+Isporuka na uređaj nije dokazana lokalnim testovima. `sent` znači FCM prihvat. Neponovljiv
+`sending`/`failed` red može zahtijevati operativnu intervenciju; detalji i ograničenje exactly-once
+su u `supabase/functions/send-push/README.md`. Već predatu poruku odjava ne može povući, zato je
+tekst generički i detalji se ponovo čitaju uz RLS.
+
+Dokaz: `009_push_devices.test.sql` (izolacija, claim, scenariji i transport u rollbacku),
+`rest_push_devices.ts` (dva stvarna JWT-a i dva salona) i `send-push/handler_test.ts` (autorizacija,
+duplikati i nepoznat ishod). Anon registracija je javni RPC; produkcijski gateway mora ograničiti
+zloupotrebu broja registracija prije javnog puštanja. Mutacija `own_devices using(true)` je
+oborila test „Drugi klijent ne vidi prvi uređaj”; rollback je vratio politiku i suite je opet zelena.

@@ -7,11 +7,20 @@ Puni task: [`tasks/sprint-2/25-push-notifikacije.md`](sprint-2/25-push-notifikac
 
 U toku. Zavisnosti su zadovoljene: [14](sprint-2/14-identitet-i-klijent-upsert.md) i
 [24](sprint-2/24-admin-akcije-nad-terminima.md) su ✅. `main` je povučen 2026-09-15 i bio je već
-ažuran. Grana je otvorena; prvi korak je validirana registracija uređaja i dokaz izolacije.
+ažuran. [Draft PR #44](https://github.com/htuco/salon-booking-platform/pull/44) je otvoren.
 
-Ovo je task koji zatvara poznatu rupu iz `.claude/docs/security.md`: `devices` upisi postoje u
-šemi, ali još nemaju validiranu funkciju/putanju. Dok se to ne zatvori, push ne smije zavisiti od
-direktnog `insert`/`update` nad tabelom.
+Pripremljeni su registracija uređaja, FCM životni ciklus oba app-a, booking FK, red za slanje,
+worker i cron. Dokazano: 255 pgTAP provjera, 12 novih REST asercija s dva stvarna JWT-a,
+6 worker testova i Dart testovi u svih pet paketa. Firebase/APNs i fizički uređaj nisu spremni,
+pa task ostaje **U toku**. Hodogram je `sprint-2/25-push-konfiguracija.md`.
+
+Puna lokalna REST suite nije zelena: `rest_admin_login.ts` dobija `invalid_credentials` za
+demo nalog u postojećoj lokalnoj bazi. Ostalih šest REST skripti prolazi (168 asercija).
+Baza nije resetovana; testovi pusha prave i čiste vlastite korisnike.
+
+iOS simulator build za `barberstudiovitez` prolazi uz nove native zavisnosti. Negativni SQL
+test je provjeren mutacijom `own_devices using(true)`: pada na tuđem uređaju i prolazi nakon
+rollbacka. Analiza svih pet paketa i `gen_flavors --check` su čisti.
 
 ## Ciljevi
 
@@ -40,20 +49,19 @@ direktnog `insert`/`update` nad tabelom.
 zato `Appointment` model već nosi komentar o tome.
 
 `notification_logs` već ima statuse `queued`, `sending`, `sent`, `failed`, `logged`, polja
-`attempts`, `error`, `claimed_at` i unique ključ `(appointment_id, device_id, type)`. Ovo izgleda
-spremno za idempotentan sender, ali nema implementacije koja ga koristi.
+`attempts`, `error`, `claimed_at` i unique ključ `(appointment_id, device_id, type)`. Novi trigger
+puni red, a `claim_push_notifications` i worker koriste ga za jednokratni pokušaj slanja.
 
-`BookingRepository.book(...)` već šalje `p_device_id`, ali danas nema provider/registraciju koja mu
-daje pravi `devices.id`. `StaffAppointmentRepository.createManual(...)` šalje `null`, što je
-ispravno za ručni telefonski termin bez app uređaja.
+`bookingDeviceIdProvider` čeka registraciju i daje `BookingRepository.book(...)` pravi
+`devices.id`. Widget test provjerava da taj ID stvarno ide u poziv. Ručni admin unos ostaje
+bez app uređaja.
 
-`supabase/functions/send-push/` i `send-reminders/` su trenutno samo `README`. Podsjetnici D-1/H-3
-ostaju Sprint 3, ali `NotificationLog` oblik iz ovog taska mora ih moći nositi.
+`send-push` ima implementaciju i šest testova. `send-reminders` ostaje stub za Sprint 3.
 
 ### Sigurnost
 
-`devices` je trenutno otvorena stavka u `.claude/docs/security.md`: nema direktnog pisanja iz
-aplikacije. Napravi `security definer` funkciju/politiku koja jasno razdvaja:
+`register_device` i `unregister_device` zatvaraju direktno pisanje. Tajna instalacije je u
+secure storage; samo hash ide u `private.device_credentials`. Funkcije razdvajaju:
 
 - anonimnu registraciju instalacije prije prijave (`auth_identity_id` ostaje `null`);
 - vezanje uređaja na vlastiti `AuthIdentity` poslije prijave;
@@ -73,9 +81,14 @@ repo. Postojeći placeholder `google-services.json` ostaje placeholder.
 
 ### Scenariji
 
-Minimum iz task fajla: novi zahtjev → vlasnik; potvrda/odbijanje → klijent i `/appointments`.
-`docs/06-auth-login-flow.md §3.1` pominje i klijentsko otkazivanje → vlasnik; prije širenja scope-a
-provjeri da li ide u ovaj task ili ostaje za podsjetnike/Sprint 3.
+Implementirani su novi zahtjev → vlasnik, potvrda/odbijanje → klijent, salonsko otkazivanje →
+klijent i klijentsko otkazivanje → vlasnik (`docs/06 §3.1`). Tap vodi na `/appointments`.
+`/notifications` ostaje postojeće prazno stanje, bez nove klijentske politike nad logovima.
+
+Worker koristi HMAC važeći 60 sekundi; trajna tajna ne ide u `pg_net`, čije grantove lokalni
+`postgres` ne može oduzeti. `sending`/`failed` se ne ponavljaju automatski: timeout može doći
+poslije FCM prihvata. To znači mogući izgubljen pokušaj nakon pada workera, ne exactly-once
+isporuku. Ograničenje i postupak su u `send-push/README.md`.
 
 ### Dokaz
 

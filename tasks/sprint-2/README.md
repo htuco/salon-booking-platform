@@ -67,6 +67,15 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 
 ## Status
 
+> **25 — Push (🟡, 2026-09-15).** Kod i lokalni testovi pripremljeni na
+> `feat/push-notifikacije`, [draft PR #44](https://github.com/htuco/salon-booking-platform/pull/44).
+> Device RPC provjerava tajnu instalacije; status termina puni red koji FCM worker preuzima
+> uz zaključavanje. Cron koristi kratki HMAC, bez trajne tajne u HTTP transportu. Dokazano:
+> **255 pgTAP**, **12 push REST asercija**, **6 worker testova**, Dart suite u svih pet paketa.
+> Firebase/APNs nalog i fizički uređaj nisu spremni, pa isporuka nije dokazana. Puna lokalna
+> REST suite ostaje djelimična zbog demo admin prijave (`invalid_credentials` u postojećoj bazi).
+> Konfiguracija i fizički dokaz: `25-push-konfiguracija.md`.
+
 > **24 — Admin akcije nad terminima i ručni unos (✅, 2026-09-15).** Salon prvi put odgovara na
 > zahtjev; do sada je `StaffAppointmentRepository` bio namjerno samo čitanje, pa je termin ostajao
 > `pending` dok ne istekne. **Rupu iz `security.md` zatvara `revoke insert, update on

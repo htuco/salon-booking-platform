@@ -90,6 +90,7 @@ class BookingSubmitNotifier extends AutoDisposeAsyncNotifier<void> {
     final startTime = flow.startTime ?? const LocalTime(0, 0);
 
     try {
+      final deviceId = await ref.read(bookingDeviceIdProvider)();
       final appointment = await ref
           .read(bookingRepositoryProvider)
           .book(
@@ -100,6 +101,7 @@ class BookingSubmitNotifier extends AutoDisposeAsyncNotifier<void> {
             startTime: startTime,
             employeeId: flow.employeeId,
             note: flow.note,
+            deviceId: deviceId,
           );
 
       ref.read(lastBookingProvider.notifier).set(appointment);

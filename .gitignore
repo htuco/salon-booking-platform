@@ -47,6 +47,8 @@ tenants/**/google-services.json
 tenants/**/GoogleService-Info.plist
 tenants/**/*.p8
 tenants/**/*.mobileprovision
+**/GoogleService-Info.plist
+.firebase-config/
 fastlane/report.xml
 
 # Generisane lokalizacije — `flutter gen-l10n` ih stvori iz lib/src/l10n/*.arb prije builda.

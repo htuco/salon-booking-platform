@@ -35,4 +35,5 @@ export 'src/catalog/settings_repository.dart';
 export 'src/catalog/working_hours_repository.dart';
 export 'src/errors/errors.dart';
 export 'src/providers.dart';
+export 'src/push/push_providers.dart';
 export 'src/vertical/vertical_repository.dart';

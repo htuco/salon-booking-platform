@@ -22,7 +22,9 @@ import '../errors/errors.dart';
 /// izgleda kao prazna baza, a zapravo je pogrešno postavljen nalog. Zato [signIn] vraća
 /// [StaffMember], ne samo sesiju: ekran odmah zna ima li s čim raditi.
 class StaffRepository {
-  const StaffRepository(this._client);
+  const StaffRepository(this._client, {this.beforeSignOut});
+
+  final Future<void> Function()? beforeSignOut;
 
   final SupabaseClient _client;
 
@@ -58,7 +60,10 @@ class StaffRepository {
   /// Stanje prijave kroz vrijeme; token ističe i osvježava se sam.
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
-  Future<void> signOut() => guard(() => _client.auth.signOut());
+  Future<void> signOut() => guard(() async {
+    await beforeSignOut?.call();
+    await _client.auth.signOut();
+  });
 
   Future<StaffMember?> _membership() async {
     if (_client.auth.currentSession == null) return null;

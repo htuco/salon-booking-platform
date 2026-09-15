@@ -54,6 +54,10 @@ android_enabled="$(sed -n '/^targets:/,$p' "$yaml" | sed -n 's/^[[:space:]]*andr
 case "$mode" in debug|release|profile) ;; *) usage ;; esac
 
 defines=(--dart-define="SALON_ID=$salon_id")
+# Izlaz firebase_defines.dart, iz privatnog configa po flavoru/platformi.
+if [ -n "${FIREBASE_DEFINES_FILE:-}" ]; then
+  defines+=(--dart-define-from-file="$FIREBASE_DEFINES_FILE")
+fi
 [ -n "${API_URL:-}" ]           && defines+=(--dart-define="API_URL=$API_URL")
 [ -n "${SUPABASE_URL:-}" ]      && defines+=(--dart-define="SUPABASE_URL=$SUPABASE_URL")
 [ -n "${SUPABASE_ANON_KEY:-}" ] && defines+=(--dart-define="SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY")

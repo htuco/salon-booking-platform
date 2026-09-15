@@ -50,7 +50,17 @@ class AdminScaffold extends ConsumerWidget {
             icon: const Icon(Icons.account_circle_outlined),
             onSelected: (izbor) async {
               if (izbor == 'odjava') {
-                await ref.read(staffRepositoryProvider).signOut();
+                try {
+                  await ref.read(staffRepositoryProvider).signOut();
+                } on ApiError {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Odjava nije uspjela. Pokušajte ponovo.'),
+                      ),
+                    );
+                  }
+                }
                 // Preusmjeravanje na `/login` radi router kroz `currentStaffProvider`.
               }
             },
