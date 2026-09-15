@@ -31,3 +31,9 @@ ta odluka nije pokrivena.
   tipove (oba su uuid) i tiho slomi push — zapisano u `Appointment` modelu.
 - iOS traži pravi uređaj i APNs ključ. Planiraj da ovaj task ne može biti dokazan lokalno do kraja.
 - Tajne u CI: `google-services.json` i APNs ključ nikad u repo.
+
+## Status (2026-09-15)
+
+U toku na grani `feat/push-notifikacije`, sa ažurnog `main`-a. Zavisnosti 14 i 24 su završene.
+Prvi korak: validirana registracija uređaja i negativni testovi tenant izolacije.
+Firebase/APNs konfiguracija i fizički uređaj još nisu potvrđeni; dokaz isporuke ostaje otvoren.

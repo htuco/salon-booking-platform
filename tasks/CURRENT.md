@@ -1,92 +1,101 @@
-# Trenutni task: 24 — Admin: potvrda, odbijanje, otkazivanje i ručni termin
+# Trenutni task: 25 — FCM, `Device` registracija i push scenariji
 
-Puni task: [`tasks/sprint-2/24-admin-akcije-nad-terminima.md`](sprint-2/24-admin-akcije-nad-terminima.md)
-**Gotov** · Učitano: 2026-09-14 · Počet: 2026-09-14 · Dokazan uživo: 2026-09-15 · Grana: `feat/admin-akcije-nad-terminima`
+Puni task: [`tasks/sprint-2/25-push-notifikacije.md`](sprint-2/25-push-notifikacije.md)
+**U toku** · Učitano: 2026-09-15 · Grana: `feat/push-notifikacije`
 
 ## Status
 
-✅ **Gotovo i dokazano uživo na oba tenanta.**
-[PR #42](https://github.com/htuco/salon-booking-platform/pull/42).
+U toku. Zavisnosti su zadovoljene: [14](sprint-2/14-identitet-i-klijent-upsert.md) i
+[24](sprint-2/24-admin-akcije-nad-terminima.md) su ✅. `main` je povučen 2026-09-15 i bio je već
+ažuran. Grana je otvorena; prvi korak je validirana registracija uređaja i dokaz izolacije.
 
-Dokazano: **220 pgTAP** (bilo 177, 42 nova), **515 Dart testova** (bilo 479), i **browser na oba
-tenanta protiv žive baze** — sve četiri akcije provjerene `psql` upitom, ne pretpostavkom.
-
-**Rupu iz `security.md` zatvara oduzimanje granta, ne dodavanje funkcija.** Dok je
-`revoke insert, update on public.appointments` izostajao, validirane funkcije su bile konvencija
-koju je bilo dovoljno zaboraviti.
-
-**Šesta greška je nađena tek na ekranu:** ručni unos je crtao duplirana vremena
-(`09:00 09:00 09:15 09:15…`), jer `get_available_slots` vraća red **po radniku**. `distinctTimes`
-postoji od taska 11 sa komentarom koji tačno opisuje zamku, ali **nije imao nijedan test** — sada
-ima sedam. Ni testovi ni analiza to nisu mogli vidjeti: i duplirana lista je ispravan izlaz iz baze.
+Ovo je task koji zatvara poznatu rupu iz `.claude/docs/security.md`: `devices` upisi postoje u
+šemi, ali još nemaju validiranu funkciju/putanju. Dok se to ne zatvori, push ne smije zavisiti od
+direktnog `insert`/`update` nad tabelom.
 
 ## Ciljevi
 
-### RPC + pgTAP (prvo)
-
-- [x] Četiri akcije — **potvrdi / odbij / otkaži / no-show**, svaka kroz RPC sa provjerom vlasništva
-- [x] `cancel_reason` i `cancelled_by` se popunjavaju na svakoj akciji
-- [x] pgTAP za sve četiri, plus **negativan** test: odbijanje ručnog termina van radnog vremena
-
-### Ručni termin — zatvara poznatu rupu
-
-- [x] Ručno dodavanje termina: pretraga po `Customer` + unos telefonskog klijenta
-      (`auth_identity_id` ostaje `null`)
-- [x] **Ručni upis prolazi istu validaciju slota kao klijentski** — v. Napomene
-
-### Ekran
-
-- [x] Akcije nad terminom u listi
-- [x] Ručni unos
-- [x] **Dokaz na živom stacku, oba tenanta** — `docs/screenshots/task-24-akcije-{barber,beauty}.png`
+- [ ] Firebase samo za FCM: app po flavoru, pravi `google-services.json` /
+      `GoogleService-Info.plist` i APNs/service-account tajne idu kroz CI/runtime, ne kroz repo
+- [ ] Validirana registracija uređaja: klijentska app registruje `device_id` prije prijave,
+      poslije prijave ga veže na `AuthIdentity`; admin app registruje uređaj vlasnika kroz
+      `staff_user_id`
+- [ ] `book_appointment` dobija pravi `devices.id` u `p_device_id`, uključujući budući guest tok
+      preko uređaja registrovanog prije prijave
+- [ ] `send-push` Edge Function poziva FCM HTTP v1, piše/zaključava `notification_logs` i ne šalje
+      duplikate za isti `appointment_id`/`device_id`/`type`
+- [ ] Novi zahtjev šalje push vlasniku salona
+- [ ] Potvrda i odbijanje šalju push klijentu i deep link vode na `/appointments`
+- [ ] `/notifications` dobija stvaran server-side izvor ili ostaje iskreno prazno stanje dok se ne
+      dogovori klijentska politika nad `notification_logs`
+- [ ] Dokaz na fizičkom uređaju, posebno iOS-u; simulator nije dovoljan za push
 
 ## Napomene
 
-### Ovo zatvara rupu koju `security.md` već vodi kao otvorenu
+### Šta već postoji
 
-`.claude/docs/security.md` (§„Šta još nije zatvoreno") bilježi: **direktan admin `insert`/`update`
-nad `appointments` zaobilazi validaciju slota.** Exclusion constraint hvata preklapanje dva termina,
-ali **radno vrijeme, blokade i `min_advance_booking_hours` ne provjerava niko** na tom putu.
+`supabase/migrations/20260910090000_init_schema.sql` već ima `public.devices` i
+`public.notification_logs`. `devices.device_id` je instalacioni identifikator (`text`), dok je
+`appointments.device_id` FK na `devices.id` (`uuid`) — zamjena prolazi tipove i tiho slomi push,
+zato `Appointment` model već nosi komentar o tome.
 
-Praktično: ako ručni unos ostane `insert` sa klijenta, admin može upisati termin u nedjelju u 3
-ujutro, i baza ga neće zaustaviti. Zato ručni upis mora ići kroz `book_appointment` — istu funkciju
-kojom prolazi klijent.
+`notification_logs` već ima statuse `queued`, `sending`, `sent`, `failed`, `logged`, polja
+`attempts`, `error`, `claimed_at` i unique ključ `(appointment_id, device_id, type)`. Ovo izgleda
+spremno za idempotentan sender, ali nema implementacije koja ga koristi.
 
-Ista tabela se u `tasks/sprint-2/README.md` vodi kao stavka koju zatvara **baš ovaj task**.
+`BookingRepository.book(...)` već šalje `p_device_id`, ali danas nema provider/registraciju koja mu
+daje pravi `devices.id`. `StaffAppointmentRepository.createManual(...)` šalje `null`, što je
+ispravno za ručni telefonski termin bez app uređaja.
 
-### Šta već postoji i ne treba graditi
+`supabase/functions/send-push/` i `send-reminders/` su trenutno samo `README`. Podsjetnici D-1/H-3
+ostaju Sprint 3, ali `NotificationLog` oblik iz ovog taska mora ih moći nositi.
 
-- **`book_appointment`** (task 05) — validirani upis, `security definer`, provjerava i preklapanje i
-  radno vrijeme. Poznaje `source`: `manual` je već u enumu `appointment_source`.
-- **`cancel_appointment`** (task 16) — otkazivanje sa provjerom vlasništva i roka iz
-  `salon_settings.min_cancel_hours`, plus `cancelled_by` (`customer` / `salon` / `system`). Pisan je
-  za **klijenta**; admin otkazivanje je drugi slučaj (salon otkazuje, rok ga ne obavezuje) — treba
-  provjeriti da li se proširuje ili dobija svoju funkciju.
-- **`staff_manage` politika** nad `appointments` — `for all` za `private.is_admin(salon_id)`. Admin
-  *smije* pisati; pitanje je samo **kuda** pisanje ide.
-- **`StaffAppointmentRepository`** (task 23) je **samo čitanje**, i to namjerno. Akcije se dopisuju
-  u njega, kao `rpc` pozivi.
+### Sigurnost
 
-### Zamka: `no_show` nije isto što i `cancelled`
+`devices` je trenutno otvorena stavka u `.claude/docs/security.md`: nema direktnog pisanja iz
+aplikacije. Napravi `security definer` funkciju/politiku koja jasno razdvaja:
 
-`AppointmentStatus` već ima oba (`cancelled`, `noShow`, `wireName: 'no_show'`), i `customers`
-nosi `no_show_count`. Ali **prag nigdje nije zapisan ni provođen** — task 21 je to izričito ostavio
-otvorenim („tri nedolaska u šest mjeseci" nema kolonu). Ako ova akcija počne dizati `no_show_count`,
-treba odlučiti da li iko taj broj koristi, ili je to kolona koju niko ne čita.
+- anonimnu registraciju instalacije prije prijave (`auth_identity_id` ostaje `null`);
+- vezanje uređaja na vlastiti `AuthIdentity` poslije prijave;
+- vezanje admin uređaja na `public.users.id` kroz `staff_user_id`.
 
-### Push se okida na ove akcije
+`x-salon-id` i ovdje bira kontekst, ne daje prava. Ako funkcija veže uređaj na identitet, vlasništvo
+se izvodi iz tokena (`auth.uid()` → `auth_identities`), ne iz argumenta.
 
-Task 24 blokira [25](sprint-2/25-push-notifikacije.md): potvrda i odbijanje su događaji koje klijent
-treba dobiti kao push. To **ne znači** da 24 nosi push — znači da RPC treba ostaviti mjesto gdje se
-`notification_logs` red kasnije upisuje, bez prepravke funkcije.
+Ako migracija dira RLS, grantove, `private.*` ili novu RPC funkciju, ažuriraj
+`.claude/docs/security.md` i `supabase/IMPLEMENTATION.md` u istoj promjeni.
 
-### Procjena
+### Firebase granica
 
-2 dana iz task fajla djeluje tačno **ako `book_appointment` primi ručni unos bez prepravke**. Ako ga
-treba proširiti (klijent bez `auth_identity_id`, admin kao pozivalac), računaj dan više — i to je
-migracija, dakle `security.md` se ažurira u istoj promjeni.
+Firebase ostaje samo FCM. Ne uvoditi Firebase Auth, Remote Config ili Crashlytics kroz ovaj task.
+Pravi `google-services.json`, `GoogleService-Info.plist`, service-account JSON i APNs ključ ne idu u
+repo. Postojeći placeholder `google-services.json` ostaje placeholder.
+
+### Scenariji
+
+Minimum iz task fajla: novi zahtjev → vlasnik; potvrda/odbijanje → klijent i `/appointments`.
+`docs/06-auth-login-flow.md §3.1` pominje i klijentsko otkazivanje → vlasnik; prije širenja scope-a
+provjeri da li ide u ovaj task ili ostaje za podsjetnike/Sprint 3.
+
+### Dokaz
+
+iOS push ne radi na simulatoru. Ako nema Firebase/APNs naloga ili fizičkog uređaja, status mora
+reći "napisano, nije dokazano na uređaju", ne "radi". Za backend dio i dalje vrijedi lokalni dokaz:
+`supabase start && supabase test db` plus Deno REST testovi kad `deno` bude dostupan.
 
 ## Istorija
+
+- **24 — Admin akcije nad terminima i ručni unos** (2026-09-15, ✅) — salon prvi put odgovara na
+  zahtjev: potvrda, odbijanje, otkazivanje, `no_show` i ručni termin rade kroz RPC putanje umjesto
+  direktnog `insert`/`update`. **Rupu iz `security.md` zatvara oduzimanje granta**, ne dodavanje
+  funkcija: `authenticated` više nema `insert`/`update` nad `appointments`, pa su jedini pisci
+  `book_appointment`, `set_appointment_status` i `cancel_appointment`. Ručni termin prolazi istu
+  validaciju slota kao klijent, ali admin ima izuzetak za `min_advance_booking_hours` jer salon
+  smije upisati klijenta koji stoji na vratima. Dokazano: **220 pgTAP**, **515 Dart testova** i
+  browser na oba tenanta protiv žive baze; sve četiri akcije provjerene `psql` upitom. Ekran je
+  našao duplirana vremena u ručnom unosu (`get_available_slots` vraća red po radniku), pa
+  `distinctTimes` sada ima testove. Ostaje 🟡 nijedan Deno REST test jer `deno` nije instaliran, i
+  admin nije pokrenut na mobilnom uređaju. [PR #42](https://github.com/htuco/salon-booking-platform/pull/42).
 
 - **21 — Client: Obavijesti, „O aplikaciji" i pravni ekrani** (2026-09-14, ✅) — `/terms`,
   `/privacy` i `/about-app` rade iz prave baze na oba tenanta; `/notifications` je **namjerno samo
