@@ -117,6 +117,26 @@ kosturu; tada služi `demo`.
 
 Na macOS-u skripta digne Simulator ako nijedan ne radi. Uređaj se bira sa `-d`, kao i inače.
 
+### Hostovani Vitez demo
+
+Javne runtime vrijednosti i lokalne putanje stoje u ignorisanom `.env.live`; predložak je
+`.env.example`. DB lozinka služi samo CLI deployu i skripta je nikad ne prosljeđuje Flutteru.
+
+```sh
+cp .env.example .env.live
+tool/run_live_demo.sh client -d <device-id>
+tool/run_live_demo.sh admin -d <device-id>
+```
+
+`tool/run_live_demo.sh` namjerno podržava samo Vitez klijent i generički admin. Za push postavi
+`FIREBASE_CLIENT_DEFINES_FILE` odnosno `FIREBASE_ADMIN_DEFINES_FILE` na privatni define JSON.
+Prije live testa hostovani projekat mora imati migracije/seed, a za demo email signup **Confirm
+email** mora biti isključen. Ne dodavati service-role ključ ni Supabase access token u `.env.live`.
+
+Availability se ne osvježava pretplatom klijenta na sve termine — to bi zaobišlo svrhu RLS-a.
+`availability_signals` nosi samo `salon_id` i nasumični `revision_id`; trigger ga promijeni nakon
+svake availability-relevantne izmjene, a app zatim ponovo poziva `get_available_slots`.
+
 ## Pokretanje admin aplikacije
 
 **Nema flavora ni `SALON_ID`** — admin je jedna generička app za sve salone, i salon dobija iz
@@ -238,7 +258,7 @@ tool/build_tenant.sh barberstudiovitez apk debug
 Razlog je `docs/06 §7.1`: jedan zajednički ID znači da korisnik u Google dijalogu vidi tuđe ime
 salona. Skripta u zaglavlju builda ispisuje **da li** je ID stigao i iz koje varijable, ali nikad
 samu vrijednost — build log je artefakt koji se čuva. Kad ID nedostaje, build prolazi i ispisuje
-upozorenje: app bez Googlea i dalje ima Apple i email OTP, pa je login ekran bez jednog dugmeta
+upozorenje: app bez Googlea i dalje ima Apple i email + lozinku, pa je login ekran bez jednog dugmeta
 bolji od builda koji pada.
 
 U CI-ju vrijednosti stoje u GitHub `vars` (client ID nije tajna, ali se mijenja po tenantu);
@@ -270,26 +290,23 @@ deno run --allow-env --allow-net supabase/tests/rest_isolation.ts
 Skripta odbija remote host, pravi dva stvarna Auth korisnika, uzima dva JWT-a i briše samo svoje
 fixture.
 
-### Email OTP lokalno
+### Email + lozinka lokalno
 
-Jedini provider prijave koji se može dokazati bez tuđih konzola — Apple i Google traže naloge i
-pravi uređaj. Mail ne izlazi napolje; hvata ga Inbucket/Mailpit na <http://127.0.0.1:54324>.
+Demo faza ima isključen confirmation, pa lokalni signup odmah vraća sesiju i ne šalje email.
+Apple i Google i dalje traže naloge i pravi uređaj.
 
 ```sh
 eval "$(supabase status -o env)"
-curl -s -X POST "$API_URL/auth/v1/otp" -H "apikey: $ANON_KEY" \
+curl -s -X POST "$API_URL/auth/v1/signup" -H "apikey: $ANON_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","create_user":true}'
-# kod iz maila:
-curl -s -X POST "$API_URL/auth/v1/verify" -H "apikey: $ANON_KEY" \
+  -d '{"email":"test@example.com","password":"demo1234"}'
+curl -s -X POST "$API_URL/auth/v1/token?grant_type=password" -H "apikey: $ANON_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"type":"email","email":"test@example.com","token":"<kod>"}'
+  -d '{"email":"test@example.com","password":"demo1234"}'
 ```
 
-Mail mora nositi **šestocifreni kod, ne link** (`docs/06 §2.1`). To osigurava
-`supabase/templates/magic_link.html` sa `{{ .Token }}`; hostovani projekat ima istu izmjenu u
-konzoli, pa se mijenjaju u paru. Rate limit je za lokalni stack podignut na 100 mailova na sat —
-sa podrazumijevana dva se flow potroši prije nego se vidi.
+Lozinka mora proći isto javno pravilo kao UI: najmanje osam znakova, bar jedno slovo i jedna cifra.
+Confirmation, SMTP i recovery namjerno nisu dio demo faze; za produkcijski tok prati task 27.
 
 ### Cijela suite jednom komandom
 
@@ -316,11 +333,8 @@ izgleda kao da je šema pokvarena, a nije — samo je stara. `supabase db reset`
 dokaže da migracije i seed prolaze od nule. Skripta ga zato zove po defaultu.
 
 **Druga zamka, iz istog gnijezda:** `supabase db reset` **ne učitava `config.toml`**. Promjena
-auth podešavanja — email template, `otp_length`, redirect URL-ovi — traži `supabase stop` pa
-`supabase start`. Simptom je podmukao: prijava i dalje radi, ali mail stigne kao **podrazumijevani
-engleski magic link** umjesto kao šestocifreni kod, pa lokalni dokaz o OTP-u ne govori ništa o
-onome što je u `config.toml`-u. Nađeno u tasku 14; provjera je subject mail-a u Mailpitu
-(`http://127.0.0.1:54324`) — mora pisati „Vaš kod za prijavu".
+auth podešavanja — confirmation, password policy, email templatei ili redirect URL-ovi — traži
+`supabase stop` pa `supabase start`. Zato reset baze sam ne dokazuje novo auth ponašanje.
 
 - **Napisana politika nije dokazana politika.** Dok suite nije prošla, u sažetku piše "napisano,
   nije pokrenuto", ne "radi".

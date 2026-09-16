@@ -6,9 +6,10 @@ prihvaćen
 
 ## Kontekst
 
-Klijentska aplikacija trenutno ima implementiran email OTP: korisnik unese adresu, prepiše
-šestocifreni kod iz poruke i dobije Supabase sesiju. Taj tok je izabran da smanji frikciju i
-izbjegne reset lozinke, ali više nije ciljni proizvodni tok.
+Klijentska aplikacija je prvobitno imala email OTP: korisnik unese adresu, prepiše šestocifreni
+kod iz poruke i dobije Supabase sesiju. Taj tok je izabran da smanji frikciju i izbjegne reset
+lozinke, ali više nije ciljni proizvodni tok. Demo implementacija je 16.09.2026. prešla na
+email + lozinku; produkcijski confirmation i recovery još nisu implementirani.
 
 Nova proizvodna odluka je klasična email autentifikacija: postojeći korisnik se prijavljuje
 emailom i lozinkom, a novi korisnik kreira račun emailom i lozinkom. Apple i Google ostaju
@@ -39,8 +40,8 @@ zaboravljene lozinke. Zato nije dovoljno zamijeniti `signInWithOtp` jednim API p
   međuvremenu zauzet.
 - Lozinka se nikad ne zapisuje u log, analitiku, bazu aplikacije, crash report ili
   `user_metadata`. Hashiranje i provjeru lozinke radi isključivo Supabase Auth.
-- Postojeća OTP implementacija ostaje historijski dokaz, ali se uklanja iz aktivnog korisničkog
-  toka tek u zasebnom implementacijskom tasku.
+- Postojeća OTP implementacija ostaje historijski dokaz, ali je uklonjena iz aktivnog
+  korisničkog toka u demo fazi taska 27.
 
 ### Privremeni demo profil
 

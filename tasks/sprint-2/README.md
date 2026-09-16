@@ -68,11 +68,12 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
 
 ## Status
 
-> **27 — Email + lozinka (🟡 plan, 2026-09-16).** ADR-0010 zamjenjuje ciljni klijentski email OTP
-> klasičnom registracijom i prijavom emailom i lozinkom. Dokumentovani su confirmation, recovery,
-> migracija ranijih OTP korisnika, callbacki po flavoru, password policy i acceptance testovi.
-> **Kod, `supabase/config.toml` i hostovani projekat još nisu promijenjeni**; implementacija čeka
-> eksplicitno odobrenje. Detalji: [27-email-password-auth.md](27-email-password-auth.md).
+> **27 — Email + lozinka (🟡 demo integracija, 2026-09-16).** Aktivni klijentski tok koristi
+> Supabase `signUp` i `signInWithPassword`; OTP UI i metode su uklonjeni. Demo nema confirmation,
+> SMTP ni recovery. Flutter analiza i testovi prolaze, ali hostovani projekat još traži potvrdu
+> emaila i nema deployanu aplikacijsku šemu, pa live tok nije dokazan. Produkcijski confirmation,
+> recovery, callbacki i migracija ranijih OTP korisnika ostaju otvoreni. Detalji:
+> [27-email-password-auth.md](27-email-password-auth.md).
 
 > **25 — Push (🟡, 2026-09-15).** Kod i lokalni testovi pripremljeni na
 > `feat/push-notifikacije`, [draft PR #44](https://github.com/htuco/salon-booking-platform/pull/44).

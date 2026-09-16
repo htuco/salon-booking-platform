@@ -19,7 +19,7 @@ sigurnosti nego kao izbor konteksta; ono što ga ograničava su politike u bazi.
 
 | Ko | Kako se prepoznaje | Smije |
 |---|---|---|
-| **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke, **objavljene recenzije** (uz agregat `salon_rating_summary`) i **pravila korištenja sa politikom privatnosti**. **Nema nijedan write grant.** |
+| **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke, **objavljene recenzije** (uz agregat `salon_rating_summary`), **pravila korištenja sa politikom privatnosti** i bezlični `availability_signals` red salona. **Nema nijedan write grant.** |
 | **klijent** | JWT bez privilegovane uloge (`private.is_client()`) | sve što i anon, plus **svoj** `auth_identities` red, i **svoj** `customers`/`appointments`/`devices` red **u salonu iz `x-salon-id`** |
 | **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` | pun CRUD nad podacima **svog** salona |
 | **super admin** | `app_metadata.role = super_admin` **i** red u `public.users` sa `role='super_admin'` | sve; iznad tenant izolacije |
@@ -179,6 +179,25 @@ umjesto osvježene liste. Isto vrijedi za `PT404` iz iste funkcije.
 `appointments` i `blocked_slots`, koje `anon` ne smije vidjeti. Izlaz su samo izvedena slobodna
 vremena — nijedan podatak o klijentu. Pregled slobodnih termina zato ne traži prijavu, a
 rezervacija traži (`grant execute ... to authenticated`).
+
+### Realtime availability bez otvaranja termina
+
+Klijentski `appointments` stream ne može osvježiti slot nakon **tuđe** rezervacije: politika
+`own_appointments` ispravno sakrije taj red. Širenje te politike bi riješilo UX tako što bi
+napravilo curenje. Migracija `20260916120000_availability_realtime.sql` zato uvodi
+`public.availability_signals` sa samo dvije kolone: `salon_id` i nasumični `revision_id`.
+
+- `anon` i `authenticated` imaju samo `select`, i samo za aktivan salon;
+- nema datuma termina, vremena, klijenta, statusa ni kumulativnog broja promjena;
+- `private.bump_availability_signal()` je trigger-only `security definer` bez app execute granta;
+- trigger mijenja reviziju nakon promjene usluga, radnika, mapiranja, radnog vremena, termina,
+  blokada ili booking postavki;
+- tabela je u `supabase_realtime` publikaciji; događaj znači samo „ponovo pozovi
+  `get_available_slots`", nikad „vjeruj payloadu kao izvoru slotova".
+
+Povezani klijent može zaključiti da se availability nekad promijenio — to je nužno da bi se lista
+osvježila — ali tabela ne čuva vrijeme ni brojač prometa. Grantovi, RLS, oblik kolona, izolacija
+drugog salona i članstvo u publikaciji drži `010_availability_realtime.test.sql`.
 
 ## Šta još nije zatvoreno
 

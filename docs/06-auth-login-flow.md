@@ -105,8 +105,10 @@ korisnika u tačan tenant flavor. Booking draft se lokalno čuva prije odlaska u
 jer potvrda može izazvati cold start. Detaljan ugovor i acceptance testovi su u
 [`tasks/sprint-2/27-email-password-auth.md`](../tasks/sprint-2/27-email-password-auth.md).
 
-> **Stanje koda 16.09.2026.** Klijentska app još koristi email OTP. Ovaj dokument opisuje ciljno
-> stanje; implementacija počinje tek nakon eksplicitnog odobrenja taska 27.
+> **Stanje koda 16.09.2026.** Demo faza koristi stvarni Supabase `signUp` i
+> `signInWithPassword`; OTP metode i UI više nisu aktivni. Za demo nema confirmationa, recoveryja
+> ni SMTP-a. Hostovani projekat još traži potvrdu emaila i nema deployanu aplikacijsku šemu, pa se
+> tok ne smatra dokazanim uživo. Produkcijski confirmation/recovery ostaju u tasku 27.
 
 ---
 
@@ -434,14 +436,13 @@ Supabase tipovi **ne smiju** procuriti iznad ovog sloja. Ako kasnije pređeš na
 
 **Greške izlaze kao `ApiError`, ne kao `AuthResult`.** Skica je ranije imala `Future<AuthResult>`; u `core_api` svaki repozitorij već signalizira grešku bacanjem `ApiError`, pa bi drugi način signalizacije u istom paketu značio da ekran mora znati koji repozitorij koristi koji. Otkazivanje od strane korisnika (zatvoren Apple/Google dijalog) nije kvar nego očekivan ishod i ima vlastiti tip, `AuthCancelledError` — bez njega svaki korisnik koji se predomisli dobije crvenu poruku o grešci.
 
-**Stanje implementacije (task 13, prije ADR-0010).** `SupabaseAuthRepository` još pokriva
-`sessionChanges`, `currentSession`, `requestEmailOtp`, `verifyEmailOtp` i `signOut`; OTP je ranije
-dokazan od ekrana do baze, ali više nije ciljni tok. Task 27 mijenja ugovor, ekran i testove tek
-nakon eksplicitnog odobrenja. `signInWithApple`/`signInWithGoogle`/`signInWithFacebook` bacaju `ServerError`
-sa imenom paketa koji fali (`sign_in_with_apple`, `google_sign_in`, `flutter_facebook_auth`):
-paketi nisu dodani jer se ni sa njima tok ne može odigrati dok client ID-evi iz
-[`12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md) nisu upisani.
-`continueAsGuest` je task 26, `deleteAccount` task 17.
+**Stanje implementacije (task 27, demo faza).** `SupabaseAuthRepository` pokriva
+`sessionChanges`, `currentSession`, `signInWithPassword`, `signUpWithPassword`, Apple, Google i
+`signOut`. Demo signup zahtijeva sesiju odmah; ako je confirmation uključen, vraća jasnu
+konfiguracijsku grešku. Produkcijski `EmailSignUpResult`, confirmation, resend i recovery još nisu
+implementirani. Apple i Google kod postoje, ali se ne mogu odigrati dok konzolna konfiguracija iz
+[`12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md) nije dostupna.
+`signInWithFacebook` i `continueAsGuest` su task 26, `deleteAccount` task 17.
 
 `currentSession` postoji uz `sessionChanges` zbog prvog frejma: router mora sinhrono znati smije li pustiti zaštićenu rutu, a `await` na stream bi prijavljenom korisniku dao treptaj login ekrana.
 

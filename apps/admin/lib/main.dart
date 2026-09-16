@@ -7,6 +7,8 @@ import 'src/core/env/bootstrap.dart';
 import 'src/core/router/admin_router.dart';
 import 'src/features/appointments/appointments_providers.dart';
 
+final adminMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 Future<void> main() async {
   final env = await bootstrapAdmin();
 
@@ -30,16 +32,35 @@ class SalonAdminApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(pushInitializationProvider);
-    void refresh() {
-      ref.invalidate(filtriraniTerminiProvider);
-      ref.invalidate(pendingCountProvider);
-      ref.invalidate(danasnjiTerminiProvider);
+    final env = ref.watch(adminEnvProvider);
+
+    // Foreground promjene stižu direktno kroz Supabase Realtime; FCM ostaje put za
+    // pozadinu/ugašenu aplikaciju. RLS na streamu ograničava admina na njegov salon.
+    if (env.hasSupabase) {
+      final salonId = ref.watch(adminSalonIdProvider);
+      if (salonId != null) {
+        ref.listen(appointmentChangesProvider(salonId), (_, next) {
+          if (next.hasValue) {
+            refreshAdminAppointments(ref);
+            return;
+          }
+          if (next.hasError) {
+            adminMessengerKey.currentState?.showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Osvježavanje termina nije dostupno. Ručno osvježite ekran.',
+                ),
+              ),
+            );
+          }
+        });
+      }
     }
+    ref.watch(pushInitializationProvider);
 
     ref.listen(pushReceivedProvider, (_, next) {
       if (next.valueOrNull == ref.read(adminSalonIdProvider) && next.hasValue) {
-        refresh();
+        refreshAdminAppointments(ref);
       }
     });
     ref.listen(pushOpenedProvider, (_, next) {
@@ -47,11 +68,12 @@ class SalonAdminApp extends ConsumerWidget {
           next.valueOrNull != ref.read(adminSalonIdProvider)) {
         return;
       }
-      refresh();
+      refreshAdminAppointments(ref);
       ref.read(adminRouterProvider).go(AdminRoute.appointments.path);
     });
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: adminMessengerKey,
       title: 'Salon Admin',
       routerConfig: ref.watch(adminRouterProvider),
       theme: ThemeData(
@@ -59,4 +81,11 @@ class SalonAdminApp extends ConsumerWidget {
       ),
     );
   }
+}
+
+void refreshAdminAppointments(WidgetRef ref) {
+  ref
+    ..invalidate(filtriraniTerminiProvider)
+    ..invalidate(pendingCountProvider)
+    ..invalidate(danasnjiTerminiProvider);
 }

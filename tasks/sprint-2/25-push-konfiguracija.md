@@ -3,6 +3,11 @@
 Kod i lokalni testovi mogu se pripremiti bez naloga. Sljedeći koraci zahtijevaju Firebase,
 Apple Developer i fizičke uređaje. Ovaj dokument ne potvrđuje da su izvršeni.
 
+> **Stanje 16.09.2026.** Lokalni Firebase CLI je prijavljen, ali taj račun nema pristup projektu
+> `hades-75751`; API vraća `403 PERMISSION_DENIED`. Prije `flutterfire configure` treba prijaviti
+> račun koji je član projekta ili dodati trenutni račun. FCM konfiguracija i prijem na uređaju zato
+> još nisu dokazani.
+
 ## Firebase I Build
 
 1. Napravi Firebase projekat samo za FCM. Registruj zasebnu Android/iOS app za svaki flavor

@@ -84,7 +84,7 @@ class AppEnv {
   /// `true` kad build ima čime pozvati Google Sign-In.
   ///
   /// Namjerno **ne baca** kad je prazan, iz istog razloga kao Supabase vrijednosti: build
-  /// bez Google ID-a i dalje ima email OTP i Apple, pa je login ekran bez jednog dugmeta
+  /// bez Google ID-a i dalje ima email + lozinku i Apple, pa je login ekran bez jednog dugmeta
   /// bolji od app-e koja ne startuje. Login ekran (task 13) po ovome odlučuje da li Google
   /// uopšte prikazati.
   bool get hasGoogleSignIn => googleWebClientId.isNotEmpty;

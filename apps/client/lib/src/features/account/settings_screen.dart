@@ -173,7 +173,7 @@ class _KarticaProfila extends ConsumerWidget {
             )
           : Row(
               children: [
-                // Nalog nema avatar ni na jednom provideru koji app podržava — email OTP
+                // Nalog nema avatar ni na jednom provideru koji app podržava — email + lozinka
                 // ga ne daje. Okvir sa inicijalom je zato **predviđeno** stanje, isto kao
                 // kod radnika bez fotografije, a ne rupa koja čeka sliku.
                 PhotoFrame(

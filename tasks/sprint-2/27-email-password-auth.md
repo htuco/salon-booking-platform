@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Dokumentovan, nije implementiran |
+| **Status** | Demo kod implementiran; hostovani Supabase još nije konfigurisan |
 | **Procjena** | Demo 2–3 dana; produkcijski email dodatno 2–3 dana + dokaz SMTP/deep linka |
 | **Zavisi od** | Demo: [13](13-client-login-ekran.md) i Supabase pristup; produkcija: SMTP i finalni callback domen |
 | **Blokira** | Produkcijsku email prijavu i store release |
@@ -14,8 +14,9 @@ Zamijeniti klijentski email OTP klasičnom registracijom i prijavom emailom i lo
 potvrdu adrese, oporavak lozinke i povratak na sačuvani booking flow. Apple i Google nisu dio ove
 zamjene i nastavljaju raditi kroz postojeći `AuthConfig`.
 
-Ovaj fajl je trenutno samo implementacijski ugovor. Do eksplicitnog odobrenja ne mijenjaju se Dart
-kod, Supabase konfiguracija, templatei ni hostovani projekat.
+Implementacija demo faze je počela 16.09.2026. Dart kod i lokalni Supabase config koriste password
+tok; hostovani projekat još nije promijenjen jer lokalni CLI nema pristup projektu ni potvrđenu
+connection string putanju.
 
 ## Dogovorene faze
 
@@ -29,6 +30,18 @@ kod, Supabase konfiguracija, templatei ni hostovani projekat.
 - Admin koristi unaprijed kreiran i potvrđen Supabase nalog vezan samo za Vitez salon.
 - Potpuni scope i kriteriji prihvata su u
   [demo zahtjevima](../../docs/08-vitez-admin-demo-requirements.md).
+
+Stanje demo faze 16.09.2026:
+
+- [x] Klijentski OTP UI i repository metode zamijenjeni su prijavom i registracijom lozinkom.
+- [x] Validacija traži najmanje osam znakova, slovo i cifru; email se trimuje, lozinka ne.
+- [x] Signup bez sesije javlja konfiguracijsku grešku umjesto da obeća email koji demo ne šalje.
+- [x] Widget i repository testovi pokrivaju prijavu, registraciju, greške i povratak u booking flow.
+- [x] Bezlični `availability_signals` Realtime signal osvježava slotove i za tuđe rezervacije;
+      RLS test potvrđuje da ne izlaže appointment podatke.
+- [ ] Na hostovanom projektu isključiti **Confirm email** za trajanje demo faze.
+- [ ] Deployati migracije i seed na hostovani projekat; trenutno nema ni `public.salons`.
+- [ ] Odigrati registraciju, prijavu i booking protiv hostovanog projekta na uređaju.
 
 ### Faza B — produkcijski email
 
@@ -85,7 +98,7 @@ proizvoljan vanjski URL.
 
 ## Repository ugovor
 
-Ciljni ugovor zamjenjuje OTP metode; nazivi su dio plana, ne postojećeg koda:
+Demo ugovor koji je sada u kodu zamjenjuje OTP metode:
 
 ```dart
 abstract interface class AuthRepository {
@@ -96,17 +109,10 @@ abstract interface class AuthRepository {
     required String email,
     required String password,
   });
-  Future<EmailSignUpResult> signUpWithPassword({
+  Future<AuthSession> signUpWithPassword({
     required String email,
     required String password,
-    required Uri emailRedirectTo,
   });
-  Future<void> resendSignUpConfirmation({required String email});
-  Future<void> requestPasswordReset({
-    required String email,
-    required Uri redirectTo,
-  });
-  Future<void> updatePassword(String newPassword);
 
   Future<AuthSession> signInWithApple();
   Future<AuthSession> signInWithGoogle();
@@ -117,7 +123,8 @@ abstract interface class AuthRepository {
 }
 ```
 
-`EmailSignUpResult` mora razlikovati najmanje:
+Produkcijska faza proširuje ugovor sa `EmailSignUpResult`, resend, recovery i update-password
+metodama. `EmailSignUpResult` tada mora razlikovati najmanje:
 
 - potvrda poslana, još nema sesije;
 - sesija postoji (dozvoljeno samo u lokalnom testnom okruženju bez confirmationa);
@@ -189,7 +196,7 @@ lozinku. To je obavezan regresijski slučaj, ne pretpostavka.
 
 ## Definicija gotovog
 
-- [ ] OTP metode i OTP UI više nisu aktivni u klijentskoj aplikaciji.
+- [x] OTP metode i OTP UI više nisu aktivni u klijentskoj aplikaciji.
 - [ ] Registracija, potvrda emaila, prijava, odjava i reset lozinke rade na iOS-u i Androidu.
 - [ ] Web varijanta istih tokova radi bez mobile schemea.
 - [ ] Booking draft preživi izlazak u email aplikaciju i hladni povratak.

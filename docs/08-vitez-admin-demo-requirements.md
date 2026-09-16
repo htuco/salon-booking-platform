@@ -65,6 +65,9 @@ odgovarajuće dugme je onemogućeno uz poruku **Nije konfigurirano za ovaj demo*
 - Nakon prijave rezervacija se upisuje u stvarnu bazu za Vitez salon.
 - Zauzet termin vraća postojeći `409` tok i novi izbor termina; ne pravi dupli booking.
 - Korisnik vidi samo vlastite termine i može ih otkazati prema postojećim pravilima.
+- Promjena termina, blokade, radnog vremena ili booking postavki mijenja javni bezlični Realtime
+  signal salona; klijent zatim ponovo poziva availability RPC. Signal ne izlaže termin, klijenta,
+  vrijeme promjene ni kumulativni broj rezervacija.
 
 ## 3. Admin aplikacija
 
@@ -141,6 +144,7 @@ Demo je gotov kada su dokazani svi obavezni koraci:
 - [ ] Rezervacija započeta prije login ekrana ostaje sačuvana i nastaje u Vitez salonu.
 - [ ] Admin se prijavljuje stvarnim demo admin nalogom i vidi novu Vitez rezervaciju.
 - [ ] Admin potvrđuje ili odbija rezervaciju, a klijentsko stanje se pravilno osvježava.
+- [ ] Slot zauzet u drugoj sesiji nestaje iz otvorenog klijentskog flowa bez ručnog refresha.
 - [ ] Klijentski nalog ne može otvoriti admin podatke.
 - [ ] Vitez klijent i admin ne mogu pročitati podatke drugog salona.
 - [ ] Apple i Google ili prolaze na fizičkom uređaju ili su eksplicitno označeni kao
@@ -149,9 +153,9 @@ Demo je gotov kada su dokazani svi obavezni koraci:
 - [ ] Evidentirano je da su identifikatori demo placeholderi i da SMTP/recovery nisu testirani.
 - [ ] Ako je push dio prezentacije, notifikacija je primljena i otvorena na fizičkom uređaju.
 
-## 9. Šta je još potrebno prije implementacije
+## 9. Šta je još potrebno za live dokaz
 
-Za početak implementacije dovoljno je potvrditi ili obezbijediti:
+Kod je implementiran lokalno. Za deploy i dokaz na uređaju još treba:
 
 1. pristup Supabase projektu nakon rotacije database lozinke;
 2. Vitez `salon_id` i podatke demo admin naloga kroz siguran kanal;

@@ -6,6 +6,27 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class _MockSupabaseClient extends Mock implements SupabaseClient {}
 
+class _MockGoTrueClient extends Mock implements GoTrueClient {}
+
+const _user = User(
+  id: 'auth-user-1',
+  appMetadata: {
+    'provider': 'email',
+    'providers': ['email'],
+  },
+  userMetadata: {},
+  aud: 'authenticated',
+  email: 'gost@primjer.ba',
+  createdAt: '2026-09-16T00:00:00Z',
+);
+
+final _session = Session(
+  accessToken: 'test-token',
+  refreshToken: 'refresh-token',
+  tokenType: 'bearer',
+  user: _user,
+);
+
 /// `SupabaseAuthRepository` — ono što se može dokazati **bez tuđih konzola**. Task 12/13.
 ///
 /// Sam Apple i Google tok se odavde ne može odigrati: traži nativni dijalog, potpisan
@@ -13,6 +34,84 @@ class _MockSupabaseClient extends Mock implements SupabaseClient {}
 /// može, i baš ona je najlakša za propustiti — **da build bez konfiguracije padne prije
 /// dijaloga, sa porukom koja imenuje šta fali**.
 void main() {
+  group('email i lozinka', () {
+    late _MockSupabaseClient client;
+    late _MockGoTrueClient auth;
+    late SupabaseAuthRepository repo;
+
+    setUp(() {
+      client = _MockSupabaseClient();
+      auth = _MockGoTrueClient();
+      when(() => client.auth).thenReturn(auth);
+      repo = SupabaseAuthRepository(client);
+    });
+
+    test('prijava trimuje email, ali ne mijenja lozinku', () async {
+      when(
+        () => auth.signInWithPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => AuthResponse(session: _session));
+
+      final session = await repo.signInWithPassword(
+        email: '  gost@primjer.ba ',
+        password: ' Razmak123 ',
+      );
+
+      expect(session.userId, 'auth-user-1');
+      expect(session.providers, {'email'});
+      verify(
+        () => auth.signInWithPassword(
+          email: 'gost@primjer.ba',
+          password: ' Razmak123 ',
+        ),
+      ).called(1);
+    });
+
+    test('registracija bez confirmationa odmah vraća sesiju', () async {
+      when(
+        () => auth.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => AuthResponse(session: _session));
+
+      final session = await repo.signUpWithPassword(
+        email: 'novi@primjer.ba',
+        password: 'Sigurna123',
+      );
+
+      expect(session.email, 'gost@primjer.ba');
+      verify(
+        () => auth.signUp(email: 'novi@primjer.ba', password: 'Sigurna123'),
+      ).called(1);
+    });
+
+    test('registracija bez sesije prijavljuje pogrešan demo config', () async {
+      when(
+        () => auth.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => AuthResponse(user: _user));
+
+      await expectLater(
+        repo.signUpWithPassword(
+          email: 'novi@primjer.ba',
+          password: 'Sigurna123',
+        ),
+        throwsA(
+          isA<ServerError>().having(
+            (error) => error.message,
+            'poruka',
+            contains('Confirm email'),
+          ),
+        ),
+      );
+    });
+  });
+
   group('Google prijava bez konfiguracije', () {
     test('prazan web client ID baca prije nego što dijalog otvori', () async {
       final repo = SupabaseAuthRepository(_MockSupabaseClient());
@@ -39,7 +138,7 @@ void main() {
       final repo = SupabaseAuthRepository(_MockSupabaseClient());
 
       // Prazno je **ispravno stanje**, ne greška pri konstrukciji: većina buildova danas
-      // nema Google, a app mora raditi sa email OTP-om.
+      // nema Google, a app mora raditi sa emailom i lozinkom.
       expect(repo.google, bezGoogleKlijenata);
       expect(repo.google.web, isEmpty);
     });
