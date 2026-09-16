@@ -414,7 +414,7 @@
   },
 
   "bookingContinueEmail": "Nastavi sa emailom",
-  "@bookingContinueEmail": { "description": "Prijava preko email OTP koda." },
+  "@bookingContinueEmail": { "description": "Prijava ili registracija emailom i lozinkom." },
 
   "bookingLegalNotice": "Prijavom prihvatate Uslove i Politiku privatnosti.",
   "@bookingLegalNotice": {
@@ -568,56 +568,65 @@
     "description": "Naslov /auth/login kad se otvori van booking flowa. Unutar flowa naslov ostaje bookingLastStepTitle."
   },
 
-  "loginHint": "Bez lozinke. Prijava traje jedan dodir.",
-  "@loginHint": { "description": "Podnaslov login ekrana, docs/06 §1.1." },
+  "loginHint": "Prijavite se da rezervišete i pratite svoje termine.",
+  "@loginHint": { "description": "Podnaslov login ekrana izvan booking flowa." },
 
-  "loginEmailTitle": "Vaš email",
-  "@loginEmailTitle": { "description": "Naslov koraka u kojem se unosi email za OTP kod." },
+  "loginEmailTitle": "Prijava emailom",
+  "@loginEmailTitle": { "description": "Naslov email + lozinka prijave." },
 
-  "loginEmailHint": "Šaljemo šestocifreni kod. Bez linka i bez lozinke.",
+  "loginEmailHint": "Unesite email i lozinku svog računa.",
   "@loginEmailHint": {
-    "description": "Objasnjenje ispod polja za email. OTP, nikad magic link — docs/06 §2.1."
+    "description": "Objašnjenje ispod naslova email prijave."
   },
+
+  "loginSignUpTitle": "Kreirajte račun",
+  "@loginSignUpTitle": { "description": "Naslov email registracije." },
+
+  "loginSignUpHint": "Račun je odmah spreman za demo — ne šaljemo email potvrdu.",
+  "@loginSignUpHint": { "description": "Demo registracija bez SMTP/confirmation toka." },
 
   "loginEmailLabel": "Email adresa",
   "@loginEmailLabel": { "description": "Labela polja za email." },
 
-  "loginSendCode": "Pošalji kod",
-  "@loginSendCode": { "description": "CTA koji zove signInWithOtp." },
+  "loginPasswordLabel": "Lozinka",
+  "@loginPasswordLabel": { "description": "Labela polja za lozinku." },
 
-  "loginCodeTitle": "Unesite kod",
-  "@loginCodeTitle": { "description": "Naslov koraka u kojem se unosi sestocifreni OTP kod." },
+  "loginPasswordRepeatLabel": "Ponovite lozinku",
+  "@loginPasswordRepeatLabel": { "description": "Labela potvrde lozinke pri registraciji." },
 
-  "loginCodeSentTo": "Kod smo poslali na {email}.",
-  "@loginCodeSentTo": {
-    "description": "Potvrda gdje je kod otisao, iznad polja za kod.",
-    "placeholders": { "email": { "type": "String" } }
-  },
+  "loginShowPassword": "Prikaži lozinku",
+  "@loginShowPassword": { "description": "Tooltip za prikaz lozinke." },
 
-  "loginCodeLabel": "Šestocifreni kod",
-  "@loginCodeLabel": { "description": "Labela polja za OTP kod." },
+  "loginHidePassword": "Sakrij lozinku",
+  "@loginHidePassword": { "description": "Tooltip za skrivanje lozinke." },
 
-  "loginVerify": "Potvrdi",
-  "@loginVerify": { "description": "CTA koji zove verifyEmailOtp." },
+  "loginSignIn": "Prijavi se",
+  "@loginSignIn": { "description": "CTA za signInWithPassword." },
 
-  "loginResend": "Pošalji kod ponovo",
-  "@loginResend": { "description": "Ponovno slanje OTP koda." },
+  "loginCreateAccount": "Kreiraj račun",
+  "@loginCreateAccount": { "description": "CTA za signUp sa emailom i lozinkom." },
 
-  "loginChangeEmail": "Promijeni email",
-  "@loginChangeEmail": { "description": "Povratak na unos emaila sa koraka sa kodom." },
+  "loginNeedAccount": "Nemate račun? Kreirajte ga",
+  "@loginNeedAccount": { "description": "Prelazak sa prijave na registraciju." },
 
-  "loginCodeResent": "Novi kod je poslan.",
-  "@loginCodeResent": { "description": "Potvrda nakon ponovnog slanja koda." },
+  "loginHaveAccount": "Već imate račun? Prijavite se",
+  "@loginHaveAccount": { "description": "Prelazak sa registracije na prijavu." },
+
+  "loginDemoEmailNotice": "Demo ne šalje potvrdu emaila niti podržava zaboravljenu lozinku.",
+  "@loginDemoEmailNotice": { "description": "Iskrena napomena o demo email ograničenjima." },
 
   "loginInvalidEmail": "Unesite ispravnu email adresu.",
   "@loginInvalidEmail": { "description": "Validacija emaila prije nego sto se posalje zahtjev." },
 
-  "loginInvalidCode": "Kod ima šest cifara.",
-  "@loginInvalidCode": { "description": "Validacija duzine OTP koda prije slanja." },
+  "loginInvalidPassword": "Lozinka mora imati najmanje 8 znakova, jedno slovo i jednu cifru.",
+  "@loginInvalidPassword": { "description": "Javno password pravilo demo registracije i prijave." },
 
-  "loginRejected": "Kod nije tačan ili je istekao. Pošaljite novi.",
+  "loginPasswordsDoNotMatch": "Lozinke se ne podudaraju.",
+  "@loginPasswordsDoNotMatch": { "description": "Validacija potvrde lozinke." },
+
+  "loginRejected": "Pogrešan email ili lozinka.",
   "@loginRejected": {
-    "description": "AuthRejectedError na login ekranu. Korisnikova greska, ne kvar sistema."
+    "description": "Generička auth poruka koja ne otkriva postoji li račun."
   },
 
   "loginRateLimited": "Previše pokušaja. Sačekajte minut pa pokušajte ponovo.",
@@ -778,8 +787,8 @@
   "accountSignedInWith": "Prijava",
   "@accountSignedInWith": { "description": "Labela reda koji kaže kojim providerom je korisnik prijavljen." },
 
-  "accountProviderEmail": "Email kod",
-  "@accountProviderEmail": { "description": "Ime email OTP providera, kako ga korisnik vidi." },
+  "accountProviderEmail": "Email i lozinka",
+  "@accountProviderEmail": { "description": "Ime email/password providera, kako ga korisnik vidi." },
 
   "accountNoEmail": "Bez email adrese",
   "@accountNoEmail": { "description": "Nalog bez maila — Apple private relay i gost. Ne prazan red, jer prazan red izgleda kao greška učitavanja." },

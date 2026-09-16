@@ -21,7 +21,7 @@ import 'auth_provider.dart';
 class AuthConfig {
   const AuthConfig({required this.enabled, required this.allowGuest});
 
-  /// Ono što svaki tenant dobija dok ne kaže drugačije: Apple, Google i email OTP, bez
+  /// Ono što svaki tenant dobija dok ne kaže drugačije: Apple, Google i email + lozinka, bez
   /// gosta. Facebook je isključen — v. [AuthProvider.facebook].
   static const AuthConfig fallback = AuthConfig(
     enabled: {AuthProvider.apple, AuthProvider.google, AuthProvider.email},

@@ -13,9 +13,9 @@
 # demo tenanti se razlikuju u zadnjoj cifri i pogresan izgleda ispravno dok se ne
 # pogleda ime salona u zaglavlju.
 #
-# Backend: ako lokalni Supabase radi, njegov URL i **anon** kljuc idu kao --dart-define.
-# Ako ne radi, app se svejedno digne — Supabase klijent se tada ne inicijalizuje i ekrani
-# ostanu na kosturu. Za vizuelnu provjeru bez backenda postoji `demo`.
+# Backend: eksplicitni `SUPABASE_URL`/`SUPABASE_ANON_KEY` imaju prednost (hostovani demo).
+# Bez njih skripta koristi lokalni Supabase ako radi. Ako nema nijednog, app se digne bez
+# klijenta i ekrani ostanu na kosturu. Za vizuelnu provjeru postoji `demo`.
 #
 # Sta se NIKAD ne uzima iz `supabase status -o env`: SERVICE_ROLE_KEY i SECRET_KEY.
 # Service role kljuc zaobilazi RLS u potpunosti i ne smije postojati u klijentskom buildu.
@@ -76,24 +76,68 @@ fi
 version_name="$(citaj versionName)"
 ios_build="$(citaj iosBuildNumber)"
 
+# Android emulator host vidi kroz 10.0.2.2; 127.0.0.1 bi pokazao na sam emulator.
+flutter_device=""
+previous_arg=""
+for current_arg in "$@"; do
+  if [ "$previous_arg" = "-d" ] || [ "$previous_arg" = "--device-id" ]; then
+    flutter_device="$current_arg"
+    break
+  fi
+  case "$current_arg" in
+    --device=*) flutter_device="${current_arg#--device=}"; break ;;
+  esac
+  previous_arg="$current_arg"
+done
+
 defines=(--dart-define="SALON_ID=$salon_id")
 backend="bez backenda (ekrani ostaju na kosturu)"
 
 # Samo za pravi entry point: demo_main.dart puni providere sam i Supabase mu ne treba.
-if [ "$nacin" = "main" ] && command -v supabase >/dev/null 2>&1; then
+if [ "$nacin" = "main" ]; then
+  if { [ -n "${SUPABASE_URL:-}" ] && [ -z "${SUPABASE_ANON_KEY:-}" ]; } ||
+     { [ -z "${SUPABASE_URL:-}" ] && [ -n "${SUPABASE_ANON_KEY:-}" ]; }; then
+    echo "SUPABASE_URL i SUPABASE_ANON_KEY moraju biti postavljeni zajedno" >&2
+    exit 1
+  fi
+
+  if [ -n "${SUPABASE_URL:-}" ]; then
+    defines+=(
+      --dart-define="SUPABASE_URL=$SUPABASE_URL"
+      --dart-define="SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+    )
+    backend="hostovani Supabase ($SUPABASE_URL)"
+  elif command -v supabase >/dev/null 2>&1; then
   # Podljuska, da se SERVICE_ROLE_KEY i SECRET_KEY ne zadrze u okolini koju nasljedjuje
   # flutter proces. Izlaz `supabase status -o env` nosi oba.
-  supabase_env="$(
-    cd "$root" && supabase status -o env 2>/dev/null | grep -E '^(API_URL|ANON_KEY)=' || true
-  )"
-  if [ -n "$supabase_env" ]; then
-    api_url="$(printf '%s\n' "$supabase_env" | sed -n 's/^API_URL="\{0,1\}//p' | tr -d '"')"
-    anon_key="$(printf '%s\n' "$supabase_env" | sed -n 's/^ANON_KEY="\{0,1\}//p' | tr -d '"')"
-    if [ -n "$api_url" ] && [ -n "$anon_key" ]; then
-      defines+=(--dart-define="SUPABASE_URL=$api_url" --dart-define="SUPABASE_ANON_KEY=$anon_key")
-      backend="lokalni Supabase ($api_url)"
+    supabase_env="$(
+      cd "$root" && supabase status -o env 2>/dev/null | grep -E '^(API_URL|ANON_KEY)=' || true
+    )"
+    if [ -n "$supabase_env" ]; then
+      api_url="$(printf '%s\n' "$supabase_env" | sed -n 's/^API_URL="\{0,1\}//p' | tr -d '"')"
+      anon_key="$(printf '%s\n' "$supabase_env" | sed -n 's/^ANON_KEY="\{0,1\}//p' | tr -d '"')"
+      if [ -n "$api_url" ] && [ -n "$anon_key" ]; then
+        if [[ "$flutter_device" == emulator-* ]]; then
+          api_url="${api_url/127.0.0.1/10.0.2.2}"
+          api_url="${api_url/localhost/10.0.2.2}"
+        fi
+        defines+=(--dart-define="SUPABASE_URL=$api_url" --dart-define="SUPABASE_ANON_KEY=$anon_key")
+        backend="lokalni Supabase ($api_url)"
+      fi
     fi
   fi
+
+  if [ -n "${FIREBASE_DEFINES_FILE:-}" ]; then
+    [ -f "$FIREBASE_DEFINES_FILE" ] || {
+      echo "FIREBASE_DEFINES_FILE ne postoji: $FIREBASE_DEFINES_FILE" >&2
+      exit 1
+    }
+    defines+=(--dart-define-from-file="$FIREBASE_DEFINES_FILE")
+  fi
+  [ -n "${GOOGLE_WEB_CLIENT_ID:-}" ] &&
+    defines+=(--dart-define="GOOGLE_WEB_CLIENT_ID=$GOOGLE_WEB_CLIENT_ID")
+  [ -n "${GOOGLE_IOS_CLIENT_ID:-}" ] &&
+    defines+=(--dart-define="GOOGLE_IOS_CLIENT_ID=$GOOGLE_IOS_CLIENT_ID")
 fi
 
 # Simulator: bez pokrenutog uredjaja `flutter run` ili pita, ili padne na desktop target.

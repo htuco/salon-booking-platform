@@ -12,7 +12,7 @@
 proizvoda i do sada ne postoji.
 
 ## Definicija gotovog
-- [x] Login za osoblje (email + lozinka ili OTP), odvojen od klijentskog flowa
+- [x] Login za osoblje (email + lozinka), odvojen od klijentskog flowa
 - [x] `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` — oba uslova,
       kako `security.md` traži
 - [x] Dashboard: današnji termini, broj `pending` zahtjeva
@@ -37,9 +37,11 @@ zakazano — do sada je sav rad išao u klijentsku app.
 
 ### Šta je isporučeno
 
-- **`StaffRepository` + `StaffMember`**, zasebno od klijentskog `AuthRepository`. Taj ugovor je
-  pisan za Apple, Google, OTP bez lozinke, gosta i brisanje naloga; ništa od toga nije admin tok, a
-  `signInWithPassword` u njemu bi svakom klijentskom ekranu ponudio metodu koju ne smije zvati.
+- **`StaffRepository` + `StaffMember`**, zasebno od klijentskog `AuthRepository`. U trenutku
+  isporuke klijentski ugovor je bio pisan za Apple, Google, OTP, gosta i brisanje naloga.
+  [ADR-0010](../../docs/adr/0010-email-lozinka-umjesto-otp-a.md) kasnije dodaje password i klijentu,
+  ali repozitoriji ostaju odvojeni: admin login mora vratiti i validirati `StaffMember`/salon
+  članstvo, dok klijentski login vraća globalni `AuthIdentity` i per-salon `Customer`.
 - **`StaffAppointmentRepository`** — dan, raspon, filter po statusu, i `pendingCount` koji **broji u
   bazi**: PostgREST reže na `max_rows`, pa bi povlačenje liste pa brojanje u Dartu dalo tih i
   pogrešan broj kod salona sa mnogo termina.

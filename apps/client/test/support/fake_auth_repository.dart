@@ -9,19 +9,19 @@ import 'package:core_domain/core_domain.dart';
 /// prije prvog frejma. Bez ove zamjene bi svaki widget test koji podigne app-u padao na
 /// inicijalizaciji, a ne na onome što mjeri.
 ///
-/// Ponašanje se podešava po testu: [otpGreska] i [prijavaGreska] puštaju grešku kroz isti
-/// put kojim bi prošla prava, pa ekran ne zna razliku.
+/// Ponašanje se podešava po testu: [prijavaGreska] i [registracijaGreska] puštaju grešku
+/// kroz isti put kojim bi prošla prava, pa ekran ne zna razliku.
 class FakeAuthRepository implements AuthRepository {
   FakeAuthRepository({
     AuthSession? pocetnaSesija,
-    this.otpGreska,
     this.prijavaGreska,
+    this.registracijaGreska,
     this.brisanjeGreska,
   }) : _sesija = pocetnaSesija {
     _kontroler.add(_sesija);
   }
 
-  /// Sesija koju vraća uspješna `verifyEmailOtp`.
+  /// Sesija koju vraća uspješan email login ili registracija.
   static const sesijaNakonPrijave = AuthSession(
     userId: 'auth-user-1',
     providers: {'email'},
@@ -31,11 +31,11 @@ class FakeAuthRepository implements AuthRepository {
   final _kontroler = StreamController<AuthSession?>.broadcast();
   AuthSession? _sesija;
 
-  /// Greška koju baca [requestEmailOtp], ili `null` za uspjeh.
-  final ApiError? otpGreska;
-
-  /// Greška koju baca [verifyEmailOtp], ili `null` za uspjeh.
+  /// Greška koju baca [signInWithPassword], ili `null` za uspjeh.
   final ApiError? prijavaGreska;
+
+  /// Greška koju baca [signUpWithPassword], ili `null` za uspjeh.
+  final ApiError? registracijaGreska;
 
   /// Greška koju baca [deleteAccount], ili `null` za uspjeh. Task 17.
   final ApiError? brisanjeGreska;
@@ -44,10 +44,10 @@ class FakeAuthRepository implements AuthRepository {
   /// odustajanje **ne** okine ništa.
   int brojBrisanja = 0;
 
-  /// Koliko je puta kod zatražen — dokaz da „Pošalji ponovo" stvarno šalje.
-  int brojZahtjevaZaKod = 0;
+  int brojPrijava = 0;
+  int brojRegistracija = 0;
 
-  /// Zadnja adresa na koju je kod tražen.
+  /// Zadnja adresa poslana Supabase Authu. Lozinka se namjerno ne čuva u test fakeu.
   String? zadnjiEmail;
 
   void dispose() => _kontroler.close();
@@ -59,18 +59,26 @@ class FakeAuthRepository implements AuthRepository {
   AuthSession? get currentSession => _sesija;
 
   @override
-  Future<void> requestEmailOtp(String email) async {
-    brojZahtjevaZaKod++;
+  Future<AuthSession> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    brojPrijava++;
     zadnjiEmail = email;
-    if (otpGreska != null) throw otpGreska!;
+    if (prijavaGreska != null) throw prijavaGreska!;
+    _sesija = sesijaNakonPrijave;
+    _kontroler.add(_sesija);
+    return sesijaNakonPrijave;
   }
 
   @override
-  Future<AuthSession> verifyEmailOtp({
+  Future<AuthSession> signUpWithPassword({
     required String email,
-    required String code,
+    required String password,
   }) async {
-    if (prijavaGreska != null) throw prijavaGreska!;
+    brojRegistracija++;
+    zadnjiEmail = email;
+    if (registracijaGreska != null) throw registracijaGreska!;
     _sesija = sesijaNakonPrijave;
     _kontroler.add(_sesija);
     return sesijaNakonPrijave;

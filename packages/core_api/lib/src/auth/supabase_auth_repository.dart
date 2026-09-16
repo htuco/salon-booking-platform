@@ -15,18 +15,10 @@ import 'auth_repository.dart';
 /// Task 12 je ostavio ugovor i konfiguraciju; ovo je prva implementacija
 /// ([task 13](../../../../../tasks/sprint-2/13-client-login-ekran.md)).
 ///
-/// ## Šta ovdje stvarno radi, a šta ne
-///
-/// **Email OTP radi u cijelosti** — `signInWithOtp` pa `verifyOTP`, oboje kroz
-/// `supabase_flutter`, koji je već zavisnost ovog paketa. To je i jedini provider koji se
-/// može dokazati bez tuđih konzola (`docs/06 §7.3`: nula minuta po flavoru).
-///
-/// **Apple, Google i Facebook bacaju, ne vraćaju praznu sesiju.** Nativni tok traži pakete
-/// kojih u `pubspec.yaml` nema (`sign_in_with_apple`, `google_sign_in`,
-/// `flutter_facebook_auth` — `docs/06 §6.1`), a i sa njima bi ostao nedokazan: client
-/// ID-evi iz `tasks/sprint-2/12-konzole-checklist.md` nisu upisani, pa bi prvi poziv pao u
-/// Google/Apple dijalogu. Tiho vraćanje `null`-a bi to sakrilo do prvog uređaja; baca se
-/// [ServerError] sa imenom paketa koji fali.
+/// Email koristi klasični `signUp`/`signInWithPassword`. Demo okruženje ne šalje email:
+/// confirmation je isključen, pa registracija mora odmah vratiti sesiju. Ako hostovani
+/// projekat još traži potvrdu, repozitorij to prijavi kao konfiguracijsku grešku umjesto
+/// da ekran obeća poruku koju demo ne šalje.
 ///
 /// ## Zašto se ne koristi `supabase.auth.currentUser` iznad ovog sloja
 ///
@@ -64,34 +56,34 @@ class SupabaseAuthRepository implements AuthRepository {
   AuthSession? get currentSession => _sesija(_auth.currentSession);
 
   @override
-  Future<void> requestEmailOtp(String email) => guard(() async {
-    await _auth.signInWithOtp(
+  Future<AuthSession> signInWithPassword({
+    required String email,
+    required String password,
+  }) => guard(() async {
+    final odgovor = await _auth.signInWithPassword(
       email: email.trim(),
-      // Klijent salona nema gdje da se "registruje" prije prve rezervacije — prva
-      // prijava **jeste** registracija (`docs/06 §1.1`: nikad forma za registraciju).
-      shouldCreateUser: true,
+      // Lozinka se namjerno ne trimuje. Razmak može biti njen stvarni znak, a tiha
+      // promjena bi korisniku napravila lozinku različitu od one koju je unio.
+      password: password,
     );
+    return _obaveznaSesija(odgovor.session, 'Email');
   });
 
   @override
-  Future<AuthSession> verifyEmailOtp({
+  Future<AuthSession> signUpWithPassword({
     required String email,
-    required String code,
+    required String password,
   }) => guard(() async {
-    final odgovor = await _auth.verifyOTP(
-      email: email.trim(),
-      token: code.trim(),
-      // `OtpType.email`, ne `signup`: isti tip pokriva i prvu prijavu i svaku sljedeću,
-      // jer `shouldCreateUser` iznad već odlučuje hoće li nalog nastati. Sa `signup` bi
-      // postojeći korisnik dobio "Token has expired or is invalid" na tačan kod.
-      type: OtpType.email,
-    );
+    final odgovor = await _auth.signUp(email: email.trim(), password: password);
 
     final sesija = _sesija(odgovor.session);
     if (sesija == null) {
-      // Ne bi trebalo da se desi: `verifyOTP` bez sesije, a bez greške. Ako se desi,
-      // ekran mora dobiti grešku — inače bi korisnik ostao na login ekranu bez poruke.
-      throw const ServerError('Prijava nije vratila sesiju');
+      // `signUp` bez sesije znači da je confirmation uključen. To je valjan produkcijski
+      // odgovor, ali nije valjan za demo bez SMTP-a: korisnik bi ostao zaključan na
+      // računu kojem potvrda nikad neće stići.
+      throw const ServerError(
+        'Supabase traži potvrdu emaila. Za demo isključi Confirm email prije registracije.',
+      );
     }
     return sesija;
   });

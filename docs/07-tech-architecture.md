@@ -28,7 +28,7 @@ salon_platform/
 │   │   │   └── src/
 │   │   │       ├── features/        # feature-first, ne layer-first
 │   │   │       │   ├── booking/     # service → employee → slot → details → success
-│   │   │       │   ├── auth/        # login, OTP, AuthConfig po platformi
+│   │   │       │   ├── auth/        # login, signup, recovery, AuthConfig po platformi
 │   │   │       │   ├── account/     # moj račun, brisanje računa
 │   │   │       │   ├── appointments/# moji termini, otkazivanje
 │   │   │       │   └── home/        # salon landing, usluge, tim, galerija

@@ -430,7 +430,7 @@ Cilj: **30 minuta tvog vremena.**
 - [ ] Supabase → Auth → Google → **Client IDs**: dodaj nove ID-eve u comma-separated listu (**web ID prvi**)
 - [ ] (iOS) `Sign In with Apple` capability — automatski kroz `fastlane produce`
 - [ ] (iOS) Supabase → Auth → Apple → **Client IDs**: dodaj bundle ID u listu
-- [ ] Email OTP: ništa po flavoru ✅
+- [ ] Email + lozinka: confirmation/recovery callback za flavor na Supabase allow-listi
 - [ ] Facebook: **samo ako je eksplicitno zatražen** — v. [06 §7.4](06-auth-login-flow.md)
 - [ ] **Testiraj Google login na signed release buildu**, ne samo u debugu ⚠️
 

@@ -63,7 +63,7 @@ Mockup u `prototype/wireframe/src/app/` je **prototip za validaciju**, ne produc
 | [HomePage.tsx](../src/app/pages/HomePage.tsx) `theme="beauty"` | isti screen, `ThemeData` iz backenda | client |
 | [BookingFlow.tsx](../src/app/pages/BookingFlow.tsx) | `client/screens/booking/` — 4 step widgeta u `PageView` | client |
 | [BookingSuccess.tsx](../src/app/pages/BookingSuccess.tsx) | `client/screens/booking/success_screen.dart` | client |
-| [ClientLogin.tsx](../src/app/pages/ClientLogin.tsx) | `client/screens/auth/login_screen.dart` + `email_otp_screen.dart` | client |
+| [ClientLogin.tsx](../src/app/pages/ClientLogin.tsx) | `client/screens/auth/` — provider izbor + email sign-in/sign-up/recovery | client |
 | [ClientAccount.tsx](../src/app/pages/ClientAccount.tsx) | `client/screens/account_screen.dart` | client |
 | [MyAppointments.tsx](../src/app/pages/MyAppointments.tsx) | `client/screens/my_appointments_screen.dart` | client |
 | [AdminLogin.tsx](../src/app/pages/AdminLogin.tsx) | `admin/screens/login_screen.dart` | admin |
@@ -172,7 +172,8 @@ Klijent u prve dvije sekunde vidi čiji je salon, šta nudi, i može zakazati je
 
 **Ruta:** `/book/*` · **Prioritet:** Must
 
-**Cilj: naručivanje u manje od 60 sekundi.** Bez forme za registraciju, bez broja telefona — prijava je jedan tap na kraju flow-a.
+**Cilj: naručivanje u manje od 60 sekundi za postojećeg korisnika.** Bez broja telefona; social
+prijava je jedan tap, a novi email korisnik ima kratku registraciju na kraju flow-a.
 
 ```mermaid
 flowchart TD
@@ -185,7 +186,7 @@ flowchart TD
     EMPTY -->|Ne| ALT[Prazno stanje<br/>Naredni slobodan dan]
     ALT --> S3
     EMPTY -->|Da| AUTH{Prijavljen?}
-    AUTH -->|Ne| LOGIN[Login: Apple / Google<br/>Facebook / Email OTP]
+    AUTH -->|Ne| LOGIN[Login: Apple / Google<br/>Facebook / Email + lozinka]
     LOGIN --> S4
     AUTH -->|Da| S4[4 · Pregled i pošalji]
     S4 --> POST[POST /appointments]
@@ -414,29 +415,34 @@ Klijent je izabrao termin. Sad se traži prijava. **Nikad ranije.** Puni dizajn 
 - "Nastavi kao gost" se prikazuje **samo** ako je `allowGuestBooking: true` — default off
 - Nakon prijave klijent se vraća **točno na korak 4**, sa sačuvanim slotom
 - Ako je slot u međuvremenu zauzet → `409` i vraćanje na korak 3 sa objašnjenjem
-- **Nema forme za registraciju.** Nikad "unesi email, ponovi lozinku"
+- Email korisnik bira **Prijava** ili **Kreiraj račun**; forma ne traži profil ni telefon
 
-#### Email OTP — dva podekrana
+#### Email + lozinka — prijava, registracija i recovery
 
 ```
 ┌─────────────────────────────────────┐      ┌─────────────────────────────────────┐
-│ ←                                   │      │ ←                                   │
+│ ←  Prijava                         │      │ ←  Kreiraj račun                  │
 ├─────────────────────────────────────┤      ├─────────────────────────────────────┤
-│  Vaš email                          │      │  Unesite kod                        │
-│                                     │      │                                     │
-│  Poslat ćemo vam 6-cifreni kod.     │      │  Poslali smo kod na                 │
-│                                     │      │  adnan@email.ba                     │
-│  ┌─────────────────────────────┐    │      │                                     │
-│  │ adnan@email.ba              │    │      │  ┌───┐┌───┐┌───┐┌───┐┌───┐┌───┐    │
-│  └─────────────────────────────┘    │      │  │ 4 ││ 8 ││ 1 ││ 2 ││   ││   │    │
-│                                     │      │  └───┘└───┘└───┘└───┘└───┘└───┘    │
-│  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   │      │                                     │
-│  ┃      POŠALJI KOD            ┃   │      │  Nisam dobio kod — pošalji ponovo   │
-│  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   │      │  (dostupno za 42s)                  │
-└─────────────────────────────────────┘      └─────────────────────────────────────┘
+│  Email                              │      │  Email                              │
+│  ┌─────────────────────────────┐    │      │  ┌─────────────────────────────┐    │
+│  │ adnan@email.ba              │    │      │  │ adnan@email.ba              │    │
+│  └─────────────────────────────┘    │      │  └─────────────────────────────┘    │
+│  Lozinka                            │      │  Lozinka · najmanje 8 znakova  │
+│  ┌─────────────────────────────┐    │      │  Ponovite lozinku                  │
+│  │ ••••••••                  👁 │    │      │                                     │
+│  └─────────────────────────────┘    │      │  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   │
+│  Zaboravili ste lozinku?            │      │  ┃      KREIRAJ RAČUN          ┃   │
+│  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   │      │  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   │
+│  ┃        PRIJAVI SE            ┃   │      │  Već imate račun? Prijavite se. │
+│  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   │      └─────────────────────────────────────┘
+│  Nemate račun? Kreirajte ga.      │
+└─────────────────────────────────────┘
 ```
 
-**Bez lozinke.** OTP kod, ne email+password — nema zaboravljenih lozinki, nema reset flow-a, nema support poziva ([06 §2.1](06-auth-login-flow.md)). Auto-submit kad se unese 6. cifra. Auto-fill iz SMS/email gdje platforma podržava.
+Nakon registracije slijedi ekran **Potvrdite email** sa resend cooldownom. Recovery ima poseban
+unos emaila i ekran **Nova lozinka** nakon valjanog callbacka. Svaki od tih ekrana zadržava karticu
+izabranog termina ili lokalno sačuvani booking draft. Puni tok: [06 §2.1](06-auth-login-flow.md)
+i [task 27](../tasks/sprint-2/27-email-password-auth.md).
 
 #### Zašto nema ekrana za telefon
 

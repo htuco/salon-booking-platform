@@ -7,6 +7,7 @@ import 'src/core/env/bootstrap.dart';
 import 'src/core/router/app_router.dart';
 import 'src/core/theme_provider.dart';
 import 'src/core/vertical_provider.dart';
+import 'src/features/booking/booking_flow_provider.dart';
 import 'src/l10n/generated/app_localizations.dart';
 
 Future<void> main() async {
@@ -34,6 +35,25 @@ class SalonClientApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tenant = ref.watch(tenantProvider);
+    final env = ref.watch(appEnvProvider);
+
+    // Realtime prati samo redove koje trenutni JWT smije vidjeti. Događaj nije nova
+    // kopija termina: invalidira se tipizirani upit i availability RPC se ponovo poziva.
+    if (env.hasSupabase) {
+      // Availability signal je javan i ne sadrži podatke o terminima. Mora raditi i prije
+      // prijave, inače anonimni korisnik ne vidi da je neko drugi upravo zauzeo slot.
+      ref.listen(availabilityChangesProvider(env.salonId), (_, next) {
+        if (next.hasValue) ref.invalidate(availableSlotsProvider);
+      });
+
+      final sesija = ref.watch(currentAuthSessionProvider);
+      if (sesija != null) {
+        ref.listen(appointmentChangesProvider(env.salonId), (_, next) {
+          if (!next.hasValue) return;
+          ref.invalidate(myAppointmentsProvider);
+        });
+      }
+    }
     ref.watch(pushInitializationProvider);
     ref.listen(pushReceivedProvider, (_, next) {
       if (next.hasValue) ref.invalidate(myAppointmentsProvider);

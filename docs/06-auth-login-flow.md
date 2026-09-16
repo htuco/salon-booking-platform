@@ -4,8 +4,8 @@ Prijava klijenta: Apple, Google, Email i Facebook — sa identity modelom za mul
 
 | | |
 |---|---|
-| **Verzija** | v2 — Supabase Auth, bez broja telefona |
-| **Datum** | 21.08.2026. |
+| **Verzija** | v3 — email + lozinka, Supabase Auth, bez broja telefona |
+| **Datum** | 16.09.2026. |
 | **Prati** | [01-mvp-spec.md](01-mvp-spec.md) · [02-user-flows-wireframes.md](02-user-flows-wireframes.md) · [04-flutter-tenant-factory.md](04-flutter-tenant-factory.md) |
 
 ---
@@ -14,9 +14,9 @@ Prijava klijenta: Apple, Google, Email i Facebook — sa identity modelom za mul
 
 | | |
 |---|---|
-| **Provideri — iOS** | Apple · Google · Email (OTP) · Facebook |
-| **Provideri — Android** | Google · Email (OTP) · Facebook |
-| **Provideri — Web** | Google · Email (OTP) · Facebook |
+| **Provideri — iOS** | Apple · Google · Email + lozinka · Facebook |
+| **Provideri — Android** | Google · Email + lozinka · Facebook |
+| **Provideri — Web** | Google · Email + lozinka · Facebook |
 | **Kad se traži login** | Na **kraju** booking flow-a, ne na ulazu u app |
 | **Auth backend** | **Supabase Auth** — jedan projekat za sve tenante |
 | **Push** | **Firebase FCM** — samo kao dostavna cijev, bez Firebase Auth-a |
@@ -33,7 +33,8 @@ Prijava klijenta: Apple, Google, Email i Facebook — sa identity modelom za mul
 
 Registracija je frikcija. Svaki dodatni korak prije "Pošalji zahtjev" gubi klijente. To je i bio razlog originalne odluke "bez accounta".
 
-Ali social login nije registracija u starom smislu — to je **jedan tap**. I ono što se time dobija je značajno:
+Social login ostaje prijava jednim tapom. Email korisnik prolazi kratku registraciju samo prvi put,
+a poslije se prijavljuje emailom i lozinkom. Ono što se identitetom dobija je značajno:
 
 | Bez logina (v1) | Sa loginom |
 |---|---|
@@ -56,7 +57,9 @@ Tri odluke koje čuvaju konverziju:
 
 1. **Login se traži na kraju, ne na početku.** Klijent slobodno pregleda salon, usluge, cijene, tim i **slobodne termine**. Login se pojavi tek kad pritisne "Pošalji zahtjev" — u momentu kad je već odlučio. Standardni e-commerce pattern, ne pregovara se.
 
-2. **Nikad forma za registraciju.** Nema "unesi email, ponovi lozinku, prihvati uslove". Četiri dugmeta, jedan tap.
+2. **Social login ostaje jedan tap; email registracija je kratka i eksplicitna.** Postojeći
+   korisnik vidi email + lozinku, a novi korisnik email + lozinku + ponovljenu lozinku. Ne tražimo
+   profil, telefon ni podatke koji nisu potrebni za račun.
 
 3. **Ne traži se broj telefona.** Vidi §3.1 — ovo je jedan cijeli ekran manje u najosjetljivijem momentu flow-a.
 
@@ -70,7 +73,7 @@ Tri odluke koje čuvaju konverziju:
 |---|---|---|---|---|
 | **Sign in with Apple** | ✅ | ❌ | ⚠️ opciono | Na Androidu tehnički moguć preko web flow-a, ali besmislen |
 | **Google** | ✅ | ✅ | ✅ | Najkorišteniji u BiH |
-| **Email (OTP kod)** | ✅ | ✅ | ✅ | Naš fallback, i zadovoljava privacy zahtjev iz §8.1 |
+| **Email + lozinka** | ✅ | ✅ | ✅ | Registracija, potvrda emaila, prijava i recovery |
 | **Facebook** | ✅ | ✅ | ✅ | ⚠️ Vidi §7.4 prije obećavanja |
 
 Redoslijed dugmeta — po očekivanoj upotrebi, ne po abecedi:
@@ -83,17 +86,29 @@ Web:      [ Google ] [ Facebook ] [ Email ]
 
 Apple je prvi na iOS-u jer je native i najmanje frikcije za iPhone korisnika. Google je prvi na Androidu iz istog razloga.
 
-### 2.1 Email login — OTP, ne lozinka
+### 2.1 Email login — email + lozinka
 
-**Ne koristimo email + lozinka.** Koristimo **6-cifreni kod** poslan na email (Supabase Auth `signInWithOtp`).
+Email provider koristi klasični password flow ([ADR-0010](adr/0010-email-lozinka-umjesto-otp-a.md)):
 
-Razlozi:
-- Nema zaboravljenih lozinki → nema reset flow-a → nema support poziva
-- Nema čuvanja hash-eva lozinki → manji sigurnosni teret
-- Klijent salona se prijavljuje 3× godišnje — lozinku bi svakako zaboravio
-- Zadovoljava Apple privacy zahtjev iz §8.1 (samo ime i email, bez trackinga)
+- **Prijava:** `signInWithPassword(email, password)`.
+- **Registracija:** `signUp(email, password)` sa obaveznom potvrdom email adrese u produkciji.
+- **Zaboravljena lozinka:** `resetPasswordForEmail`, povratak u app i `updateUser` sa novom
+  lozinkom.
+- **Postojeći OTP korisnik:** postavlja prvu lozinku kroz isti recovery tok; ne dobija novi
+  `auth.users` ni `AuthIdentity` red.
 
-Magic link je alternativa, ali OTP kod je bolji na mobilnom — ne izlazi iz app-a u browser i vraća se.
+Minimalno pravilo je 8 znakova sa slovima i ciframa. Server je izvor istine. Lozinka se ne trimuje,
+ne zapisuje u logove i ne sprema u aplikacijsku bazu; Supabase Auth čuva samo hash.
+
+Produkcija koristi vlastiti SMTP za confirmation i recovery poruke. Oba linka moraju vratiti
+korisnika u tačan tenant flavor. Booking draft se lokalno čuva prije odlaska u email aplikaciju,
+jer potvrda može izazvati cold start. Detaljan ugovor i acceptance testovi su u
+[`tasks/sprint-2/27-email-password-auth.md`](../tasks/sprint-2/27-email-password-auth.md).
+
+> **Stanje koda 16.09.2026.** Demo faza koristi stvarni Supabase `signUp` i
+> `signInWithPassword`; OTP metode i UI više nisu aktivni. Za demo nema confirmationa, recoveryja
+> ni SMTP-a. Hostovani projekat još traži potvrdu emaila i nema deployanu aplikacijsku šemu, pa se
+> tok ne smatra dokazanim uživo. Produkcijski confirmation/recovery ostaju u tasku 27.
 
 ---
 
@@ -113,13 +128,18 @@ flowchart TD
     AUTH -->|Ne| LOGIN[Login screen]
 
     LOGIN --> P1[Apple / Google / Facebook]
-    LOGIN --> P2[Email OTP]
+    LOGIN --> P2[Email]
+    P2 --> EMODE{Ima račun?}
+    EMODE -->|Da| EPASS[Email + lozinka]
+    EMODE -->|Ne| SIGNUP[Kreiraj račun]
+    SIGNUP --> CONFIRM[Potvrdi email]
     LOGIN --> GUEST{allowGuestBooking?}
     GUEST -->|Da| GFORM[Nastavi kao gost: samo ime]
     GUEST -->|Ne| P1
 
     P1 --> S4
-    P2 --> S4
+    EPASS --> S4
+    CONFIRM --> S4
     GFORM --> S4
 
     S4 --> POST[POST /appointments]
@@ -172,7 +192,7 @@ Cutlio ne traži telefon, i to je ispravno. **Push notifikacija zamjenjuje i poz
 Supabase projekat "salon-platform"
 │
 ├── Auth (JEDAN dijeljeni user pool)
-│   └── providers: apple, google, facebook, email OTP
+│   └── providers: apple, google, facebook, email + lozinka
 │       └── Authorized Client IDs: comma-separated po flavoru (v. §7)
 │
 ├── Postgres
@@ -355,7 +375,7 @@ Gost unosi **samo ime**. Backend kreira anonimni `AuthIdentity` (`isAnonymous: t
 | Google native | `google_sign_in` → `supabase.auth.signInWithIdToken` |
 | Apple native | `sign_in_with_apple` → `signInWithIdToken` |
 | Facebook | `flutter_facebook_auth` → `signInWithIdToken` |
-| Email OTP | `supabase.auth.signInWithOtp` + `verifyOTP` |
+| Email + lozinka | `signUp` + `signInWithPassword` + `resetPasswordForEmail` + `updateUser` |
 | Push | `firebase_messaging` (samo FCM, bez Firebase Auth) |
 | Secure storage | `flutter_secure_storage` |
 
@@ -397,8 +417,15 @@ abstract interface class AuthRepository {
   Future<AuthSession> signInWithApple();
   Future<AuthSession> signInWithGoogle();
   Future<AuthSession> signInWithFacebook();
-  Future<void> requestEmailOtp(String email);
-  Future<AuthSession> verifyEmailOtp({required String email, required String code});
+  Future<AuthSession> signInWithPassword({required String email, required String password});
+  Future<EmailSignUpResult> signUpWithPassword({
+    required String email,
+    required String password,
+    required Uri emailRedirectTo,
+  });
+  Future<void> resendSignUpConfirmation({required String email});
+  Future<void> requestPasswordReset({required String email, required Uri redirectTo});
+  Future<void> updatePassword(String newPassword);
   Future<AuthSession> continueAsGuest({required String name});
   Future<void> signOut();
   Future<void> deleteAccount();          // obavezno, v. §8.2
@@ -409,13 +436,13 @@ Supabase tipovi **ne smiju** procuriti iznad ovog sloja. Ako kasnije pređeš na
 
 **Greške izlaze kao `ApiError`, ne kao `AuthResult`.** Skica je ranije imala `Future<AuthResult>`; u `core_api` svaki repozitorij već signalizira grešku bacanjem `ApiError`, pa bi drugi način signalizacije u istom paketu značio da ekran mora znati koji repozitorij koristi koji. Otkazivanje od strane korisnika (zatvoren Apple/Google dijalog) nije kvar nego očekivan ishod i ima vlastiti tip, `AuthCancelledError` — bez njega svaki korisnik koji se predomisli dobije crvenu poruku o grešci.
 
-**Stanje implementacije (task 13).** `SupabaseAuthRepository` pokriva `sessionChanges`,
-`currentSession`, `requestEmailOtp`, `verifyEmailOtp` i `signOut` — email prijava radi i dokazana
-je od ekrana do baze. `signInWithApple`/`signInWithGoogle`/`signInWithFacebook` bacaju `ServerError`
-sa imenom paketa koji fali (`sign_in_with_apple`, `google_sign_in`, `flutter_facebook_auth`):
-paketi nisu dodani jer se ni sa njima tok ne može odigrati dok client ID-evi iz
-[`12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md) nisu upisani.
-`continueAsGuest` je task 26, `deleteAccount` task 17.
+**Stanje implementacije (task 27, demo faza).** `SupabaseAuthRepository` pokriva
+`sessionChanges`, `currentSession`, `signInWithPassword`, `signUpWithPassword`, Apple, Google i
+`signOut`. Demo signup zahtijeva sesiju odmah; ako je confirmation uključen, vraća jasnu
+konfiguracijsku grešku. Produkcijski `EmailSignUpResult`, confirmation, resend i recovery još nisu
+implementirani. Apple i Google kod postoje, ali se ne mogu odigrati dok konzolna konfiguracija iz
+[`12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md) nije dostupna.
+`signInWithFacebook` i `continueAsGuest` su task 26, `deleteAccount` task 17.
 
 `currentSession` postoji uz `sessionChanges` zbog prvog frejma: router mora sinhrono znati smije li pustiti zaštićenu rutu, a `await` na stream bi prijavljenom korisniku dao treptaj login ekrana.
 
@@ -470,10 +497,14 @@ end
 
 > ⚠️ Supabase podrška za **više Apple client ID-eva** je manje dokumentovana od Google varijante. **Testiraj to na drugom flavoru prije nego uzmeš trećeg iOS klijenta.** Ako ne radi, fallback je Apple web OAuth flow sa jednim Service ID-om za sve tenante — manje elegantno, ali funkcionalno.
 
-### 7.3 Email OTP
-Ništa po flavoru. Jedan Supabase Auth za sve tenante. Email template može nositi naziv salona.
+### 7.3 Email + lozinka
 
-**Trošak:** 0 min po flavoru. Najvrjedniji provider u setu.
+Jedan Supabase Auth user pool ostaje zajednički, ali svaki flavor mora imati dozvoljene callback
+putanje za potvrdu emaila i recovery. Produkcija traži vlastiti SMTP, bosanske email template i
+stvarni HTTPS `SITE_URL`. Password policy je zajednički za sve tenante.
+
+**Trošak:** nema OAuth klijenta po flavoru, ali callback se mora testirati na svakom package/bundle
+ID-u i u stvarnim email klijentima.
 
 ### 7.4 Facebook — pročitaj prije nego obećaš klijentu ⚠️
 
@@ -546,7 +577,9 @@ Apple je 2024. ublažio pravilo: Sign in with Apple **nije više striktno obavez
 2. omogućava korisniku da **zadrži email privatnim**
 3. **ne prati** korisnika kroz app
 
-**Kako to zadovoljavamo:** nudimo Sign in with Apple na iOS-u. Naš Email OTP takođe zadovoljava sva tri uslova (naš servis, samo ime i email, bez trackinga), pa imamo dva nezavisna načina da prođemo 4.8.
+**Kako to zadovoljavamo:** nudimo Sign in with Apple na iOS-u. Email + lozinka ostaje first-party
+login, ali ne oslanjamo store prolaz na tvrdnju da on korisniku skriva email; Apple provider ostaje
+uključen i mora biti dokazan na release buildu.
 
 > Ne izostavljaj Apple sa iOS-a "jer 4.8 više nije obavezan". Formalno prolaziš, ali riskiraš raspravu sa review timom po svakom flavoru — a rasprave sa review timom su nam ionako najveći rizik ([04 §6.2](04-flutter-tenant-factory.md)).
 
@@ -587,10 +620,10 @@ Auth ide u **Sprint 2**, prije push notifikacija (jer `Device` visi na `AuthIden
 - `AuthConfig` u `core_domain` + filtriranje po platformi
 
 ### Sprint 2 — auth
-1. Supabase Auth provideri uključeni (Apple, Google, Email OTP) + comma-separated client ID-evi
+1. Supabase Auth provideri uključeni (Apple, Google, Email) + comma-separated client ID-evi
 2. Google native sign-in — **provjeri release SHA-1**
 3. Apple native sign-in — `fastlane` capability, na našem accountu
-4. Email OTP flow (`signInWithOtp` + `verifyOTP`)
+4. Email + lozinka: signup, confirmation, login, recovery i migracija postojećih OTP korisnika
 5. Login screen sa `AuthConfig` filtriranjem po platformi
 6. RLS policy + **test izolacije: klijent u dva salona, dokaži da salon A ne vidi salon B** ⚠️
 7. `AuthIdentity` upsert + `Customer` upsert po `(salonId, authIdentityId)`
@@ -610,8 +643,8 @@ Auth ide u **Sprint 2**, prije push notifikacija (jer `Device` visi na `AuthIden
 |---|---|
 | **Login se traži na kraju booking flow-a, ne na ulazu** | Klijent koji je izabrao termin prihvata login; onaj na ulazu odlazi |
 | **Pregled salona i slobodnih termina nikad ne traži login** | Inače je web kanal (Instagram, QR) mrtav |
-| Nema forme za registraciju — samo social + Email OTP | Četiri dugmeta, jedan tap |
-| **Email login je OTP kod, ne lozinka** | Nema reset flow-a, nema support poziva, zadovoljava 4.8 |
+| Social login je jedan tap; email ima kratku eksplicitnu registraciju | Email + lozinka traži jasan signup, ne pogađanje korisnikove namjere |
+| **Email login koristi lozinku, ne OTP** | Nova proizvodna odluka iz ADR-0010; uključuje confirmation i recovery |
 | **Ne tražimo broj telefona od klijenta** | Push zamjenjuje poziv i SMS. Jedan ekran manje, nula troška po poruci, manji GDPR teret. Cutlio radi isto |
 | Telefon ostaje na `Customer`, ali ga upisuje samo salon admin | Za klijente koji zovu telefonom i nikad neće imati app |
 | **Supabase Auth, ne Firebase Auth** | Auth i RLS su jedan sistem; premoštavanje Firebase tokena u Supabase JWT je nepotreban pokretni dio |
@@ -635,6 +668,8 @@ Auth ide u **Sprint 2**, prije push notifikacija (jer `Device` visi na `AuthIden
 - [Apple (sort of) removes its requirement that apps offer 'Sign in with Apple' support — 9to5Mac](https://9to5mac.com/2024/01/27/sign-in-with-apple-rules-app-store/)
 - [Apple Developer Forums — App Review 4.8.0 Design: Login Services](https://developer.apple.com/forums/thread/765145)
 - [Supabase Docs — Login with Google (multiple client IDs)](https://supabase.com/docs/guides/auth/social-login/auth-google)
+- [Supabase Docs — Password-based Auth](https://supabase.com/docs/guides/auth/passwords)
+- [Supabase Docs — Native Mobile Deep Linking](https://supabase.com/docs/guides/auth/native-mobile-deep-linking)
 - [Supabase Blog — Native Mobile Auth Support for Google and Apple Sign in](https://supabase.com/blog/native-mobile-auth)
 - [Supabase Discussion #32709 — Sign in with Apple multiple client ids](https://github.com/orgs/supabase/discussions/32709)
 - [Can you use one Facebook app ID with multiple Apps and Plugins?](https://fbtutorial.com/can-use-one-facebook-app-id-multiple-apps-plugins/)

@@ -17,12 +17,6 @@ import '../errors/errors.dart';
 /// koristi koji. Otkazivanje od strane korisnika (zatvoren Apple/Google dijalog) nije
 /// greška sistema nego očekivan ishod, pa ima vlastiti tip: [AuthCancelledError].
 ///
-/// ## Šta je od ovoga implementirano
-///
-/// **Ništa — ovo je samo ugovor.** Task 12 postavlja providere i konfiguraciju;
-/// `SupabaseAuthRepository` piše [task 13](../../../../tasks/sprint-2/13-client-login-ekran.md),
-/// koji je prvi koji ga ima gdje pozvati. Metode koje ni 13 ne treba nose oznaku uz sebe —
-/// [continueAsGuest] je task 26, [deleteAccount] task 17.
 /// Google OAuth client ID-evi za jedan build (`docs/06 §7.1`).
 ///
 /// Dva su, ne jedan:
@@ -67,16 +61,19 @@ abstract interface class AuthRepository {
   /// Implementira [task 26](../../../../tasks/sprint-2/26-gost-i-facebook.md).
   Future<AuthSession> signInWithFacebook();
 
-  /// Šalje šestocifreni OTP kod na [email].
-  ///
-  /// **OTP, nikad magic link.** Link na mobilnom izlazi iz app-a u browser i ne vraća se
-  /// pouzdano (`docs/06 §2.1`).
-  Future<void> requestEmailOtp(String email);
-
-  /// Provjerava kod iz [requestEmailOtp].
-  Future<AuthSession> verifyEmailOtp({
+  /// Prijava postojećeg korisnika email adresom i lozinkom.
+  Future<AuthSession> signInWithPassword({
     required String email,
-    required String code,
+    required String password,
+  });
+
+  /// Registracija email adresom i lozinkom.
+  ///
+  /// Demo Supabase projekat privremeno ima isključenu potvrdu emaila, pa uspješan poziv
+  /// mora odmah vratiti sesiju. Produkcijski confirmation tok je zasebna faza taska 27.
+  Future<AuthSession> signUpWithPassword({
+    required String email,
+    required String password,
   });
 
   /// Rezervacija bez naloga; dozvoljeno samo kad je `AuthConfig.allowGuest`.

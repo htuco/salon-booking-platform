@@ -2,7 +2,6 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -31,12 +30,8 @@ import 'login_controller.dart';
 /// zaobilaženje `autoDispose`-a nego posljedica toga što je prijava **dio flowa**.
 /// Dokazuje se mjerenjem, ne pretpostavkom: `login_screen_test.dart`.
 ///
-/// ## Koda za OTP ima dva koraka, i to nije u handoffu
-///
-/// `docs/06 §2.1` traži šestocifreni kod, a handoff ga nije nacrtao — 16 ekrana ne
-/// uključuje nijedan OTP ekran. Oblik je zato izveden iz tokena (`AppSpacing`, hairline
-/// granica, radius 0) i iz `inputDecorationTheme`, ne izmišljen: isti ritam kao ostatak
-/// flowa, bez ijedne nove vrijednosti.
+/// Email ima eksplicitnu prijavu i registraciju. Demo ne šalje confirmation/recovery
+/// poruke, ali uspjeh vraća stvarnu Supabase sesiju kojom booking prolazi RLS.
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({this.from, super.key});
 
@@ -123,14 +118,16 @@ class LoginScreen extends ConsumerWidget {
                     _Greska(poruka: _poruka(l10n, stanje.error!)),
                     const SizedBox(height: AppSpacing.lg),
                   ],
-                  if (stanje.notice != null) ...[
-                    _Obavijest(poruka: stanje.notice!),
-                    const SizedBox(height: AppSpacing.lg),
-                  ],
                   switch (stanje.phase) {
                     LoginPhase.providers => const _IzborProvidera(),
-                    LoginPhase.email => const _UnosEmaila(),
-                    LoginPhase.code => _UnosKoda(povratak: _povratak),
+                    LoginPhase.signIn => _EmailPasswordForma(
+                      povratak: _povratak,
+                      registracija: false,
+                    ),
+                    LoginPhase.signUp => _EmailPasswordForma(
+                      povratak: _povratak,
+                      registracija: true,
+                    ),
                   },
                   if (stanje.phase == LoginPhase.providers) ...[
                     const SizedBox(height: AppSpacing.lg),
@@ -148,17 +145,13 @@ class LoginScreen extends ConsumerWidget {
     );
   }
 
-  /// Nazad korak po korak kroz prijavu, pa tek onda van ekrana.
-  ///
-  /// Bez ovoga bi korisnik sa koraka sa kodom jednim dodirom ispao iz cijele prijave i
-  /// morao ponovo tražiti mail.
+  /// Nazad sa email forme vodi na izbor providera, pa tek onda van ekrana.
   void _nazad(BuildContext context, WidgetRef ref, LoginPhase phase) {
     final kontroler = ref.read(loginControllerProvider.notifier);
 
     switch (phase) {
-      case LoginPhase.code:
-        kontroler.promijeniEmail();
-      case LoginPhase.email:
+      case LoginPhase.signIn:
+      case LoginPhase.signUp:
         kontroler.nazadNaProvidere();
       case LoginPhase.providers:
         context.go(_povratak);
@@ -167,16 +160,16 @@ class LoginScreen extends ConsumerWidget {
 
   String _naslov(AppLocalizations l10n, LoginPhase phase) => switch (phase) {
     LoginPhase.providers => l10n.loginTitle,
-    LoginPhase.email => l10n.loginEmailTitle,
-    LoginPhase.code => l10n.loginCodeTitle,
+    LoginPhase.signIn => l10n.loginEmailTitle,
+    LoginPhase.signUp => l10n.loginSignUpTitle,
   };
 
   String _podnaslov(AppLocalizations l10n, LoginState stanje) =>
       switch (stanje.phase) {
         LoginPhase.providers =>
           _izFlowa ? l10n.bookingLastStepHint : l10n.loginHint,
-        LoginPhase.email => l10n.loginEmailHint,
-        LoginPhase.code => l10n.loginCodeSentTo(stanje.email),
+        LoginPhase.signIn => l10n.loginEmailHint,
+        LoginPhase.signUp => l10n.loginSignUpHint,
       };
 }
 
@@ -275,33 +268,6 @@ class _Greska extends StatelessWidget {
   }
 }
 
-/// Potvrda koja nije greška („Novi kod je poslan"). Neutralan obrub, ne crveni.
-class _Obavijest extends StatelessWidget {
-  const _Obavijest({required this.poruka});
-
-  final String poruka;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(LucideIcons.mailCheck, size: 20),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(child: Text(poruka, style: theme.textTheme.bodyMedium)),
-        ],
-      ),
-    );
-  }
-}
-
 /// Dugmad iz `visibleAuthProvidersProvider` — **ekran ne zna koji provideri postoje**.
 ///
 /// Lista je već filtrirana po platformi (`docs/06 §6.2`), pa ovdje nema nijednog
@@ -355,101 +321,36 @@ class _IzborProvidera extends ConsumerWidget {
   };
 }
 
-/// Unos email adrese. **Nema polja za telefon** (`docs/06 §3.1`).
-class _UnosEmaila extends ConsumerStatefulWidget {
-  const _UnosEmaila();
-
-  @override
-  ConsumerState<_UnosEmaila> createState() => _UnosEmailaState();
-}
-
-class _UnosEmailaState extends ConsumerState<_UnosEmaila> {
-  final _polje = TextEditingController();
-  String? _lokalnaGreska;
-
-  @override
-  void dispose() {
-    _polje.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final stanje = ref.watch(loginControllerProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          key: const ValueKey('login-email'),
-          controller: _polje,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.done,
-          autocorrect: false,
-          autofillHints: const [AutofillHints.email],
-          decoration: InputDecoration(
-            labelText: l10n.loginEmailLabel,
-            errorText: _lokalnaGreska,
-          ),
-          onSubmitted: (_) => _posalji(),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        AppButton(
-          label: l10n.loginSendCode,
-          loading: stanje.busy,
-          onPressed: _posalji,
-        ),
-      ],
-    );
-  }
-
-  /// Validacija prije poziva, da se rate limit ne troši na očigledno pogrešnu adresu.
-  ///
-  /// Provjera je namjerno gruba (`nešto@nešto.nešto`): stroža regula odbija adrese koje
-  /// stvarno postoje, a jedini pouzdan dokaz da adresa radi je kod koji na nju stigne.
-  void _posalji() {
-    final adresa = _polje.text.trim();
-    final ispravna = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(adresa);
-
-    setState(() {
-      _lokalnaGreska = ispravna
-          ? null
-          : AppLocalizations.of(context).loginInvalidEmail;
-    });
-    if (!ispravna) return;
-
-    // **Odfokusiraj prije prelaza na korak sa kodom.** Flutter web drži jedan DOM
-    // `<input>` za fokusirano polje i ne čisti mu vrijednost kad ga preuzme drugi
-    // `TextField` — korisnik bi u polju za kod zatekao svoju email adresu. Dart kontroler
-    // je pri tome prazan, pa nijedan widget test to ne vidi; našao je prvi prolaz kroz
-    // browser (v. status blok taska 13). `ValueKey` na poljima nije dovoljan, jer
-    // vrijednost ne dolazi iz Flutterovog stabla nego iz DOM-a.
-    //
-    // Na mobilnom je ovo usput i ispravno ponašanje: tastatura se sklanja kad zahtjev ode.
-    FocusScope.of(context).unfocus();
-
-    ref.read(loginControllerProvider.notifier).posaljiKod(adresa);
-  }
-}
-
-/// Unos šestocifrenog koda, pa povratak u flow.
-class _UnosKoda extends ConsumerStatefulWidget {
-  const _UnosKoda({required this.povratak});
+/// Email + lozinka. **Nema polja za telefon** (`docs/06 §3.1`) niti recovery linka u
+/// demo fazi, jer bez SMTP-a ne postoji poruka koju bi korisnik mogao dobiti.
+class _EmailPasswordForma extends ConsumerStatefulWidget {
+  const _EmailPasswordForma({
+    required this.povratak,
+    required this.registracija,
+  });
 
   final String povratak;
+  final bool registracija;
 
   @override
-  ConsumerState<_UnosKoda> createState() => _UnosKodaState();
+  ConsumerState<_EmailPasswordForma> createState() =>
+      _EmailPasswordFormaState();
 }
 
-class _UnosKodaState extends ConsumerState<_UnosKoda> {
-  final _polje = TextEditingController();
-  String? _lokalnaGreska;
+class _EmailPasswordFormaState extends ConsumerState<_EmailPasswordForma> {
+  final _email = TextEditingController();
+  final _lozinka = TextEditingController();
+  final _ponovljena = TextEditingController();
+  String? _emailGreska;
+  String? _lozinkaGreska;
+  String? _ponovljenaGreska;
+  bool _sakrijLozinku = true;
 
   @override
   void dispose() {
-    _polje.dispose();
+    _email.dispose();
+    _lozinka.dispose();
+    _ponovljena.dispose();
     super.dispose();
   }
 
@@ -458,76 +359,135 @@ class _UnosKodaState extends ConsumerState<_UnosKoda> {
     final l10n = AppLocalizations.of(context);
     final stanje = ref.watch(loginControllerProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // **Otvoreno, samo na webu i samo uz čitač ekrana:** Flutter web ponovo koristi
-        // isti semantics `<input>` za oba polja, pa mu `aria-label` postane „Šestocifreni
-        // kod" a vrijednost ostane upisani email. Vidljivo polje na canvasu je prazno
-        // (Dart kontroler je prazan — potvrđeno porukom „Kod ima šest cifara" na pokušaj
-        // potvrde), pa sighted korisnik ovo ne vidi; čitač ekrana pročita tuđu vrijednost.
-        //
-        // Probani i **odbačeni** kao nedjelotvorni: `ValueKey` po polju (ostaje, jer je
-        // ispravan sam po sebi), `FocusScope.unfocus()` prije prelaza (ostaje, jer sklanja
-        // tastaturu na mobilnom), i `AutofillGroup` po koraku (uklonjen — ništa nije
-        // promijenio, a dodavao je gniježđenje). Detalji u status bloku taska 13.
-        //
-        // Web nije store target nijednog tenanta (`targets.web` u `tenant.yaml`), pa ovo
-        // ne blokira task — ali se ne piše kao riješeno.
-        TextField(
-          key: const ValueKey('login-code'),
-          controller: _polje,
-          keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done,
-          autofillHints: const [AutofillHints.oneTimeCode],
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(6),
-          ],
-          decoration: InputDecoration(
-            labelText: l10n.loginCodeLabel,
-            errorText: _lokalnaGreska,
+    return AutofillGroup(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            key: const ValueKey('login-email'),
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autocorrect: false,
+            autofillHints: const [AutofillHints.email],
+            decoration: InputDecoration(
+              labelText: l10n.loginEmailLabel,
+              errorText: _emailGreska,
+            ),
           ),
-          onSubmitted: (_) => _potvrdi(),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        AppButton(
-          label: l10n.loginVerify,
-          loading: stanje.busy,
-          onPressed: _potvrdi,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppButton(
-          label: l10n.loginResend,
-          variant: AppButtonVariant.outline,
-          onPressed: stanje.busy
-              ? null
-              : () => ref
-                    .read(loginControllerProvider.notifier)
-                    .ponovoPosalji(l10n.loginCodeResent),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            key: const ValueKey('login-password'),
+            controller: _lozinka,
+            obscureText: _sakrijLozinku,
+            textInputAction: widget.registracija
+                ? TextInputAction.next
+                : TextInputAction.done,
+            autocorrect: false,
+            enableSuggestions: false,
+            autofillHints: [
+              widget.registracija
+                  ? AutofillHints.newPassword
+                  : AutofillHints.password,
+            ],
+            decoration: InputDecoration(
+              labelText: l10n.loginPasswordLabel,
+              errorText: _lozinkaGreska,
+              suffixIcon: IconButton(
+                tooltip: _sakrijLozinku
+                    ? l10n.loginShowPassword
+                    : l10n.loginHidePassword,
+                onPressed: () =>
+                    setState(() => _sakrijLozinku = !_sakrijLozinku),
+                icon: Icon(
+                  _sakrijLozinku ? LucideIcons.eye : LucideIcons.eyeOff,
+                ),
+              ),
+            ),
+            onSubmitted: (_) {
+              if (!widget.registracija) _posalji();
+            },
+          ),
+          if (widget.registracija) ...[
+            const SizedBox(height: AppSpacing.lg),
+            TextField(
+              key: const ValueKey('login-password-repeat'),
+              controller: _ponovljena,
+              obscureText: _sakrijLozinku,
+              textInputAction: TextInputAction.done,
+              autocorrect: false,
+              enableSuggestions: false,
+              autofillHints: const [AutofillHints.newPassword],
+              decoration: InputDecoration(
+                labelText: l10n.loginPasswordRepeatLabel,
+                errorText: _ponovljenaGreska,
+              ),
+              onSubmitted: (_) => _posalji(),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            label: widget.registracija
+                ? l10n.loginCreateAccount
+                : l10n.loginSignIn,
+            loading: stanje.busy,
+            onPressed: _posalji,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: widget.registracija
+                ? l10n.loginHaveAccount
+                : l10n.loginNeedAccount,
+            variant: AppButtonVariant.outline,
+            onPressed: stanje.busy
+                ? null
+                : () {
+                    final kontroler = ref.read(
+                      loginControllerProvider.notifier,
+                    );
+                    widget.registracija
+                        ? kontroler.otvoriPrijavu()
+                        : kontroler.otvoriRegistraciju();
+                  },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            l10n.loginDemoEmailNotice,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _potvrdi() async {
-    final kod = _polje.text.trim();
+  Future<void> _posalji() async {
+    final l10n = AppLocalizations.of(context);
+    final adresa = _email.text.trim();
+    final lozinka = _lozinka.text;
+    final emailIspravan = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+        .hasMatch(adresa);
+    final lozinkaIspravna =
+        lozinka.length >= 8 &&
+        RegExp('[A-Za-z]').hasMatch(lozinka) &&
+        RegExp('[0-9]').hasMatch(lozinka);
+    final ponovljenaIspravna =
+        !widget.registracija || _ponovljena.text == lozinka;
 
     setState(() {
-      _lokalnaGreska = kod.length == 6
+      _emailGreska = emailIspravan ? null : l10n.loginInvalidEmail;
+      _lozinkaGreska = lozinkaIspravna ? null : l10n.loginInvalidPassword;
+      _ponovljenaGreska = ponovljenaIspravna
           ? null
-          : AppLocalizations.of(context).loginInvalidCode;
+          : l10n.loginPasswordsDoNotMatch;
     });
-    if (kod.length != 6) return;
+    if (!emailIspravan || !lozinkaIspravna || !ponovljenaIspravna) return;
 
     FocusScope.of(context).unfocus();
-
-    // Router se uzima prije `await`-a: uspjeh navigira, a `GoRouter.of(context)` bi
-    // nakon toga gađao element koji je već otišao sa stabla.
     final router = GoRouter.of(context);
-    final sesija = await ref
-        .read(loginControllerProvider.notifier)
-        .potvrdiKod(kod);
+    final kontroler = ref.read(loginControllerProvider.notifier);
+    final sesija = widget.registracija
+        ? await kontroler.registrujEmail(adresa, lozinka)
+        : await kontroler.prijaviEmail(adresa, lozinka);
 
     if (sesija != null) router.go(widget.povratak);
   }

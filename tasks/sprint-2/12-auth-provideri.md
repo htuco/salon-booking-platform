@@ -7,13 +7,18 @@
 | **Blokira** | 13, 14, i sve što traži prijavljenog korisnika |
 | **Reference** | [06 §1](../../docs/06-auth-login-flow.md) · [06 §2](../../docs/06-auth-login-flow.md) · [06 §7](../../docs/06-auth-login-flow.md) |
 
+> **Promjena plana 16.09.2026.** OTP dijelovi ovog taska su historijski dokaz. Ciljni email tok je
+> email + lozinka iz [ADR-0010](../../docs/adr/0010-email-lozinka-umjesto-otp-a.md), a implementacija
+> je izdvojena u [task 27](27-email-password-auth.md).
+
 ## Cilj
-Apple, Google i Email OTP rade u Supabase projektu, a aplikacija zna **koji su provideri
+Apple, Google i Email rade u Supabase projektu, a aplikacija zna **koji su provideri
 dozvoljeni na kojoj platformi** — bez toga Android build nudi Sign in with Apple koji tamo nema šta
 da radi.
 
 ## Definicija gotovog
-- [ ] Provideri uključeni u Supabase konzoli: Apple, Google, Email (OTP, **bez lozinke**)
+- [ ] Provideri uključeni u Supabase konzoli: Apple, Google, Email; **Confirm email uključen**
+      za ciljni password tok
       — **traži tvoj nalog**, v. [konzole checklist](12-konzole-checklist.md) §3
 - [x] `AuthConfig` filtrira listu po platformi ([06 §2](../../docs/06-auth-login-flow.md))
       — u `core_domain`, sa vlastitim `AuthPlatform` enumom umjesto `TargetPlatform`;
@@ -40,11 +45,13 @@ da radi.
   odbija build ([06 §7.2](../../docs/06-auth-login-flow.md)).
 - **Client ID je po flavoru, ne po projektu.** Jedan ID za sve tenante znači da korisnik u
   Google dijalogu vidi tuđe ime salona.
-- Email OTP, **nikad magic link** na mobilnom: link izlazi iz app-a u browser i ne vraća se
-  pouzdano ([06 §2.1](../../docs/06-auth-login-flow.md)).
+- Confirmation i recovery link moraju se vratiti u tačan flavor; nije dovoljno dobiti HTTP 200
+  od Auth API-ja ([06 §2.1](../../docs/06-auth-login-flow.md)).
 
 
 ## Status (2026-09-12) — 🟡 kod gotov, konzole čekaju
+
+Ovaj status opisuje tada isporučeni OTP tok. Ne dokazuje niti implementira odluku iz ADR-0010.
 
 Grana `feat/auth-provideri`, PR [#20](https://github.com/htuco/salon-booking-platform/pull/20).
 

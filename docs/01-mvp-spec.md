@@ -16,7 +16,10 @@ Personalizovane **native** booking aplikacije za frizerske, barber i beauty salo
 
 Platforma omogućava salonima da dobiju **svoju native mobilnu aplikaciju** u App Storeu i Google Playu — sa svojim imenom, ikonom, bojama i uslugama.
 
-Klijent salona skine aplikaciju salona, izabere uslugu, radnika i termin, **prijavi se jednim tapom** i pošalje zahtjev. Nema forme za registraciju i ne traži se broj telefona. Vlasnik salona kroz admin aplikaciju upravlja terminima, uslugama, radnicima i rasporedom.
+Klijent salona skine aplikaciju salona, izabere uslugu, radnika i termin, prijavi se i pošalje
+zahtjev. Social login je jedan tap; email korisnik se prvi put kratko registruje emailom i lozinkom.
+Broj telefona se ne traži. Vlasnik salona kroz admin aplikaciju upravlja terminima, uslugama,
+radnicima i rasporedom.
 
 Iako svaki salon ima svoju aplikaciju u storeu, tehnički je to **jedan Flutter codebase, jedan multi-tenant backend, N buildova**. Novi klijent = novi flavor + config, ne novi projekat.
 
@@ -116,7 +119,8 @@ Faza 2: radnik dobija login u istu admin app i vidi samo svoje termine.
 ### 5.4 End Customer / Klijent salona
 Skine app salona (ili otvori web link) · vidi salon i usluge · bira uslugu, radnika (ili "bilo koji"), datum i slobodan termin · **prijavi se** · šalje zahtjev · **dobija push kad salon potvrdi** · vidi i otkazuje svoje termine.
 
-**Prijava:** Apple (iOS), Google, Email (OTP kod) i Facebook. Nema forme za registraciju — jedan tap.
+**Prijava:** Apple (iOS), Google, Email + lozinka i Facebook. Social login je jedan tap; email ima
+eksplicitnu registraciju, potvrdu adrese i oporavak lozinke.
 
 **Login se traži na kraju booking flow-a**, nakon što je klijent izabrao termin — nikad na ulazu u app. Pregled salona, usluga, cijena, tima i slobodnih termina **nikad** ne traži prijavu. Puni dizajn: [06-auth-login-flow.md](06-auth-login-flow.md).
 
@@ -163,7 +167,10 @@ Mobile-first, jedan salon po buildu. `salonId` je **ukucan u build** kroz `--dar
 
 **Moji termini** *(novo — omogućeno native-om)* — lista termina sa ovog uređaja, sortirana po datumu, sa statusom. Klijent može otkazati termin do `minCancelHours` prije početka. Bez naloga: termini se vežu na `deviceId` + telefon.
 
-**Prijava** *(novo u v4)* — Apple (iOS) · Google · Email OTP · Facebook (iza flaga). Login se pojavljuje između koraka 3 i 4 booking flow-a. **Bez broja telefona i bez forme za registraciju.** Opcioni guest mod po salonu (`allowGuestBooking`, default off). Detalji: [06-auth-login-flow.md](06-auth-login-flow.md).
+**Prijava** *(novo u v4)* — Apple (iOS) · Google · Email + lozinka · Facebook (iza flaga).
+Login se pojavljuje između koraka 3 i 4 booking flow-a. **Bez broja telefona.** Email korisnik bira
+prijavu ili kratku registraciju, potvrđuje adresu i može vratiti zaboravljenu lozinku. Opcioni guest
+mod po salonu (`allowGuestBooking`, default off). Detalji: [06-auth-login-flow.md](06-auth-login-flow.md).
 
 **Moj račun** *(obavezno za store)* — pregled podataka, odjava i **brisanje računa iz same app-e**. Bez ekrana za brisanje računa iOS submission pada ([06 §8.2](06-auth-login-flow.md)).
 
@@ -556,7 +563,7 @@ Google Play developer account: **25 USD jednokratno, jedan za sve** · Apple Dev
 | Sloj | Izbor |
 |---|---|
 | Baza | **Supabase Postgres** |
-| Auth | **Supabase Auth** — Apple, Google, Facebook, Email OTP |
+| Auth | **Supabase Auth** — Apple, Google, Facebook, Email + lozinka |
 | Tenant izolacija | **RLS policy** po `salon_id` |
 | Availability engine | Postgres funkcija ili Edge Function |
 | Storage | Supabase Storage — logo, cover, galerija, app ikone |
@@ -680,7 +687,7 @@ salon_platform/                     # jedan git repo
 > Korak 6 je 2–3 dana rada. Ako se odgodi, kasnije je prepisivanje svakog ekrana. Uradi ga odmah, čak i ako je prvi klijent frizer.
 
 ### Sprint 2 — auth, admin i notifikacije
-12. **Supabase Auth provideri** (Apple, Google, Email OTP) + comma-separated client ID-evi po flavoru
+12. **Supabase Auth provideri** (Apple, Google, Email + lozinka) + confirmation/recovery callbacki i comma-separated client ID-evi po flavoru
 13. **Client login screen** sa `AuthConfig` filtriranjem po platformi
 14. **Backend: verifikacija tokena, `AuthIdentity` upsert, `Customer` upsert po `(salonId, authIdentityId)`**
 15. **Test izolacije: klijent u dva salona — dokaži da salon A ne vidi salon B** ⚠️
@@ -720,7 +727,7 @@ Detaljno: [05 §10](05-vertical-packs.md).
 |---|---|
 | **Native od početka, Flutter** | Ikona salona u storeu je proizvod koji prodajemo. Flutter daje Android + iOS + web iz jednog koda |
 | **Web build je sekundarni kanal, ne zamjena** | Instagram bio i QR trebaju link. Isti codebase ga daje besplatno |
-| **Klijent se prijavljuje, ali nikad ne ispunjava formu** | Social login je jedan tap. Login se traži na kraju flow-a, ne na ulazu |
+| **Login se traži tek na kraju flow-a** | Social login je jedan tap; samo novi email korisnik ispunjava kratku registraciju |
 | **Ne tražimo broj telefona od klijenta** | Push zamjenjuje poziv i SMS. Jedan ekran manje, nula troška po poruci, manji GDPR teret. Cutlio radi isto |
 | Identitet je `AuthIdentity` + `deviceId` za push | Omogućava "Moji termini", push, VIP, waitlist, recall |
 | **Availability logika je na backendu, nikad u app-u** | Verzije app-a na telefonima kasne mjesecima. Bug u app-u ne možeš hotfixati |
@@ -733,7 +740,7 @@ Detaljno: [05 §10](05-vertical-packs.md).
 | Client app brandiran, admin generički | Novac je u tome kako izgleda pred klijentom salona |
 | **iOS je Pro paket, Android + web je Starter** | Google je tolerantniji, Android dominira u BiH, Starter nema Apple rizika |
 | **Vertikala je config, ne fork koda** | Fork znači N codebase-ova i smrt štancanja |
-| **Login: Apple (iOS), Google, Email OTP, Facebook** | Jedan tap, nikad forma za registraciju |
+| **Login: Apple (iOS), Google, Email + lozinka, Facebook** | Social login jedan tap; email ima registraciju, confirmation i recovery |
 | **Login se traži na kraju booking flow-a, ne na ulazu** | Klijent koji je izabrao termin prihvata login; onaj na ulazu odlazi |
 | **Pregled salona i slobodnih termina nikad ne traži login** | Inače je web kanal (Instagram, QR) mrtav |
 | **Supabase za bazu, auth i cron; Firebase samo za FCM** | Availability engine traži SQL. RLS i Auth su jedan sistem. FCM je jedini pravi cross-platform push |

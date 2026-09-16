@@ -23,8 +23,9 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, masere,
 | **03** | [Market Research](03-market-research-cutlio.md) | Cutlio, Rezervo, Rezervacija, SrediMe, Barberly, Booksy/Fresha — modeli, cijene, šta kopiramo |
 | **04** | [Flutter Tenant Factory](04-flutter-tenant-factory.md) | Kako štancati klijente: flavors, CI/CD, store submission, onboarding checklist, skaliranje |
 | **05** | [Vertikalni paketi](05-vertical-packs.md) | Frizeri, beauty, **zubari**, health, generic — terminologija, pravila, dentalni recall, GDPR |
-| **06** | [Auth & Login Flow](06-auth-login-flow.md) | Apple, Google, Email OTP, Facebook — identity model, per-flavor config, store zahtjevi |
+| **06** | [Auth & Login Flow](06-auth-login-flow.md) | Apple, Google, Email + lozinka, Facebook — identity model, per-flavor config, store zahtjevi |
 | **07** | [Tehnička arhitektura](07-tech-architecture.md) | Puna struktura repoa, konkretan izbor Flutter/Next.js/Supabase paketa, monorepo alati, observability |
+| **08** | [Vitez + admin demo zahtjevi](08-vitez-admin-demo-requirements.md) | Dogovoreni demo scope, auth ponašanje, konfiguracija, van-scope stavke i kriteriji prihvata |
 | — | [Team Handbook](TEAM_HANDBOOK.md) | Uloge u proizvodu, kako se doprinosi repou, rad sa Claude Code, razlike među mašinama |
 | — | [ADR-ovi](adr/) | Donesene odluke sa obrazloženjem i odbačenim opcijama |
 
@@ -114,12 +115,12 @@ Ne otvaraj ih ponovo bez novog podatka:
 |---|---|
 | Native od početka, Flutter (Android + iOS + Web iz jednog koda) | [01 §1.1](01-mvp-spec.md) |
 | Web build je sekundarni kanal (Instagram bio, QR), ne zamjena za app | [01 §1.1](01-mvp-spec.md) |
-| Klijent se prijavljuje jednim tapom, ali nikad ne ispunjava formu | [06 §1.1](06-auth-login-flow.md) |
+| Social login je jedan tap; email korisnik ima kratku registraciju i recovery | [ADR-0010](adr/0010-email-lozinka-umjesto-otp-a.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |
 | Vertikala je config, ne fork koda | [05 §2](05-vertical-packs.md) |
-| Login: Apple (iOS), Google, Email OTP, Facebook — na **kraju** booking flow-a | [06 §1.1](06-auth-login-flow.md) |
+| Login: Apple (iOS), Google, Email + lozinka, Facebook — na **kraju** booking flow-a | [06 §1.1](06-auth-login-flow.md) |
 | Pregled salona i slobodnih termina nikad ne traži login | [06 §1.1](06-auth-login-flow.md) |
 | **Supabase** za bazu, auth, storage i cron; **Firebase samo za FCM push** | [01 §16.1](01-mvp-spec.md) |
 | Jedan Supabase projekat; `AuthIdentity` globalan, `Customer` per-salon | [06 §4](06-auth-login-flow.md) |

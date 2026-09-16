@@ -1,45 +1,43 @@
-# Trenutni task: 25 — FCM, `Device` registracija i push scenariji
+# Trenutni task: 27 — Vitez live integracija i email + lozinka
 
-Puni task: [`tasks/sprint-2/25-push-notifikacije.md`](sprint-2/25-push-notifikacije.md)
-**U toku** · Učitano: 2026-09-15 · Grana: `feat/push-notifikacije`
+Puni task: [`tasks/sprint-2/27-email-password-auth.md`](sprint-2/27-email-password-auth.md)
+**U toku** · Učitano: 2026-09-16 · Grana: `feat/vitez-live-integration`
 
 ## Status
 
-U toku. Zavisnosti su zadovoljene: [14](sprint-2/14-identitet-i-klijent-upsert.md) i
-[24](sprint-2/24-admin-akcije-nad-terminima.md) su ✅. `main` je povučen 2026-09-15 i bio je već
-ažuran. [Draft PR #44](https://github.com/htuco/salon-booking-platform/pull/44) je otvoren.
+Demo kod je implementiran: klijentski OTP je zamijenjen stvarnim Supabase email/password signupom
+i loginom. Vitez klijent i admin slušaju RLS-ograničene promjene vlastitih termina, dok javni
+`availability_signals` emituje samo nasumičnu reviziju salona da i tuđa rezervacija osvježi slotove
+bez curenja appointment podataka. Live launcher čita javne ključeve iz ignorisanog `.env.live`;
+DB lozinka se ne prosljeđuje app-u. Analiza i kompletni Flutter testovi prolaze u svih pet paketa;
+lokalno prolazi 261 pgTAP provjera, uključujući Realtime publikaciju i RLS signala.
 
-Pripremljeni su registracija uređaja, FCM životni ciklus oba app-a, booking FK, red za slanje,
-worker i cron. Dokazano: 255 pgTAP provjera, 12 novih REST asercija s dva stvarna JWT-a,
-6 worker testova i Dart testovi u svih pet paketa. Firebase/APNs i fizički uređaj nisu spremni,
-pa task ostaje **U toku**. Hodogram je `sprint-2/25-push-konfiguracija.md`.
+Hostovani Auth endpoint je dostupan, ali projekat još traži potvrdu emaila i PostgREST nema
+`public.salons`, što znači da migracije/seed nisu deployani. Supabase CLI nije prijavljen, a
+direktni deploy nema potvrđenu Dashboard connection string putanju. Firebase CLI je prijavljen na
+račun koji nema pristup projektu `hades-75751` (`403 PERMISSION_DENIED`). Zbog toga email tok,
+availability i push još nisu dokazani na hostovanom projektu ni fizičkom uređaju.
 
-Puna lokalna REST suite nije zelena: `rest_admin_login.ts` dobija `invalid_credentials` za
-demo nalog u postojećoj lokalnoj bazi. Ostalih šest REST skripti prolazi (168 asercija).
-Baza nije resetovana; testovi pusha prave i čiste vlastite korisnike.
-
-iOS simulator build za `barberstudiovitez` prolazi uz nove native zavisnosti. Negativni SQL
-test je provjeren mutacijom `own_devices using(true)`: pada na tuđem uređaju i prolazi nakon
-rollbacka. Analiza svih pet paketa i `gen_flavors --check` su čisti.
+Za nastavak vlasnik treba na ovoj mašini uraditi `supabase login` ili dati službenu connection
+string putanju iz Dashboarda, isključiti **Confirm email** za demo i prijaviti Firebase račun koji
+ima pristup projektu. Tajne se ne šalju u chat niti commitaju.
 
 ## Ciljevi
 
-- [ ] Firebase samo za FCM: app po flavoru, pravi `google-services.json` /
-      `GoogleService-Info.plist` i APNs/service-account tajne idu kroz CI/runtime, ne kroz repo
-- [ ] Validirana registracija uređaja: klijentska app registruje `device_id` prije prijave,
-      poslije prijave ga veže na `AuthIdentity`; admin app registruje uređaj vlasnika kroz
-      `staff_user_id`
-- [ ] `book_appointment` dobija pravi `devices.id` u `p_device_id`, uključujući budući guest tok
-      preko uređaja registrovanog prije prijave
-- [ ] `send-push` Edge Function poziva FCM HTTP v1, piše/zaključava `notification_logs` i ne šalje
-      duplikate za isti `appointment_id`/`device_id`/`type`
-- [ ] Novi zahtjev šalje push vlasniku salona
-- [ ] Potvrda i odbijanje šalju push klijentu i deep link vode na `/appointments`
-- [ ] `/notifications` dobija stvaran server-side izvor ili ostaje iskreno prazno stanje dok se ne
-      dogovori klijentska politika nad `notification_logs`
-- [ ] Dokaz na fizičkom uređaju, posebno iOS-u; simulator nije dovoljan za push
+- [x] Klijentski email OTP zamijenjen stvarnim signup/login tokom sa lozinkom.
+- [x] Javni ključevi ulaze kroz ignorisani live env i nikad ne uključuju service role.
+- [x] Vlastiti termini i admin lista osvježavaju se kroz RLS-ograničeni Realtime stream.
+- [x] Tuđe rezervacije osvježavaju availability kroz bezlični signal, bez otvaranja appointment
+      reda javnosti.
+- [x] Lokalni Auth smoke, 261 pgTAP provjera, analiza i Flutter testovi su zeleni.
+- [ ] Deployati šemu/seed na hostovani Supabase i za demo isključiti **Confirm email**.
+- [ ] Odigrati email signup/login, booking i drugi-session Realtime refresh protiv hostovanog
+      projekta.
+- [ ] Dati Firebase CLI pristup projektu, generisati Vitez/admin config i dokazati FCM na uređaju.
+- [ ] Dokazati Apple/Google na pravilno potpisanom fizičkom uređaju ili ih jasno označiti kao
+      nekonfigurisane u demou.
 
-## Napomene
+## Napomene o povezanom push tasku
 
 ### Šta već postoji
 
@@ -136,8 +134,8 @@ reći "napisano, nije dokazano na uređaju", ne "radi". Za backend dio i dalje v
 
 - **23 — Admin: login, dashboard i lista termina** (2026-09-14, ✅) — `apps/admin` je prestao biti
   skelet od osam fajlova. Prijava ide kroz **zaseban `StaffRepository`**, ne kroz klijentski
-  `AuthRepository`: taj ugovor je pisan za Apple, Google, OTP i gosta, i `signInWithPassword` bi u
-  njemu svakom klijentskom ekranu ponudio metodu koju ne smije zvati. `signIn` vraća `StaffMember`,
+  `AuthRepository`: u vrijeme isporuke klijent je koristio Apple, Google, OTP i gosta. ADR-0010
+  dodaje password i klijentu, ali ugovori ostaju odvojeni jer `signIn` vraća `StaffMember`,
   ne samo sesiju, jer `private.is_admin()` traži **oba** uslova — claim u JWT-u i red u
   `public.users`; ko ima token a nema red prijavi se i ne vidi nijedan red, što na ekranu izgleda
   kao prazna baza a zapravo je pogrešno postavljen nalog. **Lista prije dashboarda**, kako task

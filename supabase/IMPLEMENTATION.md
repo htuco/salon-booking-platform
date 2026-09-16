@@ -17,12 +17,16 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 
 ## Schema/API contracts
 
-- Public table names and fields are snake_case. All 16 entities exist. Every table has RLS enabled.
+- Public table names and fields are snake_case. Sve aplikacijske tabele imaju uključen RLS.
 - Deterministic tenants: Barber Studio Vitez = 550e8400-e29b-41d4-a716-446655440000; Beauty Studio Travnik = 550e8400-e29b-41d4-a716-446655440001.
 - Services IDs end in 1..4 (barber) and 5..8 (beauty), prefix 10000000-0000-4000-8000-. Employees end in 1..2 and 3..4, prefix 20000000-0000-4000-8000-.
 - Staff JWTs require app_metadata.role = salon_admin and app_metadata.salon_id, PLUS a matching public.users row. A super_admin needs both its trusted claim and database membership. user_metadata is only display data.
 - Each client request for private data requires x-salon-id. It is validated as an active salon and combined with the authenticated user's identity. This header chooses the current app context; it never grants ownership or admin rights.
 - Public browsing of active salons, active services/employees, mappings, schedules and settings requires no login. Anonymous users have no write grants.
+- `availability_signals` is the only public Realtime availability signal: it exposes only
+  `(salon_id, revision_id)` for an active salon. Triggers rotate the opaque UUID after changes to
+  services, employees, mappings, schedules, appointments, blocked slots or booking settings; the
+  client then re-runs `get_available_slots`. Appointment rows remain private.
 - Admins read per-salon customers/appointments. Global auth_identities rows cannot be read by staff JWTs. No API lists salons for an identity.
 - Supabase Auth insert/update automatically upserts auth_identities. Account deletion/anonymization and booking/customer RPCs belong to subsequent migrations.
 - Composite tenant foreign keys prevent mixing an employee/service/customer/device from another salon, even when a tenant ID is present in a forged payload.
