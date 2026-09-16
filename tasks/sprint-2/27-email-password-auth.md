@@ -3,10 +3,10 @@
 | | |
 |---|---|
 | **Status** | Dokumentovan, nije implementiran |
-| **Procjena** | 3–5 dana + dokaz SMTP/deep linka na uređajima |
-| **Zavisi od** | [13](13-client-login-ekran.md), produkcijski SMTP i finalni callback domen |
+| **Procjena** | Demo 2–3 dana; produkcijski email dodatno 2–3 dana + dokaz SMTP/deep linka |
+| **Zavisi od** | Demo: [13](13-client-login-ekran.md) i Supabase pristup; produkcija: SMTP i finalni callback domen |
 | **Blokira** | Produkcijsku email prijavu i store release |
-| **Reference** | [06 §2.1](../../docs/06-auth-login-flow.md) · [ADR-0010](../../docs/adr/0010-email-lozinka-umjesto-otp-a.md) |
+| **Reference** | [Demo zahtjevi](../../docs/08-vitez-admin-demo-requirements.md) · [06 §2.1](../../docs/06-auth-login-flow.md) · [ADR-0010](../../docs/adr/0010-email-lozinka-umjesto-otp-a.md) |
 
 ## Cilj
 
@@ -16,6 +16,24 @@ zamjene i nastavljaju raditi kroz postojeći `AuthConfig`.
 
 Ovaj fajl je trenutno samo implementacijski ugovor. Do eksplicitnog odobrenja ne mijenjaju se Dart
 kod, Supabase konfiguracija, templatei ni hostovani projekat.
+
+## Dogovorene faze
+
+### Faza A — Vitez + admin demo
+
+- Konfigurišu se samo `barberstudiovitez` i admin aplikacija.
+- Apple i Google ostaju stvarni provideri; nekonfiguriran provider ne smije glumiti uspjeh.
+- Email koristi stvarni `signUp`/`signInWithPassword` i stvarnu Supabase sesiju, ali je potvrda
+  emaila isključena i SMTP se ne koristi.
+- Confirmation, recovery i migracija OTP korisnika nisu dio demo faze.
+- Admin koristi unaprijed kreiran i potvrđen Supabase nalog vezan samo za Vitez salon.
+- Potpuni scope i kriteriji prihvata su u
+  [demo zahtjevima](../../docs/08-vitez-admin-demo-requirements.md).
+
+### Faza B — produkcijski email
+
+Ostatak ovog taska opisuje ciljnu produkcijsku varijantu: potvrdu adrese, resend, recovery,
+SMTP, callbacke i migraciju starih OTP korisnika. Demo odstupanje ne mijenja proizvodnu odluku.
 
 ## Korisnički tokovi
 

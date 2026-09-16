@@ -5,6 +5,12 @@ nisu na ovoj mašini: Supabase, Google Cloud i Apple Developer. Social konfigura
 email + lozinka dodatno čeka implementaciju [taska 27](27-email-password-auth.md). Postojeći OTP
 kod nije dokaz ciljnog password toka.
 
+> **Trenutni demo scope (16.09.2026):** konfigurišu se samo Vitez klijent i admin. Identifikatori
+> sa `nasadomena` su placeholderi. Email komunikacija, confirmation i recovery se ne šalju; demo
+> koristi stvarnu Supabase email/password sesiju bez SMTP-a. Produkcijski koraci za drugi flavor,
+> finalni domen i email delivery ostaju zapisani ispod, ali sada nisu blokatori. Vidi
+> [demo zahtjeve](../../docs/08-vitez-admin-demo-requirements.md).
+
 Redoslijed je namjeran: Google i Apple **prave** client ID-eve, Supabase ih samo **prima**. Ako
 kreneš od Supabasea, na trećem koraku nemaš šta upisati.
 

@@ -42,6 +42,14 @@ zaboravljene lozinke. Zato nije dovoljno zamijeniti `signInWithOtp` jednim API p
 - Postojeća OTP implementacija ostaje historijski dokaz, ali se uklanja iz aktivnog korisničkog
   toka tek u zasebnom implementacijskom tasku.
 
+### Privremeni demo profil
+
+Prvi integrisani demo obuhvata samo Vitez klijent i admin. U njemu se simulira email komunikacija,
+ali ne i Supabase sesija: `signUp`/`signInWithPassword` su stvarni, dok su potvrda emaila, SMTP i
+recovery privremeno isključeni. Time rezervacija i admin i dalje prolaze stvarni JWT, RLS i tenant
+izolaciju. Ovo odstupanje nije dozvoljeno za produkciju i detaljno je definisano u
+[demo zahtjevima](../08-vitez-admin-demo-requirements.md).
+
 ## Razmatrane opcije
 
 ### Email OTP

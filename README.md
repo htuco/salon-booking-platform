@@ -21,6 +21,7 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, stomato
 | 05 | [Vertikalni paketi](docs/05-vertical-packs.md) — frizeri, beauty, zubari, health, generic |
 | 06 | [Auth & Login Flow](docs/06-auth-login-flow.md) — Apple, Google, Email + lozinka, Facebook · Supabase Auth |
 | 07 | [Tehnička arhitektura](docs/07-tech-architecture.md) — struktura foldera, izbor paketa (Flutter/Next.js/Supabase), monorepo alati |
+| 08 | [Vitez + admin demo zahtjevi](docs/08-vitez-admin-demo-requirements.md) — trenutni scope, auth simulacija i kriteriji prihvata |
 
 ---
 

@@ -21,7 +21,9 @@ Baza nije resetovana; testovi pusha prave i čiste vlastite korisnike.
 **Planirana auth promjena (16.09.2026, nije implementirana):** klijentski email OTP zamjenjuje se
 email + lozinka tokom [taska 27](sprint-2/27-email-password-auth.md). Odluka i posljedice su u
 [ADR-0010](../docs/adr/0010-email-lozinka-umjesto-otp-a.md); postojeći kod i Supabase config još
-ostaju OTP dok korisnik ne odobri implementaciju.
+ostaju OTP dok korisnik ne odobri implementaciju. Prva faza je samo Vitez + admin demo: stvarna
+Supabase email/password sesija bez confirmation emaila, SMTP-a i recoveryja. Dogovoreni scope i
+kriteriji su u [demo zahtjevima](../docs/08-vitez-admin-demo-requirements.md).
 
 iOS simulator build za `barberstudiovitez` prolazi uz nove native zavisnosti. Negativni SQL
 test je provjeren mutacijom `own_devices using(true)`: pada na tuđem uređaju i prolazi nakon
