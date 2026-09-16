@@ -18,6 +18,11 @@ Puna lokalna REST suite nije zelena: `rest_admin_login.ts` dobija `invalid_crede
 demo nalog u postojećoj lokalnoj bazi. Ostalih šest REST skripti prolazi (168 asercija).
 Baza nije resetovana; testovi pusha prave i čiste vlastite korisnike.
 
+**Planirana auth promjena (16.09.2026, nije implementirana):** klijentski email OTP zamjenjuje se
+email + lozinka tokom [taska 27](sprint-2/27-email-password-auth.md). Odluka i posljedice su u
+[ADR-0010](../docs/adr/0010-email-lozinka-umjesto-otp-a.md); postojeći kod i Supabase config još
+ostaju OTP dok korisnik ne odobri implementaciju.
+
 iOS simulator build za `barberstudiovitez` prolazi uz nove native zavisnosti. Negativni SQL
 test je provjeren mutacijom `own_devices using(true)`: pada na tuđem uređaju i prolazi nakon
 rollbacka. Analiza svih pet paketa i `gen_flavors --check` su čisti.
@@ -136,8 +141,8 @@ reći "napisano, nije dokazano na uređaju", ne "radi". Za backend dio i dalje v
 
 - **23 — Admin: login, dashboard i lista termina** (2026-09-14, ✅) — `apps/admin` je prestao biti
   skelet od osam fajlova. Prijava ide kroz **zaseban `StaffRepository`**, ne kroz klijentski
-  `AuthRepository`: taj ugovor je pisan za Apple, Google, OTP i gosta, i `signInWithPassword` bi u
-  njemu svakom klijentskom ekranu ponudio metodu koju ne smije zvati. `signIn` vraća `StaffMember`,
+  `AuthRepository`: u vrijeme isporuke klijent je koristio Apple, Google, OTP i gosta. ADR-0010
+  dodaje password i klijentu, ali ugovori ostaju odvojeni jer `signIn` vraća `StaffMember`,
   ne samo sesiju, jer `private.is_admin()` traži **oba** uslova — claim u JWT-u i red u
   `public.users`; ko ima token a nema red prijavi se i ne vidi nijedan red, što na ekranu izgleda
   kao prazna baza a zapravo je pogrešno postavljen nalog. **Lista prije dashboarda**, kako task

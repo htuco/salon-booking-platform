@@ -21,8 +21,9 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [24](24-admin-akcije-nad-terminima.md) ✅ | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
 | [25](25-push-notifikacije.md) 🟡 | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
 | [26](26-gost-i-facebook.md) | Guest flow + Facebook iza flaga | — | 1–2 dana |
+| [27](27-email-password-auth.md) | Client: email + lozinka umjesto OTP-a | store release | 3–5 dana |
 
-**Ukupno: ~23–30 radnih dana.**
+**Ukupno: ~26–35 radnih dana.**
 
 ## Redoslijed koji nije očigledan
 
@@ -66,6 +67,12 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
   dobijaju svoj handoff, koji još ne postoji.
 
 ## Status
+
+> **27 — Email + lozinka (🟡 plan, 2026-09-16).** ADR-0010 zamjenjuje ciljni klijentski email OTP
+> klasičnom registracijom i prijavom emailom i lozinkom. Dokumentovani su confirmation, recovery,
+> migracija ranijih OTP korisnika, callbacki po flavoru, password policy i acceptance testovi.
+> **Kod, `supabase/config.toml` i hostovani projekat još nisu promijenjeni**; implementacija čeka
+> eksplicitno odobrenje. Detalji: [27-email-password-auth.md](27-email-password-auth.md).
 
 > **25 — Push (🟡, 2026-09-15).** Kod i lokalni testovi pripremljeni na
 > `feat/push-notifikacije`, [draft PR #44](https://github.com/htuco/salon-booking-platform/pull/44).
@@ -293,9 +300,9 @@ Sitno, ali ne smije se izgubiti:
 > **23 — Admin: login, dashboard i lista termina (✅, 2026-09-14).** `apps/admin` je prestao biti
 > skelet od osam fajlova: `/login`, `/appointments` i `/dashboard` imaju pravo tijelo, a vlasnik
 > se prijavi email-om i lozinkom i vidi šta mu je zakazano.
-> **Prijava ide kroz zaseban `StaffRepository`**, ne kroz klijentski `AuthRepository` — taj ugovor
-> je pisan za Apple, Google, OTP i gosta, i `signInWithPassword` bi u njemu svakom klijentskom
-> ekranu ponudio metodu koju ne smije zvati. `signIn` vraća `StaffMember`, ne samo sesiju, jer
+> **Prijava ide kroz zaseban `StaffRepository`**, ne kroz klijentski `AuthRepository`. ADR-0010
+> naknadno dodaje password i klijentu, ali ugovori ostaju odvojeni: `signIn` vraća `StaffMember`,
+> ne samo sesiju, jer
 > `private.is_admin()` traži **oba** uslova: claim u JWT-u i red u `public.users`.
 > **Lista je pisana prije dashboarda**, kako task nalaže — dashboard je njen sažetak i dijeli iste
 > repozitorije.

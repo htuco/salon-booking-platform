@@ -1,8 +1,9 @@
 # Task 12 — konzole, korak po korak
 
 Sve iz [taska 12](12-auth-provideri.md) što se **ne može uraditi iz repoa**, jer traži naloge koji
-nisu na ovoj mašini: Supabase, Google Cloud i Apple Developer. Kod je gotov i dokazan; ovo je
-jedini dio koji čeka tebe.
+nisu na ovoj mašini: Supabase, Google Cloud i Apple Developer. Social konfiguracija čeka konzole;
+email + lozinka dodatno čeka implementaciju [taska 27](27-email-password-auth.md). Postojeći OTP
+kod nije dokaz ciljnog password toka.
 
 Redoslijed je namjeran: Google i Apple **prave** client ID-eve, Supabase ih samo **prima**. Ako
 kreneš od Supabasea, na trećem koraku nemaš šta upisati.
@@ -15,7 +16,7 @@ Kolona "gdje završi" govori gdje vrijednost ide kad je dobiješ — nijedna ne 
 | 2 | Apple Developer | Sign In with Apple na App ID-u | Supabase |
 | 3 | Supabase | Uključi providere, upiši redirect URL-ove | — |
 | 4 | GitHub | `vars` i `secrets` | — |
-| 5 | Lokalno | Dokaz da OTP radi | — |
+| 5 | Lokalno | Dokaz signup/login/recovery toka | — |
 
 ---
 
@@ -102,12 +103,13 @@ uradi rano.
 **a) Sign In / Providers → Email**
 
 - **Enable** ostaje uključen
-- **Confirm email** → isključi (OTP je sam po sebi potvrda)
-- Lozinke ne koristimo nigdje u app-i — login ekran nudi samo OTP
-
-Zatim *Emails → Templates → Magic Link*. Tijelo mora nositi **`{{ .Token }}`**, ne
-`{{ .ConfirmationURL }}`. Ovo je jedino mjesto gdje se bira OTP naspram magic linka, i ono što
-`docs/06 §2.1` traži: link na mobilnom izlazi iz app-a u browser i ne vraća se pouzdano.
+- **Confirm email** → uključi
+- Minimum password length → **8**; zahtjev → najmanje slova i cifre
+- Uključi leaked-password protection ako ga plan podržava
+- Postavi stvarni HTTPS `Site URL` i confirmation/recovery callbacke iz taska 27
+- *Emails → Templates*: prevedi **Confirm signup**, **Reset password** i obavijest o promjeni
+  lozinke; OTP-specifični Magic Link template više nije aktivni klijentski tok
+- Prije produkcije poveži vlastiti SMTP i verifikuj sending domen
 
 **b) Sign In / Providers → Google**
 
@@ -126,7 +128,7 @@ Zatim *Emails → Templates → Magic Link*. Tijelo mora nositi **`{{ .Token }}`
 
 **d) URL Configuration → Redirect URLs**
 
-Dodaj po jedan red za svaki flavor, **tačno ovako**:
+Postojeći login callbacki ostaju za social providere:
 
 ```
 ba.nasadomena.barberstudiovitez://login-callback
@@ -136,6 +138,10 @@ ba.nasadomena.beautystudiotravnik://login-callback
 Lista je *exact match*. Novi tenant koji nije dobio svoj red ovdje završi na "requested path is
 invalid" umjesto u app-i. Iste dvije vrijednosti su već upisane u `supabase/config.toml` za lokalni
 stack — konzola i taj fajl se drže u paru.
+
+Za email confirmation i recovery dodaj i stvarni HTTPS callback sa finalne platform domene. On
+mora korisniku ponuditi eksplicitan povratak u odgovarajući flavor; detalji i rute su u
+[tasku 27](27-email-password-auth.md). Ne kreiraj produkcijske URL-ove sa placeholder domenom.
 
 ---
 
@@ -174,28 +180,27 @@ je artefakt koji se čuva.
 
 ---
 
-## 5. Lokalni dokaz — email OTP bez ijedne tuđe konzole
+## 5. Lokalni dokaz — email + lozinka
 
-Ovo možeš odmah, ne čeka ništa od gore:
+Ovo se izvodi nakon implementacije taska 27 i promjene lokalnog Auth configa:
 
 ```bash
 supabase start
 eval "$(supabase status -o env)"   # izlaz sadrzi service role kljuc — nikad u commit
 
-curl -s -X POST "$API_URL/auth/v1/otp" \
+curl -s -X POST "$API_URL/auth/v1/signup" \
   -H "apikey: $ANON_KEY" -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","create_user":true}'
+  -d '{"email":"test@example.com","password":"Testna123"}'
 ```
 
-Mail ne izlazi napolje — hvata ga Inbucket na <http://127.0.0.1:54324>. Otvori poruku i provjeri da
-u njoj stoji **šestocifreni kod**, a ne link. Ako vidiš link, `{{ .Token }}` nije u templateu.
-
-Rate limit je za lokalni stack podignut na 100 mailova na sat (`supabase/config.toml`); sa
-podrazumijevana dva se flow potroši prije nego se vidi.
+Mail ne izlazi napolje — hvata ga Mailpit na URL-u koji vrati `supabase status`. Dokaz nije samo
+uspješan `signup`: otvori confirmation poruku, vrati se u app, prijavi se lozinkom, zatraži reset,
+postavi novu lozinku i dokaži da stara više ne radi. Ponovi na fizičkom iPhone i Android uređaju
+sa produkcijskim SMTP-om prije releasea.
 
 ---
 
-## Ostalo za task 13, ne za ovaj
+## Ostalo za taskove 13 i 27, ne za ovaj
 
 Ove stavke traže prave client ID-eve, pa ih nema smisla raditi prije nego prođeš korak 1:
 

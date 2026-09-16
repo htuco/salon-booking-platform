@@ -19,7 +19,7 @@ Personalizovane **native** booking aplikacije za frizere, beauty salone, stomato
 | 03 | [Market Research](docs/03-market-research-cutlio.md) — Cutlio, Rezervo, Rezervacija, Barberly |
 | 04 | [Flutter Tenant Factory](docs/04-flutter-tenant-factory.md) — flavors, CI/CD, store submission |
 | 05 | [Vertikalni paketi](docs/05-vertical-packs.md) — frizeri, beauty, zubari, health, generic |
-| 06 | [Auth & Login Flow](docs/06-auth-login-flow.md) — Apple, Google, Email OTP, Facebook · Supabase Auth |
+| 06 | [Auth & Login Flow](docs/06-auth-login-flow.md) — Apple, Google, Email + lozinka, Facebook · Supabase Auth |
 | 07 | [Tehnička arhitektura](docs/07-tech-architecture.md) — struktura foldera, izbor paketa (Flutter/Next.js/Supabase), monorepo alati |
 
 ---
@@ -88,8 +88,9 @@ Otvori `/` za pregled svih ekrana grupisanih po tri dijela sistema.
 **Client app** (brandiran po salonu)
 `/s/barber-studio-vitez` · `/s/beauty-studio-travnik` · `/s/:slug/book/service` · `/book/employee` · `/book/datetime` · **`/s/:slug/auth/login`** · `/book/details` · `/book/success` · `/s/:slug/appointments` · **`/s/:slug/account`**
 
-> Login ekran ima demo prekidač iOS/Android i podekrane preko query parametra:
-> `?screen=email` · `?screen=otp` · `?platform=android`
+> Zamrznuti React prototip još demonstrira stari OTP podekran kroz `?screen=otp`. Ciljni Flutter
+> tok je email + lozinka iz [ADR-0010](docs/adr/0010-email-lozinka-umjesto-otp-a.md); prototip se ne
+> mijenja jer više nije vizuelni izvor istine.
 
 **Admin app** (jedna za sve salone)
 `/admin/login` · `/admin/dashboard` · `/admin/appointments` · `/admin/calendar` · `/admin/services` · `/admin/employees`

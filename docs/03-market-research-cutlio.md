@@ -293,7 +293,7 @@ Izmjene koje ovo istraživanje uvodi:
 | 10 | **Vertikalni paketi kao diferencijator** — frizeri/beauty/zubari/ostalo sa svojom terminologijom i pravilima | [05-vertical-packs.md](05-vertical-packs.md) |
 | 11 | Pending timeout — zaboravljeni zahtjev ne smije trajno blokirati kalendar | [01 §8](01-mvp-spec.md) |
 | 12 | `bookingMode: auto` spreman za Fazu 2 — dio salona neće htjeti ručnu potvrdu | [01 §11](01-mvp-spec.md) |
-| 13 | **Login: Apple, Google, Email OTP, Facebook** — na kraju booking flow-a, ne na ulazu | [06](06-auth-login-flow.md) |
+| 13 | **Login: Apple, Google, Email + lozinka, Facebook** — na kraju booking flow-a, ne na ulazu | [06](06-auth-login-flow.md) |
 | 14 | **Ne tražimo broj telefona od klijenta** — Cutlio ga ne traži, push zamjenjuje poziv i SMS | [06 §3.1](06-auth-login-flow.md) |
 | 15 | **Rezervo model bez tačnog vremena** dostupan kao `date_only` granularnost | [05 §4](05-vertical-packs.md) |
 

@@ -61,6 +61,8 @@ Koji provider na kojoj platformi uopšte ima implementaciju stoji na samom `Auth
 - **Izgleda kao bug, a nije:** Apple se ne pojavljuje na Androidu ni kad je `apple: true` u
   `tenant.yaml`. Presjek je namjeran u oba smjera — tenant ne može uključiti provider koji na toj
   platformi nema implementaciju.
-- **Izgleda kao bug, a nije:** web build nudi samo email OTP, jer nativni tokovi tamo nemaju
-  implementaciju. `kIsWeb` se provjerava prije `defaultTargetPlatform` upravo zato što bi browser
-  na iPhoneu inače prijavio `TargetPlatform.iOS` i ponudio Sign in with Apple koji ne radi.
+- **Izgleda kao bug, a nije:** web build nudi samo email provider, jer nativni tokovi tamo nemaju
+  implementaciju. U vrijeme ove odluke email je bio OTP; [ADR-0010](0010-email-lozinka-umjesto-otp-a.md)
+  mijenja ga u email + lozinku bez promjene platformskog filtriranja. `kIsWeb` se provjerava prije
+  `defaultTargetPlatform` upravo zato što bi browser na iPhoneu inače prijavio
+  `TargetPlatform.iOS` i ponudio Sign in with Apple koji ne radi.

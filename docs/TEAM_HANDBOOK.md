@@ -31,7 +31,7 @@ opis uloga u `docs/01 §5`.
 
 **Klijent salona**
 - Pregled salona, usluga, cijena, tima i slobodnih termina **nikad ne traži prijavu**
-- Prijava se traži tek na **kraju** booking flowa: Apple (iOS), Google, Email OTP, Facebook
+- Prijava se traži tek na **kraju** booking flowa: Apple (iOS), Google, Email + lozinka, Facebook
   (Facebook je iza flaga i default isključen)
 - **Broj telefona se ne traži.** Push zamjenjuje i poziv i SMS
 - Vidi i otkazuje svoje termine, do `minCancelHours` prije termina; poslije toga samo salon

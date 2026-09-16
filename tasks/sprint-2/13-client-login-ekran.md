@@ -7,6 +7,10 @@
 | **Blokira** | 14 (upsert traži token), 16, 17 |
 | **Reference** | [06 §1.1](../../docs/06-auth-login-flow.md) · [06 §3](../../docs/06-auth-login-flow.md) · `prototype/ui/SPEC.md` 5f |
 
+> **Promjena plana 16.09.2026.** Ovaj task ostaje dokaz ranije implementiranog OTP toka. Ciljni
+> email + lozinka tok, registracija i recovery opisani su u
+> [tasku 27](27-email-password-auth.md); kod još nije promijenjen.
+
 ## Cilj
 Korisnik koji je izabrao termin prijavi se **na zadnjem koraku** i zahtjev ode dalje — bez izlaska
 iz flowa i bez gubitka izbora.
