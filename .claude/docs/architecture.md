@@ -43,8 +43,12 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
   **`apps/admin` ga namjerno ne uvozi** (provjereno u tasku 23, kad je admin dobio prve ekrane).
   `core_ui` nosi oblik brandirane klijentske vitrine — serif naslovi, hairline granice, „← Početna"
   umjesto `AppBar`-a, tema po tenantu iz `tenant.yaml`. Admin je generička alatka za rad, jedan
-  build za sve salone, i koristi obični Material 3 sa `AppBar`-om. Dijeljenje bi značilo da svaka
-  promjena brendiranog oblika povlači admin ekran koji sa brendom nema veze.
+  build za sve salone. Dijeljenje bi značilo da svaka promjena brendiranog oblika povlači admin
+  ekran koji sa brendom nema veze.
+
+  Od taska 28 admin ima **svoju** temu u `apps/admin/lib/src/core/theme/`, po handoffu u
+  `prototype/admin/`. Zabrana uvoza više nije samo dogovor: `no_hardcoded_colors_test.dart` pada
+  ako se `core_ui` pojavi u uvozu ili u `pubspec.yaml`-u admina.
 - **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
   (`env`, `router`, `theme`) i `lib/src/l10n/`. Feature folder drži ekran, njegove privatne
   widgete u `widgets/` i logiku koja ne pripada ni domenu ni UI-ju — formatiranje cijene i
@@ -63,8 +67,14 @@ Dok se generator ne podigne na 4.x, lista ide mimo modela: `salons.gallery_urls`
 ### Tema je runtime podatak, ne konstanta
 
 `buildAppTheme(primary, secondary, themeName)` u `core_ui/src/theme/theme_factory.dart` je **jedina**
-funkcija koja pravi `ThemeData` u sistemu. Boje su joj ulaz, jer ih vlasnik salona mijenja iz admin
-aplikacije i promjena mora stići bez novog builda.
+funkcija koja pravi `ThemeData` **u klijentskoj app-i**. Boje su joj ulaz, jer ih vlasnik salona
+mijenja iz admin aplikacije i promjena mora stići bez novog builda.
+
+Admin je obrnut slučaj i ima **svoju** takvu funkciju, `buildAdminTheme()` u
+`apps/admin/lib/src/core/theme/admin_theme.dart` (task 28). Ona ne prima ništa: admin je jedan build
+za sve salone i njegova plava `#3D6D9E` je identitet Salon OS-a, ne boja salona. Otud i razlika u
+tome gdje se mjeri kontrast — klijent ga računa u runtime-u (`contrast.dart`), jer brand boju bira
+vlasnik i niko je ne vidi prije builda; admin ga mjeri **u testu**, jer su mu boje konstante.
 
 Do boje se dolazi lancem, u `apps/client/lib/src/core/theme_provider.dart`:
 

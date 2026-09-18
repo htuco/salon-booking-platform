@@ -9,7 +9,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 
 | # | Task | Prikazi | Blokira | Procjena |
 |---|---|---|---|---|
-| [28](28-admin-tema-i-tipografija.md) | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
+| [28](28-admin-tema-i-tipografija.md) 🟡 | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
 | [29](29-responsive-shell.md) | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
 | [30](30-postojeci-ekrani-na-handoff.md) | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) | Kalendar dana | `3c` `3l` | — | 2–3 dana |
@@ -29,8 +29,8 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
   prvo prevede ekran, prevodi ga u ljusku koja se sutra mijenja, pa ga prevodi dvaput.
 - **28 je prvi i nije kozmetika.** Dok tokeni nisu na jednom mjestu, svaki naredni ekran ih
   prepisuje. `SPEC.md` to kaže izričito: „Vrijednosti prvo centralizovati u
-  `apps/admin/lib/src/core/theme/`; ne ponavljati hex vrijednosti po ekranima." Taj folder danas
-  ima samo `.gitkeep`, a `main.dart` gradi temu iz jednog `ColorScheme.fromSeed`.
+  `apps/admin/lib/src/core/theme/`; ne ponavljati hex vrijednosti po ekranima." Taj folder je do
+  28 imao samo `.gitkeep`, a `main.dart` je temu gradio iz jednog `ColorScheme.fromSeed`.
 - **33 prije 34.** Smjena je smjena **radnika**; radno vrijeme koje se piše prije nego osoblje ima
   svoj ekran nema na šta da se veže.
 - **32, 33 i 34 nose backend, ne samo ekran.** Danas ne postoji nijedna RPC putanja kojom admin
@@ -66,4 +66,33 @@ ovdje — admin se razvija protiv lokalnog stacka.
 
 ## Status
 
-> Sprint još nije počeo. Prvi task je [28](28-admin-tema-i-tipografija.md).
+> **28 — Admin tema, tipografija i tokeni (🟡, 2026-09-19).** `apps/admin/lib/src/core/theme/` je
+> prestao biti `.gitkeep`: pet fajlova nose paletu, razmake, uglove, tipografiju i statusne tonove,
+> a `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`. Space Grotesk i JetBrains Mono su
+> **zapakovani u repo** uz OFL licence; browser potvrđuje da se učitavaju iz bundlea, ne sa Google
+> Fonts.
+>
+> **Mjerenje canvasa je oborilo tri stvari koje `SPEC.md` tvrdi**, i sve tri su zapisane nazad u
+> `SPEC.md`: velika brojka i statusna pilula **nisu** mono (to je iz skice `Smjer C`, finalni canvas
+> ih crta u Space Grotesku), a sekundarni akcent `#5980A6` finalni canvas **ne koristi nijednom**.
+> Uz to, dvije vrijednosti za „sekundarni tekst" nisu izbor nego dvije uloge, razdvojene po
+> veličini teksta.
+>
+> **Dva para iz handoffa padaju WCAG AA i nisu prepisana doslovno:** `#6B757B` na radnoj pozadini
+> mjeri 4,35:1, a oznaka „Završeno" (`#6B757B` na `#EEF1F3`) 4,15:1 — tekst je spušten na `#5B656B`
+> (5,26:1). Razlika je jedna nijansa sive; pad ispod praga se vidi tek kome smeta. `theme_contrast_test.dart`
+> drži i tvrdnju da ti parovi **padaju**, da se „vraćanje na handoff" ne desi nečujno.
+>
+> Dokazano lokalno: **567 Dart testova** u pet paketa, od toga `admin` **70** (bilo 16 — ostali
+> paketi su rasli kroz taskove 24–27, ne kroz ovaj), čista analiza svuda, i **login ekran u Chromiumu na 1440×900 i 402×874** —
+> `docs/screenshots/task-28-admin-login-*.png`. Provjereno da novi testovi **mogu pasti**: heks
+> ubačen u ekran, `onSurfaceVariant` spušten na `textMuted`, uklonjen `FontVariation`, i statusni
+> ton vraćen na `primaryContainer` — svaki put padne tačno onaj test koji to pokriva.
+>
+> **Ostalo za sljedećeg:** dashboard, lista termina i ručni unos su prošli samo kroz widget testove
+> — na ekranu nisu, jer na ovoj mašini nema ni Dockera ni `supabase` CLI-ja, pa se lokalni stack ne
+> može dići (`supabase start` → komanda ne postoji). Kad stack postoji, dokaz je prijava pa
+> `/dashboard` i `/appointments` u browseru. `gh` takođe nije na PATH-u, pa je PR otvoren ručno.
+>
+> Sljedeći task je [29](29-responsive-shell.md); mjere ljuske (sidebar 236, top bar 66, gutter 20)
+> već stoje u `AdminSize`/`AdminSpacing` da ih ne prepisuje kod sebe.

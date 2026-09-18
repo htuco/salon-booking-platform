@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'src/core/env/app_env.dart';
 import 'src/core/env/bootstrap.dart';
 import 'src/core/router/admin_router.dart';
+import 'src/core/theme/theme.dart';
 import 'src/features/appointments/appointments_providers.dart';
 
 final adminMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -77,9 +78,7 @@ class SalonAdminApp extends ConsumerWidget {
       scaffoldMessengerKey: adminMessengerKey,
       title: 'Salon Admin',
       routerConfig: ref.watch(adminRouterProvider),
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF171717)),
-      ),
+      theme: buildAdminTheme(),
     );
   }
 }

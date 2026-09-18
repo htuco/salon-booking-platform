@@ -2,6 +2,8 @@ import 'package:core_api/core_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/theme.dart';
+
 /// Prijava osoblja — email i lozinka.
 ///
 /// **Bez OTP-a i bez nativnih providera**, za razliku od klijentskog login ekrana. Admin
@@ -174,7 +176,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.errorContainer,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AdminRadius.base),
                       ),
                       child: Text(
                         _greska!,

@@ -1,6 +1,7 @@
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/theme/theme.dart';
 import 'appointments_providers.dart';
 
 /// Jedan termin u admin listi.
@@ -30,11 +31,13 @@ class AppointmentTile extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text(
             _vrijeme(termin.startTime),
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontFeatures: const [FontFeature.tabularFigures()],
+            // Vrijeme je **JetBrains Mono** — `SPEC.md` mu daje sate, datume i brojcani
+            // podatak. Tabularne cifre nosi `AdminText.time` sam, pa se ovdje ne
+            // ponavljaju.
+            style: AdminText.time.copyWith(
               // Otkazan termin se **ne brise iz liste** nego se stisava: vlasnik mora
               // vidjeti da je slot bio zauzet pa oslobodjen.
-              color: otkazan ? theme.disabledColor : null,
+              color: otkazan ? AdminColors.textMuted : AdminColors.ink,
             ),
           ),
         ),
@@ -43,7 +46,7 @@ class AppointmentTile extends StatelessWidget {
         termin.customerName,
         style: theme.textTheme.titleMedium?.copyWith(
           decoration: otkazan ? TextDecoration.lineThrough : null,
-          color: otkazan ? theme.disabledColor : null,
+          color: otkazan ? AdminColors.textMuted : null,
         ),
       ),
       subtitle: Column(
@@ -52,8 +55,7 @@ class AppointmentTile extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             'do ${_vrijeme(termin.endTime)}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontFeatures: const [FontFeature.tabularFigures()],
+            style: AdminText.dataInline.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -110,45 +112,35 @@ class _StatusZnak extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final statusi = context.statusColors;
 
-    final (pozadina, tekst) = switch (status) {
-      AppointmentStatus.pending => (
-        scheme.tertiaryContainer,
-        scheme.onTertiaryContainer,
-      ),
-      AppointmentStatus.confirmed => (
-        scheme.primaryContainer,
-        scheme.onPrimaryContainer,
-      ),
-      AppointmentStatus.cancelled => (
-        scheme.errorContainer,
-        scheme.onErrorContainer,
-      ),
-      AppointmentStatus.completed => (
-        scheme.surfaceContainerHighest,
-        scheme.onSurfaceVariant,
-      ),
-      AppointmentStatus.noShow => (
-        scheme.errorContainer,
-        scheme.onErrorContainer,
-      ),
-      AppointmentStatus.unknown => (
-        scheme.surfaceContainerHighest,
-        scheme.onSurfaceVariant,
-      ),
+    // Parovi dolaze iz teme, ne iz `ColorScheme`-a. Ranija verzija je uzimala
+    // `primaryContainer` za potvrdjen termin, pa je „potvrdjeno" bilo plavo — handoff ga
+    // crta zeleno, a plava je u ovom sistemu akcent, ne status.
+    final ton = switch (status) {
+      AppointmentStatus.pending => statusi.waiting,
+      AppointmentStatus.confirmed => statusi.positive,
+      AppointmentStatus.cancelled => statusi.negative,
+      AppointmentStatus.completed => statusi.neutral,
+      // „Nije se pojavio" nije otkazivanje: otkazao je neko, ovo se prosto desilo.
+      AppointmentStatus.noShow => statusi.negativeQuiet,
+      AppointmentStatus.unknown => statusi.neutral,
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
       decoration: BoxDecoration(
-        color: pozadina,
-        borderRadius: BorderRadius.circular(12),
+        color: ton.background,
+        borderRadius: BorderRadius.circular(AdminRadius.pill),
       ),
       child: Text(
+        // Tekst je obavezan, ne dodatak uz boju (`SPEC.md`; WCAG 1.4.1).
+        //
+        // Labela je i dalje `statusLabela` — canvas pise „Potvrdjeno", a ovdje stoji
+        // „Potvrdjeni", jer isti string sluzi i kao labela filtera. To je promjena copyja
+        // i pripada tasku 30, ne ovom.
         statusLabela(status),
-        style: theme.textTheme.labelSmall?.copyWith(color: tekst),
+        style: AdminText.statusLabel.copyWith(color: ton.foreground),
       ),
     );
   }
