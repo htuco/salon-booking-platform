@@ -35,8 +35,13 @@ abstract final class AdminSpacing {
   /// čita kao namjera, ne kao broj sa skale.
   static const double gutterMobile = 20;
 
-  /// Gutter desktop radne površine (24).
-  static const double gutterDesktop = 24;
+  /// Gutter desktop radne površine (28).
+  ///
+  /// **Nije sa skale i nije 24**, kako je ovdje prvo stajalo. Canvas radnu površinu crta
+  /// sa `padding:28px` u svih sedam desktop prikaza u opsegu, a top bar sa `padding:0 28px`
+  /// (9 pojava); `padding:24px` i `padding:0 24px` se ne javljaju **nijednom**. 24 u
+  /// handoffu postoji, ali kao razmak *između sekcija* ([xxl]), ne kao gutter.
+  static const double gutterDesktop = 28;
 }
 
 /// Uglovi.

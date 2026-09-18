@@ -1,17 +1,52 @@
 import 'package:core_api/core_api.dart';
+import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../navigation/admin_destinations.dart';
 import '../router/admin_router.dart';
+import '../theme/theme.dart';
 
-/// Zajedničko zaglavlje i navigacija admin ekrana.
+/// Širina na kojoj ljuska mijenja oblik.
+abstract final class AdminBreakpoint {
+  /// 840 — ispod nje donja navigacija, od nje sidebar.
+  ///
+  /// **Canvas ne daje ovaj broj**, i to je namjerno: `SPEC.md` crta 1440 i 402, a tablet
+  /// „nije posebno nacrtan" uz izričit zahtjev da se raspored mijenja *na breakpointu, ne
+  /// skaliranjem desktopa*. Broj je zato uzet iz Material `expanded` praga, koji je
+  /// najbliža postojeća konvencija: tablet u portretu (768–834) dobija mobilni raspored,
+  /// koji je za dodir ionako ispravniji, a sidebar se pojavi tek kad ima mjesta za 236 px
+  /// plus radnu površinu.
+  static const double desktop = 840;
+}
+
+/// Šta ljuska zna o širini, za ekran koji stoji u njoj.
 ///
-/// **`AppBar` je ovdje ispravan**, za razliku od klijentske app-e, gdje ga
-/// `prototype/ui/README.md` odbija u korist „← Početna" i serif naslova u tijelu. Razlog je
-/// što su to dva različita proizvoda: klijentska app je brandirana vitrina salona i nosi
-/// oblik iz handoffa, a admin je generička alatka za rad — jedan build za sve salone, bez
-/// brenda i bez `core_ui`.
+/// Postoji da ekran ne izvodi isti prag na svom mjestu. Drugi prag u ekranu bi značio
+/// raspored koji se mijenja na jednoj širini, a razmak na drugoj — greška koja se vidi samo
+/// u uskom pojasu između te dvije.
+///
+/// **Statičke metode nad `MediaQuery`, a ne `InheritedWidget`.** Ljusku pravi
+/// [AdminScaffold], a ekran svoje tijelo gradi *prije* nego što ga ljuska primi — pogled
+/// naviše iz ekrana bi promašio ljusku i uvijek vratio telefonske vrijednosti. Ta greška
+/// prolazi analizu i vidi se tek na 1440.
+abstract final class AdminShell {
+  static bool jeDesktop(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= AdminBreakpoint.desktop;
+
+  /// Horizontalni razmak sadržaja: 28 na desktopu, 20 na telefonu.
+  static double gutterOf(BuildContext context) => jeDesktop(context)
+      ? AdminSpacing.gutterDesktop
+      : AdminSpacing.gutterMobile;
+}
+
+/// Ljuska admin ekrana: sidebar na desktopu, donja navigacija na telefonu.
+///
+/// **Jedan route model, dvije ljuske.** Obje čitaju `kAdminDestinations`; nema dva stabla
+/// ekrana i nema ekrana koji postoji samo na jednoj širini. Prelaz ide na
+/// [AdminBreakpoint.desktop] — horizontalno skaliran desktop nije mobilni layout
+/// (`SPEC.md`, „Raspored i komponente").
 class AdminScaffold extends ConsumerWidget {
   const AdminScaffold({
     required this.title,
@@ -25,7 +60,7 @@ class AdminScaffold extends ConsumerWidget {
   final String title;
   final Widget body;
 
-  /// Ruta koju ovaj ekran predstavlja, za oznaku u donjoj navigaciji.
+  /// Ruta koju ovaj ekran predstavlja, za oznaku u navigaciji.
   ///
   /// Prosljeđuje je ekran, a **ne čita se iz `GoRouterState`**: čitanje iz routera veže
   /// svaki admin ekran za router stablo, pa se ne može podići u widget testu bez pravog
@@ -38,96 +73,398 @@ class AdminScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final clan = ref.watch(currentStaffProvider).valueOrNull;
+    return AdminShell.jeDesktop(context)
+        ? _desktop(context, ref)
+        : _telefon(context, ref);
+  }
 
+  /// 1440: tamni sidebar lijevo, top bar iznad radne površine.
+  Widget _desktop(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        actions: [
-          ...?actions,
-          PopupMenuButton<String>(
-            tooltip: 'Nalog',
-            icon: const Icon(Icons.account_circle_outlined),
-            onSelected: (izbor) async {
-              if (izbor == 'odjava') {
-                try {
-                  await ref.read(staffRepositoryProvider).signOut();
-                } on ApiError {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Odjava nije uspjela. Pokušajte ponovo.'),
-                      ),
-                    );
-                  }
-                }
-                // Preusmjeravanje na `/login` radi router kroz `currentStaffProvider`.
-              }
-            },
-            itemBuilder: (context) => [
-              if (clan != null)
-                PopupMenuItem<String>(
-                  enabled: false,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(clan.name),
-                      Text(
-                        clan.email,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-              const PopupMenuDivider(),
-              const PopupMenuItem<String>(
-                value: 'odjava',
-                child: Text('Odjavi se'),
-              ),
-            ],
+      body: Row(
+        children: [
+          _Sidebar(aktivna: aktivna),
+          Expanded(
+            child: Column(
+              children: [
+                _TopBar(title: title, actions: actions),
+                Expanded(child: body),
+              ],
+            ),
           ),
         ],
       ),
+      floatingActionButton: floatingActionButton,
+    );
+  }
+
+  /// 402: `AppBar` iznad, četiri ćelije ispod.
+  ///
+  /// `AppBar` ostaje iz taska 23 — handoff (`3k`) umjesto njega crta veliki naslov u
+  /// tijelu ekrana, ali to je oblik **ekrana**, ne ljuske, i pripada tasku 30. Ovaj task
+  /// mijenja navigaciju, ne zaglavlja.
+  Widget _telefon(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        actions: [...?actions, _NalogDugme(ikona: true)],
+      ),
       body: body,
       floatingActionButton: floatingActionButton,
-      bottomNavigationBar: _AdminNavigacija(aktivna: aktivna),
+      bottomNavigationBar: _DonjaNavigacija(aktivna: aktivna),
     );
   }
 }
 
-/// Donja navigacija — samo ekrani koji **postoje**.
-///
-/// Kalendar, usluge, radnici i postavke su rute iz `AdminRoute`, ali ih pišu taskovi 24 i
-/// Sprint 3. Ćelija koja vodi na placeholder je gora od ćelije koje nema: obeća funkciju
-/// koja ne postoji i vlasnik je traži ponovo.
-class _AdminNavigacija extends StatelessWidget {
-  const _AdminNavigacija({this.aktivna});
+// ---------------------------------------------------------------------------
+// Desktop
+// ---------------------------------------------------------------------------
+
+/// Tamni sidebar iz `3b` — 236 px, osam stavki, ime prijavljenog na dnu.
+class _Sidebar extends ConsumerWidget {
+  const _Sidebar({this.aktivna});
 
   final AdminRoute? aktivna;
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clan = ref.watch(currentStaffProvider).valueOrNull;
+
+    return Container(
+      width: AdminSize.sidebarWidth,
+      color: AdminColors.ink,
+      padding: const EdgeInsets.symmetric(vertical: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Ime proizvoda, ne ime salona: admin je jedan build za sve salone. Ispod njega
+          // canvas crta „6 lokacija" i birač lokacije — to je `3a` i ostaje izvan sprinta.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: Text(
+              'Salon OS',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: AdminColors.onAccent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final cilj in kAdminDestinations)
+                  _SidebarStavka(cilj: cilj, izabrana: cilj.route == aktivna),
+              ],
+            ),
+          ),
+          const Spacer(),
+          if (clan != null) _SidebarPodnozje(clan: clan),
+        ],
+      ),
+    );
+  }
+}
+
+/// Jedan red sidebara. Canvas: `padding:10px 12px`, radius 6, izabrana `#232a2f`.
+class _SidebarStavka extends ConsumerWidget {
+  const _SidebarStavka({required this.cilj, required this.izabrana});
+
+  final AdminDestination cilj;
+  final bool izabrana;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final boja = izabrana ? AdminColors.onAccent : AdminColors.sidebarText;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Material(
+        color: izabrana ? AdminColors.sidebarSelected : Colors.transparent,
+        borderRadius: BorderRadius.circular(AdminRadius.base),
+        child: InkWell(
+          onTap: () => context.go(cilj.putanja),
+          borderRadius: BorderRadius.circular(AdminRadius.base),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Icon(cilj.icon, size: 18, color: boja),
+                const SizedBox(width: AdminSpacing.md),
+                Expanded(
+                  child: Text(
+                    cilj.label,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: boja,
+                      fontWeight: izabrana ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                ),
+                if (cilj.brojac != null) _Pilula(brojac: cilj.brojac!),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ime i uloga prijavljenog, iznad linije na dnu sidebara.
+class _SidebarPodnozje extends StatelessWidget {
+  const _SidebarPodnozje({required this.clan});
+
+  final StaffMember clan;
+
+  @override
   Widget build(BuildContext context) {
-    final indeks = aktivna == AdminRoute.appointments ? 1 : 0;
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.only(top: 14),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: AdminColors.sidebarDivider,
+            width: AdminSize.hairline,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  clan.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AdminColors.onAccent,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  clan.email,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AdminColors.sidebarMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _OdjavaDugme(svijetla: true),
+        ],
+      ),
+    );
+  }
+}
+
+/// Top bar iz `3b` — 66 px, breadcrumb lijevo, akcije ekrana desno.
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.title, this.actions});
+
+  final String title;
+  final List<Widget>? actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: AdminSize.topBarHeight,
+      decoration: const BoxDecoration(
+        color: AdminColors.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: AdminColors.separator,
+            width: AdminSize.hairline,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AdminSpacing.gutterDesktop,
+      ),
+      child: Row(
+        children: [
+          // Canvas ovdje crta `Vitez / Danas`. Ime lokacije nedostaje jer ga
+          // `StaffMember` ne nosi — v. „ostalo za sljedećeg" u tasku 29.
+          Expanded(
+            child: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+          ...?actions,
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Telefon
+// ---------------------------------------------------------------------------
+
+/// Četiri ćelije iz `3k`: tri stavke sa vrha navigacije, pa „Još".
+class _DonjaNavigacija extends ConsumerWidget {
+  const _DonjaNavigacija({this.aktivna});
+
+  final AdminRoute? aktivna;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final celije = [...adminPrimarne, kAdminJos];
+
+    // Modul iza „Još" označava četvrtu ćeliju: ko je na `/services`, mora vidjeti gdje se
+    // nalazi. Bez ovoga pet od osam ekrana stoji bez ijedne označene ćelije.
+    final izabrani = celije.indexWhere((c) => c.route == aktivna);
+    final krozJos = adminSporedne.any((c) => c.route == aktivna);
+    final indeks = izabrani >= 0
+        ? izabrani
+        : krozJos
+        ? celije.length - 1
+        : 0;
 
     return NavigationBar(
       selectedIndex: indeks,
+      destinations: [
+        for (final cilj in celije)
+          NavigationDestination(
+            icon: cilj.brojac == null
+                ? Icon(cilj.icon)
+                : Badge(
+                    label: _BrojacTekst(brojac: cilj.brojac!),
+                    isLabelVisible: true,
+                    child: Icon(cilj.icon),
+                  ),
+            label: cilj.label,
+          ),
+      ],
       onDestinationSelected: (i) {
-        final cilj = i == 0 ? AdminRoute.dashboard : AdminRoute.appointments;
-        if (cilj != aktivna) context.goNamed(cilj.name);
+        final cilj = celije[i];
+        if (cilj.route != aktivna) context.go(cilj.putanja);
       },
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.dashboard_outlined),
-          selectedIcon: Icon(Icons.dashboard),
-          label: 'Pregled',
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Dijelovi koje dijele obje ljuske
+// ---------------------------------------------------------------------------
+
+/// Brojač uz „Zahtjeve" u sidebaru. Canvas: akcent, radius 20, mono 11.
+class _Pilula extends ConsumerWidget {
+  const _Pilula({required this.brojac});
+
+  final ProviderListenable<AsyncValue<int>> brojac;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final broj = ref.watch(brojac).valueOrNull ?? 0;
+    // Nula se ne crta: pilula sa `0` kaže „ima ih nula", a prazno mjesto kaže isto i ne
+    // traži čitanje.
+    if (broj == 0) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      decoration: BoxDecoration(
+        color: AdminColors.accent,
+        borderRadius: BorderRadius.circular(AdminRadius.pill),
+      ),
+      child: Text(
+        '$broj',
+        style: AdminText.dataInline.copyWith(
+          color: AdminColors.onAccent,
+          fontWeight: FontWeight.w600,
         ),
-        NavigationDestination(
-          icon: Icon(Icons.event_note_outlined),
-          selectedIcon: Icon(Icons.event_note),
-          label: 'Termini',
-        ),
+      ),
+    );
+  }
+}
+
+/// Isti brojač, kao labela Material `Badge`-a u donjoj navigaciji.
+class _BrojacTekst extends ConsumerWidget {
+  const _BrojacTekst({required this.brojac});
+
+  final ProviderListenable<AsyncValue<int>> brojac;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final broj = ref.watch(brojac).valueOrNull ?? 0;
+    return Text(broj == 0 ? '' : '$broj');
+  }
+}
+
+/// Meni naloga u `AppBar`-u telefona.
+class _NalogDugme extends ConsumerWidget {
+  const _NalogDugme({this.ikona = false});
+
+  final bool ikona;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clan = ref.watch(currentStaffProvider).valueOrNull;
+
+    return PopupMenuButton<String>(
+      tooltip: 'Nalog',
+      icon: ikona ? const Icon(Icons.account_circle_outlined) : null,
+      onSelected: (izbor) async {
+        if (izbor == 'odjava') await odjavi(context, ref);
+      },
+      itemBuilder: (context) => [
+        if (clan != null)
+          PopupMenuItem<String>(
+            enabled: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(clan.name),
+                Text(clan.email, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        const PopupMenuDivider(),
+        const PopupMenuItem<String>(value: 'odjava', child: Text('Odjavi se')),
       ],
     );
+  }
+}
+
+/// Odjava iz podnožja sidebara — ikona, jer ime i mail već stoje pored nje.
+class _OdjavaDugme extends ConsumerWidget {
+  const _OdjavaDugme({this.svijetla = false});
+
+  final bool svijetla;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      tooltip: 'Odjavi se',
+      onPressed: () => odjavi(context, ref),
+      icon: const Icon(Icons.logout, size: 18),
+      color: svijetla ? AdminColors.sidebarText : null,
+    );
+  }
+}
+
+/// Odjava, sa porukom kad ne prođe.
+///
+/// Stoji kao funkcija jer je zovu tri mjesta: meni u `AppBar`-u, dugme u sidebaru i „Još".
+/// Preusmjeravanje na `/login` radi router kroz `currentStaffProvider`.
+Future<void> odjavi(BuildContext context, WidgetRef ref) async {
+  try {
+    await ref.read(staffRepositoryProvider).signOut();
+  } on ApiError {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Odjava nije uspjela. Pokušajte ponovo.')),
+      );
+    }
   }
 }

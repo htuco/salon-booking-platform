@@ -37,15 +37,18 @@ Appointment _termin({
   status: status,
 );
 
-Widget _ekran(List<Appointment> termini) => ProviderScope(
-  overrides: [
-    currentStaffProvider.overrideWith(
-      (ref) => Stream<StaffMember?>.value(_vlasnik),
-    ),
-    filtriraniTerminiProvider.overrideWith((ref) async => termini),
-  ],
-  child: const MaterialApp(home: AdminAppointmentsScreen()),
-);
+Widget _ekran(List<Appointment> termini, {AppointmentStatus? trazeniStatus}) =>
+    ProviderScope(
+      overrides: [
+        currentStaffProvider.overrideWith(
+          (ref) => Stream<StaffMember?>.value(_vlasnik),
+        ),
+        filtriraniTerminiProvider.overrideWith((ref) async => termini),
+      ],
+      child: MaterialApp(
+        home: AdminAppointmentsScreen(trazeniStatus: trazeniStatus),
+      ),
+    );
 
 void main() {
   testWidgets('lista prikazuje termine sa vremenom i imenom', (tester) async {
@@ -172,6 +175,53 @@ void main() {
 
       expect(poslije.status, AppointmentStatus.confirmed);
       expect(poslije.dan.difference(prije).inDays, 1);
+    });
+  });
+
+  group('filter iz adrese (`?status=`)', () {
+    test('statusIzUpita mapira samo stvarne statuse', () {
+      expect(statusIzUpita('pending'), AppointmentStatus.pending);
+      expect(statusIzUpita('no_show'), AppointmentStatus.noShow);
+    });
+
+    test('smece u adresi znaci „svi", ne prazan ekran', () {
+      // `AppointmentStatus.fromWire` bi ovdje vratilo `unknown`, sto je tacno za red iz
+      // baze a pogresno za adresu: filter po statusu koji nijedan termin nema daje praznu
+      // listu, pa `/appointments?status=blabla` izgleda kao dan bez termina.
+      expect(AppointmentStatus.fromWire('blabla'), AppointmentStatus.unknown);
+
+      expect(statusIzUpita('blabla'), isNull);
+      expect(statusIzUpita('unknown'), isNull);
+      expect(statusIzUpita(''), isNull);
+      expect(statusIzUpita(null), isNull);
+    });
+
+    test('postaviStatusTacno ne prebacuje', () {
+      // Zamka zbog koje metoda uopste postoji: `postaviStatus` je prebacivac, pa bi
+      // otvaranje `?status=pending` nad vec filtriranom listom ocistilo filter — ista
+      // adresa dala bi dva razlicita ekrana.
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(appointmentsFilterProvider.notifier);
+
+      notifier.postaviStatusTacno(AppointmentStatus.pending);
+      notifier.postaviStatusTacno(AppointmentStatus.pending);
+
+      expect(
+        container.read(appointmentsFilterProvider).status,
+        AppointmentStatus.pending,
+      );
+    });
+
+    testWidgets('ekran otvoren sa `?status=pending` filtrira listu', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _ekran(const [], trazeniStatus: AppointmentStatus.pending),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Zahtjevi'), findsWidgets);
     });
   });
 

@@ -1,9 +1,9 @@
 import 'package:core_api/core_api.dart';
-import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/admin_destinations.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
@@ -22,6 +22,9 @@ class AdminDashboardScreen extends ConsumerWidget {
     final clan = ref.watch(currentStaffProvider).valueOrNull;
     final danasnji = ref.watch(danasnjiTerminiProvider);
     final naCekanju = ref.watch(pendingCountProvider);
+    // Gutter dolazi iz ljuske (20 na telefonu, 28 na desktopu), ne iz broja u ekranu —
+    // inače bi desktop dobio telefonski razmak, a to se vidi tek na 1440.
+    final gutter = AdminShell.gutterOf(context);
 
     return AdminScaffold(
       title: 'Pregled',
@@ -33,7 +36,10 @@ class AdminDashboardScreen extends ConsumerWidget {
             ..invalidate(pendingCountProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(
+            horizontal: gutter,
+            vertical: AdminSpacing.lg,
+          ),
           children: [
             if (clan != null)
               Text(clan.name, style: Theme.of(context).textTheme.headlineSmall),
@@ -89,14 +95,11 @@ class _ZahtjeviKartica extends ConsumerWidget {
       margin: EdgeInsets.zero,
       color: imaZahtjeva ? theme.colorScheme.tertiaryContainer : null,
       child: InkWell(
-        onTap: imaZahtjeva
-            ? () {
-                ref
-                    .read(appointmentsFilterProvider.notifier)
-                    .postaviStatus(AppointmentStatus.pending);
-                context.goNamed(AdminRoute.appointments.name);
-              }
-            : null,
+        // **Adresa, ne stanje providera.** Ranije je kartica mijenjala filter pa
+        // navigirala; na webu je to značilo da refresh i „nazad" vrate nefiltriranu listu,
+        // a URL ne opisuje šta se vidi. Ista adresa nosi i ćelija „Zahtjevi" u navigaciji,
+        // pa oba ulaza vode na isti ekran.
+        onTap: imaZahtjeva ? () => context.go(kZahtjeviPutanja) : null,
         borderRadius: BorderRadius.circular(AdminRadius.base),
         child: Padding(
           padding: const EdgeInsets.all(16),

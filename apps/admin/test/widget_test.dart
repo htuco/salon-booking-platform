@@ -44,6 +44,10 @@ Widget _app(ProviderContainer container) => UncontrolledProviderScope(
 void main() {
   test('rute prate 01 §12', () {
     // Prepisano iz specifikacije, ne iz enuma — inace test potvrdjuje sam sebe.
+    //
+    // `/clients` i `/more` su u §12 dopisane u tasku 29, iz admin handoffa: prva nosi
+    // prikaze `3e`/`3o`, druga prikaz `3t`. Red ide u tabelu **pa** ovdje — obrnuto bi
+    // znacilo da enum vodi specifikaciju.
     const izSpecifikacije = {
       '/login',
       '/dashboard',
@@ -52,10 +56,12 @@ void main() {
       '/appointments/new',
       '/calendar',
       '/calendar/block',
+      '/clients',
       '/services',
       '/employees',
       '/working-hours',
       '/settings',
+      '/more',
     };
 
     expect(AdminRoute.values.map((r) => r.path).toSet(), izSpecifikacije);

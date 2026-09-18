@@ -1,12 +1,12 @@
 # Trenutni task: 29 — Responsive shell: desktop sidebar i mobilna navigacija
 
 Puni task: [`tasks/sprint-3/29-responsive-shell.md`](sprint-3/29-responsive-shell.md)
-**Nije počet** · Učitan: 2026-09-19
+**U toku** · Grana: `feat/admin-responsive-shell` · Učitan: 2026-09-19
 
 ## Status
 
-Nije počet. Zavisnost [28](sprint-3/28-admin-tema-i-tipografija.md) je spojena u `main` (`61da040`),
-pa mjere ljuske već postoje kao tokeni i ne mjere se ponovo.
+U toku. Zavisnost [28](sprint-3/28-admin-tema-i-tipografija.md) je spojena, pa mjere ljuske već
+postoje kao tokeni i ne mjere se ponovo.
 
 Danas `AdminScaffold` crta **istu ljusku na svakoj širini**: Material `AppBar` plus `NavigationBar`
 sa **dvije** ćelije (Pregled, Termini). Nema breakpointa, nema sidebara, i dvije od četiri tražene
@@ -34,10 +34,24 @@ sa **dvije** ćelije (Pregled, Termini). Nema breakpointa, nema sidebara, i dvij
 - **`AdminScaffold` i `aktivna` već postoje i već su ispravni.** Peta DoD stavka nije posao nego
   zabrana regresije: komentar u `admin_scaffold.dart` već objašnjava zašto se ruta ne čita iz
   `GoRouterState`. Ovdje se ništa ne „popravlja" — samo se ne kvari.
-- **„Zahtjevi" danas nije ruta nego stanje providera.** Dashboard kartica zove
-  `postaviStatus(AppointmentStatus.pending)` i vodi na `/appointments`. Navigacijska ćelija koja
-  radi isto puca na webu: refresh i „nazad" vrate nefiltriranu listu, a URL ne opisuje šta se vidi.
-  Prije koda treba odluka — query parametar na `/appointments` ili zasebna ruta.
+- **„Zahtjevi" danas nije ruta nego stanje providera, i to je riješeno kao query parametar.**
+  Dashboard kartica zove `postaviStatus(AppointmentStatus.pending)` pa navigira na `/appointments`.
+  Navigacijska ćelija koja radi isto puca na webu: refresh i „nazad" vrate nefiltriranu listu, a URL
+  ne opisuje šta se vidi. Odluka je `/appointments?status=pending`, **ne zasebna ruta** — canvas
+  crta „Zahtjeve" kao filtriranu listu istih termina, a zasebna ruta bi ostavila `/appointments` bez
+  ijednog ulaza iz navigacije, jer handoff nema ćeliju „Termini" (v. sljedeća napomena).
+- **Handoff nema ćeliju „Termini", a `/appointments` ne smije ostati bez ulaza.** Izmjereno iz
+  `canvas/Salon OS Admin.dc.html`: sidebar (`3b`) nosi **osam** stavki — Danas, Kalendar, Zahtjevi,
+  Klijenti, Usluge, Osoblje, Radno vrijeme, Postavke — a donja navigacija (`3k`, `3t`) **četiri** —
+  Danas, Kalendar, Zahtjevi, Još. Puna lista termina se ne pojavljuje ni u jednoj. Zato „Zahtjevi"
+  vodi na `/appointments?status=pending`: ista ruta, a postojeća filter traka na ekranu vraća na
+  „sve", pa nijedan ekran ne ostaje bez ulaza.
+- **Brojač uz „Zahtjeve" je dio ljuske, ne ekrana.** Canvas ga crta u sidebaru i u donjoj navigaciji
+  (`4`), `pendingCountProvider` već postoji. Ulazi u ovaj task jer živi u navigaciji; izgled kartica
+  i lista koje ga troše pripada [30](sprint-3/30-postojeci-ekrani-na-handoff.md).
+- **Iz sidebara namjerno izostaju „6 lokacija", „‹ Nazad na mrežu" i biranje lokacije `▾`.** To je
+  `3a`, koji `SPEC.md` izričito stavlja izvan sprinta: traži multi-location RBAC, a prikaz u
+  prototipu nije dozvola za client-side izbor salona (ADR-0003).
 - **`AdminRoute` nema `clients`.** `3e`/`3o` piše task [35](sprint-3/35-klijenti-i-profil.md), ali
   DoD ovog taska traži ulaz u „Još". Ruta mora nastati sada kao placeholder, inače ćelija nema gdje
   da vodi. Ostalih pet (`calendar`, `services`, `employees`, `workingHours`, `settings`) već stoje

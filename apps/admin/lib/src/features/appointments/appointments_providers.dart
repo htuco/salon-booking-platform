@@ -53,12 +53,37 @@ class AppointmentsFilterNotifier extends Notifier<AppointmentsFilter> {
 
   /// `null` vraća na „svi statusi". Ponovni tap na već izabran status ga isključuje —
   /// inače se filter ne može poništiti bez traženja dugmeta „Svi".
-  void postaviStatus(AppointmentStatus? status) {
-    state = state.kopija(
-      dan: state.dan,
-      status: state.status == status ? null : status,
-    );
+  void postaviStatus(AppointmentStatus? status) =>
+      postaviStatusTacno(state.status == status ? null : status);
+
+  /// Postavlja status **bez prebacivanja**.
+  ///
+  /// Postoji odvojeno od [postaviStatus] zbog URL-a: `/appointments?status=pending`
+  /// otvoren dok je „na čekanju" već izabran mora ostati filtriran. Da ruta zove metodu
+  /// koja prebacuje, ista adresa bi davala dva različita ekrana — filtrirani kad se dođe
+  /// izvana, prazan filter kad se ćelija „Zahtjevi" tapne dvaput.
+  void postaviStatusTacno(AppointmentStatus? status) {
+    state = state.kopija(dan: state.dan, status: status);
   }
+}
+
+/// Ime query parametra kojim URL nosi filter statusa.
+const String kStatusUpit = 'status';
+
+/// Status iz URL-a — `null` znači „svi", i to je jedini ispravan odgovor na smeće.
+///
+/// **Namjerno ne koristi `AppointmentStatus.fromWire`.** Ono nepoznatu vrijednost mapira u
+/// `unknown`, što je tačno za red iz baze (buduća migracija ne smije srušiti parsiranje),
+/// ali pogrešno za adresu koju čovjek može otkucati: `?status=blabla` bi filtrirao po
+/// statusu koji nijedan termin nema i dao prazan ekran umjesto pune liste.
+AppointmentStatus? statusIzUpita(String? vrijednost) {
+  if (vrijednost == null || vrijednost.isEmpty) return null;
+
+  for (final status in AppointmentStatus.values) {
+    if (status == AppointmentStatus.unknown) continue;
+    if (status.wireName == vrijednost) return status;
+  }
+  return null;
 }
 
 final appointmentsFilterProvider =
