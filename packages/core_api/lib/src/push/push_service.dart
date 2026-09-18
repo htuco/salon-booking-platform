@@ -20,7 +20,7 @@ class PushService with WidgetsBindingObserver {
   final String? salonId;
   final bool staff;
   final _opened = StreamController<String>.broadcast();
-  final _received = StreamController<String>.broadcast();
+  final _received = StreamController<PushMessage>.broadcast();
   final _subscriptions = <StreamSubscription<dynamic>>[];
   Future<void> _queue = Future.value();
   Future<void>? _initializing;
@@ -31,7 +31,7 @@ class PushService with WidgetsBindingObserver {
   bool _signingOut = false;
 
   Stream<String> get opened => _opened.stream;
-  Stream<String> get received => _received.stream;
+  Stream<PushMessage> get received => _received.stream;
 
   String? takeInitialSalon() {
     final value = _pendingSalon;
@@ -83,8 +83,8 @@ class PushService with WidgetsBindingObserver {
     );
     _subscriptions.add(
       FirebaseMessaging.onMessage.listen((message) {
-        final salon = _messageSalon(message);
-        if (salon != null) _received.add(salon);
+        final push = _pushMessage(message);
+        if (push != null) _received.add(push);
       }),
     );
     await _serialize(_sync).catchError((Object _) => null);
@@ -99,6 +99,18 @@ class PushService with WidgetsBindingObserver {
     }
     if (salon != _registeredSalon && salon != salonId) return null;
     return salon;
+  }
+
+  PushMessage? _pushMessage(RemoteMessage message) {
+    final salon = _messageSalon(message);
+    if (salon == null) return null;
+    return PushMessage(
+      salonId: salon,
+      notificationId:
+          message.data['notification_id'] as String? ?? message.messageId ?? '',
+      title: message.notification?.title,
+      body: message.notification?.body,
+    );
   }
 
   Future<T> _serialize<T>(Future<T> Function() work) {
@@ -198,4 +210,27 @@ class PushService with WidgetsBindingObserver {
     unawaited(_opened.close());
     unawaited(_received.close());
   }
+}
+
+/// Sigurni dio FCM poruke potreban UI-ju za foreground prikaz.
+///
+/// Backend namjerno ne šalje lične podatke u push payloadu. Detalji termina se uvijek
+/// ponovo čitaju pod trenutnim JWT-om.
+///
+/// `title` i `body` su ono što je backend poslao — ovdje nema fallback teksta, jer bi
+/// svaki takav tekst nosio terminologiju jedne vertikale u zajednički paket. Poruka bez
+/// njih i dalje osvježava listu, samo se ne prikazuje kao sistemska obavijest.
+@immutable
+class PushMessage {
+  const PushMessage({
+    required this.salonId,
+    required this.notificationId,
+    this.title,
+    this.body,
+  });
+
+  final String salonId;
+  final String notificationId;
+  final String? title;
+  final String? body;
 }

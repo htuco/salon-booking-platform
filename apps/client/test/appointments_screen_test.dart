@@ -201,6 +201,74 @@ void main() {
       container.dispose();
     });
 
+    testWidgets('povlačenje nadolje ponovo čita listu iz baze', (tester) async {
+      // Realtime veza može biti suspendovana dok je app u pozadini, pa povlačenje
+      // mora stvarno pogoditi bazu, a ne samo animirati indikator.
+      final repo = _MockAppointments();
+      var citanja = 0;
+      when(repo.forCurrentCustomer).thenAnswer((_) async {
+        citanja++;
+        return [_termin(dan: 20, sat: 10)];
+      });
+
+      final container = await _pump(tester, repo: repo);
+      final prije = citanja;
+
+      await tester.fling(find.text('10:00'), const Offset(0, 900), 2000);
+      await tester.pumpAndSettle();
+
+      expect(citanja, prije + 1);
+
+      container.dispose();
+    });
+
+    testWidgets('povratak u prvi plan ponovo čita listu', (tester) async {
+      // FCM ili Realtime događaj se može propustiti dok je app u pozadini. Povratak
+      // na ekran zato ne smije vjerovati keširanom stanju.
+      final repo = _MockAppointments();
+      var citanja = 0;
+      when(repo.forCurrentCustomer).thenAnswer((_) async {
+        citanja++;
+        return [_termin(dan: 20, sat: 10)];
+      });
+
+      final container = await _pump(tester, repo: repo);
+      final prije = citanja;
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+
+      expect(citanja, prije + 1);
+
+      container.dispose();
+    });
+
+    testWidgets('prazna lista se takođe može povući nadolje', (tester) async {
+      // Prazno stanje nije scrollable samo po sebi — bez omotača u ListView-u
+      // korisnik kojem je lista prazna nema kako da je osvježi.
+      final repo = _MockAppointments();
+      var citanja = 0;
+      when(repo.forCurrentCustomer).thenAnswer((_) async {
+        citanja++;
+        return const <Appointment>[];
+      });
+
+      final container = await _pump(tester, repo: repo);
+      final prije = citanja;
+
+      await tester.fling(
+        find.byType(RefreshIndicator).first,
+        const Offset(0, 900),
+        2000,
+      );
+      await tester.pumpAndSettle();
+
+      expect(citanja, prije + 1);
+
+      container.dispose();
+    });
+
     testWidgets('odbijenica zbog roka kaže šta uraditi', (tester) async {
       // `PT403` iz baze stiže kao `NotFoundError` — `mapError` namjerno ne razlikuje
       // „zabranjeno" od „ne postoji". Na ovom ekranu termin sigurno postoji, pa je

@@ -46,7 +46,7 @@ final pushOpenedProvider = StreamProvider<String>((ref) async* {
   yield* messages.stream;
 });
 
-final pushReceivedProvider = StreamProvider<String>(
+final pushReceivedProvider = StreamProvider<PushMessage>(
   (ref) => ref.watch(pushServiceProvider)?.received ?? const Stream.empty(),
 );
 

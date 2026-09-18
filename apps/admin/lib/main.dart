@@ -59,9 +59,10 @@ class SalonAdminApp extends ConsumerWidget {
     ref.watch(pushInitializationProvider);
 
     ref.listen(pushReceivedProvider, (_, next) {
-      if (next.valueOrNull == ref.read(adminSalonIdProvider) && next.hasValue) {
-        refreshAdminAppointments(ref);
-      }
+      final message = next.valueOrNull;
+      if (message == null) return;
+      if (message.salonId != ref.read(adminSalonIdProvider)) return;
+      refreshAdminAppointments(ref);
     });
     ref.listen(pushOpenedProvider, (_, next) {
       if (!next.hasValue ||
