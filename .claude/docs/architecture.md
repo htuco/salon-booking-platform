@@ -483,7 +483,16 @@ token refresh, promjene sesije i odjavu. `bookingDeviceIdProvider` čeka registr
 pravi `devices.id`. Podrazumijevano isključen `PUSH_ENABLED` čuva razvoj bez Firebase konfiguracije.
 
 Firebase Core/Messaging su jedini Firebase pluginovi; Supabase i dalje radi autentikaciju.
-App sluša typed tokove sa salon ID-em i navigira vlastitim routerom na `/appointments`.
+App sluša typed tokove i navigira vlastitim routerom na `/appointments`. `opened` nosi samo salon
+ID, `received` nosi `PushMessage` — salon, `notification_id` i tekst koji je backend poslao, bez
+ličnih podataka.
+
+Foreground prikaz je asimetričan po platformi i to je namjerno. iOS crta obavijest sam, jer
+`PushService` uključi `setForegroundNotificationPresentationOptions`. Android to ne radi, pa
+`ForegroundNotifications` (klijent) šalje poruku kroz MethodChannel `MainActivity`-ju, koji je
+crta na kanalu `appointment_updates` — istom koji manifest daje FCM-u kao default, da korisnik
+ima jednu sistemsku postavku. Zato `ForegroundNotifications.show` odmah izlazi na iOS-u; bez toga
+bi se ista obavijest pojavila dvaput.
 Client koristi build salon, admin članstvo. Worker uzima događaje iz baze i dobija kratkotrajni
 Vault HMAC kroz cron, bez klijentskog pozivanja funkcije za slanje. Operativni ugovor:
 `supabase/functions/send-push/README.md`.

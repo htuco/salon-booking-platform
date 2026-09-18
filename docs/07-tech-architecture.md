@@ -115,7 +115,7 @@ Primjenjuje se identično na `apps/client` i `apps/admin` (dijele se preko `pack
 | **Routing** | `go_router` | Deklarativan, deep linking (`/s/:slug/book/service`), i **jedini** realan izbor za web build klijent app-a ([01 §16.2](01-mvp-spec.md#162-frontend--šta-u-čemu)) gdje URL mora odražavati ekran |
 | **Backend klijent** | `supabase_flutter` | Auth + Postgrest + Realtime + Storage u jednom paketu, službeni SDK |
 | **Serijalizacija / modeli** | `freezed` + `json_serializable` + `build_runner` | Immutable modeli, `copyWith`, union tipovi za `Appointment.status` — smanjuje klasu grešaka gdje se zaboravi ažurirati polje |
-| **Push (foreground prikaz)** | `firebase_messaging` + `flutter_local_notifications` | FCM dostavlja poruku, ali foreground prikaz na oba OS-a traži lokalne notifikacije — FCM sam to ne radi kad je app otvorena |
+| **Push (foreground prikaz)** | `firebase_messaging` + native MethodChannel | FCM dostavlja poruku, ali kad je app otvorena Android sam ne crta notification payload. iOS to rješava `setForegroundNotificationPresentationOptions`, pa je ostao samo Android — a za ~60 linija Kotlina u `MainActivity` ne uvodimo `flutter_local_notifications` i njegov plugin lanac |
 | **Slike** | `cached_network_image` | Logo/cover/galerija sa Supabase Storage URL-ova; keširanje je obavezno jer se isti brend učitava na svakom otvaranju |
 | **SVG** | `flutter_svg` | Ikone i brend asseti koji dolaze kao SVG iz dizajna |
 | **Ikone** | `lucide_icons` | Poklapa se sa `lucide-react` iz web prototipa — jedan jezik ikona kroz sistem (v. §2) |

@@ -18,6 +18,13 @@ direktni deploy nema potvrđenu Dashboard connection string putanju. Firebase CL
 račun koji nema pristup projektu `hades-75751` (`403 PERMISSION_DENIED`). Zbog toga email tok,
 availability i push još nisu dokazani na hostovanom projektu ni fizičkom uređaju.
 
+Vitez Firebase config je u međuvremenu dobiven. Stoji **izvan gita**, na
+`tenants/barberstudiovitez/google-services.json`, a izvedeni `--dart-define-from-file` je u
+`.firebase-config/barberstudiovitez.json` (obje putanje su u `.gitignore`); u repou i dalje stoji
+generisani placeholder. Uz to je dodat foreground prikaz obavijesti na Androidu — iOS ga već ima
+kroz `setForegroundNotificationPresentationOptions`. Sam prijem push poruke na fizičkom uređaju i
+dalje **nije dokazan**; dokazano je samo da analiza i Flutter testovi prolaze.
+
 Za nastavak vlasnik treba na ovoj mašini uraditi `supabase login` ili dati službenu connection
 string putanju iz Dashboarda, isključiti **Confirm email** za demo i prijaviti Firebase račun koji
 ima pristup projektu. Tajne se ne šalju u chat niti commitaju.

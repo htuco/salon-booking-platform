@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:core_api/core_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'src/core/env/app_env.dart';
 import 'src/core/env/bootstrap.dart';
+import 'src/core/foreground_notifications.dart';
 import 'src/core/router/app_router.dart';
 import 'src/core/theme_provider.dart';
 import 'src/core/vertical_provider.dart';
@@ -56,7 +59,10 @@ class SalonClientApp extends ConsumerWidget {
     }
     ref.watch(pushInitializationProvider);
     ref.listen(pushReceivedProvider, (_, next) {
-      if (next.hasValue) ref.invalidate(myAppointmentsProvider);
+      final message = next.valueOrNull;
+      if (message == null) return;
+      ref.invalidate(myAppointmentsProvider);
+      unawaited(ForegroundNotifications.show(message));
     });
     ref.listen(pushOpenedProvider, (_, next) {
       if (!next.hasValue) return;
