@@ -48,10 +48,7 @@ void main() {
         scheme.errorContainer,
       ),
       'onSurface/surface': (scheme.onSurface, scheme.surface),
-      'onSurface/surfaceContainer': (
-        scheme.onSurface,
-        scheme.surfaceContainer,
-      ),
+      'onSurface/surfaceContainer': (scheme.onSurface, scheme.surfaceContainer),
       'onSurface/surfaceContainerHighest': (
         scheme.onSurface,
         scheme.surfaceContainerHighest,
@@ -99,8 +96,7 @@ void main() {
       expect(
         odnos(AdminColors.textMuted, AdminColors.ground),
         lessThan(kAa),
-        reason:
-            'ako ovo prođe, boja je promijenjena i doc komentar uz nju više ne važi',
+        reason: 'ako ovo prođe, boja je promijenjena i doc komentar uz nju više ne važi',
       );
     });
 
@@ -118,7 +114,10 @@ void main() {
     test('accentSoft nije podloga za tekst i nije ušao u šemu', () {
       // Sekundarni akcent iz SPEC tabele: finalni canvas ga ne crta nijednom, a nijedan
       // tekst na njemu ne prolazi AA. Ovaj test pada ako ga neko ubaci u `ColorScheme`.
-      expect(odnos(AdminColors.onAccent, AdminColors.accentSoft), lessThan(kAa));
+      expect(
+        odnos(AdminColors.onAccent, AdminColors.accentSoft),
+        lessThan(kAa),
+      );
       expect(odnos(AdminColors.ink, AdminColors.accentSoft), lessThan(kAa));
 
       final uSemi = <Color>[

@@ -212,9 +212,7 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
           // `error`, ne `errorContainer`: snackbar tekst dolazi iz teme i pisan je za
           // tamnu podlogu (`AdminColors.ground` na `ink`). Na svijetlom `errorContainer`
           // tintu bi bio nevidljiv — 1,06:1.
-          backgroundColor: greska
-              ? Theme.of(context).colorScheme.error
-              : null,
+          backgroundColor: greska ? Theme.of(context).colorScheme.error : null,
         ),
       );
   }

@@ -16,22 +16,23 @@ import 'package:flutter_test/flutter_test.dart';
 
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 
-Appointment _termin({
-  AppointmentStatus status = AppointmentStatus.confirmed,
-}) => Appointment(
-  id: 'a1',
-  salonId: _salonId,
-  serviceId: 's1',
-  customerId: 'c1',
-  customerName: 'Adnan Kovac',
-  date: LocalDate(2026, 9, 14),
-  startTime: LocalTime(13, 0),
-  endTime: LocalTime(13, 40),
-  status: status,
-);
+Appointment _termin({AppointmentStatus status = AppointmentStatus.confirmed}) =>
+    Appointment(
+      id: 'a1',
+      salonId: _salonId,
+      serviceId: 's1',
+      customerId: 'c1',
+      customerName: 'Adnan Kovac',
+      date: LocalDate(2026, 9, 14),
+      startTime: LocalTime(13, 0),
+      endTime: LocalTime(13, 40),
+      status: status,
+    );
 
-Widget _uTemi(Widget dijete) =>
-    MaterialApp(theme: buildAdminTheme(), home: Scaffold(body: dijete));
+Widget _uTemi(Widget dijete) => MaterialApp(
+  theme: buildAdminTheme(),
+  home: Scaffold(body: dijete),
+);
 
 /// Stil koji je stvarno iscrtan za dati tekst.
 TextStyle _stilZa(WidgetTester tester, String tekst) =>
@@ -68,7 +69,10 @@ void main() {
 
     final pilula = tester.widget<Container>(
       find
-          .ancestor(of: find.text('Potvrđeni'), matching: find.byType(Container))
+          .ancestor(
+            of: find.text('Potvrđeni'),
+            matching: find.byType(Container),
+          )
           .first,
     );
     final ukras = pilula.decoration! as BoxDecoration;

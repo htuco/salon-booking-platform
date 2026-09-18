@@ -110,8 +110,7 @@ abstract final class AdminText {
   ///
   /// Razmak `.08em` je dio oblika, ne ukras: bez njega verzalni tekst te veličine izgleda
   /// kao greška u pismu.
-  static TextStyle get eyebrow =>
-      mono(size: 10.5, weight: 400, tracking: 0.08);
+  static TextStyle get eyebrow => mono(size: 10.5, weight: 400, tracking: 0.08);
 
   /// Statusna oznaka u piluli — „Potvrđeno", „Na čekanju".
   ///
