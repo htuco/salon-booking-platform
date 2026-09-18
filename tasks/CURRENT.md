@@ -1,42 +1,74 @@
-# Trenutni task: 28 — Admin tema, tipografija i tokeni
+# Trenutni task: 29 — Responsive shell: desktop sidebar i mobilna navigacija
 
-Puni task: [`tasks/sprint-3/28-admin-tema-i-tipografija.md`](sprint-3/28-admin-tema-i-tipografija.md)
-**U toku** · Grana: `feat/admin-tema-i-tokeni` · Zadnji rad: 2026-09-19
+Puni task: [`tasks/sprint-3/29-responsive-shell.md`](sprint-3/29-responsive-shell.md)
+**Nije počet** · Učitan: 2026-09-19
 
 ## Status
 
-Kod je gotov i dokazan lokalno; ostaje PR i zeleni CI. `apps/admin/lib/src/core/theme/` nosi pet
-fajlova (paleta, razmaci, tipografija, statusni tonovi, `buildAdminTheme()`), `main.dart` više ne
-gradi temu iz `ColorScheme.fromSeed`, a Space Grotesk i JetBrains Mono su zapakovani u repo uz OFL.
+Nije počet. Zavisnost [28](sprint-3/28-admin-tema-i-tipografija.md) je spojena u `main` (`61da040`),
+pa mjere ljuske već postoje kao tokeni i ne mjere se ponovo.
 
-Puni nalazi — šta je mjerenje canvasa oborilo i koja dva para iz handoffa padaju WCAG AA — stoje u
-`## Status` bloku samog taska i u [`tasks/sprint-3/README.md`](sprint-3/README.md). Ne prepisuju se
-ovdje.
+Danas `AdminScaffold` crta **istu ljusku na svakoj širini**: Material `AppBar` plus `NavigationBar`
+sa **dvije** ćelije (Pregled, Termini). Nema breakpointa, nema sidebara, i dvije od četiri tražene
+ćelije ne postoje.
 
 ## Ciljevi
 
-- [x] Tokeni iz `SPEC.md` u `apps/admin/lib/src/core/theme/`, na jednom mjestu
-- [x] Space Grotesk i JetBrains Mono lokalno zapakovani, bez Google Fonts zavisnosti
-- [x] `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`
-- [x] Nijedan admin ekran nema hardkodiran hex — drži `no_hardcoded_colors_test.dart`
-- [x] Postojeća četiri ekrana rade isto kao prije, samo kroz temu — 70 admin testova PASS
-- [x] PR otvoren protiv `main`-a — [#49](https://github.com/htuco/salon-booking-platform/pull/49), draft
-- [ ] CI zelen
+- [ ] Breakpoint u `core/widgets/` — ispod njega donja navigacija, iznad sidebar; desktop se ne skalira
+- [ ] Desktop grana: sidebar `AdminSize.sidebarWidth` (236), top bar `AdminSize.topBarHeight` (66),
+      sadržaj na radnoj površini sa `AdminSpacing.gutterDesktop` (24)
+- [ ] Mobilna grana: **četiri** ćelije — Danas · Kalendar · Zahtjevi · Još — i gutter
+      `AdminSpacing.gutterMobile` (20)
+- [ ] „Zahtjevi" dobije **svoju adresu**, jer danas nije ruta nego stanje providera (v. Napomene)
+- [ ] „Još" (`3t`) sa ulazima u klijente, usluge, osoblje, radno vrijeme i postavke —
+      `AdminRoute.clients` danas **ne postoji** i mora nastati bar kao placeholder
+- [ ] Obje grane čitaju **istu listu ruta**; nema dva stabla ekrana
+- [ ] `AdminScaffold` ostaje jedini nosilac navigacije, a `aktivna` se i dalje prosljeđuje iz ekrana
+- [ ] Widget test nad **istim** ekranom na 1440×900 i 402×874
 
 ## Napomene
 
-- **Grana `feat/admin-tema-i-tokeni`, sa svježeg `main`-a** (`649057b`). Ranija bojazan da `main`
-  nema Sprint 3 bila je zasnovana na zastarjelom lokalnom `main`-u — PR #48 je spojen.
-- **`gh` postoji, ali nije na PATH-u** — stoji na `C:\Program Files\GitHub CLI\gh.exe`. Komande
-  rade uz `export PATH="$PATH:/c/Program Files/GitHub CLI"`. Bez toga `gh` izgleda kao da nije
-  instaliran, što me je jednom već navelo na pogrešan zaključak u ovoj sesiji.
-- **Nema Dockera ni `supabase` CLI-ja**, pa lokalni stack ne radi. Zato su dashboard i lista termina
-  dokazani samo widget testovima, a na ekranu je viđen **login**, iz pravog `flutter build web`
-  bundlea. To je zapisano kao „ostalo za sljedećeg", ne prešućeno.
-- **Sljedeći task je [29](sprint-3/29-responsive-shell.md).** Mjere ljuske koje mu trebaju
-  (sidebar 236, top bar 66, gutter 20) već stoje u `AdminSize`/`AdminSpacing`.
+- **Zavisnost je namirena, ali 28 je i dalje 🟡.** Ostatak (dashboard i lista termina nisu viđeni na
+  ekranu, jer nema Dockera ni `supabase` CLI-ja) ne blokira ovaj task — shell se dokazuje widget
+  testovima na dvije širine, ne živim stackom.
+- **`AdminScaffold` i `aktivna` već postoje i već su ispravni.** Peta DoD stavka nije posao nego
+  zabrana regresije: komentar u `admin_scaffold.dart` već objašnjava zašto se ruta ne čita iz
+  `GoRouterState`. Ovdje se ništa ne „popravlja" — samo se ne kvari.
+- **„Zahtjevi" danas nije ruta nego stanje providera.** Dashboard kartica zove
+  `postaviStatus(AppointmentStatus.pending)` i vodi na `/appointments`. Navigacijska ćelija koja
+  radi isto puca na webu: refresh i „nazad" vrate nefiltriranu listu, a URL ne opisuje šta se vidi.
+  Prije koda treba odluka — query parametar na `/appointments` ili zasebna ruta.
+- **`AdminRoute` nema `clients`.** `3e`/`3o` piše task [35](sprint-3/35-klijenti-i-profil.md), ali
+  DoD ovog taska traži ulaz u „Još". Ruta mora nastati sada kao placeholder, inače ćelija nema gdje
+  da vodi. Ostalih pet (`calendar`, `services`, `employees`, `workingHours`, `settings`) već stoje
+  kao placeholder rute.
+- **Komentar u `_AdminNavigacija` treba prepisati, ne obrisati.** Danas tvrdi suprotno od koraka 3:
+  „Ćelija koja vodi na placeholder je gora od ćelije koje nema." Task 29 tu odluku svjesno obrće —
+  neka to i piše, inače sljedeći čitalac vidi samo da je pravilo nestalo.
+- **Login i ručni unos imaju vlastiti `Scaffold`**, ne `AdminScaffold` — i tako treba da ostane:
+  prijava nema navigaciju, a ručni unos je modalni tok.
+- **Admin je i web build.** Router namjerno koristi `redirect`, ne `initialLocation`, da bookmark na
+  `/employees` ne završi na loginu sa pogrešnim URL-om. Ljuska to ne smije pokvariti.
+- **Boja ne dolazi iz `tenant.yaml`.** Admin nije brandiran — plava je identitet Salon OS-a. Ovo je
+  obrnuto od pravila za `apps/client` i najlakše se prekrši navikom.
+- **`gh` nije na PATH-u** — `export PATH="$PATH:/c/Program Files/GitHub CLI"`.
+- Procjena iz task fajla (1–2 dana) ostaje; nalazi dodaju dvije rute i jednu odluku, ne novi sloj.
 
 ## Istorija
+
+- **28 — Admin tema, tipografija i tokeni** (2026-09-19, 🟡) — `apps/admin/lib/src/core/theme/` je
+  prestao biti `.gitkeep`: pet fajlova nose paletu, razmake, uglove, tipografiju i statusne tonove,
+  a `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`. Space Grotesk i JetBrains Mono su
+  zapakovani u repo uz OFL. **Mjerenje canvasa je oborilo tri tvrdnje iz `SPEC.md`** i sve tri su
+  zapisane nazad u `SPEC.md`: velika brojka i statusna pilula nisu mono, a sekundarni akcent
+  `#5980A6` finalni canvas ne koristi nijednom. **Dva para iz handoffa padaju WCAG AA** i nisu
+  prepisana doslovno — `#6B757B` na radnoj pozadini mjeri 4,35:1, oznaka „Završeno" 4,15:1; tekst
+  je spušten na `#5B656B` (5,26:1), a `theme_contrast_test.dart` drži i tvrdnju da ti parovi
+  **padaju**, da se vraćanje na handoff ne desi nečujno. Dokazano: **567 Dart testova** u pet
+  paketa, od toga `admin` **70** (bilo 16), čista analiza, i login ekran u Chromiumu na 1440×900 i
+  402×874. Ostaje 🟡 jer dashboard, lista termina i ručni unos **nisu viđeni na ekranu** — na ovoj
+  mašini nema ni Dockera ni `supabase` CLI-ja, pa se lokalni stack ne može dići.
+  [PR #49](https://github.com/htuco/salon-booking-platform/pull/49), spojen (`61da040`).
 
 - **27 — Vitez live integracija i email + lozinka** (2026-09-16, 🟡) — klijentski OTP je zamijenjen
   stvarnim Supabase `signUp`/`signInWithPassword` tokom; Vitez klijent i admin slušaju
