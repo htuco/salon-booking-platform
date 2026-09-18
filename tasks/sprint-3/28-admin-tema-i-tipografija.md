@@ -98,6 +98,19 @@ na handoff" bez razloga i bez traga.
   obori `theme_tokens_test`, a statusni ton vraćen na `primaryContainer` obori tri od četiri
   tvrdnje u `appointment_tile_theme_test`. Sve vraćeno.
 
+### Nalaz iz pregleda: četiri stila još nemaju ekran
+
+`AdminText.display`, `.metricNumber`, `.eyebrow` i `.timeLarge` ne koristi nijedan ekran — samo
+testovi. To nije previd nego posljedica granice taska: naslov ekrana i kartica metrike dolaze sa
+[29](29-responsive-shell.md) i [30](30-postojeci-ekrani-na-handoff.md), eyebrow labela sa shellom,
+`timeLarge` sa kalendarom u [31](31-kalendar-dana.md). Isto vrijedi za `AdminSize.sidebarWidth`,
+`.topBarHeight` i `AdminSpacing.gutterDesktop`.
+
+**Namjerno nisu naknadno ugurani u postojeće ekrane.** Brojač zahtjeva na dashboardu jeste metrika i
+mogao bi odmah uzeti `AdminText.metricNumber`, ali to je skok sa 20 na 30 px — vizuelna promjena
+koja pripada tasku 30, ne „prelasku na temu bez promjene ponašanja". Ako neki od ta četiri stila
+poslije 31 i dalje nema potrošača, briše se, ne čuva.
+
 ### Ostalo za sljedećeg
 
 - **Dashboard, lista termina i ručni unos nisu viđeni na ekranu** — samo kroz widget testove. Na
@@ -106,7 +119,12 @@ na handoff" bez razloga i bez traga.
 - **Copy statusa je i dalje u množini** („Potvrđeni"), jer isti string služi i kao labela filtera;
   canvas piše „Potvrđeno". To je promjena teksta i pripada tasku
   [30](30-postojeci-ekrani-na-handoff.md).
-- **CI još nije zelen** — PR [#49](https://github.com/htuco/salon-booking-platform/pull/49) je
-  otvoren kao draft, job „Analiza, format i testovi" je u redu čekanja.
+- **PR [#49](https://github.com/htuco/salon-booking-platform/pull/49) je spojen** u `main`
+  (`61da040`). Job „Analiza, format i testovi" je zelen i na PR-u
+  ([run 35405127974](https://github.com/htuco/salon-booking-platform/actions/runs/35405127974), 3m40s)
+  i nad merge commitom na `main`-u
+  ([run 35405309652](https://github.com/htuco/salon-booking-platform/actions/runs/35405309652)).
+  Android i iOS flavor buildovi u istom run-u su još trajali kad je task zatvoren; oni ne diraju
+  admin temu, ali ako puknu, to je posao ovog taska, ne sljedećeg.
 - **`gh` postoji ali nije na PATH-u** (`C:\Program Files\GitHub CLI\gh.exe`); bez ručnog dodavanja
   u PATH izgleda kao da nije instaliran.

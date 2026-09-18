@@ -94,7 +94,9 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > može dići (`supabase start` → komanda ne postoji). Kad stack postoji, dokaz je prijava pa
 > `/dashboard` i `/appointments` u browseru.
 >
-> PR: [#49](https://github.com/htuco/salon-booking-platform/pull/49) (draft).
+> **Zatvoreno:** PR [#49](https://github.com/htuco/salon-booking-platform/pull/49) je spojen u
+> `main` (`61da040`), job „Analiza, format i testovi" zelen i na PR-u i nad merge commitom.
+> Ostaje 🟡 samo zbog dokaza na ekranu koji čeka Docker, ne zbog koda.
 >
 > Sljedeći task je [29](29-responsive-shell.md); mjere ljuske (sidebar 236, top bar 66, gutter 20)
 > već stoje u `AdminSize`/`AdminSpacing` da ih ne prepisuje kod sebe.
