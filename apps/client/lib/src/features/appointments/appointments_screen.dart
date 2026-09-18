@@ -31,11 +31,38 @@ import 'appointments_provider.dart';
 /// Odlučuje `cancel_appointment` u bazi, iz `salon_settings.min_cancel_hours`. Ekran
 /// unaprijed onemogući dugme da korisnik ne dobije grešku na nešto što se vidjelo da neće
 /// proći — ali kad se njih dvoje raziđu, baza je u pravu i njena poruka izlazi na ekran.
-class AppointmentsScreen extends ConsumerWidget {
+class AppointmentsScreen extends ConsumerStatefulWidget {
   const AppointmentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppointmentsScreen> createState() => _AppointmentsScreenState();
+}
+
+class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Realtime veza može biti suspendovana dok je aplikacija u pozadini. Povratak na
+    // ekran zato uvijek ponovo čita iz baze, čak i ako FCM/Realtime događaj nije uhvaćen.
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(myAppointmentsProvider);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final prijavljen = ref.watch(isSignedInProvider);
@@ -135,7 +162,7 @@ class _Tabovi extends ConsumerWidget {
   }
 }
 
-class _Lista extends StatelessWidget {
+class _Lista extends ConsumerWidget {
   const _Lista({
     required this.termini,
     required this.prazno,
@@ -149,24 +176,44 @@ class _Lista extends StatelessWidget {
   final bool zatvoreni;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
 
+    Future<void> osvjezi() async {
+      ref.invalidate(myAppointmentsProvider);
+      await ref.read(myAppointmentsProvider.future);
+    }
+
     if (termini.isEmpty) {
-      return _Prazno(
-        poruka: prazno,
-        akcija: zatvoreni ? null : l10n.appointmentsBookCta,
-        onAkcija: zatvoreni
-            ? null
-            : () => context.go(ClientRoute.bookService.path),
+      return RefreshIndicator(
+        onRefresh: osvjezi,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.55,
+              child: _Prazno(
+                poruka: prazno,
+                akcija: zatvoreni ? null : l10n.appointmentsBookCta,
+                onAkcija: zatvoreni
+                    ? null
+                    : () => context.go(ClientRoute.bookService.path),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(AppSpacing.gutter),
-      itemCount: termini.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (context, i) => _Kartica(appointment: termini[i]),
+    return RefreshIndicator(
+      onRefresh: osvjezi,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
+        itemCount: termini.length,
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+        itemBuilder: (context, i) => _Kartica(appointment: termini[i]),
+      ),
     );
   }
 }
