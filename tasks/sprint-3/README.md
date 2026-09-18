@@ -92,7 +92,9 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > **Ostalo za sljedećeg:** dashboard, lista termina i ručni unos su prošli samo kroz widget testove
 > — na ekranu nisu, jer na ovoj mašini nema ni Dockera ni `supabase` CLI-ja, pa se lokalni stack ne
 > može dići (`supabase start` → komanda ne postoji). Kad stack postoji, dokaz je prijava pa
-> `/dashboard` i `/appointments` u browseru. `gh` takođe nije na PATH-u, pa je PR otvoren ručno.
+> `/dashboard` i `/appointments` u browseru.
+>
+> PR: [#49](https://github.com/htuco/salon-booking-platform/pull/49) (draft).
 >
 > Sljedeći task je [29](29-responsive-shell.md); mjere ljuske (sidebar 236, top bar 66, gutter 20)
 > već stoje u `AdminSize`/`AdminSpacing` da ih ne prepisuje kod sebe.

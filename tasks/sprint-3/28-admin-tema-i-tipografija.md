@@ -106,4 +106,7 @@ na handoff" bez razloga i bez traga.
 - **Copy statusa je i dalje u množini** („Potvrđeni"), jer isti string služi i kao labela filtera;
   canvas piše „Potvrđeno". To je promjena teksta i pripada tasku
   [30](30-postojeci-ekrani-na-handoff.md).
-- **`gh` nije na PATH-u**, pa je PR otvoren ručno.
+- **CI još nije zelen** — PR [#49](https://github.com/htuco/salon-booking-platform/pull/49) je
+  otvoren kao draft, job „Analiza, format i testovi" je u redu čekanja.
+- **`gh` postoji ali nije na PATH-u** (`C:\Program Files\GitHub CLI\gh.exe`); bez ručnog dodavanja
+  u PATH izgleda kao da nije instaliran.

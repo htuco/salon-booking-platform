@@ -20,14 +20,16 @@ ovdje.
 - [x] `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`
 - [x] Nijedan admin ekran nema hardkodiran hex — drži `no_hardcoded_colors_test.dart`
 - [x] Postojeća četiri ekrana rade isto kao prije, samo kroz temu — 70 admin testova PASS
-- [ ] PR otvoren protiv `main`-a i CI zelen
+- [x] PR otvoren protiv `main`-a — [#49](https://github.com/htuco/salon-booking-platform/pull/49), draft
+- [ ] CI zelen
 
 ## Napomene
 
 - **Grana `feat/admin-tema-i-tokeni`, sa svježeg `main`-a** (`649057b`). Ranija bojazan da `main`
   nema Sprint 3 bila je zasnovana na zastarjelom lokalnom `main`-u — PR #48 je spojen.
-- **`gh` nije na PATH-u ove mašine**, pa se PR ne može otvoriti komandom. Grana je gurnuta; PR se
-  otvara ručno na GitHubu, kao draft, po `.github/pull_request_template.md`.
+- **`gh` postoji, ali nije na PATH-u** — stoji na `C:\Program Files\GitHub CLI\gh.exe`. Komande
+  rade uz `export PATH="$PATH:/c/Program Files/GitHub CLI"`. Bez toga `gh` izgleda kao da nije
+  instaliran, što me je jednom već navelo na pogrešan zaključak u ovoj sesiji.
 - **Nema Dockera ni `supabase` CLI-ja**, pa lokalni stack ne radi. Zato su dashboard i lista termina
   dokazani samo widget testovima, a na ekranu je viđen **login**, iz pravog `flutter build web`
   bundlea. To je zapisano kao „ostalo za sljedećeg", ne prešućeno.
