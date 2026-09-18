@@ -1,107 +1,51 @@
-# Trenutni task: 27 — Vitez live integracija i email + lozinka
+# Trenutni task: 28 — Admin tema, tipografija i tokeni
 
-Puni task: [`tasks/sprint-2/27-email-password-auth.md`](sprint-2/27-email-password-auth.md)
-**U toku** · Učitano: 2026-09-16 · Grana: `feat/vitez-live-integration`
+Puni task: [`tasks/sprint-3/28-admin-tema-i-tipografija.md`](sprint-3/28-admin-tema-i-tipografija.md)
+**Nije počet** · Učitano: 2026-09-19 · Grana: još nije otvorena
 
 ## Status
 
-Demo kod je implementiran: klijentski OTP je zamijenjen stvarnim Supabase email/password signupom
-i loginom. Vitez klijent i admin slušaju RLS-ograničene promjene vlastitih termina, dok javni
-`availability_signals` emituje samo nasumičnu reviziju salona da i tuđa rezervacija osvježi slotove
-bez curenja appointment podataka. Live launcher čita javne ključeve iz ignorisanog `.env.live`;
-DB lozinka se ne prosljeđuje app-u. Analiza i kompletni Flutter testovi prolaze u svih pet paketa;
-lokalno prolazi 261 pgTAP provjera, uključujući Realtime publikaciju i RLS signala.
+Sprint 3 je raspisan i cijeli je jedna aplikacija: `apps/admin` po handoffu u
+[`prototype/admin/`](../prototype/admin/README.md) — 10 desktop i 11 mobilnih prikaza, sa mapom na
+rute u [`SPEC.md`](../prototype/admin/SPEC.md). Devet taskova, 28–36, redoslijed i obrazloženje su
+u [`tasks/sprint-3/README.md`](sprint-3/README.md).
 
-Hostovani Auth endpoint je dostupan, ali projekat još traži potvrdu emaila i PostgREST nema
-`public.salons`, što znači da migracije/seed nisu deployani. Supabase CLI nije prijavljen, a
-direktni deploy nema potvrđenu Dashboard connection string putanju. Firebase CLI je prijavljen na
-račun koji nema pristup projektu `hades-75751` (`403 PERMISSION_DENIED`). Zbog toga email tok,
-availability i push još nisu dokazani na hostovanom projektu ni fizičkom uređaju.
+Prvi je 28 jer je sve ostalo naslonjeno na njega: `apps/admin/lib/src/core/theme/` danas ima samo
+`.gitkeep`, a `main.dart` gradi temu iz jednog `ColorScheme.fromSeed`. Dok tokeni nisu na jednom
+mjestu, svaki naredni ekran prepisuje hex iz handoffa.
 
-Vitez Firebase config je u međuvremenu dobiven. Stoji **izvan gita**, na
-`tenants/barberstudiovitez/google-services.json`, a izvedeni `--dart-define-from-file` je u
-`.firebase-config/barberstudiovitez.json` (obje putanje su u `.gitignore`); u repou i dalje stoji
-generisani placeholder. Uz to je dodat foreground prikaz obavijesti na Androidu — iOS ga već ima
-kroz `setForegroundNotificationPresentationOptions`. Sam prijem push poruke na fizičkom uređaju i
-dalje **nije dokazan**; dokazano je samo da analiza i Flutter testovi prolaze.
-
-Za nastavak vlasnik treba na ovoj mašini uraditi `supabase login` ili dati službenu connection
-string putanju iz Dashboarda, isključiti **Confirm email** za demo i prijaviti Firebase račun koji
-ima pristup projektu. Tajne se ne šalju u chat niti commitaju.
+**Sprint 2 je zatvoren onoliko koliko se može bez tuđih naloga.** Ono što je ostalo 🟡 ne čeka kod
+nego pristup: deploy šeme na hostovani Supabase, FCM na fizičkom uređaju, Apple i Google konzole.
+Nijedna od tih stavki ne blokira nijedan task u Sprintu 3 — admin se razvija protiv lokalnog
+stacka.
 
 ## Ciljevi
 
-- [x] Klijentski email OTP zamijenjen stvarnim signup/login tokom sa lozinkom.
-- [x] Javni ključevi ulaze kroz ignorisani live env i nikad ne uključuju service role.
-- [x] Vlastiti termini i admin lista osvježavaju se kroz RLS-ograničeni Realtime stream.
-- [x] Tuđe rezervacije osvježavaju availability kroz bezlični signal, bez otvaranja appointment
-      reda javnosti.
-- [x] Lokalni Auth smoke, 261 pgTAP provjera, analiza i Flutter testovi su zeleni.
-- [ ] Deployati šemu/seed na hostovani Supabase i za demo isključiti **Confirm email**.
-- [ ] Odigrati email signup/login, booking i drugi-session Realtime refresh protiv hostovanog
-      projekta.
-- [ ] Dati Firebase CLI pristup projektu, generisati Vitez/admin config i dokazati FCM na uređaju.
-- [ ] Dokazati Apple/Google na pravilno potpisanom fizičkom uređaju ili ih jasno označiti kao
-      nekonfigurisane u demou.
-
-## Napomene o povezanom push tasku
-
-### Šta već postoji
-
-`supabase/migrations/20260910090000_init_schema.sql` već ima `public.devices` i
-`public.notification_logs`. `devices.device_id` je instalacioni identifikator (`text`), dok je
-`appointments.device_id` FK na `devices.id` (`uuid`) — zamjena prolazi tipove i tiho slomi push,
-zato `Appointment` model već nosi komentar o tome.
-
-`notification_logs` već ima statuse `queued`, `sending`, `sent`, `failed`, `logged`, polja
-`attempts`, `error`, `claimed_at` i unique ključ `(appointment_id, device_id, type)`. Novi trigger
-puni red, a `claim_push_notifications` i worker koriste ga za jednokratni pokušaj slanja.
-
-`bookingDeviceIdProvider` čeka registraciju i daje `BookingRepository.book(...)` pravi
-`devices.id`. Widget test provjerava da taj ID stvarno ide u poziv. Ručni admin unos ostaje
-bez app uređaja.
-
-`send-push` ima implementaciju i šest testova. `send-reminders` ostaje stub za Sprint 3.
-
-### Sigurnost
-
-`register_device` i `unregister_device` zatvaraju direktno pisanje. Tajna instalacije je u
-secure storage; samo hash ide u `private.device_credentials`. Funkcije razdvajaju:
-
-- anonimnu registraciju instalacije prije prijave (`auth_identity_id` ostaje `null`);
-- vezanje uređaja na vlastiti `AuthIdentity` poslije prijave;
-- vezanje admin uređaja na `public.users.id` kroz `staff_user_id`.
-
-`x-salon-id` i ovdje bira kontekst, ne daje prava. Ako funkcija veže uređaj na identitet, vlasništvo
-se izvodi iz tokena (`auth.uid()` → `auth_identities`), ne iz argumenta.
-
-Ako migracija dira RLS, grantove, `private.*` ili novu RPC funkciju, ažuriraj
-`.claude/docs/security.md` i `supabase/IMPLEMENTATION.md` u istoj promjeni.
-
-### Firebase granica
-
-Firebase ostaje samo FCM. Ne uvoditi Firebase Auth, Remote Config ili Crashlytics kroz ovaj task.
-Pravi `google-services.json`, `GoogleService-Info.plist`, service-account JSON i APNs ključ ne idu u
-repo. Postojeći placeholder `google-services.json` ostaje placeholder.
-
-### Scenariji
-
-Implementirani su novi zahtjev → vlasnik, potvrda/odbijanje → klijent, salonsko otkazivanje →
-klijent i klijentsko otkazivanje → vlasnik (`docs/06 §3.1`). Tap vodi na `/appointments`.
-`/notifications` ostaje postojeće prazno stanje, bez nove klijentske politike nad logovima.
-
-Worker koristi HMAC važeći 60 sekundi; trajna tajna ne ide u `pg_net`, čije grantove lokalni
-`postgres` ne može oduzeti. `sending`/`failed` se ne ponavljaju automatski: timeout može doći
-poslije FCM prihvata. To znači mogući izgubljen pokušaj nakon pada workera, ne exactly-once
-isporuku. Ograničenje i postupak su u `send-push/README.md`.
-
-### Dokaz
-
-iOS push ne radi na simulatoru. Ako nema Firebase/APNs naloga ili fizičkog uređaja, status mora
-reći "napisano, nije dokazano na uređaju", ne "radi". Za backend dio i dalje vrijedi lokalni dokaz:
-`supabase start && supabase test db` plus Deno REST testovi kad `deno` bude dostupan.
+- [ ] Tokeni iz `SPEC.md` u `apps/admin/lib/src/core/theme/`, na jednom mjestu
+- [ ] Space Grotesk i JetBrains Mono lokalno zapakovani, bez Google Fonts zavisnosti
+- [ ] `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`
+- [ ] Nijedan admin ekran nema hardkodiran hex
+- [ ] Postojeća četiri ekrana rade isto kao prije, samo kroz temu
 
 ## Istorija
+
+- **27 — Vitez live integracija i email + lozinka** (2026-09-16, 🟡) — klijentski OTP je zamijenjen
+  stvarnim Supabase `signUp`/`signInWithPassword` tokom; Vitez klijent i admin slušaju
+  RLS-ograničene promjene vlastitih termina, a javni `availability_signals` emituje samo nasumičnu
+  reviziju salona, pa tuđa rezervacija osvježi slotove bez curenja appointment podataka. Live
+  launcher čita javne ključeve iz ignorisanog `.env.live`. Dokazano lokalno: **261 pgTAP**, analiza
+  i Flutter testovi u svih pet paketa.
+  **Ostatak ne čeka kod nego tuđe naloge** i zato je task skinut sa aktivnog mjesta: hostovani
+  projekat još traži potvrdu emaila i nema deployanu šemu (`supabase login` ili službeni connection
+  string), Firebase CLI nema pristup projektu `hades-75751` (`403`), a Apple/Google traže potpisan
+  fizički uređaj. Do tada email tok, availability i push **nisu dokazani na hostovanom projektu**.
+  [PR #45](https://github.com/htuco/salon-booking-platform/pull/45), pa #46 i #47.
+
+- **26 — Guest flow i Facebook iza flaga** (2026-09-19, ⛔ skinut) — Facebook login se ne
+  implementira ([ADR-0011](../docs/adr/0011-facebook-login-se-ne-implementira.md)); kod je uklonjen,
+  ne ostavljen iza flaga. Tok gosta nije odbačen, ali je ostao bez taska — `AuthConfig.allowGuest` i
+  `AuthRepository.continueAsGuest` stoje u kodu, `continueAsGuest` baca grešku.
+  [PR #48](https://github.com/htuco/salon-booking-platform/pull/48).
 
 - **24 — Admin akcije nad terminima i ručni unos** (2026-09-15, ✅) — salon prvi put odgovara na
   zahtjev: potvrda, odbijanje, otkazivanje, `no_show` i ručni termin rade kroz RPC putanje umjesto

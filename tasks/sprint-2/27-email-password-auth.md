@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Demo kod implementiran; hostovani Supabase još nije konfigurisan |
+| **Status** | 🟡 Demo kod je u `main`-u (PR #45); ostatak čeka pristupe, ne kod |
 | **Procjena** | Demo 2–3 dana; produkcijski email dodatno 2–3 dana + dokaz SMTP/deep linka |
 | **Zavisi od** | Demo: [13](13-client-login-ekran.md) i Supabase pristup; produkcija: SMTP i finalni callback domen |
 | **Blokira** | Produkcijsku email prijavu i store release |
