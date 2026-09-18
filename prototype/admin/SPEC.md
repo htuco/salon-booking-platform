@@ -57,6 +57,17 @@ smanjivati desktop prikaz.
 - Design canvas ih učitava sa Google Fonts. Flutter implementacija treba lokalno zapakovane fontove
   kako izgled aplikacije ne bi zavisio od mreže.
 
+**Dvije ispravke izmjerene iz `canvas/Salon OS Admin.dc.html` pri implementaciji (task 28).** Gornja
+rečenica o moni je prepisana iz ranije skice `canvas/Smjer C - Space Grotesk.dc.html`; finalni
+canvas je crta uže:
+
+- **Velika brojka nije mono.** Mono se nigdje ne crta iznad 15 px. Brojevi u karticama metrika
+  (`14`, `71%`, `265 KM`) su Space Grotesk 700, 24–38 px. Mono je pismo *inline podatka* — `13:00`,
+  `82%`, `26 MIN`, `15 KM`, broj telefona.
+- **Statusna oznaka nije mono.** Pilula je `font:500 12.5px 'Space Grotesk'` malim slovima
+  („Potvrđeno"), `border-radius:20px`, `padding:4px 11px`. Verzalna mono oznaka postoji samo u
+  skici.
+
 ### Osnovni tokeni
 
 | Uloga | Vrijednost iz handoffa |
@@ -74,6 +85,18 @@ smanjivati desktop prikaz.
 
 Vrijednosti prvo centralizovati u `apps/admin/lib/src/core/theme/`; ne ponavljati hex vrijednosti
 po ekranima. Admin akcent je platformski, nije tenant boja.
+
+**Tri nalaza iz mjerenja canvasa i kontrasta (task 28)**, da se tabela ne čita doslovnije nego što
+crtež dopušta:
+
+- **Sekundarni akcent `#5980A6` finalni canvas ne koristi nijednom** — ostao je iz skice `Smjer C`.
+  Bijeli tekst na njemu mjeri 4,15:1, crni 4,30:1; nije podloga za tekst, samo obrub ili ispuna
+  trake. Emfazu akcenta u canvasu nosi `#27496B` na tinti `#EAF1F8`.
+- **„Sekundarni tekst" su dvije uloge, ne jedan izbor.** Canvas crta `#5B656B` na tekstu tijela
+  (13,5–15 px) i `#6B757B` na sitnoj labeli i mono eyebrow-u (10,5–13 px).
+- **`#6B757B` se smije koristiti samo na bijeloj kartici.** Na radnoj pozadini `#F4F6F7` mjeri
+  4,35:1 i pada WCAG AA. Isto vrijedi za par oznake „Završeno" iz canvasa (`#6B757B` na `#EEF1F3`,
+  4,15:1) — u implementaciji je tekst spušten na `#5B656B` (5,26:1).
 
 ### Raspored i komponente
 

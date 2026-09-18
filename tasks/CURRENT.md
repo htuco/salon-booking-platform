@@ -1,31 +1,40 @@
 # Trenutni task: 28 — Admin tema, tipografija i tokeni
 
 Puni task: [`tasks/sprint-3/28-admin-tema-i-tipografija.md`](sprint-3/28-admin-tema-i-tipografija.md)
-**Nije počet** · Učitano: 2026-09-19 · Grana: još nije otvorena
+**U toku** · Grana: `feat/admin-tema-i-tokeni` · Zadnji rad: 2026-09-19
 
 ## Status
 
-Sprint 3 je raspisan i cijeli je jedna aplikacija: `apps/admin` po handoffu u
-[`prototype/admin/`](../prototype/admin/README.md) — 10 desktop i 11 mobilnih prikaza, sa mapom na
-rute u [`SPEC.md`](../prototype/admin/SPEC.md). Devet taskova, 28–36, redoslijed i obrazloženje su
-u [`tasks/sprint-3/README.md`](sprint-3/README.md).
+Kod je gotov i dokazan lokalno; ostaje PR i zeleni CI. `apps/admin/lib/src/core/theme/` nosi pet
+fajlova (paleta, razmaci, tipografija, statusni tonovi, `buildAdminTheme()`), `main.dart` više ne
+gradi temu iz `ColorScheme.fromSeed`, a Space Grotesk i JetBrains Mono su zapakovani u repo uz OFL.
 
-Prvi je 28 jer je sve ostalo naslonjeno na njega: `apps/admin/lib/src/core/theme/` danas ima samo
-`.gitkeep`, a `main.dart` gradi temu iz jednog `ColorScheme.fromSeed`. Dok tokeni nisu na jednom
-mjestu, svaki naredni ekran prepisuje hex iz handoffa.
-
-**Sprint 2 je zatvoren onoliko koliko se može bez tuđih naloga.** Ono što je ostalo 🟡 ne čeka kod
-nego pristup: deploy šeme na hostovani Supabase, FCM na fizičkom uređaju, Apple i Google konzole.
-Nijedna od tih stavki ne blokira nijedan task u Sprintu 3 — admin se razvija protiv lokalnog
-stacka.
+Puni nalazi — šta je mjerenje canvasa oborilo i koja dva para iz handoffa padaju WCAG AA — stoje u
+`## Status` bloku samog taska i u [`tasks/sprint-3/README.md`](sprint-3/README.md). Ne prepisuju se
+ovdje.
 
 ## Ciljevi
 
-- [ ] Tokeni iz `SPEC.md` u `apps/admin/lib/src/core/theme/`, na jednom mjestu
-- [ ] Space Grotesk i JetBrains Mono lokalno zapakovani, bez Google Fonts zavisnosti
-- [ ] `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`
-- [ ] Nijedan admin ekran nema hardkodiran hex
-- [ ] Postojeća četiri ekrana rade isto kao prije, samo kroz temu
+- [x] Tokeni iz `SPEC.md` u `apps/admin/lib/src/core/theme/`, na jednom mjestu
+- [x] Space Grotesk i JetBrains Mono lokalno zapakovani, bez Google Fonts zavisnosti
+- [x] `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`
+- [x] Nijedan admin ekran nema hardkodiran hex — drži `no_hardcoded_colors_test.dart`
+- [x] Postojeća četiri ekrana rade isto kao prije, samo kroz temu — 70 admin testova PASS
+- [x] PR otvoren protiv `main`-a — [#49](https://github.com/htuco/salon-booking-platform/pull/49), draft
+- [ ] CI zelen
+
+## Napomene
+
+- **Grana `feat/admin-tema-i-tokeni`, sa svježeg `main`-a** (`649057b`). Ranija bojazan da `main`
+  nema Sprint 3 bila je zasnovana na zastarjelom lokalnom `main`-u — PR #48 je spojen.
+- **`gh` postoji, ali nije na PATH-u** — stoji na `C:\Program Files\GitHub CLI\gh.exe`. Komande
+  rade uz `export PATH="$PATH:/c/Program Files/GitHub CLI"`. Bez toga `gh` izgleda kao da nije
+  instaliran, što me je jednom već navelo na pogrešan zaključak u ovoj sesiji.
+- **Nema Dockera ni `supabase` CLI-ja**, pa lokalni stack ne radi. Zato su dashboard i lista termina
+  dokazani samo widget testovima, a na ekranu je viđen **login**, iz pravog `flutter build web`
+  bundlea. To je zapisano kao „ostalo za sljedećeg", ne prešućeno.
+- **Sljedeći task je [29](sprint-3/29-responsive-shell.md).** Mjere ljuske koje mu trebaju
+  (sidebar 236, top bar 66, gutter 20) već stoje u `AdminSize`/`AdminSpacing`.
 
 ## Istorija
 

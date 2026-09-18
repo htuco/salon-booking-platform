@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/admin_router.dart';
+import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../appointments/appointment_tile.dart';
 import '../appointments/appointments_providers.dart';
@@ -96,7 +97,7 @@ class _ZahtjeviKartica extends ConsumerWidget {
                 context.goNamed(AdminRoute.appointments.name);
               }
             : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AdminRadius.base),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(

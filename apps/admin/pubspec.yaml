@@ -71,6 +71,20 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Oba pisma su **varijabilna** (jedna `wght` osa), pa je po porodici jedan fajl umjesto
+  # reza po tezini. Tezina se zato u kodu postavlja kroz `FontVariation`, ne samo kroz
+  # `fontWeight` — v. `lib/src/core/theme/admin_typography.dart`.
+  #
+  # Fajlovi su zapakovani namjerno: canvas ih ucitava sa Google Fonts, aplikacija ne smije
+  # zavisiti od mreze za vlastiti izgled. OFL licence stoje uz njih u istom folderu.
+  fonts:
+    - family: Space Grotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk[wght].ttf
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono[wght].ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
