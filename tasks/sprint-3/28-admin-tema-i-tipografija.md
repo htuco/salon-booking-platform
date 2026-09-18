@@ -36,7 +36,7 @@ ekran prepisuje hex iz handoffa i nema ga gdje promijeniti.
   i drugi handoff. Prepisivanje navike iz `core_ui` je ovdje greška.
 - Statusna oznaka mora nositi **tekst**, ne samo boju (`SPEC.md`, „Raspored i komponente").
 
-## Status (2026-09-19) — 🟡 kod gotov, ekranski dokaz djelimičan
+## Status (2026-09-19) — ✅ zatvoren
 
 Admin je prvi put dobio vlastiti dizajn sistem. `apps/admin/lib/src/core/theme/` nosi pet fajlova:
 paleta (`admin_colors.dart` — **jedino mjesto sa heksom u `apps/admin`**), razmaci i uglovi
@@ -82,6 +82,9 @@ na handoff" bez razloga i bez traga.
 
 ### Dokazano
 
+- **CI zelen na PR-u**: job „Analiza, format i testovi" prošao za 3m12s,
+  [run 35405127974](https://github.com/htuco/salon-booking-platform/actions/runs/35405127974).
+  Ostala tri job-a (`APK`, `iOS`, `AAB`) se preskoče: `tenants/`, `tool/` i flavori nisu dirani.
 - **567 Dart testova PASS** u pet paketa, od toga `admin` **70** (bilo 16; ostali paketi su rasli
   kroz taskove 24–27, ne kroz ovaj); čista `melos run analyze` svuda.
 - **Login ekran u Chromiumu**, 1440×900 i 402×874, iz stvarnog `flutter build web` bundlea:
@@ -98,6 +101,19 @@ na handoff" bez razloga i bez traga.
   obori `theme_tokens_test`, a statusni ton vraćen na `primaryContainer` obori tri od četiri
   tvrdnje u `appointment_tile_theme_test`. Sve vraćeno.
 
+### Nalaz iz pregleda: četiri stila još nemaju ekran
+
+`AdminText.display`, `.metricNumber`, `.eyebrow` i `.timeLarge` ne koristi nijedan ekran — samo
+testovi. To nije previd nego posljedica granice taska: naslov ekrana i kartica metrike dolaze sa
+[29](29-responsive-shell.md) i [30](30-postojeci-ekrani-na-handoff.md), eyebrow labela sa shellom,
+`timeLarge` sa kalendarom u [31](31-kalendar-dana.md). Isto vrijedi za `AdminSize.sidebarWidth`,
+`.topBarHeight` i `AdminSpacing.gutterDesktop`.
+
+**Namjerno nisu naknadno ugurani u postojeće ekrane.** Brojač zahtjeva na dashboardu jeste metrika i
+mogao bi odmah uzeti `AdminText.metricNumber`, ali to je skok sa 20 na 30 px — vizuelna promjena
+koja pripada tasku 30, ne „prelasku na temu bez promjene ponašanja". Ako neki od ta četiri stila
+poslije 31 i dalje nema potrošača, briše se, ne čuva.
+
 ### Ostalo za sljedećeg
 
 - **Dashboard, lista termina i ručni unos nisu viđeni na ekranu** — samo kroz widget testove. Na
@@ -106,7 +122,5 @@ na handoff" bez razloga i bez traga.
 - **Copy statusa je i dalje u množini** („Potvrđeni"), jer isti string služi i kao labela filtera;
   canvas piše „Potvrđeno". To je promjena teksta i pripada tasku
   [30](30-postojeci-ekrani-na-handoff.md).
-- **CI još nije zelen** — PR [#49](https://github.com/htuco/salon-booking-platform/pull/49) je
-  otvoren kao draft, job „Analiza, format i testovi" je u redu čekanja.
 - **`gh` postoji ali nije na PATH-u** (`C:\Program Files\GitHub CLI\gh.exe`); bez ručnog dodavanja
   u PATH izgleda kao da nije instaliran.

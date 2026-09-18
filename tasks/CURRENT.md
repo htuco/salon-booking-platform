@@ -1,42 +1,44 @@
-# Trenutni task: 28 — Admin tema, tipografija i tokeni
+# Trenutni task
 
-Puni task: [`tasks/sprint-3/28-admin-tema-i-tipografija.md`](sprint-3/28-admin-tema-i-tipografija.md)
-**U toku** · Grana: `feat/admin-tema-i-tokeni` · Zadnji rad: 2026-09-19
+Nijedan task nije učitan. Sljedeći je [29 — Responsive shell](sprint-3/29-responsive-shell.md);
+učitava se sa `/task load 29`.
 
 ## Status
 
-Kod je gotov i dokazan lokalno; ostaje PR i zeleni CI. `apps/admin/lib/src/core/theme/` nosi pet
-fajlova (paleta, razmaci, tipografija, statusni tonovi, `buildAdminTheme()`), `main.dart` više ne
-gradi temu iz `ColorScheme.fromSeed`, a Space Grotesk i JetBrains Mono su zapakovani u repo uz OFL.
-
-Puni nalazi — šta je mjerenje canvasa oborilo i koja dva para iz handoffa padaju WCAG AA — stoje u
-`## Status` bloku samog taska i u [`tasks/sprint-3/README.md`](sprint-3/README.md). Ne prepisuju se
-ovdje.
+Gotov — [28](sprint-3/28-admin-tema-i-tipografija.md) je zatvoren 2026-09-19.
 
 ## Ciljevi
 
-- [x] Tokeni iz `SPEC.md` u `apps/admin/lib/src/core/theme/`, na jednom mjestu
-- [x] Space Grotesk i JetBrains Mono lokalno zapakovani, bez Google Fonts zavisnosti
-- [x] `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`
-- [x] Nijedan admin ekran nema hardkodiran hex — drži `no_hardcoded_colors_test.dart`
-- [x] Postojeća četiri ekrana rade isto kao prije, samo kroz temu — 70 admin testova PASS
-- [x] PR otvoren protiv `main`-a — [#49](https://github.com/htuco/salon-booking-platform/pull/49), draft
-- [ ] CI zelen
+—
 
 ## Napomene
 
-- **Grana `feat/admin-tema-i-tokeni`, sa svježeg `main`-a** (`649057b`). Ranija bojazan da `main`
-  nema Sprint 3 bila je zasnovana na zastarjelom lokalnom `main`-u — PR #48 je spojen.
-- **`gh` postoji, ali nije na PATH-u** — stoji na `C:\Program Files\GitHub CLI\gh.exe`. Komande
-  rade uz `export PATH="$PATH:/c/Program Files/GitHub CLI"`. Bez toga `gh` izgleda kao da nije
-  instaliran, što me je jednom već navelo na pogrešan zaključak u ovoj sesiji.
-- **Nema Dockera ni `supabase` CLI-ja**, pa lokalni stack ne radi. Zato su dashboard i lista termina
-  dokazani samo widget testovima, a na ekranu je viđen **login**, iz pravog `flutter build web`
-  bundlea. To je zapisano kao „ostalo za sljedećeg", ne prešućeno.
-- **Sljedeći task je [29](sprint-3/29-responsive-shell.md).** Mjere ljuske koje mu trebaju
-  (sidebar 236, top bar 66, gutter 20) već stoje u `AdminSize`/`AdminSpacing`.
+—
 
 ## Istorija
+
+- **28 — Admin tema, tipografija i tokeni** (2026-09-19, ✅) — admin je prvi put dobio vlastiti
+  dizajn sistem: `apps/admin/lib/src/core/theme/` je od `.gitkeep` postao pet fajlova (paleta,
+  razmaci i radius **6**, tipografija, statusni tonovi kao `ThemeExtension`, `buildAdminTheme()`),
+  a `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`. **Zabrana `core_ui`-a više nije
+  dogovor nego test** — `core_ui` gradi temu iz *tenant* boja, pa bi sidebar promijenio boju kad se
+  prijavi drugi vlasnik; prolazi analizu, prolazi test, vidi se tek kad dva salona otvore istu
+  aplikaciju. Iz istog razloga admin **nema** svoj `contrast.dart`: tamo je brand boja ulaz koji
+  vlasnik bira, ovdje su boje konstante, pa se kontrast mjeri u testu a ne računa u runtime-u.
+  **Mjerenje canvasa je oborilo tri tvrdnje iz `SPEC.md`**, sve tri vraćene u taj dokument: velika
+  brojka i statusna pilula **nisu** mono (to je iz skice `Smjer C`; finalni canvas ih crta u Space
+  Grotesku), a sekundarni akcent `#5980A6` finalni canvas **ne koristi nijednom** — i nijedan tekst
+  na njemu ne prolazi AA. **Dva para iz handoffa padaju WCAG AA** (`#6B757B` na radnoj pozadini
+  4,35:1; oznaka „Završeno" 4,15:1) i nisu prepisana doslovno; test drži i tvrdnju da ti parovi
+  **padaju**, da se povratak „na handoff" ne desi nečujno. Usput nađeno da je **potvrđen termin bio
+  plav** (`primaryContainer`), a handoff ga crta zeleno. Dokazano: **567 Dart testova** u pet paketa
+  (`admin` 70, bilo 16), čista analiza i `dart format`, **zeleni CI**
+  ([run 35405127974](https://github.com/htuco/salon-booking-platform/actions/runs/35405127974)), i
+  login ekran u Chromiumu na 1440×900 i 402×874 iz pravog web builda, sa mrežnim logom koji
+  pokazuje fontove iz bundlea i nijedan zahtjev ka Google Fonts. Svaki novi test provjeren da **može
+  pasti**. Ostaje: dashboard i lista termina nisu viđeni na ekranu — ova mašina nema ni Docker ni
+  `supabase` CLI, pa lokalni stack ne radi.
+  [PR #49](https://github.com/htuco/salon-booking-platform/pull/49).
 
 - **27 — Vitez live integracija i email + lozinka** (2026-09-16, 🟡) — klijentski OTP je zamijenjen
   stvarnim Supabase `signUp`/`signInWithPassword` tokom; Vitez klijent i admin slušaju

@@ -9,7 +9,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 
 | # | Task | Prikazi | Blokira | Procjena |
 |---|---|---|---|---|
-| [28](28-admin-tema-i-tipografija.md) 🟡 | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
+| [28](28-admin-tema-i-tipografija.md) ✅ | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
 | [29](29-responsive-shell.md) | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
 | [30](30-postojeci-ekrani-na-handoff.md) | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) | Kalendar dana | `3c` `3l` | — | 2–3 dana |
@@ -66,7 +66,7 @@ ovdje — admin se razvija protiv lokalnog stacka.
 
 ## Status
 
-> **28 — Admin tema, tipografija i tokeni (🟡, 2026-09-19).** `apps/admin/lib/src/core/theme/` je
+> **28 — Admin tema, tipografija i tokeni (✅, 2026-09-19).** `apps/admin/lib/src/core/theme/` je
 > prestao biti `.gitkeep`: pet fajlova nose paletu, razmake, uglove, tipografiju i statusne tonove,
 > a `main.dart` više ne gradi temu iz `ColorScheme.fromSeed`. Space Grotesk i JetBrains Mono su
 > **zapakovani u repo** uz OFL licence; browser potvrđuje da se učitavaju iz bundlea, ne sa Google
@@ -94,7 +94,8 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > može dići (`supabase start` → komanda ne postoji). Kad stack postoji, dokaz je prijava pa
 > `/dashboard` i `/appointments` u browseru.
 >
-> PR: [#49](https://github.com/htuco/salon-booking-platform/pull/49) (draft).
+> PR: [#49](https://github.com/htuco/salon-booking-platform/pull/49), CI zelen
+> ([run 35405127974](https://github.com/htuco/salon-booking-platform/actions/runs/35405127974)).
 >
 > Sljedeći task je [29](29-responsive-shell.md); mjere ljuske (sidebar 236, top bar 66, gutter 20)
 > već stoje u `AdminSize`/`AdminSpacing` da ih ne prepisuje kod sebe.
