@@ -13,7 +13,9 @@ const _marker = 'GENERISANO — ne editovati ručno';
 
 /// Imena koja `AuthProvider.fromWire` u `core_domain` poznaje. Redoslijed je redoslijed
 /// prikaza na login ekranu (Apple prvi — App Review 4.8, v. docs/06 §7.2).
-const _poznatiProvideri = ['apple', 'google', 'facebook', 'email'];
+// `facebook` je namjerno izostavljen — ADR-0011. Tenant koji ga upiše obara generator,
+// umjesto da ključ tiho prođe kao konfiguracija koja ne radi ništa.
+const _poznatiProvideri = ['apple', 'google', 'email'];
 const _podrazumijevaniProvideri = ['apple', 'google', 'email'];
 const _beginFlavors = '    // >>> BEGIN GENERATED FLAVORS';
 const _endFlavors = '    // <<< END GENERATED FLAVORS';

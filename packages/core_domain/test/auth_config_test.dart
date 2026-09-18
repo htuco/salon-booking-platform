@@ -7,7 +7,6 @@ void main() {
       expect(AuthProvider.values.map((p) => p.wireName), [
         'apple',
         'google',
-        'facebook',
         'email',
       ]);
     });
@@ -78,25 +77,9 @@ void main() {
       expect(config.forPlatform(AuthPlatform.ios).first, AuthProvider.apple);
     });
 
-    test('Facebook je isključen u podrazumijevanom configu', () {
-      expect(
-        AuthConfig.fallback.enabled,
-        isNot(contains(AuthProvider.facebook)),
-      );
-      expect(
-        AuthConfig.fallback.forPlatform(AuthPlatform.android),
-        isNot(contains(AuthProvider.facebook)),
-      );
-    });
-
     test('web nudi samo email — nativni tokovi tamo nemaju implementaciju', () {
       const config = AuthConfig(
-        enabled: {
-          AuthProvider.apple,
-          AuthProvider.google,
-          AuthProvider.facebook,
-          AuthProvider.email,
-        },
+        enabled: {AuthProvider.apple, AuthProvider.google, AuthProvider.email},
         allowGuest: false,
       );
 
@@ -116,9 +99,13 @@ void main() {
     });
 
     test('nepoznato ime se ispušta, ostatak preživi', () {
+      // `facebook` je namjerno među nepoznatima: bio je validan provider pa je uklonjen
+      // (ADR-0011). Zaostao u bazi ili u starom buildu ne smije vaskrsnuti dugme kojem
+      // nema implementacije iza.
       final config = AuthConfig.fromNames(const [
         'google',
         'passkey',
+        'facebook',
         'email',
       ], allowGuest: true);
 

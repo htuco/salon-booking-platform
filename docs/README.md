@@ -116,11 +116,12 @@ Ne otvaraj ih ponovo bez novog podatka:
 | Native od početka, Flutter (Android + iOS + Web iz jednog koda) | [01 §1.1](01-mvp-spec.md) |
 | Web build je sekundarni kanal (Instagram bio, QR), ne zamjena za app | [01 §1.1](01-mvp-spec.md) |
 | Social login je jedan tap; email korisnik ima kratku registraciju i recovery | [ADR-0010](adr/0010-email-lozinka-umjesto-otp-a.md) |
+| **Facebook login se ne implementira** — provideri su Apple, Google i email | [ADR-0011](adr/0011-facebook-login-se-ne-implementira.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |
 | Vertikala je config, ne fork koda | [05 §2](05-vertical-packs.md) |
-| Login: Apple (iOS), Google, Email + lozinka, Facebook — na **kraju** booking flow-a | [06 §1.1](06-auth-login-flow.md) |
+| Login: Apple (iOS), Google, Email + lozinka — na **kraju** booking flow-a | [06 §1.1](06-auth-login-flow.md) |
 | Pregled salona i slobodnih termina nikad ne traži login | [06 §1.1](06-auth-login-flow.md) |
 | **Supabase** za bazu, auth, storage i cron; **Firebase samo za FCM push** | [01 §16.1](01-mvp-spec.md) |
 | Jedan Supabase projekat; `AuthIdentity` globalan, `Customer` per-salon | [06 §4](06-auth-login-flow.md) |

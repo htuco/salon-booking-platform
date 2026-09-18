@@ -119,7 +119,7 @@ Faza 2: radnik dobija login u istu admin app i vidi samo svoje termine.
 ### 5.4 End Customer / Klijent salona
 Skine app salona (ili otvori web link) · vidi salon i usluge · bira uslugu, radnika (ili "bilo koji"), datum i slobodan termin · **prijavi se** · šalje zahtjev · **dobija push kad salon potvrdi** · vidi i otkazuje svoje termine.
 
-**Prijava:** Apple (iOS), Google, Email + lozinka i Facebook. Social login je jedan tap; email ima
+**Prijava:** Apple (iOS), Google i Email + lozinka (Facebook je skinut — [ADR-0011](adr/0011-facebook-login-se-ne-implementira.md)). Social login je jedan tap; email ima
 eksplicitnu registraciju, potvrdu adrese i oporavak lozinke.
 
 **Login se traži na kraju booking flow-a**, nakon što je klijent izabrao termin — nikad na ulazu u app. Pregled salona, usluga, cijena, tima i slobodnih termina **nikad** ne traži prijavu. Puni dizajn: [06-auth-login-flow.md](06-auth-login-flow.md).
@@ -167,7 +167,7 @@ Mobile-first, jedan salon po buildu. `salonId` je **ukucan u build** kroz `--dar
 
 **Moji termini** *(novo — omogućeno native-om)* — lista termina sa ovog uređaja, sortirana po datumu, sa statusom. Klijent može otkazati termin do `minCancelHours` prije početka. Bez naloga: termini se vežu na `deviceId` + telefon.
 
-**Prijava** *(novo u v4)* — Apple (iOS) · Google · Email + lozinka · Facebook (iza flaga).
+**Prijava** *(novo u v4)* — Apple (iOS) · Google · Email + lozinka.
 Login se pojavljuje između koraka 3 i 4 booking flow-a. **Bez broja telefona.** Email korisnik bira
 prijavu ili kratku registraciju, potvrđuje adresu i može vratiti zaboravljenu lozinku. Opcioni guest
 mod po salonu (`allowGuestBooking`, default off). Detalji: [06-auth-login-flow.md](06-auth-login-flow.md).
@@ -426,7 +426,7 @@ servira i tu stranicu.
 | Booking — termin | `/book/slot` | Must |
 | Booking — podaci | `/book/details` | Must |
 | Booking — potvrda | `/book/success` | Must |
-| **Login (Apple/Google/Email/Facebook)** | `/auth/login` | Must |
+| **Login (Apple/Google/Email)** | `/auth/login` | Must |
 | **Moj račun + brisanje računa** | `/account` | Must |
 | Moji termini | `/appointments` | Must |
 | Detalji termina + otkazivanje | `/appointments/:id` | Should |
@@ -563,7 +563,7 @@ Google Play developer account: **25 USD jednokratno, jedan za sve** · Apple Dev
 | Sloj | Izbor |
 |---|---|
 | Baza | **Supabase Postgres** |
-| Auth | **Supabase Auth** — Apple, Google, Facebook, Email + lozinka |
+| Auth | **Supabase Auth** — Apple, Google, Email + lozinka |
 | Tenant izolacija | **RLS policy** po `salon_id` |
 | Availability engine | Postgres funkcija ili Edge Function |
 | Storage | Supabase Storage — logo, cover, galerija, app ikone |
@@ -699,7 +699,6 @@ salon_platform/                     # jedan git repo
 21. Push: novi zahtjev → vlasnik, potvrda/odbijanje → klijent
 22. Client: "Moji termini" + otkazivanje
 23. Guest flow za `allowGuestBooking: true`
-24. Facebook login — **iza flaga**, testiraj scenario iz [06 §7.4](06-auth-login-flow.md) na dva flavora
 
 > Koraci 15 i 16 se najčešće preskaču. 15 je poslovni rizik (salon otkrije da mu vidiš klijentelu kod konkurencije), 16 je odbijeni submission.
 
@@ -740,7 +739,7 @@ Detaljno: [05 §10](05-vertical-packs.md).
 | Client app brandiran, admin generički | Novac je u tome kako izgleda pred klijentom salona |
 | **iOS je Pro paket, Android + web je Starter** | Google je tolerantniji, Android dominira u BiH, Starter nema Apple rizika |
 | **Vertikala je config, ne fork koda** | Fork znači N codebase-ova i smrt štancanja |
-| **Login: Apple (iOS), Google, Email + lozinka, Facebook** | Social login jedan tap; email ima registraciju, confirmation i recovery |
+| **Login: Apple (iOS), Google, Email + lozinka** | Social login jedan tap; email ima registraciju, confirmation i recovery |
 | **Login se traži na kraju booking flow-a, ne na ulazu** | Klijent koji je izabrao termin prihvata login; onaj na ulazu odlazi |
 | **Pregled salona i slobodnih termina nikad ne traži login** | Inače je web kanal (Instagram, QR) mrtav |
 | **Supabase za bazu, auth i cron; Firebase samo za FCM** | Availability engine traži SQL. RLS i Auth su jedan sistem. FCM je jedini pravi cross-platform push |
@@ -758,7 +757,7 @@ Detaljno: [05 §10](05-vertical-packs.md).
 
 1. Pročitaj **[03 §2.4 — pricing protiv Rezerva](03-market-research-cutlio.md)**. Ta odluka mora biti donesena prije prvog sastanka, ne poslije
 2. Pročitaj **[04 §6.2 — Apple strategija](04-flutter-tenant-factory.md)**. Sve iOS app-e idu pod tvojim accountom (kao Cutlio) — ali disciplina diferencijacije nije opciona, i pripremi ljestvicu fallbackova prije prvog odbijanja
-3. Pročitaj **[06 — Auth & login flow](06-auth-login-flow.md)**, posebno §7.4 o Facebooku prije nego ga obećaš klijentu
+3. Pročitaj **[06 — Auth & login flow](06-auth-login-flow.md)**; §7.4 o Facebooku je zapis odluke da ga nema ([ADR-0011](adr/0011-facebook-login-se-ne-implementira.md))
 4. Validiraj ekrane i flowove u [02-user-flows-wireframes.md](02-user-flows-wireframes.md) i u interaktivnom mockupu (`npm run dev`)
 5. Odluči vertikalni redoslijed — preporuka: `barber` + `beauty` u Fazi 1, `dental` u Fazi 2 ([05 §7.3](05-vertical-packs.md))
 6. Sprint 0: monorepo + flavors + CI, sa Barber Studio Vitez i Beauty Studio Travnik kao dokazom

@@ -91,7 +91,7 @@ class LoginController extends AutoDisposeNotifier<LoginState> {
     }
   }
 
-  /// Nativna prijava (Apple, Google, Facebook).
+  /// Nativna prijava (Apple, Google).
   Future<AuthSession?> prijaviSe(AuthProvider provider) async {
     state = state.kopija(busy: true, ocistiGresku: true);
 
@@ -99,7 +99,6 @@ class LoginController extends AutoDisposeNotifier<LoginState> {
       final sesija = await switch (provider) {
         AuthProvider.apple => _repository.signInWithApple(),
         AuthProvider.google => _repository.signInWithGoogle(),
-        AuthProvider.facebook => _repository.signInWithFacebook(),
         AuthProvider.email => throw const ServerError(
           'Email prijava ide kroz password ekran, ne kroz prijaviSe',
         ),

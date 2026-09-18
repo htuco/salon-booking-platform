@@ -408,11 +408,6 @@
   "bookingContinueGoogle": "Nastavi sa Google",
   "@bookingContinueGoogle": { "description": "Prijava preko Google naloga." },
 
-  "bookingContinueFacebook": "Nastavi sa Facebookom",
-  "@bookingContinueFacebook": {
-    "description": "Prijava preko Facebooka. Iskljucen po defaultu u tenant.yaml — docs/06 §7.4."
-  },
-
   "bookingContinueEmail": "Nastavi sa emailom",
   "@bookingContinueEmail": { "description": "Prijava ili registracija emailom i lozinkom." },
 
@@ -634,7 +629,7 @@
 
   "loginProviderUnavailable": "Ovaj način prijave još nije dostupan. Prijavite se emailom.",
   "@loginProviderUnavailable": {
-    "description": "Apple/Google/Facebook dok nativni paketi i client ID-evi ne postoje (task 12 konzole)."
+    "description": "Apple/Google dok nativni paketi i client ID-evi ne postoje (task 12 konzole)."
   },
 
   "loginCancelled": "Prijava je prekinuta.",

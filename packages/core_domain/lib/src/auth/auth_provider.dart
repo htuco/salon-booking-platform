@@ -23,14 +23,11 @@ enum AuthProvider {
   /// vidi tuđe ime salona.
   google('google', {AuthPlatform.ios, AuthPlatform.android}),
 
-  /// Isključen po defaultu — Metina politika o bundle restrikcijama i app review po
-  /// Facebook App-u ga čine providerom sa najgorim odnosom vrijednosti i troška
-  /// (`docs/06 §7.4`). Uključuje se po tenantu, bez novog builda.
-  facebook('facebook', {AuthPlatform.ios, AuthPlatform.android}),
-
-  /// Šestocifreni OTP kod na email, **nikad magic link**: link na mobilnom izlazi iz app-a
-  /// u browser i ne vraća se pouzdano (`docs/06 §2.1`). Jedini provider koji ne košta
-  /// ništa po flavoru i radi na svim platformama.
+  /// Email + lozinka (`docs/06 §2.1`, [ADR-0010]). Jedini provider koji ne košta ništa po
+  /// flavoru i radi na svim platformama.
+  ///
+  /// Facebook je nekad stajao ovdje i **namjerno ga više nema** — v.
+  /// [ADR-0011](../../../../../docs/adr/0011-facebook-login-se-ne-implementira.md).
   email('email', {AuthPlatform.ios, AuthPlatform.android, AuthPlatform.web});
 
   const AuthProvider(this.wireName, this.platforms);
@@ -49,7 +46,6 @@ enum AuthProvider {
   static AuthProvider? fromWire(String? value) => switch (value) {
     'apple' => apple,
     'google' => google,
-    'facebook' => facebook,
     'email' => email,
     _ => null,
   };

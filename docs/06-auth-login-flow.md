@@ -1,6 +1,10 @@
 # Auth & Login Flow
 
-Prijava klijenta: Apple, Google, Email i Facebook — sa identity modelom za multi-tenant sistem.
+Prijava klijenta: Apple, Google i Email — sa identity modelom za multi-tenant sistem.
+
+> **Facebook je skinut** ([ADR-0011](adr/0011-facebook-login-se-ne-implementira.md), 19.09.2026).
+> Ovaj dokument ga i dalje analizira u §7.4, jer je ta analiza razlog zbog kojeg je pao. Sve što
+> ovdje piše o Facebooku je **zapis, ne plan** — u kodu ga nema.
 
 | | |
 |---|---|
@@ -14,9 +18,9 @@ Prijava klijenta: Apple, Google, Email i Facebook — sa identity modelom za mul
 
 | | |
 |---|---|
-| **Provideri — iOS** | Apple · Google · Email + lozinka · Facebook |
-| **Provideri — Android** | Google · Email + lozinka · Facebook |
-| **Provideri — Web** | Google · Email + lozinka · Facebook |
+| **Provideri — iOS** | Apple · Google · Email + lozinka |
+| **Provideri — Android** | Google · Email + lozinka |
+| **Provideri — Web** | Google · Email + lozinka |
 | **Kad se traži login** | Na **kraju** booking flow-a, ne na ulazu u app |
 | **Auth backend** | **Supabase Auth** — jedan projekat za sve tenante |
 | **Push** | **Firebase FCM** — samo kao dostavna cijev, bez Firebase Auth-a |
@@ -25,7 +29,7 @@ Prijava klijenta: Apple, Google, Email i Facebook — sa identity modelom za mul
 | **Apple konfiguracija** | Sve na **našem** Developer accountu → `fastlane` skriptuje capability |
 | **Guest booking** | Opciono po salonu (`allowGuestBooking`), default **isključeno** |
 
-**Najveći rizik:** Facebook po flavoru. Vidi §7.4 prije nego ga obećaš klijentu.
+**Najveći rizik:** Apple i Google traže tuđe konzole i fizički uređaj; nijedan nije odigran.
 
 ---
 
@@ -48,7 +52,6 @@ a poslije se prijavljuje emailom i lozinkom. Ono što se identitetom dobija je z
 **Cijena koju plaćaš:**
 - Konverzija na booking padne za procijenjeno **10–20%** ako je login obavezan prije bookinga
 - Per-flavor konfiguracija auth providera pri onboardingu (v. §7)
-- Facebook: potencijalno Meta app review po tenantu (v. §7.4)
 - Politika privatnosti i **brisanje računa** su sad obavezni po store pravilima (v. §8)
 
 ### 1.1 Kako se frikcija minimizuje
@@ -74,14 +77,13 @@ Tri odluke koje čuvaju konverziju:
 | **Sign in with Apple** | ✅ | ❌ | ⚠️ opciono | Na Androidu tehnički moguć preko web flow-a, ali besmislen |
 | **Google** | ✅ | ✅ | ✅ | Najkorišteniji u BiH |
 | **Email + lozinka** | ✅ | ✅ | ✅ | Registracija, potvrda emaila, prijava i recovery |
-| **Facebook** | ✅ | ✅ | ✅ | ⚠️ Vidi §7.4 prije obećavanja |
 
 Redoslijed dugmeta — po očekivanoj upotrebi, ne po abecedi:
 
 ```
-iOS:      [ Apple ]  [ Google ]  [ Facebook ]  [ Email ]
-Android:  [ Google ] [ Facebook ] [ Email ]
-Web:      [ Google ] [ Facebook ] [ Email ]
+iOS:      [ Apple ]  [ Google ]  [ Email ]
+Android:  [ Google ] [ Email ]
+Web:      [ Google ] [ Email ]
 ```
 
 Apple je prvi na iOS-u jer je native i najmanje frikcije za iPhone korisnika. Google je prvi na Androidu iz istog razloga.
@@ -442,7 +444,8 @@ Supabase tipovi **ne smiju** procuriti iznad ovog sloja. Ako kasnije pređeš na
 konfiguracijsku grešku. Produkcijski `EmailSignUpResult`, confirmation, resend i recovery još nisu
 implementirani. Apple i Google kod postoje, ali se ne mogu odigrati dok konzolna konfiguracija iz
 [`12-konzole-checklist.md`](../tasks/sprint-2/12-konzole-checklist.md) nije dostupna.
-`signInWithFacebook` i `continueAsGuest` su task 26, `deleteAccount` task 17.
+`signInWithFacebook` **više ne postoji** ([ADR-0011](adr/0011-facebook-login-se-ne-implementira.md));
+`continueAsGuest` baca grešku i nema task iza sebe, `deleteAccount` je task 17.
 
 `currentSession` postoji uz `sessionChanges` zbog prvog frejma: router mora sinhrono znati smije li pustiti zaštićenu rutu, a `await` na stream bi prijavljenom korisniku dao treptaj login ekrana.
 
@@ -506,7 +509,11 @@ stvarni HTTPS `SITE_URL`. Password policy je zajednički za sve tenante.
 **Trošak:** nema OAuth klijenta po flavoru, ali callback se mora testirati na svakom package/bundle
 ID-u i u stvarnim email klijentima.
 
-### 7.4 Facebook — pročitaj prije nego obećaš klijentu ⚠️
+### 7.4 Facebook — analiza koja je odlučila da ga nema ⚠️
+
+> **Odluka je pala: Facebook login se ne implementira**
+> ([ADR-0011](adr/0011-facebook-login-se-ne-implementira.md), 19.09.2026). Odjeljak ostaje jer
+> nosi obrazloženje; preporuka ispod je **prevaziđena**.
 
 Meta dokumentacija je protivrječna oko dijeljenja jednog App ID-a preko više bundle-ova:
 
@@ -554,9 +561,8 @@ CI (`dart run tool/gen_flavors.dart --check`). Tenant bez `auth:` bloka dobija i
 `allowGuestBooking` je ovdje samo **fallback dok backend ne odgovori**; izvor istine je
 `salon_settings.allow_guest_booking`, koji vlasnik mijenja bez novog builda.
 
-`facebookAppId`/`facebookClientToken` **nisu** implementirani — dodaju se u
-[tasku 26](../tasks/sprint-2/26-gost-i-facebook.md), i to samo ako se ide scenario "FB App po
-flavoru".
+`facebookAppId`/`facebookClientToken` ne postoje i neće — `facebook` više nije ni validan ključ u
+`auth.providers` ([ADR-0011](adr/0011-facebook-login-se-ne-implementira.md)).
 
 **Client ID-evi ne idu u `tenant.yaml`.** Oni se mijenjaju po okruženju i ne pripadaju fajlu koji
 stoji u gitu — prosljeđuje ih `tool/build_tenant.sh` kao `--dart-define`, tražeći prvo

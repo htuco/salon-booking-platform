@@ -232,7 +232,6 @@ void main() {
       expect(find.text('Nastavi sa Apple'), findsOneWidget);
       expect(find.text('Nastavi sa Google'), findsOneWidget);
       expect(find.text('Nastavi sa emailom'), findsOneWidget);
-      expect(find.text('Nastavi sa Facebookom'), findsNothing);
       container.dispose();
     });
 

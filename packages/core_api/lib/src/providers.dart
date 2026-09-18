@@ -164,7 +164,7 @@ final customerRepositoryProvider = Provider<CustomerRepository>(
 /// sljedeća prijava ponovi bez posljedice.
 ///
 /// Gost (`isAnonymous`) je namjerno uključen: i on ima `auth_identities` red i rezerviše
-/// pod svojim identitetom — tok gosta je task 26, ali ovdje se ne razlikuje.
+/// pod svojim identitetom — tok gosta nije implementiran, ali ovdje se ne bi razlikovao.
 final currentCustomerIdProvider = FutureProvider<String?>((ref) async {
   if (ref.watch(currentAuthSessionProvider) == null) return null;
 

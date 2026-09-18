@@ -160,7 +160,8 @@ ništa). Web nije store target nijednog tenanta (`targets.web`), pa ovo ne bloki
 [task 17](17-moj-racun-i-brisanje.md). Do tada se sesija u razvoju čisti sa
 `localStorage.clear()` u konzoli.
 
-**Guest i Facebook** ostaju `UnimplementedError` sa imenom taska — [26](26-gost-i-facebook.md).
+**Guest** ostaje `UnimplementedError` bez taska, a **Facebook** je u međuvremenu uklonjen iz koda
+([ADR-0011](../../docs/adr/0011-facebook-login-se-ne-implementira.md)).
 
 **CI nije ništa potvrdio** — naplata na `htuco` nalogu blokira workflowove do 29.09.2026.
 Sve gore je pokrenuto lokalno.

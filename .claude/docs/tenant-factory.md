@@ -45,8 +45,9 @@ generisano zastarjelo.
   a ne u Dartu na uređaju: neispravan heks bi tamo bio izuzetak pri startu aplikacije, ovdje je pad
   generatora u CI-ju. U registar ulaze kao ARGB `int`, pa app ne parsira boju pri startu.
 
-- **`auth.providers` prima samo `apple`, `google`, `facebook`, `email`**, i samo `true`/`false`.
-  Nepoznat ključ ili `"da"` umjesto `true` obore generisanje. Isti razlog kao kod boja: tipfeler u
+- **`auth.providers` prima samo `apple`, `google`, `email`**, i samo `true`/`false`. Nepoznat
+  ključ ili `"da"` umjesto `true` obore generisanje — uključujući `facebook`, koji je namjerno
+  ispao ([ADR-0011](../../docs/adr/0011-facebook-login-se-ne-implementira.md)). Isti razlog kao kod boja: tipfeler u
   konfiguraciji mora pasti u CI-ju, a ne završiti kao login ekran kojem fali dugme.
 - **iOS build sa social providerom mora imati `apple: true`.** Generator pada ako ga nema —
   App Review odbija takav build po pravilu 4.8 (`docs/06 §7.2`), a to je jedino mjesto gdje
@@ -78,7 +79,7 @@ zadnjeg store submissiona ne smije biti izuzetak. Detalji: `.claude/docs/archite
 
 ```yaml
 auth:
-  providers: { apple: true, google: true, email: true, facebook: false }
+  providers: { apple: true, google: true, email: true }
   allowGuestBooking: false
 ```
 

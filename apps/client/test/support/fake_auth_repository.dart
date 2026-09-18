@@ -101,13 +101,8 @@ class FakeAuthRepository implements AuthRepository {
       throw prijavaGreska ?? const ServerError('Google prijava nije dostupna');
 
   @override
-  Future<AuthSession> signInWithFacebook() async =>
-      throw prijavaGreska ??
-          const ServerError('Facebook prijava nije dostupna');
-
-  @override
   Future<AuthSession> continueAsGuest({required String name}) async =>
-      throw const ServerError('Tok gosta je task 26');
+      throw const ServerError('Tok gosta nije implementiran');
 
   /// Brisanje naloga (task 17).
   ///
