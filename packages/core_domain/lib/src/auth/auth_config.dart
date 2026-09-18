@@ -4,7 +4,7 @@ import 'auth_provider.dart';
 /// Koji se provideri nude na login ekranu — **podatak, ne `if` u widgetu**.
 ///
 /// Isto pravilo kao za vertikale (`docs/05 §2`): ekran renderuje
-/// [forPlatform] i ne zna koji provideri uopšte postoje. Isključivanje Facebooka za jednog
+/// [forPlatform] i ne zna koji provideri uopšte postoje. Isključivanje providera za jednog
 /// tenanta je time promjena konfiguracije, ne novi store submission.
 ///
 /// ## Odakle vrijednosti dolaze
@@ -22,7 +22,7 @@ class AuthConfig {
   const AuthConfig({required this.enabled, required this.allowGuest});
 
   /// Ono što svaki tenant dobija dok ne kaže drugačije: Apple, Google i email + lozinka, bez
-  /// gosta. Facebook je isključen — v. [AuthProvider.facebook].
+  /// gosta. To su ujedno i svi provideri koji postoje — v. [AuthProvider].
   static const AuthConfig fallback = AuthConfig(
     enabled: {AuthProvider.apple, AuthProvider.google, AuthProvider.email},
     allowGuest: false,
@@ -33,7 +33,8 @@ class AuthConfig {
   final Set<AuthProvider> enabled;
 
   /// Da li se smije rezervisati bez naloga. Prati `salon_settings.allow_guest_booking`;
-  /// sam tok gosta je [task 26](../../../../tasks/sprint-2/26-gost-i-facebook.md).
+  /// sam tok gosta još nije implementiran ni raspisan
+  /// ([ADR-0011](../../../../../docs/adr/0011-facebook-login-se-ne-implementira.md)).
   final bool allowGuest;
 
   /// Provideri koje treba prikazati na [platform], u redoslijedu deklaracije

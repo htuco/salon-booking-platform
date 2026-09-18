@@ -214,7 +214,7 @@ lozinku. To je obavezan regresijski slučaj, ne pretpostavka.
 ## Ne ulazi u ovaj task
 
 - uklanjanje Apple ili Google providera;
-- Facebook i guest flow iz taska 26;
+- guest flow (Facebook je skinut — [ADR-0011](../../docs/adr/0011-facebook-login-se-ne-implementira.md));
 - MFA/passkeys;
 - promjena admin prijave, koja već koristi poseban `StaffRepository` i email + lozinku;
 - ručno upravljanje lozinkama iz super-admin baze.

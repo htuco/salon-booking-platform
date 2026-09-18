@@ -29,9 +29,9 @@ class AuthSession {
   /// `null` za goste i za Apple private relay dok korisnik ne podijeli adresu.
   final String? email;
 
-  /// Gost — rezervisao je bez naloga. Tok gosta je
-  /// [task 26](../../../../tasks/sprint-2/26-gost-i-facebook.md); polje postoji ovdje da
-  /// ekran ne mora pitati backend šta je korisnik.
+  /// Gost — rezervisao je bez naloga. Sam tok gosta još nije implementiran ni raspisan
+  /// ([ADR-0011](../../../../../docs/adr/0011-facebook-login-se-ne-implementira.md)); polje
+  /// postoji ovdje da ekran ne mora pitati backend šta je korisnik.
   final bool isAnonymous;
 
   @override

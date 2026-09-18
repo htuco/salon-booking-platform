@@ -142,14 +142,13 @@ class _Prijava extends ConsumerWidget {
             label: switch (provider) {
               AuthProvider.apple => l10n.bookingContinueApple,
               AuthProvider.google => l10n.bookingContinueGoogle,
-              AuthProvider.facebook => l10n.bookingContinueFacebook,
               AuthProvider.email => l10n.bookingContinueEmail,
             },
             icon: switch (provider) {
               AuthProvider.apple => LucideIcons.apple,
               AuthProvider.email => LucideIcons.atSign,
-              // Lucide nema brand ikone — ni Google ni Facebook.
-              AuthProvider.google || AuthProvider.facebook => null,
+              // Lucide nema Google logo.
+              AuthProvider.google => null,
             },
             variant: provider == AuthProvider.apple
                 ? AppButtonVariant.primary

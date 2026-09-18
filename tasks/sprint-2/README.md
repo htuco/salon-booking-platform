@@ -20,10 +20,9 @@ korake 12–24, uz tri dopune koje su nastale u Sprintu 1: šema nema kolone koj
 | [23](23-admin-login-i-lista.md) ✅ | Admin: login, dashboard, lista termina | 24, 25 | 2–3 dana |
 | [24](24-admin-akcije-nad-terminima.md) ✅ | Admin: potvrdi/odbij/otkaži + ručni termin | 25 | 2 dana |
 | [25](25-push-notifikacije.md) 🟡 | FCM, `Device` registracija, push scenariji | Sprint 3 | 2–3 dana |
-| [26](26-gost-i-facebook.md) | Guest flow + Facebook iza flaga | — | 1–2 dana |
 | [27](27-email-password-auth.md) | Client: email + lozinka umjesto OTP-a | store release | 3–5 dana |
 
-**Ukupno: ~26–35 radnih dana.**
+**Ukupno: ~25–33 radna dana.** Task 26 je skinut sa plana, v. status blok ispod.
 
 ## Redoslijed koji nije očigledan
 
@@ -67,6 +66,18 @@ Namjerno, po [01 §17](../../docs/01-mvp-spec.md#17-build-order):
   dobijaju svoj handoff, koji još ne postoji.
 
 ## Status
+
+> **26 — skinut sa plana (19.09.2026).** Facebook login se ne implementira
+> ([ADR-0011](../../docs/adr/0011-facebook-login-se-ne-implementira.md)): Meta traži app review i
+> jedan odobren bundle po app ID-u, što u fabrici od N brandiranih app-i znači ili jedan app ID
+> koji Meta može pauzirati svima odjednom, ili tuđi review u svakom onboardingu. `docs/06 §7.4` je
+> to predvidio — „prvo što treba pasti". Kod je uklonjen, a ne ostavljen iza flaga: `AuthProvider`
+> ima tri člana, `signInWithFacebook()` nema, i `facebook` više nije validan ključ u
+> `auth.providers`, pa ga generator obara.
+>
+> **Tok gosta nije odbačen, ali je ostao bez taska.** Bio je u istom fajlu sa Facebookom.
+> `AuthConfig.allowGuest` i `AuthRepository.continueAsGuest` stoje u kodu, `continueAsGuest` baca
+> grešku. Kad zatreba, raspisuje se nanovo — imenovano ovdje da ne nestane tiho.
 
 > **27 — Email + lozinka (🟡 demo integracija, 2026-09-16).** Aktivni klijentski tok koristi
 > Supabase `signUp` i `signInWithPassword`; OTP UI i metode su uklonjeni. Demo nema confirmation,

@@ -56,11 +56,6 @@ abstract interface class AuthRepository {
   /// i **razlikuje se po flavoru** (`docs/06 §7.1`).
   Future<AuthSession> signInWithGoogle();
 
-  /// Facebook prijava. Isključena po defaultu u `tenant.yaml` — v.
-  /// [AuthProvider.facebook] i `docs/06 §7.4`.
-  /// Implementira [task 26](../../../../tasks/sprint-2/26-gost-i-facebook.md).
-  Future<AuthSession> signInWithFacebook();
-
   /// Prijava postojećeg korisnika email adresom i lozinkom.
   Future<AuthSession> signInWithPassword({
     required String email,
@@ -77,7 +72,10 @@ abstract interface class AuthRepository {
   });
 
   /// Rezervacija bez naloga; dozvoljeno samo kad je `AuthConfig.allowGuest`.
-  /// Implementira [task 26](../../../../tasks/sprint-2/26-gost-i-facebook.md).
+  ///
+  /// **Nema task iza sebe.** Task 26 je nosio i tok gosta i Facebook; skinut je sa plana kad
+  /// je Facebook otpao ([ADR-0011](../../../../docs/adr/0011-facebook-login-se-ne-implementira.md)),
+  /// pa gost čeka novi raspis. Dotle implementacija baca grešku.
   Future<AuthSession> continueAsGuest({required String name});
 
   Future<void> signOut();

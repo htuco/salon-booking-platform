@@ -51,7 +51,6 @@ void main() {
             AuthProvider.google,
             AuthProvider.email,
           });
-          expect(config.enabled, isNot(contains(AuthProvider.facebook)));
           expect(config.allowGuest, isFalse);
         },
       );

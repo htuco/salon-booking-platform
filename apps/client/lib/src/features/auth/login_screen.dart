@@ -183,7 +183,7 @@ String _poruka(AppLocalizations l10n, ApiError greska) => switch (greska) {
   RateLimitError() => l10n.loginRateLimited,
   AuthCancelledError() => l10n.loginCancelled,
   NetworkError() => l10n.noConnection,
-  // Apple/Google/Facebook dok nativni paketi ne postoje stižu ovuda — poruka mora
+  // Apple i Google dok nativni paketi ne postoje stižu ovuda — poruka mora
   // ponuditi izlaz koji radi, a to je email.
   ServerError() => l10n.loginProviderUnavailable,
   NotFoundError() || ConflictError() || MappingError() => l10n.genericError,
@@ -307,17 +307,16 @@ class _IzborProvidera extends ConsumerWidget {
       switch (provider) {
         AuthProvider.apple => l10n.bookingContinueApple,
         AuthProvider.google => l10n.bookingContinueGoogle,
-        AuthProvider.facebook => l10n.bookingContinueFacebook,
         AuthProvider.email => l10n.bookingContinueEmail,
       };
 
   IconData? _ikona(AuthProvider provider) => switch (provider) {
     AuthProvider.apple => LucideIcons.apple,
     AuthProvider.email => LucideIcons.atSign,
-    // **Lucide nema brand ikone** — ni Google ni Facebook. Dugmad ostaju bez ikone,
-    // kao u handoffu; službeni logo nije `IconData` nego asset sa svojim pravilima
-    // upotrebe, i uvodi se tek kad ti provideri prvi put stvarno rade.
-    AuthProvider.google || AuthProvider.facebook => null,
+    // **Lucide nema Google logo.** Dugme ostaje bez ikone, kao u handoffu; službeni logo
+    // nije `IconData` nego asset sa svojim pravilima upotrebe, i uvodi se tek kad Google
+    // prijava prvi put stvarno radi.
+    AuthProvider.google => null,
   };
 }
 

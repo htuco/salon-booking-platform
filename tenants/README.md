@@ -45,8 +45,10 @@ platformi, izvan `tenant.yaml` i gita. `tool/firebase_defines.dart` je pretvara 
   kad se raziđu, baza je u pravu, ali korisnik vidi treptaj boje pri startu.
 - **`branding.theme`** je `modern_barber` (tamna), `elegant_beauty` (svijetla) ili `clinical_calm`;
   bira svjetlinu i neutralnu paletu. Nepoznato ime pada na `modern_barber` umjesto da sruši app.
-- **`auth.providers` prima samo `apple`, `google`, `facebook`, `email`**, i svaka vrijednost mora
-  biti `true` ili `false`. Nepoznat ključ ili vrijednost tipa `"da"` **obore generisanje** — tipfeler
+- **`auth.providers` prima samo `apple`, `google`, `email`**, i svaka vrijednost mora
+  biti `true` ili `false`. `facebook` je bio četvrti i **namjerno ga više nema**
+  ([ADR-0011](../docs/adr/0011-facebook-login-se-ne-implementira.md)) — tenant koji ga zadrži
+  obara generator. Nepoznat ključ ili vrijednost tipa `"da"` **obore generisanje** — tipfeler
   u konfiguraciji se tako vidi u CI-ju, a ne kao login ekran bez dugmeta kod korisnika. Tenant bez
   `auth:` bloka dobija Apple, Google i email.
 - **`apple: true` na Androidu se ignoriše, ne pada.** Filtriranje po platformi radi `AuthConfig`

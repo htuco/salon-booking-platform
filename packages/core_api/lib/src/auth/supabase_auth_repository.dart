@@ -250,13 +250,9 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> signInWithFacebook() =>
-      throw _nedostajePaket('Facebook', 'flutter_facebook_auth');
-
-  @override
   Future<AuthSession> continueAsGuest({required String name}) =>
       throw ServerError(
-        'Tok gosta nije implementiran — task 26 (tasks/sprint-2/26-gost-i-facebook.md)',
+        'Tok gosta nije implementiran — nema taska (docs/adr/0011-facebook-login-se-ne-implementira.md)',
       );
 
   /// Brisanje naloga kroz Edge Function `delete-account` (task 17).
@@ -297,15 +293,6 @@ class SupabaseAuthRepository implements AuthRepository {
       // Namjerno prazno: brisanje je prošlo, a odjava nema šta da spasi.
     }
   });
-
-  /// Greška sa imenom paketa koji fali, umjesto `UnimplementedError`.
-  ///
-  /// [ApiError] zato što ekran hvata samo njega (`core_api.dart`, pravilo 2): sa
-  /// `UnimplementedError` bi nativno dugme rušilo ekran umjesto da prikaže poruku.
-  ApiError _nedostajePaket(String provider, String paket) => ServerError(
-    '$provider prijava još nije dostupna — traži paket `$paket` i client ID iz '
-    'tasks/sprint-2/12-konzole-checklist.md',
-  );
 
   /// Supabaseova `Session` → domenski [AuthSession]. Jedina tačka prevoda.
   AuthSession? _sesija(Session? session) {
