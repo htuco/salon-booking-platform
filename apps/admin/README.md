@@ -1,17 +1,30 @@
-# admin
+# Salon OS admin
 
-A new Flutter project.
+Generička Flutter admin aplikacija za sve salone. Admin ne bira `SALON_ID`: nakon
+email+password prijave salon i ovlasti dolaze iz server-side membershipa i Supabase RLS-a.
 
-## Getting Started
+## Vizuelni handoff
 
-This project is a starting point for a Flutter application.
+Puni admin dizajn je u [`prototype/admin`](../../prototype/admin/README.md): 10 desktop i 11
+mobilnih prikaza, uz [mapu prema rutama i modulima](../../prototype/admin/SPEC.md). HTML canvas je
+samo referenca; implementacija ostaje u ovom Flutter paketu.
 
-A few resources to get you started if this is your first Flutter project:
+## Pokretanje
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Iz roota repozitorija:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+cd apps/admin
+flutter run -d chrome \
+  --dart-define=SUPABASE_URL=... \
+  --dart-define=SUPABASE_ANON_KEY=...
+```
+
+Bez Supabase konfiguracije aplikacija može podići UI shell, ali stvarni admin login, tenant
+izolacija i akcije nad terminima zahtijevaju pravi Supabase JWT i lokalni ili hostovani backend.
+
+## Trenutno stanje
+
+- implementirani su login, dashboard, lista/filter termina i akcije nad terminima;
+- kalendar, usluge, osoblje, radno vrijeme i postavke još imaju placeholder rute;
+- admin ostaje nebrandiran po tenantu — ne uvoziti klijentsku `core_ui` temu.

@@ -71,6 +71,9 @@ odgovarajuće dugme je onemogućeno uz poruku **Nije konfigurirano za ovaj demo*
 
 ## 3. Admin aplikacija
 
+Vizuelni handoff i mapa ekrana nalaze se u [`prototype/admin`](../prototype/admin/README.md).
+Handoff definiše izgled, ali ne mijenja ni jedan sigurnosni zahtjev ispod.
+
 - Admin koristi stvarni Supabase email+password login; social login se ne prikazuje.
 - Demo admin nalog se kreira ručno, označava kao potvrđen i povezuje samo sa Vitez salonom.
 - Uloga i pristup dolaze iz server-side membershipa/RLS-a, ne iz lokalnog demo flaga.

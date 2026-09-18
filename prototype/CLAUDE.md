@@ -1,15 +1,26 @@
 # `prototype/` — vizuelne reference, nijedna nije production kod
 
-Dva foldera, dvije uloge. Root pravila važe — v. `../CLAUDE.md`.
+Tri foldera, tri uloge. Root pravila važe — v. `../CLAUDE.md`.
 
 | Folder | Šta je | Status |
 |---|---|---|
 | `ui/` | Dizajnerski handoff: 17 ekrana u punoj vjernosti, finalni copy, tokeni, komponente | **Vizuelni izvor istine** |
+| `admin/` | Salon OS handoff: 10 desktop i 11 mobilnih admin prikaza | **Vizuelni izvor istine za `apps/admin`** |
 | `wireframe/` | Stariji React/Vite prototip sa svojim toolchainom | **Zamrznut** |
 
-**Gdje se njih dvoje ne slažu, `ui/` je jači.** Vjernost je viša i copy je finalan.
-`wireframe/` ostaje referenca samo za **flow i rute** (`wireframe/src/app/routes.tsx` prati
-`docs/01 §12`) i kao istorijski zapis.
+Za klijentsku aplikaciju je `ui/` jači od `wireframe/`; za admin aplikaciju je `admin/` jači od
+`wireframe/`. Vjernost im je viša i copy je finalniji. `wireframe/` ostaje referenca samo za
+**flow i rute** (`wireframe/src/app/routes.tsx` prati `docs/01 §12`) i kao istorijski zapis.
+
+## `admin/` — kako se čita
+
+`admin/SPEC.md` mapira svih 21 prikaz na postojeće i buduće Flutter module. `admin/index.html`
+služi samo kao navigacija kroz originalni design canvas. Canvas renderer i placeholder slike se
+ne portuju u aplikaciju.
+
+Admin je jedan platformski build za sve salone. Njegov plavi akcent je identitet Salon OS-a, ne
+tenant branding; salon i ovlasti i dalje dolaze iz server-side membershipa i RLS-a. Multi-location
+prikaz `3a` je budući scope dok ne postoji odgovarajući RBAC.
 
 ## `ui/` — kako se čita
 
