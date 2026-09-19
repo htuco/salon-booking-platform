@@ -53,6 +53,10 @@ const double _formaSirina = 560;
 /// Horizontalni padding forme unutar te kolone (`3j`: `padding:0 72px`).
 const double _formaPadding = 72;
 
+/// Ko uopšte može ući — jedina rečenica iz canvasa koja o tome govori (`3u`).
+const String kPristupNapomena =
+    'Pristup imaju samo vlasnik i majstori lokacije.';
+
 /// Visina tamnog zaglavlja na telefonu (`3u`: `height:280px;flex:0 0 280px`).
 const double _heroVisina = 280;
 
@@ -187,6 +191,10 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   /// telefonu sa otvorenom tastaturom forma skroluje, a „Prijavi se" ostaje na ekranu.
   Widget _telefon() {
     return Column(
+      // `stretch`, ne default `center`: bez toga traka u dnu i „Prijavi se" u njoj dobiju
+      // širinu svog teksta, pa dugme stoji kao mala pilula nasred ekrana. Widget test to
+      // ne vidi — dugme postoji i tapa se — vidjelo se tek na snimku.
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: _heroVisina, child: _TamnaPloha(hero: true)),
         Expanded(
@@ -303,15 +311,18 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
           if (jeDesktop) ...[
             const SizedBox(height: AdminSpacing.xxl),
             _dugme(visina: 52),
-          ],
-          const SizedBox(height: AdminSpacing.xl),
-          Text(
-            'Pristup imaju samo vlasnik i majstori lokacije.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AdminColors.textMuted,
-              height: 1.6,
+          ] else ...[
+            // Na desktopu ista rečenica stoji na tamnoj plohi; ovdje je ispod polja, kako
+            // je `3u` i crta.
+            const SizedBox(height: AdminSpacing.xl),
+            Text(
+              kPristupNapomena,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AdminColors.textMuted,
+                height: 1.6,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -413,8 +424,11 @@ class _Polje extends StatelessWidget {
 
 /// Tamna ploha: desna kolona na desktopu, zaglavlje na telefonu.
 ///
-/// Umjesto fotografije iz canvasa nosi gradijent i logotip — v. „Šta iz canvasa namjerno
-/// nije nacrtano" na vrhu fajla.
+/// Umjesto fotografije iz canvasa nosi gradijent — v. „Šta iz canvasa namjerno nije
+/// nacrtano" na vrhu fajla. Na telefonu (`3u`) na njoj stoji logotip, jer ga forma ispod
+/// nema; na desktopu logotip stoji u formi, pa ploha nosi rečenicu o tome ko uopšte ima
+/// pristup. **Isti blok na oba mjesta bi značio dva logotipa na jednom ekranu** — prvi
+/// snimak je izgledao tačno tako.
 class _TamnaPloha extends StatelessWidget {
   const _TamnaPloha({this.hero = false});
 
@@ -435,9 +449,15 @@ class _TamnaPloha extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.all(hero ? AdminSpacing.xl : 48),
-        child: const Align(
+        child: Align(
           alignment: Alignment.bottomLeft,
-          child: _Logotip(naTamnom: true),
+          child: hero
+              ? const _Logotip(naTamnom: true)
+              : Text(
+                  kPristupNapomena,
+                  style: Theme.of(context).textTheme.bodyLarge
+                      ?.copyWith(color: AdminColors.sidebarText, height: 1.6),
+                ),
         ),
       ),
     );

@@ -116,8 +116,13 @@ void main() {
     testWidgets('nosi logotip i primarnu radnju', (tester) async {
       await _naSirini(tester, _desktop, _ekran());
 
-      // Logotip stoji dvaput: u bijeloj koloni i na tamnoj plohi.
-      expect(find.text('Salon OS'), findsNWidgets(2));
+      // **Jednom**, ne dvaput: logotip je u bijeloj koloni, a tamna ploha nosi rečenicu o
+      // pristupu. Prvi prolaz ga je crtao na oba mjesta i to se vidjelo tek na snimku.
+      expect(find.text('Salon OS'), findsOneWidget);
+      expect(
+        find.text('Pristup imaju samo vlasnik i majstori lokacije.'),
+        findsOneWidget,
+      );
       expect(find.text('Prijava'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, 'Prijavi se'), findsOneWidget);
     });
@@ -136,6 +141,17 @@ void main() {
         tester.getTopLeft(zaglavlje).dy,
         lessThan(tester.getTopLeft(find.byType(Form)).dy),
       );
+    });
+
+    testWidgets('primarna radnja ide preko cijele širine', (tester) async {
+      // Canvas je crta kao punu traku (`height:54px` preko gutter-a). Prvi prolaz je
+      // koloni ostavio `center`, pa je dugme dobilo širinu svog teksta.
+      await _naSirini(tester, _telefon, _ekran());
+
+      final sirina = tester
+          .getSize(find.widgetWithText(FilledButton, 'Prijavi se'))
+          .width;
+      expect(sirina, _telefon.width - 2 * 20);
     });
 
     testWidgets('„Prijavi se" stoji ispod skrola, ne u njemu', (tester) async {
