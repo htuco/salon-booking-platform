@@ -1,8 +1,9 @@
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/format/datum.dart';
 import '../../core/theme/theme.dart';
-import 'appointments_providers.dart';
+import 'status_pill.dart';
 
 /// Jedan termin u admin listi.
 ///
@@ -30,7 +31,7 @@ class AppointmentTile extends StatelessWidget {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            _vrijeme(termin.startTime),
+            vrijemeHhMm(termin.startTime),
             // Vrijeme je **JetBrains Mono** — `SPEC.md` mu daje sate, datume i brojcani
             // podatak. Tabularne cifre nosi `AdminText.time` sam, pa se ovdje ne
             // ponavljaju.
@@ -54,7 +55,7 @@ class AppointmentTile extends StatelessWidget {
         children: [
           const SizedBox(height: 2),
           Text(
-            'do ${_vrijeme(termin.endTime)}',
+            'do ${vrijemeHhMm(termin.endTime)}',
             style: AdminText.dataInline.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -91,57 +92,7 @@ class AppointmentTile extends StatelessWidget {
           ],
         ],
       ),
-      trailing: _StatusZnak(status: termin.status),
-    );
-  }
-
-  /// `HH:MM` iz `LocalTime`, bez sekundi — sekunde u rasporedu ne znače ništa.
-  static String _vrijeme(LocalTime vrijeme) =>
-      '${vrijeme.hour.toString().padLeft(2, '0')}:'
-      '${vrijeme.minute.toString().padLeft(2, '0')}';
-}
-
-/// Status kao obojena oznaka.
-///
-/// **Boja nije jedini nosilac informacije** — uz nju uvijek ide tekst. Vlasnik koji ne
-/// razlikuje zelenu od narandžaste mora moći pročitati status (WCAG 1.4.1).
-class _StatusZnak extends StatelessWidget {
-  const _StatusZnak({required this.status});
-
-  final AppointmentStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final statusi = context.statusColors;
-
-    // Parovi dolaze iz teme, ne iz `ColorScheme`-a. Ranija verzija je uzimala
-    // `primaryContainer` za potvrdjen termin, pa je „potvrdjeno" bilo plavo — handoff ga
-    // crta zeleno, a plava je u ovom sistemu akcent, ne status.
-    final ton = switch (status) {
-      AppointmentStatus.pending => statusi.waiting,
-      AppointmentStatus.confirmed => statusi.positive,
-      AppointmentStatus.cancelled => statusi.negative,
-      AppointmentStatus.completed => statusi.neutral,
-      // „Nije se pojavio" nije otkazivanje: otkazao je neko, ovo se prosto desilo.
-      AppointmentStatus.noShow => statusi.negativeQuiet,
-      AppointmentStatus.unknown => statusi.neutral,
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
-      decoration: BoxDecoration(
-        color: ton.background,
-        borderRadius: BorderRadius.circular(AdminRadius.pill),
-      ),
-      child: Text(
-        // Tekst je obavezan, ne dodatak uz boju (`SPEC.md`; WCAG 1.4.1).
-        //
-        // Labela je i dalje `statusLabela` — canvas pise „Potvrdjeno", a ovdje stoji
-        // „Potvrdjeni", jer isti string sluzi i kao labela filtera. To je promjena copyja
-        // i pripada tasku 30, ne ovom.
-        statusLabela(status),
-        style: AdminText.statusLabel.copyWith(color: ton.foreground),
-      ),
+      trailing: AppointmentStatusPill(status: termin.status),
     );
   }
 }

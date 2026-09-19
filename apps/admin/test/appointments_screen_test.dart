@@ -83,11 +83,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tarik Begic'), findsOneWidget);
-    // Suzeno na celiju: „Otkazani" stoji i u filter cipu iznad liste.
+    // Suzeno na celiju: „Otkazani" stoji i u filter cipu iznad liste — ali u **mnozini**,
+    // dok pilula uz termin od taska 30 nosi jedninu („Otkazano").
     expect(
       find.descendant(
         of: find.byType(AppointmentTile),
-        matching: find.text('Otkazani'),
+        matching: find.text('Otkazano'),
       ),
       findsOneWidget,
     );

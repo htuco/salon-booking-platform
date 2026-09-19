@@ -274,3 +274,89 @@ final adminEmployeeLinksProvider = FutureProvider<List<EmployeeService>>((
 
   return ref.watch(employeeRepositoryProvider).serviceLinksForSalon(salonId);
 });
+
+/// Kratka oznaka statusa — ono što stoji u piluli uz termin.
+///
+/// **Nije isto što i [statusLabela].** Filter u listi imenuje *grupu* redova („Potvrđeni",
+/// „Otkazani"), a pilula imenuje *jedan* termin („Potvrđeno", „Otkazano"), kako ga canvas i
+/// piše. Jedan string za oboje je do taska 30 značio da uz termin piše množina.
+String statusOznaka(AppointmentStatus status) => switch (status) {
+  AppointmentStatus.pending => 'Na čekanju',
+  AppointmentStatus.confirmed => 'Potvrđeno',
+  AppointmentStatus.cancelled => 'Otkazano',
+  AppointmentStatus.completed => 'Završeno',
+  AppointmentStatus.noShow => 'Nije došao',
+  AppointmentStatus.unknown => 'Nepoznato',
+};
+
+/// Salon kojim admin upravlja.
+///
+/// Postoji zbog **imena**: breadcrumb `Vitez / Danas` iz `3b` i kartica lokacije iz `3k`
+/// traže ime salona, a `StaffMember` nosi samo `salonId` — red u `public.users` nema
+/// naziv. Ime se zato čita iz `salons`, istim repozitorijem kao u klijentskoj app-i.
+///
+/// `null` dok se ne učita ili kad admin nije vezan za salon; ekran tada crta samo naslov,
+/// bez lijeve strane breadcrumba.
+final adminSalonProvider = FutureProvider<Salon?>((ref) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return null;
+
+  return ref.watch(salonRepositoryProvider).byId(salonId);
+});
+
+/// Koliko dana unaprijed kartica „Zahtjevi" gleda.
+///
+/// Zahtjev za termin za dva mjeseca je rijedak, ali postoji; 60 dana je granica upita, ne
+/// tvrdnja o proizvodu. Brojač u navigaciji broji **sve** `pending` redove
+/// ([pendingCountProvider]), pa se ta dva broja mogu raziću — kartica zato nosi „Vidi sve",
+/// koje vodi na punu filtriranu listu.
+const int kZahtjeviHorizontDana = 60;
+
+/// Zahtjevi koji čekaju odgovor — od danas unaprijed, najstariji prvi.
+///
+/// **Ne gleda unazad.** `pending` termin kojem je vrijeme prošlo nije zahtjev nego ostatak;
+/// potvrda takvog reda bi upisala termin u prošlost, a odbijanje ništa ne mijenja.
+final zahtjeviProvider = FutureProvider<List<Appointment>>((ref) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return const [];
+
+  final danas = DateTime.now();
+  return ref
+      .watch(staffAppointmentRepositoryProvider)
+      .forRange(
+        salonId: salonId,
+        from: DateTime(danas.year, danas.month, danas.day),
+        to: DateTime(
+          danas.year,
+          danas.month,
+          danas.day,
+        ).add(const Duration(days: kZahtjeviHorizontDana)),
+        status: AppointmentStatus.pending,
+      );
+});
+
+/// Usluge po `id`-u — ime i cijena za red termina.
+///
+/// `appointments` nosi samo `service_id`, pa svaki ekran koji piše „Fade šišanje · 15 KM"
+/// treba cjenovnik. Mapa se gradi **jednom** iz [adminServicesProvider]; kartica koja bi
+/// sama tražila svoju uslugu pokrenula bi upit po redu liste.
+final uslugePoIdProvider = Provider<Map<String, Service>>((ref) {
+  final usluge =
+      ref.watch(adminServicesProvider).valueOrNull ?? const <Service>[];
+  return {for (final usluga in usluge) usluga.id: usluga};
+});
+
+/// Radnici po `id`-u — ime uz termin.
+final radniciPoIdProvider = Provider<Map<String, Employee>>((ref) {
+  final radnici =
+      ref.watch(adminEmployeesProvider).valueOrNull ?? const <Employee>[];
+  return {for (final radnik in radnici) radnik.id: radnik};
+});
+
+/// Cijene usluga, za sažetak prometa.
+final cijenePoUsluziProvider = Provider<Map<String, double>>((ref) {
+  return {
+    for (final unos in ref.watch(uslugePoIdProvider).entries)
+      unos.key: unos.value.price,
+  };
+});

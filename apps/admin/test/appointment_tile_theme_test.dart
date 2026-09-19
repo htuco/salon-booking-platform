@@ -57,7 +57,9 @@ void main() {
 
     // WCAG 1.4.1: vlasnik koji ne razlikuje zelenu od narandžaste mora **pročitati**
     // status. Oznaka bez teksta prolazi svaki drugi test u ovom fajlu.
-    final oznaka = _stilZa(tester, 'Potvrđeni');
+    // Jednina: pilula imenuje **jedan** termin („Potvrđeno"), a množina iz `statusLabela`
+    // ostaje filteru koji imenuje grupu redova („Potvrđeni"). Task 30.
+    final oznaka = _stilZa(tester, 'Potvrđeno');
     expect(oznaka.fontFamily, kAdminSansFamily);
     expect(oznaka.color, AdminStatusColors.standard().positive.foreground);
   });
@@ -70,7 +72,7 @@ void main() {
     final pilula = tester.widget<Container>(
       find
           .ancestor(
-            of: find.text('Potvrđeni'),
+            of: find.text('Potvrđeno'),
             matching: find.byType(Container),
           )
           .first,

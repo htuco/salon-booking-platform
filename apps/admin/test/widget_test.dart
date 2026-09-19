@@ -1,6 +1,7 @@
 import 'package:admin/main.dart';
 import 'package:admin/src/core/env/app_env.dart';
 import 'package:admin/src/core/router/admin_router.dart';
+import 'package:admin/src/features/dashboard/dashboard_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -98,7 +99,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(container.read(adminRouterProvider).state.uri.path, '/dashboard');
-    expect(find.text(_vlasnik.name), findsOneWidget);
+    // Ekran, ne ime prijavljenog: od taska 30 „Danas" crta datum i raspored, a ime stoji
+    // u sidebaru (desktop) odnosno iza dugmeta naloga (telefon). Ovaj test pazi na guard i
+    // rutu, pa provjerava da je stigao **taj** ekran.
+    expect(find.byType(AdminDashboardScreen), findsOneWidget);
   });
 
   testWidgets('prijavljen deep link na /employees prolazi', (tester) async {

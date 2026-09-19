@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/appointments/appointments_providers.dart';
 import '../navigation/admin_destinations.dart';
 import '../router/admin_router.dart';
 import '../theme/theme.dart';
@@ -54,6 +55,7 @@ class AdminScaffold extends ConsumerWidget {
     this.aktivna,
     this.actions,
     this.floatingActionButton,
+    this.sopstvenoZaglavlje = false,
     super.key,
   });
 
@@ -70,6 +72,14 @@ class AdminScaffold extends ConsumerWidget {
 
   final List<Widget>? actions;
   final Widget? floatingActionButton;
+
+  /// Ekran sam crta zaglavlje na telefonu, pa ljuska ne stavlja `AppBar`.
+  ///
+  /// `3k` iznad sadržaja crta **veliki naslov u tijelu** („Danas", 30 px, ispod njega
+  /// datum i broj termina), a ne 56-pikselnu traku sa sitnim naslovom. Ljuska to ne može
+  /// nacrtati sama jer podnaslov zna samo ekran. Desktop ovim nije dotaknut: tamo top bar
+  /// pripada ljusci, jer nosi breadcrumb i akcije koje su iste za sve ekrane.
+  final bool sopstvenoZaglavlje;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -105,10 +115,12 @@ class AdminScaffold extends ConsumerWidget {
   /// mijenja navigaciju, ne zaglavlja.
   Widget _telefon(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        actions: [...?actions, _NalogDugme(ikona: true)],
-      ),
+      appBar: sopstvenoZaglavlje
+          ? null
+          : AppBar(
+              title: Text(title),
+              actions: [...?actions, const AdminNalogDugme(ikona: true)],
+            ),
       body: body,
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: _DonjaNavigacija(aktivna: aktivna),
@@ -264,15 +276,20 @@ class _SidebarPodnozje extends StatelessWidget {
 }
 
 /// Top bar iz `3b` — 66 px, breadcrumb lijevo, akcije ekrana desno.
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({required this.title, this.actions});
 
   final String title;
   final List<Widget>? actions;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // Ime salona, ne ime proizvoda: `Vitez / Danas`. Dolazi iz `salons`, jer ga
+    // `StaffMember` ne nosi — v. `adminSalonProvider`. Dok se ne učita (ili ako admin nije
+    // vezan za salon), breadcrumb je sam naslov; kosa crta bez lijeve strane bi izgledala
+    // kao greška u iscrtavanju.
+    final salon = ref.watch(adminSalonProvider).valueOrNull;
 
     return Container(
       height: AdminSize.topBarHeight,
@@ -290,15 +307,40 @@ class _TopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Canvas ovdje crta `Vitez / Danas`. Ime lokacije nedostaje jer ga
-          // `StaffMember` ne nosi — v. „ostalo za sljedećeg" u tasku 29.
-          Expanded(
-            child: Text(
-              title,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleMedium,
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (salon != null) ...[
+                  Flexible(
+                    child: Text(
+                      salon.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: AdminColors.textMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 11),
+                    child: Text(
+                      '/',
+                      style: TextStyle(color: AdminColors.breadcrumbSeparator),
+                    ),
+                  ),
+                ],
+                Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
+          const Spacer(),
           ...?actions,
         ],
       ),
@@ -401,8 +443,8 @@ class _BrojacTekst extends ConsumerWidget {
 }
 
 /// Meni naloga u `AppBar`-u telefona.
-class _NalogDugme extends ConsumerWidget {
-  const _NalogDugme({this.ikona = false});
+class AdminNalogDugme extends ConsumerWidget {
+  const AdminNalogDugme({this.ikona = false, super.key});
 
   final bool ikona;
 

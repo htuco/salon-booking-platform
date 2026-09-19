@@ -60,6 +60,18 @@ Future<void> main() async {
           (ref) => Stream<StaffMember?>.value(_vlasnik),
         ),
         pendingCountProvider.overrideWith((ref) async => 4),
+        // Ekran „Danas" od taska 30 piše uslugu, majstora i cijenu uz termin, a ime salona
+        // u breadcrumb — sve troje dolazi iz drugih tabela, pa demo mora napuniti i njih.
+        // Bez toga bi snimak pokazao raspored bez ijednog opisa, što izgleda kao greška u
+        // ekranu, a greška je u demou.
+        adminSalonProvider.overrideWith((ref) async => _salon),
+        adminServicesProvider.overrideWith((ref) async => _usluge),
+        adminEmployeesProvider.overrideWith((ref) async => _radnici),
+        zahtjeviProvider.overrideWith(
+          (ref) async => _termini
+              .where((t) => t.status == AppointmentStatus.pending)
+              .toList(),
+        ),
         danasnjiTerminiProvider.overrideWith((ref) async => _termini),
         // **Filter se poštuje, ne zaobilazi.** Ravna lista bi na
         // `/appointments?status=pending` prikazala svih pet termina uz izabran čip „Na
@@ -79,6 +91,9 @@ Future<void> main() async {
 ///
 /// Brojevi su demo sadržaj, ne podatak iz baze — v. `SPEC.md`, „Funkcionalne granice".
 final List<Appointment> _termini = [
+  // Jedan završen termin, da „9 završeno · 5 predstoji" i „Promet do sada" imaju šta
+  // pokazati — inače je promet uvijek 0 KM i izgleda kao da brojka ne radi.
+  _termin('Adnan Kovač', 10, 0, AppointmentStatus.completed),
   _termin('Tarik Selimović', 13, 0, AppointmentStatus.confirmed),
   _termin('Haris Delić', 14, 20, AppointmentStatus.confirmed),
   _termin('Nedim Hodžić', 15, 0, AppointmentStatus.pending),
@@ -86,12 +101,43 @@ final List<Appointment> _termini = [
   _termin('Kenan Zukić', 19, 20, AppointmentStatus.confirmed),
 ];
 
+final _salon = Salon(
+  id: _salonId,
+  name: 'Barber Studio Vitez',
+  slug: 'barber-studio-vitez',
+  city: 'Vitez',
+);
+
+/// Cjenovnik i ekipa iz `supabase/seed.sql`, skraćeno.
+const _usluge = [
+  Service(
+    id: 'demo-fade',
+    salonId: _salonId,
+    name: 'Fade šišanje',
+    price: 20,
+    durationMinutes: 40,
+  ),
+  Service(
+    id: 'demo-brada',
+    salonId: _salonId,
+    name: 'Brada + konturisanje',
+    price: 15,
+    durationMinutes: 30,
+  ),
+];
+
+const _radnici = [
+  Employee(id: 'demo-emir', salonId: _salonId, name: 'Emir'),
+  Employee(id: 'demo-vedad', salonId: _salonId, name: 'Vedad'),
+];
+
 Appointment _termin(String ime, int sat, int minuta, AppointmentStatus status) {
   final sada = DateTime.now();
   return Appointment(
     id: 'demo-$ime',
     salonId: _salonId,
-    serviceId: 'demo-usluga',
+    serviceId: sat.isEven ? 'demo-fade' : 'demo-brada',
+    employeeId: sat.isEven ? 'demo-emir' : 'demo-vedad',
     customerId: 'demo-klijent',
     customerName: ime,
     date: LocalDate(sada.year, sada.month, sada.day),
