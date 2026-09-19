@@ -360,3 +360,23 @@ final cijenePoUsluziProvider = Provider<Map<String, double>>((ref) {
       unos.key: unos.value.price,
   };
 });
+
+/// Jedan termin, za ekran detalja.
+///
+/// `family` po `id`-u iz adrese. `null` znači „nema ga ili nije naš" — ekran ta dva slučaja
+/// namjerno ne razlikuje, v. `StaffAppointmentRepository.byId`.
+///
+/// **Ne čita se iz liste u memoriji.** Detalj se otvara i iz bookmarka i iz obavijesti, kad
+/// nijedna lista nije učitana; uz to je nakon akcije svježe čitanje jedini način da ekran
+/// pokaže ono što stvarno piše u bazi.
+final terminProvider = FutureProvider.family<Appointment?, String>((
+  ref,
+  appointmentId,
+) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return null;
+
+  return ref
+      .watch(staffAppointmentRepositoryProvider)
+      .byId(salonId: salonId, appointmentId: appointmentId);
+});

@@ -437,61 +437,64 @@ class _RedTabele extends StatelessWidget {
       ),
       child: Opacity(
         opacity: zatvoren ? 0.5 : 1,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
-          child: Row(
-            children: [
-              SizedBox(
-                width: _kolonaVrijeme,
-                child: Text(
-                  vrijemeHhMm(termin.startTime),
-                  style: AdminText.timeLarge.copyWith(
-                    color: AdminColors.textSecondary,
+        child: InkWell(
+          onTap: () => context.go('/appointments/${termin.id}'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: _kolonaVrijeme,
+                  child: Text(
+                    vrijemeHhMm(termin.startTime),
+                    style: AdminText.timeLarge.copyWith(
+                      color: AdminColors.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Text(
-                  termin.customerName,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: uToku ? FontWeight.w600 : FontWeight.w500,
+                Expanded(
+                  child: Text(
+                    termin.customerName,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: uToku ? FontWeight.w600 : FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: _kolonaUsluga,
-                child: Text(
-                  opis.usluga ?? '—',
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AdminColors.textSecondary,
+                SizedBox(
+                  width: _kolonaUsluga,
+                  child: Text(
+                    opis.usluga ?? '—',
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AdminColors.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: _kolonaMajstor,
-                child: Text(
-                  // Prazno, ne „—": termin bez radnika znači „bilo ko", a crtica se čita
-                  // kao nedostajući podatak.
-                  opis.majstor ?? 'bilo ko',
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AdminColors.textSecondary,
+                SizedBox(
+                  width: _kolonaMajstor,
+                  child: Text(
+                    // Prazno, ne „—": termin bez radnika znači „bilo ko", a crtica se čita
+                    // kao nedostajući podatak.
+                    opis.majstor ?? 'bilo ko',
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AdminColors.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: _kolonaStatus,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppointmentStatusPill(
-                    status: termin.status,
-                    uToku: uToku,
+                SizedBox(
+                  width: _kolonaStatus,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AppointmentStatusPill(
+                      status: termin.status,
+                      uToku: uToku,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -849,6 +852,8 @@ class _Telefon extends ConsumerWidget {
                                   radnici: radnici,
                                 ),
                                 uToku: terminUToku(termin, sada),
+                                onTap: () =>
+                                    context.go('/appointments/${termin.id}'),
                               ),
                             ),
                         ],

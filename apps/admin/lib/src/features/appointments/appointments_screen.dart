@@ -404,6 +404,7 @@ class _Lista extends ConsumerWidget {
               datum: zahtjevi
                   ? naslovDanaZaDatum(termin.date).toLowerCase()
                   : null,
+              onTap: () => context.go('/appointments/${termin.id}'),
               podnozje: AppointmentActionsBar(termin: termin),
             );
           },

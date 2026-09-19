@@ -73,6 +73,11 @@ Future<void> main() async {
         adminSalonProvider.overrideWith((ref) async => _salon),
         adminServicesProvider.overrideWith((ref) async => _usluge),
         adminEmployeesProvider.overrideWith((ref) async => _radnici),
+        // Detalj se otvara tapom na termin; bez ovoga bi demo pokazao stanje greške, jer
+        // `terminProvider` ide u bazu.
+        terminProvider.overrideWith(
+          (ref, id) async => _termini.where((t) => t.id == id).firstOrNull,
+        ),
         zahtjeviProvider.overrideWith(
           (ref) async => _termini
               .where((t) => t.status == AppointmentStatus.pending)
@@ -147,6 +152,10 @@ Appointment _termin(String ime, int sat, int minuta, AppointmentStatus status) {
     employeeId: sat.isEven ? 'demo-emir' : 'demo-vedad',
     customerId: 'demo-klijent',
     customerName: ime,
+    customerPhone: '061 552 104',
+    customerNote: ime.startsWith('Tarik')
+        ? 'Sa strane 1, gore makazama. Ne kratiti brkove.'
+        : null,
     date: LocalDate(sada.year, sada.month, sada.day),
     startTime: LocalTime(sat, minuta),
     endTime: LocalTime(minuta >= 20 ? sat + 1 : sat, (minuta + 40) % 60),

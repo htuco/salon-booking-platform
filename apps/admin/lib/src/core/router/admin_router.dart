@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/appointments/appointments_providers.dart';
+import '../../features/appointments/appointment_detail_screen.dart';
 import '../../features/appointments/appointments_screen.dart';
 import '../../features/appointments/new_appointment_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -77,6 +78,14 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.appointmentNew.name,
         builder: (context, state) => const NewAppointmentScreen(),
       ),
+      // Detalj termina stoji **poslije** `/appointments/new`, v. komentar iznad.
+      GoRoute(
+        path: AdminRoute.appointmentDetails.path,
+        name: AdminRoute.appointmentDetails.name,
+        builder: (context, state) => AppointmentDetailScreen(
+          appointmentId: state.pathParameters['id'] ?? '',
+        ),
+      ),
       GoRoute(
         path: AdminRoute.more.path,
         name: AdminRoute.more.name,
@@ -117,6 +126,8 @@ const _napisane = {
   AdminRoute.appointments,
   // Task 24.
   AdminRoute.appointmentNew,
+  // Task 30.
+  AdminRoute.appointmentDetails,
   // Task 29.
   AdminRoute.more,
 };
