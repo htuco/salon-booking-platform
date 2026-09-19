@@ -1,72 +1,44 @@
 # Trenutni task: 29 — Responsive shell: desktop sidebar i mobilna navigacija
 
 Puni task: [`tasks/sprint-3/29-responsive-shell.md`](sprint-3/29-responsive-shell.md)
-**U toku** · Grana: `feat/admin-responsive-shell` · Učitan: 2026-09-19
+**Gotov** · Grana: `feat/admin-responsive-shell` · Zadnji rad: 2026-09-19
 
 ## Status
 
-U toku. Zavisnost [28](sprint-3/28-admin-tema-i-tipografija.md) je spojena, pa mjere ljuske već
-postoje kao tokeni i ne mjere se ponovo.
+Kod je gotov i dokazan — 85 admin testova, čista analiza, i obje ljuske viđene u Chromiumu.
+Ostaje spajanje [PR-a #51](https://github.com/htuco/salon-booking-platform/pull/51) i zeleni CI.
 
-Danas `AdminScaffold` crta **istu ljusku na svakoj širini**: Material `AppBar` plus `NavigationBar`
-sa **dvije** ćelije (Pregled, Termini). Nema breakpointa, nema sidebara, i dvije od četiri tražene
-ćelije ne postoje.
+Puni nalazi — šta je mjerenje canvasa oborilo, koja je odluka svjesno obrnuta i koju je grešku
+našao browser — stoje u `## Status` bloku samog taska i u
+[`tasks/sprint-3/README.md`](sprint-3/README.md). Ne prepisuju se ovdje.
 
 ## Ciljevi
 
-- [ ] Breakpoint u `core/widgets/` — ispod njega donja navigacija, iznad sidebar; desktop se ne skalira
-- [ ] Desktop grana: sidebar `AdminSize.sidebarWidth` (236), top bar `AdminSize.topBarHeight` (66),
-      sadržaj na radnoj površini sa `AdminSpacing.gutterDesktop` (24)
-- [ ] Mobilna grana: **četiri** ćelije — Danas · Kalendar · Zahtjevi · Još — i gutter
-      `AdminSpacing.gutterMobile` (20)
-- [ ] „Zahtjevi" dobije **svoju adresu**, jer danas nije ruta nego stanje providera (v. Napomene)
-- [ ] „Još" (`3t`) sa ulazima u klijente, usluge, osoblje, radno vrijeme i postavke —
-      `AdminRoute.clients` danas **ne postoji** i mora nastati bar kao placeholder
-- [ ] Obje grane čitaju **istu listu ruta**; nema dva stabla ekrana
-- [ ] `AdminScaffold` ostaje jedini nosilac navigacije, a `aktivna` se i dalje prosljeđuje iz ekrana
-- [ ] Widget test nad **istim** ekranom na 1440×900 i 402×874
+- [x] Breakpoint u `core/widgets/` — ispod njega donja navigacija, iznad sidebar
+- [x] Desktop: sidebar 236, top bar 66, radna površina sa gutterom **28** (bio 24, canvas kaže 28)
+- [x] Telefon: četiri ćelije — Danas · Kalendar · Zahtjevi · Još — i gutter 20
+- [x] „Zahtjevi" imaju adresu: `/appointments?status=pending`, preživi refresh i „nazad"
+- [x] „Još" (`3t`) sa svih pet modula; `AdminRoute.clients` i `.more` nastali i upisani u `docs/01 §12`
+- [x] Obje grane čitaju istu listu ruta
+- [x] `AdminScaffold` je jedini nosilac navigacije — uključujući placeholder module, što je bila greška
+- [x] Widget test nad istim ekranom na 1440×900 i 402×874
+- [ ] PR spojen i CI zelen
 
 ## Napomene
 
-- **Zavisnost je namirena, ali 28 je i dalje 🟡.** Ostatak (dashboard i lista termina nisu viđeni na
-  ekranu, jer nema Dockera ni `supabase` CLI-ja) ne blokira ovaj task — shell se dokazuje widget
-  testovima na dvije širine, ne živim stackom.
-- **`AdminScaffold` i `aktivna` već postoje i već su ispravni.** Peta DoD stavka nije posao nego
-  zabrana regresije: komentar u `admin_scaffold.dart` već objašnjava zašto se ruta ne čita iz
-  `GoRouterState`. Ovdje se ništa ne „popravlja" — samo se ne kvari.
-- **„Zahtjevi" danas nije ruta nego stanje providera, i to je riješeno kao query parametar.**
-  Dashboard kartica zove `postaviStatus(AppointmentStatus.pending)` pa navigira na `/appointments`.
-  Navigacijska ćelija koja radi isto puca na webu: refresh i „nazad" vrate nefiltriranu listu, a URL
-  ne opisuje šta se vidi. Odluka je `/appointments?status=pending`, **ne zasebna ruta** — canvas
-  crta „Zahtjeve" kao filtriranu listu istih termina, a zasebna ruta bi ostavila `/appointments` bez
-  ijednog ulaza iz navigacije, jer handoff nema ćeliju „Termini" (v. sljedeća napomena).
-- **Handoff nema ćeliju „Termini", a `/appointments` ne smije ostati bez ulaza.** Izmjereno iz
-  `canvas/Salon OS Admin.dc.html`: sidebar (`3b`) nosi **osam** stavki — Danas, Kalendar, Zahtjevi,
-  Klijenti, Usluge, Osoblje, Radno vrijeme, Postavke — a donja navigacija (`3k`, `3t`) **četiri** —
-  Danas, Kalendar, Zahtjevi, Još. Puna lista termina se ne pojavljuje ni u jednoj. Zato „Zahtjevi"
-  vodi na `/appointments?status=pending`: ista ruta, a postojeća filter traka na ekranu vraća na
-  „sve", pa nijedan ekran ne ostaje bez ulaza.
-- **Brojač uz „Zahtjeve" je dio ljuske, ne ekrana.** Canvas ga crta u sidebaru i u donjoj navigaciji
-  (`4`), `pendingCountProvider` već postoji. Ulazi u ovaj task jer živi u navigaciji; izgled kartica
-  i lista koje ga troše pripada [30](sprint-3/30-postojeci-ekrani-na-handoff.md).
-- **Iz sidebara namjerno izostaju „6 lokacija", „‹ Nazad na mrežu" i biranje lokacije `▾`.** To je
-  `3a`, koji `SPEC.md` izričito stavlja izvan sprinta: traži multi-location RBAC, a prikaz u
-  prototipu nije dozvola za client-side izbor salona (ADR-0003).
-- **`AdminRoute` nema `clients`.** `3e`/`3o` piše task [35](sprint-3/35-klijenti-i-profil.md), ali
-  DoD ovog taska traži ulaz u „Još". Ruta mora nastati sada kao placeholder, inače ćelija nema gdje
-  da vodi. Ostalih pet (`calendar`, `services`, `employees`, `workingHours`, `settings`) već stoje
-  kao placeholder rute.
-- **Komentar u `_AdminNavigacija` treba prepisati, ne obrisati.** Danas tvrdi suprotno od koraka 3:
-  „Ćelija koja vodi na placeholder je gora od ćelije koje nema." Task 29 tu odluku svjesno obrće —
-  neka to i piše, inače sljedeći čitalac vidi samo da je pravilo nestalo.
-- **Login i ručni unos imaju vlastiti `Scaffold`**, ne `AdminScaffold` — i tako treba da ostane:
-  prijava nema navigaciju, a ručni unos je modalni tok.
-- **Admin je i web build.** Router namjerno koristi `redirect`, ne `initialLocation`, da bookmark na
-  `/employees` ne završi na loginu sa pogrešnim URL-om. Ljuska to ne smije pokvariti.
-- **Boja ne dolazi iz `tenant.yaml`.** Admin nije brandiran — plava je identitet Salon OS-a. Ovo je
-  obrnuto od pravila za `apps/client` i najlakše se prekrši navikom.
+- **`apps/admin/lib/demo_main.dart` je nov i koristiće ga taskovi 30–36.** Admin ekran se ne vidi
+  bez prijave, a lokalnog stacka nema; ovo je isti obrazac kao klijentski `demo_main.dart`.
+  Pokretanje: `flutter run -d chrome -t lib/demo_main.dart` iz `apps/admin`.
+- **Ljuska nije viđena sa pravom prijavom ni pravim podacima.** Hostovani projekat iz `.env.live`
+  **sada ima šemu** (`/rest/v1/salons` → 200, promjena u odnosu na status taska 27), ali nije bilo
+  naloga za prijavu. Kad ga bude: `tool/run_live_demo.sh admin`.
+- **Sljedeći task je [30](sprint-3/30-postojeci-ekrani-na-handoff.md)**, i nosi tri stvari koje su
+  ovdje ostale vidljive: breadcrumb `Vitez / Danas` (traži ime salona, kojeg `StaffMember` nema),
+  akcije desktop top bara, i naslov „Danas" umjesto „Pregled".
 - **`gh` nije na PATH-u** — `export PATH="$PATH:/c/Program Files/GitHub CLI"`.
-- Procjena iz task fajla (1–2 dana) ostaje; nalazi dodaju dvije rute i jednu odluku, ne novi sloj.
+- **`dart run melos run format` pada lokalno** na zastarjelom `apps/client/build/` folderu
+  (`PathNotFoundException`), ne na kodu. `dart format` nad `lib` i `test` je čist; CI iz svježeg
+  checkouta to ne vidi.
 
 ## Istorija
 
