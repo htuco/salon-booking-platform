@@ -245,7 +245,38 @@ adresnoj traci ostane tačan, a otvori se početna. Provjerava se nad **gotovim*
 cd apps/client && flutter build web --dart-define=SALON_ID=<uuid>
 # posluži build/web uz SPA fallback (sve nepoznato -> index.html), pa u browseru otvori
 # /book/slot direktno i potvrdi da se vidi taj ekran, ne početna
+python tool/serve_web_demo.py apps/client/build/web 4320
 ```
+
+`tool/serve_web_demo.py` postoji zbog dvije stvari koje `python -m http.server` ne radi:
+**SPA fallback** (bez njega `/appointments?status=pending` vraća 404, a upravo se tu provjerava
+da filter preživi refresh) i **vezivanje na `0.0.0.0`**, pa se isti build otvori i sa telefona na
+istoj mreži. Skripta ispiše obje adrese. Na Windowsu prvi pokušaj sa telefona zna pasti na
+Firewall — port se mora dozvoliti.
+
+Admin protiv **hostovanog** projekta se gradi sa vrijednostima iz ignorisanog `.env.live`:
+
+```sh
+set -a && source .env.live && set +a
+cd apps/admin && flutter build web -t lib/main.dart --output=build/live-admin   --dart-define="SUPABASE_URL=$SUPABASE_URL" --dart-define="SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+python ../../tool/serve_web_demo.py build/live-admin 4320
+```
+
+Prijava je seed nalog: `admin@barberstudiovitez.test` / `admin123456` (v. `supabase/seed.sql`).
+**Travnik admin na hostovanom projektu ne postoji** — `POST /auth/v1/token` vraća 400, pa se
+„druga prijava, drugi salon" tamo još ne može odigrati.
+
+### Screenshot bez playwrighta
+
+Kad MCP playwright ne radi, snimak pravi instalirani Chrome:
+
+```sh
+chrome --headless=new --disable-gpu --hide-scrollbars --virtual-time-budget=15000   --window-size=1440,900 --screenshot=out.png http://localhost:4320/
+```
+
+**Zamka:** Chrome ima minimalnu širinu prozora oko 500 px, pa `--window-size=402,874` daje
+snimak u kojem sadržaj *izgleda* kao da izlazi van ekrana, a ne izlazi. Telefonska širina se
+dobija skaliranjem: `--force-device-scale-factor=1.25 --window-size=503,1093` → CSS 402×874.
 
 ### `tool/build_tenant.sh` — jedina ulazna tačka u build
 
