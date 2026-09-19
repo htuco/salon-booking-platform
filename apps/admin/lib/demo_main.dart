@@ -59,7 +59,13 @@ Future<void> main() async {
         currentStaffProvider.overrideWith(
           (ref) => Stream<StaffMember?>.value(_vlasnik),
         ),
-        pendingCountProvider.overrideWith((ref) async => 4),
+        // Brojač prati demo listu, ne izmišljenu četvorku: snimak na kojem sidebar kaže
+        // „4" a lista pokaže jedan zahtjev izgleda kao greška u brojaču.
+        pendingCountProvider.overrideWith(
+          (ref) async => _termini
+              .where((t) => t.status == AppointmentStatus.pending)
+              .length,
+        ),
         // Ekran „Danas" od taska 30 piše uslugu, majstora i cijenu uz termin, a ime salona
         // u breadcrumb — sve troje dolazi iz drugih tabela, pa demo mora napuniti i njih.
         // Bez toga bi snimak pokazao raspored bez ijednog opisa, što izgleda kao greška u
@@ -97,6 +103,7 @@ final List<Appointment> _termini = [
   _termin('Tarik Selimović', 13, 0, AppointmentStatus.confirmed),
   _termin('Haris Delić', 14, 20, AppointmentStatus.confirmed),
   _termin('Nedim Hodžić', 15, 0, AppointmentStatus.pending),
+  _termin('Almir Šahić', 17, 30, AppointmentStatus.pending),
   _termin('Faruk Begić', 16, 10, AppointmentStatus.confirmed),
   _termin('Kenan Zukić', 19, 20, AppointmentStatus.confirmed),
 ];

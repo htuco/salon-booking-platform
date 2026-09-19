@@ -106,15 +106,20 @@ class AppointmentCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      datum == null
-                          ? vrijemeHhMm(termin.startTime)
-                          : '$datum · ${vrijemeHhMm(termin.startTime)}',
-                      style: AdminText.timeLarge.copyWith(
-                        color: AdminColors.textSecondary,
+                    // `Flexible`, ne goli `Text`: uz datum („sutra · 10:00") i dugu
+                    // statusnu oznaku red je na 402 px izlazio 48 px van kartice.
+                    Flexible(
+                      child: Text(
+                        datum == null
+                            ? vrijemeHhMm(termin.startTime)
+                            : '$datum · ${vrijemeHhMm(termin.startTime)}',
+                        overflow: TextOverflow.ellipsis,
+                        style: AdminText.timeLarge.copyWith(
+                          color: AdminColors.textSecondary,
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: AdminSpacing.sm),
                     AppointmentStatusPill(status: termin.status, uToku: uToku),
                   ],
                 ),

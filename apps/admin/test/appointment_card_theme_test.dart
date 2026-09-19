@@ -9,7 +9,7 @@
 library;
 
 import 'package:admin/src/core/theme/theme.dart';
-import 'package:admin/src/features/appointments/appointment_tile.dart';
+import 'package:admin/src/features/appointments/appointment_card.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,7 +42,7 @@ void main() {
   testWidgets('vrijeme termina je JetBrains Mono, sa tabularnim ciframa', (
     tester,
   ) async {
-    await tester.pumpWidget(_uTemi(AppointmentTile(termin: _termin())));
+    await tester.pumpWidget(_uTemi(AppointmentCard(termin: _termin())));
 
     final stil = _stilZa(tester, '13:00');
     expect(stil.fontFamily, kAdminMonoFamily);
@@ -53,7 +53,7 @@ void main() {
   testWidgets('statusna oznaka je Space Grotesk i nosi tekst, ne samo boju', (
     tester,
   ) async {
-    await tester.pumpWidget(_uTemi(AppointmentTile(termin: _termin())));
+    await tester.pumpWidget(_uTemi(AppointmentCard(termin: _termin())));
 
     // WCAG 1.4.1: vlasnik koji ne razlikuje zelenu od narandžaste mora **pročitati**
     // status. Oznaka bez teksta prolazi svaki drugi test u ovom fajlu.
@@ -67,7 +67,7 @@ void main() {
   testWidgets('potvrđen termin je zelen, ne plav', (tester) async {
     // Ranija verzija je uzimala `primaryContainer`, pa je „potvrđeno" bilo plavo — a
     // plava je u ovom sistemu akcent, ne status. Handoff ga crta zeleno.
-    await tester.pumpWidget(_uTemi(AppointmentTile(termin: _termin())));
+    await tester.pumpWidget(_uTemi(AppointmentCard(termin: _termin())));
 
     final pilula = tester.widget<Container>(
       find
@@ -99,14 +99,14 @@ void main() {
 
     await tester.pumpWidget(
       _uTemi(
-        AppointmentTile(termin: _termin(status: AppointmentStatus.cancelled)),
+        AppointmentCard(termin: _termin(status: AppointmentStatus.cancelled)),
       ),
     );
     final otkazan = podloga(tester);
 
     await tester.pumpWidget(
       _uTemi(
-        AppointmentTile(termin: _termin(status: AppointmentStatus.noShow)),
+        AppointmentCard(termin: _termin(status: AppointmentStatus.noShow)),
       ),
     );
     final nijeDosao = podloga(tester);
