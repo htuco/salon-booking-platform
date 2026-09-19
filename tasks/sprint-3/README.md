@@ -10,7 +10,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | # | Task | Prikazi | Blokira | Procjena |
 |---|---|---|---|---|
 | [28](28-admin-tema-i-tipografija.md) 🟡 | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
-| [29](29-responsive-shell.md) | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
+| [29](29-responsive-shell.md) ✅ | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
 | [30](30-postojeci-ekrani-na-handoff.md) | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) | Kalendar dana | `3c` `3l` | — | 2–3 dana |
 | [32](32-usluge-i-cjenovnik.md) | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
@@ -100,3 +100,46 @@ ovdje — admin se razvija protiv lokalnog stacka.
 >
 > Sljedeći task je [29](29-responsive-shell.md); mjere ljuske (sidebar 236, top bar 66, gutter 20)
 > već stoje u `AdminSize`/`AdminSpacing` da ih ne prepisuje kod sebe.
+
+> **29 — Responsive shell (✅, 2026-09-19).** `AdminScaffold` na 1440 crta tamni sidebar od 236 px
+> i top bar od 66, na 402 četiri ćelije; prelaz na **840**, jer canvas taj broj ne daje a tablet
+> „nije posebno nacrtan". Obje ljuske čitaju `kAdminDestinations` — prve tri su ćelije telefona,
+> ostalih pet rep iste liste iza „Još".
+>
+> **Mjerenje canvasa je oborilo token iz taska 28:** `AdminSpacing.gutterDesktop` je bio 24, a
+> canvas crta **28** — `padding:28px` u svih sedam desktop prikaza u opsegu, `padding:24px`
+> nijednom.
+>
+> **Handoff nema ćeliju „Termini"**, pa „Zahtjevi" vode na `/appointments?status=pending`, a ne na
+> vlastitu rutu — zasebna ruta bi punu listu ostavila bez ijednog ulaza iz navigacije. Time je
+> popravljena i web greška: kartica na dashboardu je mijenjala stanje providera pa navigirala, pa
+> su refresh i „nazad" vraćali nefiltriranu listu. Dodane `/clients` i `/more`, i upisane u
+> `docs/01 §12`.
+>
+> **Ranija odluka je svjesno obrnuta** i tako zapisana: „ćelija koja vodi na placeholder je gora od
+> ćelije koje nema" više ne vrijedi, jer `3b` crta svih osam modula.
+>
+> **Greška koju je našao browser, a testovi nisu mogli:** `AdminPlaceholderScreen` je imao vlastiti
+> `Scaffold`, pa je `/clients` otvoren iz „Još" bio slijepa ulica bez ikakve navigacije. Widget test
+> to ne vidi jer diže jedan ekran, a ovo je svojstvo prelaza između dva. **Usput ispravljen i jedan
+> bezvrijedan test** — provjera guttera je poredila token sam sa sobom i prolazila nad pogrešnom
+> vrijednošću.
+>
+> Dokazano: **85 admin testova** (bilo 70), 582 ukupno, čista analiza; svaki novi test provjeren da
+> **može pasti**; uživo u Chromiumu na obje širine, uključujući refresh na
+> `/appointments?status=pending` — `docs/screenshots/task-29-admin-*.png`.
+>
+> **Ostalo za sljedećeg:** snimci su iz novog `apps/admin/lib/demo_main.dart`, ne iz prave prijave —
+> nema Dockera ni `supabase` CLI-ja. Hostovani projekat iz `.env.live` **sada ima šemu**
+> (`/rest/v1/salons` → 200), ali nije bilo naloga; kad ga bude, `tool/run_live_demo.sh admin`.
+> Breadcrumb `Vitez / Danas`, akcije top bara i naslov „Danas" umjesto „Pregled" su copy i akcije
+> ekrana — task [30](30-postojeci-ekrani-na-handoff.md).
+>
+> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51) — CI zelen, nije draft,
+> **otvoren i čeka spajanje**.
+>
+> Sljedeći task je [30](30-postojeci-ekrani-na-handoff.md). Tri stvari koje mu je 29 ostavio
+> vidljive na snimcima: breadcrumb `Vitez / Danas` (traži ime salona, kojeg `StaffMember` nema),
+> akcije desktop top bara („Pretraži klijenta", „Blokiraj termin", „+ Novi termin"), i naslov
+> dashboarda „Pregled" dok ga navigacija zove „Danas". Za vizuelni dokaz koristi
+> `apps/admin/lib/demo_main.dart` — `flutter run -d chrome -t lib/demo_main.dart` iz `apps/admin`.

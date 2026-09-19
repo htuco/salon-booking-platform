@@ -50,10 +50,29 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
   `prototype/admin/`. Zabrana uvoza više nije samo dogovor: `no_hardcoded_colors_test.dart` pada
   ako se `core_ui` pojavi u uvozu ili u `pubspec.yaml`-u admina.
 - **`apps/*`** — feature-first folderi (`lib/src/features/<feature>/`) plus `lib/src/core/`
-  (`env`, `router`, `theme`) i `lib/src/l10n/`. Feature folder drži ekran, njegove privatne
+  (`env`, `router`, `theme`, u adminu i `navigation` i `widgets`) i `lib/src/l10n/`. Feature folder drži ekran, njegove privatne
   widgete u `widgets/` i logiku koja ne pripada ni domenu ni UI-ju — formatiranje cijene i
   vremena (zna jezik), izračun koji bi se inače sakrio u `build`. `features/home/` je prvi takav
   i uzor za ostale.
+
+### Admin ljuska: jedna lista odredišta, dvije ljuske
+
+Od taska 29 `apps/admin/lib/src/core/navigation/admin_destinations.dart` drži **jedinu** listu
+navigacije. Iz nje se crta i tamni sidebar na desktopu i donja navigacija na telefonu; prelaz je u
+`AdminScaffold` na `AdminBreakpoint.desktop` (840). Prve tri stavke su ćelije telefona, ostalih pet
+su rep koji stoji iza „Još" (`/more`) — **rep iste liste, ne druga lista**, pa modul dodan u
+navigaciju ne može ostati dostupan samo na jednoj širini.
+
+Dvije posljedice koje se lako prekrše:
+
+- **Svaki admin ekran stoji u `AdminScaffold`**, uključujući placeholder rute. Vlastiti `Scaffold`
+  znači ekran bez navigacije, a otkad navigacija nudi i nenapisane module, to je slijepa ulica.
+- **Ekran i dalje prosljeđuje `aktivna`**, ne čita rutu iz `GoRouterState`. Kad ekranu treba nešto
+  iz adrese — kao filter statusa na `/appointments?status=pending` — čita ga **route builder** i
+  predaje kao argument konstruktora. Tako ekran ostaje podiziv u widget testu bez pravog routera.
+
+Ovo je folder navigacije, ne sloj: smije uvesti feature providere (brojač zahtjeva), isto kao što
+router uvozi svaki feature ekran.
 
 Poštuj smjer zavisnosti gore: `core_domain` ne smije uvesti `core_api`, a `core_ui` ne smije uvesti
 nijedan repozitorij.

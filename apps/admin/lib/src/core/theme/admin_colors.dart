@@ -84,8 +84,22 @@ abstract final class AdminColors {
   /// `#FAE9E5` — tinta destruktivnog: podloga upozorenja i oznake otkazanog termina.
   static const Color destructiveTint = Color(0xFFFAE9E5);
 
-  /// `#1E2429` — izdignuti red u sidebaru (aktivna stavka navigacije).
+  /// `#1E2429` — izdignuti red u sidebaru (kartica salona iznad navigacije).
   static const Color sidebarRaised = Color(0xFF1E2429);
+
+  /// `#232A2F` — podloga **aktivne stavke** navigacije u sidebaru.
+  ///
+  /// Nije isto što i [sidebarRaised], iako su susjedne nijanse: canvas `3b` crta karticu
+  /// salona na `#1e2429`, a izabranu stavku na `#232a2f`, jedan korak svjetlije. Ko ih
+  /// spoji u jedan token, dobije sidebar u kojem izabrana stavka izgleda kao još jedna
+  /// kartica.
+  static const Color sidebarSelected = Color(0xFF232A2F);
+
+  /// `#242B30` — linija iznad podnožja sidebara (ime prijavljenog).
+  static const Color sidebarDivider = Color(0xFF242B30);
+
+  /// `#C7CED2` — kosa crta u breadcrumbu top bara (`Vitez / Danas`).
+  static const Color breadcrumbSeparator = Color(0xFFC7CED2);
 
   /// `#98A2A9` — neaktivna stavka sidebara. 6,86:1 na [ink].
   static const Color sidebarText = Color(0xFF98A2A9);

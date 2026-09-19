@@ -450,13 +450,20 @@ servira i tu stranicu.
 | Detalji termina (bottom sheet) | `/appointments/:id` | Must |
 | Dodaj termin | `/appointments/new` | Must |
 | Kalendar (dnevni) | `/calendar` | Should |
+| Klijenti | `/clients` | Should |
 | Usluge | `/services` | Must |
 | Radnici | `/employees` | Must |
 | Radno vrijeme | `/working-hours` | Should |
 | Blokiraj vrijeme (modal) | `/calendar/block` | Should |
 | Postavke | `/settings` | Should |
+| Još (ulaz u module izvan četiri ćelije) | `/more` | Should |
 | O aplikaciji | `/about-app` | Should |
 | Pravila korištenja | `/terms` | Must |
+
+**Dvije rute dodane u tasku 29, iz admin handoffa.** `/clients` nosi prikaze `3e`/`3o`, koje ova
+tabela nije imala iako `prototype/admin/SPEC.md` klijente broji kao modul. `/more` je prikaz `3t` i
+postoji zbog oblika navigacije, ne zbog novog sadržaja: sidebar na desktopu nosi osam modula, a
+donja navigacija telefona ima četiri ćelije, pa ostalih pet stoji iza „Još".
 
 ### Super admin (Next.js konzola — `web/app/super-admin`)
 

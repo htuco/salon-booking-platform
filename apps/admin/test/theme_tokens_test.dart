@@ -23,6 +23,9 @@ void main() {
       expect(AdminSize.sidebarWidth, 236);
       expect(AdminSize.topBarHeight, 66);
       expect(AdminSpacing.gutterMobile, 20);
+      // 28, ne 24: `padding:28px` je u svih sedam desktop prikaza u opsegu, a
+      // `padding:24px` se u canvasu ne javlja nijednom.
+      expect(AdminSpacing.gutterDesktop, 28);
     });
 
     test('tema koristi osnovni radius na kartici', () {

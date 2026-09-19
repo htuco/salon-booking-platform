@@ -101,9 +101,18 @@ crtež dopušta:
 ### Raspored i komponente
 
 - Desktop koristi sidebar od približno 236 px, top bar od 60–66 px i kartice na svijetloj radnoj
-  površini.
+  površini. **Horizontalni gutter radne površine je 28 px** (izmjereno u tasku 29: `padding:28px`
+  u svih sedam desktop prikaza u opsegu i `padding:0 28px` u top barovima; `padding:24px` se ne
+  javlja nijednom). 24 u handoffu postoji, ali kao razmak između sekcija.
 - Mobilni prikazi koriste 20 px horizontalni gutter, velike touch mete i donju navigaciju:
   **Danas · Kalendar · Zahtjevi · Još**.
+
+**Sastav navigacije, izmjeren u tasku 29.** Sidebar (`3b`) nosi **osam** stavki — Danas, Kalendar,
+Zahtjevi, Klijenti, Usluge, Osoblje, Radno vrijeme, Postavke — a donja navigacija (`3k`, `3t`)
+**četiri**. Posljedica koju tabela prikaza ne pokazuje: **puna lista termina nema svoju ćeliju ni u
+jednoj navigaciji**. „Zahtjevi" su zato filtrirana ista lista (`/appointments?status=pending`), a ne
+zaseban ekran; zasebna ruta bi punu listu ostavila bez ijednog ulaza iz navigacije. Uz „Zahtjeve"
+obje ljuske crtaju brojač, pa je i on dio ljuske, ne ekrana.
 - Statusi moraju imati tekstualnu oznaku; boja nije jedini nosač značenja.
 - Tabele na uskim širinama prelaze u kartice/liste. Horizontalno skalirani desktop nije prihvatljiv
   mobilni layout.

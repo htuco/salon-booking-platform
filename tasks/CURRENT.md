@@ -1,60 +1,46 @@
-# Trenutni task: 29 — Responsive shell: desktop sidebar i mobilna navigacija
+# Trenutni task
 
-Puni task: [`tasks/sprint-3/29-responsive-shell.md`](sprint-3/29-responsive-shell.md)
-**Nije počet** · Učitan: 2026-09-19
+Nijedan task nije učitan. Sljedeći na redu je
+[30 — Postojeći ekrani na handoff](sprint-3/30-postojeci-ekrani-na-handoff.md); učitaj ga sa
+`/task load 30`.
 
 ## Status
 
-Nije počet. Zavisnost [28](sprint-3/28-admin-tema-i-tipografija.md) je spojena u `main` (`61da040`),
-pa mjere ljuske već postoje kao tokeni i ne mjere se ponovo.
-
-Danas `AdminScaffold` crta **istu ljusku na svakoj širini**: Material `AppBar` plus `NavigationBar`
-sa **dvije** ćelije (Pregled, Termini). Nema breakpointa, nema sidebara, i dvije od četiri tražene
-ćelije ne postoje.
+Nema aktivnog taska.
 
 ## Ciljevi
 
-- [ ] Breakpoint u `core/widgets/` — ispod njega donja navigacija, iznad sidebar; desktop se ne skalira
-- [ ] Desktop grana: sidebar `AdminSize.sidebarWidth` (236), top bar `AdminSize.topBarHeight` (66),
-      sadržaj na radnoj površini sa `AdminSpacing.gutterDesktop` (24)
-- [ ] Mobilna grana: **četiri** ćelije — Danas · Kalendar · Zahtjevi · Još — i gutter
-      `AdminSpacing.gutterMobile` (20)
-- [ ] „Zahtjevi" dobije **svoju adresu**, jer danas nije ruta nego stanje providera (v. Napomene)
-- [ ] „Još" (`3t`) sa ulazima u klijente, usluge, osoblje, radno vrijeme i postavke —
-      `AdminRoute.clients` danas **ne postoji** i mora nastati bar kao placeholder
-- [ ] Obje grane čitaju **istu listu ruta**; nema dva stabla ekrana
-- [ ] `AdminScaffold` ostaje jedini nosilac navigacije, a `aktivna` se i dalje prosljeđuje iz ekrana
-- [ ] Widget test nad **istim** ekranom na 1440×900 i 402×874
+—
 
 ## Napomene
 
-- **Zavisnost je namirena, ali 28 je i dalje 🟡.** Ostatak (dashboard i lista termina nisu viđeni na
-  ekranu, jer nema Dockera ni `supabase` CLI-ja) ne blokira ovaj task — shell se dokazuje widget
-  testovima na dvije širine, ne živim stackom.
-- **`AdminScaffold` i `aktivna` već postoje i već su ispravni.** Peta DoD stavka nije posao nego
-  zabrana regresije: komentar u `admin_scaffold.dart` već objašnjava zašto se ruta ne čita iz
-  `GoRouterState`. Ovdje se ništa ne „popravlja" — samo se ne kvari.
-- **„Zahtjevi" danas nije ruta nego stanje providera.** Dashboard kartica zove
-  `postaviStatus(AppointmentStatus.pending)` i vodi na `/appointments`. Navigacijska ćelija koja
-  radi isto puca na webu: refresh i „nazad" vrate nefiltriranu listu, a URL ne opisuje šta se vidi.
-  Prije koda treba odluka — query parametar na `/appointments` ili zasebna ruta.
-- **`AdminRoute` nema `clients`.** `3e`/`3o` piše task [35](sprint-3/35-klijenti-i-profil.md), ali
-  DoD ovog taska traži ulaz u „Još". Ruta mora nastati sada kao placeholder, inače ćelija nema gdje
-  da vodi. Ostalih pet (`calendar`, `services`, `employees`, `workingHours`, `settings`) već stoje
-  kao placeholder rute.
-- **Komentar u `_AdminNavigacija` treba prepisati, ne obrisati.** Danas tvrdi suprotno od koraka 3:
-  „Ćelija koja vodi na placeholder je gora od ćelije koje nema." Task 29 tu odluku svjesno obrće —
-  neka to i piše, inače sljedeći čitalac vidi samo da je pravilo nestalo.
-- **Login i ručni unos imaju vlastiti `Scaffold`**, ne `AdminScaffold` — i tako treba da ostane:
-  prijava nema navigaciju, a ručni unos je modalni tok.
-- **Admin je i web build.** Router namjerno koristi `redirect`, ne `initialLocation`, da bookmark na
-  `/employees` ne završi na loginu sa pogrešnim URL-om. Ljuska to ne smije pokvariti.
-- **Boja ne dolazi iz `tenant.yaml`.** Admin nije brandiran — plava je identitet Salon OS-a. Ovo je
-  obrnuto od pravila za `apps/client` i najlakše se prekrši navikom.
-- **`gh` nije na PATH-u** — `export PATH="$PATH:/c/Program Files/GitHub CLI"`.
-- Procjena iz task fajla (1–2 dana) ostaje; nalazi dodaju dvije rute i jednu odluku, ne novi sloj.
+—
 
 ## Istorija
+
+- **29 — Responsive shell: desktop sidebar i mobilna navigacija** (2026-09-19, ✅) — `AdminScaffold`
+  na 1440 crta tamni sidebar od 236 px i top bar od 66, na 402 četiri ćelije; prelaz na **840**, jer
+  canvas taj broj ne daje a `SPEC.md` kaže da tablet „nije posebno nacrtan". Obje ljuske čitaju
+  **jednu** listu (`kAdminDestinations`): prve tri su ćelije telefona, ostalih pet rep iza „Još", pa
+  modul dodan u navigaciju ne može ostati dostupan samo na jednoj širini. **Mjerenje canvasa je
+  oborilo token iz taska 28** — `gutterDesktop` je bio 24, a `padding:28px` stoji u svih sedam
+  desktop prikaza u opsegu dok se `padding:24px` ne javlja nijednom. **Handoff nema ćeliju
+  „Termini"**, pa „Zahtjevi" vode na `/appointments?status=pending` a ne na vlastitu rutu: zasebna
+  ruta bi punu listu ostavila bez ijednog ulaza iz navigacije. Time je popravljena i web greška —
+  kartica na dashboardu je mijenjala stanje providera pa navigirala, pa su refresh i „nazad"
+  vraćali nefiltriranu listu. Dodane `/clients` i `/more` i upisane u `docs/01 §12`, a ranija odluka
+  „ćelija koja vodi na placeholder je gora od ćelije koje nema" je **svjesno obrnuta** i tako
+  zapisana. **Greška koju je našao browser, a testovi nisu mogli:** `AdminPlaceholderScreen` je imao
+  vlastiti `Scaffold`, pa je `/clients` otvoren iz „Još" bio slijepa ulica bez ikakve navigacije —
+  widget test to ne vidi jer diže jedan ekran, a ovo je svojstvo prelaza između dva. **Usput
+  ispravljen i jedan bezvrijedan test:** provjera guttera je poredila token sam sa sobom i prolazila
+  nad pogrešnom vrijednošću. Dokazano: **85 admin testova** (bilo 70), **582 ukupno**, čista analiza,
+  svaki novi test provjeren da **može pasti** (osam prolaza), CI zelen, i obje ljuske uživo u
+  Chromiumu uključujući refresh na `?status=pending` — `docs/screenshots/task-29-admin-*.png`.
+  Ostaje 🟡 samo dokaz sa **pravom prijavom**: snimci su iz novog `apps/admin/lib/demo_main.dart`,
+  jer nema Dockera ni `supabase` CLI-ja; hostovani projekat iz `.env.live` sada ima šemu, ali nije
+  bilo naloga. [PR #51](https://github.com/htuco/salon-booking-platform/pull/51) — **otvoren, čeka
+  spajanje.**
 
 - **28 — Admin tema, tipografija i tokeni** (2026-09-19, 🟡) — `apps/admin/lib/src/core/theme/` je
   prestao biti `.gitkeep`: pet fajlova nose paletu, razmake, uglove, tipografiju i statusne tonove,

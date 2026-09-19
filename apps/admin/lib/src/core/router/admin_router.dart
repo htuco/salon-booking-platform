@@ -3,10 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/appointments/appointments_providers.dart';
 import '../../features/appointments/appointments_screen.dart';
 import '../../features/appointments/new_appointment_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/more/more_screen.dart';
 import '../../features/placeholder/admin_placeholder_screen.dart';
 
 /// Rute admin aplikacije, po `docs/01-mvp-spec.md` §12.
@@ -54,10 +56,16 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.dashboard.name,
         builder: (context, state) => const AdminDashboardScreen(),
       ),
+      // `?status=pending` je adresa „Zahtjeva" iz navigacije. Filter se čita **ovdje** i
+      // prosljeđuje ekranu kao argument, a ne u ekranu iz `GoRouterState`: ekran koji čita
+      // router se ne može podići u widget testu bez pravog `GoRouter`-a (v. `aktivna` u
+      // `admin_scaffold.dart`).
       GoRoute(
         path: AdminRoute.appointments.path,
         name: AdminRoute.appointments.name,
-        builder: (context, state) => const AdminAppointmentsScreen(),
+        builder: (context, state) => AdminAppointmentsScreen(
+          trazeniStatus: statusIzUpita(state.uri.queryParameters[kStatusUpit]),
+        ),
       ),
       // **Mora stajati prije `/appointments/:id`**, inače `go_router` pročita „new" kao
       // vrijednost parametra `id` i otvori detalje termina kojeg nema. Statički segment
@@ -69,8 +77,20 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.appointmentNew.name,
         builder: (context, state) => const NewAppointmentScreen(),
       ),
-      // Rute koje jos nemaju tijelo. Ostaju kao placeholderi da ulaz postoji kad task 24 i
-      // Sprint 3 dodju do njih; donja navigacija ih namjerno **ne** nudi.
+      GoRoute(
+        path: AdminRoute.more.path,
+        name: AdminRoute.more.name,
+        builder: (context, state) => const AdminMoreScreen(),
+      ),
+      // Rute koje jos nemaju tijelo. Ostaju kao placeholderi da ulaz postoji kad ih
+      // Sprint 3 napise.
+      //
+      // **Task 29 je ovdje obrnuo raniju odluku.** Do njega je vrijedilo „celija koja vodi
+      // na placeholder je gora od celije koje nema", pa navigacija nije nudila nijednu
+      // nenapisanu rutu. Handoff trazi suprotno: sidebar `3b` crta svih osam modula, a
+      // `3t` ih na telefonu nabraja iza „Jos". Ljuska se zato pise nad punom listom, i
+      // placeholder je ono sto vlasnik vidi dok modul ne dobije ekran — vidljivo prazno
+      // mjesto umjesto nevidljivog.
       for (final route in AdminRoute.values)
         if (!_napisane.contains(route))
           GoRoute(
@@ -79,6 +99,7 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => AdminPlaceholderScreen(
               title: route.title,
               path: state.uri.path,
+              route: route,
             ),
           ),
     ],
@@ -96,6 +117,8 @@ const _napisane = {
   AdminRoute.appointments,
   // Task 24.
   AdminRoute.appointmentNew,
+  // Task 29.
+  AdminRoute.more,
 };
 
 /// Premoscuje Riverpod provider i `Listenable` koji `go_router` ocekuje.
@@ -114,10 +137,18 @@ enum AdminRoute {
   appointmentNew('/appointments/new', 'Dodaj termin'),
   calendar('/calendar', 'Kalendar'),
   calendarBlock('/calendar/block', 'Blokiraj vrijeme'),
+  clients('/clients', 'Klijenti'),
   services('/services', 'Usluge'),
   employees('/employees', 'Radnici'),
   workingHours('/working-hours', 'Radno vrijeme'),
-  settings('/settings', 'Postavke');
+  settings('/settings', 'Postavke'),
+
+  /// `3t` — ulaz u module koje donja navigacija ne nosi kao ćeliju.
+  ///
+  /// **Postoji samo zato što telefon ima četiri ćelije, a navigacija osam stavki.** Na
+  /// desktopu tih pet modula stoji u sidebaru, pa se do ovog ekrana ne dolazi iz
+  /// navigacije — ruta ostaje ispravna ako je neko otvori direktno.
+  more('/more', 'Još');
 
   const AdminRoute(this.path, this.title);
 

@@ -15,16 +15,51 @@ import 'appointments_providers.dart';
 /// **Piše se prije dashboarda**, kako task 23 nalaže: dashboard je sažetak ove liste. Da je
 /// išao prvi, upit za „današnje termine" bi se napisao dvaput — jednom sam svoj, pa opet kad
 /// lista donese filtere.
-class AdminAppointmentsScreen extends ConsumerWidget {
-  const AdminAppointmentsScreen({super.key});
+class AdminAppointmentsScreen extends ConsumerStatefulWidget {
+  const AdminAppointmentsScreen({this.trazeniStatus, super.key});
+
+  /// Status iz `?status=` u adresi, ili `null` za „svi".
+  ///
+  /// Dolazi iz **route buildera**, ne iz `GoRouterState` u ovom ekranu — v. komentar uz
+  /// rutu. Zahvaljujući tome ekran se i dalje diže u testu bez routera.
+  final AppointmentStatus? trazeniStatus;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminAppointmentsScreen> createState() =>
+      _AdminAppointmentsScreenState();
+}
+
+class _AdminAppointmentsScreenState
+    extends ConsumerState<AdminAppointmentsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Filter je app-scoped `Notifier`, a adresa je ono što korisnik vidi — kad se ekran
+    // otvori sa `?status=`, adresa je jača. Upis ide poslije prvog frame-a jer se provider
+    // ne smije mijenjati usred gradnje widgeta.
+    final trazeni = widget.trazeniStatus;
+    if (trazeni != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref
+            .read(appointmentsFilterProvider.notifier)
+            .postaviStatusTacno(trazeni);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final filter = ref.watch(appointmentsFilterProvider);
     final termini = ref.watch(filtriraniTerminiProvider);
 
     return AdminScaffold(
-      title: 'Termini',
+      // Naslov prati filter, jer ista ruta nosi dvije ćelije navigacije: „Zahtjevi" vode
+      // ovdje sa `?status=pending`. Ekran naslovljen „Termini" poslije tapa na „Zahtjeve"
+      // izgleda kao da je ćelija promašila.
+      title: filter.status == AppointmentStatus.pending
+          ? 'Zahtjevi'
+          : 'Termini',
       aktivna: AdminRoute.appointments,
       // Ručni unos je jedini ulaz u `/appointments/new` — bez njega ekran postoji ali se do
       // njega ne može doći iz aplikacije, što je rupa koju je task 17 već jednom našao sa
