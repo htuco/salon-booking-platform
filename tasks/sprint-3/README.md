@@ -11,7 +11,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 |---|---|---|---|---|
 | [28](28-admin-tema-i-tipografija.md) 🟡 | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
 | [29](29-responsive-shell.md) ✅ | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
-| [30](30-postojeci-ekrani-na-handoff.md) | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
+| [30](30-postojeci-ekrani-na-handoff.md) 🟡 | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) | Kalendar dana | `3c` `3l` | — | 2–3 dana |
 | [32](32-usluge-i-cjenovnik.md) | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
 | [33](33-osoblje-i-smjene.md) | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
@@ -135,8 +135,8 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > Breadcrumb `Vitez / Danas`, akcije top bara i naslov „Danas" umjesto „Pregled" su copy i akcije
 > ekrana — task [30](30-postojeci-ekrani-na-handoff.md).
 >
-> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51) — CI zelen, nije draft,
-> **otvoren i čeka spajanje**.
+> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51) — CI zelen, **spojen u `main`**
+> (`88c1605`).
 >
 > Sljedeći task je [30](30-postojeci-ekrani-na-handoff.md). Tri stvari koje mu je 29 ostavio
 > vidljive na snimcima: breadcrumb `Vitez / Danas` (traži ime salona, kojeg `StaffMember` nema),

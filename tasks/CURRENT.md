@@ -1,20 +1,56 @@
-# Trenutni task
+# Trenutni task: 30 — Postojeći ekrani na handoff
 
-Nijedan task nije učitan. Sljedeći na redu je
-[30 — Postojeći ekrani na handoff](sprint-3/30-postojeci-ekrani-na-handoff.md); učitaj ga sa
-`/task load 30`.
+Puni task: [sprint-3/30-postojeci-ekrani-na-handoff.md](sprint-3/30-postojeci-ekrani-na-handoff.md).
+Učitan 2026-09-19. Zavisnost [29](sprint-3/29-responsive-shell.md) je ✅ i spojena u `main`
+(`88c1605`), pa task nije blokiran.
 
 ## Status
 
-Nema aktivnog taska.
+U toku — grana `feat/admin-ekrani-na-handoff`.
 
 ## Ciljevi
 
-—
+- [ ] `/login` po `3j` (desktop) i `3u` (telefon) — `login_screen.dart` ima temu iz taska 28, ali
+      nije poređen sa canvasom; auth putanja (`StaffRepository`, email + lozinka) se ne dira
+- [ ] `/dashboard` po `3b` / `3k` — naslov je danas `Pregled`, navigacija ga zove `Danas`; uz to
+      breadcrumb `Vitez / Danas` i akcije desktop top bara („Pretraži klijenta", „Blokiraj termin",
+      „+ Novi termin") iz `3b`
+- [ ] Pending prikaz po `3d` / `3m` — unutar `/appointments?status=pending`, bez nove rute
+- [ ] Detalj termina po `3n` — **danas ne postoji**: router ima `login`, `dashboard`,
+      `appointments`, `appointmentNew`, `more` i placeholdere, ali nijednu rutu detalja. Akcije
+      ostaju iste četiri iz `appointment_actions_bar.dart`
+- [ ] Nijedna RPC putanja nije promijenjena (`set_appointment_status`, `cancel_appointment`,
+      `book_appointment` kao od taska 24)
+- [ ] Postojeći admin testovi i dalje prolaze + novi za ono što ekran sad prikazuje
+- [ ] Prolaz kroz browser na oba tenanta — ista aplikacija, druga prijava, nijedan tuđi termin
 
 ## Napomene
 
-—
+- **DoD kaže „postojećih 27 admin testova" — taj broj je zastario.** Task 28 ih je digao na 70,
+  task 29 na **85** (582 ukupno u pet paketa). Mjerilo je `melos run test`, ne broj iz task fajla.
+- **Ljuska je gotova i ne prepisuje se.** `AdminScaffold` crta sidebar (236), top bar (66) i donju
+  navigaciju iz jedne liste `kAdminDestinations`; breakpoint je 840. Ekran dobija samo tijelo —
+  ako se u ekran vrati vlastiti `Scaffold`, ponavlja se greška iz 29 (`AdminPlaceholderScreen` je
+  bio slijepa ulica bez navigacije, i to widget test ne vidi).
+- **Tokeni su u `apps/admin/lib/src/core/theme/`, hex u ekranu je greška** — drži je
+  `no_hardcoded_colors_test.dart`. `gutterDesktop` je 28 (mjereno u 29), mobilni 20.
+- **Breadcrumb `Vitez / Danas` traži ime salona, kojeg `StaffMember` nema** — model nosi `salonId`,
+  ne ime. Ili se ime čita iz `salons` novim upitom, ili se breadcrumb crta bez njega; to je odluka
+  koju ovaj task mora donijeti svjesno, nije copy detalj.
+- **Admin nije brandiran.** Plava je identitet Salon OS-a; ne uvozi se `core_ui` tema klijenta ni
+  bilo šta iz `tenant.yaml`.
+- **Demo sadržaj iz canvasa (imena, iznosi) nije podatak** — ne ide ni u kod ni u testove.
+- **Vizuelni dokaz ide kroz `apps/admin/lib/demo_main.dart`** (`flutter run -d chrome -t
+  lib/demo_main.dart` iz `apps/admin`), jer na ovoj mašini nema ni Dockera ni `supabase` CLI-ja.
+  Dokaz sa **pravom prijavom** ostaje 🟡 i iz 28 i iz 29; hostovani projekat iz `.env.live` ima
+  šemu, ali nema naloga (`tool/run_live_demo.sh admin` kad ga bude). Ako se to ne promijeni,
+  „prolaz kroz browser na oba tenanta" iz DoD-a zatvara se demo launcherom i to se tako zapisuje.
+- **Drift u dokumentaciji, zatečen pri učitavanju:** status blok taska 29 u
+  `tasks/sprint-3/README.md` i njegov zapis u `## Istorija` ispod još kažu da je PR #51 „otvoren i
+  čeka spajanje", a spojen je (`88c1605`). Popravlja se u prvom commitu ovog taska, ne u `load`
+  akciji.
+- Canvas se gleda uživo: `python3 -m http.server 4173 --directory prototype/admin`, pa
+  `http://localhost:4173/`.
 
 ## Istorija
 
@@ -39,8 +75,7 @@ Nema aktivnog taska.
   Chromiumu uključujući refresh na `?status=pending` — `docs/screenshots/task-29-admin-*.png`.
   Ostaje 🟡 samo dokaz sa **pravom prijavom**: snimci su iz novog `apps/admin/lib/demo_main.dart`,
   jer nema Dockera ni `supabase` CLI-ja; hostovani projekat iz `.env.live` sada ima šemu, ali nije
-  bilo naloga. [PR #51](https://github.com/htuco/salon-booking-platform/pull/51) — **otvoren, čeka
-  spajanje.**
+  bilo naloga. [PR #51](https://github.com/htuco/salon-booking-platform/pull/51), spojen (`88c1605`).
 
 - **28 — Admin tema, tipografija i tokeni** (2026-09-19, 🟡) — `apps/admin/lib/src/core/theme/` je
   prestao biti `.gitkeep`: pet fajlova nose paletu, razmake, uglove, tipografiju i statusne tonove,
