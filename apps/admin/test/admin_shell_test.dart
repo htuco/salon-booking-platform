@@ -184,6 +184,24 @@ void main() {
       expect(find.text('0'), findsNothing);
     });
 
+    testWidgets('bez zahtjeva nema ni tačke nad ćelijom', (tester) async {
+      // **Ovu je našao emulator, ne test.** Donja navigacija je `Badge` crtala uvijek, sa
+      // praznim tekstom kad je brojač nula — a Material prazan `label` iscrta kao tačku.
+      // Salon bez ijednog zahtjeva je tako vidio crvenu tačku i otvarao prazan ekran.
+      // Provjera na `find.text('0')` to ne vidi, jer teksta i nema.
+      await _naSirini(tester, _telefon, _ekran(naCekanju: 0));
+      expect(find.byType(Badge), findsNothing);
+    });
+
+    testWidgets('sa zahtjevima tačka postoji', (tester) async {
+      // Zaseban test, a ne drugi `pumpWidget` u prethodnom: `ProviderScope` override-e
+      // primjenjuje pri montiranju, pa bi drugi pump u istom testu zadržao staru nulu i
+      // test bi prolazio iz pogrešnog razloga.
+      await _naSirini(tester, _telefon, _ekran(naCekanju: 3));
+      expect(find.byType(Badge), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+    });
+
     testWidgets('„Zahtjevi" vode na filtriranu listu, ne na svoju rutu', (
       tester,
     ) async {

@@ -447,7 +447,7 @@ servira i tu stranicu.
 | Login | `/login` | Must |
 | Dashboard | `/dashboard` | Must |
 | Termini + filteri | `/appointments` | Must |
-| Detalji termina (bottom sheet) | `/appointments/:id` | Must |
+| Detalji termina | `/appointments/:id` | Must |
 | Dodaj termin | `/appointments/new` | Must |
 | Kalendar (dnevni) | `/calendar` | Should |
 | Klijenti | `/clients` | Should |
@@ -459,6 +459,12 @@ servira i tu stranicu.
 | Još (ulaz u module izvan četiri ćelije) | `/more` | Should |
 | O aplikaciji | `/about-app` | Should |
 | Pravila korištenja | `/terms` | Must |
+
+**Detalj termina je ekran, ne bottom sheet** (ispravljeno u tasku 30). Ova tabela ga je zvala
+„bottom sheet" dok admin handoffa nije bilo; `prototype/admin/SPEC.md` prikazom `3n` crta **puni
+ekran** sa vlastitim zaglavljem, tabelom zapisa i trakom radnji u dnu. Sheet je uz to pogrešan
+oblik za adresu koja mora raditi iz bookmarka i, jednog dana, iz push obavijesti — ono što se
+otvara preko liste nema svoju stranicu.
 
 **Dvije rute dodane u tasku 29, iz admin handoffa.** `/clients` nosi prikaze `3e`/`3o`, koje ova
 tabela nije imala iako `prototype/admin/SPEC.md` klijente broji kao modul. `/more` je prikaz `3t` i

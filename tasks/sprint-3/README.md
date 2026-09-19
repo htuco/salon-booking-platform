@@ -11,7 +11,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 |---|---|---|---|---|
 | [28](28-admin-tema-i-tipografija.md) 🟡 | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
 | [29](29-responsive-shell.md) ✅ | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
-| [30](30-postojeci-ekrani-na-handoff.md) | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
+| [30](30-postojeci-ekrani-na-handoff.md) 🟡 | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) | Kalendar dana | `3c` `3l` | — | 2–3 dana |
 | [32](32-usluge-i-cjenovnik.md) | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
 | [33](33-osoblje-i-smjene.md) | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
@@ -135,11 +135,63 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > Breadcrumb `Vitez / Danas`, akcije top bara i naslov „Danas" umjesto „Pregled" su copy i akcije
 > ekrana — task [30](30-postojeci-ekrani-na-handoff.md).
 >
-> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51) — CI zelen, nije draft,
-> **otvoren i čeka spajanje**.
+> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51) — CI zelen, **spojen u `main`**
+> (`88c1605`).
 >
 > Sljedeći task je [30](30-postojeci-ekrani-na-handoff.md). Tri stvari koje mu je 29 ostavio
 > vidljive na snimcima: breadcrumb `Vitez / Danas` (traži ime salona, kojeg `StaffMember` nema),
 > akcije desktop top bara („Pretraži klijenta", „Blokiraj termin", „+ Novi termin"), i naslov
 > dashboarda „Pregled" dok ga navigacija zove „Danas". Za vizuelni dokaz koristi
 > `apps/admin/lib/demo_main.dart` — `flutter run -d chrome -t lib/demo_main.dart` iz `apps/admin`.
+
+> **30 — Postojeći ekrani na handoff (🟡, 2026-09-19).** Prijava, „Danas", zahtjevi, lista termina
+> i **detalj termina** imaju izgled iz `prototype/admin/`. `/appointments/:id` je do sada bio
+> placeholder iako ruta stoji u enumu i u `docs/01 §12`; sada čita jedan termin iz baze
+> (`StaffAppointmentRepository.byId`, nov) umjesto da ga dobije iz liste — ista adresa mora raditi
+> iz bookmarka i, sutra, iz push obavijesti.
+>
+> **Ljuska je zatvorila tri stvari koje joj je 29 ostavio:** breadcrumb `Vitez / Danas` (ime salona
+> dolazi iz novog `adminSalonProvider`-a, jer `StaffMember` nosi samo `salonId`), akcije desktop top
+> bara, i naslov „Danas" umjesto „Pregled". Uz to `AdminScaffold` sada zna da telefonski ekran može
+> nositi **svoje** zaglavlje — `3k` iznad sadržaja crta veliki naslov, a `AppBar` sa sitnim „Danas"
+> bi istu riječ napisao dvaput.
+>
+> **Dvanaest stvari iz canvasa namjerno nije nacrtano**, sa razlogom i taskom u kojem se vraćaju —
+> tabela je upisana u `prototype/admin/SPEC.md`. Tri su vrijedne pomena: brojke „6 lokacija · 19
+> majstora · 84 termina" na prijavi **nisu demo sadržaj nego tuđi podaci** (zbir preko svih salona,
+> koji `salon_admin` po RLS-u ne smije vidjeti, a ekran prijave bi ih tražio neprijavljen);
+> „Slobodno vrijeme" i „82% zauzetosti" traže smjene radnika (task 33), pa je zauzetost ovdje u
+> **minutama i relativnoj traci** umjesto izmišljenog procenta kapaciteta; a „najstariji zahtjev
+> prije 26 min" nema šta da računa jer `appointments` nema `created_at`.
+>
+> **Četiri greške koje je našao ekran, a testovi nisu mogli:** brojanje termina po
+> `status.blocksSlot` (koje je `false` za završen termin, pa je „6 termina" pokazivalo 5),
+> zauzetost koja piše „3 3 termina", telefonska prijava sa dugmetom širine svog teksta nasred
+> ekrana, i desktop prijava sa dva logotipa. Sve četiri su sada pokrivene testom koji mjeri cijeli
+> red ili širinu, a ne postojanje widgeta.
+>
+> **Usput ispravljeno u dokumentaciji:** `docs/01 §12` je detalj termina zvala „bottom sheet", a
+> `3n` crta puni ekran; i statusna oznaka uz termin je prešla u jedninu („Potvrđeno"), dok množina
+> ostaje filteru koji imenuje grupu redova — dug koji je task 24 ostavio zapisan u kodu.
+>
+> Dokazano: **642 testa** u pet paketa (admin **145**, bilo 85), čista analiza i format, i svih pet
+> prikaza uživo u Chromiumu na 1440 i na 402 — `docs/screenshots/task-30-admin-*.png`.
+>
+> **Prava prijava je odigrana, i time pada dug iz 28 i 29.** Ti taskovi su pretpostavljali da
+> hostovani projekat nema naloge; seed admin `admin@barberstudiovitez.test` / `admin123456`
+> **postoji**. Tok je odigran na **Android emulatoru (API 35)** protiv hostovanog Supabasea —
+> prijava, „Danas" sa pravim terminima, detalj termina (`docs/screenshots/task-30-admin-uredjaj-*.png`).
+>
+> **Uređaj je našao grešku koju nijedan test ni web snimak nisu:** ćelija „Zahtjevi" je nosila
+> crvenu tačku iako nema nijednog zahtjeva — `Badge` je bio uvijek vidljiv, a Material prazan
+> `label` iscrta kao tačku. Demo je uvijek imao zahtjeve, pa se na webu nije vidjelo. Test sada
+> gleda postojanje `Badge`-a, ne tekst u njemu.
+>
+> **Ostalo za sljedećeg:** drugi tenant — `admin@beautystudiotravnik.test` na hostovanom projektu
+> **ne postoji** (`400` na `POST /auth/v1/token`), pa „ista aplikacija, druga prijava, nijedan tuđi
+> termin" ostaje nedokazano uživo; izolacija i dalje stoji na pgTAP-u i Deno testovima. App nije
+> pokrenuta na **fizičkom** uređaju, a iOS je nedostupan jer je mašina Windows.
+>
+> Sljedeći task je [31](31-kalendar-dana.md). Tri stvari koje mu 30 ostavlja spremne:
+> `AppointmentCard` i `AppointmentStatusPill` (oblik termina), `core/format/datum.dart` (imena dana
+> i mjeseci na jednom mjestu) i `terminProvider` sa rutom detalja, na koju kalendar može voditi.
