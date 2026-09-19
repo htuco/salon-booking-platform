@@ -99,6 +99,7 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => AdminPlaceholderScreen(
               title: route.title,
               path: state.uri.path,
+              route: route,
             ),
           ),
     ],

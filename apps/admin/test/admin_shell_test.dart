@@ -12,6 +12,7 @@ import 'package:admin/src/core/router/admin_router.dart';
 import 'package:admin/src/core/theme/theme.dart';
 import 'package:admin/src/core/widgets/admin_scaffold.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
+import 'package:admin/src/features/placeholder/admin_placeholder_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +50,24 @@ Widget _ekran({int naCekanju = 4, AdminRoute aktivna = AdminRoute.dashboard}) =>
         ),
       ),
     );
+
+/// Isti obrazac, ali sa placeholder ekranom jedne od nenapisanih ruta.
+Widget _placeholder(AdminRoute route) => ProviderScope(
+  overrides: [
+    currentStaffProvider.overrideWith(
+      (ref) => Stream<StaffMember?>.value(_vlasnik),
+    ),
+    pendingCountProvider.overrideWith((ref) async => 4),
+  ],
+  child: MaterialApp(
+    theme: buildAdminTheme(),
+    home: AdminPlaceholderScreen(
+      title: route.title,
+      path: route.path,
+      route: route,
+    ),
+  ),
+);
 
 /// Postavlja širinu prozora prije gradnje i vraća je poslije testa.
 Future<void> _naSirini(
@@ -179,17 +198,36 @@ void main() {
       expect(zahtjevi.putanja, kZahtjeviPutanja);
     });
 
+    testWidgets('placeholder modul nije slijepa ulica', (tester) async {
+      // **Ovu je našao browser, ne test.** `AdminPlaceholderScreen` je do taska 29 imao
+      // vlastiti `Scaffold`, sto nije smetalo dok navigacija nije nudila nenapisane rute.
+      // Otkad ih nudi, `/clients` otvoren iz „Još" se crtao bez ikakve navigacije i iz
+      // njega se izlazilo samo dugmetom „nazad" u browseru.
+      //
+      // Test stoji na obje širine jer se greška na svakoj vidi drugačije: na telefonu
+      // nedostaje donja navigacija, na desktopu sidebar.
+      await _naSirini(tester, _telefon, _placeholder(AdminRoute.clients));
+      expect(find.byType(NavigationBar), findsOneWidget);
+
+      await _naSirini(tester, _desktop, _placeholder(AdminRoute.clients));
+      expect(find.text('Salon OS'), findsOneWidget);
+    });
+
     testWidgets('gutter prati širinu, ne ekran', (tester) async {
+      // **Brojevi su ovdje namjerno, a ne `AdminSpacing.gutterDesktop`.** Prva verzija
+      // ovog testa je poredila token sa samim sobom i prošla je i kad je gutter vraćen na
+      // pogrešnih 24 — provjereno pokretanjem. Vrijednosti su izmjerene iz canvasa:
+      // radna površina `padding:28px`, mobilni ekrani `padding:… 20px`.
       await _naSirini(tester, _desktop, _ekran());
       expect(
         AdminShell.gutterOf(tester.element(find.text('tijelo ekrana'))),
-        AdminSpacing.gutterDesktop,
+        28,
       );
 
       await _naSirini(tester, _telefon, _ekran());
       expect(
         AdminShell.gutterOf(tester.element(find.text('tijelo ekrana'))),
-        AdminSpacing.gutterMobile,
+        20,
       );
     });
   });
