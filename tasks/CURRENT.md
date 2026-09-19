@@ -16,12 +16,17 @@ koda nego od naloga i Dockera.
 - [x] Detalj termina po `3n` — ruta `/appointments/:id` više nije placeholder
 - [x] Nijedna RPC putanja nije promijenjena; jedini novi upit je `select` (`byId`)
 - [x] 642 testa u pet paketa (admin 145, bilo 85), čista analiza i format
-- [ ] 🟡 Prolaz uz pravu prijavu na oba tenanta — traži Docker ili nalog na hostovanom projektu
+- [x] Prolaz uz **pravu prijavu** na Android emulatoru, protiv hostovanog projekta
+- [ ] 🟡 Drugi tenant — Travnik admin ne postoji na hostovanom projektu (`400` na prijavi)
 
 ## Napomene
 
-- **Snimci su iz demo ulaza**, ne iz prijave: `apps/admin/lib/demo_main.dart` za ekrane iza guarda,
-  `lib/main.dart` bez env-a za prijavu. Isti dug kao u taskovima 28 i 29.
+- **Prava prijava radi:** seed nalog `admin@barberstudiovitez.test` / `admin123456` postoji na
+  hostovanom projektu iz `.env.live`, suprotno pretpostavci iz taska 29. Tok je odigran na Android
+  emulatoru (`docs/screenshots/task-30-admin-uredjaj-*.png`); web snimci ostaju iz demo ulaza.
+- **iOS simulator ovdje ne postoji** — mašina je Windows. Emulatori: `Vitez_API_35`, `vitez_api35`.
+  Pokretanje: `flutter emulators --launch Vitez_API_35`, pa
+  `tool/run_live_demo.sh admin -d emulator-5554`.
 - **Screenshot bez playwrighta:** MCP server nije htio da se poveže, pa su snimci pravljeni
   headless Chromeom (`chrome --headless=new --screenshot`). Zamka: Chrome ima **minimalnu širinu
   prozora oko 500 px**, pa 402 traži `--force-device-scale-factor=1.25 --window-size=503,1093`;

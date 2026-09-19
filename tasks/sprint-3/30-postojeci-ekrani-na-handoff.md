@@ -20,8 +20,10 @@ ispod ostaju netaknuti.
       `book_appointment` rade kao od taska 24; jedini novi upit je `select` (`byId`)
 - [x] Postojeći admin testovi i dalje prolaze; novi testovi za ono što ekran sad prikazuje
       (broj iz DoD-a je bio zastario: 85 prije ovog taska, ne 27)
-- [ ] 🟡 Prolaz kroz browser na oba tenanta — ista aplikacija, druga prijava, nijedan tuđi termin
-      (ostaje: nema Dockera ni `supabase` CLI-ja, pa nema prijave; snimci su iz `demo_main.dart`)
+- [x] Prolaz uz **pravu prijavu** — Android emulator (API 35) protiv hostovanog projekta:
+      prijava seed nalogom, „Danas" sa pravim terminima, detalj termina
+- [ ] 🟡 **Drugi tenant** — `admin@beautystudiotravnik.test` na hostovanom projektu ne postoji
+      (`POST /auth/v1/token` → 400), pa se „druga prijava, nijedan tuđi termin" ne može odigrati
 
 ## Koraci
 1. Prijava, pa „Danas", pa zahtjevi, pa detalj
@@ -67,8 +69,21 @@ je pokazivalo 5, a majstor koji je sve odradio izgledao prazan.
 nijednu radnju" je trebalo oboriti **sva tri** čuvara da test pukne, i to je ovdje zapisano jer
 znači da test pokriva svojstvo, ne jednu granu.
 
-**Ostalo za sljedećeg (🟡).** Nijedna od četiri ekrana nije viđena uz **pravu prijavu**: na ovoj
-mašini nema Dockera ni `supabase` CLI-ja, pa se lokalni stack ne diže, a hostovani projekat iz
-`.env.live` ima šemu ali nema naloga. Snimci su iz `apps/admin/lib/demo_main.dart` (i prijava iz
-`lib/main.dart` bez env-a). Kad nalog bude: `tool/run_live_demo.sh admin`, pa prijava dvama
-vlasnicima i provjera da nijedan ne vidi tuđi termin.
+**Prava prijava je odigrana — pretpostavka iz taska 29 nije bila tačna.** Tamo stoji da hostovani
+projekat „ima šemu, ali nije bilo naloga"; seed nalog `admin@barberstudiovitez.test` /
+`admin123456` **postoji i prijava prolazi**. Tok je odigran na **Android emulatoru (API 35)**
+protiv hostovanog Supabasea: prijava, „Danas" sa pravim terminima iz baze, pa detalj termina —
+`docs/screenshots/task-30-admin-uredjaj-*.png`. Time pada i dug iz taskova 28 i 29 („nije viđeno
+uz pravu prijavu"), ne samo iz ovog.
+
+**Uređaj je našao grešku koju nijedan test i nijedan web snimak nisu:** ćelija „Zahtjevi" u donjoj
+navigaciji je nosila **crvenu tačku iako nema nijednog zahtjeva**. `Badge` je bio uvijek vidljiv, a
+Material prazan `label` iscrta kao tačku — salon bez ijednog zahtjeva je tako dobijao znak da ga
+nešto čeka. Web snimci to nisu pokazali jer je demo uvijek imao zahtjeve na čekanju. Popravljeno i
+pokriveno testom koji gleda **postojanje `Badge`-a**, ne teksta u njemu.
+
+**Ostalo za sljedećeg (🟡).** Drugi tenant: `admin@beautystudiotravnik.test` na hostovanom projektu
+**ne postoji** (`POST /auth/v1/token` vraća 400), pa se „ista aplikacija, druga prijava, nijedan
+tuđi termin" još ne može odigrati uživo — izolacija je i dalje dokazana samo pgTAP-om i Deno
+testovima. Uz to app **nije pokrenuta na fizičkom uređaju**; emulator nije telefon (nema pravog
+dodira, mreže ni notifikacija). iOS ostaje nedostupan jer je ova mašina Windows.

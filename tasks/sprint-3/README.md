@@ -177,10 +177,20 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > Dokazano: **642 testa** u pet paketa (admin **145**, bilo 85), čista analiza i format, i svih pet
 > prikaza uživo u Chromiumu na 1440 i na 402 — `docs/screenshots/task-30-admin-*.png`.
 >
-> **Ostalo za sljedećeg:** nijedan ekran nije viđen uz **pravu prijavu** — nema Dockera ni
-> `supabase` CLI-ja, pa snimci idu iz `demo_main.dart` (prijava iz `main.dart` bez env-a). To je
-> isti dug kao u 28 i 29 i ne čeka kod nego nalog: `tool/run_live_demo.sh admin`, pa prijava dvama
-> vlasnicima i provjera da nijedan ne vidi tuđi termin.
+> **Prava prijava je odigrana, i time pada dug iz 28 i 29.** Ti taskovi su pretpostavljali da
+> hostovani projekat nema naloge; seed admin `admin@barberstudiovitez.test` / `admin123456`
+> **postoji**. Tok je odigran na **Android emulatoru (API 35)** protiv hostovanog Supabasea —
+> prijava, „Danas" sa pravim terminima, detalj termina (`docs/screenshots/task-30-admin-uredjaj-*.png`).
+>
+> **Uređaj je našao grešku koju nijedan test ni web snimak nisu:** ćelija „Zahtjevi" je nosila
+> crvenu tačku iako nema nijednog zahtjeva — `Badge` je bio uvijek vidljiv, a Material prazan
+> `label` iscrta kao tačku. Demo je uvijek imao zahtjeve, pa se na webu nije vidjelo. Test sada
+> gleda postojanje `Badge`-a, ne tekst u njemu.
+>
+> **Ostalo za sljedećeg:** drugi tenant — `admin@beautystudiotravnik.test` na hostovanom projektu
+> **ne postoji** (`400` na `POST /auth/v1/token`), pa „ista aplikacija, druga prijava, nijedan tuđi
+> termin" ostaje nedokazano uživo; izolacija i dalje stoji na pgTAP-u i Deno testovima. App nije
+> pokrenuta na **fizičkom** uređaju, a iOS je nedostupan jer je mašina Windows.
 >
 > Sljedeći task je [31](31-kalendar-dana.md). Tri stvari koje mu 30 ostavlja spremne:
 > `AppointmentCard` i `AppointmentStatusPill` (oblik termina), `core/format/datum.dart` (imena dana

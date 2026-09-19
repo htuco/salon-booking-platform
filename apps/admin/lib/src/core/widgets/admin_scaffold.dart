@@ -379,11 +379,7 @@ class _DonjaNavigacija extends ConsumerWidget {
           NavigationDestination(
             icon: cilj.brojac == null
                 ? Icon(cilj.icon)
-                : Badge(
-                    label: _BrojacTekst(brojac: cilj.brojac!),
-                    isLabelVisible: true,
-                    child: Icon(cilj.icon),
-                  ),
+                : _IkonaSaBrojacem(cilj: cilj),
             label: cilj.label,
           ),
       ],
@@ -429,16 +425,24 @@ class _Pilula extends ConsumerWidget {
   }
 }
 
-/// Isti brojač, kao labela Material `Badge`-a u donjoj navigaciji.
-class _BrojacTekst extends ConsumerWidget {
-  const _BrojacTekst({required this.brojac});
+/// Isti brojač, kao Material `Badge` u donjoj navigaciji.
+///
+/// **Nula se ne crta uopšte**, kao ni u sidebaru. Ranije je `Badge` uvijek bio vidljiv sa
+/// praznim tekstom, a Material prazan `label` iscrta kao **tačku** — pa je salon bez ijednog
+/// zahtjeva vidio crvenu tačku nad „Zahtjevima" i otvarao prazan ekran. Widget test to nije
+/// uhvatio jer `Badge` i dalje postoji i `Text` je prazan; vidjelo se tek na uređaju.
+class _IkonaSaBrojacem extends ConsumerWidget {
+  const _IkonaSaBrojacem({required this.cilj});
 
-  final ProviderListenable<AsyncValue<int>> brojac;
+  final AdminDestination cilj;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final broj = ref.watch(brojac).valueOrNull ?? 0;
-    return Text(broj == 0 ? '' : '$broj');
+    final broj = ref.watch(cilj.brojac!).valueOrNull ?? 0;
+    final ikona = Icon(cilj.icon);
+    if (broj == 0) return ikona;
+
+    return Badge(label: Text('$broj'), child: ikona);
   }
 }
 
