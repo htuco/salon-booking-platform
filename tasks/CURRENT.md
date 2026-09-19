@@ -1,52 +1,36 @@
 # Trenutni task: 30 — Postojeći ekrani na handoff
 
 Puni task: [sprint-3/30-postojeci-ekrani-na-handoff.md](sprint-3/30-postojeci-ekrani-na-handoff.md).
-Učitan 2026-09-19. Zavisnost [29](sprint-3/29-responsive-shell.md) je ✅ i spojena u `main`
-(`88c1605`), pa task nije blokiran.
+Grana `feat/admin-ekrani-na-handoff`, [PR #52](https://github.com/htuco/salon-booking-platform/pull/52).
 
 ## Status
 
-U toku — grana `feat/admin-ekrani-na-handoff`.
+Gotov u kodu (🟡) — čeka pregled PR-a. Ostaje samo dokaz sa **pravom prijavom**, koji ne zavisi od
+koda nego od naloga i Dockera.
 
 ## Ciljevi
 
-- [ ] `/login` po `3j` (desktop) i `3u` (telefon) — `login_screen.dart` ima temu iz taska 28, ali
-      nije poređen sa canvasom; auth putanja (`StaffRepository`, email + lozinka) se ne dira
-- [ ] `/dashboard` po `3b` / `3k` — naslov je danas `Pregled`, navigacija ga zove `Danas`; uz to
-      breadcrumb `Vitez / Danas` i akcije desktop top bara („Pretraži klijenta", „Blokiraj termin",
-      „+ Novi termin") iz `3b`
-- [ ] Pending prikaz po `3d` / `3m` — unutar `/appointments?status=pending`, bez nove rute
-- [ ] Detalj termina po `3n` — **danas ne postoji**: router ima `login`, `dashboard`,
-      `appointments`, `appointmentNew`, `more` i placeholdere, ali nijednu rutu detalja. Akcije
-      ostaju iste četiri iz `appointment_actions_bar.dart`
-- [ ] Nijedna RPC putanja nije promijenjena (`set_appointment_status`, `cancel_appointment`,
-      `book_appointment` kao od taska 24)
-- [ ] Postojeći admin testovi i dalje prolaze + novi za ono što ekran sad prikazuje
-- [ ] Prolaz kroz browser na oba tenanta — ista aplikacija, druga prijava, nijedan tuđi termin
+- [x] `/login` po `3j` / `3u`
+- [x] `/dashboard` po `3b` / `3k` — „Danas", breadcrumb i akcije top bara
+- [x] Zahtjevi po `3d` / `3m`, unutar `/appointments?status=pending`
+- [x] Detalj termina po `3n` — ruta `/appointments/:id` više nije placeholder
+- [x] Nijedna RPC putanja nije promijenjena; jedini novi upit je `select` (`byId`)
+- [x] 642 testa u pet paketa (admin 145, bilo 85), čista analiza i format
+- [ ] 🟡 Prolaz uz pravu prijavu na oba tenanta — traži Docker ili nalog na hostovanom projektu
 
 ## Napomene
 
-- **DoD kaže „postojećih 27 admin testova" — taj broj je zastario.** Task 28 ih je digao na 70,
-  task 29 na **85** (582 ukupno u pet paketa). Mjerilo je `melos run test`, ne broj iz task fajla.
-- **Ljuska je gotova i ne prepisuje se.** `AdminScaffold` crta sidebar (236), top bar (66) i donju
-  navigaciju iz jedne liste `kAdminDestinations`; breakpoint je 840. Ekran dobija samo tijelo —
-  ako se u ekran vrati vlastiti `Scaffold`, ponavlja se greška iz 29 (`AdminPlaceholderScreen` je
-  bio slijepa ulica bez navigacije, i to widget test ne vidi).
-- **Tokeni su u `apps/admin/lib/src/core/theme/`, hex u ekranu je greška** — drži je
-  `no_hardcoded_colors_test.dart`. `gutterDesktop` je 28 (mjereno u 29), mobilni 20.
-- **Breadcrumb `Vitez / Danas` traži ime salona, kojeg `StaffMember` nema** — model nosi `salonId`,
-  ne ime. Ili se ime čita iz `salons` novim upitom, ili se breadcrumb crta bez njega; to je odluka
-  koju ovaj task mora donijeti svjesno, nije copy detalj.
-- **Admin nije brandiran.** Plava je identitet Salon OS-a; ne uvozi se `core_ui` tema klijenta ni
-  bilo šta iz `tenant.yaml`.
-- **Demo sadržaj iz canvasa (imena, iznosi) nije podatak** — ne ide ni u kod ni u testove.
-- **Vizuelni dokaz ide kroz `apps/admin/lib/demo_main.dart`** (`flutter run -d chrome -t
-  lib/demo_main.dart` iz `apps/admin`), jer na ovoj mašini nema ni Dockera ni `supabase` CLI-ja.
-  Dokaz sa **pravom prijavom** ostaje 🟡 i iz 28 i iz 29; hostovani projekat iz `.env.live` ima
-  šemu, ali nema naloga (`tool/run_live_demo.sh admin` kad ga bude). Ako se to ne promijeni,
-  „prolaz kroz browser na oba tenanta" iz DoD-a zatvara se demo launcherom i to se tako zapisuje.
-- **Drift u dokumentaciji, zatečen pri učitavanju:** status blok taska 29 u
-  `tasks/sprint-3/README.md` i njegov zapis u `## Istorija` ispod još kažu da je PR #51 „otvoren i
+- **Snimci su iz demo ulaza**, ne iz prijave: `apps/admin/lib/demo_main.dart` za ekrane iza guarda,
+  `lib/main.dart` bez env-a za prijavu. Isti dug kao u taskovima 28 i 29.
+- **Screenshot bez playwrighta:** MCP server nije htio da se poveže, pa su snimci pravljeni
+  headless Chromeom (`chrome --headless=new --screenshot`). Zamka: Chrome ima **minimalnu širinu
+  prozora oko 500 px**, pa 402 traži `--force-device-scale-factor=1.25 --window-size=503,1093`;
+  bez toga snimak izgleda kao da sadržaj izlazi van ekrana, a ne izlazi.
+- **Za `?status=pending` treba SPA fallback** — `python -m http.server` na toj putanji vraća 404.
+- Ostalo spremno za task 31: `AppointmentCard`, `AppointmentStatusPill`, `core/format/datum.dart`,
+  `terminProvider` i ruta detalja.
+
+## Istorija` ispod još kažu da je PR #51 „otvoren i
   čeka spajanje", a spojen je (`88c1605`). Popravlja se u prvom commitu ovog taska, ne u `load`
   akciji.
 - Canvas se gleda uživo: `python3 -m http.server 4173 --directory prototype/admin`, pa

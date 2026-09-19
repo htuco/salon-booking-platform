@@ -143,3 +143,45 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > akcije desktop top bara („Pretraži klijenta", „Blokiraj termin", „+ Novi termin"), i naslov
 > dashboarda „Pregled" dok ga navigacija zove „Danas". Za vizuelni dokaz koristi
 > `apps/admin/lib/demo_main.dart` — `flutter run -d chrome -t lib/demo_main.dart` iz `apps/admin`.
+
+> **30 — Postojeći ekrani na handoff (🟡, 2026-09-19).** Prijava, „Danas", zahtjevi, lista termina
+> i **detalj termina** imaju izgled iz `prototype/admin/`. `/appointments/:id` je do sada bio
+> placeholder iako ruta stoji u enumu i u `docs/01 §12`; sada čita jedan termin iz baze
+> (`StaffAppointmentRepository.byId`, nov) umjesto da ga dobije iz liste — ista adresa mora raditi
+> iz bookmarka i, sutra, iz push obavijesti.
+>
+> **Ljuska je zatvorila tri stvari koje joj je 29 ostavio:** breadcrumb `Vitez / Danas` (ime salona
+> dolazi iz novog `adminSalonProvider`-a, jer `StaffMember` nosi samo `salonId`), akcije desktop top
+> bara, i naslov „Danas" umjesto „Pregled". Uz to `AdminScaffold` sada zna da telefonski ekran može
+> nositi **svoje** zaglavlje — `3k` iznad sadržaja crta veliki naslov, a `AppBar` sa sitnim „Danas"
+> bi istu riječ napisao dvaput.
+>
+> **Dvanaest stvari iz canvasa namjerno nije nacrtano**, sa razlogom i taskom u kojem se vraćaju —
+> tabela je upisana u `prototype/admin/SPEC.md`. Tri su vrijedne pomena: brojke „6 lokacija · 19
+> majstora · 84 termina" na prijavi **nisu demo sadržaj nego tuđi podaci** (zbir preko svih salona,
+> koji `salon_admin` po RLS-u ne smije vidjeti, a ekran prijave bi ih tražio neprijavljen);
+> „Slobodno vrijeme" i „82% zauzetosti" traže smjene radnika (task 33), pa je zauzetost ovdje u
+> **minutama i relativnoj traci** umjesto izmišljenog procenta kapaciteta; a „najstariji zahtjev
+> prije 26 min" nema šta da računa jer `appointments` nema `created_at`.
+>
+> **Četiri greške koje je našao ekran, a testovi nisu mogli:** brojanje termina po
+> `status.blocksSlot` (koje je `false` za završen termin, pa je „6 termina" pokazivalo 5),
+> zauzetost koja piše „3 3 termina", telefonska prijava sa dugmetom širine svog teksta nasred
+> ekrana, i desktop prijava sa dva logotipa. Sve četiri su sada pokrivene testom koji mjeri cijeli
+> red ili širinu, a ne postojanje widgeta.
+>
+> **Usput ispravljeno u dokumentaciji:** `docs/01 §12` je detalj termina zvala „bottom sheet", a
+> `3n` crta puni ekran; i statusna oznaka uz termin je prešla u jedninu („Potvrđeno"), dok množina
+> ostaje filteru koji imenuje grupu redova — dug koji je task 24 ostavio zapisan u kodu.
+>
+> Dokazano: **642 testa** u pet paketa (admin **145**, bilo 85), čista analiza i format, i svih pet
+> prikaza uživo u Chromiumu na 1440 i na 402 — `docs/screenshots/task-30-admin-*.png`.
+>
+> **Ostalo za sljedećeg:** nijedan ekran nije viđen uz **pravu prijavu** — nema Dockera ni
+> `supabase` CLI-ja, pa snimci idu iz `demo_main.dart` (prijava iz `main.dart` bez env-a). To je
+> isti dug kao u 28 i 29 i ne čeka kod nego nalog: `tool/run_live_demo.sh admin`, pa prijava dvama
+> vlasnicima i provjera da nijedan ne vidi tuđi termin.
+>
+> Sljedeći task je [31](31-kalendar-dana.md). Tri stvari koje mu 30 ostavlja spremne:
+> `AppointmentCard` i `AppointmentStatusPill` (oblik termina), `core/format/datum.dart` (imena dana
+> i mjeseci na jednom mjestu) i `terminProvider` sa rutom detalja, na koju kalendar može voditi.
