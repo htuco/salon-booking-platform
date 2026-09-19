@@ -1,49 +1,46 @@
-# Trenutni task: 29 — Responsive shell: desktop sidebar i mobilna navigacija
+# Trenutni task
 
-Puni task: [`tasks/sprint-3/29-responsive-shell.md`](sprint-3/29-responsive-shell.md)
-**Gotov** · Grana: `feat/admin-responsive-shell` · Zadnji rad: 2026-09-19
+Nijedan task nije učitan. Sljedeći na redu je
+[30 — Postojeći ekrani na handoff](sprint-3/30-postojeci-ekrani-na-handoff.md); učitaj ga sa
+`/task load 30`.
 
 ## Status
 
-Kod je gotov i dokazan — 85 admin testova, čista analiza, obje ljuske viđene u Chromiumu i
-**zelen CI**. Ostaje samo spajanje [PR-a #51](https://github.com/htuco/salon-booking-platform/pull/51),
-koji više nije draft.
-
-Puni nalazi — šta je mjerenje canvasa oborilo, koja je odluka svjesno obrnuta i koju je grešku
-našao browser — stoje u `## Status` bloku samog taska i u
-[`tasks/sprint-3/README.md`](sprint-3/README.md). Ne prepisuju se ovdje.
+Nema aktivnog taska.
 
 ## Ciljevi
 
-- [x] Breakpoint u `core/widgets/` — ispod njega donja navigacija, iznad sidebar
-- [x] Desktop: sidebar 236, top bar 66, radna površina sa gutterom **28** (bio 24, canvas kaže 28)
-- [x] Telefon: četiri ćelije — Danas · Kalendar · Zahtjevi · Još — i gutter 20
-- [x] „Zahtjevi" imaju adresu: `/appointments?status=pending`, preživi refresh i „nazad"
-- [x] „Još" (`3t`) sa svih pet modula; `AdminRoute.clients` i `.more` nastali i upisani u `docs/01 §12`
-- [x] Obje grane čitaju istu listu ruta
-- [x] `AdminScaffold` je jedini nosilac navigacije — uključujući placeholder module, što je bila greška
-- [x] Widget test nad istim ekranom na 1440×900 i 402×874
-- [x] CI zelen — job „Analiza, format i testovi" prošao
-      ([run 35408537356](https://github.com/htuco/salon-booking-platform/actions/runs/35408537356))
-- [ ] PR [#51](https://github.com/htuco/salon-booking-platform/pull/51) spojen
+—
 
 ## Napomene
 
-- **`apps/admin/lib/demo_main.dart` je nov i koristiće ga taskovi 30–36.** Admin ekran se ne vidi
-  bez prijave, a lokalnog stacka nema; ovo je isti obrazac kao klijentski `demo_main.dart`.
-  Pokretanje: `flutter run -d chrome -t lib/demo_main.dart` iz `apps/admin`.
-- **Ljuska nije viđena sa pravom prijavom ni pravim podacima.** Hostovani projekat iz `.env.live`
-  **sada ima šemu** (`/rest/v1/salons` → 200, promjena u odnosu na status taska 27), ali nije bilo
-  naloga za prijavu. Kad ga bude: `tool/run_live_demo.sh admin`.
-- **Sljedeći task je [30](sprint-3/30-postojeci-ekrani-na-handoff.md)**, i nosi tri stvari koje su
-  ovdje ostale vidljive: breadcrumb `Vitez / Danas` (traži ime salona, kojeg `StaffMember` nema),
-  akcije desktop top bara, i naslov „Danas" umjesto „Pregled".
-- **`gh` nije na PATH-u** — `export PATH="$PATH:/c/Program Files/GitHub CLI"`.
-- **`dart run melos run format` pada lokalno** na zastarjelom `apps/client/build/` folderu
-  (`PathNotFoundException`), ne na kodu. `dart format` nad `lib` i `test` je čist; CI iz svježeg
-  checkouta to ne vidi.
+—
 
 ## Istorija
+
+- **29 — Responsive shell: desktop sidebar i mobilna navigacija** (2026-09-19, ✅) — `AdminScaffold`
+  na 1440 crta tamni sidebar od 236 px i top bar od 66, na 402 četiri ćelije; prelaz na **840**, jer
+  canvas taj broj ne daje a `SPEC.md` kaže da tablet „nije posebno nacrtan". Obje ljuske čitaju
+  **jednu** listu (`kAdminDestinations`): prve tri su ćelije telefona, ostalih pet rep iza „Još", pa
+  modul dodan u navigaciju ne može ostati dostupan samo na jednoj širini. **Mjerenje canvasa je
+  oborilo token iz taska 28** — `gutterDesktop` je bio 24, a `padding:28px` stoji u svih sedam
+  desktop prikaza u opsegu dok se `padding:24px` ne javlja nijednom. **Handoff nema ćeliju
+  „Termini"**, pa „Zahtjevi" vode na `/appointments?status=pending` a ne na vlastitu rutu: zasebna
+  ruta bi punu listu ostavila bez ijednog ulaza iz navigacije. Time je popravljena i web greška —
+  kartica na dashboardu je mijenjala stanje providera pa navigirala, pa su refresh i „nazad"
+  vraćali nefiltriranu listu. Dodane `/clients` i `/more` i upisane u `docs/01 §12`, a ranija odluka
+  „ćelija koja vodi na placeholder je gora od ćelije koje nema" je **svjesno obrnuta** i tako
+  zapisana. **Greška koju je našao browser, a testovi nisu mogli:** `AdminPlaceholderScreen` je imao
+  vlastiti `Scaffold`, pa je `/clients` otvoren iz „Još" bio slijepa ulica bez ikakve navigacije —
+  widget test to ne vidi jer diže jedan ekran, a ovo je svojstvo prelaza između dva. **Usput
+  ispravljen i jedan bezvrijedan test:** provjera guttera je poredila token sam sa sobom i prolazila
+  nad pogrešnom vrijednošću. Dokazano: **85 admin testova** (bilo 70), **582 ukupno**, čista analiza,
+  svaki novi test provjeren da **može pasti** (osam prolaza), CI zelen, i obje ljuske uživo u
+  Chromiumu uključujući refresh na `?status=pending` — `docs/screenshots/task-29-admin-*.png`.
+  Ostaje 🟡 samo dokaz sa **pravom prijavom**: snimci su iz novog `apps/admin/lib/demo_main.dart`,
+  jer nema Dockera ni `supabase` CLI-ja; hostovani projekat iz `.env.live` sada ima šemu, ali nije
+  bilo naloga. [PR #51](https://github.com/htuco/salon-booking-platform/pull/51) — **otvoren, čeka
+  spajanje.**
 
 - **28 — Admin tema, tipografija i tokeni** (2026-09-19, 🟡) — `apps/admin/lib/src/core/theme/` je
   prestao biti `.gitkeep`: pet fajlova nose paletu, razmake, uglove, tipografiju i statusne tonove,

@@ -135,4 +135,11 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > Breadcrumb `Vitez / Danas`, akcije top bara i naslov „Danas" umjesto „Pregled" su copy i akcije
 > ekrana — task [30](30-postojeci-ekrani-na-handoff.md).
 >
-> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51), CI zelen, spreman za spajanje.
+> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51) — CI zelen, nije draft,
+> **otvoren i čeka spajanje**.
+>
+> Sljedeći task je [30](30-postojeci-ekrani-na-handoff.md). Tri stvari koje mu je 29 ostavio
+> vidljive na snimcima: breadcrumb `Vitez / Danas` (traži ime salona, kojeg `StaffMember` nema),
+> akcije desktop top bara („Pretraži klijenta", „Blokiraj termin", „+ Novi termin"), i naslov
+> dashboarda „Pregled" dok ga navigacija zove „Danas". Za vizuelni dokaz koristi
+> `apps/admin/lib/demo_main.dart` — `flutter run -d chrome -t lib/demo_main.dart` iz `apps/admin`.

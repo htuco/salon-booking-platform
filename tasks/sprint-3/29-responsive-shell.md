@@ -37,7 +37,7 @@ modela**, ne kao dva stabla ekrana.
 - Admin je i web build. `initialLocation` nadjačava URL iz adresne trake — router to već zna, i
   ljuska to ne smije pokvariti.
 
-## Status (2026-09-19)
+## Status (2026-09-19) — ✅ zatvoren
 
 Gotovo. `AdminScaffold` na 1440 crta tamni sidebar od 236 px i top bar od 66, na 402 četiri
 ćelije donje navigacije; prelaz ide na **840** (Material `expanded`). Canvas taj broj ne daje —
@@ -107,6 +107,8 @@ izmjerene brojeve (28 i 20), a `theme_tokens_test` je dobio tvrdnju o 28.
 
 ### Ostalo za sljedećeg
 
+- **[PR #51](https://github.com/htuco/salon-booking-platform/pull/51) je otvoren i čeka spajanje.**
+  CI je zelen i PR nije draft; merge je odluka vlasnika repoa, ne dio ovog taska.
 - **Ljuska nije viđena sa pravim podacima ni pravom prijavom.** Snimci su iz
   `apps/admin/lib/demo_main.dart`, novog demo ulaza sa override-anim providerima — na ovoj mašini
   nema Dockera ni `supabase` CLI-ja. Hostovani projekat iz `.env.live` **ima šemu**

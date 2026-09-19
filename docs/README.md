@@ -117,6 +117,7 @@ Ne otvaraj ih ponovo bez novog podatka:
 | Web build je sekundarni kanal (Instagram bio, QR), ne zamjena za app | [01 §1.1](01-mvp-spec.md) |
 | Social login je jedan tap; email korisnik ima kratku registraciju i recovery | [ADR-0010](adr/0010-email-lozinka-umjesto-otp-a.md) |
 | **Facebook login se ne implementira** — provideri su Apple, Google i email | [ADR-0011](adr/0011-facebook-login-se-ne-implementira.md) |
+| **Admin navigacija nosi i nenapisane module**, a „Zahtjevi" su filter u adresi, ne svoja ruta | [ADR-0012](adr/0012-admin-navigacija-nosi-i-nenapisane-module.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |
