@@ -135,4 +135,4 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > Breadcrumb `Vitez / Danas`, akcije top bara i naslov „Danas" umjesto „Pregled" su copy i akcije
 > ekrana — task [30](30-postojeci-ekrani-na-handoff.md).
 >
-> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51).
+> PR: [#51](https://github.com/htuco/salon-booking-platform/pull/51), CI zelen, spreman za spajanje.

@@ -5,8 +5,9 @@ Puni task: [`tasks/sprint-3/29-responsive-shell.md`](sprint-3/29-responsive-shel
 
 ## Status
 
-Kod je gotov i dokazan — 85 admin testova, čista analiza, i obje ljuske viđene u Chromiumu.
-Ostaje spajanje [PR-a #51](https://github.com/htuco/salon-booking-platform/pull/51) i zeleni CI.
+Kod je gotov i dokazan — 85 admin testova, čista analiza, obje ljuske viđene u Chromiumu i
+**zelen CI**. Ostaje samo spajanje [PR-a #51](https://github.com/htuco/salon-booking-platform/pull/51),
+koji više nije draft.
 
 Puni nalazi — šta je mjerenje canvasa oborilo, koja je odluka svjesno obrnuta i koju je grešku
 našao browser — stoje u `## Status` bloku samog taska i u
@@ -22,7 +23,9 @@ našao browser — stoje u `## Status` bloku samog taska i u
 - [x] Obje grane čitaju istu listu ruta
 - [x] `AdminScaffold` je jedini nosilac navigacije — uključujući placeholder module, što je bila greška
 - [x] Widget test nad istim ekranom na 1440×900 i 402×874
-- [ ] PR spojen i CI zelen
+- [x] CI zelen — job „Analiza, format i testovi" prošao
+      ([run 35408537356](https://github.com/htuco/salon-booking-platform/actions/runs/35408537356))
+- [ ] PR [#51](https://github.com/htuco/salon-booking-platform/pull/51) spojen
 
 ## Napomene
 

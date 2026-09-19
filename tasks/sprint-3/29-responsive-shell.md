@@ -99,6 +99,8 @@ izmjerene brojeve (28 i 20), a `theme_tokens_test` je dobio tvrdnju o 28.
   tvrdnje, donja navigacija sa svih osam modula tri, gutter vraćen na 24 dvije, `postaviStatusTacno`
   pretvoren u prebacivač jednu, „Zahtjevi" na vlastitoj ruti jednu, uklonjen fallback na „Još"
   jednu, sidebar bez brojača jednu, placeholder vraćen na vlastiti `Scaffold` jednu. Sve vraćeno.
+- **CI zelen** — job „Analiza, format i testovi"
+  ([run 35408537356](https://github.com/htuco/salon-booking-platform/actions/runs/35408537356)).
 - **Uživo u Chromiumu** iz pravog `flutter build web` bundlea, na obje širine:
   `docs/screenshots/task-29-admin-*.png` — ljuska, „Još", zahtjevi, **refresh na
   `/appointments?status=pending`** (filter preživi hladan start) i placeholder na obje širine.
