@@ -8,6 +8,7 @@ import '../../features/appointments/appointment_detail_screen.dart';
 import '../../features/appointments/appointments_screen.dart';
 import '../../features/appointments/new_appointment_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/more/more_screen.dart';
 import '../../features/placeholder/admin_placeholder_screen.dart';
@@ -87,6 +88,11 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: AdminRoute.calendar.path,
+        name: AdminRoute.calendar.name,
+        builder: (context, state) => const AdminCalendarScreen(),
+      ),
+      GoRoute(
         path: AdminRoute.more.path,
         name: AdminRoute.more.name,
         builder: (context, state) => const AdminMoreScreen(),
@@ -130,6 +136,9 @@ const _napisane = {
   AdminRoute.appointmentDetails,
   // Task 29.
   AdminRoute.more,
+  // Task 31. `/calendar/block` **ostaje placeholder** — blokada je pisanje, a `rpc` za nju
+  // dolazi tek u tasku 34.
+  AdminRoute.calendar,
 };
 
 /// Premoscuje Riverpod provider i `Listenable` koji `go_router` ocekuje.

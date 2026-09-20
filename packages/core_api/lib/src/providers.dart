@@ -9,6 +9,7 @@ import 'auth/supabase_auth_repository.dart';
 import 'booking/appointment_repository.dart';
 import 'booking/booking_repository.dart';
 import 'booking/staff_appointment_repository.dart';
+import 'catalog/blocked_slot_repository.dart';
 import 'catalog/employee_repository.dart';
 import 'catalog/policy_repository.dart';
 import 'catalog/review_repository.dart';
@@ -71,6 +72,12 @@ final employeeRepositoryProvider = Provider<EmployeeRepository>(
 
 final workingHoursRepositoryProvider = Provider<WorkingHoursRepository>(
   (ref) => WorkingHoursRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Blokirano vrijeme salona. Čita ga admin kalendar; klijentskoj app-i ne treba, jer je
+/// za nju blokada odsustvo slota, a ne podatak.
+final blockedSlotRepositoryProvider = Provider<BlockedSlotRepository>(
+  (ref) => BlockedSlotRepository(ref.watch(supabaseClientProvider)),
 );
 
 final settingsRepositoryProvider = Provider<SettingsRepository>(

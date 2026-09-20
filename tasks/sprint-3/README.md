@@ -12,7 +12,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [28](28-admin-tema-i-tipografija.md) 🟡 | Admin tema, tipografija i tokeni | svi | 29, 30 | 1 dan |
 | [29](29-responsive-shell.md) ✅ | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
 | [30](30-postojeci-ekrani-na-handoff.md) 🟡 | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
-| [31](31-kalendar-dana.md) | Kalendar dana | `3c` `3l` | — | 2–3 dana |
+| [31](31-kalendar-dana.md) ✅ | Kalendar dana | `3c` `3l` | — | 2–3 dana |
 | [32](32-usluge-i-cjenovnik.md) | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
 | [33](33-osoblje-i-smjene.md) | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
@@ -195,3 +195,51 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > Sljedeći task je [31](31-kalendar-dana.md). Tri stvari koje mu 30 ostavlja spremne:
 > `AppointmentCard` i `AppointmentStatusPill` (oblik termina), `core/format/datum.dart` (imena dana
 > i mjeseci na jednom mjestu) i `terminProvider` sa rutom detalja, na koju kalendar može voditi.
+
+> **31 — Kalendar dana (✅, 2026-09-20).** `/calendar` je prestao biti placeholder. Desktop `3c` je
+> mreža sa kolonom po radniku nad satnom osom (80 px/sat iz canvasa), telefon `3l` ista stvar kao
+> lista po vremenu — **jedan model, dva čitanja**. `calendar_day.dart` je čista funkcija nad
+> terminima, radnim vremenom i blokadama, bez ijednog widgeta: blok na pogrešnom mjestu na osi
+> izgleda tačno kao blok na pravom, pa se razlika vidi samo u testu.
+>
+> **`blocked_slots` je prvi put dobila Dart repozitorij.** Tabela postoji od init migracije, ali je
+> do sada čitana **isključivo iz SQL-a** (`get_available_slots`, admin akcije) — klijentu blokada
+> nije podatak nego odsustvo slota. Adminu jeste: kalendar koji je ne crta pokazuje prazninu tamo
+> gdje je vlasnik svjesno zatvorio vrijeme. Repozitorij **samo čita**; pisanje („Blokiraj vrijeme",
+> „Dodaj pauzu", „Zatvori dan") je task 34. To je i jedino odstupanje od DoD-a, koji je tražio da
+> se čita bez novog upita — termini i jesu, kroz postojeći `forDay`.
+>
+> **Ispravljena netačna tvrdnja koju je prvi prolaz umalo ostavio u repou:** doc je pisao da bi
+> direktan upis blokade bio „obrnuto od pravila upisanog u grantove". Nije — init migracija daje
+> `insert/update/delete` nad `blocked_slots` roli `authenticated` i nikad ih nije oduzela, za
+> razliku od `appointments`, gdje ih je task 24 povukao. **Provjereno pozivom**, ne čitanjem
+> migracije: prijavljen seed admin je kroz REST upisao i obrisao blokadu. Zapisano u
+> `.claude/docs/security.md`.
+>
+> **Tri stvari iz canvasa namjerno nisu nacrtane**, sa razlogom i taskom povratka, i upisane su u
+> tabelu u `prototype/admin/SPEC.md`: prekidač `Dan · Sedmica · Mjesec` (dvije od tri opcije ne bi
+> radile), „Dodaj pauzu" i „Zatvori dan" (pišu u `working_hours` — task 34) i fotografija radnika
+> (`image_url` je prazan u seedu, pa bi svaka kolona nosila slomljenu sliku — task 33). **Dvije
+> stvari aplikacija ima, a canvas nema:** peti red legende („Otkazano", jer kalendar otkazane
+> termine prikazuje) i kolona „Bez radnika" (`employee_id` je nullable).
+>
+> **Tri greške koje je našao ekran, a testovi nisu mogli:** kvadratići u legendi su uzimali
+> `foreground` umjesto `background`, pa je „Otkazano" bio nevidljiv; tekst u 40-minutnom bloku se
+> rezao po dnu, jer je padding biran po trajanju u minutama a ne po visini u pikselima; i
+> „Slobodno" se protezalo preko zatvaranja salona — subota se zatvara u 14:00, a termin u 14:20 je
+> prijavio „Slobodno 2h 20m", red koji nudi da se zakaže kad se ne radi.
+>
+> Dokazano: **716 testova** u pet paketa (`admin` **219**, od toga 62 nova), čista analiza i format
+> nad svim verzionisanim Dart fajlovima, četiri sabotaže koje potvrđuju da novi testovi **mogu
+> pasti**, i **prava prijava** protiv hostovanog projekta — klik na blok u mreži otvara pravi detalj
+> termina (`docs/screenshots/task-31-admin-kalendar-uzivo*.png`). Nijedan test ne zove
+> `DateTime.now()`: dan je fiksiran, a „sada" ulazi kroz `sadaProvider`.
+>
+> **Ostalo za sljedećeg:** `/calendar` ne nosi dan u adresi, pa bookmark uvijek otvara danas — isti
+> obrazac kao `?status=pending` iz taska 29 ako zatreba. Uz to, nađeno uživo i **nije od ovog
+> taska**: deep link na **bilo koju** admin rutu poslije osvježavanja pada na `/dashboard`, jer
+> redirect izgubi traženu putanju dok sesija nije učitana. Blokade nemaju seed red, pa se do taska
+> 34 vide samo uz ručan upis.
+>
+> Sljedeći task je [32](32-usluge-i-cjenovnik.md) — prvi u sprintu koji **nosi backend**: danas ne
+> postoji nijedna RPC putanja kojom admin piše uslugu, pa ide migracija i pgTAP prije ekrana.

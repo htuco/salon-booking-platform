@@ -30,6 +30,7 @@ import 'main.dart';
 import 'src/core/env/app_env.dart';
 import 'src/core/env/bootstrap.dart';
 import 'src/features/appointments/appointments_providers.dart';
+import 'src/features/calendar/calendar_providers.dart';
 
 /// Vitez iz `supabase/seed.sql`.
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
@@ -92,6 +93,29 @@ Future<void> main() async {
           if (filter.status == null) return _termini;
           return _termini.where((t) => t.status == filter.status).toList();
         }),
+
+        // Kalendar (task 31) čita četiri stvari, a ne jednu: termine **izabranog** dana,
+        // radno vrijeme, blokade i radnike. Demo mora napuniti sve četiri, inače kalendar
+        // nacrta osam praznih kolona i izgleda kao da ekran ne radi.
+        //
+        // **Termini prate izabrani dan, i nedjeljom ih nema.** Ravna lista bi isti dan
+        // vratila i za nedjelju, pa bi snimak pokazao pun raspored u salonu koji tog dana
+        // ne radi. Ovako strelica „sljedeći dan" vidljivo mijenja sadržaj, a neradni dan
+        // izgleda kao neradni dan.
+        kalendarTerminiProvider.overrideWith((ref) async {
+          final dan = ref.watch(kalendarDatumProvider);
+          if (dan.weekday == DateTime.sunday) return const <Appointment>[];
+          return [
+            for (final termin in _termini)
+              termin.copyWith(date: LocalDate(dan.year, dan.month, dan.day)),
+          ];
+        }),
+        kalendarRadnoVrijemeProvider.overrideWith((ref) async => _radnoVrijeme),
+        kalendarBlokadeProvider.overrideWith((ref) async {
+          final dan = ref.watch(kalendarDatumProvider);
+          if (dan.weekday == DateTime.sunday) return const <BlockedSlot>[];
+          return [_blokada(dan)];
+        }),
       ],
       child: const SalonAdminApp(),
     ),
@@ -141,7 +165,49 @@ const _usluge = [
 const _radnici = [
   Employee(id: 'demo-emir', salonId: _salonId, name: 'Emir'),
   Employee(id: 'demo-vedad', salonId: _salonId, name: 'Vedad'),
+  // Treći radnik **nema nijedan termin** i počinje kasnije od ostalih. Oba su namjerna:
+  // kalendar tako pokazuje i praznu kolonu i pojas „Ne radi do 12:00", koje demo sa dva
+  // puna radnika nikad ne bi nacrtao.
+  Employee(id: 'demo-amar', salonId: _salonId, name: 'Amar'),
 ];
+
+/// Radno vrijeme za svih sedam dana: salon 09–17, Amar 12–20 sa pauzom.
+///
+/// Nedjelja je zatvorena, kao u `supabase/seed.sql` — strelica „sljedeći dan" tako prije
+/// ili kasnije dođe do dana koji se **vidi** kao neradan.
+final List<WorkingHour> _radnoVrijeme = [
+  for (var dan = 1; dan <= 7; dan++) ...[
+    WorkingHour(
+      id: 'demo-wh-salon-$dan',
+      salonId: _salonId,
+      dayOfWeek: dan,
+      startTime: const LocalTime(9, 0),
+      endTime: LocalTime(dan == 6 ? 14 : 17, 0),
+      isClosed: dan == 7,
+    ),
+    if (dan != 7)
+      WorkingHour(
+        id: 'demo-wh-amar-$dan',
+        salonId: _salonId,
+        employeeId: 'demo-amar',
+        dayOfWeek: dan,
+        startTime: const LocalTime(12, 0),
+        endTime: const LocalTime(20, 0),
+        breakStartTime: const LocalTime(15, 0),
+        breakEndTime: const LocalTime(16, 0),
+      ),
+  ],
+];
+
+/// Jedna salonska blokada, da se vidi razlika između „zauzeto" i „zatvoreno".
+BlockedSlot _blokada(DateTime dan) => BlockedSlot(
+  id: 'demo-blokada',
+  salonId: _salonId,
+  date: LocalDate(dan.year, dan.month, dan.day),
+  startTime: const LocalTime(11, 0),
+  endTime: const LocalTime(12, 0),
+  reason: 'Isporuka robe',
+);
 
 Appointment _termin(String ime, int sat, int minuta, AppointmentStatus status) {
   final sada = DateTime.now();

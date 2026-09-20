@@ -1,47 +1,72 @@
-# Trenutni task: 30 — Postojeći ekrani na handoff
+# Trenutni task
 
-Puni task: [sprint-3/30-postojeci-ekrani-na-handoff.md](sprint-3/30-postojeci-ekrani-na-handoff.md).
-Grana `feat/admin-ekrani-na-handoff`, [PR #52](https://github.com/htuco/salon-booking-platform/pull/52).
+Nijedan task nije učitan — task 31 je zatvoren. Sljedeći po redu je
+[32 — Usluge i cjenovnik](sprint-3/32-usluge-i-cjenovnik.md), prvi u sprintu koji **nosi backend**:
+nema RPC putanje kojom admin piše uslugu, pa ide migracija i pgTAP prije ekrana.
+Učitaj ga sa `/task load 32`.
 
 ## Status
 
-Gotov u kodu (🟡) — čeka pregled PR-a. Ostaje samo dokaz sa **pravom prijavom**, koji ne zavisi od
-koda nego od naloga i Dockera.
+Gotov.
 
 ## Ciljevi
 
-- [x] `/login` po `3j` / `3u`
-- [x] `/dashboard` po `3b` / `3k` — „Danas", breadcrumb i akcije top bara
-- [x] Zahtjevi po `3d` / `3m`, unutar `/appointments?status=pending`
-- [x] Detalj termina po `3n` — ruta `/appointments/:id` više nije placeholder
-- [x] Nijedna RPC putanja nije promijenjena; jedini novi upit je `select` (`byId`)
-- [x] 642 testa u pet paketa (admin 145, bilo 85), čista analiza i format
-- [x] Prolaz uz **pravu prijavu** na Android emulatoru, protiv hostovanog projekta
-- [ ] 🟡 Drugi tenant — Travnik admin ne postoji na hostovanom projektu (`400` na prijavi)
+—
 
 ## Napomene
 
-- **Prava prijava radi:** seed nalog `admin@barberstudiovitez.test` / `admin123456` postoji na
-  hostovanom projektu iz `.env.live`, suprotno pretpostavci iz taska 29. Tok je odigran na Android
-  emulatoru (`docs/screenshots/task-30-admin-uredjaj-*.png`); web snimci ostaju iz demo ulaza.
-- **iOS simulator ovdje ne postoji** — mašina je Windows. Emulatori: `Vitez_API_35`, `vitez_api35`.
-  Pokretanje: `flutter emulators --launch Vitez_API_35`, pa
-  `tool/run_live_demo.sh admin -d emulator-5554`.
-- **Screenshot bez playwrighta:** MCP server nije htio da se poveže, pa su snimci pravljeni
-  headless Chromeom (`chrome --headless=new --screenshot`). Zamka: Chrome ima **minimalnu širinu
-  prozora oko 500 px**, pa 402 traži `--force-device-scale-factor=1.25 --window-size=503,1093`;
-  bez toga snimak izgleda kao da sadržaj izlazi van ekrana, a ne izlazi.
-- **Za `?status=pending` treba SPA fallback** — `python -m http.server` na toj putanji vraća 404.
-- Ostalo spremno za task 31: `AppointmentCard`, `AppointmentStatusPill`, `core/format/datum.dart`,
-  `terminProvider` i ruta detalja.
-
-## Istorija` ispod još kažu da je PR #51 „otvoren i
-  čeka spajanje", a spojen je (`88c1605`). Popravlja se u prvom commitu ovog taska, ne u `load`
-  akciji.
-- Canvas se gleda uživo: `python3 -m http.server 4173 --directory prototype/admin`, pa
-  `http://localhost:4173/`.
+—
 
 ## Istorija
+
+- **31 — Kalendar dana** (2026-09-20, ✅) — `/calendar` je prestao biti placeholder: desktop `3c`
+  je mreža sa kolonom po radniku nad satnom osom, telefon `3l` ista stvar kao lista po vremenu.
+  **Jedan model, dva čitanja** — `calendar_day.dart` je čista funkcija nad terminima, radnim
+  vremenom i blokadama, jer blok na pogrešnom mjestu na osi izgleda tačno kao blok na pravom;
+  miješanje pogleda „po radniku" i „po vremenu" je zamka koju kalendar nasljeđuje od availability
+  enginea. Vrijeme je svugdje `int` minuta od ponoći, ne `DateTime`. **`blocked_slots` je prvi put
+  dobila Dart repozitorij** — tabela postoji od init migracije, ali je do sada čitana isključivo iz
+  SQL-a; bez nje se „blokade se vide" ne može ispuniti, i to je jedino odstupanje od DoD-a, koji je
+  tražio čitanje bez novog upita (termini i jesu, kroz postojeći `forDay`). Repozitorij **samo
+  čita**; pisanje je task 34. **Ispravljena netačna tvrdnja** koju je prvi prolaz umalo ostavio u
+  repou: grantovi nad `blocked_slots` **dozvoljavaju** direktan upis, za razliku od `appointments`
+  gdje ih je task 24 oduzeo — provjereno pozivom, ne čitanjem migracije, i upisano u
+  `security.md`. Četiri odluke koje se ne vide iz koda: osa se razvlači preko svega što dan sadrži
+  (termin van smjene ne smije nestati), zatvoren dan se ne čita iz `start_time`/`end_time` (default
+  `09:00–17:00` stoji i u `is_closed` redu), termin bez radnika dobija kolonu „Bez radnika", i
+  preklapanje ide u trake (otkazan termin ostaje u listi, pa novi legitimno stoji preko njega).
+  **Tri greške našao ekran, ne testovi:** kvadratići u legendi su uzimali `foreground` umjesto
+  `background` pa je „Otkazano" bio nevidljiv; tekst u 40-minutnom bloku se rezao po dnu, jer je
+  padding biran po minutama a ne po pikselima; i „Slobodno" se protezalo preko zatvaranja salona.
+  Dokazano: **716 testova** u pet paketa (`admin` **219**, od toga 62 nova), čista analiza i format,
+  četiri sabotaže koje potvrđuju da testovi mogu pasti, i **prava prijava** protiv hostovanog
+  projekta u kojoj klik na blok otvara pravi detalj termina. Ostalo: `/calendar` ne nosi dan u
+  adresi, blokade nemaju seed red, a deep link na **bilo koju** admin rutu poslije osvježavanja pada
+  na `/dashboard` — nađeno uživo i **nije od ovog taska**.
+  [PR #53](https://github.com/htuco/salon-booking-platform/pull/53).
+
+- **30 — Postojeći ekrani na handoff** (2026-09-20, 🟡) — prijava, „Danas", zahtjevi, lista termina
+  i **detalj termina** su dobili izgled iz `prototype/admin/`. `/appointments/:id` je bio placeholder
+  iako ruta stoji u enumu i u `docs/01 §12`; sada čita jedan termin iz baze
+  (`StaffAppointmentRepository.byId`, nov) umjesto iz liste — ista adresa mora raditi iz bookmarka i,
+  sutra, iz push obavijesti. Ljuska je zatvorila tri stvari koje joj je 29 ostavio: breadcrumb
+  `Vitez / Danas` (ime salona iz novog `adminSalonProvider`-a, jer `StaffMember` nosi samo `salonId`),
+  akcije desktop top bara, i naslov „Danas" umjesto „Pregled". **Dvanaest stvari iz canvasa namjerno
+  nije nacrtano**, sa razlogom i taskom povratka — tabela je u `prototype/admin/SPEC.md`; brojke na
+  prijavi („6 lokacija · 19 majstora · 84 termina") nisu demo sadržaj nego **tuđi podaci** koje
+  `salon_admin` po RLS-u ne smije vidjeti. **Četiri greške je našao ekran, a testovi nisu mogli:**
+  brojanje po `status.blocksSlot` (pokazivalo 5 od 6 termina), „3 3 termina" u zauzetosti,
+  telefonsko dugme širine svog teksta nasred ekrana, i desktop prijava sa dva logotipa — sve četiri
+  sada mjeri test nad cijelim redom ili širinom. **Uređaj je našao petu:** ćelija „Zahtjevi" je
+  nosila crvenu tačku i kad zahtjeva nema, jer Material prazan `Badge.label` iscrta kao tačku; na
+  webu se nije vidjelo jer demo uvijek ima zahtjeve. **Prava prijava je odigrana i time pada dug iz
+  28 i 29** — seed nalog na hostovanom projektu postoji, tok je snimljen na Android emulatoru
+  (`docs/screenshots/task-30-admin-uredjaj-*.png`). Dokazano: **642 testa** (admin **145**, bilo 85),
+  čista analiza i format, svih pet prikaza uživo na 1440 i 402. **Ostalo:**
+  `admin@beautystudiotravnik.test` na hostovanom projektu ne postoji (`400` na prijavi), pa „ista
+  app, druga prijava, nijedan tuđi termin" ostaje nedokazano uživo — izolacija stoji na pgTAP-u i
+  Deno testovima; fizički uređaj i iOS nisu dirani.
+  [PR #52](https://github.com/htuco/salon-booking-platform/pull/52), spojen (`305c1ba`).
 
 - **29 — Responsive shell: desktop sidebar i mobilna navigacija** (2026-09-19, ✅) — `AdminScaffold`
   na 1440 crta tamni sidebar od 236 px i top bar od 66, na 402 četiri ćelije; prelaz na **840**, jer

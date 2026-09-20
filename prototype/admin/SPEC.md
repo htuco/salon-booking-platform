@@ -22,7 +22,7 @@ smanjivati desktop prikaz.
 |---|---|---|
 | `3a` | Pregled mreže — svi saloni | Budući multi-location/platform scope; ne otkrivati bez posebne uloge i RLS-a. |
 | `3b` | Lokacija — Danas | Ciljni izgled postojećeg `/dashboard` ekrana. |
-| `3c` | Kalendar dana | Cilj za `/calendar`; ruta je trenutno placeholder. |
+| `3c` | Kalendar dana | `/calendar`, od taska 31. Kolona po radniku nad zajedničkim modelom `calendar_day.dart`. |
 | `3d` | Zahtjevi za potvrdu | Ciljni pending prikaz unutar postojećih termina. |
 | `3e` | Klijenti i profil | Novi modul; repozitorij i ruta još nisu izdvojeni u admin app. |
 | `3f` | Usluge i cjenovnik | Cilj za `/services`; ruta je trenutno placeholder. |
@@ -36,7 +36,7 @@ smanjivati desktop prikaz.
 | ID | Prikaz | Veza sa `apps/admin` |
 |---|---|---|
 | `3k` | Danas | Mobilni oblik dashboarda. |
-| `3l` | Kalendar | Mobilni oblik kalendara. |
+| `3l` | Kalendar | Mobilni oblik kalendara — **lista po vremenu**, isti model, ne stisnuta mreža. |
 | `3m` | Zahtjevi | Pending lista i potvrda/odbijanje. |
 | `3n` | Detalj termina | Detalj i postojeće akcije nad terminom. |
 | `3o` | Klijenti | Mobilna lista klijenata. |
@@ -156,10 +156,22 @@ modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.
 | „Ponudi drugo vrijeme" (`3d`), „Pomjeri" (`3n`) | Nema RPC putanje za pomjeranje termina; `set_appointment_status` mijenja status, ne vrijeme | otvoreno |
 | „Pozovi" / „Poruka" (`3n`) | `tel:`/`sms:` traže `url_launcher`, koji nije zavisnost admina | otvoreno |
 | Fotografije klijenata i lokacije | Placeholderi iz `canvas/assets/`; `customers` i `public.users` nemaju sliku | — |
+| Prekidač `Dan · Sedmica · Mjesec` (`3c`) | Ovaj task je kalendar **dana**; dvije od tri opcije ne bi radile | otvoreno |
+| „Dodaj pauzu", „Zatvori dan" (`3c`) | Oba pišu u `working_hours`; blokada i pauza dobijaju svoj ekran | task 34 |
+| Fotografija radnika u zaglavlju kolone (`3c`) | `employees.image_url` je nullable i u seedu prazan — svaka kolona bi nosila slomljenu sliku; stoji inicijal | task 33 |
 
 Uz to su dvije rečenice copy-ja promijenjene jer tvrde ono što proizvod nema: podnaslov prijave
 „Jedan račun za sve vaše lokacije." (admin dobija tačno jedan salon iz membershipa) i naslov
 dashboarda „Pregled", koji navigacija zove „Danas".
+
+**Legenda kalendara ima pet redova, canvas četiri** (izmjereno u tasku 31). Peti je „Otkazano":
+canvas ga ne crta jer ga njegov demo dan nema, a kalendar otkazane termine **prikazuje** — dan sa
+tri termina od kojih je jedan otkazan nije isto što i dan sa dva. Boja na rasporedu koju legenda ne
+objašnjava je gora od legende koja je za jedan red duža.
+
+**Kolona „Bez radnika" (`3c`) nije u canvasu.** `appointments.employee_id` je nullable jer salon
+smije pustiti „bilo ko"; takav termin nema svoju kolonu u handoffu, a raspored koji ga tiho izostavi
+je gori od rasporeda sa kolonom viška. Tu kolonu dobija i termin čiji radnik više ne postoji.
 
 **Detalj termina je puni ekran, ne bottom sheet.** `docs/01 §12` ga je tako zvala prije handoffa;
 `3n` crta ekran sa vlastitim zaglavljem i trakom radnji u dnu, a i adresa mora raditi iz bookmarka.

@@ -31,6 +31,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format/datum.dart';
+import '../../core/format/tekst.dart';
 import '../../core/navigation/admin_destinations.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
@@ -139,7 +140,7 @@ class _NaslovDana extends ConsumerWidget {
         Text(
           uDanu.isEmpty
               ? 'Danas nema zakazanih termina.'
-              : '${_terminaTekst(uDanu.length)} · prvi '
+              : '${terminaTekst(uDanu.length)} · prvi '
                     '${vrijemeHhMm(uDanu.first.startTime)} · zadnji '
                     '${vrijemeHhMm(uDanu.last.startTime)}',
           style: Theme.of(context).textTheme.bodyLarge
@@ -753,10 +754,10 @@ class _ZauzetostKartica extends ConsumerWidget {
                           ),
                           const Spacer(),
                           Text(
-                            // `_terminaTekst` **nosi i broj** — prvi prolaz ga je ispisao
+                            // `terminaTekst` **nosi i broj** — prvi prolaz ga je ispisao
                             // dvaput („3 3 termina"). Testovi su gledali samo `40m`, pa to
                             // nije uhvatio nijedan; vidjelo se tek na snimku.
-                            '${_terminaTekst(radnik.termina)}'
+                            '${terminaTekst(radnik.termina)}'
                             ' · ${trajanjeKratko(radnik.minuta)}',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: context.adminColors.textSecondary,
@@ -907,7 +908,7 @@ class _MobilnoZaglavlje extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     '${datumDugo(DateTime.now())} · '
-                    '${_terminaTekst(uDanu)}',
+                    '${terminaTekst(uDanu)}',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: context.adminColors.textSecondary,
                     ),
@@ -1082,16 +1083,6 @@ final _sazetakProvider = Provider<DashboardSazetak>((ref) {
   final termini = ref.watch(danasnjiTerminiProvider).valueOrNull ?? const [];
   return DashboardSazetak.izracunaj(termini, ref.watch(cijenePoUsluziProvider));
 });
-
-/// Bosanski plural po zadnjoj cifri, uz izuzetak za 11–14.
-String _terminaTekst(int broj) {
-  final zadnjeDvije = broj % 100;
-  final zadnja = broj % 10;
-  if (zadnjeDvije >= 11 && zadnjeDvije <= 14) return '$broj termina';
-  if (zadnja == 1) return '$broj termin';
-  if (zadnja >= 2 && zadnja <= 4) return '$broj termina';
-  return '$broj termina';
-}
 
 String _zahtjevaTekst(int broj) {
   final zadnjeDvije = broj % 100;

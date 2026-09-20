@@ -180,6 +180,21 @@ umjesto osvježene liste. Isto vrijedi za `PT404` iz iste funkcije.
 vremena — nijedan podatak o klijentu. Pregled slobodnih termina zato ne traži prijavu, a
 rezervacija traži (`grant execute ... to authenticated`).
 
+### `blocked_slots` se od taska 31 čita i iz aplikacije
+
+Do kalendara je ta tabela postojala samo kao ulaz u `security definer` funkcije iznad — ništa u
+Dartu je nije dodirivalo. Admin kalendar je čita direktno (`BlockedSlotRepository.forDay`), i to je
+ispravno: `staff_manage` politika iz init migracije (`for all ... using(private.is_admin(salon_id))`)
+presijeca na članstvo, pa admin koji pošalje tuđi `salon_id` dobije **praznu listu**, ne tuđe
+blokade. Klijentska app je i dalje ne čita i ne smije — njoj je blokada odsustvo slota, a ne podatak.
+
+**Grantovi ovdje nisu isti kao nad `appointments`.** Init migracija daje
+`select,insert,update,delete` nad `blocked_slots` roli `authenticated` i nikad ih nije oduzela, za
+razliku od `appointments`, gdje ih je task 24 povukao da bi „samo kroz `rpc`" bila tvrdnja baze a ne
+konvencija. Prijavljen `salon_admin` zato **može** direktno upisati i obrisati blokadu — provjereno
+pozivom u tasku 31, ne čitanjem migracije. Repozitorij svejedno samo čita; pisanje i odluka ide li
+kroz validiranu funkciju pripadaju tasku 34.
+
 ### Realtime availability bez otvaranja termina
 
 Klijentski `appointments` stream ne može osvježiti slot nakon **tuđe** rezervacije: politika

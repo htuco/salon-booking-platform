@@ -42,7 +42,7 @@ class AppointmentStatusPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(AdminRadius.pill),
         ),
         child: Text(
-          'U toku',
+          kOznakaUToku,
           style: AdminText.statusLabel.copyWith(
             color: context.adminColors.onAccent,
           ),
@@ -53,15 +53,10 @@ class AppointmentStatusPill extends StatelessWidget {
     // Parovi dolaze iz teme, ne iz `ColorScheme`-a. Ranija verzija je uzimala
     // `primaryContainer` za potvrđen termin, pa je „potvrđeno" bilo plavo — handoff ga
     // crta zeleno, a plava je u ovom sistemu akcent, ne status.
-    final ton = switch (status) {
-      AppointmentStatus.pending => statusi.waiting,
-      AppointmentStatus.confirmed => statusi.positive,
-      AppointmentStatus.cancelled => statusi.negative,
-      AppointmentStatus.completed => statusi.neutral,
-      // „Nije se pojavio" nije otkazivanje: otkazao je neko, ovo se prosto desilo.
-      AppointmentStatus.noShow => statusi.negativeQuiet,
-      AppointmentStatus.unknown => statusi.neutral,
-    };
+    //
+    // Mapa stoji uz `statusOznaka`, ne ovdje: kalendar crta iste tonove u bloku i u
+    // legendi, a dvije kopije `switch`-a se raziđu prvi put kad se doda status.
+    final ton = statusTon(statusi, status);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
