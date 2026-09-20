@@ -260,7 +260,11 @@ void main() {
       await _naSirini(tester, _desktop, _ekran());
 
       expect(find.text('Potvrđeno'), findsOneWidget);
-      expect(find.text('Čeka potvrdu'), findsOneWidget);
+      // **„Na čekanju", ne „Čeka potvrdu" iz canvasa:** legenda mora govoriti istim
+      // riječima kao statusna pilula uz termin, inače isti pojam ima dva imena na istom
+      // ekranu — greška koju je task 30 već vadio iz dashboarda.
+      expect(find.text('Na čekanju'), findsOneWidget);
+      expect(find.text('Čeka potvrdu'), findsNothing);
       expect(find.text('Završeno'), findsOneWidget);
       expect(find.text('Otkazano'), findsOneWidget);
       expect(find.text('U toku'), findsOneWidget);
@@ -286,10 +290,7 @@ void main() {
         _ekran(radnici: const [], termini: const [], blokade: const []),
       );
 
-      expect(
-        find.textContaining('nema nijednog radnika'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('nema nijednog radnika'), findsOneWidget);
     });
   });
 
@@ -435,10 +436,7 @@ void main() {
         ),
       );
 
-      expect(
-        find.text('Nema zakazanih termina za ovaj dan.'),
-        findsOneWidget,
-      );
+      expect(find.text('Nema zakazanih termina za ovaj dan.'), findsOneWidget);
     });
   });
 

@@ -1,77 +1,49 @@
-# Trenutni task: 31 — Kalendar dana
+# Trenutni task
 
-Puni task: [sprint-3/31-kalendar-dana.md](sprint-3/31-kalendar-dana.md). Učitan 2026-09-20.
+Nijedan task nije učitan — task 31 je zatvoren. Sljedeći po redu je
+[32 — Usluge i cjenovnik](sprint-3/32-usluge-i-cjenovnik.md), prvi u sprintu koji **nosi backend**:
+nema RPC putanje kojom admin piše uslugu, pa ide migracija i pgTAP prije ekrana.
+Učitaj ga sa `/task load 32`.
 
 ## Status
 
-U toku.
+Gotov.
 
 ## Ciljevi
 
-- [ ] Desktop `3c`: kolona po radniku, vremenska osa, termin kao blok
-- [ ] Telefon `3l`: isti podaci kao lista po vremenu — ne stisnuta mreža
-- [ ] Termin vodi na detalj (`/appointments/:id`), koji od taska 30 nije placeholder
-- [ ] Pauze, neradni dani i blokade se **vide**, ne samo kao praznina
-- [ ] Termini se čitaju kroz postojeći `StaffAppointmentRepository`, bez novog upita nad `appointments`
-- [ ] Testovi rade u bilo koje doba dana i bilo koji dan u sedmici — fiksirano vrijeme, ne `DateTime.now()`
+—
 
 ## Napomene
 
-**Šta je već spremno, i gdje je provjereno**
-
-- `StaffAppointmentRepository.forDay({salonId, dan})` postoji i vraća termine jednog dana **rastuće
-  po vremenu početka**, sa otkazanima unutra (`packages/core_api/lib/src/booking/staff_appointment_repository.dart`).
-  Kalendaru ne treba novi upit nad `appointments` — DoD stavka je već ispunjena izborom izvora.
-- Kolone po radniku: `adminEmployeesProvider` (`appointments_providers.dart:257`) već čita radnike
-  kroz `adminSalonIdProvider`. **Ne koristi `employeesProvider` iz `core_api`** — on čita
-  `currentSalonIdProvider`, koji admin app nema (komentar na `appointments_providers.dart:239`).
-- Oblik termina i formatiranje: `AppointmentCard`, `AppointmentStatusPill`, `core/format/datum.dart`
-  i `terminProvider` sa rutom detalja — sve iz taska 30.
-- Ljuska: `AdminScaffold` prelazi na mobilni raspored na **840**; telefonski ekran može nositi svoje
-  zaglavlje umjesto `AppBar`-a (task 30).
-
-**Pauze, neradni dani i blokade — dva izvora, jedan nedostaje u Dartu**
-
-- Pauze i neradni dani **su pokriveni**: `WorkingHoursRepository.forSalon(salonId)` vraća i salonske
-  redove (`employee_id is null`) i one po radniku, a `WorkingHour` nosi `breakStartTime`/`breakEndTime`
-  (`hasBreak`) i `isClosed`. Zamka je zapisana u modelu: kad je `isClosed`, `startTime`/`endTime`
-  **i dalje nose default iz baze** (`09:00`–`17:00`) — ne čitaj ih bez provjere flaga.
-- Blokade **nemaju Dart repozitorij**. `public.blocked_slots` postoji od init migracije (`salon_id`,
-  `employee_id`, `date`, `start_time`, `end_time`, `reason`), ima `select` grant za `authenticated`
-  i `staff_manage` politiku, i index `blocked_slots_date_idx(salon_id,date)` — ali je do sada čitana
-  samo iz SQL-a (`get_available_slots`, admin akcije). Čita se ili novim repozitorijem u
-  `core_api/lib/src/catalog/`, ili se stavka odgađa za task 34 uz imenovan ostatak. **Ne rješava se
-  kroz `get_available_slots`** — ta funkcija vraća slobodno vrijeme, ne razlog zauzeća.
-
-**Zamke iz task fajla, i zašto stoje**
-
-- `get_available_slots` vraća **red po radniku**. Kalendaru to i treba, ali miješanje tog pogleda sa
-  `distinctTimes` (task 24) daje ili duplikate ili izgubljene termine.
-- Test koji je zelen samo poslije 09:30 ili samo ponedjeljkom nije test — tri takva su nađena u
-  tasku 17. Kalendar je najgore mjesto za tu grešku.
-- Termin duži od jednog slota i prekoračenje preko ponoći moraju imati svoj slučaj.
-
-**Okruženje i dokaz**
-
-- Polazna baza: 642 Dart testa u pet paketa, od toga `admin` **145**. Novi test se provjerava da
-  **može pasti**, ne samo da prolazi.
-- Docker i `supabase` CLI na ovoj mašini **ne postoje** — lokalni stack se ne diže. Uživo se radi
-  protiv hostovanog projekta iz `.env.live`: seed admin `admin@barberstudiovitez.test` / `admin123456`.
-  Android emulatori: `Vitez_API_35`, `vitez_api35` → `flutter emulators --launch Vitez_API_35`, pa
-  `tool/run_live_demo.sh admin -d emulator-5554`. iOS nema — mašina je Windows.
-- Web snimci bez playwrighta: `chrome --headless=new --screenshot`. Chrome ima **minimalnu širinu
-  prozora oko 500 px**, pa 402 traži `--force-device-scale-factor=1.25 --window-size=503,1093`.
-  Za rute sa query stringom treba SPA fallback — `tool/serve_web_build.sh`.
-- Canvas uživo: `python3 -m http.server 4173 --directory prototype/admin`, pa `http://localhost:4173/`.
-- **Paleta je promijenjena poslije statusnih blokova taska 30:** commit `a1a64ef` je uveo dostavljenu
-  OKLCH paletu i dao coralu (`#EE6C4D`) ulogu glavne radnje. Zapisano je u `prototype/admin/SPEC.md`
-  i `admin_colors.dart`, ali **ne** u status blokovima u `tasks/sprint-3/`. Boje se uzimaju iz
-  `AdminColors`, nikad heks u ekranu.
-
-**Procjena** 2–3 dana iz task fajla stoji; blokade su jedini dio koji je može pomjeriti, jer traže
-novi repozitorij i njegove testove.
+—
 
 ## Istorija
+
+- **31 — Kalendar dana** (2026-09-20, ✅) — `/calendar` je prestao biti placeholder: desktop `3c`
+  je mreža sa kolonom po radniku nad satnom osom, telefon `3l` ista stvar kao lista po vremenu.
+  **Jedan model, dva čitanja** — `calendar_day.dart` je čista funkcija nad terminima, radnim
+  vremenom i blokadama, jer blok na pogrešnom mjestu na osi izgleda tačno kao blok na pravom;
+  miješanje pogleda „po radniku" i „po vremenu" je zamka koju kalendar nasljeđuje od availability
+  enginea. Vrijeme je svugdje `int` minuta od ponoći, ne `DateTime`. **`blocked_slots` je prvi put
+  dobila Dart repozitorij** — tabela postoji od init migracije, ali je do sada čitana isključivo iz
+  SQL-a; bez nje se „blokade se vide" ne može ispuniti, i to je jedino odstupanje od DoD-a, koji je
+  tražio čitanje bez novog upita (termini i jesu, kroz postojeći `forDay`). Repozitorij **samo
+  čita**; pisanje je task 34. **Ispravljena netačna tvrdnja** koju je prvi prolaz umalo ostavio u
+  repou: grantovi nad `blocked_slots` **dozvoljavaju** direktan upis, za razliku od `appointments`
+  gdje ih je task 24 oduzeo — provjereno pozivom, ne čitanjem migracije, i upisano u
+  `security.md`. Četiri odluke koje se ne vide iz koda: osa se razvlači preko svega što dan sadrži
+  (termin van smjene ne smije nestati), zatvoren dan se ne čita iz `start_time`/`end_time` (default
+  `09:00–17:00` stoji i u `is_closed` redu), termin bez radnika dobija kolonu „Bez radnika", i
+  preklapanje ide u trake (otkazan termin ostaje u listi, pa novi legitimno stoji preko njega).
+  **Tri greške našao ekran, ne testovi:** kvadratići u legendi su uzimali `foreground` umjesto
+  `background` pa je „Otkazano" bio nevidljiv; tekst u 40-minutnom bloku se rezao po dnu, jer je
+  padding biran po minutama a ne po pikselima; i „Slobodno" se protezalo preko zatvaranja salona.
+  Dokazano: **716 testova** u pet paketa (`admin` **219**, od toga 62 nova), čista analiza i format,
+  četiri sabotaže koje potvrđuju da testovi mogu pasti, i **prava prijava** protiv hostovanog
+  projekta u kojoj klik na blok otvara pravi detalj termina. Ostalo: `/calendar` ne nosi dan u
+  adresi, blokade nemaju seed red, a deep link na **bilo koju** admin rutu poslije osvježavanja pada
+  na `/dashboard` — nađeno uživo i **nije od ovog taska**.
+  [PR #53](https://github.com/htuco/salon-booking-platform/pull/53).
 
 - **30 — Postojeći ekrani na handoff** (2026-09-20, 🟡) — prijava, „Danas", zahtjevi, lista termina
   i **detalj termina** su dobili izgled iz `prototype/admin/`. `/appointments/:id` je bio placeholder

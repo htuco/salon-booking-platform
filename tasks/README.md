@@ -12,7 +12,7 @@ njemu urađeno. `CURRENT.md` je **derivat**: kad se raziđe sa task fajlom ili r
 | [Sprint 0](sprint-0/) | 01–06 | Native multi-tenant model radi: flavori, RLS izolacija, CI, availability, vertikale | 5 ✅, 1 🟡 |
 | [Sprint 1](sprint-1/) | 07–11 | Prvi ekrani — plumbing, `core_api`, `core_ui` theme factory, home, booking flow | 4 ✅, 1 🟡 |
 | [Sprint 2](sprint-2/) | 12–25, 27 | Auth, identitet, ostatak handoffa, admin i push | 11 ✅, 3 🟡 |
-| [Sprint 3](sprint-3/) | 28–36 | Admin aplikacija po handoffu iz `prototype/admin/` | 9 otvorenih |
+| [Sprint 3](sprint-3/) | 28–36 | Admin aplikacija po handoffu iz `prototype/admin/` | 2 ✅, 2 🟡, 5 otvorenih |
 
 Task 26 (guest + Facebook) je **skinut** sa plana, zato numeracija Sprinta 2 preskače broj —
 [ADR-0011](../docs/adr/0011-facebook-login-se-ne-implementira.md).

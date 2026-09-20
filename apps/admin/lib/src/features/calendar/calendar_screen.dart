@@ -28,7 +28,6 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../appointments/appointment_card.dart';
 import '../appointments/appointments_providers.dart';
-import '../dashboard/dashboard_summary.dart';
 import 'calendar_day.dart';
 import 'calendar_providers.dart';
 
@@ -40,7 +39,11 @@ const double _sirinaOse = 76;
 /// Canvas crta tri kolone na 1440 px, što daje ~370 px po koloni. Salon sa osam radnika bi
 /// na istoj širini dobio 145 px po koloni, u koje ime klijenta ne stane — tada je skrol
 /// pošteniji od stiskanja.
-const double _minSirinaKolone = 190;
+///
+/// **240, a ne 190.** Mjera mora primiti i podnaslov zaglavlja: 190 minus padding (2×18),
+/// inicijal (34) i razmak (11) ostavlja 109 px za `09:00–17:00 · 3 termina`, koje traži oko
+/// 150 — broj termina bi se odsjekao prvi, a on je razlog zbog kojeg se u zaglavlje gleda.
+const double _minSirinaKolone = 240;
 
 /// Razmak bloka od ivice kolone. Canvas: `left:8px;right:8px`.
 const double _uvlakaBloka = 8;
@@ -70,18 +73,12 @@ class _TopBarAkcije extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        OutlinedButton(
-          onPressed: () => context.go(AdminRoute.calendarBlock.path),
-          child: const Text('Blokiraj vrijeme'),
-        ),
-        const SizedBox(width: AdminSpacing.md),
-        FilledButton(
-          onPressed: () => context.go(AdminRoute.appointmentNew.path),
-          child: const Text('+ Novi termin'),
-        ),
-      ],
+    // Samo jedna radnja: „Blokiraj vrijeme" stoji u bočnoj traci, kako ga canvas i crta.
+    // Prva verzija ga je imala na oba mjesta — dva ista dugmeta u istom vidnom polju uče
+    // vlasnika da pogodi koje je „pravo".
+    return FilledButton(
+      onPressed: () => context.go(AdminRoute.appointmentNew.path),
+      child: const Text('+ Novi termin'),
     );
   }
 }
@@ -108,9 +105,8 @@ class _Desktop extends ConsumerWidget {
                 child: dan.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (_, _) => _Greska(
-                    onPonovi: () => osvjeziKalendar(ref),
-                  ),
+                  error: (_, _) =>
+                      _Greska(onPonovi: () => osvjeziKalendar(ref)),
                   data: (dan) => _Mreza(dan: dan),
                 ),
               ),
@@ -167,9 +163,8 @@ class _ZaglavljeDana extends ConsumerWidget {
           const SizedBox(width: AdminSpacing.md),
           Text(
             datumDugo(dan),
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.headlineMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: AdminSpacing.md),
           // „Danas" nestaje kad se već gleda danas: dugme koje ne mijenja ništa uči
@@ -185,6 +180,11 @@ class _ZaglavljeDana extends ConsumerWidget {
   }
 }
 
+/// Strelica za dan — zaobljen kvadrat, ne krug.
+///
+/// **Meta je 38 px na desktopu i [AdminSize.touchTarget] na telefonu.** 38 je canvas mjera
+/// i tačna je za miš; na telefonu je ista strelica primarna navigacija ekrana, a `SPEC.md`
+/// traži „velike touch mete". Prva verzija je nosila 38 na obje širine.
 class _StrelicaDana extends StatelessWidget {
   const _StrelicaDana({
     required this.ikona,
@@ -198,17 +198,25 @@ class _StrelicaDana extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mjera = AdminShell.jeDesktop(context) ? 38.0 : AdminSize.touchTarget;
+
     return Tooltip(
       message: opis,
       child: IconButton.outlined(
         onPressed: onTap,
         icon: Icon(ikona),
         // Bez ovoga `IconButton` nosi Material default od 48 px i razmak između strelica
-        // postaje veći nego u canvasu (38 px).
-        constraints: const BoxConstraints.tightFor(width: 38, height: 38),
+        // postaje veći nego u canvasu.
+        constraints: BoxConstraints.tightFor(width: mjera, height: mjera),
         padding: EdgeInsets.zero,
         iconSize: 20,
         tooltip: null,
+        style: IconButton.styleFrom(
+          // Canvas crta `border-radius:6px`, a `IconButton.outlined` je po defaultu krug.
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AdminRadius.base),
+          ),
+        ),
       ),
     );
   }
@@ -297,7 +305,10 @@ class _ZaglavljeKolone extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: AdminSpacing.lg),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: AdminSpacing.lg,
+      ),
       decoration: BoxDecoration(
         border: Border(
           left: BorderSide(
@@ -350,19 +361,22 @@ class _Inicijal extends StatelessWidget {
   Widget build(BuildContext context) {
     final slovo = ime.trim().isEmpty ? '?' : ime.trim()[0].toUpperCase();
 
-    return Container(
-      width: 34,
-      height: 34,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: context.adminColors.accentTint,
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        slovo,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: context.adminColors.accentInk,
-          fontWeight: FontWeight.w600,
+    // Čitač ekrana inače pročita usamljeno slovo prije imena koje stoji odmah pored.
+    return ExcludeSemantics(
+      child: Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: context.adminColors.accentTint,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          slovo,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: context.adminColors.accentInk,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -388,7 +402,10 @@ class _Osa extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(width: _sirinaOse, child: _SatiOse(osa: dan.osa)),
+              SizedBox(
+                width: _sirinaOse,
+                child: _SatiOse(osa: dan.osa),
+              ),
               for (final kolona in dan.kolone)
                 SizedBox(
                   width: sirinaKolone,
@@ -535,62 +552,90 @@ class _BlokTermina extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Prag se poredi sa visinom koju tekst **stvarno** traži: uvećan sistemski font je isto
+    // što i niži blok.
+    final skala = MediaQuery.textScalerOf(context).scale(1);
     final termin = stavka.termin!;
     final uToku = sada != null && terminUToku(termin, sada!);
     final ton = _tonTermina(context, termin.status, uToku: uToku);
+    final oznaka = uToku ? kOznakaUToku : statusOznaka(termin.status);
     final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(right: 2),
-      child: Material(
-        color: ton.pozadina,
-        borderRadius: BorderRadius.circular(AdminRadius.base),
-        child: InkWell(
-          onTap: () => context.go('/appointments/${termin.id}'),
-          borderRadius: BorderRadius.circular(AdminRadius.base),
-          child: Container(
-            decoration: BoxDecoration(
+      child: Semantics(
+        button: true,
+        label: oznakaTermina(
+          termin,
+          status: oznaka,
+          usluga: ref.watch(uslugePoIdProvider)[termin.serviceId]?.name,
+          radnik: ref.watch(radniciPoIdProvider)[termin.employeeId]?.name,
+        ),
+        child: ExcludeSemantics(
+          child: Material(
+            color: ton.pozadina,
+            borderRadius: BorderRadius.circular(AdminRadius.base),
+            child: InkWell(
+              // `push`, ne `go` — v. isti komentar uz mobilni red.
+              onTap: () => context.push('/appointments/${termin.id}'),
               borderRadius: BorderRadius.circular(AdminRadius.base),
-              border: Border(left: BorderSide(color: ton.rub, width: 3)),
-            ),
-            padding: EdgeInsets.fromLTRB(
-              12,
-              visina < _zaPunPadding ? 6 : 9,
-              12,
-              visina < _zaPunPadding ? 6 : 9,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  termin.customerName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: ton.tekst,
-                    fontWeight: FontWeight.w600,
-                    // Otkazan termin se ne briše iz rasporeda nego se precrtava: slot je
-                    // bio zauzet pa oslobođen, i vlasnik to mora vidjeti.
-                    decoration: _precrtan(termin.status)
-                        ? TextDecoration.lineThrough
-                        : null,
-                  ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AdminRadius.base),
+                  border: Border(left: BorderSide(color: ton.rub, width: 3)),
                 ),
-                // Nizak blok nema mjesta za drugi red. Vrijeme se i tako čita sa ose, a
-                // ime klijenta je ono zbog čega se u blok gleda.
-                if (visina >= _zaDrugiRed)
-                  Flexible(
-                    child: Text(
-                      _opisBloka(stavka, ref.watch(uslugePoIdProvider)),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: ton.tekstTih,
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  visina < _zaPunPadding * skala ? 6 : 9,
+                  12,
+                  visina < _zaPunPadding * skala ? 6 : 9,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // I naslov je `Flexible`: na uvećanom sistemskom fontu jedan red zna
+                    // biti viši od cijelog bloka, a `Column` sa čvrstom visinom tada
+                    // prelije.
+                    Flexible(
+                      child: Text(
+                        termin.customerName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: ton.tekst,
+                          fontWeight: FontWeight.w600,
+                          // Otkazan termin se ne briše iz rasporeda nego se precrtava:
+                          // slot je bio zauzet pa oslobođen, i vlasnik to mora vidjeti.
+                          decoration: _precrtan(termin.status)
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                    // Nizak blok nema mjesta za drugi red. Vrijeme se i tako čita sa ose, a
+                    // ime klijenta je ono zbog čega se u blok gleda — status tada ostaje samo
+                    // u oznaci za čitač ekrana i u tooltipu, v. `Semantics` niže.
+                    if (visina >= _zaDrugiRed * skala)
+                      Flexible(
+                        child: Text(
+                          _opisBloka(
+                            stavka,
+                            ref.watch(uslugePoIdProvider),
+                            status: uToku
+                                ? kOznakaUToku
+                                : statusOznaka(termin.status),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: ton.tekstTih,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -599,17 +644,41 @@ class _BlokTermina extends ConsumerWidget {
   }
 }
 
-/// `11:00–12:20 · Fade + brada` — drugi red bloka.
+/// `11:00–12:20 · Potvrđeno · Fade + brada` — drugi red bloka.
 ///
 /// Usluga dolazi iz mape, ne iz termina: `appointments` nosi samo `service_id`, pa bi blok
 /// koji sam traži svoju uslugu pokrenuo upit po svakom terminu u mreži.
-String _opisBloka(StavkaKalendara stavka, Map<String, Service> usluge) {
-  final raspon =
-      '${vrijemeOse(stavka.odMinuta)}–${vrijemeOse(stavka.doMinuta)}';
+String _opisBloka(
+  StavkaKalendara stavka,
+  Map<String, Service> usluge, {
+  required String status,
+}) {
   final usluga = usluge[stavka.termin!.serviceId]?.name;
 
-  return usluga == null || usluga.isEmpty ? raspon : '$raspon · $usluga';
+  return [
+    '${vrijemeOse(stavka.odMinuta)}–${vrijemeOse(stavka.doMinuta)}',
+    status,
+    if (usluga != null && usluga.isNotEmpty) usluga,
+  ].join(' · ');
 }
+
+/// Oznaka jednog termina za čitač ekrana.
+///
+/// Blok i red su **dva teksta jedan ispod drugog**; bez spajanja ih TalkBack pročita kao
+/// dva nepovezana čvora, bez statusa i bez radnika. Radnik ulazi zato što kolona, koja ga
+/// na ekranu nosi, čitaču ne znači ništa.
+String oznakaTermina(
+  Appointment termin, {
+  required String status,
+  String? usluga,
+  String? radnik,
+}) => [
+  '${vrijemeHhMm(termin.startTime)}–${vrijemeHhMm(termin.endTime)}',
+  termin.customerName,
+  status,
+  if (usluga != null && usluga.isNotEmpty) usluga,
+  if (radnik != null && radnik.isNotEmpty) radnik,
+].join(', ');
 
 /// Pozadinski pojas: pauza, blokada ili neradno vrijeme.
 ///
@@ -622,16 +691,21 @@ class _Pojas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tamnija = stavka.vrsta == VrstaStavke.neradno;
+    final neradno = stavka.vrsta == VrstaStavke.neradno;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AdminRadius.base),
       child: CustomPaint(
-        painter: _Sraffura(
+        // **Razliku nosi gustina, ne samo boja.** Prva verzija je „ne radi" i „pauzu"
+        // razlikovala po `border` naspram `separator` — a u tamnoj paleti su ta dva tokena
+        // ista boja (`#373A40`), pa su dvije različite stvari izgledale identično. Korak
+        // šrafure radi u obje teme, i vidi ga i onaj ko boje ne razlikuje.
+        painter: _Srafura(
           podloga: context.adminColors.ground,
-          crta: tamnija
+          crta: neradno
               ? context.adminColors.border
               : context.adminColors.separator,
+          korak: neradno ? 10 : 16,
         ),
         child: LayoutBuilder(
           builder: (context, constraints) =>
@@ -657,15 +731,17 @@ class _TekstPojasa extends StatelessWidget {
 
   /// Visine ispod kojih natpis ne stane. Mjereno nad `bodyMedium` (≈20 px) i
   /// `dataInline` (≈17 px), uz padding koji se i sam smanjuje.
+  /// Mjereno bez uvećanja sistemskog fonta, pa se množe skalom — v. `_BlokTermina`.
   static const double _zaNaslov = 30;
   static const double _zaVrijeme = 62;
 
   @override
   Widget build(BuildContext context) {
-    if (visina < _zaNaslov) return const SizedBox.shrink();
+    final skala = MediaQuery.textScalerOf(context).scale(1);
+    if (visina < _zaNaslov * skala) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final usko = visina < _zaVrijeme;
+    final usko = visina < _zaVrijeme * skala;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(12, usko ? 5 : 9, 12, usko ? 5 : 9),
@@ -803,7 +879,10 @@ class _MiniMjesec extends ConsumerWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: AdminSpacing.lg),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: AdminSpacing.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -863,24 +942,33 @@ class _DanMjeseca extends ConsumerWidget {
     // mjesec čita brže kad sedmica ima vidljiv kraj.
     final vikend = dan.weekday >= DateTime.saturday;
 
-    return InkWell(
-      onTap: () => ref.read(kalendarDatumProvider.notifier).postavi(dan),
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: izabran ? context.adminColors.accent : null,
+    return Semantics(
+      button: true,
+      selected: izabran,
+      label: datumDugo(dan),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: () => ref.read(kalendarDatumProvider.notifier).postavi(dan),
+          // Canvas: `padding:6px 0;border-radius:4px` — sitnija mjera od [AdminRadius.base],
+          // izmjerena, jer ćelija od 20 px sa radijusom 6 izgleda kao pilula.
           borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          '${dan.day}',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: izabran
-                ? context.adminColors.onAccent
-                : vikend
-                ? context.adminColors.textMuted
-                : null,
-            fontWeight: izabran ? FontWeight.w600 : null,
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: izabran ? context.adminColors.accent : null,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              '${dan.day}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: izabran
+                    ? context.adminColors.onAccent
+                    : vikend
+                    ? context.adminColors.textMuted
+                    : null,
+                fontWeight: izabran ? FontWeight.w600 : null,
+              ),
+            ),
           ),
         ),
       ),
@@ -904,7 +992,10 @@ class _Legenda extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: AdminSpacing.lg),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: AdminSpacing.lg,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -915,21 +1006,33 @@ class _Legenda extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AdminSpacing.md),
+            // **Nazivi dolaze iz `statusOznaka`, ne kao literali.** Canvas piše „Čeka
+            // potvrdu", a pilula uz termin „Na čekanju" — ista stvar pod dva imena na
+            // istom ekranu je greška koju je task 30 već jednom vadio iz dashboarda
+            // („Pregled" naspram „Danas"). Legenda zato govori jezikom pilule.
+            //
             // **Kvadratić nosi `background`, ne `foreground`.** Blok termina je ispunjen
             // podlogom tona, a `foreground` je tekst na njoj — legenda po njemu je
             // pokazivala boju koje na rasporedu nema, a za „Otkazano" (`onDestructive`,
             // skoro bijela) kvadratić se nije ni vidio. Našao snimak, ne test: widget test
             // vidi da red postoji, ne i da mu je uzorak nevidljiv.
-            _RedLegende(ton: statusi.positive, tekst: 'Potvrđeno'),
-            _RedLegende(ton: statusi.waiting, tekst: 'Čeka potvrdu'),
-            _RedLegende(ton: statusi.neutral, tekst: 'Završeno'),
-            _RedLegende(ton: statusi.negative, tekst: 'Otkazano'),
+            for (final status in const [
+              AppointmentStatus.confirmed,
+              AppointmentStatus.pending,
+              AppointmentStatus.completed,
+              AppointmentStatus.cancelled,
+            ])
+              _RedLegende(
+                // Isti izvor boje koji koristi i blok, i statusna pilula uz termin.
+                ton: statusTon(statusi, status),
+                tekst: statusOznaka(status),
+              ),
             _RedLegende(
               ton: AdminStatusTone(
                 background: context.adminColors.accent,
                 foreground: context.adminColors.onAccent,
               ),
-              tekst: 'U toku',
+              tekst: kOznakaUToku,
             ),
           ],
         ),
@@ -967,9 +1070,8 @@ class _RedLegende extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             tekst,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: context.adminColors.textSecondary,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: context.adminColors.textSecondary),
           ),
         ],
       ),
@@ -997,8 +1099,14 @@ class _Telefon extends ConsumerWidget {
           child: dan.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => _Greska(onPonovi: () => osvjeziKalendar(ref)),
+            // `await` na `future`, ne goli `invalidate`: `invalidate` je sinhron, pa bi
+            // se spinner ugasio prije nego ijedan od četiri upita vrati odgovor — korisnik
+            // vidi „osvježeno" dok se još učitava.
             data: (dan) => RefreshIndicator(
-              onRefresh: () async => osvjeziKalendar(ref),
+              onRefresh: () async {
+                osvjeziKalendar(ref);
+                await ref.read(kalendarDanProvider.future);
+              },
               child: _MobilnaLista(dan: dan),
             ),
           ),
@@ -1030,12 +1138,14 @@ class _MobilnoZaglavlje extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Kalendar', style: AdminText.metricNumber),
+                // `display`, ne `metricNumber`: to je naslov ekrana, isti koji nose
+                // „Danas" i „Termini". `metricNumber` je brojka u kartici metrike i
+                // promjena njene veličine ne smije pomjeriti naslov.
+                Text('Kalendar', style: AdminText.display),
                 Text(
                   datumDugo(ref.watch(kalendarDatumProvider)),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.adminColors.textSecondary,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: context.adminColors.textSecondary),
                 ),
               ],
             ),
@@ -1103,43 +1213,52 @@ class _CelijaDana extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return InkWell(
-      onTap: () => ref.read(kalendarDatumProvider.notifier).postavi(dan),
-      borderRadius: BorderRadius.circular(AdminRadius.base),
-      child: Container(
-        width: 56,
-        height: 68,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: izabran ? context.adminColors.accent : null,
+    return Semantics(
+      button: true,
+      selected: izabran,
+      // Bez ovoga čitač pročita „SUB" pa „19" kao dva nepovezana čvora, bez mjeseca i bez
+      // toga koji je dan izabran.
+      label: datumDugo(dan),
+      child: ExcludeSemantics(
+        child: InkWell(
+          onTap: () => ref.read(kalendarDatumProvider.notifier).postavi(dan),
           borderRadius: BorderRadius.circular(AdminRadius.base),
-          border: izabran
-              ? null
-              : Border.all(
-                  color: context.adminColors.border,
-                  width: AdminSize.hairline,
+          child: Container(
+            width: 56,
+            height: 68,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: izabran ? context.adminColors.accent : null,
+              borderRadius: BorderRadius.circular(AdminRadius.base),
+              border: izabran
+                  ? null
+                  : Border.all(
+                      color: context.adminColors.border,
+                      width: AdminSize.hairline,
+                    ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _kratkiDan(dan),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: izabran
+                        ? context.adminColors.onAccent
+                        : context.adminColors.textSecondary,
+                  ),
                 ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _kratkiDan(dan),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: izabran
-                    ? context.adminColors.onAccent
-                    : context.adminColors.textSecondary,
-              ),
+                const SizedBox(height: 3),
+                Text(
+                  '${dan.day}',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: izabran ? context.adminColors.onAccent : null,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 3),
-            Text(
-              '${dan.day}',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: izabran ? context.adminColors.onAccent : null,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1175,7 +1294,8 @@ class _TrakaRadnika extends ConsumerWidget {
             _ChipRadnika(
               tekst: 'Svi',
               izabran: izabran == null,
-              onTap: () => ref.read(izabraniRadnikProvider.notifier).postavi(null),
+              onTap: () =>
+                  ref.read(izabraniRadnikProvider.notifier).postavi(null),
             ),
             for (final kolona in dan.kolone)
               _ChipRadnika(
@@ -1223,6 +1343,14 @@ class _ChipRadnika extends StatelessWidget {
 }
 
 /// Lista po vremenu — `3l`.
+///
+/// **Isprekidani redovi „Slobodno 80 min · Dodirni za novi termin" iz canvasa ovdje ne
+/// postoje.** Slobodno vrijeme nije rupa u rasporedu: `buffer_minutes` produžava zauzeti
+/// interval, `slot_step_minutes` bira dozvoljene početke, `min_advance_booking_hours`
+/// odsijeca ono što je preblizu. Računanje u Dartu bi vlasniku nudilo termine koje
+/// `book_appointment` odbija — a availability logika u aplikaciji je bug koji se ne može
+/// hotfixati (`.claude/docs/architecture.md`). Izvor bi bio `get_available_slots`, ali on
+/// traži uslugu i trajanje, kojih kalendar dana nema.
 class _MobilnaLista extends ConsumerWidget {
   const _MobilnaLista({required this.dan});
 
@@ -1233,9 +1361,7 @@ class _MobilnaLista extends ConsumerWidget {
     final izabran = ref.watch(izabraniRadnikProvider);
     final kolona = izabran == null
         ? null
-        : dan.kolone
-              .where((k) => _kljucKolone(k) == izabran)
-              .firstOrNull;
+        : dan.kolone.where((k) => _kljucKolone(k) == izabran).firstOrNull;
 
     final redovi = kolona == null
         ? redoviDana(dan)
@@ -1270,8 +1396,10 @@ class _MobilniRed extends ConsumerWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 62,
+        // Canvas daje 62 px, ali kao **minimum**: na uvećanom sistemskom fontu `11:00` u
+        // toj širini ne stane, a odsječeno vrijeme u kalendaru je gore od šireg reda.
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 62),
           child: Padding(
             padding: const EdgeInsets.only(top: 15),
             child: Text(
@@ -1283,7 +1411,9 @@ class _MobilniRed extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: 11),
-        Expanded(child: _SadrzajReda(red: red, sada: sada)),
+        Expanded(
+          child: _SadrzajReda(red: red, sada: sada),
+        ),
       ],
     );
   }
@@ -1299,9 +1429,6 @@ class _SadrzajReda extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stavka = red.stavka;
 
-    if (stavka.vrsta == VrstaStavke.slobodno) {
-      return _SlobodnoRed(stavka: stavka);
-    }
     if (stavka.termin == null) return _PojasRed(red: red);
 
     final termin = stavka.termin!;
@@ -1312,47 +1439,66 @@ class _SadrzajReda extends ConsumerWidget {
     final opis = opisTermina(termin, usluge: usluge, radnici: radnici);
     final theme = Theme.of(context);
 
-    return Material(
-      color: ton.pozadina,
-      borderRadius: BorderRadius.circular(AdminRadius.base),
-      child: InkWell(
-        onTap: () => context.go('/appointments/${termin.id}'),
-        borderRadius: BorderRadius.circular(AdminRadius.base),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 64),
-          decoration: BoxDecoration(
+    return Semantics(
+      button: true,
+      label: oznakaTermina(
+        termin,
+        status: uToku ? kOznakaUToku : statusOznaka(termin.status),
+        usluga: opis.usluga,
+        radnik: opis.majstor ?? red.radnik,
+      ),
+      child: ExcludeSemantics(
+        child: Material(
+          color: ton.pozadina,
+          borderRadius: BorderRadius.circular(AdminRadius.base),
+          child: InkWell(
+            // `push`, ne `go`: `go` zamijeni cijeli stek, pa „Nazad" iz detalja vodi na
+            // `/appointments` umjesto natrag u kalendar (`canPop()` u detalju bude `false`).
+            onTap: () => context.push('/appointments/${termin.id}'),
             borderRadius: BorderRadius.circular(AdminRadius.base),
-            border: Border(left: BorderSide(color: ton.rub, width: 3)),
-          ),
-          padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                termin.customerName,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: ton.tekst,
-                  fontWeight: FontWeight.w600,
-                  decoration: _precrtan(termin.status)
-                      ? TextDecoration.lineThrough
-                      : null,
-                ),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 64),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AdminRadius.base),
+                border: Border(left: BorderSide(color: ton.rub, width: 3)),
               ),
-              const SizedBox(height: 2),
-              Text(
-                [
-                  if (opis.red.isNotEmpty) opis.red,
-                  '${stavka.trajanjeMinuta} min',
-                  // Ime radnika samo u listi „Svi": u listi jednog radnika bi ga svaki red
-                  // ponavljao, a chip iznad ga već kaže.
-                  if (red.radnik case final ime? when opis.majstor == null) ime,
-                ].join(' · '),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: ton.tekstTih,
-                ),
+              padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    termin.customerName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: ton.tekst,
+                      fontWeight: FontWeight.w600,
+                      decoration: _precrtan(termin.status)
+                          ? TextDecoration.lineThrough
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      // **Status je prvi i uvijek prisutan.** `SPEC.md` („Raspored i
+                      // komponente") traži da boja nije jedini nosač značenja, a legenda koja
+                      // to objašnjava živi u bočnoj traci — koje na 402 px nema. Bez ove riječi
+                      // je telefonski raspored nečitljiv svakome ko ne razlikuje nijanse.
+                      uToku ? kOznakaUToku : statusOznaka(termin.status),
+                      if (opis.red.isNotEmpty) opis.red,
+                      '${stavka.trajanjeMinuta} min',
+                      // Ime radnika samo u listi „Svi": u listi jednog radnika bi ga svaki red
+                      // ponavljao, a chip iznad ga već kaže.
+                      if (red.radnik case final ime? when opis.majstor == null)
+                        ime,
+                    ].join(' · '),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: ton.tekstTih,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1374,7 +1520,7 @@ class _PojasRed extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AdminRadius.base),
       child: CustomPaint(
-        painter: _Sraffura(
+        painter: _Srafura(
           podloga: context.adminColors.ground,
           crta: context.adminColors.separator,
         ),
@@ -1404,55 +1550,6 @@ class _PojasRed extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// `Slobodno 80 min · Dodirni za novi termin` — isprekidani red iz `3l`.
-class _SlobodnoRed extends StatelessWidget {
-  const _SlobodnoRed({required this.stavka});
-
-  final StavkaKalendara stavka;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: () => context.go(AdminRoute.appointmentNew.path),
-      borderRadius: BorderRadius.circular(AdminRadius.base),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 64),
-        padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-        decoration: BoxDecoration(
-          color: context.adminColors.surface,
-          borderRadius: BorderRadius.circular(AdminRadius.base),
-          border: Border.all(
-            color: context.adminColors.border,
-            width: AdminSize.hairline,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Slobodno ${trajanjeKratko(stavka.trajanjeMinuta)}',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: context.adminColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Dodirni za novi termin',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: context.adminColors.textMuted,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -1510,6 +1607,11 @@ class _MobilnaTraka extends StatelessWidget {
 // Prazna stanja i greška
 // ---------------------------------------------------------------------------
 
+/// Prazan dan — **skrolabilan, iako stane na ekran.**
+///
+/// `RefreshIndicator` hvata gest samo nad `Scrollable`-om. Sa golim `Center`-om bi
+/// pull-to-refresh nestao tačno na danu na kojem vlasnik najviše želi povući da provjeri je
+/// li raspored stvarno prazan.
 class _PrazanDan extends StatelessWidget {
   const _PrazanDan({required this.dan, this.kolona});
 
@@ -1524,26 +1626,36 @@ class _PrazanDan extends StatelessWidget {
         ? !kolona!.radi
         : dan.kolone.isNotEmpty && dan.kolone.every((k) => !k.radi);
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AdminSpacing.xxxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              nerada ? Icons.event_busy_outlined : Icons.event_available_outlined,
-              size: 48,
-              color: context.adminColors.textMuted,
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AdminSpacing.xxxl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    nerada
+                        ? Icons.event_busy_outlined
+                        : Icons.event_available_outlined,
+                    size: 48,
+                    color: context.adminColors.textMuted,
+                  ),
+                  const SizedBox(height: AdminSpacing.lg),
+                  Text(
+                    nerada
+                        ? 'Ovaj dan se ne radi.'
+                        : 'Nema zakazanih termina za ovaj dan.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: AdminSpacing.lg),
-            Text(
-              nerada
-                  ? 'Ovaj dan se ne radi.'
-                  : 'Nema zakazanih termina za ovaj dan.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1604,9 +1716,15 @@ class _Greska extends StatelessWidget {
               color: context.adminColors.textMuted,
             ),
             const SizedBox(height: AdminSpacing.lg),
-            const Text('Kalendar se ne može učitati.', textAlign: TextAlign.center),
+            const Text(
+              'Kalendar se ne može učitati.',
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: AdminSpacing.lg),
-            FilledButton(onPressed: onPonovi, child: const Text('Pokušaj opet')),
+            FilledButton(
+              onPressed: onPonovi,
+              child: const Text('Pokušaj opet'),
+            ),
           ],
         ),
       ),
@@ -1656,14 +1774,7 @@ _TonBloka _tonTermina(
     );
   }
 
-  final ton = switch (status) {
-    AppointmentStatus.pending => statusi.waiting,
-    AppointmentStatus.confirmed => statusi.positive,
-    AppointmentStatus.cancelled => statusi.negative,
-    AppointmentStatus.completed => statusi.neutral,
-    AppointmentStatus.noShow => statusi.negativeQuiet,
-    AppointmentStatus.unknown => statusi.neutral,
-  };
+  final ton = statusTon(statusi, status);
 
   return _TonBloka(
     pozadina: ton.background,
@@ -1674,8 +1785,7 @@ _TonBloka _tonTermina(
 }
 
 bool _precrtan(AppointmentStatus status) =>
-    status == AppointmentStatus.cancelled ||
-    status == AppointmentStatus.noShow;
+    status == AppointmentStatus.cancelled || status == AppointmentStatus.noShow;
 
 bool _istiDan(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
@@ -1700,19 +1810,19 @@ class _SatneLinije extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SatneLinije old) =>
-      old.broj != broj || old.boja != boja;
+  bool shouldRepaint(_SatneLinije old) => old.broj != broj || old.boja != boja;
 }
 
 /// Kosa šrafura pozadinskog pojasa. Canvas: `repeating-linear-gradient(135deg, …)`.
-class _Sraffura extends CustomPainter {
-  const _Sraffura({required this.podloga, required this.crta});
+class _Srafura extends CustomPainter {
+  const _Srafura({required this.podloga, required this.crta, this.korak = 16});
 
   final Color podloga;
   final Color crta;
 
-  /// Razmak između crta. Canvas crta par 8/16 px, dakle korak 16.
-  static const double _korak = 16;
+  /// Razmak između crta. Canvas crta par 8/16 px, dakle korak 16 za pauzu i blokadu;
+  /// neradno vrijeme ide gušće, da se razlikuje i bez boje.
+  final double korak;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1720,11 +1830,11 @@ class _Sraffura extends CustomPainter {
 
     final olovka = Paint()
       ..color = crta
-      ..strokeWidth = 8;
+      ..strokeWidth = korak / 2;
 
     // 135° ide gore-desno; crte se pomjeraju od `-size.height` da pokriju i gornji lijevi
     // ugao, koji bi inače ostao prazan.
-    for (var x = -size.height; x < size.width + size.height; x += _korak) {
+    for (var x = -size.height; x < size.width + size.height; x += korak) {
       canvas.drawLine(
         Offset(x, size.height),
         Offset(x + size.height, 0),
@@ -1734,6 +1844,6 @@ class _Sraffura extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_Sraffura old) =>
-      old.podloga != podloga || old.crta != crta;
+  bool shouldRepaint(_Srafura old) =>
+      old.podloga != podloga || old.crta != crta || old.korak != korak;
 }

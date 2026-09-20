@@ -25,20 +25,22 @@ class KalendarDatumNotifier extends Notifier<DateTime> {
 
   void postavi(DateTime dan) => state = DateTime(dan.year, dan.month, dan.day);
 
-  void pomjeri(int dana) {
-    final novi = state.add(Duration(days: dana));
-    // `DateTime.add` sa danima preskače ljetno/zimsko računanje vremena — 23-satni dan bi
-    // vratio isti datum. Normalizacija na ponoć to poravna.
-    postavi(DateTime(novi.year, novi.month, novi.day));
-  }
+  /// Pomjera prikazani dan.
+  ///
+  /// **Računa po kalendaru, ne po trajanju.** `state.add(Duration(days: 1))` dodaje 24 sata,
+  /// a zadnja nedjelja oktobra u Sarajevu ima 25 — ponoć + 24 h tada padne u 23:00 **istog
+  /// dana**, pa normalizacija na ponoć vrati isti datum i strelica „Sljedeći dan" jednom
+  /// godišnje ne uradi ništa. Konstruktor `DateTime` prekoračenje dana normalizuje po
+  /// kalendaru, pa ljetno računanje vremena u račun nikad ne ulazi.
+  void pomjeri(int dana) =>
+      postavi(DateTime(state.year, state.month, state.day + dana));
 
   void danas() => postavi(DateTime.now());
 }
 
-final kalendarDatumProvider =
-    NotifierProvider<KalendarDatumNotifier, DateTime>(
-      KalendarDatumNotifier.new,
-    );
+final kalendarDatumProvider = NotifierProvider<KalendarDatumNotifier, DateTime>(
+  KalendarDatumNotifier.new,
+);
 
 /// Radnik izabran na telefonu (`3l` chip traka). `null` = „Svi".
 ///
@@ -61,7 +63,9 @@ class IzabraniRadnik extends Notifier<String?> {
 /// **Isti `forDay` koji koristi dashboard** — kalendar ne uvodi nijedan novi upit nad
 /// `appointments`. Otkazani termini ostaju u listi, jer slot koji je bio zauzet pa
 /// oslobođen nije isto što i slot koji nikad nije ni postojao.
-final kalendarTerminiProvider = FutureProvider<List<Appointment>>((ref) async {
+final kalendarTerminiProvider = FutureProvider.autoDispose<List<Appointment>>((
+  ref,
+) async {
   final salonId = ref.watch(adminSalonIdProvider);
   if (salonId == null) return const [];
 
@@ -74,17 +78,18 @@ final kalendarTerminiProvider = FutureProvider<List<Appointment>>((ref) async {
 ///
 /// Ne zavisi od izabranog dana: upit vraća svih sedam dana odjednom, pa listanje kroz
 /// sedmicu ne pravi novi upit za raspored.
-final kalendarRadnoVrijemeProvider = FutureProvider<List<WorkingHour>>((
-  ref,
-) async {
-  final salonId = ref.watch(adminSalonIdProvider);
-  if (salonId == null) return const [];
+final kalendarRadnoVrijemeProvider =
+    FutureProvider.autoDispose<List<WorkingHour>>((ref) async {
+      final salonId = ref.watch(adminSalonIdProvider);
+      if (salonId == null) return const [];
 
-  return ref.watch(workingHoursRepositoryProvider).forSalon(salonId);
-});
+      return ref.watch(workingHoursRepositoryProvider).forSalon(salonId);
+    });
 
 /// Blokade izabranog dana.
-final kalendarBlokadeProvider = FutureProvider<List<BlockedSlot>>((ref) async {
+final kalendarBlokadeProvider = FutureProvider.autoDispose<List<BlockedSlot>>((
+  ref,
+) async {
   final salonId = ref.watch(adminSalonIdProvider);
   if (salonId == null) return const [];
 
@@ -95,11 +100,19 @@ final kalendarBlokadeProvider = FutureProvider<List<BlockedSlot>>((ref) async {
 
 /// Sastavljen dan — ono što ekran crta.
 ///
+/// **`autoDispose`, kao i tri čitanja ispod njega.** Desktop `3c` nema pull-to-refresh, a
+/// `FutureProvider` bez `autoDispose` drži vrijednost do kraja života aplikacije: vlasnik
+/// koji potvrdi zahtjev u modulu „Zahtjevi" pa se vrati na kalendar vidio bi taj termin i
+/// dalje narandžastim, dok god ne pomjeri dan i vrati se. Ovako se čitanja oslobode kad
+/// ekran ode sa stabla i ponove se pri povratku.
+///
 /// Čeka **sva četiri** čitanja, umjesto da svako gleda svoj `valueOrNull`. Razlog je
 /// tačnost, ne urednost: dan sastavljen dok radno vrijeme još nije stiglo nacrtao bi svaku
 /// kolonu kao neradnu, pa bi se na trenutak vidio zatvoren salon. Gubitak veze na bilo
 /// kojem od četiri upita je zato greška cijelog ekrana, koju `_Greska` nudi da se ponovi.
-final kalendarDanProvider = FutureProvider<KalendarDan>((ref) async {
+final kalendarDanProvider = FutureProvider.autoDispose<KalendarDan>((
+  ref,
+) async {
   final dan = ref.watch(kalendarDatumProvider);
 
   final (termini, radnici, radnoVrijeme, blokade) = await (
@@ -120,15 +133,20 @@ final kalendarDanProvider = FutureProvider<KalendarDan>((ref) async {
 
 /// Osvježava sve što kalendar čita.
 ///
-/// Na jednom mjestu, jer se poziva sa tri (pull-to-refresh, dugme greške, povratak sa
-/// detalja) — a provider zaboravljen na jednom od njih daje ekran koji se „ponekad" ne
-/// osvježi.
+/// Na jednom mjestu, jer se poziva sa dva (pull-to-refresh na telefonu i dugme „Pokušaj
+/// opet" u stanju greške) — a provider zaboravljen na jednom od njih daje ekran koji se
+/// „ponekad" ne osvježi.
+///
+/// **Usluge su peto čitanje, i lako ispadnu.** Kalendar ih ne čita direktno nego kroz
+/// `uslugePoIdProvider`, ali o njima zavisi naziv usluge u bloku i u mobilnom redu; bez
+/// ovog reda preimenovana usluga preživi i pull-to-refresh i „Pokušaj opet".
 void osvjeziKalendar(WidgetRef ref) {
   ref
     ..invalidate(kalendarTerminiProvider)
     ..invalidate(kalendarBlokadeProvider)
     ..invalidate(kalendarRadnoVrijemeProvider)
-    ..invalidate(adminEmployeesProvider);
+    ..invalidate(adminEmployeesProvider)
+    ..invalidate(adminServicesProvider);
 }
 
 /// Sat ekrana — jedan izvor „sada" za liniju trenutnog vremena i za oznaku „U toku".
@@ -139,7 +157,10 @@ void osvjeziKalendar(WidgetRef ref) {
 ///
 /// Test ga override-uje sa `Stream.value(...)`. Bez toga bi svaki widget test kalendara
 /// zavisio od doba dana, što je tačno zamka zbog koje task 31 i ima svoju napomenu.
-final sadaProvider = StreamProvider<DateTime>((ref) async* {
+///
+/// **`autoDispose` zaustavlja kucanje kad kalendar nije otvoren.** Bez njega bi
+/// `Stream.periodic` radio do kraja života aplikacije, iako liniju „sada" crta jedan ekran.
+final sadaProvider = StreamProvider.autoDispose<DateTime>((ref) async* {
   yield DateTime.now();
   yield* Stream<DateTime>.periodic(
     const Duration(minutes: 1),

@@ -191,14 +191,3 @@ String iznosKm(double iznos) {
       : iznos.toStringAsFixed(2);
   return '$tekst KM';
 }
-
-/// `1 termin`, `2 termina`, `14 termina` — bosanski plural po zadnjoj cifri.
-///
-/// Izuzetak za 11–14 nije kozmetika: po samoj zadnjoj cifri bi „21 termin" bilo tačno, a
-/// „11 termin" ne bi. Stoji ovdje, a ne u ekranu, jer isti broj piše i „Danas" i zaglavlje
-/// kolone u kalendaru (`3c`); dvije kopije znače da se jedna popravi, a druga ne.
-String terminaTekst(int broj) {
-  final zadnjeDvije = broj % 100;
-  if (zadnjeDvije >= 11 && zadnjeDvije <= 14) return '$broj termina';
-  return broj % 10 == 1 ? '$broj termin' : '$broj termina';
-}

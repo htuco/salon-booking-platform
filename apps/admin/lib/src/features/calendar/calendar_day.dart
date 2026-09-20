@@ -22,12 +22,17 @@ library;
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 
-import '../dashboard/dashboard_summary.dart';
+import '../../core/format/tekst.dart';
 
 /// Minuta u danu. Gornja granica ose i jedini dozvoljen „kraj dana".
 const int kMinutaUDanu = 24 * 60;
 
 /// Visina jednog sata u pikselima — canvas `3c` crta satnu mrežu na 80 px.
+///
+/// **Piksel u modelu je namjeran izuzetak.** Ovaj fajl ne uvozi Flutter, ali [KalendarOsa]
+/// jeste geometrija: `yZa` i `visinaZa` vraćaju piksele, jer je „gdje na osi stoji 13:20"
+/// pitanje na koje se odgovara jednom i provjerava testom, a ne u svakom widgetu iznova.
+/// Kad `3c` dobije drugu gustinu ose, mijenja se ova konstanta — ne raspored koda.
 const double kVisinaSata = 80;
 
 /// Osa kad dan nema **ništa**: ni raspored, ni termin, ni blokadu.
@@ -54,10 +59,6 @@ enum VrstaStavke {
 
   /// Vrijeme van radnog vremena tog radnika, unutar prikazane ose.
   neradno,
-
-  /// Rupa između zauzeća jednog radnika. Postoji **samo** u listi jednog radnika —
-  /// v. [redoviKolone].
-  slobodno,
 }
 
 /// Jedno zauzeće na osi jedne kolone.
@@ -77,6 +78,7 @@ class StavkaKalendara {
     this.traka = 0,
     this.brojTraka = 1,
     this.cijeliSalon = false,
+    this.id,
   });
 
   final VrstaStavke vrsta;
@@ -98,6 +100,13 @@ class StavkaKalendara {
 
   /// Koliko traka kolona ima na mjestu ove stavke.
   final int brojTraka;
+
+  /// `blocked_slots.id` za blokadu; `null` za sve ostalo.
+  ///
+  /// Postoji samo da se salonska blokada u mobilnoj listi prepozna kao **ista** blokada u
+  /// više kolona. Vrijeme i tekst za to nisu dovoljni: dvije blokade istog raspona i istog
+  /// razloga su dvije blokade.
+  final String? id;
 
   /// Blokada koja vrijedi za **cijeli salon**, ne za jednog radnika.
   ///
@@ -127,6 +136,7 @@ class StavkaKalendara {
     traka: traka,
     brojTraka: brojTraka,
     cijeliSalon: cijeliSalon,
+    id: id,
   );
 }
 
@@ -228,8 +238,6 @@ class KalendarDan {
   final KalendarOsa osa;
   final List<KolonaRadnika> kolone;
 
-  bool get prazan => kolone.every((k) => k.termini.isEmpty);
-
   /// Ukupno termina koji se broje u dan, kroz sve kolone.
   int get brojTermina =>
       kolone.fold(0, (zbir, kolona) => zbir + kolona.brojTermina);
@@ -322,65 +330,29 @@ KalendarDan izgradiDan({
 
 /// Kolona izravnata u listu po vremenu — mobilni `3l`.
 ///
-/// **Slobodne rupe postoje samo ovdje, i samo za jednog radnika.** „Slobodno 80 min" preko
-/// cijelog salona bi bila ista izmišljotina kao kartica „Slobodno vrijeme" izostavljena iz
-/// `3b` (v. `dashboard_summary.dart`): kad u smjeni radi troje, slobodno nije „otvoreno
-/// minus zauzeto". Rupa u koloni jednog radnika je, naprotiv, tačno ono što jeste.
+/// **Vraća samo zauzeća, nikad „slobodno".** `3l` crta i isprekidane redove
+/// „Slobodno 80 min · Dodirni za novi termin", i prva verzija ovog taska ih je računala
+/// ovdje — „smjena minus zauzeća", uz prag od 15 minuta. To je availability logika u
+/// aplikaciji, koju `.claude/docs/architecture.md` isključuje bez ograde: „Dart ne filtrira
+/// slotove, ne sabira buffer i ne računa trajanje."
 ///
-/// Rupa kraća od [najkracaRupa] se ne crta — između dva termina uvijek ostane po koja
-/// minuta, a red „Slobodno 5 min" je šum, ne ponuda.
-List<StavkaKalendara> redoviKolone(
-  KolonaRadnika kolona, {
-  int najkracaRupa = 15,
-}) {
-  final zauzeca =
-      kolona.stavke
-          .where((s) => s.vrsta != VrstaStavke.neradno)
-          .toList(growable: false)
-        ..sort((a, b) => a.odMinuta.compareTo(b.odMinuta));
-
-  final raspored = kolona.raspored;
-  if (raspored == null || raspored.isClosed) return zauzeca;
-
-  final redovi = <StavkaKalendara>[];
-  var kursor = raspored.startTime.minutesFromMidnight;
-  final krajSmjene = raspored.endTime.minutesFromMidnight;
-
-  for (final stavka in zauzeca) {
-    // Rupa se **odsijeca na kraj smjene**. Termin upisan poslije zatvaranja (ručni unos to
-    // smije) bi inače rastegao „slobodno" preko zatvorenog salona — red koji nudi da se
-    // zakaže u vrijeme kad se ne radi. Našao snimak: subota se zatvara u 14:00, a termin u
-    // 14:20 je prijavio „Slobodno 2h 20m".
-    final krajRupe = stavka.odMinuta < krajSmjene
-        ? stavka.odMinuta
-        : krajSmjene;
-    if (krajRupe - kursor >= najkracaRupa && kursor < krajSmjene) {
-      redovi.add(
-        StavkaKalendara(
-          vrsta: VrstaStavke.slobodno,
-          odMinuta: kursor,
-          doMinuta: krajRupe,
-        ),
-      );
-    }
-    redovi.add(stavka);
-    // `max`, ne dodjela: termin koji je cijeli unutar prethodnog (preklapanje) bi inače
-    // vratio kursor unazad i otvorio lažnu rupu.
-    if (stavka.doMinuta > kursor) kursor = stavka.doMinuta;
-  }
-
-  if (krajSmjene - kursor >= najkracaRupa) {
-    redovi.add(
-      StavkaKalendara(
-        vrsta: VrstaStavke.slobodno,
-        odMinuta: kursor,
-        doMinuta: krajSmjene,
-      ),
-    );
-  }
-
-  return redovi;
-}
+/// Razlog nije čistoća sloja nego tačnost. Rupa u rasporedu **nije** slobodan termin:
+/// `salon_settings.buffer_minutes` produžava zauzeti interval, `slot_step_minutes` bira
+/// dozvoljene početke, a `min_advance_booking_hours` odsijeca ono što je preblizu. Rupa od
+/// 15 minuta uz buffer od 5 nije slobodna — vlasnik bi vidio ponudu, dodirnuo je i dobio
+/// odbijenicu iz `book_appointment`. Isti razlog je kartici „Slobodno vrijeme" zatvorio
+/// ulaz u `3b` (v. `dashboard_summary.dart`).
+///
+/// Kad slobodno vrijeme zatreba, izvor je `get_available_slots` — ali on traži uslugu i
+/// trajanje, kojih kalendar dana nema.
+///
+/// Neradni pojasevi ispadaju jer je lista ionako unutar smjene; pauza i blokada ostaju, jer
+/// one **jesu** zauzeće.
+List<StavkaKalendara> redoviKolone(KolonaRadnika kolona) =>
+    kolona.stavke
+        .where((s) => s.vrsta != VrstaStavke.neradno)
+        .toList(growable: false)
+      ..sort((a, b) => a.odMinuta.compareTo(b.odMinuta));
 
 /// Jedan red mobilne liste — stavka i, kad lista miješa radnike, čiji je.
 class RedListe {
@@ -394,13 +366,10 @@ class RedListe {
 
 /// Cijeli dan kao jedna lista — mobilni `3l` sa izabranim „Svi".
 ///
-/// **Bez slobodnih rupa.** Rupa u koloni jednog radnika je podatak; „slobodno" preko
-/// cijelog salona nije, jer kad u smjeni radi troje, slobodno nije „otvoreno minus
-/// zauzeto". Isti razlog zbog kojeg kartica „Slobodno vrijeme" nije ušla u `3b`
-/// (`dashboard_summary.dart`).
-///
 /// **Salonska blokada se pojavljuje jednom**, iako stoji u svakoj koloni. Pet puta
-/// ispisana „Inventura" bi izgledalo kao pet blokada.
+/// ispisana „Inventura" bi izgledalo kao pet blokada. Prepoznaje se po `blocked_slots.id`,
+/// ne po vremenu i tekstu: dvije salonske blokade istog raspona i istog razloga su dvije
+/// blokade, i prva verzija ih je spajala u jednu.
 List<RedListe> redoviDana(KalendarDan dan) {
   final redovi = <RedListe>[];
   final vidjeneSalonske = <String>{};
@@ -412,11 +381,7 @@ List<RedListe> redoviDana(KalendarDan dan) {
       // Pauza je po radniku i smije se ponoviti; salonska blokada stoji u svakoj koloni i
       // ispisuje se jednom, bez imena radnika — ona nije ničija.
       if (stavka.cijeliSalon) {
-        if (!vidjeneSalonske.add(
-          '${stavka.odMinuta}-${stavka.doMinuta}-${stavka.tekst}',
-        )) {
-          continue;
-        }
+        if (!vidjeneSalonske.add(stavka.id ?? '')) continue;
         redovi.add(RedListe(stavka: stavka));
         continue;
       }
@@ -517,6 +482,7 @@ KolonaRadnika _kolona({
         osa: osa,
         tekst: blokadaNaslov(blokada),
         cijeliSalon: blokada.isSalonWide,
+        id: blokada.id,
       ),
     for (final termin in termini)
       ?_pojas(
@@ -608,6 +574,7 @@ StavkaKalendara? _pojas({
   Appointment? termin,
   String? tekst,
   bool cijeliSalon = false,
+  String? id,
 }) {
   final presjek = _presjek(_raspon(odMinuta, doMinuta), osa);
   if (presjek == null) return null;
@@ -619,18 +586,24 @@ StavkaKalendara? _pojas({
     termin: termin,
     tekst: tekst,
     cijeliSalon: cijeliSalon,
+    id: id,
   );
 }
 
 /// Raspon koji je uvijek pozitivan i uvijek unutar jednog dana.
 ///
 /// **Prekoračenje preko ponoći.** `appointments` i `blocked_slots` nose
-/// `check(end_time > start_time)`, pa red koji završava sutra u bazi ne može nastati — ali
-/// `end_time` jeste `time`, a Postgresov `time` poznaje `24:00:00`, dok `LocalTime` zna
-/// sate 0–23. Takav red bi ovdje stigao kao kraj koji nije veći od početka i, bez ovoga,
-/// dao blok **negativne visine** — Flutter ga iscrta kao grešku layouta ili ga ne iscrta
-/// uopšte, a u oba slučaja termin nestane sa rasporeda. Kraj koji nije poslije početka
-/// zato znači „do kraja dana".
+/// `check(end_time > start_time)`, pa red koji završava prije nego počne iz baze ne dolazi.
+/// Ovo je odbrana od modela sastavljenog rukom — u testu, u demo ulazu, ili u budućem
+/// kodu koji računa kraj — jer bi kraj koji nije poslije početka dao blok **negativne
+/// visine**, koji Flutter iscrta kao grešku layouta ili ne iscrta uopšte. U oba slučaja
+/// termin nestane sa rasporeda. Kraj koji nije poslije početka zato znači „do kraja dana".
+///
+/// **Postgresov `24:00:00` ovdje ne stiže, i to je zasebna zamka.** `LocalTime.parse` zna
+/// sate 0–23 i na `24:00` baca `FormatException`, koju mapper pretvori u `MappingError` —
+/// pa jedan takav red obori **cijelo** čitanje dana, a ne jedan blok. To se ne može
+/// popraviti ovdje; mjesto je `LocalTime.parse` ili mapper, i zapisano je u statusu
+/// taska 31.
 (int, int) _raspon(int odMinuta, int doMinuta) {
   final od = odMinuta.clamp(0, kMinutaUDanu);
   final do_ = doMinuta <= od ? kMinutaUDanu : doMinuta.clamp(0, kMinutaUDanu);
@@ -647,8 +620,8 @@ StavkaKalendara? _pojas({
 int _poVremenu(StavkaKalendara a, StavkaKalendara b) {
   final poPocetku = a.odMinuta.compareTo(b.odMinuta);
   if (poPocetku != 0) return poPocetku;
-  // Duži prvi, da traka 0 nosi onaj koji pokriva više dana — inače se kratak termin nađe
-  // lijevo od dugog koji ga sadrži, pa izgleda kao da je dugi počeo kasnije.
+  // Duži prvi, da traka 0 nosi onaj koji pokriva više vremena — inače se kratak termin
+  // nađe lijevo od dugog koji ga sadrži, pa izgleda kao da je dugi počeo kasnije.
   return b.trajanjeMinuta.compareTo(a.trajanjeMinuta);
 }
 

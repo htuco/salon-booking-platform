@@ -2,6 +2,8 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/theme.dart';
+
 /// Šta lista termina trenutno prikazuje — jedan dan i, opciono, jedan status.
 class AppointmentsFilter {
   const AppointmentsFilter({required this.dan, this.status});
@@ -288,6 +290,31 @@ String statusOznaka(AppointmentStatus status) => switch (status) {
   AppointmentStatus.noShow => 'Nije došao',
   AppointmentStatus.unknown => 'Nepoznato',
 };
+
+/// Par boja koji status nosi — podloga i tekst na njoj.
+///
+/// Stoji uz [statusOznaka], jer su to dvije polovine iste odluke: kako se status **zove** i
+/// kako **izgleda**. Do taska 31 je `switch` postojao u `status_pill.dart`, pa je kalendar
+/// dopisao svoj — dvije mape se raziđu prvi put kad se doda status, a razlika se vidi tek
+/// kad se dva ekrana otvore jedan uz drugi.
+AdminStatusTone statusTon(
+  AdminStatusColors statusi,
+  AppointmentStatus status,
+) => switch (status) {
+  AppointmentStatus.pending => statusi.waiting,
+  AppointmentStatus.confirmed => statusi.positive,
+  AppointmentStatus.cancelled => statusi.negative,
+  AppointmentStatus.completed => statusi.neutral,
+  // „Nije se pojavio" nije otkazivanje: otkazao je neko, ovo se prosto desilo.
+  AppointmentStatus.noShow => statusi.negativeQuiet,
+  AppointmentStatus.unknown => statusi.neutral,
+};
+
+/// Oznaka termina koji **upravo traje**.
+///
+/// Nije `AppointmentStatus`: u bazi se terminu ništa ne mijenja kad počne. Enum opisuje
+/// red, ovo opisuje trenutak u kojem se red gleda.
+const String kOznakaUToku = 'U toku';
 
 /// Salon kojim admin upravlja.
 ///

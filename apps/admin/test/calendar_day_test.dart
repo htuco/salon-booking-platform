@@ -491,69 +491,14 @@ void main() {
       expect(dan.yLinijeSada(DateTime(2026, 5, 18, 19)), isNull);
     });
   });
-
   group('mobilna lista jednog radnika', () {
-    test('slobodne rupe popunjavaju razmake unutar smjene', () {
-      final dan = _dan(
-        radnici: [_radnik('e1', 'Emir')],
-        termini: [
-          _termin(od: 9 * 60, doMinuta: 10 * 60, id: 'a1'),
-          _termin(od: 11 * 60, doMinuta: 12 * 60, id: 'a2'),
-        ],
-        radnoVrijeme: [_raspored(doMinuta: 13 * 60)],
-      );
-
-      final redovi = redoviKolone(_kolona(dan, 'Emir'));
-      expect(redovi.map((s) => s.vrsta), [
-        VrstaStavke.termin,
-        VrstaStavke.slobodno,
-        VrstaStavke.termin,
-        VrstaStavke.slobodno,
-      ]);
-      expect(redovi[1].odMinuta, 10 * 60);
-      expect(redovi[1].doMinuta, 11 * 60);
-      expect(redovi.last.doMinuta, 13 * 60);
-    });
-
-    test('rupa se odsijeca na kraj smjene, ne na sljedeći termin', () {
-      // Termin poslije zatvaranja je moguć (ručni unos ga smije upisati). Rupa do njega bi
-      // nudila da se zakaže u vrijeme kad salon ne radi.
-      final dan = _dan(
-        radnici: [_radnik('e1', 'Emir')],
-        termini: [_termin(od: 15 * 60, doMinuta: 16 * 60)],
-        radnoVrijeme: [_raspored(od: 9 * 60, doMinuta: 14 * 60)],
-      );
-
-      final slobodno = redoviKolone(_kolona(dan, 'Emir'))
-          .where((s) => s.vrsta == VrstaStavke.slobodno)
-          .toList();
-
-      expect(slobodno, hasLength(1));
-      expect(slobodno.single.odMinuta, 9 * 60);
-      expect(slobodno.single.doMinuta, 14 * 60);
-    });
-
-    test('rupa kraća od praga se ne crta', () {
-      // Između dva termina uvijek ostane po koja minuta; „Slobodno 5 min" je šum.
-      final dan = _dan(
-        radnici: [_radnik('e1', 'Emir')],
-        termini: [
-          _termin(od: 9 * 60, doMinuta: 10 * 60, id: 'a1'),
-          _termin(od: 10 * 60 + 5, doMinuta: 11 * 60, id: 'a2'),
-        ],
-        radnoVrijeme: [_raspored(doMinuta: 11 * 60)],
-      );
-
-      final redovi = redoviKolone(_kolona(dan, 'Emir'));
-      expect(redovi.map((s) => s.vrsta), [
-        VrstaStavke.termin,
-        VrstaStavke.termin,
-      ]);
-    });
-
-    test('neradni pojas ne ulazi u listu, jer je lista već unutar smjene', () {
+    test('vraća zauzeća po vremenu, bez neradnih pojaseva', () {
       final dan = _dan(
         radnici: [_radnik('e1', 'Emir'), _radnik('e2', 'Amar')],
+        termini: [
+          _termin(od: 13 * 60, doMinuta: 14 * 60, id: 'a1', radnik: 'e2'),
+          _termin(od: 12 * 60, doMinuta: 13 * 60, id: 'a2', radnik: 'e2'),
+        ],
         radnoVrijeme: [
           _raspored(),
           _raspored(radnik: 'e2', od: 12 * 60, doMinuta: 20 * 60),
@@ -561,12 +506,34 @@ void main() {
       );
 
       final redovi = redoviKolone(_kolona(dan, 'Amar'));
-      expect(redovi.any((s) => s.vrsta == VrstaStavke.neradno), isFalse);
-      expect(redovi.single.vrsta, VrstaStavke.slobodno);
-      expect(redovi.single.odMinuta, 12 * 60);
+      expect(redovi.map((s) => s.vrsta), [
+        VrstaStavke.termin,
+        VrstaStavke.termin,
+      ]);
+      // Lista je ionako unutar smjene; „Ne radi do 12:00" bi u njoj bio red o tome da
+      // reda nema.
+      expect(redovi.map((s) => s.odMinuta), [12 * 60, 13 * 60]);
     });
 
-    test('pauza i blokada ostaju u listi, jer su ono što drži vrijeme', () {
+    test('ne izmišlja slobodno vrijeme', () {
+      // **Ovo je odluka, ne propust.** Prva verzija je računala „smjena minus zauzeća" i
+      // crtala „Slobodno 80 min · Dodirni za novi termin" iz canvasa. Rupa u rasporedu
+      // nije slobodan termin: `buffer_minutes` produžava zauzeti interval,
+      // `slot_step_minutes` bira dozvoljene početke, `min_advance_booking_hours` odsijeca
+      // preblisko. Availability logika u aplikaciji je bug koji se ne može hotfixati
+      // (`.claude/docs/architecture.md`), pa praznina ostaje praznina.
+      final dan = _dan(
+        radnici: [_radnik('e1', 'Emir')],
+        termini: [_termin(od: 9 * 60, doMinuta: 10 * 60)],
+        radnoVrijeme: [_raspored(doMinuta: 17 * 60)],
+      );
+
+      final redovi = redoviKolone(_kolona(dan, 'Emir'));
+      expect(redovi, hasLength(1));
+      expect(redovi.single.vrsta, VrstaStavke.termin);
+    });
+
+    test('pauza i blokada ostaju, jer one jesu zauzeće', () {
       final dan = _dan(
         radnici: [_radnik('e1', 'Emir')],
         radnoVrijeme: [_raspored(pauzaOd: 12 * 60, pauzaDo: 12 * 60 + 40)],
@@ -581,31 +548,14 @@ void main() {
       );
     });
 
-    test('dan u kojem radnik ne radi nema izmišljeno slobodno vrijeme', () {
+    test('dan u kojem radnik ne radi nema nijedan red', () {
       final dan = _dan(
         dan: _nedjelja,
         radnici: [_radnik('e1', 'Emir')],
         radnoVrijeme: [_raspored(dan: 7, zatvoreno: true)],
       );
 
-      final redovi = redoviKolone(_kolona(dan, 'Emir'));
-      expect(redovi.any((s) => s.vrsta == VrstaStavke.slobodno), isFalse);
-    });
-
-    test('termin unutar drugog ne otvara lažnu rupu iza sebe', () {
-      // Kursor koji se pomjeri unazad bi između 11:00 i 12:00 prijavio slobodno, iako taj
-      // sat drži duži termin.
-      final dan = _dan(
-        radnici: [_radnik('e1', 'Emir')],
-        termini: [
-          _termin(od: 10 * 60, doMinuta: 12 * 60, id: 'a1'),
-          _termin(od: 10 * 60 + 30, doMinuta: 11 * 60, id: 'a2'),
-        ],
-        radnoVrijeme: [_raspored(od: 10 * 60, doMinuta: 12 * 60)],
-      );
-
-      final redovi = redoviKolone(_kolona(dan, 'Emir'));
-      expect(redovi.any((s) => s.vrsta == VrstaStavke.slobodno), isFalse);
+      expect(redoviKolone(_kolona(dan, 'Emir')), isEmpty);
     });
   });
 
@@ -623,21 +573,6 @@ void main() {
       final redovi = redoviDana(dan);
       expect(redovi.map((r) => r.radnik), ['Amar', 'Emir']);
       expect(redovi.first.stavka.odMinuta, 10 * 60);
-    });
-
-    test('nema izmišljenog slobodnog vremena preko cijelog salona', () {
-      // Kad u smjeni radi troje, „slobodno" nije „otvoreno minus zauzeto" — isti razlog
-      // zbog kojeg kartica „Slobodno vrijeme" nije ušla u `3b`.
-      final dan = _dan(
-        radnici: [_radnik('e1', 'Emir'), _radnik('e2', 'Amar')],
-        termini: [_termin(od: 11 * 60, doMinuta: 12 * 60)],
-        radnoVrijeme: [_raspored()],
-      );
-
-      expect(
-        redoviDana(dan).any((r) => r.stavka.vrsta == VrstaStavke.slobodno),
-        isFalse,
-      );
     });
 
     test('salonska blokada se ispisuje jednom, i bez imena radnika', () {
