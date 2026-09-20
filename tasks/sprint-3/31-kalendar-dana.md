@@ -34,4 +34,4 @@
 
 ## Status
 
-Nije počet.
+U toku (2026-09-20). Grana `feat/admin-kalendar-dana`.
