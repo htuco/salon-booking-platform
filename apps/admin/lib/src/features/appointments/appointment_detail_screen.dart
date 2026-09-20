@@ -125,7 +125,7 @@ class _Detalj extends ConsumerWidget {
                           napomena,
                           style: Theme.of(context).textTheme.bodyLarge
                               ?.copyWith(
-                                color: AdminColors.textSecondary,
+                                color: context.adminColors.textSecondary,
                                 height: 1.55,
                               ),
                         ),
@@ -149,7 +149,9 @@ class _Detalj extends ConsumerWidget {
                         child: Text(
                           razlog,
                           style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: AdminColors.textSecondary),
+                              ?.copyWith(
+                                color: context.adminColors.textSecondary,
+                              ),
                         ),
                       ),
                     ),
@@ -183,11 +185,11 @@ class _Zaglavlje extends StatelessWidget {
         AdminShell.gutterOf(context),
         AdminSpacing.lg,
       ),
-      decoration: const BoxDecoration(
-        color: AdminColors.surface,
+      decoration: BoxDecoration(
+        color: context.adminColors.surface,
         border: Border(
           bottom: BorderSide(
-            color: AdminColors.separator,
+            color: context.adminColors.separator,
             width: AdminSize.hairline,
           ),
         ),
@@ -205,7 +207,7 @@ class _Zaglavlje extends StatelessWidget {
                   label: const Text('Termini'),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.only(right: AdminSpacing.md),
-                    foregroundColor: AdminColors.accentInk,
+                    foregroundColor: context.adminColors.accentInk,
                   ),
                 ),
                 const Spacer(),
@@ -244,8 +246,8 @@ class _Klijent extends StatelessWidget {
               width: 52,
               height: 52,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: AdminColors.neutralTint,
+              decoration: BoxDecoration(
+                color: context.adminColors.neutralTint,
                 shape: BoxShape.circle,
               ),
               // Inicijal umjesto fotografije: `customers` nema sliku, a placeholder iz
@@ -253,7 +255,7 @@ class _Klijent extends StatelessWidget {
               child: Text(
                 _inicijal(termin.customerName),
                 style: theme.textTheme.titleLarge?.copyWith(
-                  color: AdminColors.textSecondary,
+                  color: context.adminColors.textSecondary,
                 ),
               ),
             ),
@@ -273,7 +275,7 @@ class _Klijent extends StatelessWidget {
                     SelectableText(
                       telefon,
                       style: AdminText.time.copyWith(
-                        color: AdminColors.textSecondary,
+                        color: context.adminColors.textSecondary,
                       ),
                     ),
                   ],
@@ -368,9 +370,9 @@ class _Red extends StatelessWidget {
       decoration: BoxDecoration(
         border: zadnji
             ? null
-            : const Border(
+            : Border(
                 bottom: BorderSide(
-                  color: AdminColors.separator,
+                  color: context.adminColors.separator,
                   width: AdminSize.hairline,
                 ),
               ),
@@ -381,7 +383,7 @@ class _Red extends StatelessWidget {
           Text(
             labela,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: AdminColors.textSecondary,
+              color: context.adminColors.textSecondary,
             ),
           ),
           const SizedBox(width: AdminSpacing.md),
@@ -417,11 +419,11 @@ class _Podnozje extends StatelessWidget {
         AdminShell.gutterOf(context),
         AdminSpacing.xl,
       ),
-      decoration: const BoxDecoration(
-        color: AdminColors.surface,
+      decoration: BoxDecoration(
+        color: context.adminColors.surface,
         border: Border(
           top: BorderSide(
-            color: AdminColors.separator,
+            color: context.adminColors.separator,
             width: AdminSize.hairline,
           ),
         ),
@@ -458,10 +460,10 @@ class _Poruka extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.event_busy_outlined,
               size: 48,
-              color: AdminColors.textMuted,
+              color: context.adminColors.textMuted,
             ),
             const SizedBox(height: AdminSpacing.lg),
             Text(tekst, textAlign: TextAlign.center),

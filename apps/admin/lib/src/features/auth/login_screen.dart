@@ -152,7 +152,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Bijela, ne radna siva: u oba prikaza forma stoji na plohi kartice, bez kartice.
-      backgroundColor: AdminColors.surface,
+      backgroundColor: context.adminColors.surface,
       body: AdminShell.jeDesktop(context) ? _desktop(context) : _telefon(),
     );
   }
@@ -215,10 +215,10 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
             AdminSpacing.gutterMobile,
             30,
           ),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: AdminColors.separator,
+                color: context.adminColors.separator,
                 width: AdminSize.hairline,
               ),
             ),
@@ -252,7 +252,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
           Text(
             'Upravljanje terminima vašeg salona.',
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: AdminColors.textSecondary,
+              color: context.adminColors.textSecondary,
             ),
           ),
           const SizedBox(height: 28),
@@ -318,7 +318,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
             Text(
               kPristupNapomena,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: AdminColors.textMuted,
+                color: context.adminColors.textMuted,
                 height: 1.6,
               ),
             ),
@@ -335,17 +335,13 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       // Primarna radnja je u canvasu **akcentna plava**, a ne crna kao ostala dugmad
       // (`background:#3d6d9e`). Tema nosi crnu jer je takva svaka druga primarna radnja
       // u adminu; ovdje je izuzetak jedan ekran, ne novi obrazac.
-      style: FilledButton.styleFrom(
-        backgroundColor: AdminColors.accent,
-        foregroundColor: AdminColors.onAccent,
-      ),
       child: _uToku
-          ? const SizedBox(
+          ? SizedBox(
               height: 20,
               width: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AdminColors.onAccent,
+                color: context.adminColors.onAccent,
               ),
             )
           : const Text('Prijavi se'),
@@ -390,7 +386,7 @@ class _Polje extends StatelessWidget {
         Text(
           labela,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: AdminColors.textSecondary,
+            color: context.adminColors.textSecondary,
           ),
         ),
         const SizedBox(height: 7),
@@ -439,12 +435,15 @@ class _TamnaPloha extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       key: kAdminLoginPlohaKey,
-      decoration: const BoxDecoration(
-        color: AdminColors.ink,
+      decoration: BoxDecoration(
+        color: context.adminColors.sidebarBackground,
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AdminColors.sidebarRaised, AdminColors.ink],
+          colors: [
+            context.adminColors.sidebarRaised,
+            context.adminColors.sidebarBackground,
+          ],
         ),
       ),
       child: Padding(
@@ -455,8 +454,10 @@ class _TamnaPloha extends StatelessWidget {
               ? const _Logotip(naTamnom: true)
               : Text(
                   kPristupNapomena,
-                  style: Theme.of(context).textTheme.bodyLarge
-                      ?.copyWith(color: AdminColors.sidebarText, height: 1.6),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: context.adminColors.sidebarText,
+                    height: 1.6,
+                  ),
                 ),
         ),
       ),
@@ -484,13 +485,13 @@ class _Logotip extends StatelessWidget {
           height: 36,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: AdminColors.accent,
+            color: context.adminColors.accent,
             borderRadius: BorderRadius.circular(AdminRadius.base),
           ),
           child: Text(
             'SO',
             style: theme.textTheme.labelLarge?.copyWith(
-              color: AdminColors.onAccent,
+              color: context.adminColors.onAccent,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -503,7 +504,9 @@ class _Logotip extends StatelessWidget {
             Text(
               'Salon OS',
               style: theme.textTheme.titleLarge?.copyWith(
-                color: naTamnom ? AdminColors.onAccent : AdminColors.ink,
+                color: naTamnom
+                    ? context.adminColors.sidebarText
+                    : context.adminColors.ink,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -511,8 +514,8 @@ class _Logotip extends StatelessWidget {
               'administracija salona',
               style: AdminText.eyebrow.copyWith(
                 color: naTamnom
-                    ? AdminColors.sidebarText
-                    : AdminColors.textMuted,
+                    ? context.adminColors.sidebarText
+                    : context.adminColors.textMuted,
               ),
             ),
           ],

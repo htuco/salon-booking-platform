@@ -38,12 +38,14 @@ class AppointmentStatusPill extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
         decoration: BoxDecoration(
-          color: AdminColors.accent,
+          color: context.adminColors.accent,
           borderRadius: BorderRadius.circular(AdminRadius.pill),
         ),
         child: Text(
           'U toku',
-          style: AdminText.statusLabel.copyWith(color: AdminColors.onAccent),
+          style: AdminText.statusLabel.copyWith(
+            color: context.adminColors.onAccent,
+          ),
         ),
       );
     }

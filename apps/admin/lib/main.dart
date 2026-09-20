@@ -79,6 +79,8 @@ class SalonAdminApp extends ConsumerWidget {
       title: 'Salon Admin',
       routerConfig: ref.watch(adminRouterProvider),
       theme: buildAdminTheme(),
+      darkTheme: buildAdminTheme(Brightness.dark),
+      themeMode: ThemeMode.system,
     );
   }
 }

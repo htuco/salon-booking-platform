@@ -54,35 +54,40 @@ class AdminStatusColors extends ThemeExtension<AdminStatusColors> {
   });
 
   /// Handoff vrijednosti; tri izmjerene iz canvasa, dvije izvedene.
-  factory AdminStatusColors.standard() => const AdminStatusColors(
+  factory AdminStatusColors.standard() =>
+      AdminStatusColors.fromPalette(AdminPalette.light);
+
+  factory AdminStatusColors.fromPalette(
+    AdminPalette colors,
+  ) => AdminStatusColors(
     // Canvas: `background:#e8f3ec;color:#2f6b47` — „Potvrđeno". 5,57:1.
     positive: AdminStatusTone(
-      background: AdminColors.positiveTint,
-      foreground: AdminColors.positiveInk,
+      background: colors.positiveTint,
+      foreground: colors.positiveInk,
     ),
     // Canvas: `background:#fdf1dd;color:#8a5a12` — „Na čekanju". 5,29:1.
     waiting: AdminStatusTone(
-      background: AdminColors.waitingTint,
-      foreground: AdminColors.waitingInk,
+      background: colors.waitingTint,
+      foreground: colors.waitingInk,
     ),
     // Canvas: `background:#eef1f3;color:#6b757b` — „Završeno". **Taj par mjeri 4,15:1 i
     // pada AA**, pa je tekst spušten na `AdminColors.textSecondary` (5,26:1). Razlika je
     // jedna nijansa sive i ne vidi se; pad ispod praga se vidi tek kome smeta.
     neutral: AdminStatusTone(
-      background: AdminColors.neutralTint,
-      foreground: AdminColors.textSecondary,
+      background: colors.neutralTint,
+      foreground: colors.ink,
     ),
     // Izvedeno: canvas ne crta otkazan termin. Uzet je destruktivni par iz SPEC tabele,
     // isti koji nosi upozorenja. 5,48:1.
     negative: AdminStatusTone(
-      background: AdminColors.destructiveTint,
-      foreground: AdminColors.destructive,
+      background: colors.destructive,
+      foreground: colors.onDestructive,
     ),
     // Izvedeno: „nije se pojavio" nije otkazivanje i ne smije izgledati isto — otkazao je
     // neko, a ovo se prosto desilo. Neutralna podloga, destruktivan tekst. 5,68:1.
     negativeQuiet: AdminStatusTone(
-      background: AdminColors.neutralTint,
-      foreground: AdminColors.destructive,
+      background: colors.neutralTint,
+      foreground: colors.ink,
     ),
   );
 

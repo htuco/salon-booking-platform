@@ -144,7 +144,7 @@ class _Sidebar extends ConsumerWidget {
 
     return Container(
       width: AdminSize.sidebarWidth,
-      color: AdminColors.ink,
+      color: context.adminColors.sidebarBackground,
       padding: const EdgeInsets.symmetric(vertical: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -156,7 +156,7 @@ class _Sidebar extends ConsumerWidget {
             child: Text(
               'Salon OS',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AdminColors.onAccent,
+                color: context.adminColors.sidebarText,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -188,12 +188,16 @@ class _SidebarStavka extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final boja = izabrana ? AdminColors.onAccent : AdminColors.sidebarText;
+    final boja = izabrana
+        ? context.adminColors.sidebarAccentForeground
+        : context.adminColors.sidebarText;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Material(
-        color: izabrana ? AdminColors.sidebarSelected : Colors.transparent,
+        color: izabrana
+            ? context.adminColors.sidebarSelected
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(AdminRadius.base),
         child: InkWell(
           onTap: () => context.go(cilj.putanja),
@@ -236,10 +240,10 @@ class _SidebarPodnozje extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14),
       padding: const EdgeInsets.only(top: 14),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: AdminColors.sidebarDivider,
+            color: context.adminColors.sidebarDivider,
             width: AdminSize.hairline,
           ),
         ),
@@ -254,7 +258,7 @@ class _SidebarPodnozje extends StatelessWidget {
                   clan.name,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AdminColors.onAccent,
+                    color: context.adminColors.sidebarText,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -262,7 +266,7 @@ class _SidebarPodnozje extends StatelessWidget {
                   clan.email,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AdminColors.sidebarMuted,
+                    color: context.adminColors.sidebarMuted,
                   ),
                 ),
               ],
@@ -293,11 +297,11 @@ class _TopBar extends ConsumerWidget {
 
     return Container(
       height: AdminSize.topBarHeight,
-      decoration: const BoxDecoration(
-        color: AdminColors.surface,
+      decoration: BoxDecoration(
+        color: context.adminColors.surface,
         border: Border(
           bottom: BorderSide(
-            color: AdminColors.separator,
+            color: context.adminColors.separator,
             width: AdminSize.hairline,
           ),
         ),
@@ -317,16 +321,18 @@ class _TopBar extends ConsumerWidget {
                       salon.name,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        color: AdminColors.textMuted,
+                        color: context.adminColors.textMuted,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 11),
                     child: Text(
                       '/',
-                      style: TextStyle(color: AdminColors.breadcrumbSeparator),
+                      style: TextStyle(
+                        color: context.adminColors.breadcrumbSeparator,
+                      ),
                     ),
                   ),
                 ],
@@ -411,13 +417,13 @@ class _Pilula extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
       decoration: BoxDecoration(
-        color: AdminColors.accent,
+        color: context.adminColors.accent,
         borderRadius: BorderRadius.circular(AdminRadius.pill),
       ),
       child: Text(
         '$broj',
         style: AdminText.dataInline.copyWith(
-          color: AdminColors.onAccent,
+          color: context.adminColors.onAccent,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -494,7 +500,7 @@ class _OdjavaDugme extends ConsumerWidget {
       tooltip: 'Odjavi se',
       onPressed: () => odjavi(context, ref),
       icon: const Icon(Icons.logout, size: 18),
-      color: svijetla ? AdminColors.sidebarText : null,
+      color: svijetla ? context.adminColors.sidebarText : null,
     );
   }
 }

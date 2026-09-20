@@ -70,33 +70,40 @@ canvas je crta uže:
 
 ### Osnovni tokeni
 
-| Uloga | Vrijednost iz handoffa |
-|---|---|
-| Glavni tekst / tamni sidebar | `#14181B` |
-| Radna pozadina | `#F4F6F7` |
-| Površina kartice | `#FFFFFF` |
-| Primarni akcent | `#3D6D9E` |
-| Sekundarni akcent | `#5980A6` |
-| Primarni obrub | `#D5DBDF` |
-| Suptilni separator | `#E6EAEC` |
-| Sekundarni tekst | `#5B656B` / `#6B757B` |
-| Destruktivni tekst | `#9C432F` |
-| Osnovni radius | `6px` |
+Od septembra 2026. aplikacija koristi dostavljenu OKLCH paletu. Ispod su njeni sRGB ekvivalenti;
+izvorne OKLCH vrijednosti ostaju dizajnerski izvor istine.
+
+| Uloga | Svijetla | Tamna |
+|---|---|---|
+| Glavni tekst | `#2C2C2C` | `#DCDCDC` |
+| Radna pozadina | `#FCFCF9` | `#1A1B1E` |
+| Površina kartice | `#FFFFFF` | `#25262B` |
+| Primarni akcent | `#3D5A80` | `#91A7FF` |
+| Radnja (coral) | `#EE6C4D` | `#FF9776` |
+| Tekst na radnji | `#2C2C2C` | `#1A1B1E` |
+| Primarni obrub | `#E2E2E2` | `#373A40` |
+| Sekundarni tekst | `#666666` | `#909296` |
+| Sidebar | `#F8F9FA` | `#141517` |
+| Destruktivni tekst | `#C94C4C` | `#F03E3E` |
+| Osnovni radius | `6px` | `6px` |
 
 Vrijednosti prvo centralizovati u `apps/admin/lib/src/core/theme/`; ne ponavljati hex vrijednosti
 po ekranima. Admin akcent je platformski, nije tenant boja.
 
-**Tri nalaza iz mjerenja canvasa i kontrasta (task 28)**, da se tabela ne čita doslovnije nego što
-crtež dopušta:
+Paleta se u Flutteru čuva kao semantički `ThemeExtension`; prilagođeni widgeti ne smiju čitati
+statične light vrijednosti jer tada ne bi pratili sistemski dark mode.
 
-- **Sekundarni akcent `#5980A6` finalni canvas ne koristi nijednom** — ostao je iz skice `Smjer C`.
-  Bijeli tekst na njemu mjeri 4,15:1, crni 4,30:1; nije podloga za tekst, samo obrub ili ispuna
-  trake. Emfazu akcenta u canvasu nosi `#27496B` na tinti `#EAF1F8`.
-- **„Sekundarni tekst" su dvije uloge, ne jedan izbor.** Canvas crta `#5B656B` na tekstu tijela
-  (13,5–15 px) i `#6B757B` na sitnoj labeli i mono eyebrow-u (10,5–13 px).
-- **`#6B757B` se smije koristiti samo na bijeloj kartici.** Na radnoj pozadini `#F4F6F7` mjeri
-  4,35:1 i pada WCAG AA. Isto vrijedi za par oznake „Završeno" iz canvasa (`#6B757B` na `#EEF1F3`,
-  4,15:1) — u implementaciji je tekst spušten na `#5B656B` (5,26:1).
+**Coral (`--secondary`) nosi glavnu radnju** — ispunjeno dugme (`+ Novi termin`, `Potvrdi`,
+`Prijava`) i oznaku „Na čekanju". Primarni akcent ostaje na selekciji, aktivnoj stavci sidebara i
+podacima. Boju dugmeta odlučuje `filledButtonTheme`; ekran je ne prepisuje kod sebe.
+
+Tri korekcije izvornog para, sve zbog WCAG AA:
+
+| Gdje | CSS daje | Implementacija | Zašto |
+|---|---|---|---|
+| Tekst na coralu | `#FFFFFF` | `#2C2C2C` | bijela na `#EE6C4D` = 3,05:1 |
+| Tekst na tamnom destruktivnom | `#FFFFFF` | `#141517` | bijela na `#F03E3E` = 3,84:1 |
+| Tamni coral | `#FFA8A8` (roza, `h=19.5`) | `#FF9776` | drugi ton, ne svjetliji coral; zadržana CSS svjetlina `L=0.8169`, uzeti ton i zasićenje corala |
 
 ### Raspored i komponente
 
@@ -128,6 +135,34 @@ obje ljuske crtaju brojač, pa je i on dio ljuske, ne ekrana.
   smije proći admin guard.
 - Tekstovi i primjeri u canvasu su demo sadržaj. Tajne, stvarne lozinke i administratorski tokeni
   ne pripadaju ni prototipu ni screenshotovima.
+
+### Šta canvas crta, a aplikacija namjerno nema (izmjereno u tasku 30)
+
+Handoff crta i kontrole i brojke iza kojih danas ne stoji ni podatak ni RPC putanja. Svaka od njih
+je **izostavljena, ne odgođena na ekranu**: dugme koje ne radi i brojka koja se računa po pogrešnom
+modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.
+
+| Iz canvasa | Zašto ne | Gdje se vraća |
+|---|---|---|
+| „Prijava kodom na telefon" (`3j`), „Face ID" (`3u`) | Prijava ostaje email + lozinka, v. gore | — |
+| „Zaboravljena?" (`3j`, `3u`) | Reset lozinke je tok sa svojom rutom (mail → link → nova lozinka) | otvoreno |
+| „Ostani prijavljen" (`3j`, `3u`) | `supabase_flutter` sesiju čuva uvijek; kvačica ne bi mijenjala ništa | — |
+| „Trenutno na platformi: 6 lokacija · 19 majstora" (`3j`) | Zbir preko **svih** salona; `salon_admin` ga po RLS-u ne smije vidjeti, a ekran prijave ga traži neprijavljen | `3a` |
+| Kartica „Slobodno vrijeme" (`3b`), „82%" zauzetosti (`3b`) | Traže kapacitet, tj. smjenu radnika | task 33 |
+| „Otvoreno do 20:00" (`3b`) | Traži radno vrijeme salona | task 34 |
+| „Pretraži klijenta" (`3b`), „Profil", „Zadnji dolasci", „12 dolazaka" (`3d`, `3n`) | Traže modul klijenata | task 35 |
+| „najstariji prije 26 min" (`3b`), „prosjek odgovora 8 min" (`3m`), „Zakazano 16.05." (`3n`) | `appointments` nema `created_at` | otvoreno |
+| „Preklapa se s pauzom Amara" (`3d`, `3m`) | Pauze i blokade ne postoje kao podatak | task 34 |
+| „Ponudi drugo vrijeme" (`3d`), „Pomjeri" (`3n`) | Nema RPC putanje za pomjeranje termina; `set_appointment_status` mijenja status, ne vrijeme | otvoreno |
+| „Pozovi" / „Poruka" (`3n`) | `tel:`/`sms:` traže `url_launcher`, koji nije zavisnost admina | otvoreno |
+| Fotografije klijenata i lokacije | Placeholderi iz `canvas/assets/`; `customers` i `public.users` nemaju sliku | — |
+
+Uz to su dvije rečenice copy-ja promijenjene jer tvrde ono što proizvod nema: podnaslov prijave
+„Jedan račun za sve vaše lokacije." (admin dobija tačno jedan salon iz membershipa) i naslov
+dashboarda „Pregled", koji navigacija zove „Danas".
+
+**Detalj termina je puni ekran, ne bottom sheet.** `docs/01 §12` ga je tako zvala prije handoffa;
+`3n` crta ekran sa vlastitim zaglavljem i trakom radnji u dnu, a i adresa mora raditi iz bookmarka.
 
 ## Redoslijed implementacije
 

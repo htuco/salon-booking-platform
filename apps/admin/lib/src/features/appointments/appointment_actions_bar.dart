@@ -3,7 +3,6 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/theme.dart';
 import 'appointments_providers.dart';
 
 /// Akcije nad jednim terminom, ispod njegovog reda u listi.
@@ -244,7 +243,7 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
         SnackBar(
           content: Text(tekst),
           // `error`, ne `errorContainer`: snackbar tekst dolazi iz teme i pisan je za
-          // tamnu podlogu (`AdminColors.ground` na `ink`). Na svijetlom `errorContainer`
+          // tamnu podlogu (`context.adminColors.ground` na `ink`). Na svijetlom `errorContainer`
           // tintu bi bio nevidljiv — 1,06:1.
           backgroundColor: greska ? Theme.of(context).colorScheme.error : null,
         ),
@@ -375,11 +374,7 @@ class _Akcija extends StatelessWidget {
         // Akcent, ne crna iz teme: `3d` i `3m` „Potvrdi" crtaju plavo. Tema nosi crnu jer
         // je takva svaka druga primarna radnja u adminu; ovdje je izuzetak jedan potez u
         // toku odlučivanja, isti kao na kartici zahtjeva na dashboardu.
-        style: FilledButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          backgroundColor: AdminColors.accent,
-          foregroundColor: AdminColors.onAccent,
-        ),
+        style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
       );
     }
 

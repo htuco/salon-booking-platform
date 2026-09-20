@@ -90,10 +90,10 @@ funkcija koja pravi `ThemeData` **u klijentskoj app-i**. Boje su joj ulaz, jer i
 mijenja iz admin aplikacije i promjena mora stići bez novog builda.
 
 Admin je obrnut slučaj i ima **svoju** takvu funkciju, `buildAdminTheme()` u
-`apps/admin/lib/src/core/theme/admin_theme.dart` (task 28). Ona ne prima ništa: admin je jedan build
-za sve salone i njegova plava `#3D6D9E` je identitet Salon OS-a, ne boja salona. Otud i razlika u
-tome gdje se mjeri kontrast — klijent ga računa u runtime-u (`contrast.dart`), jer brand boju bira
-vlasnik i niko je ne vidi prije builda; admin ga mjeri **u testu**, jer su mu boje konstante.
+`apps/admin/lib/src/core/theme/admin_theme.dart` (task 28). Prima samo `Brightness`: admin je jedan
+build za sve salone, ali prati sistemski light/dark mode. Paleta je platformska, ne boja salona.
+Klijent kontrast računa u runtime-u (`contrast.dart`), jer brand boju bira vlasnik; admin obje
+fiksne varijante mjeri **u testu**.
 
 Do boje se dolazi lancem, u `apps/client/lib/src/core/theme_provider.dart`:
 

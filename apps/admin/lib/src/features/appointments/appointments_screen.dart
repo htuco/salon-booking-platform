@@ -177,12 +177,12 @@ class _Zaglavlje extends ConsumerWidget {
       decoration: BoxDecoration(
         // Na telefonu je zaglavlje bijela traka iznad sive radne površine (`3m`); na
         // desktopu stoji **na** radnoj površini, jer je iznad njega već top bar.
-        color: jeDesktop ? null : AdminColors.surface,
+        color: jeDesktop ? null : context.adminColors.surface,
         border: jeDesktop
             ? null
-            : const Border(
+            : Border(
                 bottom: BorderSide(
-                  color: AdminColors.separator,
+                  color: context.adminColors.separator,
                   width: AdminSize.hairline,
                 ),
               ),
@@ -209,7 +209,7 @@ class _Zaglavlje extends ConsumerWidget {
                       Text(
                         podnaslov,
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          color: AdminColors.textSecondary,
+                          color: context.adminColors.textSecondary,
                         ),
                       ),
                     ],
@@ -333,13 +333,17 @@ class _Cip extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(right: 9),
       child: Material(
-        color: izabran ? AdminColors.accent : AdminColors.surface,
+        color: izabran
+            ? context.adminColors.accent
+            : context.adminColors.surface,
         // Obrub ide kroz `shape`, pa `borderRadius` uz njega **nije dozvoljen** —
         // `Material` to provjerava assertom i ruši ekran, ne samo čip.
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AdminRadius.base),
           side: BorderSide(
-            color: izabran ? AdminColors.accent : AdminColors.border,
+            color: izabran
+                ? context.adminColors.accent
+                : context.adminColors.border,
             width: AdminSize.hairline,
           ),
         ),
@@ -353,7 +357,9 @@ class _Cip extends StatelessWidget {
             child: Text(
               labela,
               style: theme.textTheme.labelLarge?.copyWith(
-                color: izabran ? AdminColors.onAccent : AdminColors.ink,
+                color: izabran
+                    ? context.adminColors.onAccent
+                    : context.adminColors.ink,
                 fontWeight: izabran ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
@@ -443,10 +449,10 @@ class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
             Container(
               width: 160,
               padding: const EdgeInsets.all(22),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   right: BorderSide(
-                    color: AdminColors.separator,
+                    color: context.adminColors.separator,
                     width: AdminSize.hairline,
                   ),
                 ),
@@ -462,14 +468,14 @@ class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
                   Text(
                     naslovDanaZaDatum(termin.date).toLowerCase(),
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AdminColors.textSecondary,
+                      color: context.adminColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${termin.durationMinutes} minuta',
                     style: AdminText.dataInline.copyWith(
-                      color: AdminColors.textMuted,
+                      color: context.adminColors.textMuted,
                     ),
                   ),
                 ],
@@ -497,7 +503,7 @@ class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
                       Text(
                         telefon,
                         style: AdminText.dataInline.copyWith(
-                          color: AdminColors.textMuted,
+                          color: context.adminColors.textMuted,
                         ),
                       ),
                     ],
@@ -529,13 +535,13 @@ class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
                       Container(
                         padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
                         decoration: BoxDecoration(
-                          color: AdminColors.neutralTint,
+                          color: context.adminColors.neutralTint,
                           borderRadius: BorderRadius.circular(AdminRadius.base),
                         ),
                         child: Text(
                           napomena,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: AdminColors.textSecondary,
+                            color: context.adminColors.textSecondary,
                           ),
                         ),
                       ),
@@ -547,10 +553,10 @@ class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
             Container(
               width: 280,
               padding: const EdgeInsets.all(22),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(
-                    color: AdminColors.separator,
+                    color: context.adminColors.separator,
                     width: AdminSize.hairline,
                   ),
                 ),
@@ -562,10 +568,6 @@ class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
                     height: 44,
                     child: FilledButton(
                       onPressed: _uToku ? null : _potvrdi,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AdminColors.accent,
-                        foregroundColor: AdminColors.onAccent,
-                      ),
                       child: const Text('Potvrdi'),
                     ),
                   ),
@@ -575,7 +577,7 @@ class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
                     child: OutlinedButton(
                       onPressed: _uToku ? null : _odbij,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AdminColors.destructive,
+                        foregroundColor: context.adminColors.destructive,
                       ),
                       child: const Text('Odbij zahtjev'),
                     ),
@@ -633,7 +635,7 @@ class _Podatak extends StatelessWidget {
         Text(
           labela,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: AdminColors.textMuted,
+            color: context.adminColors.textMuted,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -652,10 +654,6 @@ class _NoviTerminDugme extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilledButton(
       onPressed: () => context.go(AdminRoute.appointmentNew.path),
-      style: FilledButton.styleFrom(
-        backgroundColor: AdminColors.accent,
-        foregroundColor: AdminColors.onAccent,
-      ),
       child: const Text('+ Novi termin'),
     );
   }
@@ -756,7 +754,7 @@ class _PrazanDan extends StatelessWidget {
             Icon(
               zahtjevi ? Icons.mark_email_read_outlined : Icons.event_available,
               size: 48,
-              color: AdminColors.textMuted,
+              color: context.adminColors.textMuted,
             ),
             const SizedBox(height: AdminSpacing.lg),
             Text(
@@ -767,7 +765,7 @@ class _PrazanDan extends StatelessWidget {
                   : 'Nema termina sa statusom „${statusLabela(filter.status!)}".',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: AdminColors.textSecondary,
+                color: context.adminColors.textSecondary,
               ),
             ),
           ],
@@ -791,10 +789,10 @@ class _Greska extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.wifi_off_outlined,
               size: 48,
-              color: AdminColors.textMuted,
+              color: context.adminColors.textMuted,
             ),
             const SizedBox(height: AdminSpacing.lg),
             Text(poruka, textAlign: TextAlign.center),

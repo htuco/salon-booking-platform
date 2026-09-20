@@ -1,133 +1,201 @@
-/// Paleta admin aplikacije — **jedino mjesto sa heks vrijednostima u `apps/admin`**.
+/// Semanticka paleta admin aplikacije.
 ///
-/// ## Zašto ovdje, a ne u `core_ui`
+/// Vrijednosti su sRGB ekvivalenti OKLCH tokena iz dostavljene Tailwind teme. Paleta je
+/// `ThemeExtension` zato što prilagođeni widgeti prate light/dark temu kao i Material widgeti.
 ///
-/// `core_ui` gradi temu iz **tenant** boja: `salons.primary_color` stiže iz baze i mijenja
-/// se po salonu bez builda. Admin je obrnut slučaj — jedan build za sve salone, i njegova
-/// plava je identitet Salon OS-a, ne boja klijenta. Da admin uvozi `buildAppTheme()`,
-/// sidebar bi promijenio boju kad se prijavi drugi vlasnik. To prolazi analizu, prolazi
-/// test, i vidi se tek kad dva salona otvore istu aplikaciju.
+/// ## [action] — coral, i dva mjesta gdje odstupa od CSS-a
 ///
-/// ## Odakle vrijednosti
+/// [action] je `--secondary` (`oklch(0.6835 0.1676 34.7009)` → `#EE6C4D`) i nosi **glavnu
+/// radnju**: `+ Novi termin`, `Potvrdi`, `Prijava`. [accent] (`--primary`) ostaje na
+/// selekciji, aktivnoj stavci sidebara i podacima. Dvije stvari se nisu dale prepisati
+/// doslovno:
 ///
-/// Prvih deset je tabela „Osnovni tokeni" iz [`prototype/admin/SPEC.md`], prepisana znak
-/// po znak. Ostale su **izmjerene iz** `prototype/admin/canvas/Salon OS Admin.dc.html` —
-/// SPEC tabela ne nabraja svaku boju koju handoff crta, a ekran koji ih traži bi ih
-/// inače prepisao kod sebe.
-///
-/// Kontrast svakog para koji se stvarno iscrtava mjeri `theme_contrast_test.dart`. Ovdje
-/// se ništa ne računa u runtime-u, za razliku od `core_ui`: tamo je brand boja **ulaz**
-/// koji vlasnik bira, ovdje je konstanta koju bira dizajn.
+/// - **[onAction] nije bijela.** CSS daje `--secondary-foreground: oklch(1 0 0)`, ali
+///   bijela na `#EE6C4D` mjeri **3,05:1** i pada AA. Tekst je zato `--foreground`
+///   (`#2C2C2C`, 4,58:1). Mjeri `theme_contrast_test.dart`.
+/// - **Dark [action] nije roza.** CSS dark `--secondary` je
+///   `oklch(0.8169 0.1032 19.5306)` → `#FFA8A8`, drugi ton, ne svjetliji coral — isto
+///   dugme bi promijenilo karakter boje između modova. Zadržana je CSS svjetlina
+///   (`L=0.8169`), uzeti su ton i zasićenje corala (`0.1676 34.7009`) → `#FF9776`,
+///   8,15:1 na [ground]. Iz istog razloga i dark `waitingInk` ide na `#FF9776`.
 library;
 
 import 'package:flutter/material.dart';
 
-/// Boje admin aplikacije.
+@immutable
+class AdminPalette extends ThemeExtension<AdminPalette> {
+  const AdminPalette({
+    required this.ink,
+    required this.ground,
+    required this.surface,
+    required this.accent,
+    required this.onAccent,
+    required this.action,
+    required this.onAction,
+    required this.border,
+    required this.separator,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.destructive,
+    required this.onDestructive,
+    required this.accentInk,
+    required this.accentTint,
+    required this.sidebarRaised,
+    required this.sidebarBackground,
+    required this.sidebarAccentForeground,
+    required this.sidebarSelected,
+    required this.sidebarDivider,
+    required this.breadcrumbSeparator,
+    required this.sidebarText,
+    required this.sidebarMuted,
+    required this.positiveTint,
+    required this.positiveInk,
+    required this.waitingTint,
+    required this.waitingInk,
+    required this.neutralTint,
+  });
+
+  static const light = AdminPalette(
+    ink: Color(0xFF2C2C2C),
+    ground: Color(0xFFFCFCF9),
+    surface: Color(0xFFFFFFFF),
+    accent: Color(0xFF3D5A80),
+    onAccent: Color(0xFFFFFFFF),
+    action: Color(0xFFEE6C4D),
+    onAction: Color(0xFF2C2C2C),
+    border: Color(0xFFE2E2E2),
+    separator: Color(0xFFF0F1F3),
+    textSecondary: Color(0xFF666666),
+    textMuted: Color(0xFF666666),
+    destructive: Color(0xFFC94C4C),
+    onDestructive: Color(0xFFFFFFFF),
+    accentInk: Color(0xFF3D5A80),
+    accentTint: Color(0xFFE9ECEF),
+    sidebarRaised: Color(0xFFE9ECEF),
+    sidebarBackground: Color(0xFFF8F9FA),
+    sidebarAccentForeground: Color(0xFF3D5A80),
+    sidebarSelected: Color(0xFFE9ECEF),
+    sidebarDivider: Color(0xFFDEE2E6),
+    breadcrumbSeparator: Color(0xFFE2E2E2),
+    sidebarText: Color(0xFF333333),
+    sidebarMuted: Color(0xFF666666),
+    positiveTint: Color(0xFFE0F2F1),
+    positiveInk: Color(0xFF004D40),
+    waitingTint: Color(0xFFEE6C4D),
+    waitingInk: Color(0xFF2C2C2C),
+    neutralTint: Color(0xFFF0F1F3),
+  );
+
+  static const dark = AdminPalette(
+    ink: Color(0xFFDCDCDC),
+    ground: Color(0xFF1A1B1E),
+    surface: Color(0xFF25262B),
+    accent: Color(0xFF91A7FF),
+    onAccent: Color(0xFF1A1B1E),
+    action: Color(0xFFFF9776),
+    onAction: Color(0xFF1A1B1E),
+    border: Color(0xFF373A40),
+    separator: Color(0xFF373A40),
+    textSecondary: Color(0xFF909296),
+    textMuted: Color(0xFF909296),
+    destructive: Color(0xFFF03E3E),
+    // CSS predlaze bijelu, ali ona na #F03E3E daje samo 3.84:1. Najtamniji token iz
+    // iste palete zadrzava karakter teme i prolazi WCAG AA.
+    onDestructive: Color(0xFF141517),
+    accentInk: Color(0xFF91A7FF),
+    accentTint: Color(0xFF2C2E33),
+    sidebarRaised: Color(0xFF2C2E33),
+    sidebarBackground: Color(0xFF141517),
+    sidebarAccentForeground: Color(0xFFFFFFFF),
+    sidebarSelected: Color(0xFF2C2E33),
+    sidebarDivider: Color(0xFF373A40),
+    breadcrumbSeparator: Color(0xFF373A40),
+    sidebarText: Color(0xFFC1C2C5),
+    sidebarMuted: Color(0xFF909296),
+    positiveTint: Color(0xFF373A40),
+    positiveInk: Color(0xFF63E6BE),
+    waitingTint: Color(0xFF2C2E33),
+    waitingInk: Color(0xFFFF9776),
+    neutralTint: Color(0xFF2C2E33),
+  );
+
+  final Color ink, ground, surface, accent, onAccent;
+  final Color action, onAction;
+  final Color border, separator, textSecondary, textMuted;
+  final Color destructive, onDestructive, accentInk, accentTint;
+  final Color sidebarRaised, sidebarSelected, sidebarDivider;
+  final Color sidebarBackground, sidebarAccentForeground;
+  final Color breadcrumbSeparator, sidebarText, sidebarMuted;
+  final Color positiveTint, positiveInk, waitingTint, waitingInk, neutralTint;
+
+  @override
+  AdminPalette copyWith() => this;
+
+  @override
+  AdminPalette lerp(ThemeExtension<AdminPalette>? other, double t) {
+    if (other is! AdminPalette) return this;
+    Color mix(Color a, Color b) => Color.lerp(a, b, t)!;
+    return AdminPalette(
+      ink: mix(ink, other.ink),
+      ground: mix(ground, other.ground),
+      surface: mix(surface, other.surface),
+      accent: mix(accent, other.accent),
+      onAccent: mix(onAccent, other.onAccent),
+      action: mix(action, other.action),
+      onAction: mix(onAction, other.onAction),
+      border: mix(border, other.border),
+      separator: mix(separator, other.separator),
+      textSecondary: mix(textSecondary, other.textSecondary),
+      textMuted: mix(textMuted, other.textMuted),
+      destructive: mix(destructive, other.destructive),
+      onDestructive: mix(onDestructive, other.onDestructive),
+      accentInk: mix(accentInk, other.accentInk),
+      accentTint: mix(accentTint, other.accentTint),
+      sidebarRaised: mix(sidebarRaised, other.sidebarRaised),
+      sidebarBackground: mix(sidebarBackground, other.sidebarBackground),
+      sidebarAccentForeground: mix(
+        sidebarAccentForeground,
+        other.sidebarAccentForeground,
+      ),
+      sidebarSelected: mix(sidebarSelected, other.sidebarSelected),
+      sidebarDivider: mix(sidebarDivider, other.sidebarDivider),
+      breadcrumbSeparator: mix(breadcrumbSeparator, other.breadcrumbSeparator),
+      sidebarText: mix(sidebarText, other.sidebarText),
+      sidebarMuted: mix(sidebarMuted, other.sidebarMuted),
+      positiveTint: mix(positiveTint, other.positiveTint),
+      positiveInk: mix(positiveInk, other.positiveInk),
+      waitingTint: mix(waitingTint, other.waitingTint),
+      waitingInk: mix(waitingInk, other.waitingInk),
+      neutralTint: mix(neutralTint, other.neutralTint),
+    );
+  }
+}
+
+extension AdminPaletteContext on BuildContext {
+  AdminPalette get adminColors =>
+      Theme.of(this).extension<AdminPalette>() ?? AdminPalette.light;
+}
+
+/// Light aliases for non-widget code and backwards-compatible token tests.
 abstract final class AdminColors {
-  // --- Tabela „Osnovni tokeni" iz `SPEC.md` ---
-
-  /// `#14181B` — glavni tekst i podloga sidebara. Isti token nosi obje uloge jer je
-  /// sidebar u handoffu doslovno „tekst boja kao ploha".
-  static const Color ink = Color(0xFF14181B);
-
-  /// `#F4F6F7` — radna pozadina iza kartica. Nije bijela: kartica se vidi kao kartica.
-  static const Color ground = Color(0xFFF4F6F7);
-
-  /// `#FFFFFF` — površina kartice.
-  static const Color surface = Color(0xFFFFFFFF);
-
-  /// `#3D6D9E` — primarni akcent. **Platformski, nije tenant boja.**
-  static const Color accent = Color(0xFF3D6D9E);
-
-  /// `#5980A6` — sekundarni akcent iz SPEC tabele.
-  ///
-  /// **Finalni canvas ga ne koristi nijednom** (`grep -oi '#5980a6'` → 0); ostao je iz
-  /// ranije skice `Smjer C - Space Grotesk.dc.html`. Stoji ovdje jer ga SPEC nabraja, ali
-  /// **samo kao obrub ili ispunu trake** — bijeli tekst na njemu mjeri 4,15:1 i pada AA,
-  /// pa nije podloga za tekst. Ko ga uzme kao pozadinu dugmeta, oborit će
-  /// `theme_contrast_test.dart`.
-  static const Color accentSoft = Color(0xFF5980A6);
-
-  /// `#D5DBDF` — obrub kartice i polja.
-  static const Color border = Color(0xFFD5DBDF);
-
-  /// `#E6EAEC` — separator između redova unutar iste kartice. Tanji potez od [border];
-  /// ista boja za oboje pretvorila bi listu u mrežu.
-  static const Color separator = Color(0xFFE6EAEC);
-
-  /// `#5B656B` — sekundarni tekst **tijela** (13,5–15 px u canvasu).
-  ///
-  /// SPEC tabela daje dvije vrijednosti za „sekundarni tekst" i ne kaže koja je koja.
-  /// Podjela je izmjerena, ne izabrana: canvas koristi `#5B656B` na većem tekstu
-  /// (59 pojava na 14 px), a [textMuted] na sitnom. Uz to je `#5B656B` jedina od dvije
-  /// koja prolazi AA i na [ground] i na [surface].
-  static const Color textSecondary = Color(0xFF5B656B);
-
-  /// `#6B757B` — sitna labela, mono eyebrow i caption (10,5–13 px).
-  ///
-  /// **Samo na [surface].** Na [ground] mjeri 4,35:1 i pada AA — zato `onSurfaceVariant`
-  /// u temi nosi [textSecondary], a ne ovu boju.
-  static const Color textMuted = Color(0xFF6B757B);
-
-  /// `#9C432F` — destruktivna radnja i tekst greške.
-  static const Color destructive = Color(0xFF9C432F);
-
-  // --- Izmjereno iz canvasa; nema ih u SPEC tabeli ---
-
-  /// `#27496B` — akcent kao **tekst** na [accentTint]. Sam [accent] na tom tintu je
-  /// presvijetao; handoff za tekst uzima tamniju varijantu iste boje.
-  static const Color accentInk = Color(0xFF27496B);
-
-  /// `#EAF1F8` — tinta akcenta: istaknuta kartica, oznaka „na čekanju" u zaglavlju.
-  static const Color accentTint = Color(0xFFEAF1F8);
-
-  /// `#FAE9E5` — tinta destruktivnog: podloga upozorenja i oznake otkazanog termina.
-  static const Color destructiveTint = Color(0xFFFAE9E5);
-
-  /// `#1E2429` — izdignuti red u sidebaru (kartica salona iznad navigacije).
-  static const Color sidebarRaised = Color(0xFF1E2429);
-
-  /// `#232A2F` — podloga **aktivne stavke** navigacije u sidebaru.
-  ///
-  /// Nije isto što i [sidebarRaised], iako su susjedne nijanse: canvas `3b` crta karticu
-  /// salona na `#1e2429`, a izabranu stavku na `#232a2f`, jedan korak svjetlije. Ko ih
-  /// spoji u jedan token, dobije sidebar u kojem izabrana stavka izgleda kao još jedna
-  /// kartica.
-  static const Color sidebarSelected = Color(0xFF232A2F);
-
-  /// `#242B30` — linija iznad podnožja sidebara (ime prijavljenog).
-  static const Color sidebarDivider = Color(0xFF242B30);
-
-  /// `#C7CED2` — kosa crta u breadcrumbu top bara (`Vitez / Danas`).
-  static const Color breadcrumbSeparator = Color(0xFFC7CED2);
-
-  /// `#98A2A9` — neaktivna stavka sidebara. 6,86:1 na [ink].
-  static const Color sidebarText = Color(0xFF98A2A9);
-
-  /// `#7D888F` — mono labela u sidebaru („VLASNIK", „6 LOKACIJA"). 4,92:1 na [ink].
-  static const Color sidebarMuted = Color(0xFF7D888F);
-
-  /// `#FFFFFF` — tekst na [accent] i na [ink]. Računa se u `core_ui`, ovdje je konstanta
-  /// jer je podloga konstanta.
-  static const Color onAccent = Color(0xFFFFFFFF);
-
-  // --- Statusni parovi; tinta + tekst na njoj ---
-  //
-  // Stoje ovdje, a ne u `AdminStatusColors`, da bi **svi** heksovi admina bili u jednom
-  // fajlu. `AdminStatusColors` ih samo slaže u parove i daje im ime po ulozi.
-
-  /// `#E8F3EC` — podloga oznake „Potvrđeno". Canvas.
-  static const Color positiveTint = Color(0xFFE8F3EC);
-
-  /// `#2F6B47` — tekst na [positiveTint]. Canvas. 5,57:1.
-  static const Color positiveInk = Color(0xFF2F6B47);
-
-  /// `#FDF1DD` — podloga oznake „Na čekanju" i kartice zahtjeva. Canvas.
-  static const Color waitingTint = Color(0xFFFDF1DD);
-
-  /// `#8A5A12` — tekst na [waitingTint]. Canvas. 5,29:1.
-  static const Color waitingInk = Color(0xFF8A5A12);
-
-  /// `#EEF1F3` — neutralna tinta: završen termin, isključeno stanje, tabela u mirovanju.
-  static const Color neutralTint = Color(0xFFEEF1F3);
+  static const ink = Color(0xFF2C2C2C),
+      ground = Color(0xFFFCFCF9),
+      surface = Color(0xFFFFFFFF);
+  static const accent = Color(0xFF3D5A80), onAccent = Color(0xFFFFFFFF);
+  static const action = Color(0xFFEE6C4D), onAction = Color(0xFF2C2C2C);
+  static const border = Color(0xFFE2E2E2), separator = Color(0xFFF0F1F3);
+  static const textSecondary = Color(0xFF666666), textMuted = Color(0xFF666666);
+  static const destructive = Color(0xFFC94C4C),
+      destructiveTint = Color(0xFFC94C4C);
+  static const accentInk = Color(0xFF3D5A80), accentTint = Color(0xFFE9ECEF);
+  static const sidebarRaised = Color(0xFFE9ECEF),
+      sidebarSelected = Color(0xFFE9ECEF);
+  static const sidebarDivider = Color(0xFFDEE2E6),
+      breadcrumbSeparator = Color(0xFFE2E2E2);
+  static const sidebarText = Color(0xFF333333),
+      sidebarMuted = Color(0xFF666666);
+  static const positiveTint = Color(0xFFE0F2F1),
+      positiveInk = Color(0xFF004D40);
+  static const waitingTint = Color(0xFFEE6C4D), waitingInk = Color(0xFF2C2C2C);
+  static const neutralTint = Color(0xFFF0F1F3);
 }

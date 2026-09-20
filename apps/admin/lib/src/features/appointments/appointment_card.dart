@@ -94,7 +94,9 @@ class AppointmentCard extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               left: BorderSide(
-                color: uToku ? AdminColors.accent : AdminColors.surface,
+                color: uToku
+                    ? context.adminColors.accent
+                    : context.adminColors.surface,
                 width: 3,
               ),
             ),
@@ -115,7 +117,7 @@ class AppointmentCard extends StatelessWidget {
                             : '$datum · ${vrijemeHhMm(termin.startTime)}',
                         overflow: TextOverflow.ellipsis,
                         style: AdminText.timeLarge.copyWith(
-                          color: AdminColors.textSecondary,
+                          color: context.adminColors.textSecondary,
                         ),
                       ),
                     ),
@@ -130,7 +132,7 @@ class AppointmentCard extends StatelessWidget {
                     // Otkazan termin se **ne briše iz liste** nego se stišava: vlasnik mora
                     // vidjeti da je slot bio zauzet pa oslobođen.
                     decoration: otkazan ? TextDecoration.lineThrough : null,
-                    color: otkazan ? AdminColors.textMuted : null,
+                    color: otkazan ? context.adminColors.textMuted : null,
                   ),
                 ),
                 if (opis.red.isNotEmpty) ...[
@@ -138,7 +140,7 @@ class AppointmentCard extends StatelessWidget {
                   Text(
                     opis.red,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AdminColors.textSecondary,
+                      color: context.adminColors.textSecondary,
                     ),
                   ),
                 ],
@@ -150,7 +152,7 @@ class AppointmentCard extends StatelessWidget {
                   Text(
                     napomena,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AdminColors.textSecondary,
+                      color: context.adminColors.textSecondary,
                       fontStyle: FontStyle.italic,
                     ),
                   ),

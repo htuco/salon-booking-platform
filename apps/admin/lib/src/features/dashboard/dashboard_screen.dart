@@ -93,10 +93,6 @@ class _TopBarAkcije extends StatelessWidget {
         const SizedBox(width: AdminSpacing.md),
         FilledButton(
           onPressed: () => context.go(AdminRoute.appointmentNew.path),
-          style: FilledButton.styleFrom(
-            backgroundColor: AdminColors.accent,
-            foregroundColor: AdminColors.onAccent,
-          ),
           child: const Text('+ Novi termin'),
         ),
       ],
@@ -147,7 +143,7 @@ class _NaslovDana extends ConsumerWidget {
                     '${vrijemeHhMm(uDanu.first.startTime)} · zadnji '
                     '${vrijemeHhMm(uDanu.last.startTime)}',
           style: Theme.of(context).textTheme.bodyLarge
-              ?.copyWith(color: AdminColors.textSecondary),
+              ?.copyWith(color: context.adminColors.textSecondary),
         ),
       ],
     );
@@ -223,7 +219,9 @@ class _Metrika extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
         side: BorderSide(
-          color: istaknuta ? AdminColors.accent : AdminColors.border,
+          color: istaknuta
+              ? context.adminColors.accent
+              : context.adminColors.border,
           width: AdminSize.hairline,
         ),
       ),
@@ -235,7 +233,7 @@ class _Metrika extends StatelessWidget {
             Text(
               labela,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: AdminColors.textMuted,
+                color: context.adminColors.textMuted,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -243,14 +241,16 @@ class _Metrika extends StatelessWidget {
             Text(
               vrijednost,
               style: AdminText.metricNumber.copyWith(
-                color: istaknuta ? AdminColors.accent : AdminColors.ink,
+                color: istaknuta
+                    ? context.adminColors.accent
+                    : context.adminColors.ink,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               opis,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: AdminColors.textSecondary,
+                color: context.adminColors.textSecondary,
               ),
             ),
           ],
@@ -315,7 +315,7 @@ class _RasporedDana extends ConsumerWidget {
                       ? ''
                       : '${radnici.length} ${_majstoraTekst(radnici.length)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AdminColors.textMuted,
+                    color: context.adminColors.textMuted,
                   ),
                 ),
               ],
@@ -376,17 +376,17 @@ class _ZaglavljeTabele extends StatelessWidget {
     Widget celija(String tekst) => Text(
       tekst.toUpperCase(),
       style: AdminText.eyebrow.copyWith(
-        color: AdminColors.textMuted,
+        color: context.adminColors.textMuted,
         fontWeight: FontWeight.w500,
       ),
     );
 
     return Container(
       padding: const EdgeInsets.fromLTRB(22, 0, 22, 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: AdminColors.separator,
+            color: context.adminColors.separator,
             width: AdminSize.hairline,
           ),
         ),
@@ -425,12 +425,12 @@ class _RedTabele extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         // Termin koji traje je istaknut tintom, kako ga canvas crta; završen je stišan.
-        color: uToku ? AdminColors.accentTint : null,
+        color: uToku ? context.adminColors.accentTint : null,
         border: zadnji
             ? null
-            : const Border(
+            : Border(
                 bottom: BorderSide(
-                  color: AdminColors.separator,
+                  color: context.adminColors.separator,
                   width: AdminSize.hairline,
                 ),
               ),
@@ -448,7 +448,7 @@ class _RedTabele extends StatelessWidget {
                   child: Text(
                     vrijemeHhMm(termin.startTime),
                     style: AdminText.timeLarge.copyWith(
-                      color: AdminColors.textSecondary,
+                      color: context.adminColors.textSecondary,
                     ),
                   ),
                 ),
@@ -467,7 +467,7 @@ class _RedTabele extends StatelessWidget {
                     opis.usluga ?? '—',
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AdminColors.textSecondary,
+                      color: context.adminColors.textSecondary,
                     ),
                   ),
                 ),
@@ -479,7 +479,7 @@ class _RedTabele extends StatelessWidget {
                     opis.majstor ?? 'bilo ko',
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AdminColors.textSecondary,
+                      color: context.adminColors.textSecondary,
                     ),
                   ),
                 ),
@@ -518,7 +518,9 @@ class _ZahtjeviKartica extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
         side: BorderSide(
-          color: broj > 0 ? AdminColors.accent : AdminColors.border,
+          color: broj > 0
+              ? context.adminColors.accent
+              : context.adminColors.border,
           width: AdminSize.hairline,
         ),
       ),
@@ -527,10 +529,10 @@ class _ZahtjeviKartica extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: AdminColors.separator,
+                  color: context.adminColors.separator,
                   width: AdminSize.hairline,
                 ),
               ),
@@ -543,8 +545,8 @@ class _ZahtjeviKartica extends ConsumerWidget {
                   broj == 0 ? 'nema novih' : '$broj ${_novihTekst(broj)}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: broj > 0
-                        ? AdminColors.accent
-                        : AdminColors.textMuted,
+                        ? context.adminColors.accent
+                        : context.adminColors.textMuted,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -576,7 +578,7 @@ class _ZahtjeviKartica extends ConsumerWidget {
                       ? 'Vidi svih $broj ${_zahtjevaTekst(broj)} →'
                       : 'Otvori zahtjeve →',
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: AdminColors.accentInk,
+                    color: context.adminColors.accentInk,
                   ),
                 ),
               ),
@@ -610,10 +612,10 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: AdminColors.separator,
+            color: context.adminColors.separator,
             width: AdminSize.hairline,
           ),
         ),
@@ -631,7 +633,7 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
               widget.opis.majstor ?? 'bilo ko',
             ].join(' · '),
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AdminColors.textSecondary,
+              color: context.adminColors.textSecondary,
             ),
           ),
           const SizedBox(height: 13),
@@ -642,8 +644,6 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
                 child: FilledButton(
                   onPressed: _uToku ? null : _potvrdi,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AdminColors.accent,
-                    foregroundColor: AdminColors.onAccent,
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                   ),
                   child: const Text('Potvrdi'),
@@ -733,7 +733,7 @@ class _ZauzetostKartica extends ConsumerWidget {
               Text(
                 'Danas nijedan termin nije vezan za majstora.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: AdminColors.textSecondary,
+                  color: context.adminColors.textSecondary,
                 ),
               )
             else
@@ -759,7 +759,7 @@ class _ZauzetostKartica extends ConsumerWidget {
                             '${_terminaTekst(radnik.termina)}'
                             ' · ${trajanjeKratko(radnik.minuta)}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: AdminColors.textSecondary,
+                              color: context.adminColors.textSecondary,
                             ),
                           ),
                         ],
@@ -770,9 +770,9 @@ class _ZauzetostKartica extends ConsumerWidget {
                         child: LinearProgressIndicator(
                           value: najvise == 0 ? 0 : radnik.minuta / najvise,
                           minHeight: 7,
-                          backgroundColor: AdminColors.neutralTint,
-                          valueColor: const AlwaysStoppedAnimation(
-                            AdminColors.accent,
+                          backgroundColor: context.adminColors.neutralTint,
+                          valueColor: AlwaysStoppedAnimation(
+                            context.adminColors.accent,
                           ),
                         ),
                       ),
@@ -885,11 +885,11 @@ class _MobilnoZaglavlje extends ConsumerWidget {
         AdminSpacing.sm,
         AdminSpacing.lg,
       ),
-      decoration: const BoxDecoration(
-        color: AdminColors.surface,
+      decoration: BoxDecoration(
+        color: context.adminColors.surface,
         border: Border(
           bottom: BorderSide(
-            color: AdminColors.separator,
+            color: context.adminColors.separator,
             width: AdminSize.hairline,
           ),
         ),
@@ -909,7 +909,7 @@ class _MobilnoZaglavlje extends ConsumerWidget {
                     '${datumDugo(DateTime.now())} · '
                     '${_terminaTekst(uDanu)}',
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: AdminColors.textSecondary,
+                      color: context.adminColors.textSecondary,
                     ),
                   ),
                 ],
@@ -937,10 +937,10 @@ class _SalonKartica extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.storefront_outlined,
               size: 20,
-              color: AdminColors.textSecondary,
+              color: context.adminColors.textSecondary,
             ),
             const SizedBox(width: 11),
             Expanded(
@@ -970,8 +970,8 @@ class _ZahtjeviTraka extends ConsumerWidget {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
-        side: const BorderSide(
-          color: AdminColors.accent,
+        side: BorderSide(
+          color: context.adminColors.accent,
           width: AdminSize.hairline,
         ),
       ),
@@ -983,7 +983,7 @@ class _ZahtjeviTraka extends ConsumerWidget {
             Text(
               '$broj ${_zahtjevaTekst(broj)} ${_cekaTekst(broj)}',
               style: theme.textTheme.titleMedium?.copyWith(
-                color: AdminColors.accentInk,
+                color: context.adminColors.accentInk,
               ),
             ),
             const SizedBox(height: AdminSpacing.md),
@@ -992,8 +992,6 @@ class _ZahtjeviTraka extends ConsumerWidget {
               child: FilledButton(
                 onPressed: () => context.go(kZahtjeviPutanja),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AdminColors.accent,
-                  foregroundColor: AdminColors.onAccent,
                   textStyle: theme.textTheme.titleMedium,
                 ),
                 child: const Text('Pregledaj zahtjeve'),
@@ -1056,7 +1054,7 @@ class _MalaMetrika extends StatelessWidget {
             Text(
               labela,
               style: theme.textTheme.labelSmall?.copyWith(
-                color: AdminColors.textMuted,
+                color: context.adminColors.textMuted,
                 fontWeight: FontWeight.w400,
               ),
             ),
