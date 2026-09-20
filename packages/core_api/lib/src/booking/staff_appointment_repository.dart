@@ -43,6 +43,29 @@ customer_name, customer_phone, customer_note, date, start_time, end_time,
 buffer_minutes, status, source, cancel_reason, cancelled_by, pending_expires_at
 ''';
 
+  /// Jedan termin po `id`-u, ili `null` ako ga nema.
+  ///
+  /// `null` je **predviđeno stanje**, ne greška: adresa `/appointments/<id>` može stajati u
+  /// bookmarku ili u obavijesti, a termin je u međuvremenu obrisan — ili je od tuđeg
+  /// salona, u kom slučaju ga `staff_manage` politika ne propusti i upit vrati nula redova.
+  /// Ekran oba slučaja prikazuje isto, jer se **ne smiju** razlikovati: poruka „nemate
+  /// pravo" bi potvrdila da taj termin postoji.
+  ///
+  /// [salonId] je, kao i drugdje ovdje, preciznost upita a ne zaštita — v. doc klase.
+  Future<Appointment?> byId({
+    required String salonId,
+    required String appointmentId,
+  }) => guard(() async {
+    final row = await _client
+        .from('appointments')
+        .select(_columns)
+        .eq('salon_id', salonId)
+        .eq('id', appointmentId)
+        .maybeSingle();
+
+    return row == null ? null : appointmentFromRow(row);
+  });
+
   /// Termini jednog dana, po vremenu početka.
   ///
   /// Rastuće, za razliku od klijentske liste: admin gleda **raspored dana** odozgo nadolje,

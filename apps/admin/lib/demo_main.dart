@@ -59,7 +59,30 @@ Future<void> main() async {
         currentStaffProvider.overrideWith(
           (ref) => Stream<StaffMember?>.value(_vlasnik),
         ),
-        pendingCountProvider.overrideWith((ref) async => 4),
+        // Brojač prati demo listu, ne izmišljenu četvorku: snimak na kojem sidebar kaže
+        // „4" a lista pokaže jedan zahtjev izgleda kao greška u brojaču.
+        pendingCountProvider.overrideWith(
+          (ref) async => _termini
+              .where((t) => t.status == AppointmentStatus.pending)
+              .length,
+        ),
+        // Ekran „Danas" od taska 30 piše uslugu, majstora i cijenu uz termin, a ime salona
+        // u breadcrumb — sve troje dolazi iz drugih tabela, pa demo mora napuniti i njih.
+        // Bez toga bi snimak pokazao raspored bez ijednog opisa, što izgleda kao greška u
+        // ekranu, a greška je u demou.
+        adminSalonProvider.overrideWith((ref) async => _salon),
+        adminServicesProvider.overrideWith((ref) async => _usluge),
+        adminEmployeesProvider.overrideWith((ref) async => _radnici),
+        // Detalj se otvara tapom na termin; bez ovoga bi demo pokazao stanje greške, jer
+        // `terminProvider` ide u bazu.
+        terminProvider.overrideWith(
+          (ref, id) async => _termini.where((t) => t.id == id).firstOrNull,
+        ),
+        zahtjeviProvider.overrideWith(
+          (ref) async => _termini
+              .where((t) => t.status == AppointmentStatus.pending)
+              .toList(),
+        ),
         danasnjiTerminiProvider.overrideWith((ref) async => _termini),
         // **Filter se poštuje, ne zaobilazi.** Ravna lista bi na
         // `/appointments?status=pending` prikazala svih pet termina uz izabran čip „Na
@@ -79,11 +102,45 @@ Future<void> main() async {
 ///
 /// Brojevi su demo sadržaj, ne podatak iz baze — v. `SPEC.md`, „Funkcionalne granice".
 final List<Appointment> _termini = [
+  // Jedan završen termin, da „9 završeno · 5 predstoji" i „Promet do sada" imaju šta
+  // pokazati — inače je promet uvijek 0 KM i izgleda kao da brojka ne radi.
+  _termin('Adnan Kovač', 10, 0, AppointmentStatus.completed),
   _termin('Tarik Selimović', 13, 0, AppointmentStatus.confirmed),
   _termin('Haris Delić', 14, 20, AppointmentStatus.confirmed),
   _termin('Nedim Hodžić', 15, 0, AppointmentStatus.pending),
+  _termin('Almir Šahić', 17, 30, AppointmentStatus.pending),
   _termin('Faruk Begić', 16, 10, AppointmentStatus.confirmed),
   _termin('Kenan Zukić', 19, 20, AppointmentStatus.confirmed),
+];
+
+final _salon = Salon(
+  id: _salonId,
+  name: 'Barber Studio Vitez',
+  slug: 'barber-studio-vitez',
+  city: 'Vitez',
+);
+
+/// Cjenovnik i ekipa iz `supabase/seed.sql`, skraćeno.
+const _usluge = [
+  Service(
+    id: 'demo-fade',
+    salonId: _salonId,
+    name: 'Fade šišanje',
+    price: 20,
+    durationMinutes: 40,
+  ),
+  Service(
+    id: 'demo-brada',
+    salonId: _salonId,
+    name: 'Brada + konturisanje',
+    price: 15,
+    durationMinutes: 30,
+  ),
+];
+
+const _radnici = [
+  Employee(id: 'demo-emir', salonId: _salonId, name: 'Emir'),
+  Employee(id: 'demo-vedad', salonId: _salonId, name: 'Vedad'),
 ];
 
 Appointment _termin(String ime, int sat, int minuta, AppointmentStatus status) {
@@ -91,9 +148,14 @@ Appointment _termin(String ime, int sat, int minuta, AppointmentStatus status) {
   return Appointment(
     id: 'demo-$ime',
     salonId: _salonId,
-    serviceId: 'demo-usluga',
+    serviceId: sat.isEven ? 'demo-fade' : 'demo-brada',
+    employeeId: sat.isEven ? 'demo-emir' : 'demo-vedad',
     customerId: 'demo-klijent',
     customerName: ime,
+    customerPhone: '061 552 104',
+    customerNote: ime.startsWith('Tarik')
+        ? 'Sa strane 1, gore makazama. Ne kratiti brkove.'
+        : null,
     date: LocalDate(sada.year, sada.month, sada.day),
     startTime: LocalTime(sat, minuta),
     endTime: LocalTime(minuta >= 20 ? sat + 1 : sat, (minuta + 40) % 60),

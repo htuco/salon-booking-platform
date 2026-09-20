@@ -15,9 +15,20 @@ import 'appointments_providers.dart';
 /// Zatvoren termin (`cancelled`, `completed`, `no_show`) nema nijednu akciju i traka se ne
 /// crta. Prazan red dugmadi ispod svakog završenog termina bi listu produžio bez razloga.
 class AppointmentActionsBar extends ConsumerStatefulWidget {
-  const AppointmentActionsBar({required this.termin, super.key});
+  const AppointmentActionsBar({
+    required this.termin,
+    this.veliko = false,
+    super.key,
+  });
 
   final Appointment termin;
+
+  /// Traka u dnu ekrana detalja (`3n`), umjesto reda dugmadi u kartici.
+  ///
+  /// Isti skup akcija i isti dijalozi — mijenja se **samo raspored**: prva radnja preko
+  /// cijele širine, ostale u redu ispod nje. Druga implementacija istih akcija bi značila
+  /// dva mjesta na kojima se pita za obrazloženje odbijanja, i dva koja se raziđu.
+  final bool veliko;
 
   @override
   ConsumerState<AppointmentActionsBar> createState() =>
@@ -40,53 +51,75 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
     // ovdje — kad dođe novi zatvoreni status, ova traka nestane sama.
     if (termin.status.isClosed) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 72, right: 16, bottom: 12),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 4,
-        children: switch (termin.status) {
-          // Zahtjev koji čeka: potvrdi ili odbij. Dvije jedine radnje koje na njemu imaju
-          // smisla, i razlog zbog kojeg cijeli task postoji.
-          AppointmentStatus.pending => [
-            _Akcija(
-              ikona: Icons.check,
-              labela: 'Potvrdi',
-              istaknuta: true,
-              onTap: _uToku ? null : () => _potvrdi(termin),
-            ),
-            _Akcija(
-              ikona: Icons.close,
-              labela: 'Odbij',
-              destruktivna: true,
-              onTap: _uToku ? null : () => _odbij(termin),
+    final akcije = _akcije(termin);
+    if (akcije.isEmpty) return const SizedBox.shrink();
+
+    if (widget.veliko) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 54, child: akcije.first),
+          if (akcije.length > 1) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                for (final akcija in akcije.skip(1)) ...[
+                  Expanded(child: SizedBox(height: 48, child: akcija)),
+                  if (akcija != akcije.last) const SizedBox(width: 10),
+                ],
+              ],
             ),
           ],
-          // Potvrđen termin: prošao je (završen / nije došao) ili ga salon mora otkazati.
-          AppointmentStatus.confirmed => [
-            _Akcija(
-              ikona: Icons.done_all,
-              labela: 'Završen',
-              istaknuta: true,
-              onTap: _uToku ? null : () => _zavrsen(termin),
-            ),
-            _Akcija(
-              ikona: Icons.person_off_outlined,
-              labela: 'Nije došao',
-              onTap: _uToku ? null : () => _nijeDosao(termin),
-            ),
-            _Akcija(
-              ikona: Icons.event_busy_outlined,
-              labela: 'Otkaži',
-              destruktivna: true,
-              onTap: _uToku ? null : () => _otkazi(termin),
-            ),
-          ],
-          _ => const [],
-        },
-      ),
-    );
+        ],
+      );
+    }
+
+    // **Bez vlastitog paddinga.** Do taska 30 je traka stajala ispod `ListTile`-a i
+    // poravnavala se uvlakom od 72 px; sada je podnožje kartice, koja svoj padding već
+    // ima. Zatečena uvlaka je na 402 px izlazila 48 px van kartice.
+    return Wrap(spacing: 9, runSpacing: 9, children: akcije);
   }
+
+  /// Koje radnje status dopušta, istaknuta prva.
+  List<_Akcija> _akcije(Appointment termin) => switch (termin.status) {
+    // Zahtjev koji čeka: potvrdi ili odbij. Dvije jedine radnje koje na njemu imaju
+    // smisla, i razlog zbog kojeg cijeli task postoji.
+    AppointmentStatus.pending => [
+      _Akcija(
+        ikona: Icons.check,
+        labela: 'Potvrdi',
+        istaknuta: true,
+        onTap: _uToku ? null : () => _potvrdi(termin),
+      ),
+      _Akcija(
+        ikona: Icons.close,
+        labela: 'Odbij',
+        destruktivna: true,
+        onTap: _uToku ? null : () => _odbij(termin),
+      ),
+    ],
+    // Potvrđen termin: prošao je (završen / nije došao) ili ga salon mora otkazati.
+    AppointmentStatus.confirmed => [
+      _Akcija(
+        ikona: Icons.done_all,
+        labela: 'Završen',
+        istaknuta: true,
+        onTap: _uToku ? null : () => _zavrsen(termin),
+      ),
+      _Akcija(
+        ikona: Icons.person_off_outlined,
+        labela: 'Nije došao',
+        onTap: _uToku ? null : () => _nijeDosao(termin),
+      ),
+      _Akcija(
+        ikona: Icons.event_busy_outlined,
+        labela: 'Otkaži',
+        destruktivna: true,
+        onTap: _uToku ? null : () => _otkazi(termin),
+      ),
+    ],
+    _ => const [],
+  };
 
   Future<void> _potvrdi(Appointment termin) => _izvrsi(
     () => ref.read(appointmentActionsProvider).potvrdi(termin.id),
@@ -210,7 +243,7 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
         SnackBar(
           content: Text(tekst),
           // `error`, ne `errorContainer`: snackbar tekst dolazi iz teme i pisan je za
-          // tamnu podlogu (`AdminColors.ground` na `ink`). Na svijetlom `errorContainer`
+          // tamnu podlogu (`context.adminColors.ground` na `ink`). Na svijetlom `errorContainer`
           // tintu bi bio nevidljiv — 1,06:1.
           backgroundColor: greska ? Theme.of(context).colorScheme.error : null,
         ),
@@ -338,6 +371,9 @@ class _Akcija extends StatelessWidget {
         onPressed: onTap,
         icon: Icon(ikona, size: 18),
         label: Text(labela),
+        // Akcent, ne crna iz teme: `3d` i `3m` „Potvrdi" crtaju plavo. Tema nosi crnu jer
+        // je takva svaka druga primarna radnja u adminu; ovdje je izuzetak jedan potez u
+        // toku odlučivanja, isti kao na kartici zahtjeva na dashboardu.
         style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
       );
     }

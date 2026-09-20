@@ -2,13 +2,13 @@
 ///
 /// Ako neki ekran napravi svoju `ThemeData` ili posegne za heksom, od tog mjesta nadalje
 /// handoff prestaje da važi, a niko to ne vidi dok ne uporedi dva ekrana jedan uz drugi.
-/// Zato su boje ovdje konstante iz `AdminColors`, a ne parametri.
+/// Zato su boje ovdje platformske palete, a ne tenant parametri.
 ///
 /// ## Razlika od `core_ui.buildAppTheme()`
 ///
 /// Klijentska tema **prima** dvije brand boje, jer ih vlasnik bira i mijenjaju se bez
 /// builda; zato tamo postoji cijela mašinerija za računanje čitljivog `onPrimary`. Admin
-/// je jedan build za sve salone i njegove boje su fiksne — kontrast se zato ne računa u
+/// je jedan build za sve salone i ima fiksnu light/dark paletu — kontrast se zato ne računa u
 /// runtime-u nego **mjeri u testu** (`theme_contrast_test.dart`). Uvoz `core_ui` u admin
 /// prolazi analizu i prolazi test, a vidi se tek kad dva salona otvore istu aplikaciju.
 library;
@@ -21,10 +21,13 @@ import 'admin_tokens.dart';
 import 'admin_typography.dart';
 
 /// Tema admin aplikacije.
-ThemeData buildAdminTheme() {
+ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
+  final colors = brightness == Brightness.dark
+      ? AdminPalette.dark
+      : AdminPalette.light;
   final textTheme = adminTextTheme();
-  const borderSide = BorderSide(
-    color: AdminColors.border,
+  final borderSide = BorderSide(
+    color: colors.border,
     width: AdminSize.hairline,
   );
   final shape = RoundedRectangleBorder(
@@ -33,20 +36,21 @@ ThemeData buildAdminTheme() {
 
   return ThemeData(
     useMaterial3: true,
-    colorScheme: _adminColorScheme,
+    brightness: brightness,
+    colorScheme: _adminColorScheme(colors, brightness),
     textTheme: textTheme,
     // Widget koji ne gleda `textTheme` (npr. `Text` bez stila u tuđoj komponenti) mora i
     // dalje dobiti Space Grotesk, a ne Roboto.
     fontFamily: kAdminSansFamily,
-    scaffoldBackgroundColor: AdminColors.ground,
-    canvasColor: AdminColors.ground,
-    dividerColor: AdminColors.separator,
-    extensions: [AdminStatusColors.standard()],
+    scaffoldBackgroundColor: colors.ground,
+    canvasColor: colors.ground,
+    dividerColor: colors.separator,
+    extensions: [colors, AdminStatusColors.fromPalette(colors)],
 
     // Kartica: bijela ploha na sivoj podlozi, bez sjenke. Dubina u ovom sistemu dolazi iz
     // hairline obruba — `elevation` bi dodao drugi jezik dubine preko istog elementa.
     cardTheme: CardThemeData(
-      color: AdminColors.surface,
+      color: colors.surface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       margin: EdgeInsets.zero,
@@ -57,43 +61,58 @@ ThemeData buildAdminTheme() {
     ),
 
     appBarTheme: AppBarTheme(
-      backgroundColor: AdminColors.surface,
-      foregroundColor: AdminColors.ink,
+      backgroundColor: colors.surface,
+      foregroundColor: colors.ink,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: textTheme.titleLarge?.copyWith(color: AdminColors.ink),
-      shape: const Border(bottom: borderSide),
+      titleTextStyle: textTheme.titleLarge?.copyWith(color: colors.ink),
+      shape: Border(bottom: borderSide),
     ),
 
-    dividerTheme: const DividerThemeData(
-      color: AdminColors.separator,
+    dividerTheme: DividerThemeData(
+      color: colors.separator,
       thickness: AdminSize.hairline,
       space: AdminSize.hairline,
     ),
 
     listTileTheme: ListTileThemeData(
-      textColor: AdminColors.ink,
-      iconColor: AdminColors.textSecondary,
+      textColor: colors.ink,
+      iconColor: colors.textSecondary,
       shape: shape,
     ),
 
+    // Ispunjeno dugme je **glavna radnja** i zato nosi `action` (coral), ne `accent`.
+    // Ovo je jedino mjesto koje to odlučuje — ekrani ne prepisuju boju dugmeta kod sebe.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AdminColors.ink,
-        foregroundColor: AdminColors.ground,
+        backgroundColor: colors.action,
+        foregroundColor: colors.onAction,
         textStyle: textTheme.labelLarge,
         minimumSize: const Size(0, AdminSize.touchTarget),
         shape: shape,
       ),
     ),
 
+    // FAB je ista radnja kao `+ Novi termin` u top baru, samo na telefonu — i mora nositi
+    // istu boju. Bez ovoga pada na M3 default (`primaryContainer`/`onPrimaryContainer`),
+    // pa je glavni CTA na telefonu blijedo siv dok je na desktopu coral.
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: colors.action,
+      foregroundColor: colors.onAction,
+      elevation: 0,
+      focusElevation: 0,
+      hoverElevation: 0,
+      highlightElevation: 0,
+      extendedTextStyle: textTheme.labelLarge,
+    ),
+
     // Sekundarna radnja je obrub, ne ispuna — canvas primarnu i sekundarnu razlikuje
     // ispunom (`Potvrdi` puno, `Odbij` obrub), ne bojom teksta.
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: AdminColors.ink,
+        foregroundColor: colors.ink,
         textStyle: textTheme.labelLarge,
         minimumSize: const Size(0, AdminSize.touchTarget),
         side: borderSide,
@@ -103,7 +122,7 @@ ThemeData buildAdminTheme() {
 
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: AdminColors.accentInk,
+        foregroundColor: colors.accent,
         textStyle: textTheme.labelLarge,
         minimumSize: const Size(0, AdminSize.touchTarget),
         shape: shape,
@@ -112,13 +131,9 @@ ThemeData buildAdminTheme() {
 
     inputDecorationTheme: InputDecorationThemeData(
       filled: true,
-      fillColor: AdminColors.surface,
-      hintStyle: textTheme.bodyMedium?.copyWith(
-        color: AdminColors.textSecondary,
-      ),
-      labelStyle: textTheme.bodyMedium?.copyWith(
-        color: AdminColors.textSecondary,
-      ),
+      fillColor: colors.surface,
+      hintStyle: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+      labelStyle: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
         borderSide: borderSide,
@@ -129,66 +144,62 @@ ThemeData buildAdminTheme() {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
-        borderSide: const BorderSide(color: AdminColors.accent, width: 2),
+        borderSide: BorderSide(color: colors.accent, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
-        borderSide: const BorderSide(color: AdminColors.destructive),
+        borderSide: BorderSide(color: colors.destructive),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
-        borderSide: const BorderSide(color: AdminColors.destructive, width: 2),
+        borderSide: BorderSide(color: colors.destructive, width: 2),
       ),
     ),
 
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: AdminColors.surface,
+      backgroundColor: colors.surface,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: AdminColors.accentTint,
+      indicatorColor: colors.accentTint,
       elevation: 0,
       labelTextStyle: WidgetStatePropertyAll(
-        textTheme.labelMedium?.copyWith(color: AdminColors.textSecondary),
+        textTheme.labelMedium?.copyWith(color: colors.textSecondary),
       ),
-      iconTheme: const WidgetStatePropertyAll(
-        IconThemeData(color: AdminColors.textSecondary),
+      iconTheme: WidgetStatePropertyAll(
+        IconThemeData(color: colors.textSecondary),
       ),
     ),
 
     snackBarTheme: SnackBarThemeData(
-      backgroundColor: AdminColors.ink,
-      contentTextStyle: textTheme.bodyMedium?.copyWith(
-        color: AdminColors.ground,
-      ),
+      backgroundColor: colors.ink,
+      contentTextStyle: textTheme.bodyMedium?.copyWith(color: colors.ground),
       behavior: SnackBarBehavior.floating,
       shape: shape,
     ),
 
     dialogTheme: DialogThemeData(
-      backgroundColor: AdminColors.surface,
+      backgroundColor: colors.surface,
       surfaceTintColor: Colors.transparent,
-      titleTextStyle: textTheme.titleLarge?.copyWith(color: AdminColors.ink),
-      contentTextStyle: textTheme.bodyMedium?.copyWith(color: AdminColors.ink),
+      titleTextStyle: textTheme.titleLarge?.copyWith(color: colors.ink),
+      contentTextStyle: textTheme.bodyMedium?.copyWith(color: colors.ink),
       shape: shape,
     ),
 
     popupMenuTheme: PopupMenuThemeData(
-      color: AdminColors.surface,
+      color: colors.surface,
       surfaceTintColor: Colors.transparent,
-      textStyle: textTheme.bodyMedium?.copyWith(color: AdminColors.ink),
+      textStyle: textTheme.bodyMedium?.copyWith(color: colors.ink),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
         side: borderSide,
       ),
     ),
 
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: AdminColors.accent,
-    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: colors.accent),
 
     chipTheme: ChipThemeData(
-      backgroundColor: AdminColors.surface,
-      selectedColor: AdminColors.accentTint,
-      labelStyle: textTheme.labelMedium?.copyWith(color: AdminColors.ink),
+      backgroundColor: colors.surface,
+      selectedColor: colors.accentTint,
+      labelStyle: textTheme.labelMedium?.copyWith(color: colors.ink),
       side: borderSide,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
@@ -199,43 +210,42 @@ ThemeData buildAdminTheme() {
 
 /// `ColorScheme` admina.
 ///
-/// Namjerno **bez** `AdminColors.accentSoft`: bijeli tekst na njemu mjeri 4,15:1, a crni
-/// 4,30:1 — nijedan ne prolazi AA, pa ta boja nije podloga za tekst i nema ulogu u šemi.
-const ColorScheme _adminColorScheme = ColorScheme(
-  brightness: Brightness.light,
-  primary: AdminColors.accent,
-  onPrimary: AdminColors.onAccent,
-  primaryContainer: AdminColors.accentTint,
-  onPrimaryContainer: AdminColors.accentInk,
-  // Sekundarna uloga nosi **tamniju** varijantu akcenta, onu koju canvas koristi kao
-  // tekst na tintu. Sekundarni akcent iz SPEC tabele ovdje ne stoji — v. doc iznad.
-  secondary: AdminColors.accentInk,
-  onSecondary: AdminColors.onAccent,
-  secondaryContainer: AdminColors.accentTint,
-  onSecondaryContainer: AdminColors.accentInk,
-  // Tercijarna uloga je „čeka odgovor" — jedini status koji i van liste termina traži
-  // svoju boju (brojač zahtjeva na dashboardu).
-  tertiary: AdminColors.waitingInk,
-  onTertiary: AdminColors.onAccent,
-  tertiaryContainer: AdminColors.waitingTint,
-  onTertiaryContainer: AdminColors.waitingInk,
-  error: AdminColors.destructive,
-  onError: AdminColors.onAccent,
-  errorContainer: AdminColors.destructiveTint,
-  onErrorContainer: AdminColors.destructive,
-  // `surface` je **radna pozadina**, ne kartica: to je ploha na kojoj ekran počinje.
-  // Kartice su `surfaceContainer*` i bijele su.
-  surface: AdminColors.ground,
-  onSurface: AdminColors.ink,
-  surfaceContainerLowest: AdminColors.surface,
-  surfaceContainerLow: AdminColors.surface,
-  surfaceContainer: AdminColors.surface,
-  surfaceContainerHigh: AdminColors.neutralTint,
-  surfaceContainerHighest: AdminColors.neutralTint,
-  // `textMuted` (#6B757B) ovdje **ne smije stajati**: na radnoj pozadini mjeri 4,35:1.
-  onSurfaceVariant: AdminColors.textSecondary,
-  outline: AdminColors.border,
-  outlineVariant: AdminColors.separator,
-  inverseSurface: AdminColors.ink,
-  onInverseSurface: AdminColors.ground,
-);
+/// `secondary` nosi `action` (coral) jer je to boja glavne radnje. Bijeli tekst na njemu
+/// pada AA (3,05:1), pa `onSecondary` ide na `onAction` — v. doc u `admin_colors.dart`.
+ColorScheme _adminColorScheme(AdminPalette colors, Brightness brightness) =>
+    ColorScheme(
+      brightness: brightness,
+      primary: colors.accent,
+      onPrimary: colors.onAccent,
+      primaryContainer: colors.accentTint,
+      onPrimaryContainer: colors.accentInk,
+      secondary: colors.action,
+      onSecondary: colors.onAction,
+      secondaryContainer: colors.waitingTint,
+      onSecondaryContainer: colors.waitingInk,
+      // Tercijarna uloga je „čeka odgovor" — jedini status koji i van liste termina traži
+      // svoju boju (brojač zahtjeva na dashboardu).
+      tertiary: colors.positiveInk,
+      onTertiary: colors.positiveTint,
+      tertiaryContainer: colors.positiveTint,
+      onTertiaryContainer: colors.positiveInk,
+      error: colors.destructive,
+      onError: colors.onDestructive,
+      errorContainer: colors.destructive,
+      onErrorContainer: colors.onDestructive,
+      // `surface` je **radna pozadina**, ne kartica: to je ploha na kojoj ekran počinje.
+      // Kartice su `surfaceContainer*` i bijele su.
+      surface: colors.ground,
+      onSurface: colors.ink,
+      surfaceContainerLowest: colors.surface,
+      surfaceContainerLow: colors.surface,
+      surfaceContainer: colors.surface,
+      surfaceContainerHigh: colors.neutralTint,
+      surfaceContainerHighest: colors.neutralTint,
+      // `textMuted` (#6B757B) ovdje **ne smije stajati**: na radnoj pozadini mjeri 4,35:1.
+      onSurfaceVariant: colors.textSecondary,
+      outline: colors.border,
+      outlineVariant: colors.separator,
+      inverseSurface: colors.ink,
+      onInverseSurface: colors.ground,
+    );

@@ -1,20 +1,45 @@
-# Trenutni task
+# Trenutni task: 30 — Postojeći ekrani na handoff
 
-Nijedan task nije učitan. Sljedeći na redu je
-[30 — Postojeći ekrani na handoff](sprint-3/30-postojeci-ekrani-na-handoff.md); učitaj ga sa
-`/task load 30`.
+Puni task: [sprint-3/30-postojeci-ekrani-na-handoff.md](sprint-3/30-postojeci-ekrani-na-handoff.md).
+Grana `feat/admin-ekrani-na-handoff`, [PR #52](https://github.com/htuco/salon-booking-platform/pull/52).
 
 ## Status
 
-Nema aktivnog taska.
+Gotov u kodu (🟡) — čeka pregled PR-a. Ostaje samo dokaz sa **pravom prijavom**, koji ne zavisi od
+koda nego od naloga i Dockera.
 
 ## Ciljevi
 
-—
+- [x] `/login` po `3j` / `3u`
+- [x] `/dashboard` po `3b` / `3k` — „Danas", breadcrumb i akcije top bara
+- [x] Zahtjevi po `3d` / `3m`, unutar `/appointments?status=pending`
+- [x] Detalj termina po `3n` — ruta `/appointments/:id` više nije placeholder
+- [x] Nijedna RPC putanja nije promijenjena; jedini novi upit je `select` (`byId`)
+- [x] 642 testa u pet paketa (admin 145, bilo 85), čista analiza i format
+- [x] Prolaz uz **pravu prijavu** na Android emulatoru, protiv hostovanog projekta
+- [ ] 🟡 Drugi tenant — Travnik admin ne postoji na hostovanom projektu (`400` na prijavi)
 
 ## Napomene
 
-—
+- **Prava prijava radi:** seed nalog `admin@barberstudiovitez.test` / `admin123456` postoji na
+  hostovanom projektu iz `.env.live`, suprotno pretpostavci iz taska 29. Tok je odigran na Android
+  emulatoru (`docs/screenshots/task-30-admin-uredjaj-*.png`); web snimci ostaju iz demo ulaza.
+- **iOS simulator ovdje ne postoji** — mašina je Windows. Emulatori: `Vitez_API_35`, `vitez_api35`.
+  Pokretanje: `flutter emulators --launch Vitez_API_35`, pa
+  `tool/run_live_demo.sh admin -d emulator-5554`.
+- **Screenshot bez playwrighta:** MCP server nije htio da se poveže, pa su snimci pravljeni
+  headless Chromeom (`chrome --headless=new --screenshot`). Zamka: Chrome ima **minimalnu širinu
+  prozora oko 500 px**, pa 402 traži `--force-device-scale-factor=1.25 --window-size=503,1093`;
+  bez toga snimak izgleda kao da sadržaj izlazi van ekrana, a ne izlazi.
+- **Za `?status=pending` treba SPA fallback** — `python -m http.server` na toj putanji vraća 404.
+- Ostalo spremno za task 31: `AppointmentCard`, `AppointmentStatusPill`, `core/format/datum.dart`,
+  `terminProvider` i ruta detalja.
+
+## Istorija` ispod još kažu da je PR #51 „otvoren i
+  čeka spajanje", a spojen je (`88c1605`). Popravlja se u prvom commitu ovog taska, ne u `load`
+  akciji.
+- Canvas se gleda uživo: `python3 -m http.server 4173 --directory prototype/admin`, pa
+  `http://localhost:4173/`.
 
 ## Istorija
 
@@ -39,8 +64,7 @@ Nema aktivnog taska.
   Chromiumu uključujući refresh na `?status=pending` — `docs/screenshots/task-29-admin-*.png`.
   Ostaje 🟡 samo dokaz sa **pravom prijavom**: snimci su iz novog `apps/admin/lib/demo_main.dart`,
   jer nema Dockera ni `supabase` CLI-ja; hostovani projekat iz `.env.live` sada ima šemu, ali nije
-  bilo naloga. [PR #51](https://github.com/htuco/salon-booking-platform/pull/51) — **otvoren, čeka
-  spajanje.**
+  bilo naloga. [PR #51](https://github.com/htuco/salon-booking-platform/pull/51), spojen (`88c1605`).
 
 - **28 — Admin tema, tipografija i tokeni** (2026-09-19, 🟡) — `apps/admin/lib/src/core/theme/` je
   prestao biti `.gitkeep`: pet fajlova nose paletu, razmake, uglove, tipografiju i statusne tonove,

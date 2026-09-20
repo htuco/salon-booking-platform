@@ -55,8 +55,8 @@ class AdminMoreScreen extends ConsumerWidget {
             child: ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Odjavi se'),
-              textColor: AdminColors.destructive,
-              iconColor: AdminColors.destructive,
+              textColor: context.adminColors.destructive,
+              iconColor: context.adminColors.destructive,
               onTap: () => odjavi(context, ref),
             ),
           ),
@@ -83,10 +83,10 @@ class _Red extends StatelessWidget {
           onTap: () => context.go(cilj.putanja),
         ),
         if (!zadnji)
-          const Divider(
+          Divider(
             height: AdminSize.hairline,
             thickness: AdminSize.hairline,
-            color: AdminColors.separator,
+            color: context.adminColors.separator,
           ),
       ],
     );

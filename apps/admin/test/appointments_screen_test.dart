@@ -1,4 +1,4 @@
-import 'package:admin/src/features/appointments/appointment_tile.dart';
+import 'package:admin/src/features/appointments/appointment_card.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/appointments/appointments_screen.dart';
 import 'package:core_api/core_api.dart';
@@ -64,7 +64,9 @@ void main() {
     expect(find.text('Emir Hodzic'), findsOneWidget);
     expect(find.text('10:00'), findsOneWidget);
     expect(find.text('11:00'), findsOneWidget);
-    expect(find.text('do 10:40'), findsOneWidget);
+    // Kraj termina se od taska 30 **ne piše** u kartici: canvas (`3k`, `3m`) nosi samo
+    // početak, a trajanje stoji u detalju. Lista se skenira po satu početka.
+    expect(find.text('do 10:40'), findsNothing);
   });
 
   testWidgets('otkazan termin ostaje u listi', (tester) async {
@@ -83,11 +85,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tarik Begic'), findsOneWidget);
-    // Suzeno na celiju: „Otkazani" stoji i u filter cipu iznad liste.
+    // Suzeno na celiju: „Otkazani" stoji i u filter cipu iznad liste — ali u **mnozini**,
+    // dok pilula uz termin od taska 30 nosi jedninu („Otkazano").
     expect(
       find.descendant(
-        of: find.byType(AppointmentTile),
-        matching: find.text('Otkazani'),
+        of: find.byType(AppointmentCard),
+        matching: find.text('Otkazano'),
       ),
       findsOneWidget,
     );
@@ -113,7 +116,7 @@ void main() {
     await tester.pumpWidget(_ekran(const []));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nema zakazanih termina za ovaj dan.'), findsOneWidget);
+    expect(find.text('Nema termina za ovaj dan.'), findsOneWidget);
   });
 
   testWidgets('status se uz boju uvijek pise i tekstom', (tester) async {
@@ -127,7 +130,7 @@ void main() {
 
     expect(
       find.descendant(
-        of: find.byType(AppointmentTile),
+        of: find.byType(AppointmentCard),
         matching: find.text('Na čekanju'),
       ),
       findsOneWidget,
