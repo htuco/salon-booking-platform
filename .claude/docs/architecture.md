@@ -495,6 +495,30 @@ ručnom unosu salon pretražuje svoj adresar po imenu i telefonu i vidi brojače
 Isti čovjek u dva salona su **dva reda** sa odvojenim brojačima, i to je uslov izolacije, ne
 nedostatak.
 
+## Kalendar dana: podatak odvojen od crtanja (task 31)
+
+`/calendar` je prvi admin ekran koji **ne prikazuje listu reda po red** nego dvodimenzionalan
+raspored, pa mu je model izdvojen iz widgeta: `apps/admin/lib/src/features/calendar/calendar_day.dart`
+je čista funkcija nad terminima, radnim vremenom i blokadama, bez ijednog `import`-a Fluttera u
+svojoj logici. Isti razlog kao `dashboard_summary.dart`: blok na pogrešnom mjestu na osi izgleda
+tačno kao blok na pravom.
+
+**Jedan model, dva čitanja.** `izgradiDan()` daje osu i kolonu po radniku (desktop `3c`),
+`redoviKolone()` jednu kolonu izravna u listu jednog radnika, `redoviDana()` cijeli dan u listu svih
+(telefon `3l`). Spajanje pogleda „po radniku" i „po vremenu" je zamka koju je task 31 naslijedio od
+availability enginea — `get_available_slots` vraća red po radniku, i svako miješanje daje ili
+duplikate ili izgubljene termine.
+
+**Vrijeme na osi je `int` minuta od ponoći.** Ne `DateTime` i ne `LocalTime`: osa je linija od 0 do
+1440 i sve na njoj je oduzimanje. `DateTime` bi u tu aritmetiku uveo zonu i ljetno računanje vremena,
+kojih u rasporedu salona nema.
+
+**`BlockedSlot` i `BlockedSlotRepository` su nastali ovdje.** `public.blocked_slots` postoji od init
+migracije, ali je do ovog taska bila čitana isključivo iz SQL-a (`get_available_slots`, admin
+akcije). Klijentu blokada nije podatak nego odsustvo slota; adminu jeste, jer kalendar koji je ne
+crta pokazuje prazninu tamo gdje je vlasnik svjesno zatvorio vrijeme. Repozitorij **samo čita**, i
+razlog nije grant nego podjela poslova — v. doc klase.
+
 ### Admin ne smije koristiti `servicesProvider` ni `employeesProvider`
 
 Ti provideri čitaju `currentSalonIdProvider`, koji klijentska app override-uje iz `SALON_ID`

@@ -76,6 +76,7 @@ class StavkaKalendara {
     this.tekst,
     this.traka = 0,
     this.brojTraka = 1,
+    this.cijeliSalon = false,
   });
 
   final VrstaStavke vrsta;
@@ -98,6 +99,13 @@ class StavkaKalendara {
   /// Koliko traka kolona ima na mjestu ove stavke.
   final int brojTraka;
 
+  /// Blokada koja vrijedi za **cijeli salon**, ne za jednog radnika.
+  ///
+  /// Postoji zbog mobilne liste sa „Svi": ista salonska blokada stoji u svakoj koloni i
+  /// tamo se mora ispisati jednom. Prepoznavanje po vremenu i tekstu ne bi bilo dovoljno —
+  /// dvije radnikove blokade u isto vrijeme sa istim razlogom su dvije blokade.
+  final bool cijeliSalon;
+
   int get trajanjeMinuta => doMinuta - odMinuta;
 
   /// Da li je ovo pozadinski pojas (pauza, blokada, neradno), a ne termin.
@@ -118,6 +126,7 @@ class StavkaKalendara {
     tekst: tekst,
     traka: traka,
     brojTraka: brojTraka,
+    cijeliSalon: cijeliSalon,
   );
 }
 
@@ -338,12 +347,19 @@ List<StavkaKalendara> redoviKolone(
   final krajSmjene = raspored.endTime.minutesFromMidnight;
 
   for (final stavka in zauzeca) {
-    if (stavka.odMinuta - kursor >= najkracaRupa && kursor < krajSmjene) {
+    // Rupa se **odsijeca na kraj smjene**. Termin upisan poslije zatvaranja (ručni unos to
+    // smije) bi inače rastegao „slobodno" preko zatvorenog salona — red koji nudi da se
+    // zakaže u vrijeme kad se ne radi. Našao snimak: subota se zatvara u 14:00, a termin u
+    // 14:20 je prijavio „Slobodno 2h 20m".
+    final krajRupe = stavka.odMinuta < krajSmjene
+        ? stavka.odMinuta
+        : krajSmjene;
+    if (krajRupe - kursor >= najkracaRupa && kursor < krajSmjene) {
       redovi.add(
         StavkaKalendara(
           vrsta: VrstaStavke.slobodno,
           odMinuta: kursor,
-          doMinuta: stavka.odMinuta,
+          doMinuta: krajRupe,
         ),
       );
     }
@@ -364,6 +380,57 @@ List<StavkaKalendara> redoviKolone(
   }
 
   return redovi;
+}
+
+/// Jedan red mobilne liste — stavka i, kad lista miješa radnike, čiji je.
+class RedListe {
+  const RedListe({required this.stavka, this.radnik});
+
+  final StavkaKalendara stavka;
+
+  /// Ime radnika. `null` u listi jednog radnika, gdje bi ga svaki red ponavljao.
+  final String? radnik;
+}
+
+/// Cijeli dan kao jedna lista — mobilni `3l` sa izabranim „Svi".
+///
+/// **Bez slobodnih rupa.** Rupa u koloni jednog radnika je podatak; „slobodno" preko
+/// cijelog salona nije, jer kad u smjeni radi troje, slobodno nije „otvoreno minus
+/// zauzeto". Isti razlog zbog kojeg kartica „Slobodno vrijeme" nije ušla u `3b`
+/// (`dashboard_summary.dart`).
+///
+/// **Salonska blokada se pojavljuje jednom**, iako stoji u svakoj koloni. Pet puta
+/// ispisana „Inventura" bi izgledalo kao pet blokada.
+List<RedListe> redoviDana(KalendarDan dan) {
+  final redovi = <RedListe>[];
+  final vidjeneSalonske = <String>{};
+
+  for (final kolona in dan.kolone) {
+    for (final stavka in kolona.stavke) {
+      if (stavka.vrsta == VrstaStavke.neradno) continue;
+
+      // Pauza je po radniku i smije se ponoviti; salonska blokada stoji u svakoj koloni i
+      // ispisuje se jednom, bez imena radnika — ona nije ničija.
+      if (stavka.cijeliSalon) {
+        if (!vidjeneSalonske.add(
+          '${stavka.odMinuta}-${stavka.doMinuta}-${stavka.tekst}',
+        )) {
+          continue;
+        }
+        redovi.add(RedListe(stavka: stavka));
+        continue;
+      }
+
+      redovi.add(RedListe(stavka: stavka, radnik: kolona.ime));
+    }
+  }
+
+  return redovi..sort((a, b) {
+    final poVremenu = a.stavka.odMinuta.compareTo(b.stavka.odMinuta);
+    return poVremenu != 0
+        ? poVremenu
+        : (a.radnik ?? '').compareTo(b.radnik ?? '');
+  });
 }
 
 /// Osa koja pokriva **sve** što dan sadrži, zaokružena na pune sate.
@@ -449,6 +516,7 @@ KolonaRadnika _kolona({
         doMinuta: blokada.endTime.minutesFromMidnight,
         osa: osa,
         tekst: blokadaNaslov(blokada),
+        cijeliSalon: blokada.isSalonWide,
       ),
     for (final termin in termini)
       ?_pojas(
@@ -539,6 +607,7 @@ StavkaKalendara? _pojas({
   required KalendarOsa osa,
   Appointment? termin,
   String? tekst,
+  bool cijeliSalon = false,
 }) {
   final presjek = _presjek(_raspon(odMinuta, doMinuta), osa);
   if (presjek == null) return null;
@@ -549,6 +618,7 @@ StavkaKalendara? _pojas({
     doMinuta: presjek.$2,
     termin: termin,
     tekst: tekst,
+    cijeliSalon: cijeliSalon,
   );
 }
 

@@ -515,6 +515,24 @@ void main() {
       expect(redovi.last.doMinuta, 13 * 60);
     });
 
+    test('rupa se odsijeca na kraj smjene, ne na sljedeći termin', () {
+      // Termin poslije zatvaranja je moguć (ručni unos ga smije upisati). Rupa do njega bi
+      // nudila da se zakaže u vrijeme kad salon ne radi.
+      final dan = _dan(
+        radnici: [_radnik('e1', 'Emir')],
+        termini: [_termin(od: 15 * 60, doMinuta: 16 * 60)],
+        radnoVrijeme: [_raspored(od: 9 * 60, doMinuta: 14 * 60)],
+      );
+
+      final slobodno = redoviKolone(_kolona(dan, 'Emir'))
+          .where((s) => s.vrsta == VrstaStavke.slobodno)
+          .toList();
+
+      expect(slobodno, hasLength(1));
+      expect(slobodno.single.odMinuta, 9 * 60);
+      expect(slobodno.single.doMinuta, 14 * 60);
+    });
+
     test('rupa kraća od praga se ne crta', () {
       // Između dva termina uvijek ostane po koja minuta; „Slobodno 5 min" je šum.
       final dan = _dan(
@@ -588,6 +606,96 @@ void main() {
 
       final redovi = redoviKolone(_kolona(dan, 'Emir'));
       expect(redovi.any((s) => s.vrsta == VrstaStavke.slobodno), isFalse);
+    });
+  });
+
+  group('mobilna lista svih radnika', () {
+    test('miješa radnike po vremenu i svakom redu piše čiji je', () {
+      final dan = _dan(
+        radnici: [_radnik('e1', 'Emir'), _radnik('e2', 'Amar')],
+        termini: [
+          _termin(od: 11 * 60, doMinuta: 12 * 60, id: 'a1'),
+          _termin(od: 10 * 60, doMinuta: 11 * 60, id: 'a2', radnik: 'e2'),
+        ],
+        radnoVrijeme: [_raspored()],
+      );
+
+      final redovi = redoviDana(dan);
+      expect(redovi.map((r) => r.radnik), ['Amar', 'Emir']);
+      expect(redovi.first.stavka.odMinuta, 10 * 60);
+    });
+
+    test('nema izmišljenog slobodnog vremena preko cijelog salona', () {
+      // Kad u smjeni radi troje, „slobodno" nije „otvoreno minus zauzeto" — isti razlog
+      // zbog kojeg kartica „Slobodno vrijeme" nije ušla u `3b`.
+      final dan = _dan(
+        radnici: [_radnik('e1', 'Emir'), _radnik('e2', 'Amar')],
+        termini: [_termin(od: 11 * 60, doMinuta: 12 * 60)],
+        radnoVrijeme: [_raspored()],
+      );
+
+      expect(
+        redoviDana(dan).any((r) => r.stavka.vrsta == VrstaStavke.slobodno),
+        isFalse,
+      );
+    });
+
+    test('salonska blokada se ispisuje jednom, i bez imena radnika', () {
+      final dan = _dan(
+        radnici: [
+          _radnik('e1', 'Emir'),
+          _radnik('e2', 'Amar'),
+          _radnik('e3', 'Vedad'),
+        ],
+        radnoVrijeme: [_raspored()],
+        blokade: [
+          _blokada(od: 10 * 60, doMinuta: 11 * 60, razlog: 'Inventura'),
+        ],
+      );
+
+      final blokade = redoviDana(dan)
+          .where((r) => r.stavka.vrsta == VrstaStavke.blokada)
+          .toList();
+      expect(blokade, hasLength(1));
+      expect(blokade.single.radnik, isNull);
+    });
+
+    test('dvije radnikove blokade u isto vrijeme ostaju dvije', () {
+      // Prepoznavanje po vremenu i tekstu bi ih spojilo u jednu; razlikuju se po tome
+      // čije su, ne po tome kako izgledaju.
+      final dan = _dan(
+        radnici: [_radnik('e1', 'Emir'), _radnik('e2', 'Amar')],
+        radnoVrijeme: [_raspored()],
+        blokade: [
+          _blokada(
+            od: 10 * 60,
+            doMinuta: 11 * 60,
+            radnik: 'e1',
+            razlog: 'Obuka',
+          ),
+          _blokada(
+            od: 10 * 60,
+            doMinuta: 11 * 60,
+            radnik: 'e2',
+            razlog: 'Obuka',
+          ),
+        ],
+      );
+
+      final blokade = redoviDana(dan)
+          .where((r) => r.stavka.vrsta == VrstaStavke.blokada)
+          .toList();
+      expect(blokade.map((r) => r.radnik), ['Amar', 'Emir']);
+    });
+
+    test('neradni pojasevi ne ulaze u listu', () {
+      final dan = _dan(
+        dan: _nedjelja,
+        radnici: [_radnik('e1', 'Emir')],
+        radnoVrijeme: [_raspored(dan: 7, zatvoreno: true)],
+      );
+
+      expect(redoviDana(dan), isEmpty);
     });
   });
 }

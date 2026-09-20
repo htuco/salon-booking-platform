@@ -14,13 +14,19 @@ import '../errors/errors.dart';
 /// Adminu jeste, i to je cijela razlika: kalendar koji blokadu ne crta pokazuje prazninu
 /// tamo gdje je vlasnik svjesno zatvorio vrijeme, pa izgleda kao da se može zakazati.
 ///
-/// ## Čitanje, ne pisanje
+/// ## Čitanje, ne pisanje — i to je odluka, ne granica baze
 ///
-/// Ovdje nema `insert`-a ni `delete`-a. „Blokiraj vrijeme" i „Dodaj pauzu" iz `3c` su
-/// **pisanje**, a pisanja u ovom sistemu idu kroz validirane `rpc` funkcije kojih za
-/// blokade još nema (task 34). Dodavanje `insert`-a ovdje bi značilo da app piše direktno
-/// u tabelu — obrnuto od pravila koje task 24 ima upisano u grantove
-/// (`.claude/docs/security.md`).
+/// Ovdje nema `insert`-a ni `delete`-a, iako bi **radili**: init migracija daje
+/// `select,insert,update,delete` nad `blocked_slots` roli `authenticated`, a `staff_manage`
+/// politika je `for all`. Provjereno pozivom, ne čitanjem migracije — prijavljen seed admin
+/// je kroz REST upisao i obrisao blokadu (task 31).
+///
+/// To je razlika u odnosu na `appointments`, gdje je task 24 **oduzeo** `insert`/`update`
+/// grant, pa je „samo kroz `rpc`" tamo tvrdnja baze. Ovdje bi bila samo konvencija.
+///
+/// Zato pisanje ne ulazi usput: „Blokiraj vrijeme", „Dodaj pauzu" i „Zatvori dan" iz `3c`
+/// su **task 34**, zajedno sa odlukom idu li kroz validiranu funkciju (kao termini) ili
+/// direktno. Ubaciti `insert` ovdje značilo bi tu odluku donijeti prešutno.
 ///
 /// ## Izolacija
 ///
