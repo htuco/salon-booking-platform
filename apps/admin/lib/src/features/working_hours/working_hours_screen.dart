@@ -10,9 +10,10 @@
 /// ## Availability ostaje na backendu
 ///
 /// Ovaj ekran mijenja **ulaz** u `get_available_slots`, nikad njegova pravila. Ovdje se
-/// ne računa nijedan slobodan termin; jedino što ekran zna izračunati je da li pauza
-/// stane u smjenu, i to samo da bi greška stigla prije `PT400` iz baze
-/// (`docs/01 §8.1`).
+/// ne računa nijedan slobodan termin; jedino što ekran provjerava sam (`_provjeri`) je
+/// staje li pauza u smjenu i je li kraj poslije početka, i to samo da greška stigne kao
+/// rečenica uz dan koji je kriv umjesto kao sirovi `PT400`. Baza istu provjeru ponavlja i
+/// ostaje jedina koja obavezuje (`docs/01 §8.1`).
 ///
 /// ## Termin se ne briše tiho
 ///
@@ -23,6 +24,7 @@ library;
 
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -48,13 +50,15 @@ class AdminWorkingHoursScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) =>
             _Greska(onRetry: () => ref.invalidate(radnoVrijemeProvider)),
-        // `key` po dužini učitanog rasporeda: kad se provider poništi nakon snimanja,
-        // uređivač se gradi iznova iz svježih redova umjesto da zadrži staro stanje.
-        data: (sve) => _Uredjivac(
-          key: ValueKey(sve.length),
-          pocetna: weekFromWorkingHours(sve),
-          desktop: desktop,
-        ),
+        // Bez `key`: svježa sedmica se preuzima u `didUpdateWidget`, ne rušenjem stanja.
+        //
+        // Prvi prolaz je ovdje imao `ValueKey(sve.length)` i **to nije radilo**:
+        // `weekFromWorkingHours` uvijek vraća sedam, pa je ključ bio isti prije i poslije
+        // snimanja i `_UredjivacState` je preživio sa starim `_dani`. Radilo je samo u
+        // prelazu 0 → 7, jedinom slučaju koji je test pokrivao. Posljedica je bila
+        // „Sačuvaj izmjene" koje ostaje aktivno nakon uspješnog snimanja.
+        data: (sve) =>
+            _Uredjivac(pocetna: weekFromWorkingHours(sve), desktop: desktop),
       ),
     );
   }
@@ -90,7 +94,7 @@ class _Greska extends StatelessWidget {
 }
 
 class _Uredjivac extends ConsumerStatefulWidget {
-  const _Uredjivac({super.key, required this.pocetna, required this.desktop});
+  const _Uredjivac({required this.pocetna, required this.desktop});
 
   final List<WorkingHoursInput> pocetna;
   final bool desktop;
@@ -110,12 +114,24 @@ class _UredjivacState extends ConsumerState<_Uredjivac> {
     _dani = List.of(widget.pocetna);
   }
 
-  bool get _izmijenjeno {
-    for (var i = 0; i < _dani.length; i++) {
-      if (_dani[i] != widget.pocetna[i]) return true;
+  /// Svježa sedmica iz baze preuzima lokalno stanje nakon snimanja.
+  ///
+  /// **Poredi se sa `_dani`, ne sa `oldWidget.pocetna`.** Poslije uspješnog upisa baza
+  /// vrati upravo ono što je poslano, pa je nova `pocetna` jednaka staroj i poređenje
+  /// dvije `pocetna` ne bi vidjelo nikakvu promjenu — a upravo tada lokalne izmjene treba
+  /// odbaciti, jer su postale zapisano stanje. Bez ovoga „Sačuvaj izmjene" ostaje aktivno
+  /// i poslije uspješnog snimanja, pa vlasnik snima isto dvaput.
+  @override
+  void didUpdateWidget(_Uredjivac oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(_dani, widget.pocetna)) {
+      _dani = List.of(widget.pocetna);
     }
-    return false;
   }
+
+  /// `listEquals`, ne petlja po indeksu: dužine su danas uvijek sedam, ali poređenje
+  /// koje to pretpostavlja postaje `RangeError` čim se pojavi raspored po radniku.
+  bool get _izmijenjeno => !listEquals(_dani, widget.pocetna);
 
   void _zamijeni(int index, WorkingHoursInput dan) =>
       setState(() => _dani[index] = dan);
@@ -124,7 +140,46 @@ class _UredjivacState extends ConsumerState<_Uredjivac> {
   ///
   /// Redoslijed je namjeran: prvo pitanje bazi šta bi ispalo, pa dijalog, pa upis. Obrnut
   /// redoslijed bi značio da vlasnik saznaje za posljedicu kad je već nastala.
+  /// Ono malo što ekran smije izračunati sam: staje li pauza u smjenu.
+  ///
+  /// Ovo **nije** availability logika — to ostaje u bazi. Ovdje je samo da greška stigne
+  /// kao rečenica uz dan koji je kriv, umjesto kao sirovi `PT400` iz backenda. Baza istu
+  /// provjeru ponavlja i ostaje jedina koja obavezuje.
+  String? _provjeri() {
+    for (final dan in _dani) {
+      if (dan.isClosed) continue;
+      final ime = kDaniSedmice[dan.dayOfWeek - 1];
+      if (dan.endTime <= dan.startTime) {
+        return '$ime: kraj radnog vremena mora biti poslije početka.';
+      }
+      if (dan.hasBreak &&
+          (dan.breakStartTime! < dan.startTime ||
+              dan.breakEndTime! > dan.endTime ||
+              dan.breakEndTime! <= dan.breakStartTime!)) {
+        return '$ime: pauza mora biti unutar radnog vremena.';
+      }
+    }
+    return null;
+  }
+
+  /// Greška ide i u `_greska` i u snackbar.
+  ///
+  /// Poruka se crta **iznad** sedam dana, a na telefonu se snima dugmetom na dnu, iza
+  /// blokada — vlasnik bi vidio samo da se spinner ugasio i da se ništa nije desilo.
+  void _prijaviGresku(String poruka) {
+    setState(() {
+      _snimam = false;
+      _greska = poruka;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(poruka)));
+  }
+
   Future<void> _sacuvaj() async {
+    final problem = _provjeri();
+    if (problem != null) {
+      _prijaviGresku(problem);
+      return;
+    }
     setState(() {
       _snimam = true;
       _greska = null;
@@ -149,16 +204,10 @@ class _UredjivacState extends ConsumerState<_Uredjivac> {
       );
     } on ApiError catch (error) {
       if (!mounted) return;
-      setState(() {
-        _snimam = false;
-        _greska = error.message;
-      });
+      _prijaviGresku(error.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _snimam = false;
-        _greska = 'Radno vrijeme se ne može sačuvati.';
-      });
+      _prijaviGresku('Radno vrijeme se ne može sačuvati.');
     }
   }
 
@@ -309,13 +358,23 @@ class _RedDana extends StatelessWidget {
           // desktopu (`3h`) ostaju u istom redu, kako ih canvas i crta.
           Row(
             children: [
-              SizedBox(
-                width: desktop ? 140 : null,
-                child: Text(
-                  ime,
-                  style: Theme.of(context).textTheme.titleMedium,
+              // Na telefonu `Expanded`, ne `SizedBox` + `Spacer`: na uvecanom sistemskom
+              // fontu (skala 2.0) ime dana i prekidac inace preliju red za 82 px.
+              if (desktop)
+                SizedBox(
+                  width: 140,
+                  child: Text(
+                    ime,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                )
+              else
+                Expanded(
+                  child: Text(
+                    ime,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                 ),
-              ),
               if (desktop) ...[
                 if (dan.isClosed)
                   Expanded(
@@ -340,30 +399,36 @@ class _RedDana extends StatelessWidget {
                   ),
                   const Spacer(),
                 ],
-              ] else ...[
-                const Spacer(),
-                if (dan.isClosed)
-                  Text('Zatvoreno', style: TextStyle(color: boje.textMuted)),
-              ],
-              Switch(
-                value: !dan.isClosed,
-                onChanged: (otvoren) =>
-                    onChanged(dan.copyWith(isClosed: !otvoren)),
+              ] else if (dan.isClosed)
+                // Bez `Spacer`: ime dana je vec `Expanded` i uzima visak prostora.
+                Text('Zatvoreno', style: TextStyle(color: boje.textMuted)),
+              // Sedam prekidaca u nizu bez labele citac ekrana javlja kao sedam puta
+              // „ukljuceno, prekidac" — ime dana stoji u zasebnom `Text`-u i ne veze se.
+              Semantics(
+                label: '$ime, salon otvoren',
+                child: Switch(
+                  value: !dan.isClosed,
+                  onChanged: (otvoren) =>
+                      onChanged(dan.copyWith(isClosed: !otvoren)),
+                ),
               ),
             ],
           ),
           if (!desktop && !dan.isClosed) ...[
             const SizedBox(height: AdminSpacing.sm),
-            Row(
+            // `Wrap`, ne `Row`: na skali 2.0 dva sata i crtica preliju red za 44 px.
+            // Isti razlog i isto rjesenje kao u `_RedPauze`.
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AdminSpacing.sm,
+              runSpacing: AdminSpacing.xs,
               children: [
                 _Sat(
                   vrijeme: dan.startTime,
                   semantika: '$ime, početak radnog vremena',
                   onChanged: (v) => onChanged(dan.copyWith(startTime: v)),
                 ),
-                const SizedBox(width: AdminSpacing.sm),
                 Text('–', style: TextStyle(color: boje.textMuted)),
-                const SizedBox(width: AdminSpacing.sm),
                 _Sat(
                   vrijeme: dan.endTime,
                   semantika: '$ime, kraj radnog vremena',
@@ -465,8 +530,16 @@ class _Sat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: semantika,
+    // `container: true` + `excludeSemantics: true` je jedino sto spoji labelu sa dugmetom.
+    //
+    // Bez njih `Semantics` pravi **susjedni** cvor: citac ekrana procita
+    // „Ponedjeljak, pocetak radnog vremena, dugme" kao stavku koja nista ne radi, pa
+    // odmah zatim „09:00, dugme" — i korisnik ne moze razlikovati pocetak od kraja, jer
+    // oba stvarna dugmeta kazu samo vrijeme. `MergeSemantics` ovdje ne pomaze.
+    container: true,
     button: true,
+    label: '$semantika, ${vrijeme.format()}',
+    excludeSemantics: true,
     child: OutlinedButton(
       onPressed: () async {
         final izabrano = await showTimePicker(
@@ -517,9 +590,21 @@ class _Blokade extends ConsumerWidget {
             padding: EdgeInsets.all(AdminSpacing.lg),
             child: Center(child: CircularProgressIndicator()),
           ),
-          error: (_, _) => Text(
-            'Blokade se ne mogu učitati.',
-            style: TextStyle(color: boje.textMuted),
+          // Isti izlaz kao gornji dio ekrana: bez ovoga je jedini način da se blokade
+          // ponovo učitaju napustiti ekran i vratiti se.
+          error: (_, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Blokade se ne mogu učitati.',
+                style: TextStyle(color: boje.textMuted),
+              ),
+              const SizedBox(height: AdminSpacing.sm),
+              OutlinedButton(
+                onPressed: () => ref.invalidate(buduceBlokadeProvider),
+                child: const Text('Pokušaj ponovo'),
+              ),
+            ],
           ),
           data: (lista) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -547,13 +632,25 @@ class _Blokade extends ConsumerWidget {
   }
 }
 
-class _RedBlokade extends ConsumerWidget {
+/// Naslov blokade — razlog, ili „Blokirano" kad ga nema (`reason` je nullable).
+String naslovBlokade(BlockedSlot blokada) =>
+    (blokada.reason?.isNotEmpty ?? false) ? blokada.reason! : 'Blokirano';
+
+class _RedBlokade extends ConsumerStatefulWidget {
   const _RedBlokade({required this.blokada});
 
   final BlockedSlot blokada;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_RedBlokade> createState() => _RedBlokadeState();
+}
+
+class _RedBlokadeState extends ConsumerState<_RedBlokade> {
+  bool _brisem = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final blokada = widget.blokada;
     final boje = context.adminColors;
     final datum = DateTime(
       blokada.date.year,
@@ -577,9 +674,7 @@ class _RedBlokade extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  blokada.reason?.isNotEmpty ?? false
-                      ? blokada.reason!
-                      : 'Blokirano',
+                  naslovBlokade(blokada),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 2),
@@ -595,16 +690,48 @@ class _RedBlokade extends ConsumerWidget {
           ),
           IconButton(
             tooltip: 'Ukloni blokadu',
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await ref
-                    .read(workingHoursActionsProvider)
-                    .obrisiBlokadu(blokada.id);
-              } on ApiError catch (error) {
-                messenger.showSnackBar(SnackBar(content: Text(error.message)));
-              }
-            },
+            // Potvrda, i dugme koje se gasi dok poziv traje.
+            //
+            // Brisanje je jedina nepovratna radnja na ovom ekranu, a stajalo je na jedan
+            // tap — promašen tap pored ikone briše „Kurban-bajram" bez pitanja. Ostatak
+            // ekrana traži izričitu potvrdu i za izmjenu radnog vremena.
+            onPressed: _brisem
+                ? null
+                : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final potvrda = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Ukloniti blokadu?'),
+                        content: Text(
+                          '${naslovBlokade(blokada)} — vrijeme ponovo postaje '
+                          'dostupno za zakazivanje.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Odustani'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Ukloni'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (potvrda != true || !mounted) return;
+                    setState(() => _brisem = true);
+                    try {
+                      await ref
+                          .read(workingHoursActionsProvider)
+                          .obrisiBlokadu(blokada.id);
+                    } on ApiError catch (error) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(error.message)),
+                      );
+                      if (mounted) setState(() => _brisem = false);
+                    }
+                  },
             icon: const Icon(Icons.delete_outline, size: 18),
           ),
         ],

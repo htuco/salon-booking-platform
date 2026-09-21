@@ -29,8 +29,10 @@ Future<bool?> prikaziKonflikte(
     final boje = context.adminColors;
     return AlertDialog(
       title: const Text('Termini ostaju van radnog vremena'),
-      content: SizedBox(
-        width: 460,
+      // `maxWidth`, ne fiksnih `460`: na telefonu je dostupno ~322 px, pa fiksna širina
+      // opisuje namjeru pogrešno („uvijek 460") iako je `AlertDialog` ionako stisne.
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +191,11 @@ class _UredjivacBlokadeState extends ConsumerState<_UredjivacBlokade> {
   @override
   Widget build(BuildContext context) {
     final sirina = MediaQuery.sizeOf(context).width;
-    final osoblje = ref.watch(osobljeZaBlokadeProvider).valueOrNull ?? const [];
+    // `isLoading` se prati odvojeno: sa `valueOrNull ?? []` dropdown dok učitava izgleda
+    // identično salonu koji stvarno nema nijednog radnika, a to su različita stanja.
+    final osobljeStanje = ref.watch(osobljeZaBlokadeProvider);
+    final osoblje = osobljeStanje.valueOrNull ?? const <Employee>[];
+    final osobljeSeUcitava = osobljeStanje.isLoading;
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -243,13 +249,28 @@ class _UredjivacBlokadeState extends ConsumerState<_UredjivacBlokade> {
               const SizedBox(height: AdminSpacing.lg),
               DropdownButtonFormField<String?>(
                 initialValue: _radnikId,
-                decoration: const InputDecoration(labelText: 'Odnosi se na'),
+                decoration: InputDecoration(
+                  labelText: 'Odnosi se na',
+                  helperText: osobljeSeUcitava
+                      ? 'Učitavanje osoblja…'
+                      : (osoblje.isEmpty
+                            ? 'Salon nema aktivnih radnika.'
+                            : null),
+                ),
+                // `isExpanded` i `ellipsis` idu zajedno: bez `isExpanded` dropdown traži
+                // prirodnu širinu stavke, pa se skraćivanje nikad ne aktivira i dugo ime
+                // („Amar Hadžiabdić-Mehmedagić iz Travnika") prelije telefon za ~300 px.
+                isExpanded: true,
                 items: [
                   const DropdownMenuItem<String?>(child: Text('Cijeli salon')),
                   for (final radnik in osoblje)
                     DropdownMenuItem<String?>(
                       value: radnik.id,
-                      child: Text(radnik.name),
+                      child: Text(
+                        radnik.name,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                 ],
                 onChanged: (v) => setState(() => _radnikId = v),
@@ -317,27 +338,35 @@ class _Polje extends StatelessWidget {
     children: [
       Text(naslov, style: Theme.of(context).textTheme.labelLarge),
       const SizedBox(height: AdminSpacing.xs),
-      SizedBox(
-        width: double.infinity,
-        child: OutlinedButton(
-          onPressed: () async {
-            final izabrano = await showTimePicker(
-              context: context,
-              initialTime: TimeOfDay(
-                hour: vrijeme.hour,
-                minute: vrijeme.minute,
-              ),
-              builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(alwaysUse24HourFormat: true),
-                child: child!,
-              ),
-            );
-            if (izabrano != null) {
-              onChanged(LocalTime(izabrano.hour, izabrano.minute));
-            }
-          },
-          child: Text(vrijeme.format()),
+      // Vidljivi naslov „Od"/„Do" stoji van dugmeta, pa ga čitač ekrana ne veže uz njega —
+      // isti razlog za `container`/`excludeSemantics` kao kod `_Sat` u ekranu.
+      Semantics(
+        container: true,
+        button: true,
+        label: '$naslov, ${vrijeme.format()}',
+        excludeSemantics: true,
+        child: SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () async {
+              final izabrano = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay(
+                  hour: vrijeme.hour,
+                  minute: vrijeme.minute,
+                ),
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(context)
+                      .copyWith(alwaysUse24HourFormat: true),
+                  child: child!,
+                ),
+              );
+              if (izabrano != null) {
+                onChanged(LocalTime(izabrano.hour, izabrano.minute));
+              }
+            },
+            child: Text(vrijeme.format()),
+          ),
         ),
       ),
     ],

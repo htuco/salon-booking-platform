@@ -72,6 +72,8 @@ Widget _screen({
   List<WorkingHour>? raspored,
   List<BlockedSlot> blokade = const [],
   Object? greska,
+  List<Employee> osoblje = const [],
+  TextScaler? skala,
 }) => ProviderScope(
   key: UniqueKey(),
   overrides: [
@@ -85,11 +87,16 @@ Widget _screen({
       return raspored ?? _raspored();
     }),
     buduceBlokadeProvider.overrideWith((ref) async => blokade),
-    osobljeZaBlokadeProvider.overrideWith((ref) async => const <Employee>[]),
+    osobljeZaBlokadeProvider.overrideWith((ref) async => osoblje),
   ],
   child: MaterialApp(
     theme: buildAdminTheme(),
-    home: const AdminWorkingHoursScreen(),
+    home: skala == null
+        ? const AdminWorkingHoursScreen()
+        : MediaQuery(
+            data: MediaQueryData(textScaler: skala),
+            child: const AdminWorkingHoursScreen(),
+          ),
   ),
 );
 
@@ -245,6 +252,74 @@ void main() {
 
     expect(find.text('Radno vrijeme se ne može učitati.'), findsOneWidget);
     expect(find.text('Pokušaj ponovo'), findsOneWidget);
+  });
+
+  // Tri regresije iz pregleda ekrana (task 34). Sve tri su reprodukovane prije popravke.
+
+  testWidgets('poslije snimanja sa sedam redova dugme se gasi', (tester) async {
+    // Prvi prolaz je stanje resetovao kroz `ValueKey(sve.length)`, a `weekFromWorkingHours`
+    // uvijek vraca sedam — kljuc je bio isti prije i poslije snimanja, pa se `_dani` nikad
+    // nije osvjezio. Radilo je samo u prelazu 0 → 7, koji je jedini bio pokriven.
+    await _pumpAt(tester, _desktop, _screen());
+
+    await tester.tap(find.byType(Switch).first);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Sačuvaj izmjene'),
+          )
+          .onPressed,
+      isNotNull,
+    );
+
+    // Isto sto radi `sacuvaj()` poslije uspjesnog upisa.
+    final element = tester.element(find.byType(AdminWorkingHoursScreen));
+    ProviderScope.containerOf(element).invalidate(radnoVrijemeProvider);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Sačuvaj izmjene'),
+          )
+          .onPressed,
+      isNull,
+      reason: 'svježa sedmica iz baze mora ugasiti dugme',
+    );
+  });
+
+  testWidgets('uvecan sistemski font ne preliva telefon', (tester) async {
+    // Popravka za sirinu (vremena ispod imena) nije pokrivala skalu teksta: red dana je
+    // prelivao 82 px, a red vremena 44 px na skali 2.0.
+    await _pumpAt(
+      tester,
+      _telefon,
+      _screen(skala: const TextScaler.linear(2.0)),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('dugo ime radnika ne preliva dropdown blokade', (tester) async {
+    await _pumpAt(
+      tester,
+      _telefon,
+      _screen(
+        osoblje: const [
+          Employee(
+            id: 'e1',
+            salonId: _salonId,
+            name: 'Amar Hadziabdic-Mehmedagic iz Travnika',
+          ),
+        ],
+      ),
+    );
+    await _doDna(tester);
+    await tester.tap(find.text('+ Dodaj neradni dan'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('„Dodaj pauzu" stoji samo na danima bez pauze', (tester) async {
