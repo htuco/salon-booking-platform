@@ -1,5 +1,9 @@
 # Workflows — komande i dokazi
 
+`Supabase tests` koristi `supabase/setup-cli@v3` sa fiksnom npm verzijom `2.117.0`.
+Raniji `@v1` sa `version: latest` mogao je pasti na GitHub Releases API rate limit
+prije starta baze i pgTAP-a; isti CLI je provjeren lokalno sa `npx supabase --version`.
+
 Sve komande se pokreću iz roota repoa osim gdje ne piše drugačije.
 
 ## Preduslovi
@@ -86,6 +90,11 @@ obrisati, samo prepisati** — a to mijenja svaki SHA iza njega. Ako repo ikad o
 završi u arhivama (GH Archive, Software Heritage) koje vraćanje na private ne dotiče.
 
 ## Generatori
+
+Task 33 dodaje `deno run --allow-env --allow-net supabase/tests/rest_employee_crud.ts` u
+`tool/test_supabase.sh` i `Supabase tests` CI. Isti lokalni env kao ostali REST testovi;
+skripta odbija nelokalni backend i čisti samo vlastite fixture redove.
+
 
 ```sh
 dart run tool/gen_flavors.dart            # Gradle flavori, iOS xcconfig, tenants.g.dart

@@ -79,6 +79,23 @@ void main() {
   });
 
   group('ekran', () {
+    testWidgets('Ime ostaje na terminu bez radnika u aktivnom katalogu', (
+      tester,
+    ) async {
+      final repo = _MockAppointments();
+      when(repo.forCurrentCustomer).thenAnswer(
+        (_) async => [
+          _termin(
+            dan: 5,
+            status: AppointmentStatus.completed,
+          ).copyWith(employeeName: 'Bivši radnik'),
+        ],
+      );
+      await _pump(tester, repo: repo);
+      await tester.tap(find.text('Prošli'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bivši radnik'), findsOneWidget);
+    });
     testWidgets('dva taba razdvajaju predstojeće od prošlih', (tester) async {
       final repo = _MockAppointments();
       when(repo.forCurrentCustomer).thenAnswer(

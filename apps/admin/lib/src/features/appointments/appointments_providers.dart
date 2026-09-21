@@ -260,7 +260,9 @@ final adminEmployeesProvider = FutureProvider<List<Employee>>((ref) async {
   final salonId = ref.watch(adminSalonIdProvider);
   if (salonId == null) return const [];
 
-  return ref.watch(employeeRepositoryProvider).forSalon(salonId);
+  return ref
+      .watch(employeeRepositoryProvider)
+      .forSalon(salonId, includeInactive: true);
 });
 
 /// Veze radnik–usluga: koji radnik radi koju uslugu.

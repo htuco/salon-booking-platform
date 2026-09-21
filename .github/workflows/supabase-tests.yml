@@ -43,9 +43,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
+      # v1 + `latest` pita GitHub Releases API i povremeno pada na rate limit
+      # prije nego sto testovi uopste krenu. v3 instalira fiksnu npm verziju.
+      - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.117.0
 
       - uses: denoland/setup-deno@v2
         with:
@@ -59,6 +61,14 @@ jobs:
       # pgTAP: tenant isolation runs inside a rollback transaction.
       - name: Run pgTAP tests
         run: supabase test db
+
+      - name: Osoblje kroz RPC i historija klijenta
+        run: |
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="$API_URL"
+          export SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          deno run --allow-env --allow-net supabase/tests/rest_employee_crud.ts
 
       - name: Push worker testovi
         run: |

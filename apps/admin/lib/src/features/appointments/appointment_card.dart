@@ -186,7 +186,7 @@ TerminOpis opisTermina(
 
   return TerminOpis(
     usluga: termin.serviceName ?? usluga?.name,
-    majstor: radnik?.name,
+    majstor: termin.employeeName ?? radnik?.name,
     cijena: saCijenom ? (termin.servicePrice ?? usluga?.price) : null,
   );
 }

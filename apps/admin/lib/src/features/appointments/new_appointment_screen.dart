@@ -536,7 +536,7 @@ class _IzborRadnika extends ConsumerWidget {
         .map((veza) => veza.employeeId)
         .toSet();
     final zaUslugu = sviRadnici
-        .where((radnik) => dozvoljeni.contains(radnik.id))
+        .where((radnik) => radnik.isActive && dozvoljeni.contains(radnik.id))
         .toList();
 
     return Wrap(

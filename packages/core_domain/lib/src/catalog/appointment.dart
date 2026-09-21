@@ -36,6 +36,9 @@ abstract class Appointment with _$Appointment {
 
     /// `null` kad salon ne traži izbor radnika (`require_staff_choice = false`).
     @JsonKey(name: 'employee_id') String? employeeId,
+
+    /// Ime u trenutku rezervacije, dostupno i nakon deaktivacije radnika.
+    @JsonKey(name: 'employee_name') String? employeeName,
     @JsonKey(name: 'customer_id') required String customerId,
     @JsonKey(name: 'auth_identity_id') String? authIdentityId,
 

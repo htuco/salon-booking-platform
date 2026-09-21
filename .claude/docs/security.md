@@ -212,6 +212,24 @@ Termin snapshotuje `service_name`, `service_price` i `service_duration_minutes` 
 upisa. Pozivalac te vrijednosti ne bira. Promjena cjenovnika zato utiče na budući availability i
 nove rezervacije, ali ne prepisuje dogovorenu cijenu ni trajanje postojećeg termina.
 
+### Osoblje — task 33
+
+`authenticated` ima samo SELECT nad `employees` i `employee_services`. `create_employee`
+i `update_employee` atomski pišu profil i kompletnu listu usluga; `set_employee_active`
+mijenja status. Svi zahtijevaju `private.is_admin(p_salon_id) is true`, a izmjena i status
+filtriraju istovremeno po salonu i ID-u. Privatna validacija nema app execute grant.
+Tuđi, nepostojeći i NULL ID usluge se odbijaju istom greškom; kompozitni FK ostaje druga brava.
+UPDATE zaključava radnika prije zamjene veza, pa paralelni upisi ne mogu pomiješati liste.
+
+Deaktivacija čuva termine (uključujući buduće), smjene i usluge. Klijent ne dobija novu
+politiku za čitanje neaktivnih radnika: `appointments.employee_name` se puni triggerom prije
+upisa/promjene radnika, a stari redovi su backfillovani. Preimenovanje i deaktivacija zato
+ne uklanjaju ime iz historije. Aktivni katalog ostaje javan; neaktivni radnik je vidljiv
+samo vlastitom adminu. `employees` nikad ne kreira `users` ni pravo prijave.
+
+Dokaz: `012_employee_crud.test.sql` i `rest_employee_crud.ts` (stvarni admin A/B i klijentski
+JWT). Namjerno slabljenje `private.is_admin` na `true` u rollback transakciji obara 7 asercija.
+
 ### Realtime availability bez otvaranja termina
 
 Klijentski `appointments` stream ne može osvježiti slot nakon **tuđe** rezervacije: politika

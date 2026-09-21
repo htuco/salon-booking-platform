@@ -118,5 +118,9 @@ void main() {
     );
     expect(find.text('10 KM'), findsNothing);
     expect(tester.takeException(), isNull);
+    // Zatvori Riverpod pretplatu prije cekanja StreamController.close u tearDown.
+    // Inace close ceka fake-async event koji se poslije zadnjeg pump-a ne isporuci.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 }
