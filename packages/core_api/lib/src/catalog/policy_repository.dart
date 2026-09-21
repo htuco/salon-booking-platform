@@ -76,6 +76,79 @@ class PolicyRepository {
       for (final row in rows) policySectionFromRow(row),
     ], const []);
   });
+
+  /// Sekcije pravila **koje piše salon** — samo `salon_policies`, za admin ekran.
+  ///
+  /// Razlikuje se od [terms] time što **ne spaja platformske**: admin uređuje samo svoje,
+  /// a lista koja bi pokazala i tuđe redove nudila bi dugme „Uredi" nad tekstom koji
+  /// `super_manage` neće pustiti da se promijeni.
+  Future<List<PolicySection>> salonSections(String salonId) => guard(() async {
+    final rows = await _client
+        .from('salon_policies')
+        .select(_salonColumns)
+        .eq('salon_id', salonId);
+
+    return mergePolicySections(const [], [
+      for (final row in rows) policySectionFromRow(row),
+    ]);
+  });
+
+  /// Dodaje ili mijenja salonsku sekciju pravila.
+  ///
+  /// **Ovo ide direktno nad tabelom, bez `rpc`, i to je odluka a ne previd.** Nad
+  /// `salon_policies` `staff_manage` već daje CRUD uz grant, a mimo `check` constrainta
+  /// koji stoje (`sort_order > 0`, neprazan naslov i tijelo) nema šta da se validira —
+  /// funkcija bi bila prosljeđivanje koje sakriva politiku umjesto da je pojača. Razlika
+  /// naspram `services`, `employees` i `working_hours`, gdje `rpc` postoji jer nosi
+  /// pravila, zapisana je u `.claude/docs/security.md`.
+  ///
+  /// **`app_policies` se odavde ne dira nikad** (ADR-0009): Zakazivanje, Cijene i „Vaši
+  /// podaci" obavezuju firmu pod čijim imenom app stoji u storeu, i `super_manage` ih
+  /// drži van dohvata salona.
+  Future<PolicySection> saveSalonSection({
+    required String salonId,
+    String? sectionId,
+    required int sortOrder,
+    required String title,
+    required String body,
+  }) => guard(() async {
+    final vrijednosti = {
+      'salon_id': salonId,
+      'sort_order': sortOrder,
+      'title': title.trim(),
+      'body': body.trim(),
+    };
+
+    final row = sectionId == null
+        ? await _client
+              .from('salon_policies')
+              .insert(vrijednosti)
+              .select(_salonColumns)
+              .single()
+        : await _client
+              .from('salon_policies')
+              .update(vrijednosti)
+              // Uz `id` i `salon_id`: RLS već drži granicu, ali filter koji je ponovi
+              // znači da greška u politici ne postane tiha izmjena tuđeg reda.
+              .eq('id', sectionId)
+              .eq('salon_id', salonId)
+              .select(_salonColumns)
+              .single();
+
+    return policySectionFromRow(row);
+  });
+
+  /// Briše salonsku sekciju pravila.
+  Future<void> deleteSalonSection({
+    required String salonId,
+    required String sectionId,
+  }) => guard(
+    () async => _client
+        .from('salon_policies')
+        .delete()
+        .eq('id', sectionId)
+        .eq('salon_id', salonId),
+  );
 }
 
 /// Spaja platformske i salonske sekcije u redoslijed kojim ih ekran numeriše.

@@ -211,6 +211,14 @@ Do taska 32 je bio samo prvi, i to se nije vidjelo jer se katalog nije mogao mij
 dok ne ubije aplikaciju. **Novi provider koji čita nešto što trigger prati mora ući u ovu listu**,
 inače se ista greška ponavlja tiho — drži je `apps/client/test/catalog_refresh_test.dart`.
 
+**Admin modul piše kroz `rpc`, uz jedan namjeran izuzetak.** `services`, `employees`,
+`working_hours`, `blocked_slots`, `appointments`, `salons` i `salon_settings` imaju samo `select`
+grant za `authenticated`; pisanje ide kroz `security definer` funkcije koje nose validaciju.
+**`salon_policies` je izuzetak** — `staff_manage` daje CRUD uz grant, jer mimo `check` constrainta
+koji već stoje nema šta da se validira, pa bi funkcija bila prosljeđivanje koje sakriva politiku.
+`app_policies` se iz admina ne dira uopšte (ADR-0009). Zašto tako i čime je dokazano:
+`.claude/docs/security.md`.
+
 Autorizacija, grantovi i ono što još nije zatvoreno: `.claude/docs/security.md`.
 
 ## Edge Functions i cron

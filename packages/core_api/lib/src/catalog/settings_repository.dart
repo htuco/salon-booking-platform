@@ -40,6 +40,51 @@ show_prices_in_app, allow_guest_booking, timezone, language
     }
     return salonSettingsFromRow(row);
   });
+
+  /// Mijenja booking pravila — `public.update_salon_settings`, samo iz admina.
+  ///
+  /// **Nema `update` nad `salon_settings` iz aplikacije.** Do taska 36 ga je bilo, uz
+  /// `staff_manage` politiku koja ga je puštala; grant je oduzet jer je značio drugi put
+  /// do istog reda, onaj koji ne prolazi kroz validaciju ove funkcije.
+  ///
+  /// **`timezone`, `language` i `auth_providers` nisu parametri.** Prvo je platformsko
+  /// (koji login uopšte postoji u buildu), druga dva mijenjaju značenje **svih** već
+  /// upisanih `time` vrijednosti u `working_hours` i `appointments` — promjena zone nije
+  /// postavka nego migracija podataka.
+  ///
+  /// Vraćeni red je ono što baza stvarno drži, ne ono što je poslano: ekran ga preuzima
+  /// umjesto da pretpostavi da je upis prošao onako kako ga je sastavio.
+  Future<SalonSettings> update({
+    required String salonId,
+    required String bookingMode,
+    required String bookingGranularity,
+    required int bufferMinutes,
+    required int slotStepMinutes,
+    required int minAdvanceBookingHours,
+    required int maxAdvanceBookingDays,
+    required int minCancelHours,
+    required bool requireStaffChoice,
+    required bool showPricesInApp,
+    required bool allowGuestBooking,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'update_salon_settings',
+      params: {
+        'p_salon_id': salonId,
+        'p_booking_mode': bookingMode,
+        'p_booking_granularity': bookingGranularity,
+        'p_buffer_minutes': bufferMinutes,
+        'p_slot_step_minutes': slotStepMinutes,
+        'p_min_advance_booking_hours': minAdvanceBookingHours,
+        'p_max_advance_booking_days': maxAdvanceBookingDays,
+        'p_min_cancel_hours': minCancelHours,
+        'p_require_staff_choice': requireStaffChoice,
+        'p_show_prices_in_app': showPricesInApp,
+        'p_allow_guest_booking': allowGuestBooking,
+      },
+    );
+    return salonSettingsFromRow(Map<String, dynamic>.from(row as Map));
+  });
 }
 
 /// Mapira `salon_settings` red na [SalonSettings].

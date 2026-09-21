@@ -28,7 +28,7 @@ smanjivati desktop prikaz.
 | `3f` | Usluge i cjenovnik | Cilj za `/services`; ruta je trenutno placeholder. |
 | `3g` | Osoblje i smjene | `/employees`: kartice radnika, editor i redovni raspored (task 33). |
 | `3h` | Radno vrijeme i pauze | Cilj za `/working-hours`; ruta je trenutno placeholder. |
-| `3i` | Postavke lokacije | Cilj za `/settings`; ruta je trenutno placeholder. |
+| `3i` | Postavke lokacije | `/settings` (task 36) — osnovni podaci, booking pravila i salonske sekcije pravila. Branding nije ovdje: boje i logo dolaze iz `tenant.yaml`. |
 | `3j` | Prijava | Vizuelni cilj za postojeći `/login`; auth ostaje Supabase email+password. |
 
 ### Telefon

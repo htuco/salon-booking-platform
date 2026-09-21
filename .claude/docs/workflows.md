@@ -95,6 +95,11 @@ Task 33 dodaje `deno run --allow-env --allow-net supabase/tests/rest_employee_cr
 `tool/test_supabase.sh` i `Supabase tests` CI. Isti lokalni env kao ostali REST testovi;
 skripta odbija nelokalni backend i čisti samo vlastite fixture redove.
 
+Task 36 dodaje `rest_postavke_lokacije.ts` na oba mjesta, i **usput vraća `rest_working_hours.ts`
+u CI**: task 34 ga je upisao samo u `tool/test_supabase.sh`, pa je dotad bio dokaz koji se vrti
+isključivo na razvojnoj mašini. Oba testa vraćaju seed u polazno stanje u `finally` bloku, jer
+mijenjaju red koji ostali testovi čitaju.
+
 
 ```sh
 dart run tool/gen_flavors.dart            # Gradle flavori, iOS xcconfig, tenants.g.dart

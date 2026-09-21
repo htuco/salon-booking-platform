@@ -87,6 +87,31 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Direktni INSERT/UPDATE/DELETE grantovi nad `working_hours` i `blocked_slots` su oduzeti
   `authenticated` roli; ostao je samo SELECT.
 
+## Postavke lokacije (task 36)
+
+- `update_salon_contact(salon_id, name, address, city, description='', phone=null, email=null,
+  instagram_url=null, facebook_url=null)` vraća jedan `salons` red. Naziv i grad su obavezni
+  (`PT400`); prazan string u opcionim poljima se snima kao NULL, adresa i opis kao prazan string
+  jer su `not null` kolone.
+- **Kolone su nabrojane u potpisu.** `status`, `plan`, `slug`, `vertical_pack_key`,
+  `terminology_override`, boje i logo **nisu parametri** i ne mogu se promijeniti iz admina:
+  branding dolazi iz `tenant.yaml` kroz generator, ostalo je platformsko.
+- `update_salon_settings(salon_id, booking_mode, booking_granularity, buffer_minutes,
+  slot_step_minutes, min_advance_booking_hours, max_advance_booking_days, min_cancel_hours,
+  require_staff_choice, show_prices_in_app, allow_guest_booking)` vraća jedan `salon_settings` red.
+  Validacija ponavlja `check` constrainte da greška stigne kao rečenica uz polje (`PT400`), a ne
+  kao `23514` sa imenom constrainta. `PT404` kad salon nema red.
+- **`timezone`, `language` i `auth_providers` nisu parametri.** Prvo dvoje mijenja značenje svih
+  već upisanih `time` vrijednosti u `working_hours` i `appointments` — to je migracija podataka,
+  ne postavka.
+- Direktni INSERT/UPDATE/DELETE grantovi nad `salons` i `salon_settings` su oduzeti `authenticated`
+  roli; `staff_manage` nad `salon_settings` je zamijenjena sa `staff_read` (`for select`), da
+  politika ne tvrdi više nego što grant dopušta.
+- **`salon_policies` namjerno nema `rpc`** — `staff_manage` daje CRUD uz grant, jer mimo postojećih
+  `check` constrainta nema šta da se validira. **`app_policies` se iz admina ne dira** (ADR-0009).
+- `min_cancel_hours` vrijedi **odmah**: `cancel_appointment` ga čita pri svakom pozivu, ne pamti ga
+  pri rezervaciji.
+
 ## Push ugovor (task 25)
 
 `register_device(salon, installation_uuid, secret, platform, fcm_token, staff)` vraća

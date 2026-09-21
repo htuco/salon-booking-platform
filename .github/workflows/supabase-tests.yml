@@ -70,6 +70,19 @@ jobs:
           export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           deno run --allow-env --allow-net supabase/tests/rest_employee_crud.ts
 
+      # Radno vrijeme (task 34) i postavke lokacije (task 36) mijenjaju ono sto klijent
+      # vidi. `rest_working_hours.ts` je task 34 dodao u `tool/test_supabase.sh`, ali ne i
+      # ovdje — pa je do taska 36 bio dokaz koji se vrti samo na razvojnoj masini.
+      - name: Radno vrijeme i postavke lokacije kroz REST
+        run: |
+          set -euo pipefail
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="$API_URL"
+          export SUPABASE_ANON_KEY="$ANON_KEY"
+          export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
+          deno run --allow-env --allow-net supabase/tests/rest_working_hours.ts
+          deno run --allow-env --allow-net supabase/tests/rest_postavke_lokacije.ts
+
       - name: Push worker testovi
         run: |
           deno check --config supabase/functions/send-push/deno.json supabase/functions/send-push/index.ts
