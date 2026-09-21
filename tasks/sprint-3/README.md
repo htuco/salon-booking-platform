@@ -13,7 +13,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [29](29-responsive-shell.md) ✅ | Responsive shell: desktop sidebar + mobilna navigacija | `3b`–`3i`, `3k`–`3t` | 30–36 | 1–2 dana |
 | [30](30-postojeci-ekrani-na-handoff.md) 🟡 | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) ✅ | Kalendar dana | `3c` `3l` | — | 2–3 dana |
-| [32](32-usluge-i-cjenovnik.md) 🟡 | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
+| [32](32-usluge-i-cjenovnik.md) ✅ | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
 | [33](33-osoblje-i-smjene.md) | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
 | [35](35-klijenti-i-profil.md) | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
@@ -243,3 +243,43 @@ ovdje — admin se razvija protiv lokalnog stacka.
 >
 > Sljedeći task je [32](32-usluge-i-cjenovnik.md) — prvi u sprintu koji **nosi backend**: danas ne
 > postoji nijedna RPC putanja kojom admin piše uslugu, pa ide migracija i pgTAP prije ekrana.
+
+**32 — Usluge i cjenovnik (CRUD)** — ✅ 2026-09-21, [PR #54](https://github.com/htuco/salon-booking-platform/pull/54).
+
+> `/services` je prestao biti placeholder: desktop tabela `3f`, mobilne kartice `3p` i editor `3q`.
+> Backend je tri uska RPC-a (`create_service`, `update_service`, `set_service_active`), a **rupu
+> zatvara oduzet grant, ne dodane funkcije** — `authenticated` više nema `insert`/`update`/`delete`
+> nad `services`, isto kao što od taska 24 nema nad `appointments`. Brisanje nije aplikacijska
+> operacija: deaktivacija čuva termine i veze radnik–usluga.
+>
+> **Nečekirana DoD stavka je tražila promjenu šeme.** Trajanje je već bilo snapshotovano kroz
+> `end_time`, ali cijena nije — `appointments` je nosio samo `service_id`, pa bi izmjena cjenovnika
+> retroaktivno promijenila stare termine i promet na dashboardu. Termin sada nosi `service_name`,
+> `service_price` i `service_duration_minutes`, koje trigger puni prije upisa; pozivalac ih ne bira.
+>
+> **Dokazano dvostruko.** `Supabase tests` zelen — pgTAP prolazi, uključujući tvrdnje da admin
+> salona B ne vidi neaktivnu uslugu salona A i ne može promijeniti nijednu. Uz to, migracija je
+> primijenjena na hostovani projekat i provjerena upitom: 0 od 20 termina bez snapshota, 0
+> neslaganja backfilla, grantovi i execute prava tačno kakvi ugovor tvrdi. **Snapshot je viđen
+> uživo**: cijena „Brade" promijenjena kroz admin ekran sa 10 na 15 KM ostavila je šest zakazanih
+> termina na 10 KM, dok Vitez klijent na Android emulatoru za nove rezervacije pokazuje 15 KM — a to
+> nijedan Dart test ne može uhvatiti.
+>
+> **Dvije greške koje su našli uređaj i CI, a ne testovi.** Klijent nije osvježavao katalog bez
+> hladnog starta: `availabilityChangesProvider` je invalidirao samo `availableSlotsProvider`, a
+> `servicesProvider` nema `autoDispose`, pa je katalog živio koliko i proces. Do ovog taska
+> nevidljivo, jer se cjenovnik nije mogao mijenjati u radu; gore od zastarjele cijene je
+> deaktivirana usluga, koja ostaje u listi i padne tek na `book_appointment`. Drugo, pgTAP je pisao
+> `select (f(...)).*`, oblik koji Postgres proširi u `(f()).kol1, (f()).kol2, …` i **pozove funkciju
+> jednom po koloni** — prvi poziv rezerviše slot, drugi ga zatekne zauzetim. Tri CI kruga i dvije
+> pogrešne dijagnoze prije tačne; obje su ostavljene zapisane u fajlu.
+>
+> **Usput popravljeno, ne pripada tasku:** dva kalendarska testa iz taska 31 koja su padala i na
+> `main`-u, pa je Flutter job bio crven na svakom PR-u.
+>
+> **Ostalo za sljedećeg:** nijedan Deno REST test za nove RPC-e. `tool/run_tenant.sh` i
+> `tool/run_live_demo.sh client` **ne rade** — šalju `--build-name`/`--build-number` u `flutter run`,
+> što Flutter 3.47.4 ne prima; zaobiđeno direktnim pozivom, popravka traži i ispravku komentara
+> iznad. U editoru se cijena popuni sa tačkom (`20.00`) a validacijska poruka uči zarez
+> (`Npr. 15,00`). Admin demo (`demo_main.dart`) nema neaktivnu uslugu ni kategoriju, pa se pilula
+> „Neaktivna" i reaktivacija ne vide bez pravog backenda. iOS nije diran.

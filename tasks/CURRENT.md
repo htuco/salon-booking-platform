@@ -4,16 +4,16 @@
 
 ## Status
 
-U toku.
+Gotovo (2026-09-21). Oba CI joba zelena na `c3762f7`.
 
 ## Ciljevi
 
 - [x] Napisati migraciju i pgTAP prije ekrana: validirani RPC za kreiranje, izmjenu i deaktivaciju
       usluge, provjera kroz `private.is_admin`, taksativni execute grantovi i oduzeti direktni
       `insert`/`update` grantovi nad `services`.
-- [ ] Dokazati da admin salona A ne može čitati ni mijenjati uslugu salona B, da klijent/anon ne
+- [x] Dokazati da admin salona A ne može čitati ni mijenjati uslugu salona B, da klijent/anon ne
       može pisati, da se usluga sa terminima ne briše i da deaktivacija ne oštećuje postojeće
-      termine ni veze radnik–usluga. **Čeka CI** — `011_service_crud.test.sql` nije izvršen nigdje.
+      termine ni veze radnik–usluga.
 - [x] Zatvoriti historijski snapshot termina: promjena cijene ne smije prepisati cijenu već
       zakazanog termina, dok nova cijena i trajanje moraju važiti za buduće rezervacije i
       availability. Dodati migraciju/backfill i prilagoditi booking RPC ugovor ako je potrebno.
@@ -71,10 +71,13 @@ U toku.
   promijenjena sa 10,00 na 15,00 KM; šest već zakazanih termina je ostalo na **10,00 KM**, a
   klijentska app na Android emulatoru odmah pokazuje **15 KM** za nove rezervacije. Ovo nijedan
   Dart test ne može uhvatiti — da trigger ne radi, cijela suite bi i dalje bila zelena.
-- **pgTAP i dalje nije pokrenut.** Na ovoj mašini nema ni Dockera ni lokalnog `supabase` stacka, a
-  MCP server je `--read-only`. `011_service_crud.test.sql` dokazuje CI job `Supabase tests`, koji
-  se okida na PR jer su dirani `supabase/migrations/**`, `supabase/tests/**` i `packages/core_api/**`.
-  Primijenjena migracija **nije** dokaz da tvrdnje o izolaciji prolaze.
+- **pgTAP je prošao na CI-ju** (`Supabase tests`, zelen na `c3762f7`). Lokalno se nije moglo
+  pokrenuti — nema Dockera, a MCP je `--read-only` — pa je dokaz iz čistog checkouta jedini koji
+  postoji. Trebalo je tri kruga i **dvije pogrešne dijagnoze**: pad nije bio ni u izolaciji ni u
+  rasporedu nego u `select (f(...)).*`, obliku koji Postgres proširi u `(f()).kol1, (f()).kol2, …`
+  i pozove funkciju **jednom po koloni** — prvi poziv rezerviše slot, drugi ga zatekne zauzetim.
+  Isto je kod `create_service` pravilo desetak usluga umjesto jedne. Obje pogrešne dijagnoze su
+  ostavljene zapisane u testu, da sljedeći ne ide istim putem.
 - DoD je preciziran nakon audita: aktivne usluge salona B su namjerno javni katalog (čita ih i
   `anon`), pa izolacija može i mora sakriti neaktivne redove i zabraniti sve tuđe mutacije; ne
   smije sakriti aktivni katalog bez lomljenja klijentske aplikacije.

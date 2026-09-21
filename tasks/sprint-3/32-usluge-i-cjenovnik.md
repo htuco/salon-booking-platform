@@ -11,15 +11,15 @@
 Salon sam mijenja svoj cjenovnik. Danas usluge postoje samo u seedu i mijenjaju se `psql`-om.
 
 ## Definicija gotovog
-- [ ] `/services` po `3f`, mobilna lista `3p`, unos i izmjena kao bottom sheet `3q`
-- [ ] Kreiranje, izmjena i deaktivacija idu **kroz RPC**, ne direktnim `insert`/`update`
-- [ ] Grantovi: `authenticated` nema `insert`/`update` nad `services` — isto kao što od taska 24
+- [x] `/services` po `3f`, mobilna lista `3p`, unos i izmjena kao bottom sheet `3q`
+- [x] Kreiranje, izmjena i deaktivacija idu **kroz RPC**, ne direktnim `insert`/`update`
+- [x] Grantovi: `authenticated` nema `insert`/`update` nad `services` — isto kao što od taska 24
       nema nad `appointments`
-- [ ] Usluga se **ne briše** dok ima termine; deaktivira se
-- [ ] pgTAP: admin salona A ne može pročitati **neaktivnu** ni promijeniti uslugu salona B;
+- [x] Usluga se **ne briše** dok ima termine; deaktivira se
+- [x] pgTAP: admin salona A ne može pročitati **neaktivnu** ni promijeniti uslugu salona B;
       aktivne usluge ostaju javni katalog koji namjerno čita i `anon`
-- [ ] Trajanje i cijena mijenjaju buduću dostupnost, a ne već zakazane termine
-- [ ] `security.md` i `supabase/IMPLEMENTATION.md` ažurirani u istoj promjeni
+- [x] Trajanje i cijena mijenjaju buduću dostupnost, a ne već zakazane termine
+- [x] `security.md` i `supabase/IMPLEMENTATION.md` ažurirani u istoj promjeni
 
 ## Koraci
 1. Migracija + `private.*` provjera + pgTAP **prije ekrana** (isti red kao task 24)
@@ -37,4 +37,4 @@ Salon sam mijenja svoj cjenovnik. Danas usluge postoje samo u seedu i mijenjaju 
 
 ## Status
 
-U toku.
+Gotovo (2026-09-21). [PR #54](https://github.com/htuco/salon-booking-platform/pull/54).
