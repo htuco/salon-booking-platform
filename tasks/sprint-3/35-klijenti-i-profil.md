@@ -114,10 +114,11 @@ tuđem redu (RLS ide prije `where`-a), nego `PGRST100` i poruka „Klijenti se n
 - **Treća sabotaža, poslije revizije:** ista pretraga po telefonu pod `service` ključem obara
   aserciju `Pretraga po telefonu iz salona B ne smije vratiti taj red`. Prije popravke fixture-a
   ista sabotaža **nije** obarala ništa — to je i bio nalaz.
-- **Oba CI joba zelena na `a2d40e9`** (zadnji commit, uključuje popravke iz revizije):
-  [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35645008432)
-  (3m9s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35645008483)
-  (2m27s). Supabase job je dokaz iz čistog checkouta, koji lokalno pokretanje ne može dati.
+- **Oba CI joba zelena na `c3a12cf`** (zadnji commit grane):
+  [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35645507089)
+  (3m13s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35645507051)
+  (2m35s). Supabase job je dokaz iz čistog checkouta, koji lokalno pokretanje ne može dati. Isti
+  par je bio zelen i na `a2d40e9`, commitu koji je donio popravke iz revizije.
 
 ### Ostalo za sljedećeg
 

@@ -365,7 +365,7 @@ zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji ni
 > asercija), **385 pgTAP PASS**, `melos run test` 786 testova (admin **268**, bilo 247), čista
 > analiza i format. Sabotaža Flutter testa: uklonjen `completed` guard daje 60 umjesto 45.
 >
-> **Oba CI joba zelena na `a2d40e9`** (zadnji commit, uključuje popravke iz revizije): 3m9s i
-> 2m27s. Ostalo: **ekran nije viđen uživo**, profil nema svoju adresu (`/clients/<id>` ne radi iz
+> **Oba CI joba zelena na `c3a12cf`** (zadnji commit grane): 3m13s i
+> 2m35s. Ostalo: **ekran nije viđen uživo**, profil nema svoju adresu (`/clients/<id>` ne radi iz
 > bookmarka), a četiri stvari iz canvasa `3e` namjerno nisu nacrtane sa razlogom u
 > `prototype/admin/SPEC.md`. PR #58 čeka spajanje.
