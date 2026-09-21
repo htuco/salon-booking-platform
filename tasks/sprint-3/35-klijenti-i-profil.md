@@ -101,7 +101,7 @@ tuđem redu (RLS ide prije `where`-a), nego `PGRST100` i poruka „Klijenti se n
 ### Dokazi
 
 - `deno run --allow-env --allow-net supabase/tests/rest_cross_salon_isolation.ts` — **42 asercije**
-  kroz tri stvarna JWT-a. **Dvije sabotaže potvrđuju da nove asercije mogu pasti:** pretraga po
+  kroz tri stvarna JWT-a. **Sabotaže potvrđuju da nove asercije mogu pasti:** pretraga po
   imenu (`error: Pretraga po imenu vraca samo red iz salona A…`) i embed po tačnom tuđem `id`-u
   (`error: Embed po tacnom id-u tudjeg klijenta ne smije vratiti nista.`).
 - Svih **devet** REST suita prolazi (236 asercija ukupno) — nema regresije od izmjene
@@ -114,16 +114,13 @@ tuđem redu (RLS ide prije `where`-a), nego `PGRST100` i poruka „Klijenti se n
 - **Treća sabotaža, poslije revizije:** ista pretraga po telefonu pod `service` ključem obara
   aserciju `Pretraga po telefonu iz salona B ne smije vratiti taj red`. Prije popravke fixture-a
   ista sabotaža **nije** obarala ništa — to je i bio nalaz.
-- **Oba CI joba zelena na `d77e71f`:**
-  [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35644141249)
-  (3m38s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35644141157)
-  (2m25s). Popravke iz revizije su commit-ovane poslije toga i traže novi zeleni prolaz.
+- **Oba CI joba zelena na `a2d40e9`** (zadnji commit, uključuje popravke iz revizije):
+  [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35645008432)
+  (3m9s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35645008483)
+  (2m27s). Supabase job je dokaz iz čistog checkouta, koji lokalno pokretanje ne može dati.
 
 ### Ostalo za sljedećeg
 
-- **CI za popravke iz revizije još nije prošao.** Oba joba su bila zelena na `d77e71f`, ali su
-  popravke fixture-a i sanitizacije commit-ovane poslije toga. PR #58 traži novi zeleni prolaz
-  prije spajanja — dokaz iz čistog checkouta je ono što lokalno pokretanje ne može dati.
 - **Ekran nije viđen uživo**, ni na webu ni na uređaju. Widget testovi pokrivaju obje širine i
   hvataju preljeve, ali task 30 i 31 su pokazali da ekran nađe greške koje testovi ne mogu.
 - **Četiri stvari iz canvasa `3e` namjerno nisu nacrtane**, sa razlogom i mjestom povratka u

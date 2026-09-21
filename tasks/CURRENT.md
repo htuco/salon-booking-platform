@@ -3,7 +3,7 @@
 ## Status
 
 Gotov — task 35 (2026-09-21). [PR #58](https://github.com/htuco/salon-booking-platform/pull/58)
-je otvoren i **čeka zeleni CI pa spajanje u `main`**. Dokazi i ograničenja:
+je otvoren, **oba CI joba zelena na `a2d40e9`**, i čeka spajanje u `main`. Dokazi i ograničenja:
 [task 35](sprint-3/35-klijenti-i-profil.md).
 Sljedeći je [36 — Postavke lokacije](sprint-3/36-postavke-lokacije.md).
 
@@ -41,8 +41,8 @@ Sljedeći je [36 — Postavke lokacije](sprint-3/36-postavke-lokacije.md).
   `ensure_customer` ne upisuje `phone`, pa je red salona B imao `NULL`, a `NULL ilike ...` je
   `NULL` — grana po telefonu nije mogla pogoditi ništa ni bez RLS-a; popravljen fixture i dodan `"`
   u sanitizaciju. **Oba CI joba su bila zelena i prije te popravke**, što je i poenta nalaza.
-  **Ostalo: CI za popravke iz revizije još nije prošao** (zelen je bio `d77e71f`, PR #58 otvoren),
-  **ekran nije viđen uživo** ni na webu ni na uređaju, profil nema
+  **Oba CI joba zelena na `a2d40e9`** (zadnji commit, sa popravkama iz revizije).
+  **Ostalo: ekran nije viđen uživo** ni na webu ni na uređaju, profil nema
   svoju adresu (`/clients/<id>` ne radi iz bookmarka, isti dug kao `/calendar` za dan), a četiri
   stvari iz canvasa `3e` namjerno nisu nacrtane, sa razlogom u `prototype/admin/SPEC.md`.
 
