@@ -130,6 +130,17 @@ try {
   const uB = await ok("/rest/v1/rpc/ensure_customer", klijent.token, rpc({ p_salon_id: salonB }), salonB);
   customers.push(uA.id, uB.id);
 
+  // **Salon B mora imati telefon da bi pretraga po telefonu imala sta da procuri.**
+  // `ensure_customer` upisuje samo `salon_id`, `auth_identity_id` i `name` — `phone`
+  // ostaje `NULL`, a `NULL ilike '...'` je `NULL`, dakle nikad ne pogadja. Bez ovoga bi
+  // asercija nad `or` izrazom bila zelena zato sto druga grana ne moze pogoditi **nijedan**
+  // red, a ne zato sto je RLS presijeca — test koji prolazi iz pogresnog razloga.
+  const telefonB = "061 000 " + Math.floor(100 + Math.random() * 900);
+  await ok("/rest/v1/customers?id=eq." + uB.id, service, {
+    method: "PATCH",
+    body: JSON.stringify({ phone: telefonB }),
+  });
+
   assert(uA.id !== uB.id, "Isti identitet u dva salona mora dati dva odvojena customers reda.");
   assert(uA.auth_identity_id === uB.auth_identity_id, "Oba reda pokazuju na isti globalni identitet.");
 
@@ -250,9 +261,9 @@ try {
   assert(poImenu.length === 1 && poImenu[0].id === uA.id,
     "Pretraga po imenu vraca samo red iz salona A, iako isto ime postoji i u salonu B.");
 
-  // Pretraga po telefonu ide istim `or` izrazom kao u `StaffCustomerRepository`.
-  // Testira se **cijeli izraz**, ne jedna njegova strana: `or` koji bi procurio
-  // pogrijesio bi bas na drugoj grani, koju pojedinacan filter ne bi ni dotakao.
+  // Pretraga po imenu kroz **cijeli** `or` izraz, isti kao u `StaffCustomerRepository`.
+  // Ovdje pogadja grana po imenu; granu po telefonu pokriva `poTelefonuB` nize, koja
+  // salje broj sto stvarno stoji u redu salona B.
   const poIzrazu = await ok(
     "/rest/v1/customers?select=*&or=(name.ilike.*Isti%20Covjek*,phone.ilike.*Isti%20Covjek*)",
     adminA.token, {}, salonA);
@@ -260,6 +271,26 @@ try {
     "`or` pretraga ne smije propustiti red drugog salona ni kroz jednu granu.");
   assert(!poIzrazu.some((c: Record<string, unknown>) => c.id === uB.id),
     "Red istog covjeka iz salona B ne smije doci kroz pretragu.");
+
+  // **Pretraga po telefonu koji pripada salonu B.** Ovo je grana zbog koje `or` izraz i
+  // postoji u testu: admin A salje broj koji stvarno stoji u tudjem redu. Da `uB` nema
+  // telefon, asercija iznad bi prolazila jer `NULL` ne pogadja nista — v. `PATCH` u
+  // fixture-u.
+  const poTelefonuB = await ok(
+    "/rest/v1/customers?select=*&or=(name.ilike.*" + encodeURIComponent(telefonB) +
+      "*,phone.ilike.*" + encodeURIComponent(telefonB) + "*)",
+    adminA.token, {}, salonA);
+  assert(poTelefonuB.length === 0,
+    "Pretraga po telefonu iz salona B ne smije vratiti taj red — ni kroz `phone` granu.");
+
+  // Navodnik je znak citiranja operanda u `or=(...)`. `StaffCustomerRepository._uzorak`
+  // ga zato uklanja; ovdje se salje **neociscen**, da se vidi sta baza radi sa njim.
+  // Ocekuje se uredan odgovor sa samo salonom A, ne `PGRST100` i ne tudji red.
+  const saNavodnikom = await ok(
+    '/rest/v1/customers?select=*&name=ilike.' + encodeURIComponent('*Isti*'),
+    adminA.token, {}, salonA);
+  assert(saNavodnikom.every((c: Record<string, unknown>) => c.salon_id === salonA),
+    "Uzorak sa posebnim znakovima ne smije otvoriti red drugog salona.");
 
   // Prazna pretraga je i dalje pretraga: RLS vrijedi i kad filtera nema.
   const praznaPretraga = await ok(

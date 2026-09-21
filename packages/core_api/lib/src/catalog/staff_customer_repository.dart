@@ -1,4 +1,5 @@
 import 'package:core_domain/core_domain.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../booking/appointment_mapper.dart';
@@ -154,9 +155,16 @@ buffer_minutes, status, source, cancel_reason, cancelled_by, pending_expires_at
   ///   pretraga nije tražila — ili padne sa `PGRST100`.
   /// - **`%` i `_` u unosu** su `like` džokeri. Bez njih bi `_` pogodio bilo koji znak, pa
   ///   bi pretraga izgledala kao da vraća nasumične ljude.
+  /// - **`"` je znak citiranja operanda.** Neuparen navodnik obara izraz sa `PGRST100`, pa
+  ///   ekran pokaže „Klijenti se ne mogu učitati." dok čovjek kuca ime sa navodnikom;
+  ///   uparen mijenja parsiranje operanda. Nije put ka tuđem redu — RLS se primjenjuje
+  ///   prije `where`-a — nego tiho pogrešan rezultat.
+  @visibleForTesting
+  static String uzorakZaTest(String izraz) => _uzorak(izraz);
+
   static String _uzorak(String izraz) {
     final ocisceno = izraz
-        .replaceAll(RegExp(r'[,()]'), ' ')
+        .replaceAll(RegExp(r'[,()"]'), ' ')
         .replaceAll(RegExp(r'[%_\\]'), '')
         .trim();
 
