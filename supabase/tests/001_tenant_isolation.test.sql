@@ -72,9 +72,10 @@ select throws_ok($$insert into public.services(salon_id,name,price,duration_minu
 -- Task 33 oduzima direktan write grant. FK se zasebno provjerava kao vlasnik baze.
 reset role;
 select throws_ok($$insert into public.employee_services(salon_id,employee_id,service_id) values('550e8400-e29b-41d4-a716-446655440000','20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000005')$$,'23503',null,'Composite FK rejects cross-tenant employee/service');
-set local role authenticated;
+-- Task 34 oduzima i direktan write grant nad `blocked_slots`, iz istog razloga kao task 33
+-- nad radnicima. Kao `authenticated` ovaj insert sada pada na `42501` prije nego FK stigne
+-- reci svoje, pa se FK — koji i dalje mora vrijediti — provjerava kao vlasnik baze.
 select throws_ok($$insert into public.blocked_slots(salon_id,employee_id,date,start_time,end_time) values('550e8400-e29b-41d4-a716-446655440000','20000000-0000-4000-8000-000000000003','2030-01-07','11:00','12:00')$$,'23503',null,'Composite FK rejects cross-tenant blocked employee');
-reset role;
 select is((select customer_name from public.appointments where id='d0000000-0000-4000-8000-000000000002'),'Shared Client','Other salon appointment survives unauthorized mutation');
 
 set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated","app_metadata":{"providers":["email"]},"user_metadata":{"role":"super_admin","salon_id":"550e8400-e29b-41d4-a716-446655440001"}}';
