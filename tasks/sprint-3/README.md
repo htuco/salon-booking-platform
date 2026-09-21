@@ -16,7 +16,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [32](32-usluge-i-cjenovnik.md) ✅ | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
 | [33](33-osoblje-i-smjene.md) ✅ | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) ✅ | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
-| [35](35-klijenti-i-profil.md) | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
+| [35](35-klijenti-i-profil.md) 🟡 | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
 | [36](36-postavke-lokacije.md) | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
 
 **Ukupno: ~15–22 radna dana.**

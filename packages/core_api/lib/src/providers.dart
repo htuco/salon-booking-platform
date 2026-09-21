@@ -340,6 +340,11 @@ final staffAppointmentRepositoryProvider = Provider<StaffAppointmentRepository>(
   (ref) => StaffAppointmentRepository(ref.watch(supabaseClientProvider)),
 );
 
+/// Adresar salona, čitan iz admina.
+final staffCustomerRepositoryProvider = Provider<StaffCustomerRepository>(
+  (ref) => StaffCustomerRepository(ref.watch(supabaseClientProvider)),
+);
+
 /// Trenutno prijavljen član osoblja, ili `null`.
 ///
 /// Prati [StaffRepository.authStateChanges], pa odjava i istek tokena sami prazne ekran —

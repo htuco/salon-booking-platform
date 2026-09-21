@@ -1,15 +1,52 @@
-# Trenutni task
+# Trenutni task: 35 — Klijenti i profil
+
+Puni task: [35 — Klijenti i profil](sprint-3/35-klijenti-i-profil.md). Učitan 2026-09-21.
 
 ## Status
 
-Gotov — task 34 (2026-09-21). [PR #57](https://github.com/htuco/salon-booking-platform/pull/57)
-je otvoren i **čeka spajanje u `main`**. Dokazi i ograničenja:
-[task 34](sprint-3/34-radno-vrijeme-i-blokade.md).
-Sljedeći je [35 — Klijenti i profil](sprint-3/35-klijenti-i-profil.md).
+U toku — započet 2026-09-21, grana `feat/klijenti-i-profil`.
 
 ## Ciljevi
 
+- [ ] Staff repozitorij nad `customers` u `core_api` — lista, pretraga po imenu/telefonu, jedan red
+      po `id`-u, i historija dolazaka iz `appointments`
+- [ ] REST test uz postojeći `rest_cross_salon_isolation.ts` koji pokriva **puteve ovog ekrana**:
+      `name=ilike.*` pretragu i obrnuti embed `customers?select=*,appointments(...)`
+- [ ] `/clients` po `3e` — lista sa pretragom, profil sa `visit_count`, `no_show_count` i historijom
+- [ ] Mobilni oblik po `3o`
+- [ ] Profil podnosi klijenta bez imena (anonimiziran) i bez `auth_identity_id` (telefonski)
+
 ## Napomene
+
+**Zavisnost 29 je ✅** (`tasks/sprint-3/README.md`), pa task nije blokiran.
+
+**Dio taska je već isporučen i to mijenja procjenu naniže.** Provjereno u repou:
+
+- `Customer` model **postoji** (`packages/core_domain/lib/src/catalog/customer.dart`, iz taska 24)
+  sa `visitCount`, `noShowCount`, `isWalkin` i `hasPhone`. Ne piše se nanovo.
+- **Migracija nije potrebna za čitanje.** `staff_manage` politika nad `customers` (`for all`,
+  `private.is_admin(salon_id)`) stoji od init migracije, i grantovi su tu — za razliku od
+  `appointments`/`employees`/`working_hours`, gdje su ih taskovi 24/33/34 oduzeli. Ekran čita
+  direktno, bez novog RPC-a.
+- `rest_cross_salon_isolation.ts` (task 15) **već dokazuje** četiri od pet puteva iz DoD-a: direktan
+  upit, po `id`-u, po `auth_identity_id`, i embed `appointments → customers`. Ostaje dopisati ono
+  što ekran stvarno radi, a test ne pokriva: **pretragu** i **obrnuti embed**.
+
+**Zamke:**
+
+- Prag je `>= 300`, ne `>= 400` — PostgREST na dvosmislen embed vraća **300** sa `PGRST201`, i test
+  sa pragom 400 prolazi lažno. Veza se mora **imenovati** (`appointments` ima dva kompozitna FK-a ka
+  `customers`); pomoćnik `ok()` u postojećem testu to već radi kako treba.
+- **`CustomerRepository` je klijentski i ostaje takav** — oslanja se na `x-salon-id`. Admin ide
+  zasebnom klasom po uzoru na `StaffAppointmentRepository` (ADR-0003).
+- `order()` u ovom paketu podrazumijeva **descending**, suprotno od SQL-a — `ascending: true` je
+  obavezan gdje treba rastuće.
+- **Canvas `3e` crta „Potrošeno" i „182 KM ukupno"**, a to nije podatak po sebi: zbir traži cijene
+  održanih termina. `appointments.service_price` postoji kao snapshot (task 32), pa je izvodljivo —
+  ali ako ne uđe, izostavlja se, ne crta se lažna nula (pravilo iz taska 30).
+- Canvas crta i fotografije klijenata i „+ Novi klijent"; `customers` nema sliku, a ručni unos je
+  `upsert_walkin_customer` iz taska 24.
+- `no_show` prag se **ne provodi** — DoD to izričito traži.
 
 ## Istorija
 
