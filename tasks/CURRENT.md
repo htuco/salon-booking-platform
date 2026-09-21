@@ -21,22 +21,28 @@ Sljedeći je [36 — Postavke lokacije](sprint-3/36-postavke-lokacije.md).
   nije trebao još jedan opšti test nego **puteve koje uvodi baš ovaj ekran** — pretragu po uzorku i
   **obrnuti** embed `customers → appointments`; oba su neugodna na isti način, jer se ne traži tuđi
   red nego se šalje uzorak, pa curenje ne bi izgledalo kao napad nego kao klijent koji se pojavio
-  niotkuda (27 → **40 asercija**). **Migracije nema, i to je nalaz a ne propust**: `staff_manage`
+  niotkuda (27 → **42 asercije**). **Migracije nema, i to je nalaz a ne propust**: `staff_manage`
   nad `customers` stoji od init migracije, a tabela je **zadržala** `insert`/`update` grant, za
   razliku od `appointments` (24), `employees` (33) i `working_hours` (34) — zato je ovo jedini
   staff repozitorij kod kojeg „samo kroz `rpc`" ne drži grant nego odluka, i to je upisano u
   `security.md` i `architecture.md`, jer je baš tu sljedeća izmjena najbliža tome da dopiše
   `insert`. **Pretraga je prvo mjesto u repou gdje korisnikov tekst ulazi u PostgREST izraz** —
-  `or=(...)` razdvaja zarezom, a `%` i `_` su `like` džokeri, pa se `,()` uklanjaju i `%_\` brišu;
+  `or=(...)` razdvaja zarezom, a `%` i `_` su `like` džokeri, pa se `,()"` uklanjaju i `%_\` brišu;
   potpuno očišćen unos daje uzorak koji **ne pogađa ništa**, ne `*%*` koji pogađa sve. **Četiri
   stanja koja bi pala na `!`** imaju svoj test: anonimiziran red (task 17), telefonski klijent bez
   `auth_identity_id`, klijent bez `last_visit_at` i termin bez `employee_name` — svako dobija riječ
   umjesto crtice. **„Nema podatka" se ne crta kao nula**: „Potrošeno" broji samo `completed`, jer
-  otkazan termin nije prihod, i izostaje kad nijedan ne nosi cijenu. Dokazano: **40 asercija** kroz
-  tri stvarna JWT-a uz **dvije sabotaže**, svih **devet** REST suita (234 asercije), **385 pgTAP
-  PASS**, `melos run test` 779 testova u pet paketa (admin **268**, bilo 247), čista analiza i
-  format; sabotaža Flutter testa (uklonjen `completed` guard) daje 60 umjesto 45. **Ostalo: CI nije
-  potvrđen** (PR #58 otvoren), **ekran nije viđen uživo** ni na webu ni na uređaju, profil nema
+  otkazan termin nije prihod, i izostaje kad nijedan ne nosi cijenu. Dokazano: **42 asercije** kroz
+  tri stvarna JWT-a uz **tri sabotaže**, svih **devet** REST suita (236 asercija), **385 pgTAP
+  PASS**, `melos run test` 786 testova u pet paketa (admin **268**, bilo 247), čista analiza i
+  format; sabotaža Flutter testa (uklonjen `completed` guard) daje 60 umjesto 45. **Revizija
+  (`rls-auditor`) je potvrdila da nijedan upit ne prelazi granicu** i da izraz nije iskoristiv za
+  injection, ali je našla da je asercija nad `or` izrazom prolazila **iz pogrešnog razloga**:
+  `ensure_customer` ne upisuje `phone`, pa je red salona B imao `NULL`, a `NULL ilike ...` je
+  `NULL` — grana po telefonu nije mogla pogoditi ništa ni bez RLS-a; popravljen fixture i dodan `"`
+  u sanitizaciju. **Oba CI joba su bila zelena i prije te popravke**, što je i poenta nalaza.
+  **Ostalo: CI za popravke iz revizije još nije prošao** (zelen je bio `d77e71f`, PR #58 otvoren),
+  **ekran nije viđen uživo** ni na webu ni na uređaju, profil nema
   svoju adresu (`/clients/<id>` ne radi iz bookmarka, isti dug kao `/calendar` za dan), a četiri
   stvari iz canvasa `3e` namjerno nisu nacrtane, sa razlogom u `prototype/admin/SPEC.md`.
 

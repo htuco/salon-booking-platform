@@ -80,25 +80,50 @@ nijedan ne nosi cijenu, jer bi „0 KM" tvrdilo da klijent ništa nije potrošio
 Isto pravilo kao u tasku 30. Cijena dolazi iz `service_price` snapshota (task 32), ne iz današnjeg
 cjenovnika: poskupljenje usluge ne smije unazad promijeniti koliko je neko potrošio.
 
+### Revizija je našla zelenu aserciju bez pokrića
+
+`rls-auditor` je nad gotovim modulom potvrdio ono glavno — nijedan upit ne prelazi granicu salona,
+`_uzorak()` nije iskoristiv za injection — ali je našao **dva nalaza o kvalitetu dokaza**, i oba bi
+ostala nevidljiva na zelenom CI-ju, jer se tiču asercija koje nedostaju.
+
+**Prvi je važniji od popravke koju je tražio.** Asercija nad `or` izrazom tvrdila je u komentaru da
+pokriva *obje* grane, jer bi „curenje pogriješilo baš na drugoj". Ali `ensure_customer` upisuje samo
+`salon_id`, `auth_identity_id` i `name` — `phone` reda u salonu B ostajao je `NULL`, a
+`NULL ilike '...'` je `NULL`. Grana po telefonu zato nije mogla pogoditi nijedan red **ni da RLS ne
+postoji**. Test je bio zelen cijelo vrijeme, iz pogrešnog razloga, tačno na grani zbog koje je i
+napisan. Fixture sada daje `uB` telefon, i sabotaža to potvrđuje: prije popravke ista sabotaža nije
+obarala ništa.
+
+Drugi je sitniji: `_uzorak()` nije uklanjao `"`, koji u `or=(...)` citira operand. Nije put ka
+tuđem redu (RLS ide prije `where`-a), nego `PGRST100` i poruka „Klijenti se ne mogu učitati." dok
+čovjek kuca ime sa navodnikom. Dodan u sanitizaciju, uz sedam unit testova nad samim izrazom.
+
 ### Dokazi
 
-- `deno run --allow-env --allow-net supabase/tests/rest_cross_salon_isolation.ts` — **40 asercija**
+- `deno run --allow-env --allow-net supabase/tests/rest_cross_salon_isolation.ts` — **42 asercije**
   kroz tri stvarna JWT-a. **Dvije sabotaže potvrđuju da nove asercije mogu pasti:** pretraga po
   imenu (`error: Pretraga po imenu vraca samo red iz salona A…`) i embed po tačnom tuđem `id`-u
   (`error: Embed po tacnom id-u tudjeg klijenta ne smije vratiti nista.`).
-- Svih **devet** REST suita prolazi (234 asercije ukupno) — nema regresije od izmjene
+- Svih **devet** REST suita prolazi (236 asercija ukupno) — nema regresije od izmjene
   `providers.dart`.
 - `npx supabase test db` — **385 testova, PASS**.
-- `dart run melos run test` — **SUCCESS**, 779 testova u pet paketa: admin **268** (bilo 247, 18
-  novih), core_domain 88, core_api 122, core_ui 67, client 234.
+- `dart run melos run test` — **SUCCESS**, 786 testova u pet paketa: admin **268** (bilo 247, 18
+  novih), core_domain 88, core_api **129** (bilo 122), core_ui 67, client 234.
 - `dart run melos run analyze` i `dart format --set-exit-if-changed` — bez ijedne primjedbe.
-- Sabotaža Flutter testa: uklonjen `completed` guard u `potroseno()` daje **60 umjesto 45**, i test
-  to imenuje.
+- Sabotaža Flutter testa: uklonjen `completed` guard u `potroseno()` daje **60 umjesto 45**, i test to imenuje.
+- **Treća sabotaža, poslije revizije:** ista pretraga po telefonu pod `service` ključem obara
+  aserciju `Pretraga po telefonu iz salona B ne smije vratiti taj red`. Prije popravke fixture-a
+  ista sabotaža **nije** obarala ništa — to je i bio nalaz.
+- **Oba CI joba zelena na `d77e71f`:**
+  [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35644141249)
+  (3m38s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35644141157)
+  (2m25s). Popravke iz revizije su commit-ovane poslije toga i traže novi zeleni prolaz.
 
 ### Ostalo za sljedećeg
 
-- **CI nije potvrđen** u trenutku pisanja — PR #58 je otvoren, oba joba treba da budu zelena prije
-  spajanja. Dokaz iz čistog checkouta je ono što lokalno pokretanje ne može dati.
+- **CI za popravke iz revizije još nije prošao.** Oba joba su bila zelena na `d77e71f`, ali su
+  popravke fixture-a i sanitizacije commit-ovane poslije toga. PR #58 traži novi zeleni prolaz
+  prije spajanja — dokaz iz čistog checkouta je ono što lokalno pokretanje ne može dati.
 - **Ekran nije viđen uživo**, ni na webu ni na uređaju. Widget testovi pokrivaju obje širine i
   hvataju preljeve, ali task 30 i 31 su pokazali da ekran nađe greške koje testovi ne mogu.
 - **Četiri stvari iz canvasa `3e` namjerno nisu nacrtane**, sa razlogom i mjestom povratka u

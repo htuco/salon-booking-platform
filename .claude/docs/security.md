@@ -472,9 +472,17 @@ bi zaobišao oboje i napravio duplikat koji se poslije ne da spojiti.
 razdvaja uslove **zarezom**, pa ime sa zarezom raspadne izraz u dva uslova — u najboljem slučaju
 `PGRST100`, u najgorem uslov koji pretraga nije tražila. Uz to su `%` i `_` `like` džokeri, pa bi
 neočišćen `_` pogađao bilo koji znak i pretraga bi izgledala kao da vraća nasumične ljude. Zato se
-`,`, `(`, `)` uklanjaju, a `%`, `_` i `\` brišu; unos koji se sav očisti daje uzorak koji **ne
-pogađa ništa**, ne `*%*` koji pogađa sve. RLS ovo ionako presijeca na salon, ali izraz koji se da
-razbiti je pogrešna navika bez obzira na to što je iza njega politika.
+`,`, `(`, `)` i `"` uklanjaju (zadnji citira operand), a `%`, `_` i `\` brišu; unos koji se sav
+očisti daje uzorak koji **ne pogađa ništa**, ne `*%*` koji pogađa sve. RLS ovo ionako presijeca na
+salon, ali izraz koji se da razbiti je pogrešna navika bez obzira na to što je iza njega politika.
+
+> **Kolona puna `NULL`-a čini aserciju zelenom bez razloga.** Prva verzija ovog testa slala je
+> cijeli `or` izraz i tvrdila da pokriva **obje** grane, ali `ensure_customer` upisuje samo
+> `salon_id`, `auth_identity_id` i `name` — `phone` drugog salona je ostajao `NULL`, a
+> `NULL ilike '...'` je `NULL`. Grana po telefonu zato nije mogla pogoditi nijedan red ni da RLS
+> nije postojao. Nađeno revizijom, ne pokretanjem: suite je bila zelena cijelo vrijeme. Kad test
+> filtrira po koloni, provjeri da red na drugoj strani granice tu kolonu **stvarno ima
+> popunjenu** — inače se mjeri odsustvo podatka umjesto politike.
 
 Istorija klijenta je **zaseban upit**, ne embed: `customers?select=*,appointments(...)` je
 dvosmislen jer veza ima dva kompozitna FK-a, pa PostgREST vraća **300** sa `PGRST201`. Imenovana
@@ -571,7 +579,7 @@ ništa.
 | `rest_public_catalog.ts` | katalog radi **bez** tokena, sa kolonama koje `core_api` stvarno šalje |
 | `rest_customer_upsert.ts` | cijeli put app-e: prijava → identitet → klijent → termin → HTTP 409 |
 | `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
-| `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header — od taska 35 i kroz **pretragu po uzorku** i **obrnuti embed** `customers → appointments` (40 asercija) |
+| `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header — od taska 35 i kroz **pretragu po uzorku** i **obrnuti embed** `customers → appointments`, i pretragu po telefonu koji stvarno stoji u tuđem redu (42 asercije) |
 | `005_delete_my_account.test.sql` | brisanje naloga — anonimizacija u **oba** salona, otkazivanje budućih termina, gašenje pristupa, trigger ne uskrsava nalog |
 | `007_policies.test.sql` | pravila i politika privatnosti — `anon` čita bez prijave, **`salon_admin` ne može pisati po `app_policies`**, sekcije neaktivnog salona su nevidljive |
 | `rest_delete_account.ts` | brisanje kroz Edge Function sa pravim JWT-om; obrisan identitet dobija **`200` sa praznom listom**, ne `401` — pristup gasi `deleted_at`, ne istek tokena |

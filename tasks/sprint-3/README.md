@@ -342,7 +342,7 @@ zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji ni
 > **Test prije ekrana je promijenio šta se testira.** `rest_cross_salon_isolation.ts` je već
 > dokazivao četiri od pet puteva iz DoD-a; nedostajali su **puteve koje uvodi baš ovaj ekran** —
 > pretraga po uzorku i **obrnuti** embed `customers → appointments`. Oba su neugodna na isti način:
-> ne traži se tuđi red nego se šalje uzorak. 27 → **40 asercija**.
+> ne traži se tuđi red nego se šalje uzorak. 27 → **42 asercije**.
 >
 > **Migracije nema, i to je nalaz.** `staff_manage` nad `customers` stoji od init migracije, a
 > tabela je **zadržala** `insert`/`update` grant — za razliku od `appointments`/`employees`/
@@ -350,14 +350,21 @@ zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji ni
 > kojeg „samo kroz `rpc`" ne drži grant nego odluka, i to je zapisano u `security.md`.
 >
 > **Pretraga je prvo mjesto gdje korisnikov tekst ulazi u PostgREST izraz** (`or=(...)` razdvaja
-> zarezom, `%`/`_` su džokeri), pa se `,()` uklanjaju a `%_\` brišu; potpuno očišćen unos daje
+> zarezom, `%`/`_` su džokeri), pa se `,()"` uklanjaju a `%_\` brišu; potpuno očišćen unos daje
 > uzorak koji ne pogađa ništa, ne onaj koji pogađa sve. **„Nema podatka" se ne crta kao nula** —
 > „Potrošeno" broji samo `completed` i izostaje kad nijedan termin ne nosi cijenu.
 >
-> Dokazano: **40 asercija** kroz tri JWT-a uz **dvije sabotaže**, svih devet REST suita (234
-> asercije), **385 pgTAP PASS**, `melos run test` 779 testova (admin **268**, bilo 247), čista
+> **Revizija je našla zelenu aserciju bez pokrića.** `rls-auditor` je potvrdio da nijedan upit ne
+> prelazi granicu i da izraz nije iskoristiv za injection, ali je našao da je asercija nad `or`
+> izrazom prolazila **iz pogrešnog razloga**: `ensure_customer` ne upisuje `phone`, pa je red u
+> salonu B imao `NULL`, a `NULL ilike ...` je `NULL` — grana po telefonu nije mogla pogoditi ništa
+> ni da RLS ne postoji. Fixture sada daje taj telefon; sabotaža prije popravke nije obarala ništa.
+> Uz to je `"` (citira operand) dodan u sanitizaciju, sa sedam unit testova nad izrazom.
+>
+> Dokazano: **42 asercije** kroz tri JWT-a uz **tri sabotaže**, svih devet REST suita (236
+> asercija), **385 pgTAP PASS**, `melos run test` 786 testova (admin **268**, bilo 247), čista
 > analiza i format. Sabotaža Flutter testa: uklonjen `completed` guard daje 60 umjesto 45.
 >
-> Ostalo: **CI nije potvrđen** (PR #58 otvoren), **ekran nije viđen uživo**, profil nema svoju
-> adresu (`/clients/<id>` ne radi iz bookmarka), a četiri stvari iz canvasa `3e` namjerno nisu
+> Ostalo: **CI za popravke iz revizije još nije prošao** (zelen je bio `d77e71f`, PR #58 otvoren),
+> **ekran nije viđen uživo**, profil nema svoju adresu (`/clients/<id>` ne radi iz bookmarka), a četiri stvari iz canvasa `3e` namjerno nisu
 > nacrtane sa razlogom u `prototype/admin/SPEC.md`.
