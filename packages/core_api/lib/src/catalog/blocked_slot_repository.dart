@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../errors/errors.dart';
+import 'schedule_conflict_mapper.dart';
 
 /// Čita blokirano vrijeme iz `public.blocked_slots`.
 ///
@@ -14,19 +15,15 @@ import '../errors/errors.dart';
 /// Adminu jeste, i to je cijela razlika: kalendar koji blokadu ne crta pokazuje prazninu
 /// tamo gdje je vlasnik svjesno zatvorio vrijeme, pa izgleda kao da se može zakazati.
 ///
-/// ## Čitanje, ne pisanje — i to je odluka, ne granica baze
+/// ## Pisanje ide kroz `rpc`, i to je sada tvrdnja baze
 ///
-/// Ovdje nema `insert`-a ni `delete`-a, iako bi **radili**: init migracija daje
-/// `select,insert,update,delete` nad `blocked_slots` roli `authenticated`, a `staff_manage`
-/// politika je `for all`. Provjereno pozivom, ne čitanjem migracije — prijavljen seed admin
-/// je kroz REST upisao i obrisao blokadu (task 31).
+/// Task 31 je ovdje ostavio otvorenu odluku: direktan `insert` bi tada **radio**, jer je
+/// init migracija dala pun grant roli `authenticated`, pa bi „samo kroz `rpc`" bila
+/// konvencija koju ništa ne drži. Task 34 je tu rupu zatvorio — grant je oduzet, kao što
+/// ga je task 24 oduzeo nad `appointments`. Direktan `insert` sada pada na `42501`.
 ///
-/// To je razlika u odnosu na `appointments`, gdje je task 24 **oduzeo** `insert`/`update`
-/// grant, pa je „samo kroz `rpc`" tamo tvrdnja baze. Ovdje bi bila samo konvencija.
-///
-/// Zato pisanje ne ulazi usput: „Blokiraj vrijeme", „Dodaj pauzu" i „Zatvori dan" iz `3c`
-/// su **task 34**, zajedno sa odlukom idu li kroz validiranu funkciju (kao termini) ili
-/// direktno. Ubaciti `insert` ovdje značilo bi tu odluku donijeti prešutno.
+/// Zato [create] i [delete] zovu `create_blocked_slot` i `delete_blocked_slot`, koje
+/// provjeravaju admina i pripadnost radnika salonu prije upisa.
 ///
 /// ## Izolacija
 ///
@@ -61,6 +58,97 @@ class BlockedSlotRepository {
         .order('start_time', ascending: true);
 
     return blockedSlotsFromRows(rows);
+  });
+
+  /// Blokade **od datuma unaprijed**, po datumu pa po vremenu.
+  ///
+  /// [forDay] je za kalendar, koji crta jedan dan; ovo je za „Neradni dani" u `3h`, gdje
+  /// vlasnik vidi šta ga tek čeka. Prošle blokade se ne vraćaju: neradni dan koji je
+  /// prošao je historija, a lista koja raste unedogled je lista koju niko ne čita.
+  ///
+  /// [from] je `null` = od danas. Dan se računa iz [DateTime.now] **lokalno**, bez
+  /// `toUtc()` — v. [LocalDate] za razlog.
+  Future<List<BlockedSlot>> fromDay({
+    required String salonId,
+    DateTime? from,
+  }) => guard(() async {
+    final rows = await _client
+        .from('blocked_slots')
+        .select(_columns)
+        .eq('salon_id', salonId)
+        .gte('date', _datum(from ?? DateTime.now()))
+        // Uzlazno eksplicitno — default u ovom paketu je silazno.
+        .order('date', ascending: true)
+        .order('start_time', ascending: true);
+
+    return blockedSlotsFromRows(rows);
+  });
+
+  /// Nova blokada — salonska ([employeeId] `null`) ili radnikova.
+  ///
+  /// **Ne briše termine ispod sebe.** Termin koji se preklapa sa blokadom ostaje gdje
+  /// jeste; šta se s njim dešava odlučuje vlasnik, a ne ovaj poziv. Listu takvih termina
+  /// daje [conflicts], koji se zove prije.
+  Future<BlockedSlot> create({
+    required String salonId,
+    required LocalDate date,
+    required LocalTime startTime,
+    required LocalTime endTime,
+    String? reason,
+    String? employeeId,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'create_blocked_slot',
+      params: {
+        'p_salon_id': salonId,
+        'p_date': date.format(),
+        'p_start_time': startTime.format(),
+        'p_end_time': endTime.format(),
+        'p_reason': reason,
+        'p_employee_id': employeeId,
+      },
+    );
+    final dynamic single = row is List && row.length == 1 ? row.single : row;
+    try {
+      return BlockedSlot.fromJson(single as Map<String, dynamic>);
+    } catch (error) {
+      throw MappingError('Neispravan `blocked_slots` red', cause: error);
+    }
+  });
+
+  /// Briše blokadu. Tuđa i nepostojeća daju istu grešku — bez otkrivanja tuđih podataka.
+  Future<void> delete({
+    required String salonId,
+    required String blockedSlotId,
+  }) => guard(() async {
+    await _client.rpc<dynamic>(
+      'delete_blocked_slot',
+      params: {'p_salon_id': salonId, 'p_blocked_slot_id': blockedSlotId},
+    );
+  });
+
+  /// Termini koji bi pali unutar blokade koja se **tek dodaje**.
+  ///
+  /// Vraća [ScheduleConflict] bez `reason`: kod blokade je razlog očigledan, pa ga
+  /// `blocked_slot_conflicts` i ne vraća kao kolonu.
+  Future<List<ScheduleConflict>> conflicts({
+    required String salonId,
+    required LocalDate date,
+    required LocalTime startTime,
+    required LocalTime endTime,
+    String? employeeId,
+  }) => guard(() async {
+    final rows = await _client.rpc<dynamic>(
+      'blocked_slot_conflicts',
+      params: {
+        'p_salon_id': salonId,
+        'p_date': date.format(),
+        'p_start_time': startTime.format(),
+        'p_end_time': endTime.format(),
+        'p_employee_id': employeeId,
+      },
+    );
+    return scheduleConflictsFromRows(rows as List<dynamic>);
   });
 
   /// `2026-05-18` — `date` kolona, bez zone i bez `toIso8601String()`.

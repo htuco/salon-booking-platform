@@ -15,7 +15,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [31](31-kalendar-dana.md) ✅ | Kalendar dana | `3c` `3l` | — | 2–3 dana |
 | [32](32-usluge-i-cjenovnik.md) ✅ | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
 | [33](33-osoblje-i-smjene.md) ✅ | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
-| [34](34-radno-vrijeme-i-blokade.md) | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
+| [34](34-radno-vrijeme-i-blokade.md) ✅ | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
 | [35](35-klijenti-i-profil.md) | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
 | [36](36-postavke-lokacije.md) | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
 
@@ -299,6 +299,37 @@ guard obara 7 testova. Flutter i Supabase CI zeleni na `8a40a97` (linkovi u task
 Review je pronašao stare veze pri refresh-u editora i pretijesan tablet raspored; browser je
 pronašao gubitak deep linka pri učitavanju članstva. Ispravljeno uz regresijske testove.
 Smjene su prikaz postojećeg ponavljajućeg `working_hours`, bez lažnog „kopiraj prošlu sedmicu“.
-Sljedeći je [34](34-radno-vrijeme-i-blokade.md): upisi radnog vremena, pauza i blokada.
+Sljedeći je [35](35-klijenti-i-profil.md).
 Hostovana migracija i native uređaji nisu provjereni; migracija mora prethoditi novom buildu.
 PR #55 je spojen u `main` (`d4c54c3`).
+
+**34 — Radno vrijeme, pauze i blokade** — ✅ 2026-09-21, [PR #57](https://github.com/htuco/salon-booking-platform/pull/57).
+
+`/working-hours` je prestao biti placeholder: sedam dana sa vremenima i pauzom, prekidač za
+neradni dan, i „Neradni dani" kao lista budućih blokada sa uređivačem koji bira cijeli salon ili
+jednog radnika. Pet novih funkcija nosi pisanje; direktan `insert/update/delete` nad
+`working_hours` i `blocked_slots` je oduzet `authenticated` roli.
+
+**Ovo je zatvorilo posljednju rupu u „samo kroz `rpc`".** Init migracija je nad obje tabele
+davala pun grant, pa je pravilo bilo konvencija a ne tvrdnja baze — task 31 je to provjerio
+pozivom i odluku izričito ostavio ovdje. Sada je tvrdnja, kao nad `appointments` (24) i
+`employees` (33).
+
+**Sedmica se piše u cjelini.** `get_available_slots` čita odsustvo reda kao **zatvoreno**, ne kao
+„nije podešeno", pa bi slanje samo izmijenjenih dana tiho zatvorilo ostale. Ulaz je zato tačno
+sedam dana, uz provjeru da je svaki ISO dan prisutan tačno jednom — sama provjera dužine propušta
+šest dana plus duplikat.
+
+**Postojeći termin se ne briše tiho.** Dvije `stable` funkcije čitanja vraćaju termine koji bi
+ispali van novog vremena ili pali pod blokadu; ekran ih pokazuje **prije** upisa, a odluka ostaje
+vlasniku.
+
+Oba CI joba zelena na `b837287`. Dokaz: 385 pgTAP PASS (57 novih), 15 REST provjera kroz stvarni JWT gdje skraćeno radno vrijeme,
+pauza, zatvoren dan i blokada svaki put mijenjaju ono što klijent dobije iz `get_available_slots`,
+a direktan `insert` vraća `401/403`. Puna Flutter suita (admin 250) i čista analiza/format.
+Widget testovi su usput našli dva stvarna preliva na telefonu (106 px i 70 px) — red dana i red
+pauze; oba ispravljena u `3s` rasporedu.
+
+Ostalo: **radnikov sedmični raspored nema ekran** (RPC ga prima i pgTAP pokriva, ekran uređuje
+salonski sloj), `/calendar/block` je i dalje placeholder ruta ali više ne čeka `rpc`, a „Pravila
+zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji nisu dirani.

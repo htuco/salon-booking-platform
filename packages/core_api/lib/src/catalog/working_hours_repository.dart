@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../errors/errors.dart';
+import 'schedule_conflict_mapper.dart';
 
 /// Čita radno vrijeme salona iz `public.working_hours`.
 ///
@@ -39,6 +40,52 @@ start_time, end_time, break_start_time, break_end_time, is_closed
         .order('day_of_week', ascending: true);
 
     return workingHoursFromRows(rows);
+  });
+
+  /// Snima **cijelu sedmicu** odjednom — salonsku ([employeeId] `null`) ili radnikovu.
+  ///
+  /// Sedam dana nije tvrdoglavost ugovora nego posljedica toga kako engine čita tabelu:
+  /// `get_available_slots` tretira **odsustvo reda kao zatvoreno**, a ne kao „nije
+  /// podešeno". Poslati tri izmijenjena dana značilo bi tiho zatvoriti ostala četiri.
+  /// Zato [days] mora nositi svaki ISO dan 1–7 tačno jednom; baza to i provjerava i
+  /// odbija `PT400` ako nije tako.
+  ///
+  /// **Postojeći termini se ne diraju.** Termin koji ispadne van novog radnog vremena
+  /// ostaje gdje jeste — vidi [conflicts], koji se zove **prije** ovoga.
+  Future<List<WorkingHour>> save({
+    required String salonId,
+    required List<WorkingHoursInput> days,
+    String? employeeId,
+  }) => guard(() async {
+    final rows = await _client.rpc<dynamic>(
+      'set_working_hours',
+      params: {
+        'p_salon_id': salonId,
+        'p_days': days.map((d) => d.toRpc()).toList(growable: false),
+        'p_employee_id': employeeId,
+      },
+    );
+    return workingHoursFromRows(rows as List<dynamic>);
+  });
+
+  /// Termini koji bi ispali van rasporeda [days], **prije** nego što se on snimi.
+  ///
+  /// Čitanje, ne pisanje: poziv ništa ne mijenja, pa ekran smije pitati na svaku izmjenu
+  /// i pokazati posljedicu dok je još moguće odustati.
+  Future<List<ScheduleConflict>> conflicts({
+    required String salonId,
+    required List<WorkingHoursInput> days,
+    String? employeeId,
+  }) => guard(() async {
+    final rows = await _client.rpc<dynamic>(
+      'working_hours_conflicts',
+      params: {
+        'p_salon_id': salonId,
+        'p_employee_id': employeeId,
+        'p_days': days.map((d) => d.toRpc()).toList(growable: false),
+      },
+    );
+    return scheduleConflictsFromRows(rows as List<dynamic>);
   });
 }
 

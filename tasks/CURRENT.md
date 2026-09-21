@@ -2,9 +2,10 @@
 
 ## Status
 
-Gotov — task 33 (2026-09-21). [PR #55](https://github.com/htuco/salon-booking-platform/pull/55)
-je spojen u `main` (`d4c54c3`). Dokazi i ograničenja: [task 33](sprint-3/33-osoblje-i-smjene.md).
-Sljedeći je [34 — Radno vrijeme, pauze i blokade](sprint-3/34-radno-vrijeme-i-blokade.md).
+Gotov — task 34 (2026-09-21). [PR #57](https://github.com/htuco/salon-booking-platform/pull/57)
+je otvoren i **čeka spajanje u `main`**. Dokazi i ograničenja:
+[task 34](sprint-3/34-radno-vrijeme-i-blokade.md).
+Sljedeći je [35 — Klijenti i profil](sprint-3/35-klijenti-i-profil.md).
 
 ## Ciljevi
 
@@ -241,3 +242,4 @@ Sljedeći je [34 — Radno vrijeme, pauze i blokade](sprint-3/34-radno-vrijeme-i
 - **32 — Usluge i cjenovnik (2026-09-21, završeno)** — PR #54 spojen u main. RPC CRUD, oduzeti direktni grantovi i snapshot usluge na terminima. Flutter i Supabase CI zeleni na c3762f7. Preostale dorade evidentirane u sprint-3/README.md: Deno REST testovi, run skripte i demo/format cijene.
 
 - **33 — Osoblje i smjene (2026-09-21)** — RPC CRUD, atomske veze usluga, deaktivacija i snapshot imena; desktop/mobilni editor i redovni raspored. 328 pgTAP, 19 REST i Flutter suite PASS; oba CI joba zelena na `8a40a97`, PR #55 spojen u `main` (`d4c54c3`). Native/hostovani deploy nisu urađeni. Sljedeći task 34.
+- **34 — Radno vrijeme, pauze i blokade** (2026-09-21) — `/working-hours` je prestao biti placeholder: sedam dana sa vremenima i pauzom, prekidač za neradni dan, i lista budućih blokada sa uređivačem koji bira cijeli salon ili jednog radnika. **Zatvorena posljednja rupa u „samo kroz `rpc`"**: init migracija je nad `working_hours` i `blocked_slots` davala pun grant, pa je pravilo bilo konvencija a ne tvrdnja baze — task 31 je to provjerio pozivom i odluku izričito ostavio ovdje. Sada je oduzet, kao nad `appointments` (24) i `employees` (33). **Sedmica se piše u cjelini, i to nije stil ugovora** — `get_available_slots` čita **odsustvo reda kao zatvoreno**, ne kao „nije podešeno", pa bi slanje samo izmijenjenih dana tiho zatvorilo ostale; ulaz je zato tačno sedam dana uz provjeru da je svaki ISO dan prisutan tačno jednom, jer sama provjera dužine propušta šest dana plus duplikat. **Postojeći termin se ne briše tiho**: dvije `stable` funkcije čitanja vraćaju termine koji bi ispali van novog vremena ili pali pod blokadu, ekran ih pokazuje **prije** upisa, a odluka ostaje vlasniku. Dokazano: **379 pgTAP PASS** (51 nov) i **15 REST provjera** kroz stvarni JWT — skraćeno radno vrijeme, pauza, zatvoren dan i blokada svaki put mijenjaju ono što klijent dobije iz `get_available_slots`, a direktan `insert` vraća `401/403`; puna Flutter suita (admin 247) i čista analiza/format. Widget testovi su usput našli **dva stvarna preliva na telefonu** (106 px i 70 px) u redu dana i redu pauze, oba ispravljena u `3s` rasporedu. Ostalo: radnikov sedmični raspored nema ekran (RPC ga prima, pgTAP pokriva), `/calendar/block` je i dalje placeholder ruta ali više ne čeka `rpc`, „Pravila zakazivanja" iz `3h` su task 36. [PR #57](https://github.com/htuco/salon-booking-platform/pull/57) otvoren, čeka spajanje.

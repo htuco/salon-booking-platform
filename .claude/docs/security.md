@@ -188,12 +188,11 @@ ispravno: `staff_manage` politika iz init migracije (`for all ... using(private.
 presijeca na članstvo, pa admin koji pošalje tuđi `salon_id` dobije **praznu listu**, ne tuđe
 blokade. Klijentska app je i dalje ne čita i ne smije — njoj je blokada odsustvo slota, a ne podatak.
 
-**Grantovi ovdje nisu isti kao nad `appointments`.** Init migracija daje
-`select,insert,update,delete` nad `blocked_slots` roli `authenticated` i nikad ih nije oduzela, za
-razliku od `appointments`, gdje ih je task 24 povukao da bi „samo kroz `rpc`" bila tvrdnja baze a ne
-konvencija. Prijavljen `salon_admin` zato **može** direktno upisati i obrisati blokadu — provjereno
-pozivom u tasku 31, ne čitanjem migracije. Repozitorij svejedno samo čita; pisanje i odluka ide li
-kroz validiranu funkciju pripadaju tasku 34.
+**Task 34 je grantove izjednačio sa `appointments`.** Init migracija je nad `blocked_slots` davala
+pun `select,insert,update,delete` roli `authenticated`, pa je prijavljen `salon_admin` **mogao**
+pisati direktno — provjereno pozivom u tasku 31, ne čitanjem migracije. To je bila jedina preostala
+tabela gdje je „samo kroz `rpc`" bila konvencija, a ne tvrdnja baze. Task 34 je `insert/update/
+delete` oduzeo i nad `blocked_slots` i nad `working_hours`; ostao je samo `select`.
 
 ### Cjenovnik — aktivno je javno, neaktivno je tenant podatak
 
@@ -229,6 +228,42 @@ samo vlastitom adminu. `employees` nikad ne kreira `users` ni pravo prijave.
 
 Dokaz: `012_employee_crud.test.sql` i `rest_employee_crud.ts` (stvarni admin A/B i klijentski
 JWT). Namjerno slabljenje `private.is_admin` na `true` u rollback transakciji obara 7 asercija.
+
+### Radno vrijeme, pauze i blokade — task 34
+
+`authenticated` ima samo SELECT nad `working_hours` i `blocked_slots`. Pisanje ide kroz
+`set_working_hours`, `create_blocked_slot` i `delete_blocked_slot`; sve su `security definer`.
+
+**Guard je jedna funkcija, `private.assert_salon_access(p_salon_id, p_employee_id)`, i zovu je sve
+pet** — tri putanje pisanja i dvije funkcije čitanja konflikata. Traži `private.is_admin` i, kad je
+`p_employee_id` dat, pripadnost tog radnika salonu. Radnik iz drugog salona, nepostojeći radnik,
+tuđa i nepostojeća blokada daju **istu** `42501` — bez otkrivanja tuđeg osoblja i bez razlike koja
+bi potvrdila da ID postoji.
+
+Prvi prolaz ovog taska je provjeru radnika imao samo u putanjama pisanja, pa su `*_conflicts`
+funkcije na tuđeg radnika vraćale **praznu listu** umjesto `42501`. Curenja nije bilo —
+`salon_id = p_salon_id` je prvi predikat u oba tijela — ali prazna lista se ne razlikuje od „nema
+konflikata", pa je ugovor greške bio nekonzistentan između funkcija iste migracije, a `salon_id`
+predikat nije imao **nijedan** test koji bi pao da se ukloni. Oboje ispravljeno; sabotaža koja
+makne taj predikat sada obara `013`.
+
+**`set_working_hours` prima cijelu sedmicu, tačno sedam dana.** To nije stilski izbor ugovora nego
+posljedica toga kako `get_available_slots` čita tabelu: **red kojeg nema znači zatvoreno**, a ne
+„nije podešeno". Djelimičan upis bi tiho zatvorio dane koje pozivalac nije poslao. Validacija zato
+odbija i pogrešnu dužinu i sedmicu sa duplikatom dana — provjera dužine sama propušta šest dana plus
+duplikat. Upis je `upsert` nad `unique nulls not distinct (salon_id, employee_id, day_of_week)`, pa
+ID-evi redova prežive izmjenu; zatvoren dan se snima bez pauze, jer ostavljena pauza u zatvorenom
+danu je neistina koju niko ne čita.
+
+**Postojeći termin se ne briše i ne pomjera.** `working_hours_conflicts` i `blocked_slot_conflicts`
+su `stable` funkcije **čitanja** koje vraćaju termine koji bi ispali iz novog rasporeda ili pali pod
+novu blokadu. Ekran ih zove **prije** upisa, pa upozorenje stiže prije posljedice; odluka šta uraditi
+sa takvim terminom ostaje vlasniku. Obje traže istog admina kao i pisanje. Prošli termini se ne
+prijavljuju: raspored se mijenja unaprijed.
+
+Dokaz: `013_working_hours_crud.test.sql` (57 asercija) i `rest_working_hours.ts` (15 provjera kroz
+stvarni JWT i PostgREST — skraćeno radno vrijeme, pauza, zatvoren dan i blokada svaki put mijenjaju
+ono što `get_available_slots` vrati klijentu, a direktan `insert` vraća `401/403`).
 
 ### Realtime availability bez otvaranja termina
 
