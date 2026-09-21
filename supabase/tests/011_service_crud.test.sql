@@ -93,6 +93,10 @@ reset role;
 -- ---------------------------------------------------------------------------
 -- 3. Postojeci termin cuva staru cijenu/trajanje, novi uzima novo
 -- ---------------------------------------------------------------------------
+-- **Dijagnostika ide prije bookinga, ne poslije.** Prvi prolaz na CI-ju je pao ovdje, na
+-- `Termin je upravo zauzet`, a tvrdnja koja bi rekla zasto je stajala iza `book_appointment`
+-- i nikad se nije izvrsila. Prazan spisak slotova stigne u RPC kao NULL `p_start_time` i
+-- javi se istom porukom kao stvarno zauzet termin — dvije razlicite stvari, jedan tekst.
 set local request.jwt.claims = '{"sub":"ee000000-0000-4000-8000-000000000032","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
 create temporary table prvi_slot as
@@ -101,16 +105,25 @@ from public.get_available_slots(
   (select salon from sfix), (select id from nova), (select utorak from sfix),
   (select radnik from sfix), true)
 order by start_time limit 1;
+reset role;
+grant select on prvi_slot to public;
+
+select diag('utorak = ' || (select utorak from sfix)
+  || ', slotova = ' || (select count(*) from prvi_slot)
+  || ', prvi = ' || coalesce((select start_time from prvi_slot)::text, 'NULL'));
+select isnt_empty('select start_time from prvi_slot',
+  'Nova usluga od 30 minuta ima bar jedan slobodan slot u utorak');
+
+set local request.jwt.claims = '{"sub":"ee000000-0000-4000-8000-000000000032","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
+set local role authenticated;
 create temporary table prvi as
 select (public.book_appointment(
   (select salon from sfix), (select customer from sfix), (select id from nova),
   (select utorak from sfix), (select start_time from prvi_slot), (select radnik from sfix)
 )).*;
 reset role;
-grant select on prvi_slot, prvi to public;
+grant select on prvi to public;
 
-select isnt_empty('select start_time from prvi_slot',
-  'Nova usluga od 30 minuta ima bar jedan slobodan slot u utorak');
 select is((select service_price from prvi), 12.50::numeric,
   'Prvi termin snapshotuje cijenu iz trenutka rezervacije');
 select is((select service_duration_minutes from prvi), 30,
