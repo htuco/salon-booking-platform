@@ -107,10 +107,10 @@ asercija, od kojih dvije čitaju termin drugog salona. **Sabotaža je provjerena
   vraća salon u polazno stanje u `finally`.
 - `dart run melos run test` — **SUCCESS** (admin 250, core_domain 88, core_api 122, core_ui 67,
   client 234). `dart analyze` bez ijedne primjedbe.
-- **Oba CI joba zelena na `68234ab`** (zadnji commit):
-  [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35614498777)
-  (3m43s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35614498450)
-  (2m22s). Supabase job je dokaz iz čistog checkouta, koji lokalno pokretanje ne može dati.
+- **Oba CI joba zelena na `b837287`** (zadnji commit):
+  [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35616810816)
+  (3m32s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35616810730)
+  (2m37s). Supabase job je dokaz iz čistog checkouta, koji lokalno pokretanje ne može dati.
 
 ### Ostalo za sljedećeg
 

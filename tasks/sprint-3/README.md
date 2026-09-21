@@ -324,7 +324,7 @@ sedam dana, uz provjeru da je svaki ISO dan prisutan tačno jednom — sama prov
 ispali van novog vremena ili pali pod blokadu; ekran ih pokazuje **prije** upisa, a odluka ostaje
 vlasniku.
 
-Oba CI joba zelena na `68234ab`. Dokaz: 385 pgTAP PASS (57 novih), 15 REST provjera kroz stvarni JWT gdje skraćeno radno vrijeme,
+Oba CI joba zelena na `b837287`. Dokaz: 385 pgTAP PASS (57 novih), 15 REST provjera kroz stvarni JWT gdje skraćeno radno vrijeme,
 pauza, zatvoren dan i blokada svaki put mijenjaju ono što klijent dobije iz `get_available_slots`,
 a direktan `insert` vraća `401/403`. Puna Flutter suita (admin 250) i čista analiza/format.
 Widget testovi su usput našli dva stvarna preliva na telefonu (106 px i 70 px) — red dana i red
