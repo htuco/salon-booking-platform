@@ -11,7 +11,9 @@ select
   'ee000000-0000-4000-8000-000000000032'::uuid as admin,
   'ee000000-0000-4000-8000-000000000033'::uuid as tudji_admin,
   'ee000000-0000-4000-8000-000000000034'::uuid as customer,
-  (date_trunc('week', (now() at time zone 'Europe/Sarajevo')) + interval '8 days')::date as utorak;
+  (date_trunc('week', (now() at time zone 'Europe/Sarajevo')) + interval '8 days')::date as utorak,
+  -- Srijeda sljedece sedmice: drugi termin ne smije dijeliti dan sa prvim, v. odjeljak 3.
+  (date_trunc('week', (now() at time zone 'Europe/Sarajevo')) + interval '9 days')::date as srijeda;
 grant select on sfix to public;
 
 insert into auth.users(id, email, raw_app_meta_data, raw_user_meta_data) values
@@ -107,6 +109,8 @@ select (public.book_appointment(
 reset role;
 grant select on prvi_slot, prvi to public;
 
+select isnt_empty('select start_time from prvi_slot',
+  'Nova usluga od 30 minuta ima bar jedan slobodan slot u utorak');
 select is((select service_price from prvi), 12.50::numeric,
   'Prvi termin snapshotuje cijenu iz trenutka rezervacije');
 select is((select service_duration_minutes from prvi), 30,
@@ -129,18 +133,34 @@ select is(
    from public.appointments where id=(select id from prvi)),
   30, 'Promjena trajanja ne pomjera vec dogovoreni kraj termina');
 
+-- **Drugi termin ide u srijedu, ne u isti utorak.** Prvi termin je zauzeo prvi slot dana
+-- i sa bufferom drzi okolinu; kad usluga naraste sa 30 na 60 minuta, "prvi slobodan slot
+-- istog dana" postaje pitanje rasporeda, a ne onoga sto ovaj blok dokazuje. Test je zbog
+-- toga pao na CI-ju u prvom prolazu (`Termin je upravo zauzet`). Ono sto se ovdje tvrdi je
+-- da **novi** termin uzima **novu** cijenu i trajanje, i to ne trazi isti dan.
+-- Srijeda je radna: seed daje 09:00-17:00 za sve dane osim nedjelje.
 set local request.jwt.claims = '{"sub":"ee000000-0000-4000-8000-000000000032","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
 create temporary table drugi_slot as
 select start_time
 from public.get_available_slots(
-  (select salon from sfix), (select id from nova), (select utorak from sfix),
+  (select salon from sfix), (select id from nova), (select srijeda from sfix),
   (select radnik from sfix), true)
 order by start_time limit 1;
+reset role;
+grant select on drugi_slot to public;
+
+-- Bez ove tvrdnje prazan spisak slotova stize do `book_appointment` kao NULL i javi se kao
+-- "Termin je upravo zauzet" — poruka koja gleda u pogresnu stranu.
+select isnt_empty('select start_time from drugi_slot',
+  'Za izmijenjenu uslugu od 60 minuta postoji bar jedan slobodan slot');
+
+set local request.jwt.claims = '{"sub":"ee000000-0000-4000-8000-000000000032","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
+set local role authenticated;
 create temporary table drugi as
 select (public.book_appointment(
   (select salon from sfix), (select customer from sfix), (select id from nova),
-  (select utorak from sfix), (select start_time from drugi_slot), (select radnik from sfix)
+  (select srijeda from sfix), (select start_time from drugi_slot), (select radnik from sfix)
 )).*;
 reset role;
 grant select on drugi to public;
