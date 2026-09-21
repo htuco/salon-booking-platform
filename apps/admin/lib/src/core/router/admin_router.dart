@@ -11,6 +11,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/more/more_screen.dart';
+import '../../features/services/services_screen.dart';
 import '../../features/placeholder/admin_placeholder_screen.dart';
 
 /// Rute admin aplikacije, po `docs/01-mvp-spec.md` §12.
@@ -97,6 +98,11 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.more.name,
         builder: (context, state) => const AdminMoreScreen(),
       ),
+      GoRoute(
+        path: AdminRoute.services.path,
+        name: AdminRoute.services.name,
+        builder: (context, state) => const AdminServicesScreen(),
+      ),
       // Rute koje jos nemaju tijelo. Ostaju kao placeholderi da ulaz postoji kad ih
       // Sprint 3 napise.
       //
@@ -139,6 +145,8 @@ const _napisane = {
   // Task 31. `/calendar/block` **ostaje placeholder** — blokada je pisanje, a `rpc` za nju
   // dolazi tek u tasku 34.
   AdminRoute.calendar,
+  // Task 32.
+  AdminRoute.services,
 };
 
 /// Premoscuje Riverpod provider i `Listenable` koji `go_router` ocekuje.

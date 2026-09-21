@@ -39,6 +39,7 @@ class StaffAppointmentRepository {
 
   static const _columns = '''
 id, salon_id, service_id, employee_id, customer_id, auth_identity_id, device_id,
+service_name, service_price, service_duration_minutes,
 customer_name, customer_phone, customer_note, date, start_time, end_time,
 buffer_minutes, status, source, cancel_reason, cancelled_by, pending_expires_at
 ''';

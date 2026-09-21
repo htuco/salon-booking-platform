@@ -227,6 +227,9 @@ void main() {
       'id': 'ap-1',
       'salon_id': '550e8400-e29b-41d4-a716-446655440000',
       'service_id': '10000000-0000-4000-8000-000000000001',
+      'service_name': 'Musko sisanje',
+      'service_price': 20.0,
+      'service_duration_minutes': 30,
       'employee_id': '20000000-0000-4000-8000-000000000001',
       'customer_id': 'cu-1',
       'auth_identity_id': null,
@@ -253,6 +256,9 @@ void main() {
       expect(appointment.endTime, const LocalTime(9, 30));
       expect(appointment.durationMinutes, 30);
       expect(appointment.bufferMinutes, 5);
+      expect(appointment.serviceName, 'Musko sisanje');
+      expect(appointment.servicePrice, 20);
+      expect(appointment.serviceDurationMinutes, 30);
     });
 
     test('status je tipiziran, ne string', () {

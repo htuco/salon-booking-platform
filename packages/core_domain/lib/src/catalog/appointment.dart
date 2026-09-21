@@ -28,6 +28,12 @@ abstract class Appointment with _$Appointment {
     @JsonKey(name: 'salon_id') required String salonId,
     @JsonKey(name: 'service_id') required String serviceId,
 
+    /// Snapshot usluge u trenutku rezervacije. Nullable polja cuvaju kompatibilnost
+    /// sa backendom prije migracije taska 32; nova baza ih uvijek popunjava triggerom.
+    @JsonKey(name: 'service_name') String? serviceName,
+    @JsonKey(name: 'service_price') double? servicePrice,
+    @JsonKey(name: 'service_duration_minutes') int? serviceDurationMinutes,
+
     /// `null` kad salon ne traži izbor radnika (`require_staff_choice = false`).
     @JsonKey(name: 'employee_id') String? employeeId,
     @JsonKey(name: 'customer_id') required String customerId,

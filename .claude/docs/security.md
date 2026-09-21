@@ -21,7 +21,7 @@ sigurnosti nego kao izbor konteksta; ono što ga ograničava su politike u bazi.
 |---|---|---|
 | **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke, **objavljene recenzije** (uz agregat `salon_rating_summary`), **pravila korištenja sa politikom privatnosti** i bezlični `availability_signals` red salona. **Nema nijedan write grant.** |
 | **klijent** | JWT bez privilegovane uloge (`private.is_client()`) | sve što i anon, plus **svoj** `auth_identities` red, i **svoj** `customers`/`appointments`/`devices` red **u salonu iz `x-salon-id`** |
-| **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` | pun CRUD nad podacima **svog** salona |
+| **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` | upravljanje podacima **svog** salona; validirani upisi termina, uređaja i usluga idu kroz RPC |
 | **super admin** | `app_metadata.role = super_admin` **i** red u `public.users` sa `role='super_admin'` | sve; iznad tenant izolacije |
 
 **Uloga u tokenu sama po sebi ne znači ništa.** `private.is_super_admin()` i `private.is_admin()`
@@ -194,6 +194,23 @@ razliku od `appointments`, gdje ih je task 24 povukao da bi „samo kroz `rpc`" 
 konvencija. Prijavljen `salon_admin` zato **može** direktno upisati i obrisati blokadu — provjereno
 pozivom u tasku 31, ne čitanjem migracije. Repozitorij svejedno samo čita; pisanje i odluka ide li
 kroz validiranu funkciju pripadaju tasku 34.
+
+### Cjenovnik — aktivno je javno, neaktivno je tenant podatak
+
+Aktivne `services` redove namjerno čita i `anon`: cjenovnik mora raditi prije prijave. Zato tvrdnja
+„admin A ne može pročitati aktivnu uslugu salona B" nije sigurnosna granica — isti red može
+pročitati neprijavljen korisnik. Granica je da drugi salon ne vidi **neaktivni** red kroz
+`staff_manage` i ne može promijeniti nijedan red.
+
+Od taska 32 `authenticated` nad `services` ima samo `select`. Kreiranje, izmjena i promjena
+`is_active` idu kroz `create_service`, `update_service` i `set_service_active`; sve tri su
+`security definer`, traže `private.is_admin(p_salon_id)` i za nepostojeći i tuđi ID vraćaju istu
+`42501`. Fizičko brisanje nije aplikacijska operacija: deaktivacija čuva termine i
+`employee_services` veze za historiju i moguću ponovnu aktivaciju.
+
+Termin snapshotuje `service_name`, `service_price` i `service_duration_minutes` triggerom prije
+upisa. Pozivalac te vrijednosti ne bira. Promjena cjenovnika zato utiče na budući availability i
+nove rezervacije, ali ne prepisuje dogovorenu cijenu ni trajanje postojećeg termina.
 
 ### Realtime availability bez otvaranja termina
 

@@ -203,7 +203,13 @@ void main() {
       await _naSirini(tester, _desktop, _ekran());
 
       expect(find.text('Mirza Aliagić'), findsOneWidget);
-      expect(find.text('11:00–12:20 · Fade šišanje'), findsOneWidget);
+      // Drugi red bloka nosi i status, ne samo uslugu — v. `_opisBloka`. Status je tu
+      // jer se otkazan i potvrđen termin inače razlikuju samo bojom, koju čitač ekrana
+      // ne vidi. Test je ovo propustio jer je pisan prije te izmjene.
+      expect(
+        find.text('11:00–12:20 · Potvrđeno · Fade šišanje'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('pauza, blokada i neradno vrijeme se vide kao pojasevi', (
@@ -346,17 +352,29 @@ void main() {
       expect(find.text('Mirza Aliagić'), findsNothing);
     });
 
-    testWidgets('lista jednog radnika nudi slobodne rupe, „Svi" ne', (
+    testWidgets('slobodne rupe se ne crtaju ni za jednog radnika', (
       tester,
     ) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      // „Slobodno" preko cijelog salona bi bilo izmišljeno kad radi više ljudi.
+      // **Obrnuta tvrdnja u odnosu na prvu verziju testa.** Canvas `3l` crta isprekidane
+      // redove „Slobodno 80 min", i test je to tražio; task 31 ih je namjerno izbacio, a
+      // test je ostao i od tada pada. Razlog izbacivanja je tačnost, ne čistoća sloja:
+      // rupa u rasporedu nije slobodan termin dok se ne uračunaju `buffer_minutes`,
+      // `slot_step_minutes` i `min_advance_booking_hours`, pa bi vlasnik dodirnuo ponudu
+      // i dobio odbijenicu iz `book_appointment`. Puna argumentacija: `calendar_day.dart`.
+      //
+      // Test ostaje kao čuvar: ako neko vrati izmišljene slobodne termine, pada ovdje.
       expect(find.textContaining('Slobodno'), findsNothing);
 
       await tester.tap(find.text('Amar').first);
       await tester.pumpAndSettle();
-      expect(find.textContaining('Slobodno'), findsWidgets);
+      expect(
+        find.textContaining('Slobodno'),
+        findsNothing,
+        reason:
+            'ni pogled na jednog radnika ne računa slobodno vrijeme u Dartu',
+      );
     });
 
     testWidgets('salonska blokada se u listi „Svi" pojavljuje jednom', (

@@ -45,8 +45,21 @@ class SalonClientApp extends ConsumerWidget {
     if (env.hasSupabase) {
       // Availability signal je javan i ne sadrži podatke o terminima. Mora raditi i prije
       // prijave, inače anonimni korisnik ne vidi da je neko drugi upravo zauzeo slot.
+      //
+      // **Signal nosi i promjenu kataloga, ne samo zauzeće slota.** Trigger u
+      // `availability_realtime.sql` rotira reviziju i na `services`, `employees` i
+      // `employee_services`. Do taska 32 se invalidirao samo `availableSlotsProvider`, i to
+      // se nije vidjelo jer se cjenovnik nije mogao mijenjati u radu — `servicesProvider`
+      // nema `autoDispose`, pa je katalog živio koliko i proces. Čim je salon dobio ekran za
+      // izmjenu cijena, ista rupa znači da klijent staru cijenu vidi do hladnog starta, a
+      // deaktiviranu uslugu može otvoriti i pasti tek na `book_appointment`.
       ref.listen(availabilityChangesProvider(env.salonId), (_, next) {
-        if (next.hasValue) ref.invalidate(availableSlotsProvider);
+        if (!next.hasValue) return;
+        ref
+          ..invalidate(availableSlotsProvider)
+          ..invalidate(servicesProvider)
+          ..invalidate(employeesProvider)
+          ..invalidate(employeeServiceLinksProvider);
       });
 
       final sesija = ref.watch(currentAuthSessionProvider);

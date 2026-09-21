@@ -199,6 +199,18 @@ su **lokalno zidno vrijeme salona** (`timezone` default `Europe/Sarajevo`), ne U
 `appointments` je u `supabase_realtime` publikaciji; Realtime poštuje SELECT RLS, pa klijent kroz
 socket dobija tačno ono što bi dobio i kroz REST.
 
+**Signal osvježava, ne donosi podatke.** `availability_signals` nosi samo `(salon_id, revision_id)`,
+a trigger ga rotira na promjenu `services`, `employees`, `employee_services`, `working_hours`,
+`appointments`, `blocked_slots` i `salon_settings`. Klijent na taj događaj **invalidira providere**
+i ponovo čita tipizirani repozitorij; iz Realtime mape se nikad ne gradi drugi izvor istine.
+
+Koje providere — to je lista koja se lako zaboravi proširiti. `SalonClientApp` na signal invalidira
+`availableSlotsProvider`, `servicesProvider`, `employeesProvider` i `employeeServiceLinksProvider`.
+Do taska 32 je bio samo prvi, i to se nije vidjelo jer se katalog nije mogao mijenjati u radu:
+`servicesProvider` nema `autoDispose`, pa je živio koliko i proces, a klijent je staru cijenu vidio
+dok ne ubije aplikaciju. **Novi provider koji čita nešto što trigger prati mora ući u ovu listu**,
+inače se ista greška ponavlja tiho — drži je `apps/client/test/catalog_refresh_test.dart`.
+
 Autorizacija, grantovi i ono što još nije zatvoreno: `.claude/docs/security.md`.
 
 ## Edge Functions i cron

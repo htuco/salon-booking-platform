@@ -29,10 +29,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format/datum.dart';
+import '../../core/format/tekst.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
-import '../dashboard/dashboard_summary.dart';
 import 'appointment_actions_bar.dart';
 import 'appointments_providers.dart';
 import 'status_pill.dart';
@@ -320,8 +320,12 @@ class _Podaci extends StatelessWidget {
         '${vrijemeHhMm(termin.startTime)}–${vrijemeHhMm(termin.endTime)}'
             ' · ${trajanjeKratko(termin.durationMinutes)}',
       ),
-      ('Usluga', usluga?.name ?? 'usluga nije u cjenovniku'),
-      if (usluga case final u?) ('Cijena', iznosKm(u.price)),
+      (
+        'Usluga',
+        termin.serviceName ?? usluga?.name ?? 'usluga nije u cjenovniku',
+      ),
+      if ((termin.servicePrice ?? usluga?.price) case final cijena?)
+        ('Cijena', iznosKm(cijena)),
       ('Majstor', radnik?.name ?? 'bilo ko'),
       ('Zakazano', _izvor(termin.source)),
       if (termin.cancelledBy case final ko? when ko.isNotEmpty)

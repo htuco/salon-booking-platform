@@ -23,6 +23,11 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Staff JWTs require app_metadata.role = salon_admin and app_metadata.salon_id, PLUS a matching public.users row. A super_admin needs both its trusted claim and database membership. user_metadata is only display data.
 - Each client request for private data requires x-salon-id. It is validated as an active salon and combined with the authenticated user's identity. This header chooses the current app context; it never grants ownership or admin rights.
 - Public browsing of active salons, active services/employees, mappings, schedules and settings requires no login. Anonymous users have no write grants.
+- `services` writes use `create_service`, `update_service` and `set_service_active`; authenticated
+  has no direct insert/update/delete grant. Active services remain public catalog, while inactive
+  rows are visible only to staff of their salon. Deactivation preserves appointments and employee
+  mappings. Appointments snapshot service name, numeric price and duration at insert time so later
+  price-list edits affect only future bookings.
 - `availability_signals` is the only public Realtime availability signal: it exposes only
   `(salon_id, revision_id)` for an active salon. Triggers rotate the opaque UUID after changes to
   services, employees, mappings, schedules, appointments, blocked slots or booking settings; the

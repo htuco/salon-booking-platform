@@ -80,6 +80,7 @@ void main() {
           'category': 'Šišanje',
           'price': 15,
           'duration_minutes': 30,
+          'is_active': false,
         },
         {
           'id': '10000000-0000-4000-8000-000000000003',
@@ -93,12 +94,34 @@ void main() {
 
       expect(services, hasLength(2));
       expect(services.first, isA<Service>());
+      expect(services.first.isActive, isFalse);
       expect(services.map((s) => s.name), ['Muško šišanje', 'Šišanje + brada']);
     });
 
     test('prazan salon daje praznu listu, ne grešku', () {
       // Tek postavljen tenant nema usluga — to je uredno stanje, ne kvar.
       expect(servicesFromRows(const []), isEmpty);
+    });
+  });
+
+  group('serviceFromRpc', () {
+    final row = {
+      'id': 's1',
+      'salon_id': 'salon-1',
+      'name': 'Feniranje',
+      'price': 25,
+      'duration_minutes': 40,
+      'is_active': true,
+    };
+
+    test('prima mapu i jednorednu listu', () {
+      expect(serviceFromRpc(row).name, 'Feniranje');
+      expect(serviceFromRpc([row]).isActive, isTrue);
+    });
+
+    test('odbija prazan ili viseredni odgovor', () {
+      expect(() => serviceFromRpc(const []), throwsA(isA<MappingError>()));
+      expect(() => serviceFromRpc([row, row]), throwsA(isA<MappingError>()));
     });
   });
 

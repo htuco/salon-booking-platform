@@ -39,6 +39,29 @@ TextStyle _stilZa(WidgetTester tester, String tekst) =>
     tester.widget<Text>(find.text(tekst)).style!;
 
 void main() {
+  test('opis termina koristi historijski snapshot usluge i cijene', () {
+    const izmijenjenaUsluga = Service(
+      id: 's1',
+      salonId: _salonId,
+      name: 'Novo ime',
+      price: 35,
+      durationMinutes: 40,
+    );
+    final termin = _termin().copyWith(
+      serviceName: 'Staro ime',
+      servicePrice: 20,
+    );
+
+    final opis = opisTermina(
+      termin,
+      usluge: const {'s1': izmijenjenaUsluga},
+      radnici: const {},
+    );
+
+    expect(opis.usluga, 'Staro ime');
+    expect(opis.cijena, 20);
+  });
+
   testWidgets('vrijeme termina je JetBrains Mono, sa tabularnim ciframa', (
     tester,
   ) async {

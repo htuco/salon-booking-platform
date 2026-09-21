@@ -12,6 +12,7 @@ init_schema migraciju — RLS i test izolacije idu u istom PR-u, ne odvojeno.
 |---|---|---|
 | `001_tenant_isolation.test.sql` | pgTAP | šema, RLS politike, `private.*` helperi — u rollback transakciji |
 | `002_availability.test.sql` | pgTAP | `get_available_slots`, `get_available_dates`, `book_appointment`, exclusion constraint (task 05) |
+| `011_service_crud.test.sql` | pgTAP | RPC upisi usluga, oduzeti direktni grantovi, tenant granica neaktivnih redova, deaktivacija i snapshot cijene/trajanja (task 32) |
 | `rest_isolation.ts` | REST, dva stvarna JWT-a | prijavljeni klijent ne vidi tuđi salon; `x-salon-id` ne daje prava |
 | `rest_public_catalog.ts` | REST, **bez korisničkog tokena** | javni katalog je čitljiv prije prijave, sa kolonama koje `core_api` repozitoriji stvarno traže; `appointments` nije; neaktivan salon nestaje |
 
