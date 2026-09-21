@@ -51,10 +51,15 @@ select throws_ok(
     where id='10000000-0000-4000-8000-000000000004'$$,
   '42501', null, 'Fizicko brisanje nije aplikacijska operacija');
 
+-- **`select * from f(...)`, nikad `select (f(...)).*`.** Drugi oblik Postgres prosiri u
+-- `(f()).kol1, (f()).kol2, ...` i pozove funkciju **jednom po koloni**. Za `create_service`
+-- to znaci desetak stvorenih usluga umjesto jedne, a za `book_appointment` nize prvi poziv
+-- rezervise slot pa ga drugi zatekne zauzetim i digne `Termin je upravo zauzet`. Upravo je
+-- to obaralo ovaj fajl na CI-ju, i izgledalo je kao greska u dostupnosti.
 create temporary table nova as
-select (public.create_service(
+select * from public.create_service(
   (select salon from sfix), '  Test usluga  ', 'Opis', 'Test', 12.50, 30, null
-)).*;
+);
 reset role;
 grant select on nova to public;
 
@@ -93,10 +98,14 @@ reset role;
 -- ---------------------------------------------------------------------------
 -- 3. Postojeci termin cuva staru cijenu/trajanje, novi uzima novo
 -- ---------------------------------------------------------------------------
--- **Dijagnostika ide prije bookinga, ne poslije.** Prvi prolaz na CI-ju je pao ovdje, na
--- `Termin je upravo zauzet`, a tvrdnja koja bi rekla zasto je stajala iza `book_appointment`
--- i nikad se nije izvrsila. Prazan spisak slotova stigne u RPC kao NULL `p_start_time` i
--- javi se istom porukom kao stvarno zauzet termin — dvije razlicite stvari, jedan tekst.
+-- **Dijagnostika ide prije bookinga, ne poslije.** Tri prolaza na CI-ju su pala ovdje na
+-- `Termin je upravo zauzet`, a tvrdnja koja bi rekla zasto je stajala **iza**
+-- `book_appointment` — naredba prije nje obori cijeli fajl, pa se nikad nije izvrsila.
+--
+-- Prava greska nije bila ni u dostupnosti ni u izolaciji nego u `(f()).*` iznad: slot je
+-- bio uredno slobodan, ali ga je prvi od dvadesetak poziva rezervisao. `isnt_empty` ostaje
+-- jer razdvaja dva stanja koja RPC javlja istim tekstom — prazan spisak stigne kao NULL
+-- `p_start_time` i dobije istu poruku kao stvarno zauzet termin.
 set local request.jwt.claims = '{"sub":"ee000000-0000-4000-8000-000000000032","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
 create temporary table prvi_slot as
@@ -109,18 +118,17 @@ reset role;
 grant select on prvi_slot to public;
 
 select diag('utorak = ' || (select utorak from sfix)
-  || ', slotova = ' || (select count(*) from prvi_slot)
-  || ', prvi = ' || coalesce((select start_time from prvi_slot)::text, 'NULL'));
+  || ', izabrani slot = ' || coalesce((select start_time from prvi_slot)::text, 'NULL'));
 select isnt_empty('select start_time from prvi_slot',
   'Nova usluga od 30 minuta ima bar jedan slobodan slot u utorak');
 
 set local request.jwt.claims = '{"sub":"ee000000-0000-4000-8000-000000000032","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
 create temporary table prvi as
-select (public.book_appointment(
+select * from public.book_appointment(
   (select salon from sfix), (select customer from sfix), (select id from nova),
   (select utorak from sfix), (select start_time from prvi_slot), (select radnik from sfix)
-)).*;
+);
 reset role;
 grant select on prvi to public;
 
@@ -171,10 +179,10 @@ select isnt_empty('select start_time from drugi_slot',
 set local request.jwt.claims = '{"sub":"ee000000-0000-4000-8000-000000000032","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
 create temporary table drugi as
-select (public.book_appointment(
+select * from public.book_appointment(
   (select salon from sfix), (select customer from sfix), (select id from nova),
   (select srijeda from sfix), (select start_time from drugi_slot), (select radnik from sfix)
-)).*;
+);
 reset role;
 grant select on drugi to public;
 
