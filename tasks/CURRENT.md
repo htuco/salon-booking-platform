@@ -2,24 +2,22 @@
 
 ## Status
 
-U toku — task 36, **Postavke lokacije** (2026-09-21). Kod je napisan i dokazan lokalno;
-[PR #59](https://github.com/htuco/salon-booking-platform/pull/59) je otvoren kao draft na commitu
-`ce76081` i **čeka CI**. Dokazi, sabotaže i ograničenja:
-[task 36](sprint-3/36-postavke-lokacije.md).
+Gotov — task 36 (2026-09-21). [PR #59](https://github.com/htuco/salon-booking-platform/pull/59)
+je otvoren, **oba CI joba zelena na `9f63943`**, i čeka spajanje u `main`. Dokazi, sabotaže i
+ograničenja: [task 36](sprint-3/36-postavke-lokacije.md).
+
+Time **Sprint 3 nema više nezatvorenih taskova sa kodom.** Ostaju 🟡 stavke [28](sprint-3/28-admin-tema-i-tipografija.md)
+i [30](sprint-3/30-postojeci-ekrani-na-handoff.md), koje čekaju dokaz na ekranu, ne kod.
 
 Task 35 je spojen u `main` (PR #58, merge `20f686b`).
 
 ## Ciljevi
 
-Preostalo do zatvaranja:
+Preostalo prije nego se PR skine sa drafta:
 
-- [ ] **Oba CI joba zelena** na `ce76081` — `Supabase tests` sada vrti i `rest_working_hours.ts`
-      (vraćen u CI) i novi `rest_postavke_lokacije.ts`, pa je ovo prvi put da ta dva idu iz
-      čistog checkouta.
 - [ ] **Ekran otvoren uživo.** Sve ostalo je dokazano, ovo nije: `./tool/run_tenant.sh`, prijava
       kao `admin@barberstudiovitez.test` / `admin123456`, pa `/settings` na obje širine i
-      poređenje sa canvasom `3i`.
-- [ ] Skinuti draft sa PR-a i spojiti.
+      poređenje sa canvasom `3i`. Isti dug stoji na 28 i 30, pa se može zatvoriti u jednom prolazu.
 
 ## Napomene
 
@@ -37,6 +35,27 @@ Preostalo do zatvaranja:
   dokaz na ekranu, ne kod.
 
 ## Istorija
+
+- **36 — Postavke lokacije** (2026-09-21) — `/settings` je bila zadnja ruta u placeholder petlji;
+  sada nosi osnovne podatke, booking pravila i salonske sekcije pravila, plus **zaključan popis**
+  platformskih (ADR-0009), jer nevidljivo ograničenje izgleda kao kvar. **Nalaz koji je odredio
+  obim: dvije tabele su bile na suprotnim krajevima iste greške** — nad `salons` vlasnik nije mogao
+  pisati **uopšte** (grant iz init migracije bio mrtav, nema politike pisanja), a nad
+  `salon_settings` je grant bio **živ** uz `staff_manage`, pa je direktan `PATCH` prolazio i
+  zaobilazio validaciju. Oba zatvorena u `rpc` kao 24/33/34; `staff_manage` sužena na `staff_read`.
+  **Kolone su nabrojane u potpisu, ne proslijeđene kroz** — boje, `slug`, `plan` i `status` ostaju
+  platformski, a `timezone`/`language` nisu postavka nego migracija podataka. **`salon_policies`
+  namjerno ostaje bez `rpc`**, jedini takav admin modul: nema šta da se validira mimo `check`
+  constrainta, pa bi funkcija sakrila politiku umjesto da je pojača. **DoD o roku otkazivanja je
+  dokazan posljedicom**: isti termin i klijent kroz `cancel_appointment` dvaput, između samo
+  promjena roka — `PT403`, pa `cancelled`. **Jedini pravi bug je bio u klijentu**: `SalonClientApp`
+  nije invalidirao `salonSettingsProvider` na realtime signal, pa bi klijent nudio otkazivanje po
+  starom roku dok baza vraća `PT403` — treći put da ista lista zakaže (32, pa 36). Dokazano: **433
+  pgTAP asercije** (novi `014` nosi 48), svih deset REST testova (novi 19 provjera, promjenu čita
+  `anon` bez tokena), `melos run test` **797**, sabotaže obaraju 2 odnosno 12 asercija. Usput
+  vraćen `rest_working_hours.ts` u CI — task 34 ga je upisao samo u lokalnu skriptu. **Ostalo:
+  ekran nije viđen uživo**, a četiri stvari iz canvasa `3i` (naslovna fotografija, lista čekanja,
+  obavijesti, „Pristup") namjerno nisu nacrtane jer nemaju šemu iza sebe. PR #59 čeka spajanje.
 
 - **35 — Klijenti i profil** (2026-09-21) — `/clients` je prestao biti placeholder: desktop `3e` je
   adresar sa profilom uz listu, telefon `3o` isti redovi kao kartice, profil preko liste. Pretraga

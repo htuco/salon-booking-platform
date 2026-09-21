@@ -17,7 +17,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [33](33-osoblje-i-smjene.md) ✅ | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) ✅ | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
 | [35](35-klijenti-i-profil.md) ✅ | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
-| [36](36-postavke-lokacije.md) 🟡 | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
+| [36](36-postavke-lokacije.md) ✅ | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
 
 **Ukupno: ~15–22 radna dana.**
 
@@ -370,9 +370,10 @@ zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji ni
 > bookmarka), a četiri stvari iz canvasa `3e` namjerno nisu nacrtane sa razlogom u
 > `prototype/admin/SPEC.md`. PR #58 čeka spajanje.
 
-> **36 — Postavke lokacije (🟡, 2026-09-21).** `/settings` je bila zadnja ruta u placeholder petlji;
-> sada nosi osnovne podatke, booking pravila i salonske sekcije pravila. [PR #59](https://github.com/htuco/salon-booking-platform/pull/59),
-> čeka CI.
+> **36 — Postavke lokacije (✅, 2026-09-21).** `/settings` je bila zadnja ruta u placeholder petlji;
+> sada nosi osnovne podatke, booking pravila i salonske sekcije pravila.
+> [PR #59](https://github.com/htuco/salon-booking-platform/pull/59), **oba CI joba zelena na
+> `9f63943`**, čeka spajanje.
 >
 > **Nalaz koji je odredio obim: dvije tabele su bile na suprotnim krajevima greške.** Nad `salons`
 > vlasnik nije mogao pisati **uopšte** — postoje samo `public_salons`, `staff_salons` (oba `select`)
