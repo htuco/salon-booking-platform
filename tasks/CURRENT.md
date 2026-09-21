@@ -2,14 +2,35 @@
 
 ## Status
 
-Gotov — task 35 (2026-09-21). [PR #58](https://github.com/htuco/salon-booking-platform/pull/58)
-je otvoren, **oba CI joba zelena na `c3a12cf`**, i čeka spajanje u `main`. Dokazi i ograničenja:
-[task 35](sprint-3/35-klijenti-i-profil.md).
-Sljedeći je [36 — Postavke lokacije](sprint-3/36-postavke-lokacije.md).
+U toku — task 36, **Postavke lokacije** (2026-09-21). Kod je napisan i dokazan lokalno;
+[PR #59](https://github.com/htuco/salon-booking-platform/pull/59) je otvoren kao draft na commitu
+`ce76081` i **čeka CI**. Dokazi, sabotaže i ograničenja:
+[task 36](sprint-3/36-postavke-lokacije.md).
+
+Task 35 je spojen u `main` (PR #58, merge `20f686b`).
 
 ## Ciljevi
 
+Preostalo do zatvaranja:
+
+- [ ] **Oba CI joba zelena** na `ce76081` — `Supabase tests` sada vrti i `rest_working_hours.ts`
+      (vraćen u CI) i novi `rest_postavke_lokacije.ts`, pa je ovo prvi put da ta dva idu iz
+      čistog checkouta.
+- [ ] **Ekran otvoren uživo.** Sve ostalo je dokazano, ovo nije: `./tool/run_tenant.sh`, prijava
+      kao `admin@barberstudiovitez.test` / `admin123456`, pa `/settings` na obje širine i
+      poređenje sa canvasom `3i`.
+- [ ] Skinuti draft sa PR-a i spojiti.
+
 ## Napomene
+
+- **Sabotažu pokretati samo unutar transakcije testa.** `create or replace` kroz `psql -f` nad
+  fajlom bez `begin;` ostane komitovan u lokalnoj bazi; sljedeći REST test je zbog toga prijavio
+  cross-tenant pisanje kojeg u migraciji nema. `npx supabase db reset` čisti.
+- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, a `deno` je u
+  `~/.deno/bin` i nije na `PATH`-u — `tool/test_supabase.sh` pretpostavlja oba na `PATH`-u, pa se
+  komande za sada pokreću ručno.
+- Poslije 36 sprint 3 nema više nezatvorenih taskova sa kodom; ostaju 🟡 stavke 28 i 30, koje čekaju
+  dokaz na ekranu, ne kod.
 
 ## Istorija
 
