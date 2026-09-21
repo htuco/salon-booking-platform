@@ -289,7 +289,8 @@ class _Kartica extends ConsumerWidget {
               style: theme.textTheme.bodyMedium,
             ),
           ],
-          if (appointment.employeeName case final name? when name.isNotEmpty) ...[
+          if (appointment.employeeName case final name?
+              when name.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(name, style: theme.textTheme.bodyMedium),
           ],
