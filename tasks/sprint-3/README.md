@@ -14,7 +14,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [30](30-postojeci-ekrani-na-handoff.md) 🟡 | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) ✅ | Kalendar dana | `3c` `3l` | — | 2–3 dana |
 | [32](32-usluge-i-cjenovnik.md) ✅ | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
-| [33](33-osoblje-i-smjene.md) 🟡 | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
+| [33](33-osoblje-i-smjene.md) ✅ | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
 | [35](35-klijenti-i-profil.md) | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
 | [36](36-postavke-lokacije.md) | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
@@ -284,4 +284,21 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > (`Npr. 15,00`). Admin demo (`demo_main.dart`) nema neaktivnu uslugu ni kategoriju, pa se pilula
 > „Neaktivna" i reaktivacija ne vide bez pravog backenda. iOS nije diran.
 
-**33 — Osoblje i smjene (CRUD)** — 🟡 2026-09-21. Pokrenuto na grani `feat/osoblje-i-smjene`. Prvi korak: migracija i pgTAP za upravljanje radnicima i vezama usluga, zatim Dart ugovor i ekran. Još nema dokaza implementacije.
+**33 — Osoblje i smjene (CRUD)** — ✅ 2026-09-21, [PR #55](https://github.com/htuco/salon-booking-platform/pull/55).
+
+`/employees` ima desktop kartice/tabelu i mobilnu listu, editor sa nullable stažom i izborom
+usluga te potvrđenu deaktivaciju/reaktivaciju. Profil i veze idu atomski kroz RPC; direktni
+write grantovi su oduzeti. Radnik nije nalog. Deaktivacija ne otkazuje postojeće termine;
+`appointments.employee_name` čuva historijsko ime bez otvaranja neaktivnog kataloga klijentima.
+
+Dokaz: 328 pgTAP, 19 novih REST, 24 REST izolacije i 57 javnog kataloga PASS; puna lokalna
+Flutter suita, čista analiza/format i web build. Chromium na stvarnom lokalnom stacku prolazi
+CRUD i promjenu statusa na desktopu/telefonu (`docs/screenshots/task-33-*.png`). Namjerno slabiji
+guard obara 7 testova. Flutter i Supabase CI zeleni na `61d8a20` (linkovi u task fajlu).
+
+Review je pronašao stare veze pri refresh-u editora i pretijesan tablet raspored; browser je
+pronašao gubitak deep linka pri učitavanju članstva. Ispravljeno uz regresijske testove.
+Smjene su prikaz postojećeg ponavljajućeg `working_hours`, bez lažnog „kopiraj prošlu sedmicu“.
+Sljedeći je [34](34-radno-vrijeme-i-blokade.md): upisi radnog vremena, pauza i blokada.
+Hostovana migracija i native uređaji nisu provjereni; migracija mora prethoditi novom buildu.
+PR je spreman za ljudski pregled; nije mergan.

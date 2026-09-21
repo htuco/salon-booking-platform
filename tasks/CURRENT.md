@@ -1,37 +1,14 @@
-# Trenutni task: 33 — Osoblje i smjene (CRUD)
-
-[Puni task](sprint-3/33-osoblje-i-smjene.md) · učitan 2026-09-21.
+# Trenutni task
 
 ## Status
 
-U toku — implementacija i lokalne provjere završene; čeka završni CI. Grana `feat/osoblje-i-smjene`, sa ažurnog `main`-a (`8cb470c`). [Draft PR #55](https://github.com/htuco/salon-booking-platform/pull/55).
+Gotov — task 33 (2026-09-21). [PR #55](https://github.com/htuco/salon-booking-platform/pull/55)
+je spreman za pregled. Dokazi i ograničenja: [task 33](sprint-3/33-osoblje-i-smjene.md).
+Sljedeći je [34 — Radno vrijeme, pauze i blokade](sprint-3/34-radno-vrijeme-i-blokade.md).
 
 ## Ciljevi
 
-- [x] Migracija i pgTAP: validirani RPC za kreiranje, izmjenu i deaktivaciju radnika te njegove usluge; oduzeti direktne write grantove.
-- [x] Dokazati tenant izolaciju na svakoj putanji, nullable staž i očuvanje termina pri deaktivaciji.
-- [x] Proširiti Employee i repository/provider ugovore: aktivni katalog za booking, svi radnici za admin i historiju.
-- [x] Implementirati `/employees` po desktop `3g` i mobilnom `3r`, editor i izbor usluga.
-- [x] Provjeriti prikaz smjena iz postojećeg radnog vremena i granicu prema tasku 34.
-- [x] Pokrenuti SQL, Dart i widget provjere, provjeriti ekran i ažurirati dokumentaciju dokazima.
-
-## Dokaz
-
-- pgTAP: 12 fajlova, 328 asercija PASS. Namjerno oslabljen admin guard obara 7 novih asercija; rollback vraća zaštitu.
-- REST osoblje: 19 provjera PASS sa stvarnim JWT-ovima admina A/B i klijenta.
-- Flutter suite: admin 236, client 234 (+1 preskočen), core_api 122, core_domain 80, core_ui 67 testova PASS; dodatni router regresijski test prolazi sa novih 20 ciljnih testova.
-- Chromium sa stvarnim lokalnim backendom: kreiranje, izmjena, deaktivacija, reaktivacija; desktop i telefon snimljeni u docs/screenshots/task-33-*.png.
-- Produkcijska migracija nije deployana; iOS/native uređaj nije provjeren.
-
 ## Napomene
-
-- Task 29 je završen; task 32 je spojen kroz PR #54. Nema blokirajućih zavisnosti.
-- Već postoje `employees`, `employee_services`, `working_hours`, nullable `experience_years`, read-only `EmployeeRepository` i admin provideri. `/employees` je placeholder.
-- Radnik nije korisnički nalog. Ovaj task ne dodjeljuje prava prijave.
-- Aktivni radnici su javni katalog; neaktivni redovi i sve mutacije moraju ostati zaštićeni.
-- `EmployeeRepository.forSalon` trenutno prepušta filtriranje RLS-u; admin vidi i neaktivne. Treba razdvojiti izbor za novu rezervaciju od historije.
-- Smjene koriste postojeći `working_hours`; uređivanje radnog vremena, pauza i blokada pripada tasku 34. Canvas prikazuje sedmične smjene, ali šema trenutno čuva ponavljajući raspored po danu sedmice.
-- Docker daemon je pokrenut; `docker info` potvrđuje server 29.7.2. Supabase stack i SQL testovi još nisu pokrenuti.
 
 ## Istorija
 
@@ -262,3 +239,5 @@ U toku — implementacija i lokalne provjere završene; čeka završni CI. Grana
 - **10 — Client home sa runtime brandingom** (2026-09-11) — `/` je prvi pravi ekran: hero, usluge, tim, radno vrijeme, kontakt i sticky CTA, sve iz `core_ui` komponenti i isključivo iz providera. **Prvi dokaz slikom**: isti web build, dva `SALON_ID`-a, razlika u imenu, bojama (zlatna tamna naspram roze svijetle) i terminologiji ("Zakaži termin" naspram "Rezerviši termin") — `docs/screenshots/task-10-home-*.png`. Dokazano na CI-ju ([run 34637330417](https://github.com/htuco/salon-booking-platform/actions/runs/34637330417)): 165 testova PASS (bilo 140), čista analiza, oba Android APK-a i oba iOS builda. Screenshot je našao grešku koju nijedan test nije mogao: živi status je bio `StatusBadge(tone: info)`, a statusne boje su brand-neutralne, pa je plava mrlja stajala preko oba brenda — sada ide u `primaryContainer`. Kontrast test je usput ispravljen na dva mjesta gdje je mjerio pogrešne parove (tekst na obojenoj površini, CTA usred Material prelaza — 2.13:1 na dugmetu koje je 8.07:1). **Ništa nije pokrenuto na uređaju i nijedan podatak nije došao sa stvarnog backenda** — `demo_main.dart` ih nosi prepisane iz `seed.sql`.
 
 - **32 — Usluge i cjenovnik (2026-09-21, završeno)** — PR #54 spojen u main. RPC CRUD, oduzeti direktni grantovi i snapshot usluge na terminima. Flutter i Supabase CI zeleni na c3762f7. Preostale dorade evidentirane u sprint-3/README.md: Deno REST testovi, run skripte i demo/format cijene.
+
+- **33 — Osoblje i smjene (2026-09-21)** — RPC CRUD, atomske veze usluga, deaktivacija i snapshot imena; desktop/mobilni editor i redovni raspored. 328 pgTAP, 19 REST i Flutter suite PASS; CI zeleni na 61d8a20, PR #55 spreman za pregled. Native/hostovani deploy nisu urađeni. Sljedeći task 34.
