@@ -30,4 +30,4 @@ Salon dodaje i uklanja radnike i određuje ko radi kada.
 
 ## Status
 
-Nije počet.
+U toku (2026-09-21). Grana `feat/osoblje-i-smjene`.

@@ -14,7 +14,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [30](30-postojeci-ekrani-na-handoff.md) 🟡 | Postojeći ekrani na handoff: prijava, Danas, zahtjevi, termini | `3b` `3d` `3j` `3k` `3m` `3n` `3u` | — | 2–3 dana |
 | [31](31-kalendar-dana.md) ✅ | Kalendar dana | `3c` `3l` | — | 2–3 dana |
 | [32](32-usluge-i-cjenovnik.md) ✅ | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
-| [33](33-osoblje-i-smjene.md) | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
+| [33](33-osoblje-i-smjene.md) 🟡 | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
 | [35](35-klijenti-i-profil.md) | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
 | [36](36-postavke-lokacije.md) | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
@@ -283,3 +283,5 @@ ovdje — admin se razvija protiv lokalnog stacka.
 > iznad. U editoru se cijena popuni sa tačkom (`20.00`) a validacijska poruka uči zarez
 > (`Npr. 15,00`). Admin demo (`demo_main.dart`) nema neaktivnu uslugu ni kategoriju, pa se pilula
 > „Neaktivna" i reaktivacija ne vide bez pravog backenda. iOS nije diran.
+
+**33 — Osoblje i smjene (CRUD)** — 🟡 2026-09-21. Pokrenuto na grani `feat/osoblje-i-smjene`. Prvi korak: migracija i pgTAP za upravljanje radnicima i vezama usluga, zatim Dart ugovor i ekran. Još nema dokaza implementacije.

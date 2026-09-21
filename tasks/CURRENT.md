@@ -1,86 +1,29 @@
-# Trenutni task: 32 — Usluge i cjenovnik (CRUD)
+# Trenutni task: 33 — Osoblje i smjene (CRUD)
 
-[Puni task](sprint-3/32-usluge-i-cjenovnik.md) · učitan 2026-09-20.
+[Puni task](sprint-3/33-osoblje-i-smjene.md) · učitan 2026-09-21.
 
 ## Status
 
-Gotovo (2026-09-21). Oba CI joba zelena na `c3762f7`.
+U toku. Grana `feat/osoblje-i-smjene`, sa ažurnog `main`-a (`8cb470c`).
 
 ## Ciljevi
 
-- [x] Napisati migraciju i pgTAP prije ekrana: validirani RPC za kreiranje, izmjenu i deaktivaciju
-      usluge, provjera kroz `private.is_admin`, taksativni execute grantovi i oduzeti direktni
-      `insert`/`update` grantovi nad `services`.
-- [x] Dokazati da admin salona A ne može čitati ni mijenjati uslugu salona B, da klijent/anon ne
-      može pisati, da se usluga sa terminima ne briše i da deaktivacija ne oštećuje postojeće
-      termine ni veze radnik–usluga.
-- [x] Zatvoriti historijski snapshot termina: promjena cijene ne smije prepisati cijenu već
-      zakazanog termina, dok nova cijena i trajanje moraju važiti za buduće rezervacije i
-      availability. Dodati migraciju/backfill i prilagoditi booking RPC ugovor ako je potrebno.
-- [x] Proširiti `core_domain`/`core_api` ugovor za admin čitanje aktivnih i neaktivnih usluga i za
-      RPC mutacije; novac ne slati kroz `double`, te osvježiti sve zavisne providere poslije upisa.
-- [x] Zamijeniti `/services` placeholder ekranom po `3f`/`3p` i bottom sheetom za unos/izmjenu po
-      `3q`, sa loading, praznim, error i inactive stanjem na desktopu i telefonu.
-- [x] Pokriti SQL, repository/provider i widget ponašanje testovima, zatim ažurirati
-      `.claude/docs/security.md` i `supabase/IMPLEMENTATION.md` stvarnim dokazima.
+- [ ] Migracija i pgTAP: validirani RPC za kreiranje, izmjenu i deaktivaciju radnika te njegove usluge; oduzeti direktne write grantove.
+- [ ] Dokazati tenant izolaciju na svakoj putanji, nullable staž i očuvanje termina pri deaktivaciji.
+- [ ] Proširiti Employee i repository/provider ugovore: aktivni katalog za booking, svi radnici za admin i historiju.
+- [ ] Implementirati `/employees` po desktop `3g` i mobilnom `3r`, editor i izbor usluga.
+- [ ] Provjeriti prikaz smjena iz postojećeg radnog vremena i granicu prema tasku 34.
+- [ ] Pokrenuti SQL, Dart i widget provjere, provjeriti ekran i ažurirati dokumentaciju dokazima.
 
 ## Napomene
 
-- Zavisnost [29](sprint-3/29-responsive-shell.md) je ✅ i već je spojena u `main`; task nije
-  blokiran. Task je pokrenut sa svježeg `main`-a (`f901c13`, merge PR-a #53) na grani
-  `feat/usluge-i-cjenovnik`. [PR #54](https://github.com/htuco/salon-booking-platform/pull/54).
-- **Klijent nije osvježavao katalog bez hladnog starta, i to je ušlo u ovaj task.** Greška postoji
-  od taska 27, ali je bila nevidljiva dok se cjenovnik nije mogao mijenjati u radu; izmjena cijena
-  je pretvara u stvarni kvar. `SalonClientApp` je na `availabilityChangesProvider` invalidirao samo
-  `availableSlotsProvider`, a `servicesProvider` nema `autoDispose` — katalog je živio koliko i
-  proces. Gore od zastarjele cijene: deaktivirana usluga ostaje u listi i klijent padne tek na
-  `book_appointment`. Nađeno na Android emulatoru protiv hostovanog projekta, ne testom.
-- Dva testa u `apps/admin/test/calendar_screen_test.dart` **padaju i na `main`-u** — naslijeđeni iz
-  taska 31 (`f66cee3`), nisu iz ovog rada. `_opisBloka` sada umeće status pa očekivani tekst ne
-  odgovara, a drugi test traži „Slobodno" redove koje je 31 namjerno uklonio. Zaslužuju svoju granu.
-- `tool/run_tenant.sh` šalje `--build-name`/`--build-number` u `flutter run`, što Flutter 3.47.4 ne
-  prima — skripta i `tool/run_live_demo.sh client` ne rade. Zaobiđeno direktnim `flutter run`-om;
-  popravka traži i ispravku komentara iznad, pa nije gurnuta u ovaj task.
-- Već postoji `services` tabela, seed za oba salona, `Service` model, read-only
-  `ServiceRepository.forSalon`, `adminServicesProvider`, ruta/navigacijski ulaz `/services` i
-  responsive admin shell. Ruta još namjerno završava na `AdminPlaceholderScreen`.
-- Postojeći repository bira samo javne kolone i ne čita `is_active`. RLS adminu već dopušta i
-  neaktivne redove kroz `staff_manage`, ali ih Dart ugovor ne može razlikovati; admin CRUD treba
-  poseban ili proširen ugovor bez kvarenja anonimnog javnog kataloga.
-- Backend još nema RPC za usluge. `authenticated` danas ima direktne `insert`, `update` i `delete`
-  grantove nad `services`; RLS ograničava salon, ali ne provodi validirani tok. FK iz
-  `appointments` već sprečava brisanje usluge koja ima termin, dok uslugu bez termina admin i
-  dalje može direktno obrisati. Cilj taska je deaktivacija, ne fizičko brisanje.
-- Trajanje termina je već snapshotovano kroz `appointments.start_time`/`end_time`, pa promjena
-  `services.duration_minutes` ne pomjera postojeći termin. Cijena **nije** snapshotovana:
-  `appointments` nosi samo `service_id`, a kartice, detalj i dashboard promet čitaju trenutni
-  `Service.price`. Promjena cijene bi zato retroaktivno promijenila stare termine i metrike —
-  nečekirana DoD stavka traži stvarnu promjenu šeme/booking ugovora, ne samo CRUD ekran.
-- `get_available_slots` i `book_appointment` već čitaju aktuelno `duration_minutes` i samo aktivne
-  usluge, pa će izmjena/deaktivacija prirodno važiti za buduće rezervacije. Test ipak mora dokazati
-  obje strane ugovora: novi slotovi koriste novu vrijednost, postojeći termini ostaju netaknuti.
-- Procjena ostaje 2–3 dana samo ako se snapshot cijene uradi usko u istoj migraciji; bez toga se
-  task ne može zatvoriti po vlastitom DoD-u.
-- **Migracija je primijenjena na hostovani projekat** (`olggovhqwirxamggkwuf`) 2026-09-21 kroz
-  `npx supabase db push --linked`; ledger je prije toga imao tačno migracije 1–13 iz repoa, pa je
-  otišla samo ova jedna. Dokazano upitom, ne porukom CLI-ja: tri snapshot kolone su `not null`, 0
-  od 20 termina bez vrijednosti, 0 neslaganja backfilla, trigger postoji, `authenticated` više
-  **nema** `insert`/`update`/`delete` nad `services` ali zadržava `select`, i sva tri RPC-a su
-  `security definer` sa execute za `authenticated` a bez za `anon`.
-- **Snapshot cijene je dokazan uživo, ne testom.** Cijena usluge „Brada" je kroz admin ekran
-  promijenjena sa 10,00 na 15,00 KM; šest već zakazanih termina je ostalo na **10,00 KM**, a
-  klijentska app na Android emulatoru odmah pokazuje **15 KM** za nove rezervacije. Ovo nijedan
-  Dart test ne može uhvatiti — da trigger ne radi, cijela suite bi i dalje bila zelena.
-- **pgTAP je prošao na CI-ju** (`Supabase tests`, zelen na `c3762f7`). Lokalno se nije moglo
-  pokrenuti — nema Dockera, a MCP je `--read-only` — pa je dokaz iz čistog checkouta jedini koji
-  postoji. Trebalo je tri kruga i **dvije pogrešne dijagnoze**: pad nije bio ni u izolaciji ni u
-  rasporedu nego u `select (f(...)).*`, obliku koji Postgres proširi u `(f()).kol1, (f()).kol2, …`
-  i pozove funkciju **jednom po koloni** — prvi poziv rezerviše slot, drugi ga zatekne zauzetim.
-  Isto je kod `create_service` pravilo desetak usluga umjesto jedne. Obje pogrešne dijagnoze su
-  ostavljene zapisane u testu, da sljedeći ne ide istim putem.
-- DoD je preciziran nakon audita: aktivne usluge salona B su namjerno javni katalog (čita ih i
-  `anon`), pa izolacija može i mora sakriti neaktivne redove i zabraniti sve tuđe mutacije; ne
-  smije sakriti aktivni katalog bez lomljenja klijentske aplikacije.
+- Task 29 je završen; task 32 je spojen kroz PR #54. Nema blokirajućih zavisnosti.
+- Već postoje `employees`, `employee_services`, `working_hours`, nullable `experience_years`, read-only `EmployeeRepository` i admin provideri. `/employees` je placeholder.
+- Radnik nije korisnički nalog. Ovaj task ne dodjeljuje prava prijave.
+- Aktivni radnici su javni katalog; neaktivni redovi i sve mutacije moraju ostati zaštićeni.
+- `EmployeeRepository.forSalon` trenutno prepušta filtriranje RLS-u; admin vidi i neaktivne. Treba razdvojiti izbor za novu rezervaciju od historije.
+- Smjene koriste postojeći `working_hours`; uređivanje radnog vremena, pauza i blokada pripada tasku 34. Canvas prikazuje sedmične smjene, ali šema trenutno čuva ponavljajući raspored po danu sedmice.
+- Docker je instaliran, ali daemon pri početnoj provjeri nije dostupan. SQL dokaz još nije pokrenut.
 
 ## Istorija
 
@@ -309,3 +252,5 @@ Gotovo (2026-09-21). Oba CI joba zelena na `c3762f7`.
 - **08 — `core_api` modeli i repozitoriji** (2026-09-11) — sedam modela u `core_domain` (odluka: [ADR-0006](../docs/adr/0006-modeli-u-core-domain.md)), pet repozitorija i `sealed ApiError` u `core_api`, svi Riverpod provideri; `supabaseClientProvider` prešao iz app-a u `core_api`. Codegen (`freezed`/`json_serializable`) ulazi prvi put, generisani fajlovi **nisu** u gitu. Dokazano na CI-ju ([Flutter 34620424824](https://github.com/htuco/salon-booking-platform/actions/runs/34620424824), [Supabase tests 34619433879](https://github.com/htuco/salon-booking-platform/actions/runs/34619433879)): 97 testova plus 26 REST asercija **bez korisničkog tokena** — javni katalog stvarno radi prije prijave. CI je uhvatio grešku koju lokalna suita nije: codegen treba svakom jobu koji kompajlira, ne samo `analyze`-u.
 - **09 — `core_ui` theme factory** (2026-09-11) — `buildAppTheme` kao jedina funkcija koja pravi `ThemeData`, tokeni (razmaci, radijusi, trajanja, statusne boje kao `ThemeExtension`), šest komponenti, i fallback lanac `salons.primary_color → tenant.yaml → default` u `appThemeProvider`-u; `main.dart` više nema nijedan heks. Generator nosi branding boje u `tenants.g.dart` kao ARGB i validira `#RRGGBB` pri generisanju. Dokazano na CI-ju ([Flutter 34630719984](https://github.com/htuco/salon-booking-platform/actions/runs/34630719984)): **140 testova**, oba APK-a, oba iOS builda. `onPrimary` se bira poređenjem WCAG odnosa, ne pragom luminancije — zlatna `#C6A667` (luminancija 0.42) bi sa naivnim pragom dobila bijeli tekst i 2.6:1. Test u obje teme je našao roze cijenu sa 4.12:1: brand tekst je bio mjeren na `surface`, a kartica stoji na `surfaceContainer`. **Ništa nije pokrenuto na uređaju** — to prvi put traži task 10.
 - **10 — Client home sa runtime brandingom** (2026-09-11) — `/` je prvi pravi ekran: hero, usluge, tim, radno vrijeme, kontakt i sticky CTA, sve iz `core_ui` komponenti i isključivo iz providera. **Prvi dokaz slikom**: isti web build, dva `SALON_ID`-a, razlika u imenu, bojama (zlatna tamna naspram roze svijetle) i terminologiji ("Zakaži termin" naspram "Rezerviši termin") — `docs/screenshots/task-10-home-*.png`. Dokazano na CI-ju ([run 34637330417](https://github.com/htuco/salon-booking-platform/actions/runs/34637330417)): 165 testova PASS (bilo 140), čista analiza, oba Android APK-a i oba iOS builda. Screenshot je našao grešku koju nijedan test nije mogao: živi status je bio `StatusBadge(tone: info)`, a statusne boje su brand-neutralne, pa je plava mrlja stajala preko oba brenda — sada ide u `primaryContainer`. Kontrast test je usput ispravljen na dva mjesta gdje je mjerio pogrešne parove (tekst na obojenoj površini, CTA usred Material prelaza — 2.13:1 na dugmetu koje je 8.07:1). **Ništa nije pokrenuto na uređaju i nijedan podatak nije došao sa stvarnog backenda** — `demo_main.dart` ih nosi prepisane iz `seed.sql`.
+
+- **32 — Usluge i cjenovnik (2026-09-21, završeno)** — PR #54 spojen u main. RPC CRUD, oduzeti direktni grantovi i snapshot usluge na terminima. Flutter i Supabase CI zeleni na c3762f7. Preostale dorade evidentirane u sprint-3/README.md: Deno REST testovi, run skripte i demo/format cijene.
