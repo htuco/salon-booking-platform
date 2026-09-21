@@ -53,13 +53,24 @@ class SalonClientApp extends ConsumerWidget {
       // nema `autoDispose`, pa je katalog živio koliko i proces. Čim je salon dobio ekran za
       // izmjenu cijena, ista rupa znači da klijent staru cijenu vidi do hladnog starta, a
       // deaktiviranu uslugu može otvoriti i pasti tek na `book_appointment`.
+      //
+      // **Task 36 dodaje `salonSettingsProvider` iz istog razloga.** Trigger rotira reviziju i
+      // na `salon_settings`, ali do ovog taska te postavke niko nije mogao promijeniti u radu —
+      // sada `/settings` može. Provider nema `autoDispose`, pa bi bez ovoga klijent do hladnog
+      // starta prikazivao **stari rok otkazivanja**, dok bi `cancel_appointment` provodio novi:
+      // ekran bi nudio otkazivanje, a baza vratila `PT403`.
+      //
+      // `salonProvider` (kontakt podaci) **namjerno nije ovdje**: trigger ne stoji nad `salons`,
+      // pa bi invalidacija bila red koji se nikad ne izvrši. Promijenjen telefon se vidi na
+      // sljedeće čitanje; da to zatreba prije, dodaje se tabela u trigger, ne provider ovdje.
       ref.listen(availabilityChangesProvider(env.salonId), (_, next) {
         if (!next.hasValue) return;
         ref
           ..invalidate(availableSlotsProvider)
           ..invalidate(servicesProvider)
           ..invalidate(employeesProvider)
-          ..invalidate(employeeServiceLinksProvider);
+          ..invalidate(employeeServiceLinksProvider)
+          ..invalidate(salonSettingsProvider);
       });
 
       final sesija = ref.watch(currentAuthSessionProvider);

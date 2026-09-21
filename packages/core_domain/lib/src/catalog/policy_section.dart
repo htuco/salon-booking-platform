@@ -32,7 +32,9 @@ enum PolicyDocument {
 /// **Broj sekcije („01", „02") nije ovdje i ne čuva se u bazi.** Računa se iz pozicije u
 /// spojenoj listi — upisan broj bi se razišao sa prikazanim čim salon doda sekciju iznad.
 ///
-/// **Read-only.** Klijentska app nad obje tabele ima samo `select`; pisanje ide iz admina.
+/// **Klijentska app nad obje tabele ima samo `select`.** Piše se iz admina, i to samo
+/// `salon_policies`: `app_policies` ostaje kod platforme (`super_manage`), pa sekcija sa
+/// [isPlatform] `true` nema put kojim bi je salon promijenio — ni na ekranu ni u bazi.
 @freezed
 abstract class PolicySection with _$PolicySection {
   const factory PolicySection({

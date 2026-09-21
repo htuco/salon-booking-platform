@@ -63,6 +63,9 @@ deno run --allow-env --allow-net supabase/tests/rest_employee_crud.ts
 echo "==> Radno vrijeme i blokade mijenjaju ono sto klijent vidi"
 deno run --allow-env --allow-net supabase/tests/rest_working_hours.ts
 
+echo "==> Postavke lokacije: sto vlasnik snimi, klijent vidi bez novog builda"
+deno run --allow-env --allow-net supabase/tests/rest_postavke_lokacije.ts
+
 echo "==> Push registracija i izolacija"
 deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
 deno test supabase/functions/send-push/handler_test.ts

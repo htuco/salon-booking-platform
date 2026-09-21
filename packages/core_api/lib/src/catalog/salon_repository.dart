@@ -44,6 +44,48 @@ phone, email, instagram_url, facebook_url, vertical_pack_key
     return salonFromRow(row);
   });
 
+  /// Mijenja kontakt podatke salona — `public.update_salon_contact`, samo iz admina.
+  ///
+  /// **Nema `update` nad `salons` iz aplikacije.** Grant je oduzet u tasku 36, pa je ovo
+  /// jedini put; tuđi salon i pozivalac koji nije njegov admin daju istu `42501`.
+  ///
+  /// **Boje, logo, `status`, `plan` i `slug` nisu ovdje i to nije propust.** Branding
+  /// dolazi iz `tenant.yaml` kroz generator — polje za boju u adminu bi napravilo drugi
+  /// izvor istine za isti podatak, i sljedeće generisanje bi ga vratilo na staro.
+  ///
+  /// [facebookUrl] je **stranica salona kao kontakt**, ne prijava Facebookom; ta ne
+  /// postoji (`docs/adr/0011-facebook-login-se-ne-implementira.md`).
+  ///
+  /// Prazan string za opciona polja baza pretvara u `null` — „nema telefona" i „telefon
+  /// je prazan" su isto stanje i ne razdvajaju se ovdje.
+  Future<Salon> updateContact({
+    required String salonId,
+    required String name,
+    required String address,
+    required String city,
+    String description = '',
+    String? phone,
+    String? email,
+    String? instagramUrl,
+    String? facebookUrl,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'update_salon_contact',
+      params: {
+        'p_salon_id': salonId,
+        'p_name': name,
+        'p_address': address,
+        'p_city': city,
+        'p_description': description,
+        'p_phone': phone,
+        'p_email': email,
+        'p_instagram_url': instagramUrl,
+        'p_facebook_url': facebookUrl,
+      },
+    );
+    return salonFromRow(Map<String, dynamic>.from(row as Map));
+  });
+
   /// Galerija salona — `salons.gallery_urls jsonb`, lista URL-ova.
   ///
   /// Zaseban upit, a ne kolona u [byId]: `Salon` je `freezed` model, a `freezed` 3.2.5

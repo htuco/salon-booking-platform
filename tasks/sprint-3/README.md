@@ -17,7 +17,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [33](33-osoblje-i-smjene.md) ✅ | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) ✅ | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
 | [35](35-klijenti-i-profil.md) ✅ | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
-| [36](36-postavke-lokacije.md) | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
+| [36](36-postavke-lokacije.md) 🟡 | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
 
 **Ukupno: ~15–22 radna dana.**
 
@@ -369,3 +369,50 @@ zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji ni
 > 2m35s. Ostalo: **ekran nije viđen uživo**, profil nema svoju adresu (`/clients/<id>` ne radi iz
 > bookmarka), a četiri stvari iz canvasa `3e` namjerno nisu nacrtane sa razlogom u
 > `prototype/admin/SPEC.md`. PR #58 čeka spajanje.
+
+> **36 — Postavke lokacije (🟡, 2026-09-21).** `/settings` je bila zadnja ruta u placeholder petlji;
+> sada nosi osnovne podatke, booking pravila i salonske sekcije pravila. [PR #59](https://github.com/htuco/salon-booking-platform/pull/59),
+> čeka CI.
+>
+> **Nalaz koji je odredio obim: dvije tabele su bile na suprotnim krajevima greške.** Nad `salons`
+> vlasnik nije mogao pisati **uopšte** — postoje samo `public_salons`, `staff_salons` (oba `select`)
+> i `super_salons`, pa je grant iz init migracije bio mrtav. Nad `salon_settings` je grant bio
+> **živ**, uz `staff_manage` koja ga je puštala, pa je direktan `PATCH` prolazio i zaobilazio svaku
+> validaciju. Oba su zatvorena u `rpc`, kao 24/33/34 prije njih, a `staff_manage` je sužena na
+> `staff_read`: politika koja tvrdi više nego što grant dopušta se pogrešno čita.
+>
+> **Kolone su nabrojane u potpisu, ne proslijeđene kroz.** `status`, `plan`, `slug`, boje i logo
+> nisu parametri — branding je `tenant.yaml`, pa bi polje u adminu bilo drugi izvor istine koji
+> sljedeće generisanje pregazi. `timezone`/`language` isto: mijenjaju značenje svih već upisanih
+> `time` vrijednosti, dakle migracija podataka, ne postavka.
+>
+> **`salon_policies` namjerno ostaje bez `rpc`** — jedini takav admin modul. `staff_manage` već daje
+> CRUD uz grant, a mimo postojećih `check` constrainta nema šta da se validira; funkcija bi bila
+> prosljeđivanje koje sakriva politiku. Zapisano u `security.md` da se ne traži `rpc` kojeg nema.
+> `app_policies` se ne dira (ADR-0009), i negativan test taska 21 je ponovljen kroz pravi PostgREST.
+>
+> **DoD o roku otkazivanja je dokazan posljedicom, ne čitanjem**: isti termin i isti klijent prođu
+> kroz `cancel_appointment` dva puta, a između poziva se samo podigne pa spusti rok — `PT403`, pa
+> `cancelled`. REST test dodaje drugu polovinu: promjenu čita **`anon` bez tokena**.
+>
+> Dokazano: **433 pgTAP asercije** u 14 fajlova (novi `014` nosi 48), svih deset REST testova
+> (novi `rest_postavke_lokacije.ts` 19 provjera), `melos run test` **797** testova (admin 278, 10
+> novih za ekran; client 235, jedan novi za invalidaciju postavki),
+> čista analiza i format, generisani fajlovi ažurni. Sabotaže: guard u `update_salon_contact` → 2
+> pale asercije, guard i validacija iz `update_salon_settings` → 12.
+>
+> **Jedini pravi bug koji je task našao je bio u klijentu, ne u adminu.** Trigger rotira reviziju i
+> na `salon_settings` od taska 26, ali `SalonClientApp` je invalidirao samo katalog — rupa se nije
+> mogla vidjeti dok postavke nije bilo moguće promijeniti u radu. Bez toga bi klijent nudio
+> otkazivanje po **starom** roku, a `cancel_appointment` vratio `PT403`. Treći put da ista lista
+> zakaže (32, pa 36), pa je uz nju u `architecture.md` dopisano i zašto `salonProvider` u njoj
+> **ne smije** biti: trigger ne stoji nad `salons`.
+>
+> **Zamka za sljedećeg, iz vlastite greške:** sabotažu pokretati **samo unutar transakcije testa**.
+> `create or replace` kroz `psql -f` nad fajlom bez `begin;` ostane komitovan u bazi, pa je sljedeći
+> REST test prijavio pravo cross-tenant pisanje kojeg u migraciji nema. `supabase db reset` to čisti.
+>
+> Ostalo za sljedećeg: **ekran nije otvoren uživo** (dokaz je widget test na dvije širine plus REST),
+> a četiri stvari iz canvasa `3i` — naslovna fotografija, lista čekanja, obavijesti klijentima i
+> „Pristup" (korisnici i uloge) — nisu u DoD-u i nemaju šemu iza sebe, pa su namjerno izostavljene.
+> Usput vraćen `rest_working_hours.ts` u CI: task 34 ga je upisao samo u `tool/test_supabase.sh`.

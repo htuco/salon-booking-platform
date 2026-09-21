@@ -51,6 +51,7 @@ void main() {
   late StreamController<int> signal;
   late List<double> cjenovnik;
   late int citanja;
+  late int citanjaPostavki;
 
   setUp(() {
     signal = StreamController<int>.broadcast();
@@ -58,6 +59,7 @@ void main() {
     // podigao cijenu kroz admin ekran.
     cjenovnik = [10, 15];
     citanja = 0;
+    citanjaPostavki = 0;
   });
 
   tearDown(() => signal.close());
@@ -77,6 +79,10 @@ void main() {
         final cijena = cjenovnik[citanja.clamp(0, cjenovnik.length - 1)];
         citanja++;
         return [_usluga(cijena)];
+      }),
+      salonSettingsProvider.overrideWith((ref) async {
+        citanjaPostavki++;
+        return const SalonSettings(id: 'st1', salonId: _salonId);
       }),
       // Realtime i push se ne dižu: test ne dira ni mrežu ni Firebase.
       availabilityChangesProvider.overrideWith((ref, salonId) => signal.stream),
@@ -120,6 +126,49 @@ void main() {
     expect(tester.takeException(), isNull);
     // Zatvori Riverpod pretplatu prije cekanja StreamController.close u tearDown.
     // Inace close ceka fake-async event koji se poslije zadnjeg pump-a ne isporuci.
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('signal o promjeni postavki osvježi i booking pravila', (
+    tester,
+  ) async {
+    // **Task 36 je ovo učinio dostižnim.** Trigger u `availability_realtime.sql` rotira
+    // reviziju i na `salon_settings`, ali do `/settings` ekrana te postavke niko nije mogao
+    // promijeniti u radu — pa se rupa nije vidjela. `salonSettingsProvider` nema
+    // `autoDispose`, pa bi bez invalidacije klijent do hladnog starta nudio otkazivanje po
+    // **starom** roku, dok bi `cancel_appointment` provodio novi i vratio `PT403`.
+    // **Postavke se čitaju lijeno** (`auth_config_provider`, ekran termina), ne na Početnoj.
+    // Zato ih test prvo mora pročitati sam — inače bi mjerio da provider bez slušaoca ne radi
+    // ništa, što je tačno i beskorisno. Ovo oponaša korisnika koji je već otvorio svoj termin.
+    final scope = app() as ProviderScope;
+    await tester.pumpWidget(scope);
+    await tester.pump();
+    await tester.pump();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SalonClientApp)),
+    );
+    // Pretplata koja živi kroz cijeli test — bez nje `invalidate` nema koga da probudi.
+    final pretplata = container.listen(salonSettingsProvider, (_, _) {});
+    addTearDown(pretplata.close);
+    await tester.pump();
+
+    final prije = citanjaPostavki;
+    expect(prije, greaterThan(0), reason: 'postavke su pročitane bar jednom');
+
+    signal.add(1);
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      citanjaPostavki,
+      greaterThan(prije),
+      reason:
+          'signal mora ponovo pročitati `salon_settings` — rok otkazivanja se '
+          'mijenja iz admina i vrijedi odmah',
+    );
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });

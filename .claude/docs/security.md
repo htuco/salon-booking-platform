@@ -265,6 +265,44 @@ Dokaz: `013_working_hours_crud.test.sql` (57 asercija) i `rest_working_hours.ts`
 stvarni JWT i PostgREST — skraćeno radno vrijeme, pauza, zatvoren dan i blokada svaki put mijenjaju
 ono što `get_available_slots` vrati klijentu, a direktan `insert` vraća `401/403`).
 
+### Postavke lokacije — task 36
+
+`authenticated` ima samo SELECT nad `salons` i `salon_settings`. Pisanje ide kroz
+`update_salon_contact` i `update_salon_settings`; obje su `security definer` i traže
+`private.is_admin(p_salon_id) is true`.
+
+**Nad `salons` vlasnik do ovog taska nije mogao pisati uopšte** — postojale su samo
+`public_salons`, `staff_salons` (oba `select`) i `super_salons`. Grant iz init migracije je bio
+mrtav i oduzet je, da red ne izgleda kao dozvola koja čeka politiku. **Nad `salon_settings` grant
+je bio živ**, uz `staff_manage` koja ga je puštala: direktan `PATCH` je prolazio i zaobilazio
+svaku validaciju. Grant je oduzet, a `staff_manage` zamijenjena sa `staff_read` (`for select`) —
+politika koja tvrdi više nego što grant dopušta je politika koju sljedeći čitalac pogrešno
+pročita. Vlasnik i dalje mora čitati svoje postavke kad salon nije aktivan, pa `select` ostaje.
+
+**Kolone su nabrojane u potpisu, ne proslijeđene kroz.** `salons` nosi `status`, `plan`, `slug`,
+`vertical_pack_key`, `terminology_override` i boje — sve platformsko. Funkcija koja bi primila red
+i spojila ga preko postojećeg dala bi vlasniku put do svih njih. Branding posebno: boje i logo
+dolaze iz `tenant.yaml` kroz generator, pa bi polje u adminu bilo drugi izvor istine koji sljedeće
+generisanje tiho pregazi. Isto važi za `salon_settings`: `timezone` i `language` mijenjaju značenje
+**svih** već upisanih `time` vrijednosti u `working_hours` i `appointments` — to je migracija
+podataka, ne postavka — a `auth_providers` opisuje koji login uopšte postoji u buildu.
+
+**`salon_policies` je jedini admin modul koji namjerno nema `rpc`.** `staff_manage` već daje CRUD
+uz grant, a mimo `check` constrainta koji stoje (`sort_order > 0`, neprazan naslov i tijelo) nema
+šta da se validira — funkcija bi bila prosljeđivanje koje sakriva politiku umjesto da je pojača.
+Zapisano ovdje da se ne traži `rpc` kojeg nema. **`app_policies` se iz admina ne dira nikad**
+(ADR-0009); negativan test taska 21 to drži i ovaj task ga ponavlja kroz pravi PostgREST.
+
+Dokaz: `014_postavke_lokacije.test.sql` (48 asercija) i `rest_postavke_lokacije.ts` (19 provjera
+kroz stvarni JWT — promjena koju vlasnik snimi čita **`anon`**, bez tokena i bez novog builda, što
+je i cijeli cilj taska). Sabotaža koja guard u `update_salon_contact` oslabi na `true` obara 2
+asercije; uklanjanje guarda i validacije iz `update_salon_settings` obara 12.
+
+**`min_cancel_hours` vrijedi odmah, i to je dokazano posljedicom a ne čitanjem.** `014` isti
+termin i istog klijenta provuče kroz `cancel_appointment` dva puta, a između poziva samo podigne
+pa spusti rok kroz `update_salon_settings`: prvi put `PT403`, drugi put `cancelled`. Rok se čita
+pri **svakom** pozivu, ne pamti se pri rezervaciji.
+
 ### Realtime availability bez otvaranja termina
 
 Klijentski `appointments` stream ne može osvježiti slot nakon **tuđe** rezervacije: politika
@@ -584,6 +622,8 @@ ništa.
 | `007_policies.test.sql` | pravila i politika privatnosti — `anon` čita bez prijave, **`salon_admin` ne može pisati po `app_policies`**, sekcije neaktivnog salona su nevidljive |
 | `rest_delete_account.ts` | brisanje kroz Edge Function sa pravim JWT-om; obrisan identitet dobija **`200` sa praznom listom**, ne `401` — pristup gasi `deleted_at`, ne istek tokena |
 | `rest_admin_login.ts` | **seed admin se stvarno prijavi kroz GoTrue** i vidi samo svoj salon; tuđi `x-salon-id` ne mijenja šta vidi, upis u tuđi salon je `403`, `anon` je `401` |
+| `014_postavke_lokacije.test.sql` | postavke lokacije — grant je granica nad `salons` i `salon_settings`, platformska polja (boja, `slug`, `plan`, zona) ostaju van dohvata vlasnika, i **promjena `min_cancel_hours` odmah mijenja ishod `cancel_appointment`** za isti termin |
+| `rest_postavke_lokacije.ts` | isto kroz PostgREST: direktan `PATCH` pada, a ono što vlasnik snimi čita **`anon` bez tokena** — dokaz da promjena vrijedi bez novog builda |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

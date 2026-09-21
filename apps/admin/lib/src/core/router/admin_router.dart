@@ -13,6 +13,7 @@ import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/more/more_screen.dart';
 import '../../features/services/services_screen.dart';
+import '../../features/settings/settings_screen.dart';
 import '../../features/employees/employees_screen.dart';
 import '../../features/placeholder/admin_placeholder_screen.dart';
 import '../../features/working_hours/working_hours_screen.dart';
@@ -123,6 +124,11 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.workingHours.name,
         builder: (context, state) => const AdminWorkingHoursScreen(),
       ),
+      GoRoute(
+        path: AdminRoute.settings.path,
+        name: AdminRoute.settings.name,
+        builder: (context, state) => const AdminSettingsScreen(),
+      ),
       // Rute koje jos nemaju tijelo. Ostaju kao placeholderi do implementacije.
       //
       // **Task 29 je ovdje obrnuo raniju odluku.** Do njega je vrijedilo „celija koja vodi
@@ -171,6 +177,8 @@ const _napisane = {
   // Task 34. `/calendar/block` i dalje nema svoj ekran, ali vise ne ceka `rpc`: blokada se
   // dodaje sa `/working-hours`, a `prikaziUredjivacBlokade` je spreman i za ulaz iz `3c`.
   AdminRoute.workingHours,
+  // Task 36 — `/settings` je bila zadnja ruta koja je padala u placeholder petlju.
+  AdminRoute.settings,
 };
 
 /// Premoscuje Riverpod provider i `Listenable` koji `go_router` ocekuje.
