@@ -28,7 +28,19 @@ U toku.
 
 - Zavisnost [29](sprint-3/29-responsive-shell.md) je ✅ i već je spojena u `main`; task nije
   blokiran. Task je pokrenut sa svježeg `main`-a (`f901c13`, merge PR-a #53) na grani
-  `feat/usluge-i-cjenovnik`.
+  `feat/usluge-i-cjenovnik`. [PR #54](https://github.com/htuco/salon-booking-platform/pull/54).
+- **Klijent nije osvježavao katalog bez hladnog starta, i to je ušlo u ovaj task.** Greška postoji
+  od taska 27, ali je bila nevidljiva dok se cjenovnik nije mogao mijenjati u radu; izmjena cijena
+  je pretvara u stvarni kvar. `SalonClientApp` je na `availabilityChangesProvider` invalidirao samo
+  `availableSlotsProvider`, a `servicesProvider` nema `autoDispose` — katalog je živio koliko i
+  proces. Gore od zastarjele cijene: deaktivirana usluga ostaje u listi i klijent padne tek na
+  `book_appointment`. Nađeno na Android emulatoru protiv hostovanog projekta, ne testom.
+- Dva testa u `apps/admin/test/calendar_screen_test.dart` **padaju i na `main`-u** — naslijeđeni iz
+  taska 31 (`f66cee3`), nisu iz ovog rada. `_opisBloka` sada umeće status pa očekivani tekst ne
+  odgovara, a drugi test traži „Slobodno" redove koje je 31 namjerno uklonio. Zaslužuju svoju granu.
+- `tool/run_tenant.sh` šalje `--build-name`/`--build-number` u `flutter run`, što Flutter 3.47.4 ne
+  prima — skripta i `tool/run_live_demo.sh client` ne rade. Zaobiđeno direktnim `flutter run`-om;
+  popravka traži i ispravku komentara iznad, pa nije gurnuta u ovaj task.
 - Već postoji `services` tabela, seed za oba salona, `Service` model, read-only
   `ServiceRepository.forSalon`, `adminServicesProvider`, ruta/navigacijski ulaz `/services` i
   responsive admin shell. Ruta još namjerno završava na `AdminPlaceholderScreen`.
