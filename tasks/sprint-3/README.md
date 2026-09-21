@@ -16,7 +16,7 @@ odjeljak „Redoslijed implementacije", uz jedno namjerno odstupanje (v. ispod).
 | [32](32-usluge-i-cjenovnik.md) ✅ | Usluge i cjenovnik — CRUD | `3f` `3p` `3q` | — | 2–3 dana |
 | [33](33-osoblje-i-smjene.md) ✅ | Osoblje i smjene — CRUD | `3g` `3r` | 34 | 2–3 dana |
 | [34](34-radno-vrijeme-i-blokade.md) ✅ | Radno vrijeme, pauze i blokade | `3h` `3s` | — | 2–3 dana |
-| [35](35-klijenti-i-profil.md) | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
+| [35](35-klijenti-i-profil.md) ✅ | Klijenti i profil | `3e` `3o` | — | 1–2 dana |
 | [36](36-postavke-lokacije.md) | Postavke lokacije | `3i` `3t` | — | 1–2 dana |
 
 **Ukupno: ~15–22 radna dana.**
@@ -333,3 +333,39 @@ pauze; oba ispravljena u `3s` rasporedu.
 Ostalo: **radnikov sedmični raspored nema ekran** (RPC ga prima i pgTAP pokriva, ekran uređuje
 salonski sloj), `/calendar/block` je i dalje placeholder ruta ali više ne čeka `rpc`, a „Pravila
 zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji nisu dirani.
+
+> **35 — Klijenti i profil (✅, 2026-09-21).** `/clients` je prestao biti placeholder: desktop `3e`
+> je adresar sa profilom uz listu, telefon `3o` isti redovi kao kartice sa profilom preko liste.
+> Pretraga po imenu i telefonu, kartice „Svi · Redovni · Neaktivni · Nedolasci", profil sa
+> `visit_count`, `no_show_count`, istorijom i bilješkom.
+>
+> **Test prije ekrana je promijenio šta se testira.** `rest_cross_salon_isolation.ts` je već
+> dokazivao četiri od pet puteva iz DoD-a; nedostajali su **puteve koje uvodi baš ovaj ekran** —
+> pretraga po uzorku i **obrnuti** embed `customers → appointments`. Oba su neugodna na isti način:
+> ne traži se tuđi red nego se šalje uzorak. 27 → **42 asercije**.
+>
+> **Migracije nema, i to je nalaz.** `staff_manage` nad `customers` stoji od init migracije, a
+> tabela je **zadržala** `insert`/`update` grant — za razliku od `appointments`/`employees`/
+> `working_hours`, gdje su ih taskovi 24/33/34 oduzeli. Zato je ovo jedini staff repozitorij kod
+> kojeg „samo kroz `rpc`" ne drži grant nego odluka, i to je zapisano u `security.md`.
+>
+> **Pretraga je prvo mjesto gdje korisnikov tekst ulazi u PostgREST izraz** (`or=(...)` razdvaja
+> zarezom, `%`/`_` su džokeri), pa se `,()"` uklanjaju a `%_\` brišu; potpuno očišćen unos daje
+> uzorak koji ne pogađa ništa, ne onaj koji pogađa sve. **„Nema podatka" se ne crta kao nula** —
+> „Potrošeno" broji samo `completed` i izostaje kad nijedan termin ne nosi cijenu.
+>
+> **Revizija je našla zelenu aserciju bez pokrića.** `rls-auditor` je potvrdio da nijedan upit ne
+> prelazi granicu i da izraz nije iskoristiv za injection, ali je našao da je asercija nad `or`
+> izrazom prolazila **iz pogrešnog razloga**: `ensure_customer` ne upisuje `phone`, pa je red u
+> salonu B imao `NULL`, a `NULL ilike ...` je `NULL` — grana po telefonu nije mogla pogoditi ništa
+> ni da RLS ne postoji. Fixture sada daje taj telefon; sabotaža prije popravke nije obarala ništa.
+> Uz to je `"` (citira operand) dodan u sanitizaciju, sa sedam unit testova nad izrazom.
+>
+> Dokazano: **42 asercije** kroz tri JWT-a uz **tri sabotaže**, svih devet REST suita (236
+> asercija), **385 pgTAP PASS**, `melos run test` 786 testova (admin **268**, bilo 247), čista
+> analiza i format. Sabotaža Flutter testa: uklonjen `completed` guard daje 60 umjesto 45.
+>
+> **Oba CI joba zelena na `c3a12cf`** (zadnji commit grane): 3m13s i
+> 2m35s. Ostalo: **ekran nije viđen uživo**, profil nema svoju adresu (`/clients/<id>` ne radi iz
+> bookmarka), a četiri stvari iz canvasa `3e` namjerno nisu nacrtane sa razlogom u
+> `prototype/admin/SPEC.md`. PR #58 čeka spajanje.

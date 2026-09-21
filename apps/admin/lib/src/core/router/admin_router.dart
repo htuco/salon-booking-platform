@@ -8,6 +8,7 @@ import '../../features/appointments/appointment_detail_screen.dart';
 import '../../features/appointments/appointments_screen.dart';
 import '../../features/appointments/new_appointment_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/clients/clients_screen.dart';
 import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/more/more_screen.dart';
@@ -108,6 +109,11 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AdminServicesScreen(),
       ),
       GoRoute(
+        path: AdminRoute.clients.path,
+        name: AdminRoute.clients.name,
+        builder: (context, state) => const AdminClientsScreen(),
+      ),
+      GoRoute(
         path: AdminRoute.employees.path,
         name: AdminRoute.employees.name,
         builder: (context, state) => const AdminEmployeesScreen(),
@@ -160,6 +166,8 @@ const _napisane = {
   AdminRoute.calendar,
   // Task 32.
   AdminRoute.services,
+  // Task 35.
+  AdminRoute.clients,
   // Task 34. `/calendar/block` i dalje nema svoj ekran, ali vise ne ceka `rpc`: blokada se
   // dodaje sa `/working-hours`, a `prikaziUredjivacBlokade` je spreman i za ulaz iz `3c`.
   AdminRoute.workingHours,

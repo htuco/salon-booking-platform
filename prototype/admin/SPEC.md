@@ -24,7 +24,7 @@ smanjivati desktop prikaz.
 | `3b` | Lokacija — Danas | Ciljni izgled postojećeg `/dashboard` ekrana. |
 | `3c` | Kalendar dana | `/calendar`, od taska 31. Kolona po radniku nad zajedničkim modelom `calendar_day.dart`. |
 | `3d` | Zahtjevi za potvrdu | Ciljni pending prikaz unutar postojećih termina. |
-| `3e` | Klijenti i profil | Novi modul; repozitorij i ruta još nisu izdvojeni u admin app. |
+| `3e` | Klijenti i profil | `/clients`, od taska 35. Adresar sa profilom uz listu, nad `StaffCustomerRepository`. |
 | `3f` | Usluge i cjenovnik | Cilj za `/services`; ruta je trenutno placeholder. |
 | `3g` | Osoblje i smjene | `/employees`: kartice radnika, editor i redovni raspored (task 33). |
 | `3h` | Radno vrijeme i pauze | Cilj za `/working-hours`; ruta je trenutno placeholder. |
@@ -39,7 +39,7 @@ smanjivati desktop prikaz.
 | `3l` | Kalendar | Mobilni oblik kalendara — **lista po vremenu**, isti model, ne stisnuta mreža. |
 | `3m` | Zahtjevi | Pending lista i potvrda/odbijanje. |
 | `3n` | Detalj termina | Detalj i postojeće akcije nad terminom. |
-| `3o` | Klijenti | Mobilna lista klijenata. |
+| `3o` | Klijenti | Mobilna lista klijenata — kartice, profil preko liste (task 35). |
 | `3p` | Usluge | Mobilna lista usluga. |
 | `3q` | Uredi uslugu | Bottom sheet za unos/izmjenu usluge. |
 | `3r` | Osoblje i smjene | Mobilno upravljanje osobljem. |
@@ -150,7 +150,7 @@ modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.
 | „Trenutno na platformi: 6 lokacija · 19 majstora" (`3j`) | Zbir preko **svih** salona; `salon_admin` ga po RLS-u ne smije vidjeti, a ekran prijave ga traži neprijavljen | `3a` |
 | Kartica „Slobodno vrijeme" (`3b`), „82%" zauzetosti (`3b`) | Traže kapacitet, tj. smjenu radnika | task 33 |
 | „Otvoreno do 20:00" (`3b`) | Traži radno vrijeme salona | task 34 |
-| „Pretraži klijenta" (`3b`), „Profil", „Zadnji dolasci", „12 dolazaka" (`3d`, `3n`) | Traže modul klijenata | task 35 |
+| „Pretraži klijenta" (`3b`), „Profil", „Zadnji dolasci", „12 dolazaka" (`3d`, `3n`) | Tražili su modul klijenata; on postoji od taska 35, ali te kontrole stoje na **tuđim** ekranima i tamo još nisu uvezane | otvoreno |
 | „najstariji prije 26 min" (`3b`), „prosjek odgovora 8 min" (`3m`), „Zakazano 16.05." (`3n`) | `appointments` nema `created_at` | otvoreno |
 | „Preklapa se s pauzom Amara" (`3d`, `3m`) | Pauze i blokade ne postoje kao podatak | task 34 |
 | „Ponudi drugo vrijeme" (`3d`), „Pomjeri" (`3n`) | Nema RPC putanje za pomjeranje termina; `set_appointment_status` mijenja status, ne vrijeme | otvoreno |
@@ -158,6 +158,10 @@ modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.
 | Fotografije klijenata i lokacije | Placeholderi iz `canvas/assets/`; `customers` i `public.users` nemaju sliku | — |
 | Prekidač `Dan · Sedmica · Mjesec` (`3c`) | Ovaj task je kalendar **dana**; dvije od tri opcije ne bi radile | otvoreno |
 | „Dodaj pauzu", „Zatvori dan" (`3c`) | Oba pišu u `working_hours`; blokada i pauza dobijaju svoj ekran | task 34 |
+| „+ Novi klijent" (`3e`) | Ručni unos ide kroz `upsert_walkin_customer` (task 24) i traži svoj obrazac; dugme koje otvara prazan ekran je gore od praznog mjesta | otvoreno |
+| „342 ukupno · 68 redovnih" (`3e`) | Zbir preko **cijelog** adresara; lista je filtrirana i odrezana na `limit`, pa bi brojka tvrdila ono što upit ne dokazuje. Podnaslov zato broji **prikazane** redove | otvoreno |
+| „Sljedeći termin" u profilu (`3e`) | Traži upit nad budućim terminima klijenta; istorija ide unatrag. Izostavljeno dok ne dobije vlastiti upit | otvoreno |
+| „Zakaži termin" i „Pozovi" u profilu (`3e`) | `tel:` traži `url_launcher` (isti razlog kao `3n`), a zakazivanje iz profila traži predpopunjen `/appointments/new` | otvoreno |
 | Fotografija radnika u zaglavlju kolone (`3c`) | `employees.image_url` je nullable i u seedu prazan — svaka kolona bi nosila slomljenu sliku; stoji inicijal | task 33 |
 
 Uz to su dvije rečenice copy-ja promijenjene jer tvrde ono što proizvod nema: podnaslov prijave

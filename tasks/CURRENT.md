@@ -2,16 +2,50 @@
 
 ## Status
 
-Gotov — task 34 (2026-09-21). [PR #57](https://github.com/htuco/salon-booking-platform/pull/57)
-je otvoren i **čeka spajanje u `main`**. Dokazi i ograničenja:
-[task 34](sprint-3/34-radno-vrijeme-i-blokade.md).
-Sljedeći je [35 — Klijenti i profil](sprint-3/35-klijenti-i-profil.md).
+Gotov — task 35 (2026-09-21). [PR #58](https://github.com/htuco/salon-booking-platform/pull/58)
+je otvoren, **oba CI joba zelena na `c3a12cf`**, i čeka spajanje u `main`. Dokazi i ograničenja:
+[task 35](sprint-3/35-klijenti-i-profil.md).
+Sljedeći je [36 — Postavke lokacije](sprint-3/36-postavke-lokacije.md).
 
 ## Ciljevi
 
 ## Napomene
 
 ## Istorija
+
+- **35 — Klijenti i profil** (2026-09-21) — `/clients` je prestao biti placeholder: desktop `3e` je
+  adresar sa profilom uz listu, telefon `3o` isti redovi kao kartice, profil preko liste. Pretraga
+  po imenu i telefonu, kartice „Svi · Redovni · Neaktivni · Nedolasci", profil sa `visit_count`,
+  `no_show_count`, istorijom i bilješkom. **Redoslijed „test prije ekrana" je promijenio šta se
+  testira**: `rest_cross_salon_isolation.ts` je već dokazivao četiri od pet puteva iz DoD-a, pa mu
+  nije trebao još jedan opšti test nego **puteve koje uvodi baš ovaj ekran** — pretragu po uzorku i
+  **obrnuti** embed `customers → appointments`; oba su neugodna na isti način, jer se ne traži tuđi
+  red nego se šalje uzorak, pa curenje ne bi izgledalo kao napad nego kao klijent koji se pojavio
+  niotkuda (27 → **42 asercije**). **Migracije nema, i to je nalaz a ne propust**: `staff_manage`
+  nad `customers` stoji od init migracije, a tabela je **zadržala** `insert`/`update` grant, za
+  razliku od `appointments` (24), `employees` (33) i `working_hours` (34) — zato je ovo jedini
+  staff repozitorij kod kojeg „samo kroz `rpc`" ne drži grant nego odluka, i to je upisano u
+  `security.md` i `architecture.md`, jer je baš tu sljedeća izmjena najbliža tome da dopiše
+  `insert`. **Pretraga je prvo mjesto u repou gdje korisnikov tekst ulazi u PostgREST izraz** —
+  `or=(...)` razdvaja zarezom, a `%` i `_` su `like` džokeri, pa se `,()"` uklanjaju i `%_\` brišu;
+  potpuno očišćen unos daje uzorak koji **ne pogađa ništa**, ne `*%*` koji pogađa sve. **Četiri
+  stanja koja bi pala na `!`** imaju svoj test: anonimiziran red (task 17), telefonski klijent bez
+  `auth_identity_id`, klijent bez `last_visit_at` i termin bez `employee_name` — svako dobija riječ
+  umjesto crtice. **„Nema podatka" se ne crta kao nula**: „Potrošeno" broji samo `completed`, jer
+  otkazan termin nije prihod, i izostaje kad nijedan ne nosi cijenu. Dokazano: **42 asercije** kroz
+  tri stvarna JWT-a uz **tri sabotaže**, svih **devet** REST suita (236 asercija), **385 pgTAP
+  PASS**, `melos run test` 786 testova u pet paketa (admin **268**, bilo 247), čista analiza i
+  format; sabotaža Flutter testa (uklonjen `completed` guard) daje 60 umjesto 45. **Revizija
+  (`rls-auditor`) je potvrdila da nijedan upit ne prelazi granicu** i da izraz nije iskoristiv za
+  injection, ali je našla da je asercija nad `or` izrazom prolazila **iz pogrešnog razloga**:
+  `ensure_customer` ne upisuje `phone`, pa je red salona B imao `NULL`, a `NULL ilike ...` je
+  `NULL` — grana po telefonu nije mogla pogoditi ništa ni bez RLS-a; popravljen fixture i dodan `"`
+  u sanitizaciju; **oba CI joba su bila zelena i prije te popravke**, što je i poenta nalaza.
+  **Oba joba su zelena i na `c3a12cf`**, zadnjem commitu grane. **Ostalo: ekran nije viđen uživo**
+  ni na webu ni na uređaju, profil nema svoju adresu (`/clients/<id>` ne radi iz bookmarka, isti
+  dug kao `/calendar` za dan), a četiri stvari iz canvasa `3e` namjerno nisu nacrtane, sa razlogom
+  u `prototype/admin/SPEC.md`.
+
 
 - **31 — Kalendar dana** (2026-09-20, ✅) — `/calendar` je prestao biti placeholder: desktop `3c`
   je mreža sa kolonom po radniku nad satnom osom, telefon `3l` ista stvar kao lista po vremenu.

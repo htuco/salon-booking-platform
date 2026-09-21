@@ -16,6 +16,7 @@ import 'catalog/review_repository.dart';
 import 'catalog/salon_repository.dart';
 import 'catalog/service_repository.dart';
 import 'catalog/settings_repository.dart';
+import 'catalog/staff_customer_repository.dart';
 import 'catalog/working_hours_repository.dart';
 import 'vertical/vertical_repository.dart';
 import 'push/push_providers.dart';
@@ -338,6 +339,11 @@ final staffRepositoryProvider = Provider<StaffRepository>(
 /// Termini salona, čitani iz admina.
 final staffAppointmentRepositoryProvider = Provider<StaffAppointmentRepository>(
   (ref) => StaffAppointmentRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Adresar salona, čitan iz admina.
+final staffCustomerRepositoryProvider = Provider<StaffCustomerRepository>(
+  (ref) => StaffCustomerRepository(ref.watch(supabaseClientProvider)),
 );
 
 /// Trenutno prijavljen član osoblja, ili `null`.
