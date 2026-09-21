@@ -16,6 +16,9 @@ void main() {
         'id': '40000000-0000-4000-8000-000000000001',
         'salon_id': '550e8400-e29b-41d4-a716-446655440000',
         'service_id': '10000000-0000-4000-8000-000000000001',
+        'service_name': 'Fade sisanje',
+        'service_price': 25.0,
+        'service_duration_minutes': 40,
         'employee_id': '20000000-0000-4000-8000-000000000001',
         'customer_id': '30000000-0000-4000-8000-000000000001',
         'auth_identity_id': null,
@@ -96,6 +99,8 @@ void main() {
       expect(a.date, const LocalDate(2026, 9, 16));
       expect(a.startTime, const LocalTime(10, 0));
       expect(a.durationMinutes, 40);
+      expect(a.serviceName, 'Fade sisanje');
+      expect(a.servicePrice, 25);
       expect(a.blocksSlot, isTrue);
     });
 

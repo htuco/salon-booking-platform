@@ -13,8 +13,8 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/format/datum.dart';
+import '../../core/format/tekst.dart';
 import '../../core/theme/theme.dart';
-import '../dashboard/dashboard_summary.dart';
 import 'status_pill.dart';
 
 /// Podaci koje kartica ne može izvesti iz samog termina.
@@ -185,8 +185,8 @@ TerminOpis opisTermina(
   final radnik = termin.employeeId == null ? null : radnici[termin.employeeId];
 
   return TerminOpis(
-    usluga: usluga?.name,
+    usluga: termin.serviceName ?? usluga?.name,
     majstor: radnik?.name,
-    cijena: saCijenom ? usluga?.price : null,
+    cijena: saCijenom ? (termin.servicePrice ?? usluga?.price) : null,
   );
 }

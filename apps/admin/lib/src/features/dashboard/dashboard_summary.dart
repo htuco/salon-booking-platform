@@ -63,7 +63,7 @@ class DashboardSazetak {
     var prognoza = 0.0;
 
     for (final termin in termini) {
-      final cijena = cijene[termin.serviceId] ?? 0;
+      final cijena = termin.servicePrice ?? cijene[termin.serviceId] ?? 0;
 
       switch (termin.status) {
         case AppointmentStatus.completed:
@@ -169,25 +169,4 @@ List<ZauzetostRadnika> zauzetostPoRadniku(
       });
 
   return lista;
-}
-
-/// `2h 40m`, `45m`, `0m` — trajanje kako ga canvas piše.
-String trajanjeKratko(int minuta) {
-  final sati = minuta ~/ 60;
-  final ostatak = minuta % 60;
-  if (sati == 0) return '${ostatak}m';
-  if (ostatak == 0) return '${sati}h';
-  return '${sati}h ${ostatak}m';
-}
-
-/// Iznos u konvertibilnim markama, bez decimala kad ih nema.
-///
-/// Cijene u seedu su cijeli brojevi (`15 KM`), ali kolona je `numeric` i salon smije
-/// upisati `12.50`. Zaokruživanje bi u izvještaju o prometu bilo tiha greška.
-String iznosKm(double iznos) {
-  final zaokruzen = iznos.roundToDouble();
-  final tekst = (iznos - zaokruzen).abs() < 0.005
-      ? zaokruzen.toStringAsFixed(0)
-      : iznos.toStringAsFixed(2);
-  return '$tekst KM';
 }

@@ -16,7 +16,8 @@ Salon sam mijenja svoj cjenovnik. Danas usluge postoje samo u seedu i mijenjaju 
 - [ ] Grantovi: `authenticated` nema `insert`/`update` nad `services` — isto kao što od taska 24
       nema nad `appointments`
 - [ ] Usluga se **ne briše** dok ima termine; deaktivira se
-- [ ] pgTAP: admin salona A ne može ni pročitati ni promijeniti uslugu salona B
+- [ ] pgTAP: admin salona A ne može pročitati **neaktivnu** ni promijeniti uslugu salona B;
+      aktivne usluge ostaju javni katalog koji namjerno čita i `anon`
 - [ ] Trajanje i cijena mijenjaju buduću dostupnost, a ne već zakazane termine
 - [ ] `security.md` i `supabase/IMPLEMENTATION.md` ažurirani u istoj promjeni
 
@@ -36,4 +37,4 @@ Salon sam mijenja svoj cjenovnik. Danas usluge postoje samo u seedu i mijenjaju 
 
 ## Status
 
-Nije počet.
+U toku.

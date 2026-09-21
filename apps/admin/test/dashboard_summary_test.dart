@@ -5,6 +5,7 @@
 library;
 
 import 'package:admin/src/features/dashboard/dashboard_summary.dart';
+import 'package:admin/src/core/format/tekst.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,10 +17,12 @@ Appointment _termin({
   String? radnik,
   int sat = 10,
   int trajanje = 40,
+  double? cijena,
 }) => Appointment(
   id: 'a-$status-$sat-$radnik',
   salonId: _salonId,
   serviceId: usluga,
+  servicePrice: cijena,
   employeeId: radnik,
   customerId: 'c1',
   customerName: 'Klijent',
@@ -74,6 +77,16 @@ void main() {
       expect(sazetak.ukupno, 1);
       expect(sazetak.zavrseno, 1);
       expect(sazetak.prometDoSada, 0);
+    });
+
+    test('snapshot cijena ima prednost nad izmijenjenim cjenovnikom', () {
+      final sazetak = DashboardSazetak.izracunaj(
+        [_termin(status: AppointmentStatus.completed, cijena: 20)],
+        const {'s1': 35.0},
+      );
+
+      expect(sazetak.prometDoSada, 20);
+      expect(sazetak.prometPrognoza, 20);
     });
   });
 

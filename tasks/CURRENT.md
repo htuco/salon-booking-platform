@@ -1,21 +1,71 @@
-# Trenutni task
+# Trenutni task: 32 — Usluge i cjenovnik (CRUD)
 
-Nijedan task nije učitan — task 31 je zatvoren. Sljedeći po redu je
-[32 — Usluge i cjenovnik](sprint-3/32-usluge-i-cjenovnik.md), prvi u sprintu koji **nosi backend**:
-nema RPC putanje kojom admin piše uslugu, pa ide migracija i pgTAP prije ekrana.
-Učitaj ga sa `/task load 32`.
+[Puni task](sprint-3/32-usluge-i-cjenovnik.md) · učitan 2026-09-20.
 
 ## Status
 
-Gotov.
+U toku.
 
 ## Ciljevi
 
-—
+- [x] Napisati migraciju i pgTAP prije ekrana: validirani RPC za kreiranje, izmjenu i deaktivaciju
+      usluge, provjera kroz `private.is_admin`, taksativni execute grantovi i oduzeti direktni
+      `insert`/`update` grantovi nad `services`.
+- [ ] Dokazati da admin salona A ne može čitati ni mijenjati uslugu salona B, da klijent/anon ne
+      može pisati, da se usluga sa terminima ne briše i da deaktivacija ne oštećuje postojeće
+      termine ni veze radnik–usluga. **Čeka CI** — `011_service_crud.test.sql` nije izvršen nigdje.
+- [x] Zatvoriti historijski snapshot termina: promjena cijene ne smije prepisati cijenu već
+      zakazanog termina, dok nova cijena i trajanje moraju važiti za buduće rezervacije i
+      availability. Dodati migraciju/backfill i prilagoditi booking RPC ugovor ako je potrebno.
+- [x] Proširiti `core_domain`/`core_api` ugovor za admin čitanje aktivnih i neaktivnih usluga i za
+      RPC mutacije; novac ne slati kroz `double`, te osvježiti sve zavisne providere poslije upisa.
+- [x] Zamijeniti `/services` placeholder ekranom po `3f`/`3p` i bottom sheetom za unos/izmjenu po
+      `3q`, sa loading, praznim, error i inactive stanjem na desktopu i telefonu.
+- [x] Pokriti SQL, repository/provider i widget ponašanje testovima, zatim ažurirati
+      `.claude/docs/security.md` i `supabase/IMPLEMENTATION.md` stvarnim dokazima.
 
 ## Napomene
 
-—
+- Zavisnost [29](sprint-3/29-responsive-shell.md) je ✅ i već je spojena u `main`; task nije
+  blokiran. Task je pokrenut sa svježeg `main`-a (`f901c13`, merge PR-a #53) na grani
+  `feat/usluge-i-cjenovnik`.
+- Već postoji `services` tabela, seed za oba salona, `Service` model, read-only
+  `ServiceRepository.forSalon`, `adminServicesProvider`, ruta/navigacijski ulaz `/services` i
+  responsive admin shell. Ruta još namjerno završava na `AdminPlaceholderScreen`.
+- Postojeći repository bira samo javne kolone i ne čita `is_active`. RLS adminu već dopušta i
+  neaktivne redove kroz `staff_manage`, ali ih Dart ugovor ne može razlikovati; admin CRUD treba
+  poseban ili proširen ugovor bez kvarenja anonimnog javnog kataloga.
+- Backend još nema RPC za usluge. `authenticated` danas ima direktne `insert`, `update` i `delete`
+  grantove nad `services`; RLS ograničava salon, ali ne provodi validirani tok. FK iz
+  `appointments` već sprečava brisanje usluge koja ima termin, dok uslugu bez termina admin i
+  dalje može direktno obrisati. Cilj taska je deaktivacija, ne fizičko brisanje.
+- Trajanje termina je već snapshotovano kroz `appointments.start_time`/`end_time`, pa promjena
+  `services.duration_minutes` ne pomjera postojeći termin. Cijena **nije** snapshotovana:
+  `appointments` nosi samo `service_id`, a kartice, detalj i dashboard promet čitaju trenutni
+  `Service.price`. Promjena cijene bi zato retroaktivno promijenila stare termine i metrike —
+  nečekirana DoD stavka traži stvarnu promjenu šeme/booking ugovora, ne samo CRUD ekran.
+- `get_available_slots` i `book_appointment` već čitaju aktuelno `duration_minutes` i samo aktivne
+  usluge, pa će izmjena/deaktivacija prirodno važiti za buduće rezervacije. Test ipak mora dokazati
+  obje strane ugovora: novi slotovi koriste novu vrijednost, postojeći termini ostaju netaknuti.
+- Procjena ostaje 2–3 dana samo ako se snapshot cijene uradi usko u istoj migraciji; bez toga se
+  task ne može zatvoriti po vlastitom DoD-u.
+- **Migracija je primijenjena na hostovani projekat** (`olggovhqwirxamggkwuf`) 2026-09-21 kroz
+  `npx supabase db push --linked`; ledger je prije toga imao tačno migracije 1–13 iz repoa, pa je
+  otišla samo ova jedna. Dokazano upitom, ne porukom CLI-ja: tri snapshot kolone su `not null`, 0
+  od 20 termina bez vrijednosti, 0 neslaganja backfilla, trigger postoji, `authenticated` više
+  **nema** `insert`/`update`/`delete` nad `services` ali zadržava `select`, i sva tri RPC-a su
+  `security definer` sa execute za `authenticated` a bez za `anon`.
+- **Snapshot cijene je dokazan uživo, ne testom.** Cijena usluge „Brada" je kroz admin ekran
+  promijenjena sa 10,00 na 15,00 KM; šest već zakazanih termina je ostalo na **10,00 KM**, a
+  klijentska app na Android emulatoru odmah pokazuje **15 KM** za nove rezervacije. Ovo nijedan
+  Dart test ne može uhvatiti — da trigger ne radi, cijela suite bi i dalje bila zelena.
+- **pgTAP i dalje nije pokrenut.** Na ovoj mašini nema ni Dockera ni lokalnog `supabase` stacka, a
+  MCP server je `--read-only`. `011_service_crud.test.sql` dokazuje CI job `Supabase tests`, koji
+  se okida na PR jer su dirani `supabase/migrations/**`, `supabase/tests/**` i `packages/core_api/**`.
+  Primijenjena migracija **nije** dokaz da tvrdnje o izolaciji prolaze.
+- DoD je preciziran nakon audita: aktivne usluge salona B su namjerno javni katalog (čita ih i
+  `anon`), pa izolacija može i mora sakriti neaktivne redove i zabraniti sve tuđe mutacije; ne
+  smije sakriti aktivni katalog bez lomljenja klijentske aplikacije.
 
 ## Istorija
 

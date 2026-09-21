@@ -15,7 +15,7 @@ class ServiceRepository {
   final SupabaseClient _client;
 
   static const _columns =
-      'id, salon_id, name, description, category, price, duration_minutes, image_url';
+      'id, salon_id, name, description, category, price, duration_minutes, is_active, image_url';
 
   /// Sve aktivne usluge salona, sortirane **uzlazno** po kategoriji pa po imenu — isti
   /// redoslijed koji ekran prikazuje, da se ne sortira ponovo na klijentu.
@@ -45,6 +45,86 @@ class ServiceRepository {
 
     return servicesFromRows(rows);
   });
+
+  /// Kreira uslugu kroz validirani RPC. [price] je decimalni tekst (`15.00`), ne
+  /// `double`: JSON floating point ne smije biti izvor vrijednosti koja završava u
+  /// Postgres `numeric(10,2)` koloni.
+  Future<Service> create({
+    required String salonId,
+    required String name,
+    required String description,
+    required String category,
+    required String price,
+    required int durationMinutes,
+    String? imageUrl,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'create_service',
+      params: {
+        'p_salon_id': salonId,
+        'p_name': name,
+        'p_description': description,
+        'p_category': category,
+        'p_price': price,
+        'p_duration_minutes': durationMinutes,
+        'p_image_url': imageUrl,
+      },
+    );
+    return serviceFromRpc(row);
+  });
+
+  Future<Service> update({
+    required String salonId,
+    required String serviceId,
+    required String name,
+    required String description,
+    required String category,
+    required String price,
+    required int durationMinutes,
+    String? imageUrl,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'update_service',
+      params: {
+        'p_salon_id': salonId,
+        'p_service_id': serviceId,
+        'p_name': name,
+        'p_description': description,
+        'p_category': category,
+        'p_price': price,
+        'p_duration_minutes': durationMinutes,
+        'p_image_url': imageUrl,
+      },
+    );
+    return serviceFromRpc(row);
+  });
+
+  Future<Service> setActive({
+    required String salonId,
+    required String serviceId,
+    required bool isActive,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'set_service_active',
+      params: {
+        'p_salon_id': salonId,
+        'p_service_id': serviceId,
+        'p_is_active': isActive,
+      },
+    );
+    return serviceFromRpc(row);
+  });
+}
+
+/// PostgREST za `returns public.services` može vratiti mapu ili listu sa jednom mapom,
+/// zavisno od verzije klijenta/content profilea. Oba oblika su isti RPC ugovor.
+@visibleForTesting
+Service serviceFromRpc(dynamic value) {
+  final dynamic row = value is List && value.length == 1 ? value.single : value;
+  if (row is! Map<String, dynamic>) {
+    throw MappingError('Neispravan `services` RPC odgovor');
+  }
+  return servicesFromRows([row]).single;
 }
 
 /// Mapira `services` redove na [Service] — v. `salonFromRow` za razlog izdvajanja.

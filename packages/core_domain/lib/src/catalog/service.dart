@@ -26,6 +26,10 @@ abstract class Service with _$Service {
     required double price,
     @JsonKey(name: 'duration_minutes') required int durationMinutes,
 
+    /// Admin vidi i ugašene redove kroz `staff_manage`; javni katalog ih RLS sakrije.
+    /// Default čuva kompatibilnost sa starijim backendom koji kolonu nije birao.
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
+
     /// Fotografija usluge — 1:1 thumb u redu usluge (`SPEC.md`: 76×76).
     ///
     /// **Nullable namjerno.** Salon koji nema fotografije mora raditi; prazan okvir je
