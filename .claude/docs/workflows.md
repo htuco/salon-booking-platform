@@ -1,5 +1,9 @@
 # Workflows — komande i dokazi
 
+`Supabase tests` koristi `supabase/setup-cli@v3` sa fiksnom npm verzijom `2.117.0`.
+Raniji `@v1` sa `version: latest` mogao je pasti na GitHub Releases API rate limit
+prije starta baze i pgTAP-a; isti CLI je provjeren lokalno sa `npx supabase --version`.
+
 Sve komande se pokreću iz roota repoa osim gdje ne piše drugačije.
 
 ## Preduslovi

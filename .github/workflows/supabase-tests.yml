@@ -43,9 +43,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
+      # v1 + `latest` pita GitHub Releases API i povremeno pada na rate limit
+      # prije nego sto testovi uopste krenu. v3 instalira fiksnu npm verziju.
+      - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.117.0
 
       - uses: denoland/setup-deno@v2
         with:
