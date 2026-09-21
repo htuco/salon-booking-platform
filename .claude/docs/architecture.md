@@ -507,6 +507,17 @@ ručnom unosu salon pretražuje svoj adresar po imenu i telefonu i vidi brojače
 Isti čovjek u dva salona su **dva reda** sa odvojenim brojačima, i to je uslov izolacije, ne
 nedostatak.
 
+Task 35 mu je dodao i repozitorij: `StaffCustomerRepository` (`core_api/src/catalog/`) je admin
+strana `customers`, odvojena od klijentskog `CustomerRepository`-ja iz istog razloga kao
+`StaffAppointmentRepository` — klijentski se oslanja na `x-salon-id` iz `SALON_ID` flavora, a admin
+app taj header nema i ne smije ga imati (ADR-0003).
+
+**Taj repozitorij samo čita, iako grant dozvoljava pisanje.** To je jedini staff repozitorij kod
+kojeg pravilo „samo kroz `rpc`" ne drži grant nego odluka: `customers` je zadržala `insert`/`update`
+(task 24 ga je ostavio da salon ispravi ime), ali ručni unos ide kroz `upsert_walkin_customer`, koji
+uz upis radi normalizaciju telefona i `on conflict do update`. Razlog stoji u `security.md`, jer je
+ovo mjesto gdje bi sljedeća izmjena lako dopisala `insert`.
+
 ## Kalendar dana: podatak odvojen od crtanja (task 31)
 
 `/calendar` je prvi admin ekran koji **ne prikazuje listu reda po red** nego dvodimenzionalan

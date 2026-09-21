@@ -1,54 +1,45 @@
-# Trenutni task: 35 — Klijenti i profil
-
-Puni task: [35 — Klijenti i profil](sprint-3/35-klijenti-i-profil.md). Učitan 2026-09-21.
+# Trenutni task
 
 ## Status
 
-U toku — započet 2026-09-21, grana `feat/klijenti-i-profil`.
+Gotov — task 35 (2026-09-21). [PR #58](https://github.com/htuco/salon-booking-platform/pull/58)
+je otvoren i **čeka zeleni CI pa spajanje u `main`**. Dokazi i ograničenja:
+[task 35](sprint-3/35-klijenti-i-profil.md).
+Sljedeći je [36 — Postavke lokacije](sprint-3/36-postavke-lokacije.md).
 
 ## Ciljevi
 
-- [ ] Staff repozitorij nad `customers` u `core_api` — lista, pretraga po imenu/telefonu, jedan red
-      po `id`-u, i historija dolazaka iz `appointments`
-- [ ] REST test uz postojeći `rest_cross_salon_isolation.ts` koji pokriva **puteve ovog ekrana**:
-      `name=ilike.*` pretragu i obrnuti embed `customers?select=*,appointments(...)`
-- [ ] `/clients` po `3e` — lista sa pretragom, profil sa `visit_count`, `no_show_count` i historijom
-- [ ] Mobilni oblik po `3o`
-- [ ] Profil podnosi klijenta bez imena (anonimiziran) i bez `auth_identity_id` (telefonski)
-
 ## Napomene
 
-**Zavisnost 29 je ✅** (`tasks/sprint-3/README.md`), pa task nije blokiran.
-
-**Dio taska je već isporučen i to mijenja procjenu naniže.** Provjereno u repou:
-
-- `Customer` model **postoji** (`packages/core_domain/lib/src/catalog/customer.dart`, iz taska 24)
-  sa `visitCount`, `noShowCount`, `isWalkin` i `hasPhone`. Ne piše se nanovo.
-- **Migracija nije potrebna za čitanje.** `staff_manage` politika nad `customers` (`for all`,
-  `private.is_admin(salon_id)`) stoji od init migracije, i grantovi su tu — za razliku od
-  `appointments`/`employees`/`working_hours`, gdje su ih taskovi 24/33/34 oduzeli. Ekran čita
-  direktno, bez novog RPC-a.
-- `rest_cross_salon_isolation.ts` (task 15) **već dokazuje** četiri od pet puteva iz DoD-a: direktan
-  upit, po `id`-u, po `auth_identity_id`, i embed `appointments → customers`. Ostaje dopisati ono
-  što ekran stvarno radi, a test ne pokriva: **pretragu** i **obrnuti embed**.
-
-**Zamke:**
-
-- Prag je `>= 300`, ne `>= 400` — PostgREST na dvosmislen embed vraća **300** sa `PGRST201`, i test
-  sa pragom 400 prolazi lažno. Veza se mora **imenovati** (`appointments` ima dva kompozitna FK-a ka
-  `customers`); pomoćnik `ok()` u postojećem testu to već radi kako treba.
-- **`CustomerRepository` je klijentski i ostaje takav** — oslanja se na `x-salon-id`. Admin ide
-  zasebnom klasom po uzoru na `StaffAppointmentRepository` (ADR-0003).
-- `order()` u ovom paketu podrazumijeva **descending**, suprotno od SQL-a — `ascending: true` je
-  obavezan gdje treba rastuće.
-- **Canvas `3e` crta „Potrošeno" i „182 KM ukupno"**, a to nije podatak po sebi: zbir traži cijene
-  održanih termina. `appointments.service_price` postoji kao snapshot (task 32), pa je izvodljivo —
-  ali ako ne uđe, izostavlja se, ne crta se lažna nula (pravilo iz taska 30).
-- Canvas crta i fotografije klijenata i „+ Novi klijent"; `customers` nema sliku, a ručni unos je
-  `upsert_walkin_customer` iz taska 24.
-- `no_show` prag se **ne provodi** — DoD to izričito traži.
-
 ## Istorija
+
+- **35 — Klijenti i profil** (2026-09-21) — `/clients` je prestao biti placeholder: desktop `3e` je
+  adresar sa profilom uz listu, telefon `3o` isti redovi kao kartice, profil preko liste. Pretraga
+  po imenu i telefonu, kartice „Svi · Redovni · Neaktivni · Nedolasci", profil sa `visit_count`,
+  `no_show_count`, istorijom i bilješkom. **Redoslijed „test prije ekrana" je promijenio šta se
+  testira**: `rest_cross_salon_isolation.ts` je već dokazivao četiri od pet puteva iz DoD-a, pa mu
+  nije trebao još jedan opšti test nego **puteve koje uvodi baš ovaj ekran** — pretragu po uzorku i
+  **obrnuti** embed `customers → appointments`; oba su neugodna na isti način, jer se ne traži tuđi
+  red nego se šalje uzorak, pa curenje ne bi izgledalo kao napad nego kao klijent koji se pojavio
+  niotkuda (27 → **40 asercija**). **Migracije nema, i to je nalaz a ne propust**: `staff_manage`
+  nad `customers` stoji od init migracije, a tabela je **zadržala** `insert`/`update` grant, za
+  razliku od `appointments` (24), `employees` (33) i `working_hours` (34) — zato je ovo jedini
+  staff repozitorij kod kojeg „samo kroz `rpc`" ne drži grant nego odluka, i to je upisano u
+  `security.md` i `architecture.md`, jer je baš tu sljedeća izmjena najbliža tome da dopiše
+  `insert`. **Pretraga je prvo mjesto u repou gdje korisnikov tekst ulazi u PostgREST izraz** —
+  `or=(...)` razdvaja zarezom, a `%` i `_` su `like` džokeri, pa se `,()` uklanjaju i `%_\` brišu;
+  potpuno očišćen unos daje uzorak koji **ne pogađa ništa**, ne `*%*` koji pogađa sve. **Četiri
+  stanja koja bi pala na `!`** imaju svoj test: anonimiziran red (task 17), telefonski klijent bez
+  `auth_identity_id`, klijent bez `last_visit_at` i termin bez `employee_name` — svako dobija riječ
+  umjesto crtice. **„Nema podatka" se ne crta kao nula**: „Potrošeno" broji samo `completed`, jer
+  otkazan termin nije prihod, i izostaje kad nijedan ne nosi cijenu. Dokazano: **40 asercija** kroz
+  tri stvarna JWT-a uz **dvije sabotaže**, svih **devet** REST suita (234 asercije), **385 pgTAP
+  PASS**, `melos run test` 779 testova u pet paketa (admin **268**, bilo 247), čista analiza i
+  format; sabotaža Flutter testa (uklonjen `completed` guard) daje 60 umjesto 45. **Ostalo: CI nije
+  potvrđen** (PR #58 otvoren), **ekran nije viđen uživo** ni na webu ni na uređaju, profil nema
+  svoju adresu (`/clients/<id>` ne radi iz bookmarka, isti dug kao `/calendar` za dan), a četiri
+  stvari iz canvasa `3e` namjerno nisu nacrtane, sa razlogom u `prototype/admin/SPEC.md`.
+
 
 - **31 — Kalendar dana** (2026-09-20, ✅) — `/calendar` je prestao biti placeholder: desktop `3c`
   je mreža sa kolonom po radniku nad satnom osom, telefon `3l` ista stvar kao lista po vremenu.

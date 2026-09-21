@@ -453,6 +453,34 @@ kolone su do sada bile mrtve. **Prag („tri nedolaska u šest mjeseci") namjern
 je pravilo vertikale (`vertical.features.noShowTracking`) i traži vlastitu odluku u Sprintu 3.
 Brojač se puni sada da statistika ne počne od nule kad ekran dođe.
 
+**Task 35 je dao brojačima čitaoca, ali ne i prag.** `/clients` prikazuje `visit_count` i
+`no_show_count` u profilu i nudi karticu „Nedolasci", i tu staje: filter *pokazuje* ko ne dolazi,
+ne sprječava ga ni u čemu. Zabrana zakazivanja i dalje ne postoji nigdje, jer je to pravilo
+vertikale. Razlika je važna pri čitanju koda — ekran koji broji nedolaske lako se pročita kao
+ekran koji ih provodi.
+
+### Adresar iz admina — samo čitanje, i zašto pretraga traži pažnju
+
+`customers` je **zadržala** `insert`/`update` grant za `authenticated` (task 24 ga je ostavio da
+salon ispravi ime i zabilježi napomenu), za razliku od `appointments`, `employees` i
+`working_hours`, gdje su ih taskovi 24/33/34 oduzeli. Uprkos tome `StaffCustomerRepository` nema
+nijednu metodu koja piše: ručni unos ide kroz `upsert_walkin_customer`, koji uz upis radi i
+normalizaciju telefona i `on conflict do update` po `unique(salon_id, phone)`. Direktan `insert`
+bi zaobišao oboje i napravio duplikat koji se poslije ne da spojiti.
+
+**Pretraga je prvo mjesto u ovom repou gdje korisnikov tekst ulazi u PostgREST izraz.** `or=(...)`
+razdvaja uslove **zarezom**, pa ime sa zarezom raspadne izraz u dva uslova — u najboljem slučaju
+`PGRST100`, u najgorem uslov koji pretraga nije tražila. Uz to su `%` i `_` `like` džokeri, pa bi
+neočišćen `_` pogađao bilo koji znak i pretraga bi izgledala kao da vraća nasumične ljude. Zato se
+`,`, `(`, `)` uklanjaju, a `%`, `_` i `\` brišu; unos koji se sav očisti daje uzorak koji **ne
+pogađa ništa**, ne `*%*` koji pogađa sve. RLS ovo ionako presijeca na salon, ali izraz koji se da
+razbiti je pogrešna navika bez obzira na to što je iza njega politika.
+
+Istorija klijenta je **zaseban upit**, ne embed: `customers?select=*,appointments(...)` je
+dvosmislen jer veza ima dva kompozitna FK-a, pa PostgREST vraća **300** sa `PGRST201`. Imenovana
+veza radi, i baš nju testira `rest_cross_salon_isolation.ts`, tačno onako kako bi je napisao neko
+ko je pročitao poruku o grešci.
+
 `cancel_reason` nosi obrazloženje **svake** akcije, ne samo otkazivanja: kolona je imenovana po
 prvom slučaju, a odbijanje („radnik na bolovanju") i no-show („nije se pojavio") su isti podatak —
 zašto termin nije održan.
@@ -543,7 +571,7 @@ ništa.
 | `rest_public_catalog.ts` | katalog radi **bez** tokena, sa kolonama koje `core_api` stvarno šalje |
 | `rest_customer_upsert.ts` | cijeli put app-e: prijava → identitet → klijent → termin → HTTP 409 |
 | `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
-| `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header |
+| `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header — od taska 35 i kroz **pretragu po uzorku** i **obrnuti embed** `customers → appointments` (40 asercija) |
 | `005_delete_my_account.test.sql` | brisanje naloga — anonimizacija u **oba** salona, otkazivanje budućih termina, gašenje pristupa, trigger ne uskrsava nalog |
 | `007_policies.test.sql` | pravila i politika privatnosti — `anon` čita bez prijave, **`salon_admin` ne može pisati po `app_policies`**, sekcije neaktivnog salona su nevidljive |
 | `rest_delete_account.ts` | brisanje kroz Edge Function sa pravim JWT-om; obrisan identitet dobija **`200` sa praznom listom**, ne `401` — pristup gasi `deleted_at`, ne istek tokena |
