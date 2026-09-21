@@ -65,7 +65,27 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - `appointments.employee_name` čuva ime pri rezervaciji. Trigger ne vjeruje payload-u;
   `employee_id=null` daje NULL ime. Postojeće termine migracija popunjava trenutnim imenom.
 - Raspored ostaje ponavljajući `working_hours`, radnikov red nadjačava salonski. Task 33
-  prikazuje raspored; uređivanje radnog vremena i blokada ostaje tasku 34.
+  prikazuje raspored; uređivanje radnog vremena i blokada je task 34 (v. ispod).
+
+## Radno vrijeme, pauze i blokade (task 34)
+
+- `set_working_hours(salon_id, days, employee_id=null)` prima **tačno sedam** `working_hours_input`
+  zapisa `(day_of_week, start_time, end_time, break_start_time, break_end_time, is_closed)` i vraća
+  snimljene redove. `employee_id=null` je salonski raspored; postavljen je radnikov, koji ga
+  nadjačava po polju.
+- **Sedam dana je obavezno jer engine čita odsustvo reda kao zatvoreno**, ne kao „nije podešeno".
+  Odbijaju se i pogrešna dužina i sedmica sa duplikatom dana. Upis je upsert, pa ID-evi redova
+  prežive izmjenu; zatvoren dan se snima bez pauze.
+- `create_blocked_slot(salon_id, date, start_time, end_time, reason=null, employee_id=null)` i
+  `delete_blocked_slot(salon_id, blocked_slot_id)`. Prazan razlog postaje NULL. Blokada bez radnika
+  pogađa cijeli salon.
+- `working_hours_conflicts(salon_id, employee_id, days)` i `blocked_slot_conflicts(salon_id, date,
+  start_time, end_time, employee_id=null)` su `stable` funkcije **čitanja**: vraćaju buduće termine
+  koji bi ispali iz novog rasporeda ili pali pod blokadu. Postojeći termin se **ne briše i ne
+  pomjera** — pozivalac ih prikazuje prije upisa. Prva vraća i `reason`
+  (`Dan je zatvoren` / `Van radnog vremena` / `Unutar pauze`), druga ne.
+- Direktni INSERT/UPDATE/DELETE grantovi nad `working_hours` i `blocked_slots` su oduzeti
+  `authenticated` roli; ostao je samo SELECT.
 
 ## Push ugovor (task 25)
 

@@ -14,6 +14,7 @@ import '../../features/more/more_screen.dart';
 import '../../features/services/services_screen.dart';
 import '../../features/employees/employees_screen.dart';
 import '../../features/placeholder/admin_placeholder_screen.dart';
+import '../../features/working_hours/working_hours_screen.dart';
 
 /// Rute admin aplikacije, po `docs/01-mvp-spec.md` §12.
 ///
@@ -111,6 +112,11 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.employees.name,
         builder: (context, state) => const AdminEmployeesScreen(),
       ),
+      GoRoute(
+        path: AdminRoute.workingHours.path,
+        name: AdminRoute.workingHours.name,
+        builder: (context, state) => const AdminWorkingHoursScreen(),
+      ),
       // Rute koje jos nemaju tijelo. Ostaju kao placeholderi do implementacije.
       //
       // **Task 29 je ovdje obrnuo raniju odluku.** Do njega je vrijedilo „celija koja vodi
@@ -150,11 +156,13 @@ const _napisane = {
   AdminRoute.appointmentDetails,
   // Task 29.
   AdminRoute.more,
-  // Task 31. `/calendar/block` **ostaje placeholder** — blokada je pisanje, a `rpc` za nju
-  // dolazi tek u tasku 34.
+  // Task 31.
   AdminRoute.calendar,
   // Task 32.
   AdminRoute.services,
+  // Task 34. `/calendar/block` i dalje nema svoj ekran, ali vise ne ceka `rpc`: blokada se
+  // dodaje sa `/working-hours`, a `prikaziUredjivacBlokade` je spreman i za ulaz iz `3c`.
+  AdminRoute.workingHours,
 };
 
 /// Premoscuje Riverpod provider i `Listenable` koji `go_router` ocekuje.
