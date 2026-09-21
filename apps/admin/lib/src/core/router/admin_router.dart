@@ -12,6 +12,7 @@ import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/more/more_screen.dart';
 import '../../features/services/services_screen.dart';
+import '../../features/employees/employees_screen.dart';
 import '../../features/placeholder/admin_placeholder_screen.dart';
 
 /// Rute admin aplikacije, po `docs/01-mvp-spec.md` §12.
@@ -31,7 +32,9 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
       // **ne smije** se tumaciti kao „nije prijavljen". Bez ovoga bi svako osvjezavanje
       // stranice na webu bacilo prijavljenog admina na login, pa ga vratilo — treptaj koji
       // izgleda kao da je sesija istekla.
-      final stanje = ref.watch(currentStaffProvider);
+      // refreshListenable ponovo evaluira guard; watch bi rekonstruisao router i
+      // izgubio deep link kada asinhrono ucitavanje clanstva zavrsi.
+      final stanje = ref.read(currentStaffProvider);
       if (stanje.isLoading) return null;
 
       final clan = stanje.valueOrNull;
@@ -103,8 +106,12 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         name: AdminRoute.services.name,
         builder: (context, state) => const AdminServicesScreen(),
       ),
-      // Rute koje jos nemaju tijelo. Ostaju kao placeholderi da ulaz postoji kad ih
-      // Sprint 3 napise.
+      GoRoute(
+        path: AdminRoute.employees.path,
+        name: AdminRoute.employees.name,
+        builder: (context, state) => const AdminEmployeesScreen(),
+      ),
+      // Rute koje jos nemaju tijelo. Ostaju kao placeholderi do implementacije.
       //
       // **Task 29 je ovdje obrnuo raniju odluku.** Do njega je vrijedilo „celija koja vodi
       // na placeholder je gora od celije koje nema", pa navigacija nije nudila nijednu
@@ -133,6 +140,7 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
 
 /// Rute koje imaju pravo tijelo — ostale dobiju placeholder iz petlje iznad.
 const _napisane = {
+  AdminRoute.employees,
   AdminRoute.login,
   AdminRoute.dashboard,
   AdminRoute.appointments,

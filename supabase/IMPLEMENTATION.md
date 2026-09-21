@@ -53,6 +53,20 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Additional notification statuses queued/sending/logged distinguish retry/dedup state and fake delivery from a real sent FCM message. Additional attempts/error/claimed_at fields support a recoverable scheduler.
 - The initial schema stores pending_expires_at and buffer_minutes per appointment to let booking logic preserve expiry and buffer semantics even if salon defaults later change.
 - Staff device ownership uses staff_user_id as well as the per-salon device row. Global Auth identities are not needed by admin push consumers.
+## Osoblje (task 33)
+
+- `create_employee(salon_id,name,role,bio,experience_years,service_ids,image_url)` i
+  `update_employee(salon_id,employee_id,name,role,bio,experience_years,service_ids,image_url)`
+  vraćaju jedan `employees` red. Profil i zamjena veza su jedna transakcija.
+- `experience_years` je nullable (0–80 kada postoji), ime je obavezno (do 120 znakova),
+  `service_ids=[]` uklanja sve veze; NULL lista i tuđi/nepostojeći ID-evi su odbijeni.
+- `set_employee_active(salon_id,employee_id,is_active)` čuva termine, veze i radno vrijeme.
+  Direktni INSERT/UPDATE/DELETE grantovi nad radnicima i vezama su oduzeti authenticated roli.
+- `appointments.employee_name` čuva ime pri rezervaciji. Trigger ne vjeruje payload-u;
+  `employee_id=null` daje NULL ime. Postojeće termine migracija popunjava trenutnim imenom.
+- Raspored ostaje ponavljajući `working_hours`, radnikov red nadjačava salonski. Task 33
+  prikazuje raspored; uređivanje radnog vremena i blokada ostaje tasku 34.
+
 ## Push ugovor (task 25)
 
 `register_device(salon, installation_uuid, secret, platform, fcm_token, staff)` vraća

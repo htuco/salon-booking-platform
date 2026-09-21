@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:admin/main.dart';
 import 'package:admin/src/core/env/app_env.dart';
 import 'package:admin/src/core/router/admin_router.dart';
@@ -43,6 +45,30 @@ Widget _app(ProviderContainer container) => UncontrolledProviderScope(
 );
 
 void main() {
+  testWidgets('Asinhrona prijava cuva isti router i deep link', (tester) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue = '/employees';
+    addTearDown(
+      tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+    );
+    final signal = StreamController<StaffMember?>();
+    final container = ProviderContainer(
+      overrides: [
+        adminEnvProvider.overrideWithValue(_env),
+        currentStaffProvider.overrideWith((ref) => signal.stream),
+      ],
+    );
+    await tester.pumpWidget(_app(container));
+    await tester.pump();
+    final router = container.read(adminRouterProvider);
+    signal.add(_vlasnik);
+    await tester.pumpAndSettle();
+    expect(identical(container.read(adminRouterProvider), router), isTrue);
+    expect(router.state.uri.path, '/employees');
+    await tester.pumpWidget(const SizedBox.shrink());
+    container.dispose();
+    unawaited(signal.close());
+    await tester.pump();
+  });
   test('rute prate 01 §12', () {
     // Prepisano iz specifikacije, ne iz enuma — inace test potvrdjuje sam sebe.
     //
@@ -116,10 +142,9 @@ void main() {
     await tester.pumpWidget(_app(container));
     await tester.pumpAndSettle();
 
-    // Ruta jos nema tijelo (Sprint 3), ali ulaz postoji i URL se cuva — inace bi
-    // podijeljena veza tiho odvela na dashboard.
+    // Task 33 zamjenjuje placeholder pravim ekranom; deep link ostaje sacuvan.
     expect(container.read(adminRouterProvider).state.uri.path, '/employees');
-    expect(find.text(AdminRoute.employees.title), findsNWidgets(2));
+    expect(find.text('Osoblje'), findsWidgets);
   });
 
   testWidgets('dok se sesija cita, korisnik se ne izbacuje na login', (

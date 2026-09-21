@@ -4,16 +4,24 @@
 
 ## Status
 
-U toku. Grana `feat/osoblje-i-smjene`, sa ažurnog `main`-a (`8cb470c`). [Draft PR #55](https://github.com/htuco/salon-booking-platform/pull/55).
+U toku — implementacija i lokalne provjere završene; čeka završni CI. Grana `feat/osoblje-i-smjene`, sa ažurnog `main`-a (`8cb470c`). [Draft PR #55](https://github.com/htuco/salon-booking-platform/pull/55).
 
 ## Ciljevi
 
-- [ ] Migracija i pgTAP: validirani RPC za kreiranje, izmjenu i deaktivaciju radnika te njegove usluge; oduzeti direktne write grantove.
-- [ ] Dokazati tenant izolaciju na svakoj putanji, nullable staž i očuvanje termina pri deaktivaciji.
-- [ ] Proširiti Employee i repository/provider ugovore: aktivni katalog za booking, svi radnici za admin i historiju.
-- [ ] Implementirati `/employees` po desktop `3g` i mobilnom `3r`, editor i izbor usluga.
-- [ ] Provjeriti prikaz smjena iz postojećeg radnog vremena i granicu prema tasku 34.
-- [ ] Pokrenuti SQL, Dart i widget provjere, provjeriti ekran i ažurirati dokumentaciju dokazima.
+- [x] Migracija i pgTAP: validirani RPC za kreiranje, izmjenu i deaktivaciju radnika te njegove usluge; oduzeti direktne write grantove.
+- [x] Dokazati tenant izolaciju na svakoj putanji, nullable staž i očuvanje termina pri deaktivaciji.
+- [x] Proširiti Employee i repository/provider ugovore: aktivni katalog za booking, svi radnici za admin i historiju.
+- [x] Implementirati `/employees` po desktop `3g` i mobilnom `3r`, editor i izbor usluga.
+- [x] Provjeriti prikaz smjena iz postojećeg radnog vremena i granicu prema tasku 34.
+- [x] Pokrenuti SQL, Dart i widget provjere, provjeriti ekran i ažurirati dokumentaciju dokazima.
+
+## Dokaz
+
+- pgTAP: 12 fajlova, 328 asercija PASS. Namjerno oslabljen admin guard obara 7 novih asercija; rollback vraća zaštitu.
+- REST osoblje: 19 provjera PASS sa stvarnim JWT-ovima admina A/B i klijenta.
+- Flutter suite: admin 236, client 234 (+1 preskočen), core_api 122, core_domain 80, core_ui 67 testova PASS; dodatni router regresijski test prolazi sa novih 20 ciljnih testova.
+- Chromium sa stvarnim lokalnim backendom: kreiranje, izmjena, deaktivacija, reaktivacija; desktop i telefon snimljeni u docs/screenshots/task-33-*.png.
+- Produkcijska migracija nije deployana; iOS/native uređaj nije provjeren.
 
 ## Napomene
 

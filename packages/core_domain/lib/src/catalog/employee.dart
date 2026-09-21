@@ -15,6 +15,7 @@ abstract class Employee with _$Employee {
     required String id,
     @JsonKey(name: 'salon_id') required String salonId,
     required String name,
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
 
     /// Titula kako je salon napisao ("Barber", "Stilistica") — slobodan tekst, ne
     /// `staff_role` enum iz `users`.

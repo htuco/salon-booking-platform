@@ -87,6 +87,11 @@ završi u arhivama (GH Archive, Software Heritage) koje vraćanje na private ne 
 
 ## Generatori
 
+Task 33 dodaje `deno run --allow-env --allow-net supabase/tests/rest_employee_crud.ts` u
+`tool/test_supabase.sh` i `Supabase tests` CI. Isti lokalni env kao ostali REST testovi;
+skripta odbija nelokalni backend i čisti samo vlastite fixture redove.
+
+
 ```sh
 dart run tool/gen_flavors.dart            # Gradle flavori, iOS xcconfig, tenants.g.dart
 dart run tool/gen_flavors.dart --check    # padne ako je generisano zastarjelo (isto što radi CI)

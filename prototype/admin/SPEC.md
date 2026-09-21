@@ -26,7 +26,7 @@ smanjivati desktop prikaz.
 | `3d` | Zahtjevi za potvrdu | Ciljni pending prikaz unutar postojećih termina. |
 | `3e` | Klijenti i profil | Novi modul; repozitorij i ruta još nisu izdvojeni u admin app. |
 | `3f` | Usluge i cjenovnik | Cilj za `/services`; ruta je trenutno placeholder. |
-| `3g` | Osoblje i smjene | Cilj za `/employees`; ruta je trenutno placeholder. |
+| `3g` | Osoblje i smjene | `/employees`: kartice radnika, editor i redovni raspored (task 33). |
 | `3h` | Radno vrijeme i pauze | Cilj za `/working-hours`; ruta je trenutno placeholder. |
 | `3i` | Postavke lokacije | Cilj za `/settings`; ruta je trenutno placeholder. |
 | `3j` | Prijava | Vizuelni cilj za postojeći `/login`; auth ostaje Supabase email+password. |
@@ -177,6 +177,13 @@ je gori od rasporeda sa kolonom viška. Tu kolonu dobija i termin čiji radnik v
 `3n` crta ekran sa vlastitim zaglavljem i trakom radnji u dnu, a i adresa mora raditi iz bookmarka.
 
 ## Redoslijed implementacije
+
+Task 33 prikazuje stvarni ponavljajući raspored po danima iz `working_hours`, sa salonskim
+fallbackom. Canvasovo „Kopiraj prošlu sedmicu“, sedmični broj termina/sati i oznaka „u smjeni“
+nisu uvedeni kao lažne vrijednosti: nema datiranih smjena. Uređivanje rasporeda ostaje tasku 34.
+Kartice prelaze na manje kolona prema raspoloživoj širini i veličini fonta; tabela smjena na
+uskim desktop prozorima prelazi u listu, kao na telefonu. Editor je scrollable bottom sheet.
+
 
 1. Centralizovati admin temu i fontove.
 2. Prevesti postojeće `/login`, `/dashboard` i `/appointments` ekrane na handoff bez promjene

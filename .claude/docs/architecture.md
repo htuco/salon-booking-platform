@@ -540,6 +540,20 @@ neoverride-ovan provider baca `UnimplementedError` tek pri otvaranju ekrana, ne 
 Zato `apps/admin` ima svoje `adminServicesProvider`, `adminEmployeesProvider` i
 `adminEmployeeLinksProvider`, koji salon uzimaju iz `adminSalonIdProvider` (tj. iz
 `StaffMember.salonId`). Svaki sljedeći admin ekran koji treba katalog ide istim putem.
+## Osoblje i historija (task 33)
+
+`EmployeeRepository.forSalon` podrazumijevano čita aktivni katalog. Admin koristi
+`includeInactive: true` pod postojećim RLS-om radi editora i historije, a izbor radnika za
+novi termin dodatno isključuje neaktivne. `EmployeeActions` jednim RPC pozivom snima profil
+i usluge i invalidira admin katalog/veze; status je zasebna potvrđena radnja.
+Editor ne prihvata stare veze dok traje refresh. Smjene čita iz postojećeg provider-a
+radnog vremena i `workingHoursFor`, bez računanja availability u ekranu.
+
+`Appointment.employeeName` je snapshot, pa klijentska historija ne zavisi od aktivnog
+kataloga. Admin kartica/detalj daje prednost snapshotu, uz fallback za stariji backend.
+Router čita auth stanje kroz `ref.read`; `refreshListenable` ponavlja guard bez
+rekonstrukcije routera i gubitka direktne adrese pri asinhronom učitavanju članstva.
+
 ## Push životni ciklus
 
 `core_api/src/push/` drži registraciju instalacije i FCM životni ciklus, zajednički za oba app-a.

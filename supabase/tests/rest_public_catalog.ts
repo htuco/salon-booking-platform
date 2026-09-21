@@ -68,7 +68,7 @@ async function serviceRequest(path: string, options: RequestInit = {}) {
 const SALON_COLUMNS =
   "id,name,slug,description,logo_url,cover_image_url,primary_color,secondary_color,theme,address,city,phone,email,instagram_url,facebook_url,vertical_pack_key";
 const SERVICE_COLUMNS = "id,salon_id,name,description,category,price,duration_minutes,image_url";
-const EMPLOYEE_COLUMNS = "id,salon_id,name,role,bio,image_url,experience_years";
+const EMPLOYEE_COLUMNS = "id,salon_id,name,role,bio,image_url,experience_years,is_active";
 const EMPLOYEE_SERVICE_COLUMNS = "id,salon_id,employee_id,service_id";
 const WORKING_HOURS_COLUMNS =
   "id,salon_id,employee_id,day_of_week,start_time,end_time,break_start_time,break_end_time,is_closed";

@@ -15,20 +15,68 @@ class EmployeeRepository {
   final SupabaseClient _client;
 
   static const _columns =
-      'id, salon_id, name, role, bio, image_url, experience_years';
+      'id, salon_id, name, role, bio, image_url, experience_years, is_active';
 
   /// Svi aktivni radnici salona, po imenu.
   ///
-  /// Kao i kod usluga, `is_active` filtrira politika `public_active` — ne ponavlja se ovdje.
-  Future<List<Employee>> forSalon(String salonId) => guard(() async {
-    final rows = await _client
+  /// Admin moze citati sve radi historije; javni katalog uvijek trazi samo aktivne.
+  Future<List<Employee>> forSalon(
+    String salonId, {
+    bool includeInactive = false,
+  }) => guard(() async {
+    var query = _client
         .from('employees')
         .select(_columns)
-        .eq('salon_id', salonId)
+        .eq('salon_id', salonId);
+    if (!includeInactive) query = query.eq('is_active', true);
+    final rows = await query
         // Uzlazno eksplicitno — v. `ServiceRepository.forSalon`: default je silazno.
         .order('name', ascending: true);
 
     return employeesFromRows(rows);
+  });
+
+  /// Profil i usluge se snimaju atomski. `null` ID znaci kreiranje.
+  Future<Employee> save({
+    required String salonId,
+    String? employeeId,
+    required String name,
+    required String role,
+    required String bio,
+    int? experienceYears,
+    String? imageUrl,
+    required List<String> serviceIds,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      employeeId == null ? 'create_employee' : 'update_employee',
+      params: {
+        'p_salon_id': salonId,
+        'p_employee_id': ?employeeId,
+        'p_name': name,
+        'p_role': role,
+        'p_bio': bio,
+        'p_experience_years': experienceYears,
+        'p_image_url': imageUrl,
+        'p_service_ids': serviceIds,
+      },
+    );
+    return employeeFromRpc(row);
+  });
+
+  Future<Employee> setActive({
+    required String salonId,
+    required String employeeId,
+    required bool isActive,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'set_employee_active',
+      params: {
+        'p_salon_id': salonId,
+        'p_employee_id': employeeId,
+        'p_is_active': isActive,
+      },
+    );
+    return employeeFromRpc(row);
   });
 
   /// Veze radnik–usluga za salon, iz spojne tabele `employee_services`.
@@ -45,6 +93,15 @@ class EmployeeRepository {
 
         return employeeServicesFromRows(rows);
       });
+}
+
+@visibleForTesting
+Employee employeeFromRpc(dynamic value) {
+  final dynamic row = value is List && value.length == 1 ? value.single : value;
+  if (row is! Map<String, dynamic>) {
+    throw const MappingError('Neispravan odgovor radnika');
+  }
+  return employeesFromRows([row]).single;
 }
 
 /// Mapira `employees` redove na [Employee].

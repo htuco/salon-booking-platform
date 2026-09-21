@@ -326,7 +326,7 @@ class _Podaci extends StatelessWidget {
       ),
       if ((termin.servicePrice ?? usluga?.price) case final cijena?)
         ('Cijena', iznosKm(cijena)),
-      ('Majstor', radnik?.name ?? 'bilo ko'),
+      ('Majstor', termin.employeeName ?? radnik?.name ?? 'bilo ko'),
       ('Zakazano', _izvor(termin.source)),
       if (termin.cancelledBy case final ko? when ko.isNotEmpty)
         ('Otkazao', ko == 'customer' ? 'klijent' : 'salon'),
