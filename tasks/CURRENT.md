@@ -3,8 +3,8 @@
 ## Status
 
 Gotov — task 36 (2026-09-21). [PR #59](https://github.com/htuco/salon-booking-platform/pull/59)
-je otvoren, **oba CI joba zelena na `9f63943`**, i čeka spajanje u `main`. Dokazi, sabotaže i
-ograničenja: [task 36](sprint-3/36-postavke-lokacije.md).
+je spojen u `main` (merge `f7bb650`). Dokazi, sabotaže i ograničenja:
+[task 36](sprint-3/36-postavke-lokacije.md).
 
 Time **Sprint 3 nema više nezatvorenih taskova sa kodom.** Ostaju 🟡 stavke [28](sprint-3/28-admin-tema-i-tipografija.md)
 i [30](sprint-3/30-postojeci-ekrani-na-handoff.md), koje čekaju dokaz na ekranu, ne kod.

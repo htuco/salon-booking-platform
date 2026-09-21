@@ -43,10 +43,10 @@ Salon mijenja svoje podatke i booking pravila bez novog builda i bez nas.
   `ascending = false` kao **default** — ista zamka je dvaput dala obrnut redoslijed (taskovi 21 i
   23) i vidi se tek na ekranu.
 
-## Status (2026-09-21) — ✅ dokazan, čeka spajanje
+## Status (2026-09-21) — ✅ spojen u main
 
-[PR #59](https://github.com/htuco/salon-booking-platform/pull/59), **oba CI joba zelena na
-`9f63943`** (zadnji commit grane). CI log potvrđuje da su novi testovi stvarno pokrenuti:
+[PR #59](https://github.com/htuco/salon-booking-platform/pull/59), spojen (merge `f7bb650`).
+**Oba CI joba zelena na `9f63943`**. CI log potvrđuje da su novi testovi stvarno pokrenuti:
 `014_postavke_lokacije.test.sql ... ok`, `Files=14, Tests=433, Result: PASS`,
 `rest_postavke_lokacije: 19 provjera proslo` i `rest_working_hours: 15 provjera proslo` — zadnji
 prvi put iz čistog checkouta, jer ga je task 34 upisao samo u lokalnu skriptu.

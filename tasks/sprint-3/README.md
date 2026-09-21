@@ -372,8 +372,8 @@ zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji ni
 
 > **36 — Postavke lokacije (✅, 2026-09-21).** `/settings` je bila zadnja ruta u placeholder petlji;
 > sada nosi osnovne podatke, booking pravila i salonske sekcije pravila.
-> [PR #59](https://github.com/htuco/salon-booking-platform/pull/59), **oba CI joba zelena na
-> `9f63943`**, čeka spajanje.
+> [PR #59](https://github.com/htuco/salon-booking-platform/pull/59), spojen (merge `f7bb650`),
+> **oba CI joba zelena na `9f63943`**.
 >
 > **Nalaz koji je odredio obim: dvije tabele su bile na suprotnim krajevima greške.** Nad `salons`
 > vlasnik nije mogao pisati **uopšte** — postoje samo `public_salons`, `staff_salons` (oba `select`)
