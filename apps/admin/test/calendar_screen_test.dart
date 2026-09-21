@@ -206,7 +206,10 @@ void main() {
       // Drugi red bloka nosi i status, ne samo uslugu — v. `_opisBloka`. Status je tu
       // jer se otkazan i potvrđen termin inače razlikuju samo bojom, koju čitač ekrana
       // ne vidi. Test je ovo propustio jer je pisan prije te izmjene.
-      expect(find.text('11:00–12:20 · Potvrđeno · Fade šišanje'), findsOneWidget);
+      expect(
+        find.text('11:00–12:20 · Potvrđeno · Fade šišanje'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('pauza, blokada i neradno vrijeme se vide kao pojasevi', (
@@ -369,7 +372,8 @@ void main() {
       expect(
         find.textContaining('Slobodno'),
         findsNothing,
-        reason: 'ni pogled na jednog radnika ne računa slobodno vrijeme u Dartu',
+        reason:
+            'ni pogled na jednog radnika ne računa slobodno vrijeme u Dartu',
       );
     });
 
