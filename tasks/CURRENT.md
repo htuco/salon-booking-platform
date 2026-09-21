@@ -4,7 +4,7 @@
 
 ## Status
 
-U toku. Grana `feat/osoblje-i-smjene`, sa ažurnog `main`-a (`8cb470c`).
+U toku. Grana `feat/osoblje-i-smjene`, sa ažurnog `main`-a (`8cb470c`). [Draft PR #55](https://github.com/htuco/salon-booking-platform/pull/55).
 
 ## Ciljevi
 
@@ -23,7 +23,7 @@ U toku. Grana `feat/osoblje-i-smjene`, sa ažurnog `main`-a (`8cb470c`).
 - Aktivni radnici su javni katalog; neaktivni redovi i sve mutacije moraju ostati zaštićeni.
 - `EmployeeRepository.forSalon` trenutno prepušta filtriranje RLS-u; admin vidi i neaktivne. Treba razdvojiti izbor za novu rezervaciju od historije.
 - Smjene koriste postojeći `working_hours`; uređivanje radnog vremena, pauza i blokada pripada tasku 34. Canvas prikazuje sedmične smjene, ali šema trenutno čuva ponavljajući raspored po danu sedmice.
-- Docker je instaliran, ali daemon pri početnoj provjeri nije dostupan. SQL dokaz još nije pokrenut.
+- Docker daemon je pokrenut; `docker info` potvrđuje server 29.7.2. Supabase stack i SQL testovi još nisu pokrenuti.
 
 ## Istorija
 
