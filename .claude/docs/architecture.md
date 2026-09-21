@@ -205,11 +205,19 @@ a trigger ga rotira na promjenu `services`, `employees`, `employee_services`, `w
 i ponovo čita tipizirani repozitorij; iz Realtime mape se nikad ne gradi drugi izvor istine.
 
 Koje providere — to je lista koja se lako zaboravi proširiti. `SalonClientApp` na signal invalidira
-`availableSlotsProvider`, `servicesProvider`, `employeesProvider` i `employeeServiceLinksProvider`.
+`availableSlotsProvider`, `servicesProvider`, `employeesProvider`, `employeeServiceLinksProvider` i
+**`salonSettingsProvider`** (task 36).
 Do taska 32 je bio samo prvi, i to se nije vidjelo jer se katalog nije mogao mijenjati u radu:
 `servicesProvider` nema `autoDispose`, pa je živio koliko i proces, a klijent je staru cijenu vidio
-dok ne ubije aplikaciju. **Novi provider koji čita nešto što trigger prati mora ući u ovu listu**,
-inače se ista greška ponavlja tiho — drži je `apps/client/test/catalog_refresh_test.dart`.
+dok ne ubije aplikaciju. **Ista greška se ponovila sa postavkama**: trigger je `salon_settings`
+pratio od taska 26, ali ih niko nije mogao promijeniti u radu dok task 36 nije napisao `/settings` —
+pa bi klijent nudio otkazivanje po **starom** roku, a `cancel_appointment` vratio `PT403`.
+**Novi provider koji čita nešto što trigger prati mora ući u ovu listu**, inače se ista greška
+ponavlja tiho — drži je `apps/client/test/catalog_refresh_test.dart`.
+
+`salonProvider` (kontakt podaci iz `salons`) **namjerno nije u listi**: trigger ne stoji nad
+`salons`, pa bi invalidacija bila red koji se nikad ne izvrši. Ako promijenjen telefon ikad zatreba
+odmah, dodaje se tabela u trigger, ne provider u ovu listu.
 
 **Admin modul piše kroz `rpc`, uz jedan namjeran izuzetak.** `services`, `employees`,
 `working_hours`, `blocked_slots`, `appointments`, `salons` i `salon_settings` imaju samo `select`
