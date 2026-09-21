@@ -294,11 +294,11 @@ write grantovi su oduzeti. Radnik nije nalog. Deaktivacija ne otkazuje postojeć
 Dokaz: 328 pgTAP, 19 novih REST, 24 REST izolacije i 57 javnog kataloga PASS; puna lokalna
 Flutter suita, čista analiza/format i web build. Chromium na stvarnom lokalnom stacku prolazi
 CRUD i promjenu statusa na desktopu/telefonu (`docs/screenshots/task-33-*.png`). Namjerno slabiji
-guard obara 7 testova. Flutter i Supabase CI zeleni na `61d8a20` (linkovi u task fajlu).
+guard obara 7 testova. Flutter i Supabase CI zeleni na `8a40a97` (linkovi u task fajlu).
 
 Review je pronašao stare veze pri refresh-u editora i pretijesan tablet raspored; browser je
 pronašao gubitak deep linka pri učitavanju članstva. Ispravljeno uz regresijske testove.
 Smjene su prikaz postojećeg ponavljajućeg `working_hours`, bez lažnog „kopiraj prošlu sedmicu“.
 Sljedeći je [34](34-radno-vrijeme-i-blokade.md): upisi radnog vremena, pauza i blokada.
 Hostovana migracija i native uređaji nisu provjereni; migracija mora prethoditi novom buildu.
-PR je spreman za ljudski pregled; nije mergan.
+PR #55 je spojen u `main` (`d4c54c3`).

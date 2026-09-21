@@ -3,7 +3,7 @@
 ## Status
 
 Gotov — task 33 (2026-09-21). [PR #55](https://github.com/htuco/salon-booking-platform/pull/55)
-je spreman za pregled. Dokazi i ograničenja: [task 33](sprint-3/33-osoblje-i-smjene.md).
+je spojen u `main` (`d4c54c3`). Dokazi i ograničenja: [task 33](sprint-3/33-osoblje-i-smjene.md).
 Sljedeći je [34 — Radno vrijeme, pauze i blokade](sprint-3/34-radno-vrijeme-i-blokade.md).
 
 ## Ciljevi
@@ -240,4 +240,4 @@ Sljedeći je [34 — Radno vrijeme, pauze i blokade](sprint-3/34-radno-vrijeme-i
 
 - **32 — Usluge i cjenovnik (2026-09-21, završeno)** — PR #54 spojen u main. RPC CRUD, oduzeti direktni grantovi i snapshot usluge na terminima. Flutter i Supabase CI zeleni na c3762f7. Preostale dorade evidentirane u sprint-3/README.md: Deno REST testovi, run skripte i demo/format cijene.
 
-- **33 — Osoblje i smjene (2026-09-21)** — RPC CRUD, atomske veze usluga, deaktivacija i snapshot imena; desktop/mobilni editor i redovni raspored. 328 pgTAP, 19 REST i Flutter suite PASS; CI zeleni na 61d8a20, PR #55 spreman za pregled. Native/hostovani deploy nisu urađeni. Sljedeći task 34.
+- **33 — Osoblje i smjene (2026-09-21)** — RPC CRUD, atomske veze usluga, deaktivacija i snapshot imena; desktop/mobilni editor i redovni raspored. 328 pgTAP, 19 REST i Flutter suite PASS; oba CI joba zelena na `8a40a97`, PR #55 spojen u `main` (`d4c54c3`). Native/hostovani deploy nisu urađeni. Sljedeći task 34.
