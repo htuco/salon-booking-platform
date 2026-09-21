@@ -30,7 +30,7 @@ Salon dodaje i uklanja radnike i određuje ko radi kada.
 
 ## Status (2026-09-21) — ✅ zatvoren
 
-[PR #55](https://github.com/htuco/salon-booking-platform/pull/55), grana `feat/osoblje-i-smjene`.
+[PR #55](https://github.com/htuco/salon-booking-platform/pull/55) spojen u `main` (`d4c54c3`).
 
 Isporučeno: atomski RPC profil/usluge, kreiranje/izmjena/deaktivacija/reaktivacija,
 nullable staž, oduzeti direktni write grantovi, snapshot imena na terminu, responsive
@@ -50,8 +50,8 @@ Dokaz:
   očuvanje `/employees` pri učitavanju prijave; desktop 1440×900 i telefon 402×874.
   Dokaz slikom: `docs/screenshots/task-33-*.png`. Widget testovi dodatno pokrivaju 320, 840,
   1024 i 1440 px te povećan font.
-- CI zelen na `61d8a20`: [Flutter](https://github.com/htuco/salon-booking-platform/actions/runs/35599439479)
-  i [Supabase tests](https://github.com/htuco/salon-booking-platform/actions/runs/35599439674).
+- CI zelen na `8a40a97`: [Flutter](https://github.com/htuco/salon-booking-platform/actions/runs/35601275480)
+  i [Supabase tests](https://github.com/htuco/salon-booking-platform/actions/runs/35601275341).
 
 Pregled je našao refresh sa starim vezama i pretijesne desktop kartice; oba su popravljena
 uz regresijske testove. Browser je našao rekonstrukciju routera tokom učitavanja članstva:
@@ -61,4 +61,4 @@ zatvaranju streama mogao ostati nedovršen; sada prvo uklanja widget/pretplatu.
 Nije provjereno/deployano: hostovani Supabase i native iOS/Android uređaj. Migracija
 `20260921140000_employee_crud.sql` mora prethoditi objavi novog builda. Screenshotovi i
 REST dokazi su iz lokalnog stacka; snapshot starih termina backfilluje trenutno ime,
-jer ranija imena baza nije čuvala. PR čeka ljudski pregled/merge.
+jer ranija imena baza nije čuvala. PR je spojen u `main`; hostovani deploy je zaseban korak.
