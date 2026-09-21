@@ -16,6 +16,7 @@ import 'catalog/review_repository.dart';
 import 'catalog/salon_repository.dart';
 import 'catalog/service_repository.dart';
 import 'catalog/settings_repository.dart';
+import 'catalog/staff_customer_repository.dart';
 import 'catalog/working_hours_repository.dart';
 import 'vertical/vertical_repository.dart';
 import 'push/push_providers.dart';
