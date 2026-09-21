@@ -21,20 +21,34 @@ create type public.working_hours_input as (
   is_closed boolean
 );
 
-create function private.validate_working_hours(
-  p_salon_id uuid, p_employee_id uuid, p_days public.working_hours_input[]
-) returns void language plpgsql security definer set search_path = '' as $fn$
-declare v_day public.working_hours_input;
+-- Admin salona, i radnik koji tom salonu stvarno pripada.
+--
+-- Stoji kao jedna funkcija, a ne prepisan uslov na pet mjesta: `p_employee_id` prolazi kroz
+-- svih pet javnih funkcija, a uslov koji se prepisuje je uslov koji ce jednom biti prepisan
+-- pogresno. Radnik iz drugog salona i nepostojeci radnik daju **istu** gresku, bez
+-- otkrivanja tudjeg osoblja.
+create function private.assert_salon_access(p_salon_id uuid, p_employee_id uuid default null)
+returns void language plpgsql security definer set search_path = '' as $fn$
 begin
   if private.is_admin(p_salon_id) is not true then
     raise exception 'Nije dozvoljeno' using errcode = '42501';
   end if;
-  -- Radnik iz drugog salona i nepostojeci radnik daju istu gresku: bez otkrivanja tudjeg osoblja.
   if p_employee_id is not null and not exists(
     select 1 from public.employees e where e.salon_id = p_salon_id and e.id = p_employee_id
   ) then
     raise exception 'Nije dozvoljeno' using errcode = '42501';
   end if;
+end;
+$fn$;
+revoke all on function private.assert_salon_access(uuid, uuid)
+  from public, anon, authenticated;
+
+create function private.validate_working_hours(
+  p_salon_id uuid, p_employee_id uuid, p_days public.working_hours_input[]
+) returns void language plpgsql security definer set search_path = '' as $fn$
+declare v_day public.working_hours_input;
+begin
+  perform private.assert_salon_access(p_salon_id, p_employee_id);
   if p_days is null or array_length(p_days, 1) is distinct from 7 then
     raise exception 'Sedmica mora imati tacno sedam dana' using errcode = 'PT400';
   end if;
@@ -84,9 +98,9 @@ create function public.working_hours_conflicts(
   customer_name text, employee_name text, reason text
 ) language plpgsql stable security definer set search_path = '' as $fn$
 begin
-  if private.is_admin(p_salon_id) is not true then
-    raise exception 'Nije dozvoljeno' using errcode = '42501';
-  end if;
+  -- Isti guard kao kod pisanja: citanje konflikata ne smije imati blazi ugovor greske od
+  -- upisa koji slijedi poslije njega.
+  perform private.assert_salon_access(p_salon_id, p_employee_id);
   return query
   with novo as (select * from unnest(p_days))
   select a.id, a.date, a.start_time, a.end_time, a.customer_name, a.employee_name,
@@ -149,14 +163,7 @@ create function public.create_blocked_slot(
 ) returns public.blocked_slots language plpgsql security definer set search_path = '' as $fn$
 declare v_row public.blocked_slots%rowtype;
 begin
-  if private.is_admin(p_salon_id) is not true then
-    raise exception 'Nije dozvoljeno' using errcode = '42501';
-  end if;
-  if p_employee_id is not null and not exists(
-    select 1 from public.employees e where e.salon_id = p_salon_id and e.id = p_employee_id
-  ) then
-    raise exception 'Nije dozvoljeno' using errcode = '42501';
-  end if;
+  perform private.assert_salon_access(p_salon_id, p_employee_id);
   if p_date is null or p_start_time is null or p_end_time is null then
     raise exception 'Datum i vrijeme su obavezni' using errcode = 'PT400';
   end if;
@@ -174,9 +181,7 @@ $fn$;
 create function public.delete_blocked_slot(p_salon_id uuid, p_blocked_slot_id uuid)
 returns void language plpgsql security definer set search_path = '' as $fn$
 begin
-  if private.is_admin(p_salon_id) is not true then
-    raise exception 'Nije dozvoljeno' using errcode = '42501';
-  end if;
+  perform private.assert_salon_access(p_salon_id);
   delete from public.blocked_slots
   where salon_id = p_salon_id and id = p_blocked_slot_id;
   -- Tudja i nepostojeca blokada daju istu gresku.
@@ -195,9 +200,9 @@ create function public.blocked_slot_conflicts(
   customer_name text, employee_name text
 ) language plpgsql stable security definer set search_path = '' as $fn$
 begin
-  if private.is_admin(p_salon_id) is not true then
-    raise exception 'Nije dozvoljeno' using errcode = '42501';
-  end if;
+  -- Isti guard kao kod pisanja, ukljucujuci provjeru radnika: citanje konflikata ne smije
+  -- imati blazi ugovor greske od blokade koja se poslije njega upisuje.
+  perform private.assert_salon_access(p_salon_id, p_employee_id);
   return query
   select a.id, a.date, a.start_time, a.end_time, a.customer_name, a.employee_name
   from public.appointments a

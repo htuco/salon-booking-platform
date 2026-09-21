@@ -232,10 +232,20 @@ JWT). Namjerno slabljenje `private.is_admin` na `true` u rollback transakciji ob
 ### Radno vrijeme, pauze i blokade — task 34
 
 `authenticated` ima samo SELECT nad `working_hours` i `blocked_slots`. Pisanje ide kroz
-`set_working_hours`, `create_blocked_slot` i `delete_blocked_slot`; sve tri su `security definer` i
-traže `private.is_admin(p_salon_id) is true`. Radnik iz drugog salona, nepostojeći radnik, tuđa i
-nepostojeća blokada daju **istu** `42501` — bez otkrivanja tuđeg osoblja i bez razlike koja bi
-potvrdila da ID postoji.
+`set_working_hours`, `create_blocked_slot` i `delete_blocked_slot`; sve su `security definer`.
+
+**Guard je jedna funkcija, `private.assert_salon_access(p_salon_id, p_employee_id)`, i zovu je sve
+pet** — tri putanje pisanja i dvije funkcije čitanja konflikata. Traži `private.is_admin` i, kad je
+`p_employee_id` dat, pripadnost tog radnika salonu. Radnik iz drugog salona, nepostojeći radnik,
+tuđa i nepostojeća blokada daju **istu** `42501` — bez otkrivanja tuđeg osoblja i bez razlike koja
+bi potvrdila da ID postoji.
+
+Prvi prolaz ovog taska je provjeru radnika imao samo u putanjama pisanja, pa su `*_conflicts`
+funkcije na tuđeg radnika vraćale **praznu listu** umjesto `42501`. Curenja nije bilo —
+`salon_id = p_salon_id` je prvi predikat u oba tijela — ali prazna lista se ne razlikuje od „nema
+konflikata", pa je ugovor greške bio nekonzistentan između funkcija iste migracije, a `salon_id`
+predikat nije imao **nijedan** test koji bi pao da se ukloni. Oboje ispravljeno; sabotaža koja
+makne taj predikat sada obara `013`.
 
 **`set_working_hours` prima cijelu sedmicu, tačno sedam dana.** To nije stilski izbor ugovora nego
 posljedica toga kako `get_available_slots` čita tabelu: **red kojeg nema znači zatvoreno**, a ne
@@ -251,7 +261,7 @@ novu blokadu. Ekran ih zove **prije** upisa, pa upozorenje stiže prije posljedi
 sa takvim terminom ostaje vlasniku. Obje traže istog admina kao i pisanje. Prošli termini se ne
 prijavljuju: raspored se mijenja unaprijed.
 
-Dokaz: `013_working_hours_crud.test.sql` (51 asercija) i `rest_working_hours.ts` (15 provjera kroz
+Dokaz: `013_working_hours_crud.test.sql` (57 asercija) i `rest_working_hours.ts` (15 provjera kroz
 stvarni JWT i PostgREST — skraćeno radno vrijeme, pauza, zatvoren dan i blokada svaki put mijenjaju
 ono što `get_available_slots` vrati klijentu, a direktan `insert` vraća `401/403`).
 

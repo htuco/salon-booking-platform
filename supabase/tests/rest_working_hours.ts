@@ -220,7 +220,12 @@ try {
     ] as const
   ) {
     const r = await call(`/rest/v1/rpc/${rpc}`, tudji, "POST", body);
-    assert(r.status >= 400, `${rpc} mora odbiti tudjeg admina`);
+    // `>= 400`, ne `>= 300`: `300` je `PGRST201` (dvosmislen embed zbog kompozitnih FK-ova) i
+    // mora biti greska, ne prolaz — v. `security.md` i zamku iz taska 15.
+    assert(
+      r.status >= 400,
+      `${rpc} mora odbiti tudjeg admina, dobio ${r.status}`,
+    );
   }
 
   // 7. Anon ne smije nista od ovoga.
@@ -230,7 +235,10 @@ try {
     "POST",
     { p_salon_id: salon, p_days: sedmica("09:00", "17:00") },
   );
-  assert(anonPokusaj.status >= 400, "Anon ne pise radno vrijeme");
+  assert(
+    anonPokusaj.status >= 400,
+    `Anon ne pise radno vrijeme, dobio ${anonPokusaj.status}`,
+  );
 } finally {
   // Vrati salon u polazno stanje: seed ostaje kakav je bio prije testa.
   if (blokada) {

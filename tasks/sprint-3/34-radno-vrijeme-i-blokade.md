@@ -62,9 +62,21 @@ ostaje vlasniku. Aplikacija ne pomjera i ne otkazuje nijedan termin.
 pauze ne stanu u 402 px kao jedan `Row`. Vremena su sada ispod imena na `3s`, a red pauze je
 `Wrap`. Na desktopu (`3h`) raspored ostaje kakav canvas crta.
 
+**`rls-auditor` je našao nedosljedan ugovor greške, i rupu u dokazu ispod njega.** Prvi prolaz je
+provjeru pripadnosti radnika imao samo u putanjama pisanja, pa su `working_hours_conflicts` i
+`blocked_slot_conflicts` na tuđeg radnika vraćale **praznu listu** umjesto `42501` — potvrđeno
+pozivom, ne čitanjem. Curenja nije bilo (`salon_id = p_salon_id` je prvi predikat u oba tijela),
+ali prazna lista se ne razlikuje od „nema konflikata", pa je signal bio zamućen, a ugovor različit
+između pet funkcija iste migracije. Ozbiljniji nalaz je bio drugi: **`salon_id` predikat u te dvije
+funkcije nije imao nijedan test koji bi pao da se ukloni** — 51 asercija bi prošla i da funkcija
+vraća termine drugog salona sa `customer_name`. Guard je izdvojen u
+`private.assert_salon_access(p_salon_id, p_employee_id)` i zovu ga **sve pet**; dodato je šest
+asercija, od kojih dvije čitaju termin drugog salona. **Sabotaža je provjerena**: uklanjanje
+`salon_id` predikata sada obara `013` (test 39).
+
 ### Dokazi
 
-- `npx supabase db reset && npx supabase test db` — **379 testova, PASS**, od toga 51 nov u
+- `npx supabase db reset && npx supabase test db` — **385 testova, PASS**, od toga 57 novih u
   `013_working_hours_crud.test.sql`.
 - `deno run --allow-env --allow-net supabase/tests/rest_working_hours.ts` — **15 provjera** kroz
   stvarni JWT i PostgREST. Skraćeno radno vrijeme, pauza, zatvoren dan i blokada svaki put
@@ -72,6 +84,9 @@ pauze ne stanu u 402 px kao jedan `Row`. Vremena su sada ispod imena na `3s`, a 
   vraća salon u polazno stanje u `finally`.
 - `dart run melos run test` — **SUCCESS** (admin 247, core_domain 88, core_api 122, core_ui 67,
   client 234). `dart analyze` bez ijedne primjedbe.
+- **Oba CI joba zelena na `3ca7e44`**: [Analiza, format i testovi](https://github.com/htuco/salon-booking-platform/actions/runs/35613117125)
+  (3m52s) i [Schema, RLS and tenant isolation](https://github.com/htuco/salon-booking-platform/actions/runs/35613117545)
+  (2m24s). Supabase job je dokaz iz čistog checkouta, koji lokalno pokretanje ne može dati.
 
 ### Ostalo za sljedećeg
 

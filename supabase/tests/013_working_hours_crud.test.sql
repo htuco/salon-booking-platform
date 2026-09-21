@@ -153,6 +153,16 @@ $$, '42501', null, 'Tudji admin ne cita konflikte');
 select throws_ok($$
   select * from blocked_slot_conflicts((select salon from wfix), (select utorak from wfix), '09:00', '10:00')
 $$, '42501', null, 'Tudji admin ne cita konflikte blokade');
+-- Admin B nad **svojim** salonom, ali sa nasim radnikom: prolazi `is_admin`, pada na radniku.
+-- Bez ove asercije provjera radnika u `*_conflicts` ne bi imala sta da je drzi.
+select throws_ok($$
+  select * from blocked_slot_conflicts((select drugi_salon from wfix), (select utorak from wfix),
+    '09:00', '10:00', (select radnik from wfix))
+$$, '42501', null, 'Radnik tudjeg salona je odbijen i u citanju konflikata blokade');
+select throws_ok($$
+  select * from working_hours_conflicts((select drugi_salon from wfix), (select radnik from wfix),
+    (select dani from sedmica))
+$$, '42501', null, 'Radnik tudjeg salona je odbijen i u citanju konflikata rasporeda');
 reset role;
 
 -- ---------------------------------------------------------------------------
@@ -208,6 +218,38 @@ select is(
   (select count(*)::int from working_hours_conflicts(
     (select salon from wfix), (select radnik2 from wfix), (select dani from sedmica))), 0,
   'Raspored drugog radnika ne prijavljuje tudji termin');
+-- Tudji radnik sada pada na guard, a ne tiho vraca praznu listu. Razlika je bitna: prazna
+-- lista se ne razlikuje od „nema konflikata", pa bi maknut `salon_id` predikat prosao nezapazeno.
+select throws_ok($$
+  select * from working_hours_conflicts((select salon from wfix), (select tudji_radnik from wfix),
+    (select dani from sedmica))
+$$, '42501', null, 'Radnik drugog salona je odbijen, ne vraca praznu listu');
+select throws_ok($$
+  select * from blocked_slot_conflicts((select salon from wfix), (select utorak from wfix),
+    '09:00', '23:00', (select tudji_radnik from wfix))
+$$, '42501', null, 'Radnik drugog salona je odbijen i kod blokade');
+reset role;
+
+-- `salon_id` predikat u `*_conflicts` mora stvarno filtrirati, ne samo `employee_id`.
+-- Termin salona B u isto vrijeme: admin A ga ne smije vidjeti ni sa svojim `p_salon_id`.
+insert into public.customers(id, salon_id, name)
+values ('cc000000-0000-4000-8000-000000000034', (select drugi_salon from wfix), 'Klijent B');
+insert into public.appointments(
+  salon_id, service_id, employee_id, customer_id, customer_name,
+  date, start_time, end_time, status)
+select w.drugi_salon, '10000000-0000-4000-8000-000000000005', w.tudji_radnik,
+  'cc000000-0000-4000-8000-000000000034', 'Klijent B', w.utorak, '18:00', '18:30', 'confirmed'
+from wfix w;
+set local role authenticated;
+select is_empty($$
+  select * from blocked_slot_conflicts((select salon from wfix), (select utorak from wfix),
+    '17:00', '19:00')
+  where customer_name = 'Klijent B'
+$$, 'Termin drugog salona ne izlazi kroz konflikte blokade');
+select is_empty($$
+  select * from working_hours_conflicts((select salon from wfix), null, (select dani from sedmica))
+  where customer_name = 'Klijent B'
+$$, 'Termin drugog salona ne izlazi kroz konflikte rasporeda');
 reset role;
 
 -- Proslost se ne prijavljuje: raspored se mijenja unaprijed.
