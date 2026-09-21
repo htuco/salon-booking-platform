@@ -396,9 +396,17 @@ zakazivanja" iz `3h` pripadaju tasku 36. Hostovani Supabase i native uređaji ni
 > `cancelled`. REST test dodaje drugu polovinu: promjenu čita **`anon` bez tokena**.
 >
 > Dokazano: **433 pgTAP asercije** u 14 fajlova (novi `014` nosi 48), svih deset REST testova
-> (novi `rest_postavke_lokacije.ts` 19 provjera), `melos run test` 278 admin testova (10 novih),
+> (novi `rest_postavke_lokacije.ts` 19 provjera), `melos run test` **797** testova (admin 278, 10
+> novih za ekran; client 235, jedan novi za invalidaciju postavki),
 > čista analiza i format, generisani fajlovi ažurni. Sabotaže: guard u `update_salon_contact` → 2
 > pale asercije, guard i validacija iz `update_salon_settings` → 12.
+>
+> **Jedini pravi bug koji je task našao je bio u klijentu, ne u adminu.** Trigger rotira reviziju i
+> na `salon_settings` od taska 26, ali `SalonClientApp` je invalidirao samo katalog — rupa se nije
+> mogla vidjeti dok postavke nije bilo moguće promijeniti u radu. Bez toga bi klijent nudio
+> otkazivanje po **starom** roku, a `cancel_appointment` vratio `PT403`. Treći put da ista lista
+> zakaže (32, pa 36), pa je uz nju u `architecture.md` dopisano i zašto `salonProvider` u njoj
+> **ne smije** biti: trigger ne stoji nad `salons`.
 >
 > **Zamka za sljedećeg, iz vlastite greške:** sabotažu pokretati **samo unutar transakcije testa**.
 > `create or replace` kroz `psql -f` nad fajlom bez `begin;` ostane komitovan u bazi, pa je sljedeći

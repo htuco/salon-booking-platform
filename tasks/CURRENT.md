@@ -23,6 +23,10 @@ Preostalo do zatvaranja:
 
 ## Napomene
 
+- **Task je našao bug u klijentu, ne u adminu.** `SalonClientApp` na realtime signal nije
+  invalidirao `salonSettingsProvider`, pa bi klijent nudio otkazivanje po starom roku dok bi baza
+  vraćala `PT403`. Popravljeno u istoj grani (`40f39b6`); lista providera u `architecture.md` je
+  sada treći put proširena i nosi razlog zašto `salonProvider` u nju **ne ide**.
 - **Sabotažu pokretati samo unutar transakcije testa.** `create or replace` kroz `psql -f` nad
   fajlom bez `begin;` ostane komitovan u lokalnoj bazi; sljedeći REST test je zbog toga prijavio
   cross-tenant pisanje kojeg u migraciji nema. `npx supabase db reset` čisti.

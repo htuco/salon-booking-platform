@@ -79,9 +79,19 @@ ono što vlasnik snimi čita **`anon` bez tokena**.
 
 **Dokazano pokretanjem:** `supabase test db` **433 asercije** u 14 fajlova (novi `014` nosi 48),
 svih deset REST testova zeleno (novi `rest_postavke_lokacije.ts` 19 provjera), `melos run test`
-**278** admin testova (10 novih za ekran), `flutter analyze` čist, `dart format` bez izmjena,
+**797** testova u pet paketa — admin **278** (10 novih za ekran) i client **235** (jedan novi, za
+invalidaciju postavki) — `flutter analyze` čist, `dart format` bez izmjena,
 `gen_flavors --check` ažuran. Sabotaže: guard u `update_salon_contact` oslabljen na `true` obara
 **2** asercije; guard i validacija izbačeni iz `update_salon_settings` obaraju **12**.
+
+**Drugi nalaz, i jedini pravi bug u ovom tasku: klijent nije osvježavao booking pravila.**
+Trigger u `availability_realtime.sql` rotira reviziju i na `salon_settings` od taska 26, ali
+`SalonClientApp` je na signal invalidirao samo katalog. Rupa se do sada **nije mogla vidjeti** jer
+postavke niko nije mogao promijeniti u radu — ovaj task je upravo to omogućio. `salonSettingsProvider`
+nema `autoDispose`, pa bi klijent do hladnog starta nudio otkazivanje po **starom** roku, dok bi
+`cancel_appointment` provodio novi i vratio `PT403`: ekran tvrdi jedno, baza radi drugo. Ovo je
+treći put da ista lista zakaže (32 za cjenovnik, 36 za postavke), pa je u `architecture.md` uz nju
+dopisan i razlog zašto `salonProvider` u njoj **ne smije** biti — trigger ne stoji nad `salons`.
 
 **Zamka za sljedećeg, iz vlastite greške u postupku.** Sabotažu treba pokretati **samo unutar
 transakcije testa**. `create or replace` kroz `psql -f` nad fajlom kojem je skinut `begin;` ostane
