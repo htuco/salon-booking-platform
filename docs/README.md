@@ -118,6 +118,9 @@ Ne otvaraj ih ponovo bez novog podatka:
 | Social login je jedan tap; email korisnik ima kratku registraciju i recovery | [ADR-0010](adr/0010-email-lozinka-umjesto-otp-a.md) |
 | **Facebook login se ne implementira** — provideri su Apple, Google i email | [ADR-0011](adr/0011-facebook-login-se-ne-implementira.md) |
 | **Admin navigacija nosi i nenapisane module**, a „Zahtjevi" su filter u adresi, ne svoja ruta | [ADR-0012](adr/0012-admin-navigacija-nosi-i-nenapisane-module.md) |
+| **Radnik dobija sužen pristup svojim terminima**, ne umanjenu admin ulogu | [ADR-0013](adr/0013-radnik-dobija-suzen-pristup-svojim-terminima.md) |
+| Korak rezervacije je **po usluzi**, uz salonski kao podrazumijevani | [ADR-0014](adr/0014-korak-rezervacije-je-po-usluzi.md) |
+| Slike idu u **Supabase Storage**, javni bucket sa upisom po salonu | [ADR-0015](adr/0015-slike-idu-u-supabase-storage-javni-bucket.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |
