@@ -1,26 +1,45 @@
 # `prototype/` — vizuelne reference, nijedna nije production kod
 
-Tri foldera, tri uloge. Root pravila važe — v. `../CLAUDE.md`.
+Četiri foldera, četiri uloge. Root pravila važe — v. `../CLAUDE.md`.
 
 | Folder | Šta je | Status |
 |---|---|---|
 | `ui/` | Dizajnerski handoff: 17 ekrana u punoj vjernosti, finalni copy, tokeni, komponente | **Vizuelni izvor istine** |
-| `admin/` | Salon OS handoff: 10 desktop i 11 mobilnih admin prikaza | **Vizuelni izvor istine za `apps/admin`** |
+| `adminv2/` | Melura redizajn: isti 21 prikaz (`3a`–`3u`), noviji izgled | **Vizuelni izvor istine za `apps/admin`** |
+| `admin/` | Stariji Salon OS handoff: istih 21 prikaz plus `SPEC.md` | **Vizual zastario, tekst važi** |
 | `wireframe/` | Stariji React/Vite prototip sa svojim toolchainom | **Zamrznut** |
 
-Za klijentsku aplikaciju je `ui/` jači od `wireframe/`; za admin aplikaciju je `admin/` jači od
-`wireframe/`. Vjernost im je viša i copy je finalniji. `wireframe/` ostaje referenca samo za
-**flow i rute** (`wireframe/src/app/routes.tsx` prati `docs/01 §12`) i kao istorijski zapis.
+Za klijentsku aplikaciju je `ui/` jači od `wireframe/`; za admin aplikaciju je **`adminv2/` jači
+od `admin/`**, a oba jača od `wireframe/`. `wireframe/` ostaje referenca samo za **flow i rute**
+(`wireframe/src/app/routes.tsx` prati `docs/01 §12`) i kao istorijski zapis.
 
-## `admin/` — kako se čita
+## Admin: sliku uzimaš iz `adminv2/`, tekst iz `admin/SPEC.md`
 
-`admin/SPEC.md` mapira svih 21 prikaz na postojeće i buduće Flutter module. `admin/index.html`
-služi samo kao navigacija kroz originalni design canvas. Canvas renderer i placeholder slike se
-ne portuju u aplikaciju.
+Ovo je jedino mjesto u repou gdje se izvor razdvaja na dva foldera, pa se najlakše pogriješi.
+Odluka i obrazloženje: [ADR-0016](../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md).
 
-Admin je jedan platformski build za sve salone. Njegov plavi akcent je identitet Salon OS-a, ne
-tenant branding; salon i ovlasti i dalje dolaze iz server-side membershipa i RLS-a. Multi-location
-prikaz `3a` je budući scope dok ne postoji odgovarajući RBAC.
+- **`adminv2/export/` je kako ekran izgleda.** 21 PNG, imenovan po istim identifikatorima
+  `3a`–`3u`. Nema `SPEC.md` i ne očekuje se.
+- **`admin/SPEC.md` je šta ekran radi.** Mapa prikaza na Flutter module, funkcionalne granice
+  („šta canvas crta, a aplikacija namjerno nema"), tokeni, redoslijed implementacije. Skup
+  ekrana je identičan u oba foldera, pa ta mapa i dalje važi.
+- Gdje `SPEC.md` opisuje **vizual** a `adminv2` pokazuje drugo, jači je `adminv2`, i `SPEC.md`
+  se ispravlja u istoj promjeni koja taj ekran dira.
+- `admin/canvas/` i `admin/index.html` se **ne portuju** — canvas renderer i placeholder slike
+  nikad nisu ni bili za portovanje.
+
+Dvije neusklađenosti koje `SPEC.md` još nosi, i koje zatvara
+[FE-401](../tasks/fe-redizajn/FE-401-admin-shell.md), ne usputna izmjena:
+
+- ime proizvoda je **Melura**, ne „Salon OS" (`SPEC.md:1`)
+- **koralna `#EE6C4D` nosi primarne akcije**, a plava `#3D5A80` pada na linkove i sporedno
+  (`SPEC.md:81–82`)
+
+Admin je jedan platformski build za sve salone, pa je njegov akcent identitet proizvoda, **ne**
+tenant branding — ista koralna u klijentskoj aplikaciji je greška, tamo boja dolazi iz
+`tenant.yaml`. Salon i ovlasti i dalje dolaze iz server-side membershipa i RLS-a. Birač lokacije i
+„6 lokacija" u sidebaru `adminv2` izvoza su prikaz `3a`: **budući scope** dok ne postoji RBAC, pa
+njihov izostanak u aplikaciji nije propust.
 
 ## `ui/` — kako se čita
 

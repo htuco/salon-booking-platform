@@ -5,7 +5,7 @@
 | **Epik** | FE-4 · Admin panel |
 | **Aplikacija** | `apps/admin` |
 | **Procjena** | 1–2 dana |
-| **Zavisi od** | ADR o `prototype/adminv2/` (v. [README](README.md), odluka 4) |
+| **Zavisi od** | ✅ [ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md) — riješen, task odblokiran |
 | **Blokira** | FE-402…FE-405 |
 | **Reference** | `apps/admin/lib/src/core/widgets/admin_scaffold.dart` · `apps/admin/lib/src/core/navigation/admin_destinations.dart` · `prototype/adminv2/export/` |
 
@@ -32,7 +32,11 @@ Za preimenovanje: „Salon OS" stoji na **dva mjesta u UI-u** — `admin_scaffol
 - [ ] Navigacija u velikim slovima, aktivna stavka sa lijevom oznakom u koralnoj
 - [ ] Oznaka uloge ispod imena korisnika
 - [ ] Sidebar se i dalje sklapa ispod praga — postojeće ponašanje ostaje dokazano istim testom
-- [ ] `prototype/CLAUDE.md` dopunjen: šta je `adminv2/` i koji handoff je jači
+- [x] `prototype/CLAUDE.md` dopunjen: šta je `adminv2/` i koji handoff je jači — urađeno uz
+      [ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md), prije ovog
+      taska, jer je blokiralo svih pet preostalih FE-4xx
+- [ ] `admin/SPEC.md` ispravljen na dva mjesta koja ADR-0016 imenuje kao zastarjela: ime
+      proizvoda (`SPEC.md:1`) i raspodjela akcenta (`SPEC.md:81–82`)
 
 ## Zamke
 - **Koralna ovdje je ispravna** (admin je jedan platformski build za sve salone); ista boja u
