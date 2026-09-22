@@ -15,6 +15,16 @@ source "$config"
 : "${SUPABASE_URL:?Nedostaje SUPABASE_URL u .env.live}"
 : "${SUPABASE_ANON_KEY:?Nedostaje SUPABASE_ANON_KEY u .env.live}"
 
+# Prazan define fajl nije greška — rad protiv hostovanog projekta ne mora imati Firebase.
+# Tišina jeste: bez njega `PUSH_ENABLED` ostaje `false`, `pushServiceProvider` vraća `null`,
+# aplikacija nikad ne pozove `register_device`, i push izostaje bez ijedne poruke. Task 39 je
+# na tome izgubio trag — u bazi nije bilo nijednog staff uređaja ni reda tipa `new_request`.
+upozori_bez_pusha() {
+  echo "UPOZORENJE: $1 je prazan — build ide bez PUSH_ENABLED." >&2
+  echo "            Aplikacija neće registrovati uređaj, pa push neće stizati." >&2
+  echo "            Postavljanje: .claude/docs/workflows.md, „Push provjere i konfiguracija\"." >&2
+}
+
 target="${1:-}"
 [ -n "$target" ] || {
   echo "Upotreba: tool/run_live_demo.sh <client|admin> [flutter argumenti]" >&2
@@ -25,6 +35,7 @@ shift
 case "$target" in
   client)
     firebase_file="${FIREBASE_CLIENT_DEFINES_FILE:-}"
+    [ -n "$firebase_file" ] || upozori_bez_pusha FIREBASE_CLIENT_DEFINES_FILE
     SUPABASE_URL="$SUPABASE_URL" \
     SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
     FIREBASE_DEFINES_FILE="$firebase_file" \
@@ -43,6 +54,8 @@ case "$target" in
         exit 1
       }
       defines+=(--dart-define-from-file="$FIREBASE_ADMIN_DEFINES_FILE")
+    else
+      upozori_bez_pusha FIREBASE_ADMIN_DEFINES_FILE
     fi
     cd "$root/apps/admin"
     exec flutter run "${defines[@]}" "$@"
