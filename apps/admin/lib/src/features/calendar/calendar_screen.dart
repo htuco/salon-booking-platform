@@ -572,68 +572,75 @@ class _BlokTermina extends ConsumerWidget {
           radnik: ref.watch(radniciPoIdProvider)[termin.employeeId]?.name,
         ),
         child: ExcludeSemantics(
-          child: Material(
-            color: ton.pozadina,
-            borderRadius: BorderRadius.circular(AdminRadius.base),
-            child: InkWell(
-              // `push`, ne `go` — v. isti komentar uz mobilni red.
-              onTap: () => context.push('/appointments/${termin.id}'),
+          // Zahtjev na odobrenju nosi isprekidan rub preko podloge, v. [_RubZahtjevaPainter].
+          // `foregroundPainter`, ne `painter`: podloga `Material`-a bi rub ispod sebe
+          // pojela.
+          child: RubZahtjeva(
+            ceka: _cekaPotvrdu(termin.status, uToku: uToku),
+            boja: ton.rub,
+            child: Material(
+              color: ton.pozadina,
               borderRadius: BorderRadius.circular(AdminRadius.base),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AdminRadius.base),
-                  border: Border(left: BorderSide(color: ton.rub, width: 3)),
-                ),
-                padding: EdgeInsets.fromLTRB(
-                  12,
-                  visina < _zaPunPadding * skala ? 6 : 9,
-                  12,
-                  visina < _zaPunPadding * skala ? 6 : 9,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // I naslov je `Flexible`: na uvećanom sistemskom fontu jedan red zna
-                    // biti viši od cijelog bloka, a `Column` sa čvrstom visinom tada
-                    // prelije.
-                    Flexible(
-                      child: Text(
-                        termin.customerName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          color: ton.tekst,
-                          fontWeight: FontWeight.w600,
-                          // Otkazan termin se ne briše iz rasporeda nego se precrtava:
-                          // slot je bio zauzet pa oslobođen, i vlasnik to mora vidjeti.
-                          decoration: _precrtan(termin.status)
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                      ),
-                    ),
-                    // Nizak blok nema mjesta za drugi red. Vrijeme se i tako čita sa ose, a
-                    // ime klijenta je ono zbog čega se u blok gleda — status tada ostaje samo
-                    // u oznaci za čitač ekrana i u tooltipu, v. `Semantics` niže.
-                    if (visina >= _zaDrugiRed * skala)
+              child: InkWell(
+                // `push`, ne `go` — v. isti komentar uz mobilni red.
+                onTap: () => context.push('/appointments/${termin.id}'),
+                borderRadius: BorderRadius.circular(AdminRadius.base),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AdminRadius.base),
+                    border: Border(left: BorderSide(color: ton.rub, width: 3)),
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                    12,
+                    visina < _zaPunPadding * skala ? 6 : 9,
+                    12,
+                    visina < _zaPunPadding * skala ? 6 : 9,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // I naslov je `Flexible`: na uvećanom sistemskom fontu jedan red zna
+                      // biti viši od cijelog bloka, a `Column` sa čvrstom visinom tada
+                      // prelije.
                       Flexible(
                         child: Text(
-                          _opisBloka(
-                            stavka,
-                            ref.watch(uslugePoIdProvider),
-                            status: uToku
-                                ? kOznakaUToku
-                                : statusOznaka(termin.status),
-                          ),
-                          maxLines: 2,
+                          termin.customerName,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: ton.tekstTih,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: ton.tekst,
+                            fontWeight: FontWeight.w600,
+                            // Otkazan termin se ne briše iz rasporeda nego se precrtava:
+                            // slot je bio zauzet pa oslobođen, i vlasnik to mora vidjeti.
+                            decoration: _precrtan(termin.status)
+                                ? TextDecoration.lineThrough
+                                : null,
                           ),
                         ),
                       ),
-                  ],
+                      // Nizak blok nema mjesta za drugi red. Vrijeme se i tako čita sa ose, a
+                      // ime klijenta je ono zbog čega se u blok gleda — status tada ostaje samo
+                      // u oznaci za čitač ekrana i u tooltipu, v. `Semantics` niže.
+                      if (visina >= _zaDrugiRed * skala)
+                        Flexible(
+                          child: Text(
+                            _opisBloka(
+                              stavka,
+                              ref.watch(uslugePoIdProvider),
+                              status: uToku
+                                  ? kOznakaUToku
+                                  : statusOznaka(termin.status),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: ton.tekstTih,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1026,6 +1033,8 @@ class _Legenda extends StatelessWidget {
                 // Isti izvor boje koji koristi i blok, i statusna pilula uz termin.
                 ton: statusTon(statusi, status),
                 tekst: statusOznaka(status),
+                // Jedini status koji na rasporedu nosi i oblik, ne samo boju.
+                isprekidan: status == AppointmentStatus.pending,
               ),
             _RedLegende(
               ton: AdminStatusTone(
@@ -1042,10 +1051,20 @@ class _Legenda extends StatelessWidget {
 }
 
 class _RedLegende extends StatelessWidget {
-  const _RedLegende({required this.ton, required this.tekst});
+  const _RedLegende({
+    required this.ton,
+    required this.tekst,
+    this.isprekidan = false,
+  });
 
   final AdminStatusTone ton;
   final String tekst;
+
+  /// Nosi li uzorak isprekidan rub, kao blok zahtjeva na rasporedu.
+  ///
+  /// Legenda mora objasniti i **oblik**, ne samo boju: rub je ono što zahtjev odvaja od
+  /// potvrđenog termina, pa uzorak koji ga nema uči pola pravila.
+  final bool isprekidan;
 
   @override
   Widget build(BuildContext context) {
@@ -1053,17 +1072,21 @@ class _RedLegende extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: ton.background,
-              borderRadius: BorderRadius.circular(3),
-              // Obrub u boji teksta: „Završeno" je gotovo bijelo na bijeloj kartici, pa bi
-              // se bez njega kvadratić stopio sa podlogom.
-              border: Border.all(
-                color: ton.foreground,
-                width: AdminSize.hairline,
+          RubZahtjeva(
+            ceka: isprekidan,
+            boja: ton.foreground,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: ton.background,
+                borderRadius: BorderRadius.circular(3),
+                // Obrub u boji teksta: „Završeno" je gotovo bijelo na bijeloj kartici, pa bi
+                // se bez njega kvadratić stopio sa podlogom.
+                border: Border.all(
+                  color: ton.foreground,
+                  width: AdminSize.hairline,
+                ),
               ),
             ),
           ),
@@ -1448,55 +1471,62 @@ class _SadrzajReda extends ConsumerWidget {
         radnik: opis.majstor ?? red.radnik,
       ),
       child: ExcludeSemantics(
-        child: Material(
-          color: ton.pozadina,
-          borderRadius: BorderRadius.circular(AdminRadius.base),
-          child: InkWell(
-            // `push`, ne `go`: `go` zamijeni cijeli stek, pa „Nazad" iz detalja vodi na
-            // `/appointments` umjesto natrag u kalendar (`canPop()` u detalju bude `false`).
-            onTap: () => context.push('/appointments/${termin.id}'),
+        // Isti isprekidan rub kao na mreži — zahtjev se i na telefonu odvaja oblikom, ne
+        // samo riječju „Čeka potvrdu" u drugom redu.
+        child: RubZahtjeva(
+          ceka: _cekaPotvrdu(termin.status, uToku: uToku),
+          boja: ton.rub,
+          child: Material(
+            color: ton.pozadina,
             borderRadius: BorderRadius.circular(AdminRadius.base),
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 64),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AdminRadius.base),
-                border: Border(left: BorderSide(color: ton.rub, width: 3)),
-              ),
-              padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    termin.customerName,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: ton.tekst,
-                      fontWeight: FontWeight.w600,
-                      decoration: _precrtan(termin.status)
-                          ? TextDecoration.lineThrough
-                          : null,
+            child: InkWell(
+              // `push`, ne `go`: `go` zamijeni cijeli stek, pa „Nazad" iz detalja vodi na
+              // `/appointments` umjesto natrag u kalendar (`canPop()` u detalju bude `false`).
+              onTap: () => context.push('/appointments/${termin.id}'),
+              borderRadius: BorderRadius.circular(AdminRadius.base),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 64),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AdminRadius.base),
+                  border: Border(left: BorderSide(color: ton.rub, width: 3)),
+                ),
+                padding: const EdgeInsets.fromLTRB(14, 13, 14, 13),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      termin.customerName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: ton.tekst,
+                        fontWeight: FontWeight.w600,
+                        decoration: _precrtan(termin.status)
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    [
-                      // **Status je prvi i uvijek prisutan.** `SPEC.md` („Raspored i
-                      // komponente") traži da boja nije jedini nosač značenja, a legenda koja
-                      // to objašnjava živi u bočnoj traci — koje na 402 px nema. Bez ove riječi
-                      // je telefonski raspored nečitljiv svakome ko ne razlikuje nijanse.
-                      uToku ? kOznakaUToku : statusOznaka(termin.status),
-                      if (opis.red.isNotEmpty) opis.red,
-                      '${stavka.trajanjeMinuta} min',
-                      // Ime radnika samo u listi „Svi": u listi jednog radnika bi ga svaki red
-                      // ponavljao, a chip iznad ga već kaže.
-                      if (red.radnik case final ime? when opis.majstor == null)
-                        ime,
-                    ].join(' · '),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: ton.tekstTih,
+                    const SizedBox(height: 2),
+                    Text(
+                      [
+                        // **Status je prvi i uvijek prisutan.** `SPEC.md` („Raspored i
+                        // komponente") traži da boja nije jedini nosač značenja, a legenda koja
+                        // to objašnjava živi u bočnoj traci — koje na 402 px nema. Bez ove riječi
+                        // je telefonski raspored nečitljiv svakome ko ne razlikuje nijanse.
+                        uToku ? kOznakaUToku : statusOznaka(termin.status),
+                        if (opis.red.isNotEmpty) opis.red,
+                        '${stavka.trajanjeMinuta} min',
+                        // Ime radnika samo u listi „Svi": u listi jednog radnika bi ga svaki red
+                        // ponavljao, a chip iznad ga već kaže.
+                        if (red.radnik case final ime?
+                            when opis.majstor == null)
+                          ime,
+                      ].join(' · '),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: ton.tekstTih,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1846,4 +1876,88 @@ class _Srafura extends CustomPainter {
   @override
   bool shouldRepaint(_Srafura old) =>
       old.podloga != podloga || old.crta != crta || old.korak != korak;
+}
+
+/// Isprekidan rub oko termina koji čeka potvrdu — `3c`, DoD FE-403.
+///
+/// **Zašto rub, a ne još jedna boja.** „Čeka potvrdu" već ima svoj par iz
+/// [AdminStatusColors.waiting], ali na mreži sa pet statusa nijansa podloge nije dovoljna
+/// da se zahtjev odvoji od termina koji je već dogovoren — a to je jedina razlika koja
+/// vlasniku mijenja radnju: potvrđen termin se gleda, zahtjev se rješava. Isprekidana
+/// linija to nosi **oblikom**, pa radi i kad boje nema (WCAG 1.4.1), isto kao što
+/// [_Srafura] nosi neradno vrijeme.
+///
+/// Crta se preko sadržaja, ne ispod: blok ima svoju podlogu, pa bi rub ispod nje nestao.
+class _RubZahtjevaPainter extends CustomPainter {
+  const _RubZahtjevaPainter({required this.boja, required this.radius});
+
+  final Color boja;
+  final double radius;
+
+  /// Crta i razmak. Par 4/3 daje oko 14 crta na tipičnoj širini bloka — dovoljno gusto da
+  /// se na 51 px visokom bloku ne pročita kao puna linija.
+  static const double _crta = 4;
+  static const double _razmak = 3;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final olovka = Paint()
+      ..color = boja
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    // Pola debljine unutra, inače `stroke` izađe iz `Size` i gornja crta se odsiječe.
+    final putanja = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1),
+          Radius.circular(radius),
+        ),
+      );
+
+    for (final mjera in putanja.computeMetrics()) {
+      for (var d = 0.0; d < mjera.length; d += _crta + _razmak) {
+        canvas.drawPath(
+          mjera.extractPath(d, (d + _crta).clamp(0.0, mjera.length)),
+          olovka,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RubZahtjevaPainter old) =>
+      old.boja != boja || old.radius != radius;
+}
+
+/// Čeka li termin potvrdu — jedini status koji nosi isprekidan rub.
+bool _cekaPotvrdu(AppointmentStatus status, {required bool uToku}) =>
+    !uToku && status == AppointmentStatus.pending;
+
+/// Omotač koji doda [_RubZahtjevaPainter] samo kad [ceka], inače propusti [child] netaknut.
+///
+/// Postoji da uslov ne uđe u stablo kao `ceka ? CustomPaint(...) : child`: taj oblik
+/// mijenja tip čvora na istom mjestu, pa `InkWell` ispod izgubi stanje kad se status
+/// termina promijeni iz „čeka potvrdu" u „potvrđeno".
+class RubZahtjeva extends StatelessWidget {
+  const RubZahtjeva({
+    required this.ceka,
+    required this.boja,
+    required this.child,
+    super.key,
+  });
+
+  final bool ceka;
+  final Color boja;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      foregroundPainter: ceka
+          ? _RubZahtjevaPainter(boja: boja, radius: AdminRadius.base)
+          : null,
+      child: child,
+    );
+  }
 }
