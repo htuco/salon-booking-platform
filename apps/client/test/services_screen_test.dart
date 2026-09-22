@@ -6,6 +6,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'support/screen_harness.dart';
 
@@ -40,6 +41,18 @@ void main() {
 
       expect(find.text('Cjenovnik još nije objavljen.'), findsOneWidget);
       expect(find.byType(SelectableRow), findsNothing);
+      // FE-104: ikona praznog stanja je Lucide, ne Material `inbox_outlined`.
+      expect(
+        tester
+            .widget<Icon>(
+              find.descendant(
+                of: find.byType(EmptyState),
+                matching: find.byType(Icon),
+              ),
+            )
+            .icon,
+        LucideIcons.inbox,
+      );
     });
 
     testWidgets('greška daje poruku i retry koji stvarno ponovi upit', (
@@ -58,6 +71,18 @@ void main() {
       );
 
       expect(find.byType(EmptyState), findsOneWidget);
+      // FE-104: greška nosi Lucide `cloudOff`, ne Material `cloud_off_outlined`.
+      expect(
+        tester
+            .widget<Icon>(
+              find.descendant(
+                of: find.byType(EmptyState),
+                matching: find.byType(Icon),
+              ),
+            )
+            .icon,
+        LucideIcons.cloudOff,
+      );
       expect(tester.takeException(), isNull);
 
       await tester.tap(find.text('Pokušaj ponovo'));
