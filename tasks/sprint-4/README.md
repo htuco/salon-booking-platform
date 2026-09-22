@@ -9,7 +9,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 
 | # | Task | Vrsta | Blokira | Procjena |
 |---|---|---|---|---|
-| [37](37-automatsko-potvrdjivanje.md) | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
+| [37](37-automatsko-potvrdjivanje.md) 🟡 | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
 | [38](38-crash-radno-vrijeme.md) | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
 | [39](39-push-na-androidu.md) | Push obavijesti na Androidu | bug | 42 | 1–2 dana |
 | [40](40-naziv-lokala-se-ne-mijenja.md) | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
@@ -45,4 +45,8 @@ od rasprave, ali sam posao je Sprint 5.
 
 ## Status
 
-Sprint otvoren 2026-09-22. Nijedan task još nije počet.
+Sprint otvoren 2026-09-22.
+
+### 37 — Automatsko potvrđivanje termina 🟡
+
+U toku od 2026-09-22, grana `fix/automatsko-potvrdjivanje`.

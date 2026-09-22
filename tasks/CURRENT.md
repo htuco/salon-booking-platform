@@ -1,38 +1,53 @@
-# Trenutni task
+# Trenutni task: 37 — Automatsko potvrđivanje termina
+
+Učitan 2026-09-22 iz [sprint-4/37](sprint-4/37-automatsko-potvrdjivanje.md). Prvi task Sprinta 4.
 
 ## Status
 
-Gotov — task 36 (2026-09-21). [PR #59](https://github.com/htuco/salon-booking-platform/pull/59)
-je spojen u `main` (merge `f7bb650`). Dokazi, sabotaže i ograničenja:
-[task 36](sprint-3/36-postavke-lokacije.md).
-
-Time **Sprint 3 nema više nezatvorenih taskova sa kodom.** Ostaju 🟡 stavke [28](sprint-3/28-admin-tema-i-tipografija.md)
-i [30](sprint-3/30-postojeci-ekrani-na-handoff.md), koje čekaju dokaz na ekranu, ne kod.
-
-Task 35 je spojen u `main` (PR #58, merge `20f686b`).
+U toku — grana `fix/automatsko-potvrdjivanje`.
 
 ## Ciljevi
 
-Preostalo prije nego se PR skine sa drafta:
-
-- [ ] **Ekran otvoren uživo.** Sve ostalo je dokazano, ovo nije: `./tool/run_tenant.sh`, prijava
-      kao `admin@barberstudiovitez.test` / `admin123456`, pa `/settings` na obje širine i
-      poređenje sa canvasom `3i`. Isti dug stoji na 28 i 30, pa se može zatvoriti u jednom prolazu.
+- [ ] Nova migracija zamjenjuje `book_appointment` **istim potpisom** — `auto` daje `confirmed` i
+      `pending_expires_at = null`, `manual` ostaje `pending` sa rokom
+- [ ] Admin unos ostaje `confirmed` / `manual` bez obzira na postavku (task 24)
+- [ ] pgTAP (`015_...`) pokriva oba načina, plus negativan test: prebacivanje postavke ne dira
+      **postojeće** termine
+- [ ] Provjera `pg_proc` upitom da je stara verzija zamijenjena, a ne preopterećena
+- [ ] Klijentski ekran poslije rezervacije čita `appointment.status` — ne tvrdi „čeka potvrdu"
+      kad je termin `confirmed`
+- [ ] `supabase/IMPLEMENTATION.md` opisuje ugovor oba načina
 
 ## Napomene
 
-- **Task je našao bug u klijentu, ne u adminu.** `SalonClientApp` na realtime signal nije
-  invalidirao `salonSettingsProvider`, pa bi klijent nudio otkazivanje po starom roku dok bi baza
-  vraćala `PT403`. Popravljeno u istoj grani (`40f39b6`); lista providera u `architecture.md` je
-  sada treći put proširena i nosi razlog zašto `salonProvider` u nju **ne ide**.
+- **Žica nikad nije spojena, nije rubni slučaj.** `salon_settings.booking_mode` postoji od
+  `init_schema` (`check in ('manual','auto')`), task 36 ga piše kroz `rpc`, admin ekran ga prebacuje.
+  Zadnja definicija `book_appointment` je u `supabase/migrations/20260914150000_admin_akcije_nad_terminima.sql:160`
+  i status bira isključivo po pozivaocu: `(case when v_admin then 'confirmed' else 'pending' end)`.
+- **`v_settings` se već čita** u toj funkciji (red iznad `insert`-a, za `buffer_minutes` i
+  `pending_expiry_hours`), pa nova migracija ne dodaje upit — samo grana po `v_settings.booking_mode`.
+- **Isti `case when v_admin` odlučuje i o `source` i o `pending_expires_at`.** `source` se **ne**
+  mijenja: `auto` je i dalje termin iz aplikacije (`app`), samo odmah potvrđen. Mijenjaju se
+  `status` i `pending_expires_at`.
+- **Klijentski ekran danas hardkodira „Na čekanju".** `apps/client/lib/src/features/booking/booking_success_screen.dart`
+  upisuje `l10n.bookingStatusPending` sa `StatusTone.warning`, a doc komentar iznad klase tvrdi da
+  „`book_appointment` uvijek pravi `pending` red". Taj komentar postaje netačan ovim taskom i mora
+  ići u istoj promjeni. `Appointment` model već nosi `status`, pa nema promjene u `core_api`.
+- **Copy mora dobiti drugu granu, ne samo drugi badge.** `bookingSuccessKicker` („ZAHTJEV JE
+  POSLAN"), `bookingSuccessBody` („Termin još nije potvrđen…") i `bookingSuccessTitle` su svi
+  pisani za `manual`. Handoff `prototype/ui/screenshots/07-zahtjev-poslan.png` nema `auto` varijantu —
+  oblik ekrana ostaje isti, mijenja se tekst i ton badgea.
+- **Zamka iz taska, provjeriti je stvarno:** `create or replace` sa drugačijim potpisom je
+  preopterećenje, ne zamjena; obje verzije ostanu sa grantom. Potpis mora ostati
+  `(uuid, uuid, uuid, date, time, uuid, text, uuid)`.
+- **Push „termin potvrđen" ne smije stići dvaput kad je `auto`** — dodir sa taskom 39, provjeriti
+  `20260915140417_push_dispatch.sql` prije nego se migracija zatvori.
+- Naslijeđeno iz taska 36 (🟡, ne blokira ovaj task): `/settings` ekran nije viđen uživo, isti dug
+  stoji na 28 i 30. Zatvara se u jednom prolazu kad se admin pokrene protiv hostovanog projekta.
+- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, a `deno` je u `~/.deno/bin` i nije na
+  `PATH`-u — `tool/test_supabase.sh` pretpostavlja oba na `PATH`-u, pa se komande pokreću ručno.
 - **Sabotažu pokretati samo unutar transakcije testa.** `create or replace` kroz `psql -f` nad
-  fajlom bez `begin;` ostane komitovan u lokalnoj bazi; sljedeći REST test je zbog toga prijavio
-  cross-tenant pisanje kojeg u migraciji nema. `npx supabase db reset` čisti.
-- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, a `deno` je u
-  `~/.deno/bin` i nije na `PATH`-u — `tool/test_supabase.sh` pretpostavlja oba na `PATH`-u, pa se
-  komande za sada pokreću ručno.
-- Poslije 36 sprint 3 nema više nezatvorenih taskova sa kodom; ostaju 🟡 stavke 28 i 30, koje čekaju
-  dokaz na ekranu, ne kod.
+  fajlom bez `begin;` ostane komitovan u lokalnoj bazi. `npx supabase db reset` čisti.
 
 ## Istorija
 
