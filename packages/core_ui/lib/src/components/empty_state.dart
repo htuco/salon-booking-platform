@@ -40,7 +40,11 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                icon,
+                size: AppSize.iconEmptyState,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: AppSpacing.lg),
             ],
             Text(

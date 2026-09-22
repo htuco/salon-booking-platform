@@ -59,6 +59,9 @@ enum AppTheme {
       textMuted: Color(0xFFC3C9CE),
       textDisabled: Color(0xFF8B9298),
       disabledFill: Color(0xFF2A2E32),
+      scrim: Color(0xB80B0C0D),
+      error: Color(0xFFFF8A80),
+      onError: Color(0xFF2C0000),
     ),
     AppTheme.elegantBeauty => const AppNeutrals(
       surface: Color(0xFFFFFBFB),
@@ -72,6 +75,9 @@ enum AppTheme {
       textMuted: Color(0xFF5F5555),
       textDisabled: Color(0xFF8A7C7C),
       disabledFill: Color(0xFFEDE2E2),
+      scrim: Color(0xB81F1A1A),
+      error: Color(0xFFB3261E),
+      onError: Color(0xFFFFFFFF),
     ),
     AppTheme.clinicalCalm => const AppNeutrals(
       surface: Color(0xFFFBFCFD),
@@ -85,6 +91,9 @@ enum AppTheme {
       textMuted: Color(0xFF52616E),
       textDisabled: Color(0xFF7D8A94),
       disabledFill: Color(0xFFE6EDF1),
+      scrim: Color(0xB816212B),
+      error: Color(0xFFB3261E),
+      onError: Color(0xFFFFFFFF),
     ),
   };
 }
@@ -104,6 +113,9 @@ class AppNeutrals {
     required this.textMuted,
     required this.textDisabled,
     required this.disabledFill,
+    required this.scrim,
+    required this.error,
+    required this.onError,
   });
 
   /// Pozadina ekrana. `SPEC.md`: `#0F1012`.
@@ -145,4 +157,20 @@ class AppNeutrals {
 
   /// Ispuna onemogućenog dugmeta. `SPEC.md`: `#2A2E32`.
   final Color disabledFill;
+
+  /// Zastor ispod modala i bottom sheeta. `SPEC.md`: `rgba(6,7,8,.72)` — otud alfa
+  /// `0xB8`. Ide **uz** `blur(1.5px)`, ne umjesto njega.
+  ///
+  /// Po temi je različit jer zastor mora biti tamniji od onoga što zatamnjuje: ista
+  /// vrijednost na svijetloj temi ostavlja modal da lebdi nad sivilom bez dubine.
+  final Color scrim;
+
+  /// Boja greške i destruktivne radnje.
+  ///
+  /// Stajala je kao heks u `theme_factory.dart` i bila **ista u sve tri teme**, pa je
+  /// svijetla tema dobijala tamnu `#FF8A80` logiku. Sada je token kao i ostalo.
+  final Color error;
+
+  /// Tekst na [error]. Bira se za kontrast, ne za kontrast sa pozadinom ekrana.
+  final Color onError;
 }

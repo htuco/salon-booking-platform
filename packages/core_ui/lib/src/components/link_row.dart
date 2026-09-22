@@ -77,7 +77,7 @@ class LinkRow extends StatelessWidget {
           if (dodirni || disabled)
             Icon(
               LucideIcons.chevronRight,
-              size: 18,
+              size: AppSize.iconInline,
               color: scheme.onSurfaceVariant,
             ),
         ],

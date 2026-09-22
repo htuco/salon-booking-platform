@@ -122,6 +122,9 @@ Ne otvaraj ih ponovo bez novog podatka:
 | Korak rezervacije je **po usluzi**, uz salonski kao podrazumijevani | [ADR-0014](adr/0014-korak-rezervacije-je-po-usluzi.md) |
 | Slike idu u **Supabase Storage**, javni bucket sa upisom po salonu | [ADR-0015](adr/0015-slike-idu-u-supabase-storage-javni-bucket.md) |
 | **`prototype/adminv2/`** je vizuelni izvor istine za admin; `admin/SPEC.md` ostaje kao tekst | [ADR-0016](adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md) |
+| **Lucide** je set ikona klijenta i `core_ui`-ja; `apps/admin` ostaje na Material `Icons.*` | [ADR-0017](adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md) |
+| Klijent **nema fiksnu koralnu** — boja ostaje tenant podatak kroz `buildAppTheme()` | [ADR-0018](adr/0018-klijent-nema-fiksnu-koralnu-boja-ostaje-tenant-podatak.md) |
+| **Barlow se ne uvodi**; Space Grotesk + JetBrains Mono i DM Serif + Archivo ostaju | [ADR-0019](adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |

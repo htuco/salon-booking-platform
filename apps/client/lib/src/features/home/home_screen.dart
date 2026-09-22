@@ -397,7 +397,7 @@ class _SekcijaLink extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(label, style: theme.textTheme.labelLarge),
-            const Icon(LucideIcons.chevronRight, size: 18),
+            const Icon(LucideIcons.chevronRight, size: AppSize.iconInline),
           ],
         ),
       ),
@@ -467,7 +467,7 @@ class _Greska extends StatelessWidget {
   @override
   Widget build(BuildContext context) => EmptyState(
     message: message,
-    icon: Icons.cloud_off_outlined,
+    icon: LucideIcons.cloudOff,
     actionLabel: retryLabel,
     onAction: onRetry,
   );

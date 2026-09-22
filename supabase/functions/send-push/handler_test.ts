@@ -113,7 +113,15 @@ Deno.test("Pad logovanja ne vraca uspjeh niti ponavlja FCM", async () => {
 });
 
 Deno.test("Svi scenariji imaju salon, stabilan ID i samo dozvoljenu rutu", () => {
-  for (const type of ["new_request", "confirmed", "rejected", "cancelled"]) {
+  for (
+    const type of [
+      "new_request",
+      "new_booking",
+      "confirmed",
+      "rejected",
+      "cancelled",
+    ]
+  ) {
     const { message } = messageFor({ ...job, type });
     assert(message.data.route === "/appointments", "Pogresan deep link");
     assert(message.data.salon_id === job.salon_id, "Nema tenant konteksta");

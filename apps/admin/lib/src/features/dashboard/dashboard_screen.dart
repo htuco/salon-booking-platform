@@ -891,7 +891,7 @@ class _ZauzetostKartica extends ConsumerWidget {
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AdminRadius.small),
                         // Traka podatka, ne indikator ucitavanja: `value` je udio
                         // minuta tog radnika u najduzem danu, boje su iz tokena.
                         // FE-205 sklanja spinnere, ne mjerila.

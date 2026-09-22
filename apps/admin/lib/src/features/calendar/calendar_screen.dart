@@ -815,7 +815,7 @@ class _LinijaSada extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: boja,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AdminRadius.small),
                   ),
                   child: Text(
                     vrijemeOse(sada.hour * 60 + sada.minute),
@@ -961,12 +961,12 @@ class _DanMjeseca extends ConsumerWidget {
           onTap: () => ref.read(kalendarDatumProvider.notifier).postavi(dan),
           // Canvas: `padding:6px 0;border-radius:4px` — sitnija mjera od [AdminRadius.base],
           // izmjerena, jer ćelija od 20 px sa radijusom 6 izgleda kao pilula.
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AdminRadius.small),
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: izabran ? context.adminColors.accent : null,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AdminRadius.small),
             ),
             child: Text(
               '${dan.day}',
@@ -1083,7 +1083,7 @@ class _RedLegende extends StatelessWidget {
               height: 10,
               decoration: BoxDecoration(
                 color: ton.background,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(AdminRadius.dot),
                 // Obrub u boji teksta: „Završeno" je gotovo bijelo na bijeloj kartici, pa bi
                 // se bez njega kvadratić stopio sa podlogom.
                 border: Border.all(

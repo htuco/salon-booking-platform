@@ -70,6 +70,9 @@ export async function authorized(
 export function messageFor(job: PushJob) {
   const titles: Record<string, string> = {
     new_request: "Novi zahtjev",
+    // Salon u `auto` modu nema na šta odgovoriti: termin je već potvrđen, a ekran
+    // zahtjeva prazan. „Novi zahtjev" bi ga poslao da traži posao kojeg nema.
+    new_booking: "Nova rezervacija",
     confirmed: "Zahtjev je potvrđen",
     rejected: "Zahtjev je odbijen",
     cancelled: "Otkazivanje",

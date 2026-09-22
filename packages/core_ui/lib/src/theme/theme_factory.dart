@@ -70,8 +70,10 @@ ThemeData buildAppTheme({
     onSecondary: onSecondary,
     secondaryContainer: secondary,
     onSecondaryContainer: onSecondary,
-    error: jeTamna ? const Color(0xFFFF8A80) : const Color(0xFFB3261E),
-    onError: jeTamna ? const Color(0xFF2C0000) : const Color(0xFFFFFFFF),
+    // Greska je token teme (FE-101): ranije je bila heks ovdje, i to isti za sve tri
+    // teme uz `jeTamna` granu, pa su dvije svijetle teme dijelile jednu vrijednost.
+    error: neutrals.error,
+    onError: neutrals.onError,
     surface: neutrals.surface,
     onSurface: neutrals.textPrimary,
     surfaceContainerHighest: neutrals.surfaceContainer,
@@ -86,6 +88,9 @@ ThemeData buildAppTheme({
     // Razdjelnik unutar grupe redova je **tanji** od granice kartice. Ista boja za oboje
     // pretvorila bi `SpecCard` u mrežu.
     outlineVariant: neutrals.hairline,
+    // Zastor modala i bottom sheeta (FE-101). Stajao je kao heks u `app_dialog.dart`,
+    // pa ga svijetle teme nisu mogle promijeniti.
+    scrim: neutrals.scrim,
   );
 
   final textTheme = buildTextTheme(
