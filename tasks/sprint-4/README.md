@@ -10,7 +10,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | # | Task | Vrsta | Blokira | Procjena |
 |---|---|---|---|---|
 | [37](37-automatsko-potvrdjivanje.md) 🟡 | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
-| [38](38-crash-radno-vrijeme.md) | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
+| [38](38-crash-radno-vrijeme.md) 🟡 | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
 | [39](39-push-na-androidu.md) | Push obavijesti na Androidu | bug | 42 | 1–2 dana |
 | [40](40-naziv-lokala-se-ne-mijenja.md) | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
 | [41](41-bez-zakazivanja-bez-prijave.md) | Zakazivanje bez prijave se uklanja | popravka | — | 1 dan |
@@ -65,3 +65,15 @@ Bug je tamo bio živ: salon je već bio u `auto` modu, prekidač uključen a bez
 hostovanom bazom, u transakciji koja je vraćena: `status=confirmed source=app rok=null`.
 
 Ostaje 🟡 samo do merge-a PR-a i dok se ekran ne vidi uživo u `auto` modu.
+
+### 38 — Crash pri izmjeni radnog vremena 🟡
+
+Kod gotov 2026-09-22 na grani `fix/crash-radno-vrijeme`. Kvar nije bio u RPC-u ni mapiranju:
+`ListView` unutar `AlertDialog.content` je pri intrinsic mjerenju bacao
+`RenderShrinkWrappingViewport does not support returning intrinsic dimensions`. Sadržaj je sada
+`SingleChildScrollView` + `Column`, pa ostaje skrolabilan bez layout assertiona.
+
+Dokaz: ciljnih **15/15** testova i cijeli admin paket **280 PASS**. Regresijski test prolazi kroz
+stvarni ekran (izmjena dana → `Sačuvaj izmjene` → konfliktni dijalog), a drugi dovlači zadnji od
+40 konflikata na telefonu. Ostaje 🟡 do PR-a i zelenog CI-ja; post-fix klik protiv hostovanog
+projekta nije ponovljen, ali backend nije dio uzroka ni popravke.

@@ -93,58 +93,98 @@ Preostalo prije nego se PR skine sa drafta:
 
 ---
 
-# Sprint 4, aktivni task: 37 — Automatsko potvrđivanje termina
+# Sprint 4, aktivni task: 38 — Crash pri izmjeni radnog vremena
 
-Učitan 2026-09-22 iz [sprint-4/37](sprint-4/37-automatsko-potvrdjivanje.md). Prvi task Sprinta 4.
+Učitan 2026-09-22 iz [sprint-4/38](sprint-4/38-crash-radno-vrijeme.md). Nema zavisnosti; blokira
+[42](sprint-4/42-neradni-dan-i-zakljucana-proslost.md).
 
 ## Status
 
-Kod gotov i dokazan — grana `fix/automatsko-potvrdjivanje`,
-[PR #63](https://github.com/htuco/salon-booking-platform/pull/63) je draft. Puni dokazi i
-zamke: [task 37](sprint-4/37-automatsko-potvrdjivanje.md).
+Uzrok nađen i popravljen na grani `fix/crash-radno-vrijeme`; spremno za draft PR.
+Puni nalaz, doslovna poruka iz konzole i dokazi: [task 38](sprint-4/38-crash-radno-vrijeme.md).
 
 ## Ciljevi
 
-Preostalo prije nego se PR skine sa drafta:
+- [x] **Reprodukcija** — `/working-hours` → izmjena → `Sačuvaj`, uz salon koji **ima** termin
+      van novog radnog vremena. Bez tog uslova se ne vidi; to je i razlog zašto demo ulaz nikad
+      nije pogodio kvar, a ne mreža kako je task pretpostavljao.
+- [x] **Doslovna poruka i stack upisani u task fajl** —
+      `RenderShrinkWrappingViewport does not support returning intrinsic dimensions`,
+      bačeno u `performLayout()`, uz `AlertDialog` iz `working_hours_dialogs.dart:30`.
+- [x] **Uzrok imenovan.** Nije `ApiError`, nije null, nije RPC: `ListView` unutar
+      `AlertDialog.content`, koji se mjeri kroz `IntrinsicWidth`. Nijedan `catch` to nije mogao
+      uhvatiti jer se baca u fazi crtanja, ne poziva.
+- [x] **Widget test koji pada na zatečenom kodu** — pisan i pokrenut prije popravke, pao sa
+      `Multiple exceptions (15)`; poslije popravke 15/15 prolazi, admin paket 280 PASS.
+- [x] **pgTAP/REST nije potreban** — ugovor baze je nedužan, pa bi novi SQL test dokazivao nešto
+      što nije bilo pokvareno.
 
-- [x] **Zelen CI na PR-u** — `Schema, RLS and tenant isolation` i `Analiza, format i testovi` oba
-      `SUCCESS`. Dokaz iz čistog checkouta, koji lokalno ne postoji.
-- [x] **Migracija je na hostovanom projektu.** Primijenjena tačno jedna (`20260922100000`);
-      dokaz ponašanjem nad tom bazom, u transakciji koja je vraćena: `status=confirmed source=app
-      rok=null`. Bug je tamo bio živ — salon je već bio u `auto` modu, prekidač uključen bez efekta.
-- [ ] **Ekran poslije rezervacije viđen uživo u `auto` modu.** Dokaz je za sada widget test plus
-      ishod iz baze. Više nije blokiran — hostovani projekat ima migraciju i salon je u `auto` modu.
+- [x] **Puni UI tok pokriven testom** — stvarni ekran mijenja dan, pritisne
+      `Sačuvaj izmjene` i otvara konfliktni dijalog bez layout exceptiona; duga lista se
+      zasebno provjerava na telefonu.
+
+Ostalo za PR/CI: post-fix klik protiv hostovanog projekta nije ponovljen. Ne mijenja DoD jer je
+isti hostovani tok već reprodukovao kvar, a nalaz je isključivo Flutter layout; trajni test sada
+prolazi kroz puni ekran, ne samo kroz izdvojeni dijalog.
 
 ## Napomene
 
-- **Nalaz koji ovaj task ne zatvara, ide u 39.** U `auto` modu salon ne dobija **nijednu** push
-  obavijest o novoj rezervaciji: `private.queue_appointment_push` na `INSERT` reagira samo na
-  `source='app' and status='pending'`, a `confirmed` red tu granu ne pogađa. Zamka koju task fajl
-  opisuje (dupla „termin potvrđen") zato **ne postoji** — problem je suprotan. Popravka traži novu
-  vrijednost u `notification_type` enumu, dakle šemu izvan DoD-a ovog taska.
-- **`source` namjerno ostaje `app` u `auto` modu.** Status i `source` odgovaraju na dva različita
-  pitanja — da li salon čeka odgovor, i odakle je termin stigao. Ako se dogovor promijeni, to
-  mijenja značenje izvještaja i traži svoj ADR.
-- **`bookingStatusPending` je obrisan iz `app_bs.arb`.** Ekran sada ide kroz
-  `statusLabel`/`statusTone`, isti helper koji koriste kartica i detalj termina; mrtav ključ sa
-  tekstom „Na čekanju" je poziv sljedećem da ga ponovo hardkodira.
-- **`dart format` ume da uđe u `apps/*/build/`** i tamo reformatira vendovani Firebase primjer, pa
-  `melos run format` padne na čistom repou. CI to ne vidi (čist checkout nema `build/`). Ako padne
-  lokalno, pogledaj mijenja li se išta van `build/` prije nego tražiš uzrok u svom kodu.
-- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, `melos` je u `~/.pub-cache/bin` i nije
-  na `PATH`-u, a `deno` je u `~/.deno/bin` — `tool/test_supabase.sh` pretpostavlja sve na `PATH`-u.
-- **Hostovani projekat se ne može `link`-ovati** bez Supabase access tokena, koji po pravilu repoa
-  ne ide u `.env.live`. Direktna veza (`db.<ref>.supabase.co:5432`) je aktivno odbijena iako AAAA
-  zapis postoji, pa sve komande idu kroz **session pooler**:
-  `postgres.<ref>@aws-1-eu-west-1.pooler.supabase.com:5432`, uz `--db-url`. Region se ne vidi
-  nigdje u `.env.live` — nađen je probanjem, jer pooler na pogrešnom regionu vrati
-  `tenant/user not found`.
-- **Sabotažu pokretati samo unutar transakcije.** `create or replace` kroz `psql -f` nad fajlom bez
-  `begin;` ostane komitovan u lokalnoj bazi. `npx supabase db reset` čisti.
-- Naslijeđeno iz taska 36 (🟡, ne blokira): `/settings` ekran nije viđen uživo, isti dug stoji na
-  28 i 30.
+- **Očigledne putanje su već pokrivene, i to sužava gdje se gleda.** `_sacuvaj`
+  ([working_hours_screen.dart:205](../apps/admin/lib/src/features/working_hours/working_hours_screen.dart#L205))
+  hvata `on ApiError` **i** ima golu `catch (_)` granu, a repozitorij ide kroz `guard()`
+  ([error_mapper.dart:159](../packages/core_api/lib/src/errors/error_mapper.dart#L159)) koji
+  garantuje da iz poziva izađe samo `ApiError`. Isto vrijedi za `_greska` prikaz i za
+  `raspored.when(error: ...)` na liniji 51. Zaključak taska da uzrok nije očigledan null se drži —
+  ali znači i da crash vjerovatno **nije** na putanji snimanja, nego negdje gdje `try` ne pokriva.
+- **Jedina asimetrija koju je čitanje našlo: brisanje blokade hvata samo `ApiError`, bez gole
+  grane** ([working_hours_screen.dart:728](../apps/admin/lib/src/features/working_hours/working_hours_screen.dart#L728)),
+  za razliku od `_sacuvaj`. Uz to `_brisem` ostaje `true` ako išta izleti. To je kandidat, **ne
+  nalaz** — „izmjena radnog vremena" iz prijave je najvjerovatnije dugme `Sačuvaj`, a ne brisanje
+  neradnog dana. Ne popravljati prije reprodukcije: popravka bez poruke iz konzole je pogađanje,
+  i tako je task i napisan.
+- **Zamka „crash poslije uspješnog upisa" ima konkretnu adresu.** `sacuvaj` radi
+  `ref.invalidate(radnoVrijemeProvider)`, refetch ide kroz `workingHoursFromRows`, a taj mapper
+  već pretvara grešku u `MappingError` (grana `ApiError`) — što opet završi u `AsyncValue.error`,
+  koji ekran crta. Dakle i ta putanja izgleda pokrivena; ako se crash ipak dešava tu, uzrok je u
+  rebuild-u uređivača, ne u mapiranju.
+- **Nasljeđe iz taska 34 koje je najbliže ovom kvaru.** `didUpdateWidget` u uređivaču poredi sa
+  `_dani`, ne sa `oldWidget.pocetna` — `ValueKey(sve.length)` je ranije bio mrtav jer
+  `weekFromWorkingHours` **uvijek** vraća sedam. To je zadnja stvar koja je dirala stanje poslije
+  snimanja i prvo mjesto koje treba pročitati kad reprodukcija pokaže trenutak crasha.
+- **`ApiError` je `sealed`** (devet grana: `NetworkError`, `NotFoundError`, `ConflictError`,
+  `ServerError`, `AuthCancelledError`, `MappingError`, `AuthRejectedError`, `RateLimitError`) — ako
+  popravka uvodi `switch`, mora pokriti sve. Pravilo iz `apps/client/CLAUDE.md` vrijedi i za admin.
+- **Van obima: raspored po radniku nema ekran.** `set_working_hours` prima `p_employee_id` i pgTAP
+  ga pokriva, ali `/working-hours` uređuje **samo salonski** raspored (dug iz taska 34). Ako se
+  reprodukcija ispostavi kao radnikov sloj, to je novi task, ne proširenje ovog.
+- **Procjena od 1 dana stoji uslovno.** Istraga se ne procjenjuje prije reprodukcije; ako uzrok
+  ispadne u RPC ugovoru, DoD traži i pgTAP/REST, pa dan postaje optimističan.
+- **Okruženje ove mašine** (naslijeđeno iz taska 37, još vrijedi): `supabase` CLI ide kroz
+  `npx supabase`, `melos` je u `~/.pub-cache/bin` i nije na `PATH`-u, `deno` je u `~/.deno/bin`;
+  `tool/test_supabase.sh` pretpostavlja sve na `PATH`-u. Hostovani projekat se ne može `link`-ovati
+  bez access tokena — sve ide kroz session pooler
+  `postgres.<ref>@aws-1-eu-west-1.pooler.supabase.com:5432` uz `--db-url`. `dart format` ume da uđe
+  u `apps/*/build/` i obori `melos run format` lokalno; CI to ne vidi.
 
 ## Istorija
+
+- **37 — Automatsko potvrđivanje termina** (2026-09-22, 🟡) — `booking_mode` je do tada postojao
+  kroz cijeli stek i **nigdje se nije čitao**: prekidač je bio uključen na hostovanom salonu i bez
+  ijednog efekta. Sada `book_appointment` računa `v_auto` i nosi njime `status` i
+  `pending_expires_at`, dok `source` **namjerno ostaje `app`** — status i porijeklo odgovaraju na
+  dva različita pitanja, i mijenjanje toga traži svoj ADR. Ekran poslije rezervacije čita status
+  umjesto da ga pretpostavlja, pa je mrtav ključ `bookingStatusPending` obrisan iz `app_bs.arb`
+  umjesto da čeka sljedećeg da ga ponovo hardkodira. Dokazi: **455 pgTAP asercija** (novi `015`
+  nosi 22), sabotaža starom verzijom funkcije obara tačno dvije, `melos run test` **798**, oba CI
+  joba `SUCCESS`, i ishod nad **hostovanom bazom** u transakciji koja je vraćena
+  (`status=confirmed source=app rok=null`). [PR #63](https://github.com/htuco/salon-booking-platform/pull/63)
+  je **merge-ovan** 2026-09-22. **Nalaz koji ovaj task nije zatvorio, ide u 39:** u `auto` modu
+  salon ne dobija **nijednu** push obavijest o novoj rezervaciji — `private.queue_appointment_push`
+  na `INSERT` gleda samo `source='app' and status='pending'`. Zamka koju task fajl opisuje (dupla
+  „termin potvrđen") **ne postoji**; problem je suprotan, a popravka traži novu vrijednost u
+  `notification_type` enumu. **Ostalo (zašto 🟡): ekran nije viđen uživo u `auto` modu** — dokaz je
+  za sada widget test plus ishod iz baze. Isti dug stoji na 28, 30 i 36; nastavlja se sa
+  `tool/run_live_demo.sh client -d chrome`.
 
 - **36 — Postavke lokacije** (2026-09-21) — `/settings` je bila zadnja ruta u placeholder petlji;
   sada nosi osnovne podatke, booking pravila i salonske sekcije pravila, plus **zaključan popis**
