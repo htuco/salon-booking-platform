@@ -96,9 +96,8 @@ Vidjeno uživo na tri mjesta (`flutter build web` + Chromium):
 Svaki nov test provjeren sabotažom: pilula vraćena na `accent` obori test, `sidebarText`
 spušten na `#444444` obori kontrastni test na tamnoj podlozi.
 
-**Zavisi od nespojenog PR-a.** Grana stoji na `docs/adr-adminv2-izvor-istine`
-([PR #67](https://github.com/htuco/salon-booking-platform/pull/67)), jer ADR-0016 nosi pravilo
-po kojem je ovaj task uopšte odblokiran. Rebase na `main` čim #67 uđe.
+**ADR-0016 je spojen u `main`** (`29fd030`) — pravilo po kojem je ovaj task odblokiran. Grana
+je rebaseovana na `main` i nosi samo ovaj task, jedan commit.
 
 Ostalo:
 

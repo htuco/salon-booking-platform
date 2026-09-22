@@ -97,5 +97,14 @@ FE-406 je počet prvi iako nije prvi po broju: ne zavisi ni od čega, blokira FE
 FE-404, i **jedini je od šest admin taskova koji ne referencira nijedan PNG iz `prototype/adminv2/`**
 — pa je mogao naprijed dok su odluke iznad čekale ADR.
 
-**Sljedeće:** [FE-401](FE-401-admin-shell.md) — sada odblokiran ADR-om 0016. Ljuska, Melura
-wordmark i koralna; blokira FE-402…FE-405, pa ide prvi.
+**U radu:** [FE-401](FE-401-admin-shell.md) — kod gotov i dokazan, grana
+`feat/fe-401-admin-ljuska-melura`. Melura wordmark, tamni sidebar, verzal navigacija, uloga
+ispod imena. 294 testa, viđeno uživo na tri ekrana. Odblokirao ga je
+[ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md), spojen u `main`.
+
+Dva nalaza iz izvoza koja task nije predvidio: **koralne oznake uz aktivnu stavku nema**
+(skeniran cijeli sidebar — nula koralnih piksela), a **pilula brojača jeste koralna**, što task
+nije spomenuo. Oba zapisana u task fajlu.
+
+**Sljedeće:** FE-402…FE-405 su sada odblokirani i mogu paralelno — [FE-405](FE-405-login.md) je
+najmanji (0,5 dan) i dijelom je već urađen uz FE-401 (wordmark na prijavi).
