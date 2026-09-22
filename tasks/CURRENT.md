@@ -1,18 +1,45 @@
-# Trenutni task: ADR-0016 — `adminv2/` je vizuelni izvor istine za admin
+# Trenutni task: FE-401 — Admin ljuska i Melura branding
 
-Nije task iz `tasks/`, nego odluka koja je blokirala pet od šest admin taskova FE epika. Grana
-`docs/adr-adminv2-izvor-istine`.
+Učitan 2026-09-22 iz [fe-redizajn/FE-401](fe-redizajn/FE-401-admin-shell.md). Grana
+`feat/fe-401-admin-ljuska-melura`, rebaseovana na `main`, jedan commit.
+
+## Status
+
+Kod gotov i dokazan. **294 testa PASS** (bilo 289), čista analiza i format. Viđeno uživo na tri
+ekrana: desktop 1600, telefon 402 i prijava.
+
+## Ciljevi
+
+- [x] Melura wordmark i logo placeholder — `AdminWordmark`, jedan widget za obje ljuske
+- [x] Tamni sidebar i u svijetloj temi, izmjeren iz `adminv2/export/3b`
+- [x] Verzal navigacija, uloga umjesto maila, koralna pilula brojača
+- [x] Četiri testa sa „Salon OS" prepisana na `kImeProizvoda`, ne obrisana
+- [x] **Zelen CI** — `Analiza, format i testovi` pass (3m47s)
+
+## Napomene uz FE-401
+
+- **Koralne oznake uz aktivnu stavku nema u izvozu.** DoD ju je tražio; skeniran je cijeli
+  sidebar u `3b` na koralne piksele i rezultat je nula. Sva koralna je desno (dugmad). Dodati
+  je značilo bi crtati nešto što dizajn ne traži.
+- **Pilula brojača je bila plava**, što task nije spomenuo. Na tamnom sidebaru se `#3D5A80`
+  čitala kao greška; izvoz mjeri `#EE6C4D`.
+- **Verzal ide kroz `toUpperCase()` u sidebaru, ne kroz `kAdminDestinations`.** Mijenjanje
+  labela bi tiho poverzalilo i donju navigaciju na telefonu, gdje `3k` crta mala slova. Oba
+  ponašanja su pod testom, a telefon je provjeren i u browseru.
+- **Nijedna nova boja.** Sve izmjerene vrijednosti su već postojeći dark tokeni.
+- Razriješena protivrječnost **unutar** `admin/SPEC.md` (red 11 traži tamni sidebar, tabela
+  tokena davala `#F8F9FA`); `SPEC.md` ispravljen.
+
+---
+
+# Prethodni task: ADR-0016 — `adminv2/` je vizuelni izvor istine za admin
+
+Spojen u `main` ([PR #67](https://github.com/htuco/salon-booking-platform/pull/67), `29fd030`).
 
 **Nalaz koji je odluku sveo na usku.** `adminv2/export/` i `admin/SPEC.md` pokrivaju **isti skup
 ekrana** — izvučeni identifikatori daju `3a`–`3u` u oba smjera, razlika nula. Dakle `adminv2` nije
 drugi handoff nego **redizajn istih 21 prikaza**, pa `SPEC.md` ostaje kao tekst (mapa na module,
 funkcionalne granice), a `adminv2` je jači za vizual. Time su **FE-401…FE-405 odblokirani**.
-
-Uz ADR: `prototype/CLAUDE.md` dobio četvrti folder i pravilo „sliku iz `adminv2/`, tekst iz
-`admin/SPEC.md`", tabela odluka u `docs/README.md` dopunjena, FE-401 i epik README ažurirani.
-
-**Sljedeće:** [FE-401](fe-redizajn/FE-401-admin-shell.md) — ljuska, Melura wordmark i koralna.
-Blokira FE-402…FE-405, pa ide prvi.
 
 ---
 

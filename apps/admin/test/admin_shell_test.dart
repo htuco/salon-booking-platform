@@ -11,6 +11,7 @@ import 'package:admin/src/core/navigation/admin_destinations.dart';
 import 'package:admin/src/core/router/admin_router.dart';
 import 'package:admin/src/core/theme/theme.dart';
 import 'package:admin/src/core/widgets/admin_scaffold.dart';
+import 'package:admin/src/core/widgets/admin_wordmark.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/placeholder/admin_placeholder_screen.dart';
 import 'package:core_api/core_api.dart';
@@ -93,7 +94,7 @@ void main() {
       final sidebar = tester.widget<Container>(
         find
             .ancestor(
-              of: find.text('Salon OS'),
+              of: find.text(kImeProizvoda),
               matching: find.byType(Container),
             )
             .last,
@@ -104,15 +105,25 @@ void main() {
     testWidgets('nosi svih osam modula iz sidebara `3b`', (tester) async {
       await _naSirini(tester, _desktop, _ekran());
 
+      // **Verzal je stil, podatak ostaje isti** (FE-401, `adminv2/export/3b`). Sidebar
+      // ispisuje `label.toUpperCase()`, a `kAdminDestinations` i dalje nosi „Danas" — zato
+      // se ovdje traži verzal, a telefonski test niže i dalje traži mala slova iz istog
+      // izvora. Da je promijenjen sam `label`, donja navigacija bi tiho dobila „DANAS".
       for (final cilj in kAdminDestinations) {
         expect(
-          find.text(cilj.label),
+          find.text(cilj.label.toUpperCase()),
           findsOneWidget,
           reason: 'sidebar nema stavku „${cilj.label}"',
+        );
+        expect(
+          find.text(cilj.label),
+          findsNothing,
+          reason: 'sidebar crta „${cilj.label}" malim slovima',
         );
       }
       // „Još" je ćelija telefona, ne modul: na desktopu tih pet stoje u sidebaru.
       expect(find.text(kAdminJos.label), findsNothing);
+      expect(find.text(kAdminJos.label.toUpperCase()), findsNothing);
     });
 
     testWidgets('top bar je visok 66 px', (tester) async {
@@ -134,7 +145,7 @@ void main() {
     testWidgets('crta četiri ćelije, bez sidebara', (tester) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      expect(find.text('Salon OS'), findsNothing);
+      expect(find.text(kImeProizvoda), findsNothing);
 
       final navigacija = tester.widget<NavigationBar>(
         find.byType(NavigationBar),
@@ -228,7 +239,7 @@ void main() {
       expect(find.byType(NavigationBar), findsOneWidget);
 
       await _naSirini(tester, _desktop, _placeholder(AdminRoute.clients));
-      expect(find.text('Salon OS'), findsOneWidget);
+      expect(find.text(kImeProizvoda), findsOneWidget);
     });
 
     testWidgets('gutter prati širinu, ne ekran', (tester) async {
@@ -287,6 +298,72 @@ void main() {
       final context = tester.element(find.text('tijelo ekrana'));
 
       expect(AdminShell.bandOf(context), AdminWidthBand.compact);
+    });
+  });
+
+  group('Melura branding (FE-401)', () {
+    testWidgets('sidebar nosi ime proizvoda i ulogu, ne mail', (tester) async {
+      // `3b` ispod imena crta **ulogu**, ne mail: u sidebaru je korisnije ko si ovdje nego
+      // čime si se prijavio. Mail ostaje dostupan u meniju naloga na telefonu.
+      await _naSirini(tester, _desktop, _ekran());
+
+      expect(find.text(kImeProizvoda), findsOneWidget);
+      expect(find.text('vlasnik lokacije'), findsOneWidget);
+      expect(find.text(_vlasnik.email), findsNothing);
+    });
+
+    testWidgets('logo je placeholder, ne prazno mjesto', (tester) async {
+      // Prazan prostor u sidebaru izgleda kao greška u iscrtavanju; isprekidani okvir
+      // kaže „ovdje ide logo, još ga nema". Pravog logo asseta još nema.
+      await _naSirini(tester, _desktop, _ekran());
+
+      expect(find.text('LOGO'), findsOneWidget);
+    });
+
+    testWidgets('pilula brojača je koralna, ne plava', (tester) async {
+      // **Ovo je našao browser, ne test.** Poslije prelaska na tamni sidebar pilula uz
+      // „Zahtjeve" je ostala `accent` (`#3D5A80`) i na tamnoj podlozi se čitala kao
+      // greška; `adminv2/export/3b` mjeri `#EE6C4D` na tom mjestu.
+      //
+      // Tekst je `onAction` (`#2C2C2C`), ne `onAccent` (bijela): bijela na koralu mjeri
+      // 3,05:1 i pada AA — v. `admin_colors.dart`.
+      await _naSirini(tester, _desktop, _ekran(naCekanju: 3));
+
+      final pilula = tester.widget<Container>(
+        find
+            .ancestor(of: find.text('3'), matching: find.byType(Container))
+            .first,
+      );
+      final dekoracija = pilula.decoration! as BoxDecoration;
+      expect(dekoracija.color, AdminPalette.light.action);
+
+      final tekst = tester.widget<Text>(find.text('3'));
+      expect(tekst.style?.color, AdminPalette.light.onAction);
+    });
+
+    test('nepoznata uloga ne ispisuje sirovu vrijednost', () {
+      // Enum `public.staff_role` se može proširiti; red koji ovdje ne prepoznajemo ne
+      // smije korisniku ispisati `salon_manager`. Tada podnožje pokaže samo ime.
+      expect(labelaUloge('salon_admin'), 'vlasnik lokacije');
+      expect(labelaUloge('employee'), 'radnik');
+      expect(labelaUloge('super_admin'), 'administrator platforme');
+      expect(labelaUloge('salon_manager'), isNull);
+      expect(labelaUloge(''), isNull);
+    });
+
+    test('sidebar je taman i u svijetloj temi', () {
+      // Izmjereno iz `adminv2/export/3b`, ne procijenjeno. Razrješava protivrječnost
+      // unutar `prototype/admin/SPEC.md`: red 11 traži „stalni tamni sidebar", a tabela
+      // tokena u redu 86 daje `#F8F9FA`. Po ADR-0016 izvoz je jači za vizual.
+      expect(AdminPalette.light.sidebarBackground, const Color(0xFF141517));
+      expect(AdminPalette.light.sidebarSelected, const Color(0xFF373A40));
+      expect(
+        AdminPalette.light.sidebarAccentForeground,
+        const Color(0xFFFFFFFF),
+      );
+
+      // Radna površina ostaje svijetla — taman je samo sidebar.
+      expect(AdminPalette.light.ground, const Color(0xFFFCFCF9));
     });
   });
 }

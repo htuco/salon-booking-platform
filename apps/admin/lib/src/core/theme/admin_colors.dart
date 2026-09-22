@@ -71,14 +71,24 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     onDestructive: Color(0xFFFFFFFF),
     accentInk: Color(0xFF3D5A80),
     accentTint: Color(0xFFE9ECEF),
-    sidebarRaised: Color(0xFFE9ECEF),
-    sidebarBackground: Color(0xFFF8F9FA),
-    sidebarAccentForeground: Color(0xFF3D5A80),
-    sidebarSelected: Color(0xFFE9ECEF),
-    sidebarDivider: Color(0xFFDEE2E6),
+    // **Sidebar je taman i u svijetloj temi** (FE-401, `adminv2/export/3b`). Vrijednosti su
+    // izmjerene iz izvoza, ne procijenjene, i sve odreda su **već postojeći tamni tokeni**:
+    // pozadina `#141517`, aktivna stavka `#373A40`, aktivni tekst `#FFFFFF`, neaktivni
+    // `#C1C2C5`. Radna površina ostaje svijetla (`#FBFBF8` u izvozu ≈ `ground`).
+    //
+    // Ovo razrješava protivrječnost **unutar** `prototype/admin/SPEC.md`: red 11 traži
+    // „stalni tamni sidebar", a tabela tokena u redu 86 daje `#F8F9FA` za svijetlu temu.
+    // Kod je do sada slijedio tabelu, `adminv2` slijedi red 11. Po
+    // [ADR-0016](../../../../../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md)
+    // izvoz je jači za vizual.
+    sidebarRaised: Color(0xFF2C2E33),
+    sidebarBackground: Color(0xFF141517),
+    sidebarAccentForeground: Color(0xFFFFFFFF),
+    sidebarSelected: Color(0xFF373A40),
+    sidebarDivider: Color(0xFF373A40),
     breadcrumbSeparator: Color(0xFFE2E2E2),
-    sidebarText: Color(0xFF333333),
-    sidebarMuted: Color(0xFF666666),
+    sidebarText: Color(0xFFC1C2C5),
+    sidebarMuted: Color(0xFF909296),
     positiveTint: Color(0xFFE0F2F1),
     positiveInk: Color(0xFF004D40),
     waitingTint: Color(0xFFEE6C4D),

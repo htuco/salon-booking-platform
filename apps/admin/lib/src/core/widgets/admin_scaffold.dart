@@ -8,6 +8,7 @@ import '../../features/appointments/appointments_providers.dart';
 import '../navigation/admin_destinations.dart';
 import '../router/admin_router.dart';
 import '../theme/theme.dart';
+import 'admin_wordmark.dart';
 
 /// Širine na kojima admin mijenja oblik.
 ///
@@ -221,15 +222,9 @@ class _Sidebar extends ConsumerWidget {
         children: [
           // Ime proizvoda, ne ime salona: admin je jedan build za sve salone. Ispod njega
           // canvas crta „6 lokacija" i birač lokacije — to je `3a` i ostaje izvan sprinta.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Text(
-              'Salon OS',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: context.adminColors.sidebarText,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+            child: AdminWordmark(),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -280,10 +275,16 @@ class _SidebarStavka extends ConsumerWidget {
                 const SizedBox(width: AdminSpacing.md),
                 Expanded(
                   child: Text(
-                    cilj.label,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    // **Verzal je stil, ne podatak.** `cilj.label` ostaje „Danas", a
+                    // velika slova dolaze iz `toUpperCase()` ovdje — isti string se zato u
+                    // čitaču ekrana i u testu i dalje čita kao „Danas", a ne „DANAS".
+                    // Mijenjanje samog `kAdminDestinations` labela bi promijenilo i
+                    // donju navigaciju na telefonu, gdje `3k` crta mala slova.
+                    cilj.label.toUpperCase(),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: boja,
-                      fontWeight: izabrana ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: izabrana ? FontWeight.w600 : FontWeight.w500,
+                      letterSpacing: 0.8,
                     ),
                   ),
                 ),
@@ -332,13 +333,17 @@ class _SidebarPodnozje extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                Text(
-                  clan.email,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: context.adminColors.sidebarMuted,
+                // **Uloga, ne mail** (`3b`). Mail je i dalje dostupan — stoji u meniju
+                // naloga na telefonu — a u sidebaru je korisnija uloga: ko si ovdje, a ne
+                // čime si se prijavio. Nepoznata uloga ne ispisuje ništa, v. [labelaUloge].
+                if (labelaUloge(clan.role) case final uloga?)
+                  Text(
+                    uloga,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: context.adminColors.sidebarMuted,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -487,13 +492,17 @@ class _Pilula extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
       decoration: BoxDecoration(
-        color: context.adminColors.accent,
+        // **Koralna, ne plava** (FE-401). Izmjereno iz `adminv2/export/3b`: pilula uz
+        // „Zahtjeve" je `#EE6C4D`, dok je prije stajao `accent` (`#3D5A80`). Par
+        // `action`/`onAction` već postoji i već je AA-provjeren — bijela na koralu pada
+        // (3,05:1), pa je tekst `#2C2C2C`. Zato ovdje ne ide `onAccent`.
+        color: context.adminColors.action,
         borderRadius: BorderRadius.circular(AdminRadius.pill),
       ),
       child: Text(
         '$broj',
         style: AdminText.dataInline.copyWith(
-          color: context.adminColors.onAccent,
+          color: context.adminColors.onAction,
           fontWeight: FontWeight.w600,
         ),
       ),
