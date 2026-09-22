@@ -9,7 +9,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 
 | # | Task | Vrsta | Blokira | Procjena |
 |---|---|---|---|---|
-| [37](37-automatsko-potvrdjivanje.md) | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
+| [37](37-automatsko-potvrdjivanje.md) 🟡 | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
 | [38](38-crash-radno-vrijeme.md) | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
 | [39](39-push-na-androidu.md) | Push obavijesti na Androidu | bug | 42 | 1–2 dana |
 | [40](40-naziv-lokala-se-ne-mijenja.md) | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
@@ -45,4 +45,23 @@ od rasprave, ali sam posao je Sprint 5.
 
 ## Status
 
-Sprint otvoren 2026-09-22. Nijedan task još nije počet.
+Sprint otvoren 2026-09-22.
+
+### 37 — Automatsko potvrđivanje termina 🟡
+
+Kod gotov i dokazan 2026-09-22, [PR #63](https://github.com/htuco/salon-booking-platform/pull/63)
+je draft. `booking_mode` je do sada postojao kroz cijeli stek i **nigdje se nije čitao**;
+sada `book_appointment` računa `v_auto` i nosi njime `status` i `pending_expires_at`, dok
+`source` ostaje `app` — status i porijeklo su dva različita pitanja. Dokazi: **455 pgTAP
+asercija** (novi `015` nosi 22), sabotaža starom verzijom funkcije obara tačno dvije, i
+`melos run test` **798**.
+
+**Nalaz za task 39:** u `auto` modu salon ne dobija nijednu push obavijest o novoj
+rezervaciji — `queue_appointment_push` na `INSERT` gleda samo `pending`. Zamka iz taska
+(dupla obavijest) ne postoji; problem je suprotan.
+
+CI je **zelen** na PR-u (oba joba `SUCCESS`), a migracija je **primijenjena na hostovani projekat**.
+Bug je tamo bio živ: salon je već bio u `auto` modu, prekidač uključen a bez efekta. Dokaz nad
+hostovanom bazom, u transakciji koja je vraćena: `status=confirmed source=app rok=null`.
+
+Ostaje 🟡 samo do merge-a PR-a i dok se ekran ne vidi uživo u `auto` modu.

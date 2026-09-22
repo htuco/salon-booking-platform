@@ -1,4 +1,5 @@
 import 'package:core_api/core_api.dart';
+import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,24 +10,33 @@ import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../appointments/appointment_labels.dart';
 import 'booking_flow_provider.dart';
 import 'booking_submit_provider.dart';
 import 'date_labels.dart';
 
 /// Ekran nakon slanja (`prototype/ui/screenshots/07-zahtjev-poslan.png`).
 ///
-/// **Ne kaže da je termin potvrđen, jer nije.** `book_appointment` uvijek pravi `pending`
-/// red — i kad salon radi u `auto` modu, potvrdu dodjeljuje baza, ne ovaj poziv
-/// (`docs/01 §18`). Lažno "Potvrđeno!" ovdje je najskuplja moguća greška u proizvodu:
-/// korisnik dođe u salon koji ga ne očekuje. Zato kicker kaže **"ZAHTJEV JE POSLAN"**, a
-/// status u tabeli stoji kao "Na čekanju".
+/// **Ekran ne pretpostavlja ishod nego ga čita.** Do taska 37 je `book_appointment` uvijek
+/// vraćao `pending`, pa je ekran smio hardkodirati "ZAHTJEV JE POSLAN" i "Na čekanju". Od
+/// tada `salon_settings.booking_mode = 'auto'` pravi red koji je **već `confirmed`**, i
+/// tekst se grana po `appointment.status` — nikad po postavci, koju ovaj ekran ni ne vidi.
 ///
-/// Copy je **doslovno iz handoffa** ("Salon vas je vidio"). Barber je 1:1; druge vertikale
-/// dobijaju svoj dizajn, pa se rod djelatnosti ("Ordinacija vas je vidjela") rješava tamo.
+/// Greška je skupa u **oba** smjera. Lažno "Potvrđeno!" znači da korisnik dođe u salon koji
+/// ga ne očekuje; lažno "čeka potvrdu" nad potvrđenim terminom znači da čeka obavijest koja
+/// nikad neće stići, i zove salon da pita nešto što mu je aplikacija već rekla.
+///
+/// Copy `manual` grane je **doslovno iz handoffa** ("Salon vas je vidio"). Barber je 1:1;
+/// druge vertikale dobijaju svoj dizajn, pa se rod djelatnosti ("Ordinacija vas je
+/// vidjela") rješava tamo. `auto` grana nema svoj canvas u handoffu — oblik ekrana ostaje
+/// isti, mijenja se samo tekst i ton badgea.
+///
+/// **Badge ide kroz `statusLabel`/`statusTone`**, isti helper koji koriste kartica i detalj
+/// termina. Vlastita mapa ovdje je bila kopija koja je slučajno bila tačna dok je status
+/// bio samo jedan.
 ///
 /// **Nema konfeta.** Prvi prolaz ih je imao, jer ih DoD taska spominje "kao u prototipu";
-/// sam prototip ih nema — ima hero površinu, kicker, serif naslov i tabelu. Slavlje nad
-/// zahtjevom koji salon još nije potvrdio je obećanje koje ekran ne smije dati.
+/// sam prototip ih nema — ima hero površinu, kicker, serif naslov i tabelu.
 class BookingSuccessScreen extends ConsumerWidget {
   const BookingSuccessScreen({super.key});
 
@@ -37,6 +47,10 @@ class BookingSuccessScreen extends ConsumerWidget {
     final scheme = theme.colorScheme;
     final vertical = verticalOf(ref);
     final appointment = ref.watch(lastBookingProvider);
+
+    // Dok termin nije stigao, ekran stoji u `manual` tekstu: to je stanje koje ne obećava
+    // ništa. Obrnuto bi značilo da prazan ekran na trenutak tvrdi da je termin potvrđen.
+    final potvrdjen = appointment?.status == AppointmentStatus.confirmed;
 
     final services = ref.watch(servicesProvider).valueOrNull;
     final usluga = appointment == null || services == null
@@ -66,17 +80,23 @@ class BookingSuccessScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.bookingSuccessKicker,
+                        potvrdjen
+                            ? l10n.bookingSuccessKickerConfirmed
+                            : l10n.bookingSuccessKicker,
                         style: kicker(color: scheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        l10n.bookingSuccessHeadline,
+                        potvrdjen
+                            ? l10n.bookingSuccessHeadlineConfirmed
+                            : l10n.bookingSuccessHeadline,
                         style: theme.textTheme.displaySmall,
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       Text(
-                        l10n.bookingSuccessBody,
+                        potvrdjen
+                            ? l10n.bookingSuccessBodyConfirmed
+                            : l10n.bookingSuccessBody,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -113,8 +133,8 @@ class BookingSuccessScreen extends ConsumerWidget {
                             SpecRow(
                               label: l10n.bookingStatusLabel,
                               trailing: StatusBadge(
-                                label: l10n.bookingStatusPending,
-                                tone: StatusTone.warning,
+                                label: statusLabel(l10n, appointment.status),
+                                tone: statusTone(appointment.status),
                               ),
                             ),
                           ],

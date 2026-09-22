@@ -1,38 +1,53 @@
-# Trenutni task
+# Trenutni task: 37 — Automatsko potvrđivanje termina
+
+Učitan 2026-09-22 iz [sprint-4/37](sprint-4/37-automatsko-potvrdjivanje.md). Prvi task Sprinta 4.
 
 ## Status
 
-Gotov — task 36 (2026-09-21). [PR #59](https://github.com/htuco/salon-booking-platform/pull/59)
-je spojen u `main` (merge `f7bb650`). Dokazi, sabotaže i ograničenja:
-[task 36](sprint-3/36-postavke-lokacije.md).
-
-Time **Sprint 3 nema više nezatvorenih taskova sa kodom.** Ostaju 🟡 stavke [28](sprint-3/28-admin-tema-i-tipografija.md)
-i [30](sprint-3/30-postojeci-ekrani-na-handoff.md), koje čekaju dokaz na ekranu, ne kod.
-
-Task 35 je spojen u `main` (PR #58, merge `20f686b`).
+Kod gotov i dokazan — grana `fix/automatsko-potvrdjivanje`,
+[PR #63](https://github.com/htuco/salon-booking-platform/pull/63) je draft. Puni dokazi i
+zamke: [task 37](sprint-4/37-automatsko-potvrdjivanje.md).
 
 ## Ciljevi
 
 Preostalo prije nego se PR skine sa drafta:
 
-- [ ] **Ekran otvoren uživo.** Sve ostalo je dokazano, ovo nije: `./tool/run_tenant.sh`, prijava
-      kao `admin@barberstudiovitez.test` / `admin123456`, pa `/settings` na obje širine i
-      poređenje sa canvasom `3i`. Isti dug stoji na 28 i 30, pa se može zatvoriti u jednom prolazu.
+- [x] **Zelen CI na PR-u** — `Schema, RLS and tenant isolation` i `Analiza, format i testovi` oba
+      `SUCCESS`. Dokaz iz čistog checkouta, koji lokalno ne postoji.
+- [x] **Migracija je na hostovanom projektu.** Primijenjena tačno jedna (`20260922100000`);
+      dokaz ponašanjem nad tom bazom, u transakciji koja je vraćena: `status=confirmed source=app
+      rok=null`. Bug je tamo bio živ — salon je već bio u `auto` modu, prekidač uključen bez efekta.
+- [ ] **Ekran poslije rezervacije viđen uživo u `auto` modu.** Dokaz je za sada widget test plus
+      ishod iz baze. Više nije blokiran — hostovani projekat ima migraciju i salon je u `auto` modu.
 
 ## Napomene
 
-- **Task je našao bug u klijentu, ne u adminu.** `SalonClientApp` na realtime signal nije
-  invalidirao `salonSettingsProvider`, pa bi klijent nudio otkazivanje po starom roku dok bi baza
-  vraćala `PT403`. Popravljeno u istoj grani (`40f39b6`); lista providera u `architecture.md` je
-  sada treći put proširena i nosi razlog zašto `salonProvider` u nju **ne ide**.
-- **Sabotažu pokretati samo unutar transakcije testa.** `create or replace` kroz `psql -f` nad
-  fajlom bez `begin;` ostane komitovan u lokalnoj bazi; sljedeći REST test je zbog toga prijavio
-  cross-tenant pisanje kojeg u migraciji nema. `npx supabase db reset` čisti.
-- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, a `deno` je u
-  `~/.deno/bin` i nije na `PATH`-u — `tool/test_supabase.sh` pretpostavlja oba na `PATH`-u, pa se
-  komande za sada pokreću ručno.
-- Poslije 36 sprint 3 nema više nezatvorenih taskova sa kodom; ostaju 🟡 stavke 28 i 30, koje čekaju
-  dokaz na ekranu, ne kod.
+- **Nalaz koji ovaj task ne zatvara, ide u 39.** U `auto` modu salon ne dobija **nijednu** push
+  obavijest o novoj rezervaciji: `private.queue_appointment_push` na `INSERT` reagira samo na
+  `source='app' and status='pending'`, a `confirmed` red tu granu ne pogađa. Zamka koju task fajl
+  opisuje (dupla „termin potvrđen") zato **ne postoji** — problem je suprotan. Popravka traži novu
+  vrijednost u `notification_type` enumu, dakle šemu izvan DoD-a ovog taska.
+- **`source` namjerno ostaje `app` u `auto` modu.** Status i `source` odgovaraju na dva različita
+  pitanja — da li salon čeka odgovor, i odakle je termin stigao. Ako se dogovor promijeni, to
+  mijenja značenje izvještaja i traži svoj ADR.
+- **`bookingStatusPending` je obrisan iz `app_bs.arb`.** Ekran sada ide kroz
+  `statusLabel`/`statusTone`, isti helper koji koriste kartica i detalj termina; mrtav ključ sa
+  tekstom „Na čekanju" je poziv sljedećem da ga ponovo hardkodira.
+- **`dart format` ume da uđe u `apps/*/build/`** i tamo reformatira vendovani Firebase primjer, pa
+  `melos run format` padne na čistom repou. CI to ne vidi (čist checkout nema `build/`). Ako padne
+  lokalno, pogledaj mijenja li se išta van `build/` prije nego tražiš uzrok u svom kodu.
+- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, `melos` je u `~/.pub-cache/bin` i nije
+  na `PATH`-u, a `deno` je u `~/.deno/bin` — `tool/test_supabase.sh` pretpostavlja sve na `PATH`-u.
+- **Hostovani projekat se ne može `link`-ovati** bez Supabase access tokena, koji po pravilu repoa
+  ne ide u `.env.live`. Direktna veza (`db.<ref>.supabase.co:5432`) je aktivno odbijena iako AAAA
+  zapis postoji, pa sve komande idu kroz **session pooler**:
+  `postgres.<ref>@aws-1-eu-west-1.pooler.supabase.com:5432`, uz `--db-url`. Region se ne vidi
+  nigdje u `.env.live` — nađen je probanjem, jer pooler na pogrešnom regionu vrati
+  `tenant/user not found`.
+- **Sabotažu pokretati samo unutar transakcije.** `create or replace` kroz `psql -f` nad fajlom bez
+  `begin;` ostane komitovan u lokalnoj bazi. `npx supabase db reset` čisti.
+- Naslijeđeno iz taska 36 (🟡, ne blokira): `/settings` ekran nije viđen uživo, isti dug stoji na
+  28 i 30.
 
 ## Istorija
 

@@ -426,6 +426,16 @@
     "description": "Serif naslov success ekrana. Prototip pise 'Salon vas je vidio'; ime djelatnosti se ovdje ne umece jer se rod razlikuje po vertikali ('Ordinacija vas je vidjela')."
   },
 
+  "bookingSuccessKickerConfirmed": "TERMIN JE POTVRĐEN",
+  "@bookingSuccessKickerConfirmed": {
+    "description": "Kicker success ekrana kad je salon u booking_mode = 'auto', pa termin nastaje kao confirmed (task 37)."
+  },
+
+  "bookingSuccessHeadlineConfirmed": "Termin je vaš",
+  "@bookingSuccessHeadlineConfirmed": {
+    "description": "Serif naslov success ekrana za potvrden termin. Bez imena djelatnosti, iz istog razloga kao bookingSuccessHeadline."
+  },
+
   "bookingAddToCalendar": "Dodaj u kalendar telefona",
   "@bookingAddToCalendar": {
     "description": "Sekundarna akcija na success ekranu (prototype/ui 5g)."
@@ -501,9 +511,9 @@
     "description": "Objasnjenje pending statusa na success ekranu."
   },
 
-  "bookingStatusPending": "Na čekanju",
-  "@bookingStatusPending": {
-    "description": "Status badge na success ekranu i u listi termina."
+  "bookingSuccessBodyConfirmed": "Ovaj salon potvrđuje termine odmah, pa je vaš već upisan u raspored. Nema čekanja na odgovor.",
+  "@bookingSuccessBodyConfirmed": {
+    "description": "Objasnjenje uz confirmed status na success ekranu. Ne obecava podsjetnik — reminder push jos ne postoji (task 39)."
   },
 
   "bookingBackHome": "Nazad na početnu",

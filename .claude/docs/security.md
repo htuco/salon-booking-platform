@@ -484,6 +484,25 @@ ostavljen `pending` bi čekao potvrdu od onoga ko ga je već potvrdio i istekao 
 `pending_expires_at`. Zato admin put daje `confirmed` + `source = 'manual'` + `pending_expires_at
 is null`, i potvrda postojećeg termina takođe skida rok isteka.
 
+### Klijentski status dolazi iz `booking_mode`, `source` ne
+
+Od taska 37 `book_appointment` računa `v_auto := v_admin or coalesce(v_settings.booking_mode,
+'manual') = 'auto'` i nosi njime **dvije** vrijednosti: `status` i `pending_expires_at`. Salon u
+`auto` modu je odgovor dao unaprijed, postavkom, pa klijentska rezervacija nastaje kao `confirmed`
+bez roka isteka.
+
+**`source` ostaje `app` i u `auto` modu.** Status i `source` odgovaraju na dva različita pitanja —
+da li salon čeka odgovor, i odakle je termin stigao. Ko ih spoji, izgubi jedini podatak po kojem
+se rezervacija klijenta razlikuje od one koju je salon sam upisao.
+
+`coalesce` nije kozmetika: salon bez reda u `salon_settings` ostavlja `v_settings` prazan, pa bi
+bez njega uslov bio `NULL`, `case` bi pao u `else`, i podrazumijevano `manual` ponašanje bi ispalo
+tačno slučajno umjesto namjerno.
+
+**Postavka vrijedi unaprijed, ne unazad.** Prebacivanje moda ne dira zatečene `pending` termine —
+vlasnik koji uključi automatsko potvrđivanje nije time odgovorio na zahtjeve koji već čekaju. To
+je negativan test u `015_automatsko_potvrdjivanje.test.sql`.
+
 ### Brojači se pune, prag ne postoji
 
 `no_show` diže `customers.no_show_count`, `completed` diže `visit_count` i `last_visit_at`. Obje
@@ -624,6 +643,7 @@ ništa.
 | `rest_admin_login.ts` | **seed admin se stvarno prijavi kroz GoTrue** i vidi samo svoj salon; tuđi `x-salon-id` ne mijenja šta vidi, upis u tuđi salon je `403`, `anon` je `401` |
 | `014_postavke_lokacije.test.sql` | postavke lokacije — grant je granica nad `salons` i `salon_settings`, platformska polja (boja, `slug`, `plan`, zona) ostaju van dohvata vlasnika, i **promjena `min_cancel_hours` odmah mijenja ishod `cancel_appointment`** za isti termin |
 | `rest_postavke_lokacije.ts` | isto kroz PostgREST: direktan `PATCH` pada, a ono što vlasnik snimi čita **`anon` bez tokena** — dokaz da promjena vrijedi bez novog builda |
+| `015_automatsko_potvrdjivanje.test.sql` | automatsko potvrđivanje — mod se prebacuje **kroz `update_salon_settings`**, pa se odmah rezerviše: `manual` daje `pending` sa rokom, `auto` `confirmed` bez roka, `source` ostaje `app` u oba, admin unos ne zavisi od postavke, a **zatečeni `pending` termini se ne diraju** |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

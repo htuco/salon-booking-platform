@@ -302,14 +302,58 @@ void main() {
           ),
         ).called(1);
         expect(find.text('Salon vas je vidio'), findsOneWidget);
-        // `docs/01 §18`: termin nastaje kao `pending`. Lažno "potvrđeno" bi značilo da
-        // korisnik dođe u salon koji ga ne očekuje.
+        // Salon u `manual` modu: baza je vratila `pending`, pa ekran ne smije reći više
+        // od toga. Lažno "potvrđeno" znači da korisnik dođe u salon koji ga ne očekuje.
         expect(find.text('Na čekanju'), findsOneWidget);
         await tester.pump(AppDuration.slow);
 
         container.dispose();
       },
     );
+
+    testWidgets('potvrdjen termin ne pise da ceka potvrdu', (tester) async {
+      // Salon u `auto` modu (`salon_settings.booking_mode`): `book_appointment` vraca
+      // red koji je **vec** `confirmed`. Ekran tu postavku ne vidi niti je smije gledati
+      // — grana iskljucivo po statusu reda koji je stvarno nastao.
+      final repo = _MockBooking()
+        ..stubUspjesan(status: AppointmentStatus.confirmed);
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        ruta: ClientRoute.bookDetails.path,
+        customerId: _customerId,
+        deviceId: 'registered-device-id',
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
+      );
+
+      await tester.pump();
+      await tester.tap(find.text('Pošalji zahtjev'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        ClientRoute.bookSuccess.path,
+      );
+
+      // Ovo su tri odvojene tvrdnje jer su do taska 37 sve tri bile hardkodirane: ko
+      // popravi samo badge, ostavi korisniku naslov koji i dalje kaze da salon tek treba
+      // da pogleda zahtjev.
+      expect(find.text('TERMIN JE POTVRĐEN'), findsOneWidget);
+      expect(find.text('Termin je vaš'), findsOneWidget);
+      expect(find.text('Potvrđeno'), findsOneWidget);
+
+      // Negativan dio: stari tekst ne smije ostati nigdje na ekranu.
+      expect(find.text('ZAHTJEV JE POSLAN'), findsNothing);
+      expect(find.text('Na čekanju'), findsNothing);
+      await tester.pump(AppDuration.slow);
+
+      container.dispose();
+    });
   });
 }
 
@@ -385,7 +429,10 @@ const _verticalDateOnly = Vertical(
 );
 
 class _MockBooking extends Mock implements BookingRepository {
-  void stubUspjesan() {
+  /// [status] je ono sto **baza** vrati, ne postavka: od taska 37 `book_appointment` u
+  /// `auto` modu pravi red koji je vec `confirmed`. Klijent postavku ne vidi, pa se ni
+  /// test ne smije praviti da je vidi.
+  void stubUspjesan({AppointmentStatus status = AppointmentStatus.pending}) {
     stubSlotovi([
       AvailableSlot(startTime: const LocalTime(9, 0), employeeId: _radnik.id),
       AvailableSlot(startTime: const LocalTime(9, 30), employeeId: _radnik.id),
@@ -412,7 +459,7 @@ class _MockBooking extends Mock implements BookingRepository {
         note: any(named: 'note'),
         deviceId: any(named: 'deviceId'),
       ),
-    ).thenAnswer((_) async => _termin);
+    ).thenAnswer((_) async => _termin.copyWith(status: status));
   }
 
   void stubSlotovi(List<AvailableSlot> slotovi) {
