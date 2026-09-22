@@ -20,11 +20,12 @@ Preostalo prije nego se PR skine sa drafta:
       prag 840 ostaje nezavisan (bira ljusku, ne broj kolona).
 - [x] **Nema praznih margina na 1920 i 2560 px** — izmjereno testom: sadržaj na 2560 ide do 2532.
       4 kolone na 2560, 3 na 1920, 2 na 1440, 1 na 1100 i na telefonu.
-- [x] **288 Flutter testova PASS** u `apps/admin` (bilo 278), čista analiza i format. Svaki novi
+- [x] **289 Flutter testova PASS** u `apps/admin` (bilo 278), čista analiza i format. Svaki novi
       test provjeren sabotažom — prva verzija je gledala samo desnu ivicu i prolazila je i kad se
       lista srozala na jednu razvučenu karticu.
 - [ ] **Zelen CI na PR-u** — dokaz iz čistog checkouta, koji lokalno ne postoji.
-- [ ] **Viđeno uživo na širokom ekranu** (`/verify`). Widget test mjeri geometriju, ne izgled.
+- [x] **Viđeno uživo na širokom ekranu** (`/verify`) — 4 kolone na 2560 px, sadržaj do desne
+      ivice. Browser je našao dvije greške koje suita nije; obje popravljene u `ca091af`.
 
 ## Napomene uz FE-406
 

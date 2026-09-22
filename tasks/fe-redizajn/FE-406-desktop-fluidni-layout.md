@@ -82,9 +82,26 @@ je tekst u jednoj koloni i duga linija se teško čita. DoD tu mogućnost izrič
 negenerisanih l10n gettera (`bookingSuccess*Confirmed`). Provjereno na čistom `main`-u bez ovih
 izmjena — isti rezultat, dakle nije regresija. Traži `flutter gen-l10n`.
 
+**Viđeno uživo (`/verify`, 2026-09-22).** `flutter build web -t lib/demo_main.dart`, pa admin
+u Chromiumu na 1920 i 2560 px. Puna lista termina: 4 kolone na 2560 px, sadržaj do desne ivice,
+bez prazne margine — ono što task traži, potvrđeno na ekranu.
+
+**Browser je našao dvije greške koje 288 testova nije.** Obje popravljene u `ca091af`:
+
+1. **Uspravan šav kroz stranicu na detalju termina.** Zaglavlje i traka radnji crtaju svoju
+   površinu, a stajali su unutar ograničenja od 720 px — pozadina je prestajala na 720 px, a
+   ostatak radne površine bio druge boje. Ograničenje sada ide oko *sadržaja*, ne oko ekrana.
+   Prva popravka je uvela drugu grešku (pilula skroz desno, dugmad razvučena preko 2324 px),
+   pa je uveden `_UzSadrzaj`: površina puna, sadržaj u koloni.
+2. **Kartica zahtjeva razvučena na 2324 px** — tri zone na suprotnim krajevima stola. Vraćena
+   granica od 1176 px, ali sada kao granica *kartice*, ne strane.
+
+Postojeći test je mjerio samo `ListView`, pa su **oba** pogrešna stanja prolazila kroz njega.
+Nov test mjeri i površinu zaglavlja i širinu dugmeta; provjeren sabotažom.
+
 Ostalo prije nego PR siđe sa drafta:
 
-- [ ] Vidjeti uživo na širokom ekranu (`/verify`).
+- [ ] Zelen CI na zadnjem commitu — dokaz iz čistog checkouta.
 
 **Dvije stavke DoD-a namjerno ostaju otvorene i ne zatvara ih ovaj PR** (obrazloženje uz njih):
 horizontalni skrol tabela pripada [FE-404](FE-404-upravljanje-podacima.md) jer dira iste fajlove,
