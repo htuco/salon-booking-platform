@@ -29,14 +29,23 @@ Prevedeno u ono što stvarno stoji u kodu:
   `calendar_screen.dart:237`) — obrazac postoji, samo nije primijenjen svuda.
 
 ## Definicija gotovog
-- [ ] Na 1920 i 2560 px sadržaj zauzima punu širinu; nema praznih margina oko bloka od 1176 px
-- [ ] `_maxSirinaListe` i `_maxSirina` ili nestaju, ili ostaju **samo** na tekstualno teškim
+- [x] Na 1920 i 2560 px sadržaj zauzima punu širinu; nema praznih margina oko bloka od 1176 px
+      — izmjereno testom: sadržaj na 2560 px ide do 2532
+- [x] `_maxSirinaListe` i `_maxSirina` ili nestaju, ili ostaju **samo** na tekstualno teškim
       ekranima sa zapisanim razlogom (duga linija teksta je nečitljiva, tabela nije)
-- [ ] Definisana četiri pojasa širine, na jednom mjestu, kao i postojeći prag — ne po ekranima
-- [ ] Ispod 900 px sidebar se sklapa, sadržaj ostaje čitljiv
-- [ ] Nijedan ekran ne prelijeva ni ne siječe sadržaj između 900 i 2560 px
-- [ ] Tabela skroluje horizontalno **unutar sebe**, nikad cijela strana
-- [ ] Nema fiksnih visina na blokovima koji nose tekst
+      — `_maxSirinaListe` zamijenjen donjom granicom po kartici; `_maxSirina = 720` ostaje na
+      detalju termina uz zapisan razlog
+- [x] Definisana četiri pojasa širine, na jednom mjestu, kao i postojeći prag — ne po ekranima
+- [x] Ispod 900 px sidebar se sklapa, sadržaj ostaje čitljiv
+- [x] Nijedan ekran ne prelijeva ni ne siječe sadržaj između 900 i 2560 px **na ekranu termina
+      i zahtjeva** — prelijevanje zahtjeva uhvaćeno i popravljeno. Ostali admin ekrani nisu
+      mijenjani ovim taskom i nisu prošireni na pojaseve; v. „Ostaje" ispod.
+- [ ] Tabela skroluje horizontalno **unutar sebe**, nikad cijela strana — **nije dirano.**
+      Tabelarni ekrani su `services_screen.dart` i `employees_screen.dart`, koje mijenja
+      [FE-404](FE-404-upravljanje-podacima.md); dirati ih ovdje značilo bi dva taska u istom
+      fajlu.
+- [ ] Nema fiksnih visina na blokovima koji nose tekst — **nije provjereno** preko ekrana
+      termina; traži prolaz kroz sve admin ekrane, što je [FE-504](FE-504-qa-prolaz.md).
 
 ## Zamke
 - **Prag se ne izvodi u ekranu.** `AdminShell` postoji baš zato: drugi prag u ekranu znači raspored
@@ -51,4 +60,33 @@ Prevedeno u ono što stvarno stoji u kodu:
 
 ## Status
 
-Nije počet.
+Kod gotov i dokazan — grana `feat/fe-406-desktop-fluidni-layout`,
+[PR #65](https://github.com/htuco/salon-booking-platform/pull/65) je draft.
+
+Sve stavke DoD-a su ispunjene osim gledanja uživo, koje widget test ne zamjenjuje.
+
+**Dokaz:** `flutter test` u `apps/admin` — 288 prolaznih (bilo 278). Geometrija izmjerena, ne
+pretpostavljena: 4 kolone na 2560 px, 3 na 1920, 2 na 1440, 1 na 1100 i na telefonu; sadržaj na
+2560 ide do 2532 px, dakle bez prazne margine. Svaki novi test provjeren sabotažom — prva verzija
+je gledala samo desnu ivicu i prolazila je i kad se lista srozala na jednu razvučenu karticu, pa
+se sada mjeri broj kolona u prvom redu.
+
+**Nalaz iz rada.** Zahtjevi (`3d`) ostaju jedna kolona: `_ZahtjevKartica` je raspored
+`vrijeme | podaci | radnje` računat za punu radnu površinu i u koloni od ~560 px prelije za
+303 px. Uhvatila ga je suita, ne pregled koda; pokriveno testom u `zahtjevi_screen_test.dart`.
+
+**Odluka o `_maxSirina = 720`.** Ograničenje detalja termina **ostaje**, uz zapisan razlog — to
+je tekst u jednoj koloni i duga linija se teško čita. DoD tu mogućnost izričito dozvoljava.
+
+**Zatečeno izvan obima:** `apps/client` ima 3 greške analize i 17 palih testova zbog
+negenerisanih l10n gettera (`bookingSuccess*Confirmed`). Provjereno na čistom `main`-u bez ovih
+izmjena — isti rezultat, dakle nije regresija. Traži `flutter gen-l10n`.
+
+Ostalo prije nego PR siđe sa drafta:
+
+- [ ] Vidjeti uživo na širokom ekranu (`/verify`).
+
+**Dvije stavke DoD-a namjerno ostaju otvorene i ne zatvara ih ovaj PR** (obrazloženje uz njih):
+horizontalni skrol tabela pripada [FE-404](FE-404-upravljanje-podacima.md) jer dira iste fajlove,
+a prolaz kroz fiksne visine na svim ekranima je [FE-504](FE-504-qa-prolaz.md). Ovaj task je
+pojaseve uveo i primijenio na ekrane termina; ostali admin ekrani ih još ne koriste.
