@@ -481,4 +481,58 @@ void main() {
       expect(tester.widget<InkWell>(red.first).onTap, isNotNull);
     });
   });
+
+  /// Zahtjev na odobrenju — DoD FE-403, „vizuelno odvojeni (isprekidan rub)".
+  ///
+  /// Boja se ne provjerava: nju već drži `theme_contrast_test.dart`, a ovdje je pitanje
+  /// **oblika** — nosi li blok koji čeka potvrdu rub kojeg potvrđen blok nema. Painter je
+  /// [RubZahtjeva] je zato javan: test pita njegov `ceka`, umjesto da pogađa tip privatnog
+  /// painter-a ili da hvata `foregroundPainter`, koji i `Material` postavlja za svoj oblik.
+  group('zahtjev na odobrenju ima isprekidan rub', () {
+    /// Nosi li blok sa tim imenom [RubZahtjeva] sa upaljenim `ceka`.
+    bool imaRub(WidgetTester tester, String ime) => find
+        .ancestor(of: find.text(ime), matching: find.byType(RubZahtjeva))
+        .evaluate()
+        .any((e) => (e.widget as RubZahtjeva).ceka);
+
+    testWidgets('desktop `3c`: nosi ga zahtjev, ne i potvrđen termin', (
+      tester,
+    ) async {
+      await _naSirini(tester, _desktop, _ekran());
+
+      // Nedim Hodžić je `pending` u fixture-u, Mirza Aliagić je `confirmed`.
+      expect(imaRub(tester, 'Nedim Hodžić'), isTrue);
+      expect(imaRub(tester, 'Mirza Aliagić'), isFalse);
+    });
+
+    testWidgets('telefon `3l`: isti rub nosi i red u listi', (tester) async {
+      await _naSirini(tester, _telefon, _ekran());
+
+      expect(imaRub(tester, 'Nedim Hodžić'), isTrue);
+      expect(imaRub(tester, 'Mirza Aliagić'), isFalse);
+    });
+
+    testWidgets('legenda objasni i oblik, ne samo boju', (tester) async {
+      await _naSirini(tester, _desktop, _ekran());
+
+      // U legendi je uzorak **brat** teksta, ne predak — pa se gleda red kao cjelina.
+      // `.first` je bitan: `find.ancestor` vrati sve `Row`-ove iznad teksta, a najdalji
+      // od njih obuhvata cijelu stranicu i uvukao bi uzorke **svih** redova legende, pa
+      // bi provjera bila zelena i za „Potvrđeno". Prvi je najbliži, dakle red legende.
+      // Uzorak uz „Na čekanju" nosi isti rub; legenda koja crta samo boju uči pola
+      // pravila. Ostali redovi ga nemaju.
+      bool uzorakImaRub(String tekst) => find
+          .descendant(
+            of: find
+                .ancestor(of: find.text(tekst), matching: find.byType(Row))
+                .first,
+            matching: find.byType(RubZahtjeva),
+          )
+          .evaluate()
+          .any((e) => (e.widget as RubZahtjeva).ceka);
+
+      expect(uzorakImaRub(statusOznaka(AppointmentStatus.pending)), isTrue);
+      expect(uzorakImaRub(statusOznaka(AppointmentStatus.confirmed)), isFalse);
+    });
+  });
 }
