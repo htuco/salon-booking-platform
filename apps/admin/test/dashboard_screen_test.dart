@@ -4,6 +4,8 @@
 /// widgeta bi prolazila i kad bi dashboard imao dva stabla, a upravo to sprint zabranjuje.
 library;
 
+import 'dart:async';
+
 import 'package:admin/src/core/format/datum.dart';
 import 'package:admin/src/features/appointments/appointment_card.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
@@ -319,6 +321,70 @@ void main() {
       );
       // Termin koji je istekao u 14:40.
       expect(terminUToku(potvrdjen, DateTime(2026, 9, 14, 14, 45)), isFalse);
+    });
+  });
+
+  group('redizajn `3b` (FE-402)', () {
+    testWidgets('kartice se preslažu u jednu kolonu ispod 900 px', (
+      tester,
+    ) async {
+      // Radna površina je širina prozora minus sidebar (236). Na 1100 px to je 864 —
+      // dakle `compact`, iako je prozor širi od 900. **Zato `LayoutBuilder`, a ne
+      // `MediaQuery`**: pojas izveden iz prozora bi ovdje tvrdio da stanu tri kartice.
+      await _naSirini(tester, const Size(1100, 900), _ekran());
+
+      final kartice = find.text('Termina danas');
+      expect(kartice, findsOneWidget);
+
+      // U jednoj koloni sve tri kartice dijele lijevu ivicu.
+      final lijeva = tester.getTopLeft(find.text('Termina danas')).dx;
+      expect(tester.getTopLeft(find.text('Čeka potvrdu')).dx, lijeva);
+      expect(tester.getTopLeft(find.text('Promet danas')).dx, lijeva);
+    });
+
+    testWidgets('na 1440 px kartice stoje jedna pored druge', (tester) async {
+      await _naSirini(tester, const Size(1440, 900), _ekran());
+
+      final prva = tester.getTopLeft(find.text('Termina danas'));
+      final druga = tester.getTopLeft(find.text('Čeka potvrdu'));
+
+      expect(druga.dx, greaterThan(prva.dx), reason: 'druga desno od prve');
+      expect(druga.dy, prva.dy, reason: 'u istom redu');
+    });
+
+    testWidgets('učitavanje je skeleton, ne spinner', (tester) async {
+      // Dashboard je **prvi ekran poslije prijave**, pa se indikator vidi na svakom
+      // ulasku. Spinner kaže „nešto se dešava"; skeleton kaže koliko redova dolazi, pa se
+      // raspored ne pomjeri kad podaci stignu.
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            currentStaffProvider.overrideWith(
+              (ref) => Stream<StaffMember?>.value(_vlasnik),
+            ),
+            adminSalonProvider.overrideWith((ref) async => _salon),
+            // Nikad se ne razriješi — ekran ostaje u stanju učitavanja.
+            danasnjiTerminiProvider.overrideWith(
+              (ref) => Completer<List<Appointment>>().future,
+            ),
+            zahtjeviProvider.overrideWith((ref) async => const <Appointment>[]),
+            pendingCountProvider.overrideWith((ref) async => 0),
+            adminServicesProvider.overrideWith((ref) async => _usluge),
+            adminEmployeesProvider.overrideWith((ref) async => _radnici),
+          ],
+          child: MaterialApp(
+            theme: buildAdminTheme(),
+            home: const AdminDashboardScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
   });
 }
