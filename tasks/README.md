@@ -14,6 +14,12 @@ njemu urađeno. `CURRENT.md` je **derivat**: kad se raziđe sa task fajlom ili r
 | [Sprint 2](sprint-2/) | 12–25, 27 | Auth, identitet, ostatak handoffa, admin i push | 11 ✅, 3 🟡 |
 | [Sprint 3](sprint-3/) | 28–36 | Admin aplikacija po handoffu iz `prototype/admin/` | 6 ✅, 3 🟡 |
 | [Sprint 4](sprint-4/) | 37–47 | Popravke onoga što laže vlasniku, pa Faza 2 — radnik sa vlastitom prijavom | otvoren |
+| [FE redizajn](fe-redizajn/) | FE-101–FE-504 | Izgled obje aplikacije po Melura handoffu | otvoren |
+
+**FE redizajn nije sprint nego epik.** Sprintovi nose funkcionalnost i idu redom; `fe-redizajn/`
+nosi izgled i presijeca ih. Zato je numerisan zasebno (`FE-<epik><broj>`) i zato njegov `README.md`
+prvo nabraja **četiri odluke koje moraju pasti prije prvog commita** — handoff na četiri mjesta
+traži suprotno od onoga što repo danas provodi.
 
 Task 26 (guest + Facebook) je **skinut** sa plana, zato numeracija Sprinta 2 preskače broj —
 [ADR-0011](../docs/adr/0011-facebook-login-se-ne-implementira.md).
