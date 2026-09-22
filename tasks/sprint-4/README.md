@@ -60,6 +60,8 @@ asercija** (novi `015` nosi 22), sabotaža starom verzijom funkcije obara tačno
 rezervaciji — `queue_appointment_push` na `INSERT` gleda samo `pending`. Zamka iz taska
 (dupla obavijest) ne postoji; problem je suprotan.
 
-CI je **zelen** na PR-u (oba joba `SUCCESS`). Ostaje 🟡 samo dok migracija ne ode na hostovani
-projekat (`npx supabase db push`) — tamo je salon **već u `auto` modu**, pa prekidač stoji uključen
-a ne radi ništa.
+CI je **zelen** na PR-u (oba joba `SUCCESS`), a migracija je **primijenjena na hostovani projekat**.
+Bug je tamo bio živ: salon je već bio u `auto` modu, prekidač uključen a bez efekta. Dokaz nad
+hostovanom bazom, u transakciji koja je vraćena: `status=confirmed source=app rok=null`.
+
+Ostaje 🟡 samo do merge-a PR-a i dok se ekran ne vidi uživo u `auto` modu.

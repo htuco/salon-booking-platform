@@ -14,12 +14,11 @@ Preostalo prije nego se PR skine sa drafta:
 
 - [x] **Zelen CI na PR-u** — `Schema, RLS and tenant isolation` i `Analiza, format i testovi` oba
       `SUCCESS`. Dokaz iz čistog checkouta, koji lokalno ne postoji.
-- [ ] **Migracija na hostovanom projektu.** `npx supabase db push` je jedini korak koji fali da
-      `auto` mod postoji i izvan lokalnog Dockera; jednosmjerna promjena nad demo bazom, čeka odluku.
-      Tamo je salon **već u `auto` modu** — prekidač je uključen i ne radi ništa, što je ovaj bug
-      zatečen uživo.
-- [ ] **Ekran poslije rezervacije viđen uživo u `auto` modu.** Dokaz je za sada widget test.
-      Blokiran prethodnom stavkom — dok migracija nije na hostovanom projektu, `auto` se uživo ne može ni izazvati.
+- [x] **Migracija je na hostovanom projektu.** Primijenjena tačno jedna (`20260922100000`);
+      dokaz ponašanjem nad tom bazom, u transakciji koja je vraćena: `status=confirmed source=app
+      rok=null`. Bug je tamo bio živ — salon je već bio u `auto` modu, prekidač uključen bez efekta.
+- [ ] **Ekran poslije rezervacije viđen uživo u `auto` modu.** Dokaz je za sada widget test plus
+      ishod iz baze. Više nije blokiran — hostovani projekat ima migraciju i salon je u `auto` modu.
 
 ## Napomene
 
@@ -39,8 +38,12 @@ Preostalo prije nego se PR skine sa drafta:
   lokalno, pogledaj mijenja li se išta van `build/` prije nego tražiš uzrok u svom kodu.
 - `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, `melos` je u `~/.pub-cache/bin` i nije
   na `PATH`-u, a `deno` je u `~/.deno/bin` — `tool/test_supabase.sh` pretpostavlja sve na `PATH`-u.
-- **Hostovani projekat nije `link`-ovan** (`npx supabase link`), pa se `migration list --linked` ne
-  može pokrenuti; stanje njegove šeme za sada nije provjereno komandom.
+- **Hostovani projekat se ne može `link`-ovati** bez Supabase access tokena, koji po pravilu repoa
+  ne ide u `.env.live`. Direktna veza (`db.<ref>.supabase.co:5432`) je aktivno odbijena iako AAAA
+  zapis postoji, pa sve komande idu kroz **session pooler**:
+  `postgres.<ref>@aws-1-eu-west-1.pooler.supabase.com:5432`, uz `--db-url`. Region se ne vidi
+  nigdje u `.env.live` — nađen je probanjem, jer pooler na pogrešnom regionu vrati
+  `tenant/user not found`.
 - **Sabotažu pokretati samo unutar transakcije.** `create or replace` kroz `psql -f` nad fajlom bez
   `begin;` ostane komitovan u lokalnoj bazi. `npx supabase db reset` čisti.
 - Naslijeđeno iz taska 36 (🟡, ne blokira): `/settings` ekran nije viđen uživo, isti dug stoji na

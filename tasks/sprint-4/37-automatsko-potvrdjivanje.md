@@ -81,11 +81,27 @@ obavijest ne stigne nijednom. Popravka traži novu vrijednost u `notification_ty
 (danas: `confirmed`, `rejected`, `reminder_d1`, `reminder_h3`, `new_request`, `cancelled`),
 što je šema izvan DoD-a ovog taska.
 
+**Migracija je na hostovanom projektu** (2026-09-22). `npx supabase db push` je primijenio
+**tačno jednu** migraciju — `migration list` je prije toga pokazao 17 primijenjenih i samo
+`20260922100000` sa praznim `remote`. Poslije: jedna `book_appointment` u `pg_proc`, sa `v_auto`.
+
+**Bug je bio živ u produkciji demo baze.** Salon je tamo **već bio u `auto` modu** — neko je
+prekidač uključio kroz Postavke, a migracije nije bilo, pa je svaka klijentska rezervacija i dalje
+nastajala kao `pending` i čekala potvrdu koju je salon postavkom već dao.
+
+Dokaz nad **hostovanom** bazom, unutar transakcije koja je vraćena (`rollback`), sa privremenim
+identitetom i prvim slotom koji `get_available_slots` stvarno vrati:
+
+```
+status=confirmed source=app rok=null
+```
+
+Provjereno poslije: nula zaostalih naloga, nula zaostalih klijenata, broj termina nepromijenjen (66).
+
 **Ostalo za sljedećeg.**
 
-- **Hostovani projekat nema ovu migraciju.** Nastavlja se sa `npx supabase db push` —
-  jednosmjerna promjena nad demo bazom, pa čeka odluku. **Salon je već u `auto` modu**
-  (provjereno nad hostovanim `salon_settings`), dakle prekidač je uključen a ne radi ništa: to
-  je ovaj bug, zatečen uživo.
-- Ekran poslije rezervacije nije viđen uživo u `auto` modu; dokaz je za sada widget test.
-  Blokiran prethodnom stavkom.
+- Ekran poslije rezervacije nije viđen uživo u `auto` modu; dokaz je za sada widget test plus
+  gornji ishod iz baze. Sada je odblokiran — hostovani projekat ima migraciju.
+- Hostovani projekat **nije `link`-ovan** i ne može biti bez Supabase access tokena, koji po
+  pravilu repoa ne ide u `.env.live`. Direktna veza (`db.<ref>.supabase.co:5432`) je odbijena, pa
+  komande idu kroz **session pooler**: `postgres.<ref>@aws-1-eu-west-1.pooler.supabase.com:5432`.
