@@ -74,6 +74,22 @@ Future<void> main() async {
         adminSalonProvider.overrideWith((ref) async => _salon),
         adminServicesProvider.overrideWith((ref) async => _usluge),
         adminEmployeesProvider.overrideWith((ref) async => _radnici),
+        // Isti razlog, ekran „Osoblje": kartica radnika ispisuje **koje usluge radi**, a
+        // to su veze iz `employee_services`. Bez ovog override-a provider ide u bazu,
+        // padne, i sve tri kartice pišu „Usluge nisu učitane." — snimak tada pokazuje
+        // stanje greške kao da je ekran pokvaren.
+        adminEmployeeLinksProvider.overrideWith(
+          (ref) async => [
+            for (final radnik in _radnici)
+              for (final usluga in _usluge)
+                EmployeeService(
+                  id: 'link-${radnik.id}-${usluga.id}',
+                  salonId: _salonId,
+                  employeeId: radnik.id,
+                  serviceId: usluga.id,
+                ),
+          ],
+        ),
         // Detalj se otvara tapom na termin; bez ovoga bi demo pokazao stanje greške, jer
         // `terminProvider` ide u bazu.
         terminProvider.overrideWith(
