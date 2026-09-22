@@ -37,12 +37,16 @@ import 'appointment_card.dart';
 import 'appointments_providers.dart';
 import 'status_pill.dart';
 
-/// Najveća širina kolone sa karticama na desktopu.
+/// Najmanja širina na kojoj se kartica termina još da složiti.
 ///
-/// Radna površina raste sa prozorom, ali kartica termina ne treba biti šira od svog
-/// sadržaja: na 2560 px bi ime klijenta i tri dugmeta stajali na suprotnim krajevima stola.
-/// `3d` je crtan na radnoj površini od 1176 px, pa je to i granica.
-const double _maxSirinaListe = 1176;
+/// Ranije je ovdje stajala granica **cijele liste** (1176 px, širina radne površine iz `3d`)
+/// i lista je bila centrirana, pa je admin na 1920 i 2560 px imao po nekoliko stotina
+/// piksela prazne margine sa svake strane umjesto radne površine.
+///
+/// Zamjena nije veća granica nego **donja**: višak prostora se troši na nove kolone, a broj
+/// kolona ograničava ovo — ime klijenta, vrijeme i tri dugmeta u redu traže oko 360 px, pa
+/// uža kartica lomi radnje u dva reda.
+const double _minSirinaKartice = 360;
 
 class AdminAppointmentsScreen extends ConsumerStatefulWidget {
   const AdminAppointmentsScreen({this.trazeniStatus, super.key});
@@ -384,38 +388,88 @@ class _Lista extends ConsumerWidget {
     final radnici = ref.watch(radniciPoIdProvider);
     final gutter = AdminShell.gutterOf(context);
 
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _maxSirinaListe),
-        child: ListView.separated(
-          padding: EdgeInsets.fromLTRB(gutter, AdminSpacing.lg, gutter, 40),
-          itemCount: termini.length,
-          separatorBuilder: (_, _) =>
-              SizedBox(height: zahtjevi ? AdminSpacing.lg : AdminSpacing.md),
-          itemBuilder: (context, i) {
-            final termin = termini[i];
-            final opis = opisTermina(termin, usluge: usluge, radnici: radnici);
+    // **`LayoutBuilder`, ne `MediaQuery`.** Ovaj ekran stoji u ljusci pored sidebara, pa je
+    // dostupna širina za `AdminSize.sidebarWidth` manja od širine prozora; pojas izveden iz
+    // prozora bi dao kolonu viška.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final band = AdminShell.bandZa(constraints.maxWidth);
+        // Pojas kaže koliko kolona *smije*, a najmanja čitljiva kartica koliko ih *stane*.
+        // Uzima se manje od toga: bez donje granice bi četiri kolone na 1200 px dale
+        // kartice od 280 px, u kojima se ime, vrijeme i tri dugmeta ne mogu složiti.
+        //
+        // **`_minSirinaKartice` je *donja* granica, ne gornja.** Dijeljenje najvećom
+        // dopuštenom širinom bi na 2324 px dalo jednu kolonu i vratilo tačno onu razvučenu
+        // karticu preko cijelog stola koju FE-406 uklanja.
+        final stane =
+            ((constraints.maxWidth - gutter * 2 + AdminSpacing.md) /
+                    (_minSirinaKartice + AdminSpacing.md))
+                .floor();
+        // **Zahtjevi ostaju jedna kolona.** `_ZahtjevKartica` je raspored iz `3d`: vrijeme
+        // lijevo, podaci u sredini, radnje desno — tri zone u `Row`-u, računate za punu
+        // radnu površinu. U koloni od ~560 px taj red prelije za 300 px. Handoff `3d` i
+        // crta zahtjeve kao listu preko cijele širine, pa mreža ovdje nije ni tražena.
+        final kolone = zahtjevi && jeDesktop
+            ? 1
+            : (band.kolone < stane ? band.kolone : stane.clamp(1, 4));
 
-            if (zahtjevi && jeDesktop) {
-              return _ZahtjevKartica(termin: termin, opis: opis);
-            }
+        Widget karticaZa(int i) {
+          final termin = termini[i];
+          final opis = opisTermina(termin, usluge: usluge, radnici: radnici);
 
-            return AppointmentCard(
-              termin: termin,
-              opis: opis,
-              // Zahtjev se može odnositi na bilo koji dan, pa vrijeme bez datuma ne kaže
-              // dovoljno; u dnevnoj listi je datum u zaglavlju i ponavljao bi se u svakom
-              // redu.
-              datum: zahtjevi
-                  ? naslovDanaZaDatum(termin.date).toLowerCase()
-                  : null,
-              onTap: () => context.go('/appointments/${termin.id}'),
-              podnozje: AppointmentActionsBar(termin: termin),
-            );
-          },
-        ),
-      ),
+          if (zahtjevi && jeDesktop) {
+            return _ZahtjevKartica(termin: termin, opis: opis);
+          }
+
+          return AppointmentCard(
+            termin: termin,
+            opis: opis,
+            // Zahtjev se može odnositi na bilo koji dan, pa vrijeme bez datuma ne kaže
+            // dovoljno; u dnevnoj listi je datum u zaglavlju i ponavljao bi se u svakom
+            // redu.
+            datum: zahtjevi
+                ? naslovDanaZaDatum(termin.date).toLowerCase()
+                : null,
+            onTap: () => context.go('/appointments/${termin.id}'),
+            podnozje: AppointmentActionsBar(termin: termin),
+          );
+        }
+
+        final razmak = zahtjevi ? AdminSpacing.lg : AdminSpacing.md;
+        final padding = EdgeInsets.fromLTRB(
+          gutter,
+          AdminSpacing.lg,
+          gutter,
+          40,
+        );
+
+        // Jedna kolona ostaje `ListView`: lijeni build nosi duge liste, a `Wrap` bi gradio
+        // svaku karticu odjednom.
+        if (kolone == 1) {
+          return ListView.separated(
+            padding: padding,
+            itemCount: termini.length,
+            separatorBuilder: (_, _) => SizedBox(height: razmak),
+            itemBuilder: (context, i) => karticaZa(i),
+          );
+        }
+
+        final sirinaKolone =
+            (constraints.maxWidth - gutter * 2 - razmak * (kolone - 1)) /
+            kolone;
+
+        return SingleChildScrollView(
+          padding: padding,
+          child: Wrap(
+            spacing: razmak,
+            runSpacing: razmak,
+            children: [
+              for (var i = 0; i < termini.length; i++)
+                SizedBox(width: sirinaKolone, child: karticaZa(i)),
+            ],
+          ),
+        );
+      },
     );
   }
 }

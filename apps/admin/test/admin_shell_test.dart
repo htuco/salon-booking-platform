@@ -249,4 +249,44 @@ void main() {
       );
     });
   });
+
+  group('pojasevi širine (FE-406)', () {
+    // **Brojevi su ovdje namjerno, a ne `AdminBreakpoint.*`.** Isti razlog kao kod gutera
+    // iznad: test koji poredi token sa samim sobom prolazi i kad se prag pomjeri.
+    test('granice pojaseva su 900, 1440 i 1920', () {
+      expect(AdminShell.bandZa(899), AdminWidthBand.compact);
+      expect(AdminShell.bandZa(900), AdminWidthBand.regular);
+      expect(AdminShell.bandZa(1439), AdminWidthBand.regular);
+      expect(AdminShell.bandZa(1440), AdminWidthBand.wide);
+      expect(AdminShell.bandZa(1919), AdminWidthBand.wide);
+      expect(AdminShell.bandZa(1920), AdminWidthBand.ultraWide);
+      expect(AdminShell.bandZa(2560), AdminWidthBand.ultraWide);
+    });
+
+    test('pojas 840–900 ima sidebar, ali je i dalje jedna kolona', () {
+      // Dva praga se namjerno ne poklapaju: `desktop` bira ljusku, pojas bira kolone.
+      // Na 860 px sidebar stoji, a sadržaj se još ne dijeli u dvije kolone.
+      expect(860 >= AdminBreakpoint.desktop, isTrue);
+      expect(AdminShell.bandZa(860), AdminWidthBand.compact);
+      expect(AdminWidthBand.compact.kolone, 1);
+    });
+
+    testWidgets('bandOf oduzima sidebar, pa 1440 nije `wide`', (tester) async {
+      // **Ovo je zamka iz taska.** Radna površina na prozoru od 1440 je 1440 − 236 = 1204,
+      // dakle `regular`. Pojas izveden iz `MediaQuery` bez oduzimanja sidebara dao bi
+      // `wide` i jednu kolonu viška.
+      await _naSirini(tester, _desktop, _ekran());
+      final context = tester.element(find.text('tijelo ekrana'));
+
+      expect(AdminShell.bandOf(context), AdminWidthBand.regular);
+      expect(AdminShell.bandZa(1440), AdminWidthBand.wide);
+    });
+
+    testWidgets('telefon ne oduzima sidebar jer ga nema', (tester) async {
+      await _naSirini(tester, _telefon, _ekran());
+      final context = tester.element(find.text('tijelo ekrana'));
+
+      expect(AdminShell.bandOf(context), AdminWidthBand.compact);
+    });
+  });
 }

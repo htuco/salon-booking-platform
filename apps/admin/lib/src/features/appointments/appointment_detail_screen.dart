@@ -38,6 +38,15 @@ import 'appointments_providers.dart';
 import 'status_pill.dart';
 
 /// Najveća širina detalja na desktopu — jedan zapis, ne tabela.
+///
+/// **Ovo ograničenje namjerno ostaje** i poslije prelaska admina na fluidnu širinu
+/// (FE-406). Detalj termina je tekst u jednoj koloni — ime, bilješka, historija — a duga
+/// linija teksta se teško čita i teško prati u novi red: mjera od oko 720 px drži red na
+/// 70–90 znakova. Tabela nema taj problem i zato nema ni ovo ograničenje.
+///
+/// Sadržaj je i dalje poravnat na vrh i **lijevo** unutar radne površine, ne centriran:
+/// centriran blok na 2560 px ostavlja prazninu s obje strane i odvaja detalj od sidebara
+/// uz koji pripada.
 const double _maxSirina = 720;
 
 class AppointmentDetailScreen extends ConsumerWidget {
@@ -95,7 +104,7 @@ class _Detalj extends ConsumerWidget {
         : ref.watch(radniciPoIdProvider)[termin.employeeId];
 
     return Align(
-      alignment: Alignment.topCenter,
+      alignment: AlignmentDirectional.topStart,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: _maxSirina),
         child: Column(
