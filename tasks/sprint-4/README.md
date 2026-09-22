@@ -77,3 +77,28 @@ Dokaz: ciljnih **15/15** testova i cijeli admin paket **280 PASS**. Regresijski 
 stvarni ekran (izmjena dana → `Sačuvaj izmjene` → konfliktni dijalog), a drugi dovlači zadnji od
 40 konflikata na telefonu. Ostaje 🟡 do PR-a i zelenog CI-ja; post-fix klik protiv hostovanog
 projekta nije ponovljen, ali backend nije dio uzroka ni popravke.
+
+### 39 — Push obavijesti na Androidu 🟡
+
+Kod gotov i dokazan u CI-ju 2026-09-22, [PR #77](https://github.com/htuco/salon-booking-platform/pull/77)
+je draft. **Lanac nije pukao na FCM-u**: cron je aktivan, oba vault tajna postoje, a svih 24 redova
+u `notification_logs` su `sent`/`attempts=1`/`error=null`. Red se prestao **stvarati** — 17 `app`
+termina 21.09. nije dalo nijedan red, a tipa `new_request` nema nijednog ikad.
+
+Dva nezavisna prekida. Prvi je popravljen: `queue_appointment_push` je na `INSERT` tražio
+`status = 'pending'`, pa je task 37 (`booking_mode` → `confirmed` u `auto` modu) tiho ugasio
+obavijest salonu. Sada presuđuje `source`, a status bira tip — `new_request` za zahtjev, novi
+**`new_booking`** za već potvrđenu rezervaciju, jer „Novi zahtjev" šalje vlasnika na prazan ekran.
+Klijent u `auto` modu namjerno ostaje bez pusha. Dokaz: pgTAP **469 asercija** (bilo 455), a
+sabotaža starom granom obara **tačno 2 od 14** u novom `016`; worker `deno test` **6/6**.
+
+Drugi prekid **nije popravljen i nije popravljiv u repou**: u `devices` je jedan jedini red i on je
+klijentski. Admin nikad ne pozove `register_device` jer su `FIREBASE_*_DEFINES_FILE` u `.env.live`
+prazni, pa `PUSH_ENABLED` ostaje `false`. `apps/admin` ima svoj `applicationId`
+(`ba.nasadomena.admin`) i traži **vlastitu Firebase Android aplikaciju**. U repou je ostalo samo da
+skripta o tome više ne ćuti i da `workflows.md` opiše postupak.
+
+**Ostaje 🟡:** migracija nije primijenjena na hostovani projekat (MCP je `--read-only`), i nema
+snimka sa uređaja. Zamka za sljedećeg: **admin u Chromeu ne može dokazati push** —
+`pushEnabledProvider` traži `!kIsWeb`.
+

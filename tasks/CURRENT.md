@@ -5,19 +5,19 @@ bez zavisnosti, **blokira task 42**. Grana `fix/push-na-androidu` sa svježeg `m
 
 ## Status
 
-U toku.
+U toku. Popravka u bazi je **dokazana u CI-ju**; dvije DoD stavke čekaju Firebase nalog i uređaj.
 
 ## Ciljevi
 
-- [ ] Imenovati **gdje** lanac puca — nalazi ispod sužavaju na dva mjesta, ostaje ih potvrditi
-      pokretanjem, ne samo čitanjem
-- [ ] **Admin nikad ne registruje staff uređaj** — `PUSH_ENABLED` je na `false` jer su oba
-      `FIREBASE_*_DEFINES_FILE` u `.env.live` prazna, a `.firebase-config/` ima samo klijenta
-- [ ] **`auto` mod guši i preostale dvije putanje** — `queue_appointment_push` na `INSERT` traži
-      `status = 'pending'`, a tip `confirmed` traži *promjenu* statusa; u `auto` modu nema nijednog
-- [ ] Dokaz iz `notification_logs` — red sa `status`, `attempts` i `error` nakon popravke
-- [ ] Obavijest stigla na Android emulator ili uređaj, sa snimkom
-- [ ] Ako je uzrok konfiguracija (Firebase app za `ba.nasadomena.admin`), zapisati u `workflows.md`
+- [x] Imenovati **gdje** lanac puca — dva mjesta, oba uzvodno od FCM-a
+- [x] **`auto` mod guši obje putanje** — `queue_appointment_push` na `INSERT` tražio je `pending`;
+      sada presuđuje `source`, a status bira tip (`new_request` / novi `new_booking`)
+- [x] Dokaz u CI-ju — pgTAP `Files=16, Tests=469, PASS`; sabotaža obara tačno 2 od 14 u `016`
+- [x] Worker zna novi tip — `deno test` **6/6**, `deno check` čist
+- [x] Konfiguracijski uzrok zapisan u `workflows.md`, a `run_live_demo.sh` više ne ćuti
+- [ ] **Migracija na hostovani projekat** — MCP je `--read-only`, bug je tamo i dalje živ
+- [ ] **Admin nema staff uređaj** — traži Firebase Android app za `ba.nasadomena.admin`
+- [ ] **Snimak sa Android uređaja** i red sa `attempts`/`error` — čeka prethodne dvije
 
 ## Napomene uz 39
 
@@ -62,9 +62,13 @@ prije ijedne izmjene.
 
 ## Šta je sljedeće
 
-`/task start 39` — grana `fix/push-na-androidu` sa svježeg `main`-a. Prvi korak je potvrditi
-`auto`-mod prekid lokalno (pgTAP koji ubaci `app` termin u `auto` salonu i očekuje red u
-`notification_logs`), jer se taj dio dokazuje bez Firebase naloga.
+Ručna provjera na uređaju. **Admin u Chromeu ne dokazuje push** — `pushEnabledProvider` traži
+`!kIsWeb`, pa je na webu `pushServiceProvider` uvijek `null` i `register_device` se ne zove.
+Chrome pokazuje samo da termin stigne u kalendar; za obavijest admin mora na Android, sa
+Firebase define fajlom za `ba.nasadomena.admin`.
+
+Redoslijed: (1) migracija na hostovani projekat, (2) Firebase app za admin `applicationId`,
+(3) klijent rezerviše na emulatoru → vlasnikov Android dobija „Nova rezervacija".
 
 ## Istorija
 
