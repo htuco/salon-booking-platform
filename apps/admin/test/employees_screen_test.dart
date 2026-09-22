@@ -48,6 +48,33 @@ const _hours = [
   ),
 ];
 
+/// Zubarska ordinacija — ista tabela, druga riječ za radnika.
+///
+/// Pisana doslovno, a ne kroz `copyWith`: `Vertical` i `VerticalTerms` ga nemaju, i ne
+/// vrijedi ga dodavati u domenski model zbog jednog testa.
+const _ordinacija = Vertical(
+  key: 'dental',
+  displayName: 'Ordinacija',
+  terms: VerticalTerms(
+    businessSingular: 'Ordinacija',
+    customerSingular: 'Pacijent',
+    customerPlural: 'Pacijenti',
+    serviceSingular: 'Usluga',
+    servicePlural: 'Usluge',
+    staffSingular: 'Doktor',
+    staffPlural: 'Naš tim',
+    appointmentSingular: 'Termin',
+    bookCta: 'Zakaži pregled',
+    noteLabel: 'Napomena',
+    myAppointments: 'Moji termini',
+    priceLabel: 'Cijena',
+    durationLabel: 'Trajanje',
+  ),
+  rules: BookingRules.fallback,
+  features: VerticalFeatures.fallback,
+  defaultTheme: 'modern_barber',
+);
+
 class _Actions extends EmployeeActions {
   _Actions(super.ref);
   EmployeeInput? saved;
@@ -74,6 +101,7 @@ Future<_Actions> _pump(
   bool listError = false,
   double scale = 1,
   Future<List<EmployeeService>> Function()? loadLinks,
+  Vertical? vertikala,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -122,6 +150,8 @@ Future<_Actions> _pump(
         }),
         kalendarRadnoVrijemeProvider.overrideWith((ref) async => _hours),
         employeeActionsProvider.overrideWith((ref) => actions = _Actions(ref)),
+        if (vertikala != null)
+          adminVerticalProvider.overrideWith((ref) async => vertikala),
       ],
       child: MaterialApp(
         theme: buildAdminTheme(),
@@ -274,5 +304,31 @@ void main() {
       ],
     );
     expect(tester.takeException(), isNull);
+  });
+
+  group('terminologija po vertikali (FE-404)', () {
+    testWidgets('zaglavlje kolone je „Radnik" dok vertikala nije stigla', (
+      tester,
+    ) async {
+      // `Vertical.fallback` je ispravno stanje, ne greška: generički naziv u zaglavlju je
+      // bolji od praznine koja izgleda kao kvar u učitavanju.
+      await _pump(tester, size: const Size(1440, 900));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Radnik'), findsWidgets);
+      // **Riječ iz canvasa se ne smije pojaviti sama od sebe.** `adminv2` je crtan za
+      // barber salon i svuda piše „Majstor"; u ordinaciji je to pogrešno.
+      expect(find.text('Majstor'), findsNothing);
+    });
+
+    testWidgets('zaglavlje prati vertikalu salona', (tester) async {
+      // Zubarska ordinacija: isti ekran, ista tabela, druga riječ. Ovo je jedini test koji
+      // razlikuje „naziv dolazi iz `vertical.terms`" od „naziv je hardkodiran na `Radnik`".
+      await _pump(tester, size: const Size(1440, 900), vertikala: _ordinacija);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Doktor'), findsWidgets);
+      expect(find.text('Radnik'), findsNothing);
+    });
   });
 }

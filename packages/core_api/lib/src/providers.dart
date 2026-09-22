@@ -377,3 +377,19 @@ final currentStaffProvider = StreamProvider<StaffMember?>((ref) async* {
 final adminSalonIdProvider = Provider<String?>(
   (ref) => ref.watch(currentStaffProvider).valueOrNull?.salonId,
 );
+
+/// Vertikala salona kojim admin upravlja — terminologija za admin ekrane.
+///
+/// **Postoji odvojeno od [verticalProvider] iz istog razloga kao `adminServicesProvider`:**
+/// onaj čita [currentSalonIdProvider], koji klijentska app override-uje iz `SALON_ID`
+/// flavora, a admin app ga nema i ne smije ga imati — jedna je za sve salone (ADR-0003).
+/// Neoverride-ovan provider tamo baca `UnimplementedError`.
+///
+/// Vraća `null` dok admin nije prijavljen ili dok salon nije poznat; ekran tada koristi
+/// [Vertical.fallback], jer je generički tekst bolji od spinnera preko naslova kolone.
+final adminVerticalProvider = FutureProvider<Vertical?>((ref) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return null;
+
+  return ref.watch(verticalRepositoryProvider).fetchForSalon(salonId);
+});

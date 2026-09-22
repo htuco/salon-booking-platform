@@ -3,6 +3,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/format/terminologija.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
@@ -289,7 +290,10 @@ class _Shifts extends ConsumerWidget {
                   children: [
                     TableRow(
                       children: [
-                        for (final label in ['Radnik', ..._days])
+                        // **Naziv kolone dolazi iz vertikale, ne iz canvasa.** `adminv2` je
+                        // crtan za barber salon i svuda piše „Majstor"; u ordinaciji je to
+                        // „Doktor". Dok vertikala stiže, `Vertical.fallback` daje „Radnik".
+                        for (final label in [radnikJednina(ref), ..._days])
                           Padding(
                             padding: const EdgeInsets.all(10),
                             child: Text(
