@@ -54,6 +54,15 @@ const double _formaSirina = 560;
 /// Horizontalni padding forme unutar te kolone (`3j`: `padding:0 72px`).
 const double _formaPadding = 72;
 
+/// Širina ispod koje tamna ploha nestaje, a forma zauzima cijeli ekran.
+///
+/// **Namjerno nije [AdminBreakpoint.desktop] (840).** Taj prag bira ljusku — sidebar ili
+/// donju navigaciju — a prijava nema ljusku: to je jedini ekran koji vidi neprijavljen
+/// korisnik. Ovdje prag bira hoće li pored forme od [_formaSirina] (560 px) stajati i ploha.
+/// Na 840 bi joj ostalo ~280 px, što je pretanko da nosi išta osim šare, a forma bi se
+/// stiskala zbog nje. Na 1000 ploha dobije ~440 px i ima smisla.
+const double kPragFotografije = 1000;
+
 /// Ko uopšte može ući — jedina rečenica iz canvasa koja o tome govori (`3u`).
 const String kPristupNapomena =
     'Pristup imaju samo vlasnik i majstori lokacije.';
@@ -154,7 +163,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
     return Scaffold(
       // Bijela, ne radna siva: u oba prikaza forma stoji na plohi kartice, bez kartice.
       backgroundColor: context.adminColors.surface,
-      body: AdminShell.jeDesktop(context) ? _desktop(context) : _telefon(),
+      // **Prijava ima svoj prag, i to je izuzetak sa razlogom.** Ostatak admina se prelama
+      // na `AdminBreakpoint.desktop` (840), jer tamo prag bira *ljusku*. Ovdje nema ljuske:
+      // prijava je jedini ekran koji vidi neprijavljen korisnik, nema ni sidebar ni donju
+      // navigaciju. Prag bira hoće li tamna ploha stajati pored forme, a njoj ispod
+      // ~1000 px ne ostane dovoljno širine da bude išta osim šare — forma bi se stisnula
+      // da bi ploha dobila prostor koji joj ne treba.
+      body: MediaQuery.sizeOf(context).width >= kPragFotografije
+          ? _desktop(context)
+          : _telefon(),
     );
   }
 
@@ -240,7 +257,12 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
   /// stoji u traci ispod skrola, pa ga ovdje nema.
   Widget _forma(BuildContext context) {
     final theme = Theme.of(context);
-    final jeDesktop = AdminShell.jeDesktop(context);
+    // **Isti prag kao raspored, ne `AdminShell.jeDesktop`.** Ovo je bio pravi bug: dok je
+    // raspored prešao na [kPragFotografije] (1000), forma je i dalje pitala prag ljuske
+    // (840), pa je u pojasu 840–1000 dugme „Prijavi se" crtano **dvaput** — jednom ovdje,
+    // jednom u traci ispod skrola. Vidjelo se tek u browseru na 960 px; nijedan test to
+    // nije hvatao jer su testne širine (1440, 1920, 402) preskakale taj pojas.
+    final jeDesktop = MediaQuery.sizeOf(context).width >= kPragFotografije;
 
     return Form(
       key: _formKey,
@@ -337,21 +359,78 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
     height: visina,
     child: FilledButton(
       onPressed: _uToku ? null : _prijavi,
-      // Primarna radnja je u canvasu **akcentna plava**, a ne crna kao ostala dugmad
-      // (`background:#3d6d9e`). Tema nosi crnu jer je takva svaka druga primarna radnja
-      // u adminu; ovdje je izuzetak jedan ekran, ne novi obrazac.
-      child: _uToku
-          ? SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: context.adminColors.onAccent,
-              ),
-            )
-          : const Text('Prijavi se'),
+      // Dugme je **koralno sa tamnim tekstom** i to dolazi iz teme (`FilledButton` →
+      // `action`/`onAction`), ne odavde: `3j` ga crta koralnim, a bijeli tekst na koralu
+      // pada AA (3,05:1), pa je `#2C2C2C`. Raniji komentar je ovdje tvrdio da je dugme
+      // „akcentna plava" po starom canvasu — to više ne važi (ADR-0016).
+      child: _uToku ? const _IndikatorPrijave() : const Text('Prijavi se'),
     ),
   );
+}
+
+/// Indikator u toku prijave — **tri tačke, ne Material spinner.**
+///
+/// `CircularProgressIndicator` je Material potpis: debljina, tempo i luk se ne daju uskladiti
+/// sa ostatkom admina, a na koralnom dugmetu je bijeli luk i padao AA. FE-205 ukida default
+/// Flutter indikatore kroz cijelu aplikaciju; ovdje je uveden samo za dugme prijave, jer je
+/// prijava **jedini ekran koji vidi neprijavljen korisnik** i indikator se tu najviše gleda.
+///
+/// Boja je `onAction` (`#2C2C2C`), ista kao tekst dugmeta — ne `onAccent`, koji je bijel.
+class _IndikatorPrijave extends StatefulWidget {
+  const _IndikatorPrijave();
+
+  @override
+  State<_IndikatorPrijave> createState() => _IndikatorPrijaveState();
+}
+
+class _IndikatorPrijaveState extends State<_IndikatorPrijave>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _kontroler = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _kontroler.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final boja = context.adminColors.onAction;
+
+    return SizedBox(
+      height: 20,
+      child: AnimatedBuilder(
+        animation: _kontroler,
+        builder: (context, _) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: 5),
+              Opacity(
+                // Tri tačke pulsiraju u nizu: svaka kasni trećinu ciklusa za prethodnom.
+                opacity: _prozirnost((_kontroler.value + i / 3) % 1),
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: boja,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Puna vidljivost na vrhu ciklusa, 0,3 na dnu — tačka nikad ne nestane sasvim, da se
+  /// dugme ne čita kao da je izgubilo sadržaj.
+  static double _prozirnost(double t) => 0.3 + 0.7 * (1 - (2 * t - 1).abs());
 }
 
 /// Polje sa labelom **iznad** okvira, kako ga canvas crta.
