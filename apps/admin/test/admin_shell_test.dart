@@ -366,4 +366,76 @@ void main() {
       expect(AdminPalette.light.ground, const Color(0xFFFCFCF9));
     });
   });
+
+  group('akcije u top baru', () {
+    /// Regresija: dugmad su stajala **na sredini** top bara, sa prazninom do desne ivice.
+    ///
+    /// Uzrok nije bio nedostatak `Spacer`-a — on je bio tu. Dashboard je svoje dvije
+    /// radnje predavao kao `Row` **bez** `mainAxisSize: MainAxisSize.min`, pa se taj red
+    /// razvukao preko cijelog ostatka top bara i dugmad su ostala na njegovom početku.
+    ///
+    /// Zato test predaje akcije **upravo tako** — neograničenim `Row`-om. Da predaje samo
+    /// dugme, prolazio bi i prije popravke i ne bi dokazivao ništa.
+    Widget saAkcijama() => ProviderScope(
+      overrides: [
+        currentStaffProvider.overrideWith(
+          (ref) => Stream<StaffMember?>.value(_vlasnik),
+        ),
+        pendingCountProvider.overrideWith((ref) async => 4),
+      ],
+      child: MaterialApp(
+        theme: buildAdminTheme(),
+        home: AdminScaffold(
+          title: 'Pregled',
+          aktivna: AdminRoute.dashboard,
+          actions: [
+            Row(
+              children: [
+                OutlinedButton(onPressed: () {}, child: const Text('Blokiraj')),
+                const SizedBox(width: AdminSpacing.md),
+                FilledButton(onPressed: () {}, child: const Text('Novi')),
+              ],
+            ),
+          ],
+          body: const Center(child: Text('tijelo ekrana')),
+        ),
+      ),
+    );
+
+    testWidgets('zadnja radnja završava uz desnu ivicu, ne na sredini', (
+      tester,
+    ) async {
+      await _naSirini(tester, _desktop, saAkcijama());
+
+      final desnaIvica = tester.getBottomRight(find.byType(FilledButton)).dx;
+
+      // Radna površina ide od sidebara do desne ivice prozora; gutter je jedini razmak
+      // koji smije ostati iza zadnjeg dugmeta.
+      const ocekivano = 1440 - AdminSpacing.gutterDesktop;
+
+      expect(
+        desnaIvica,
+        moreOrLessEquals(ocekivano, epsilon: 1),
+        reason:
+            'Zadnja radnja mora završiti na $ocekivano px (gutter od desne ivice), '
+            'a završava na $desnaIvica px.',
+      );
+    });
+
+    testWidgets('obje radnje ostaju u desnoj polovini top bara', (
+      tester,
+    ) async {
+      await _naSirini(tester, _desktop, saAkcijama());
+
+      // Sredina radne površine: sidebar (236) + pola ostatka.
+      const sredina =
+          AdminSize.sidebarWidth + (1440 - AdminSize.sidebarWidth) / 2;
+
+      expect(
+        tester.getTopLeft(find.byType(OutlinedButton)).dx,
+        greaterThan(sredina),
+        reason: 'Prva radnja je lijevo od sredine — red se razvukao.',
+      );
+    });
+  });
 }

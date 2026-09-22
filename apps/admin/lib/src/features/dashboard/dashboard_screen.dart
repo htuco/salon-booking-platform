@@ -83,6 +83,9 @@ class _TopBarAkcije extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      // Bez ovoga se red razvuce preko ostatka top bara i dugmad ostanu na njegovom
+      // pocetku, a ne uz desnu ivicu.
+      mainAxisSize: MainAxisSize.min,
       children: [
         OutlinedButton(
           // `/calendar/block` je do taska 34 placeholder, ali **ruta postoji** i vodi u
