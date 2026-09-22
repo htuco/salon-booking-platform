@@ -160,39 +160,59 @@ class _KarticeMetrika extends ConsumerWidget {
     final sazetak = ref.watch(_sazetakProvider);
     final naCekanju = ref.watch(pendingCountProvider).valueOrNull ?? 0;
 
-    // `IntrinsicHeight` da sve tri kartice budu jednako visoke kao u canvasu: `stretch`
-    // sam u `ListView`-u traži beskonačnu visinu i ruši layout.
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _Metrika(
-              labela: 'Termina danas',
-              vrijednost: '${sazetak.ukupno}',
-              opis:
-                  '${sazetak.zavrseno} završeno · ${sazetak.predstoji} predstoji',
-            ),
-          ),
-          const SizedBox(width: AdminSpacing.lg),
-          Expanded(
-            child: _Metrika(
-              labela: 'Čeka potvrdu',
-              vrijednost: '$naCekanju',
-              opis: naCekanju == 0 ? 'nema novih zahtjeva' : 'traže odgovor',
-              istaknuta: naCekanju > 0,
-            ),
-          ),
-          const SizedBox(width: AdminSpacing.lg),
-          Expanded(
-            child: _Metrika(
-              labela: 'Promet danas',
-              vrijednost: iznosKm(sazetak.prometDoSada),
-              opis: 'prognoza ${iznosKm(sazetak.prometPrognoza)}',
-            ),
-          ),
-        ],
+    final kartice = [
+      _Metrika(
+        labela: 'Termina danas',
+        vrijednost: '${sazetak.ukupno}',
+        opis: '${sazetak.zavrseno} završeno · ${sazetak.predstoji} predstoji',
       ),
+      _Metrika(
+        labela: 'Čeka potvrdu',
+        vrijednost: '$naCekanju',
+        opis: naCekanju == 0 ? 'nema novih zahtjeva' : 'traže odgovor',
+        istaknuta: naCekanju > 0,
+      ),
+      _Metrika(
+        labela: 'Promet danas',
+        vrijednost: iznosKm(sazetak.prometDoSada),
+        opis: 'prognoza ${iznosKm(sazetak.prometPrognoza)}',
+      ),
+    ];
+
+    // **`LayoutBuilder`, ne `MediaQuery`** — isti razlog kao u FE-406: ovaj ekran stoji u
+    // ljusci pored sidebara, pa je dostupna širina za `AdminSize.sidebarWidth` manja od
+    // širine prozora. Pojas izveden iz prozora bi na 1100 px tvrdio da ima mjesta za tri
+    // kartice, a stvarno ih stane jedna.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final uJednuKolonu = AdminShell.bandZa(constraints.maxWidth).jeCompact;
+
+        if (uJednuKolonu) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (i, kartica) in kartice.indexed) ...[
+                if (i > 0) const SizedBox(height: AdminSpacing.md),
+                kartica,
+              ],
+            ],
+          );
+        }
+
+        // `IntrinsicHeight` da sve tri kartice budu jednako visoke kao u canvasu: `stretch`
+        // sam u `ListView`-u traži beskonačnu visinu i ruši layout.
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (i, kartica) in kartice.indexed) ...[
+                if (i > 0) const SizedBox(width: AdminSpacing.lg),
+                Expanded(child: kartica),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -220,8 +240,12 @@ class _Metrika extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
         side: BorderSide(
+          // **Obrub je koralan, brojka ostaje plava** — izmjereno iz `3b`, ne pretpostavljeno.
+          // Kartica „Čeka potvrdu" ima obrub `#EE6C4D`, a njena velika brojka je `#3D5A80`,
+          // ista kao u ostalim karticama. Koralna kaže „ovdje treba nešto uraditi", plava
+          // ostaje boja podatka; da su obje koralne, brojka bi se čitala kao upozorenje.
           color: istaknuta
-              ? context.adminColors.accent
+              ? context.adminColors.action
               : context.adminColors.border,
           width: AdminSize.hairline,
         ),
@@ -267,24 +291,45 @@ class _DvijeKolone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Omjer, a ne dvije fiksne širine: radna površina na 1920 je 1684 px, a tabela na
-        // 1440 je crtana za 880. Fiksna kolona bi ostatak monitora ostavila praznim.
-        Expanded(flex: 162, child: _RasporedDana()),
-        SizedBox(width: AdminSpacing.xl),
-        Expanded(
-          flex: 100,
-          child: Column(
+    // **I ovaj raspored se preslaže ispod 900 px**, ne samo kartice metrika. To je našao
+    // test: na radnoj površini od 864 px desna kolona dobije ~330 px, a zaglavlje kartice
+    // „Zahtjevi" (naslov plus „N novih") tu prelije za 31 px. Dvije kolone od kojih je
+    // jedna preuska nisu raspored nego greška koja se vidi tek na uskom prozoru.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (AdminShell.bandZa(constraints.maxWidth).jeCompact) {
+          return const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _RasporedDana(),
+              SizedBox(height: AdminSpacing.xl),
               _ZahtjeviKartica(),
               SizedBox(height: 18),
               _ZauzetostKartica(),
             ],
-          ),
-        ),
-      ],
+          );
+        }
+
+        return const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Omjer, a ne dvije fiksne širine: radna površina na 1920 je 1684 px, a tabela
+            // na 1440 je crtana za 880. Fiksna kolona bi ostatak monitora ostavila praznim.
+            Expanded(flex: 162, child: _RasporedDana()),
+            SizedBox(width: AdminSpacing.xl),
+            Expanded(
+              flex: 100,
+              child: Column(
+                children: [
+                  _ZahtjeviKartica(),
+                  SizedBox(height: 18),
+                  _ZauzetostKartica(),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -324,10 +369,7 @@ class _RasporedDana extends ConsumerWidget {
           ),
           const _ZaglavljeTabele(),
           termini.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(AdminSpacing.xxxl),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            loading: () => const _SkeletonRasporeda(),
             error: (_, _) => const Padding(
               padding: EdgeInsets.all(AdminSpacing.xxl),
               child: Text('Termini se ne mogu učitati.'),
@@ -368,6 +410,88 @@ const double _kolonaVrijeme = 76;
 const double _kolonaUsluga = 162;
 const double _kolonaMajstor = 92;
 const double _kolonaStatus = 102;
+
+/// Skeleton reda rasporeda — **umjesto spinnera**, jer je dashboard prvi ekran poslije
+/// prijave i indikator se na njemu vidi na *svakom* ulasku.
+///
+/// Spinner kaže „nešto se dešava"; skeleton kaže „ovdje dolazi tabela sa ovoliko redova",
+/// pa se raspored ne pomjeri kad podaci stignu. Trake su u `neutralTint` i **blago pulsiraju**
+/// — statične trake na sporoj vezi izgledaju kao da se učitavanje zaglavilo.
+class _SkeletonRasporeda extends StatefulWidget {
+  const _SkeletonRasporeda({this.redova = 5});
+
+  final int redova;
+
+  @override
+  State<_SkeletonRasporeda> createState() => _SkeletonRasporedaState();
+}
+
+class _SkeletonRasporedaState extends State<_SkeletonRasporeda>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _kontroler = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _kontroler.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Širine su nejednake namjerno: jednake trake izgledaju kao tabela, a ne kao tekst
+    // koji tek dolazi. Prate kolone iz `_ZaglavljeTabele` — vrijeme, klijent, usluga,
+    // majstor, status.
+    const udjeli = [0.08, 0.22, 0.26, 0.14, 0.12];
+
+    return AnimatedBuilder(
+      animation: _kontroler,
+      builder: (context, _) => Opacity(
+        opacity: 0.45 + 0.35 * _kontroler.value,
+        child: Column(
+          children: [
+            for (var red = 0; red < widget.redova; red++)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: context.adminColors.separator,
+                      width: AdminSize.hairline,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    for (final (i, udio) in udjeli.indexed) ...[
+                      if (i > 0) const Spacer(),
+                      Expanded(
+                        flex: (udio * 100).round(),
+                        child: Container(
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: context.adminColors.neutralTint,
+                            borderRadius: BorderRadius.circular(
+                              AdminRadius.base,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _ZaglavljeTabele extends StatelessWidget {
   const _ZaglavljeTabele();
@@ -825,10 +949,7 @@ class _Telefon extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               termini.when(
-                loading: () => const Padding(
-                  padding: EdgeInsets.all(AdminSpacing.xxxl),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+                loading: () => const _SkeletonRasporeda(redova: 3),
                 error: (_, _) => const Padding(
                   padding: EdgeInsets.all(AdminSpacing.lg),
                   child: Text('Termini se ne mogu učitati.'),
