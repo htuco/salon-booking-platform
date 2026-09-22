@@ -12,9 +12,12 @@ zamke: [task 37](sprint-4/37-automatsko-potvrdjivanje.md).
 
 Preostalo prije nego se PR skine sa drafta:
 
-- [ ] **Zelen CI job `Supabase tests`** na PR-u — dirano je `supabase/`, pa lokalno zeleno nije dovoljno.
+- [x] **Zelen CI na PR-u** — `Schema, RLS and tenant isolation` i `Analiza, format i testovi` oba
+      `SUCCESS`. Dokaz iz čistog checkouta, koji lokalno ne postoji.
 - [ ] **Migracija na hostovanom projektu.** `npx supabase db push` je jedini korak koji fali da
       `auto` mod postoji i izvan lokalnog Dockera; jednosmjerna promjena nad demo bazom, čeka odluku.
+      Tamo je salon **već u `auto` modu** — prekidač je uključen i ne radi ništa, što je ovaj bug
+      zatečen uživo.
 - [ ] **Ekran poslije rezervacije viđen uživo u `auto` modu.** Dokaz je za sada widget test.
       Blokiran prethodnom stavkom — dok migracija nije na hostovanom projektu, `auto` se uživo ne može ni izazvati.
 

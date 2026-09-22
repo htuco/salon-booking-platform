@@ -69,6 +69,9 @@ rezervacija klijenta od one koju je salon sam upisao.
   zamjenu, ne preopterećenje.
 - `melos run analyze` bez primjedbi u pet paketa, `melos run format` čist,
   `melos run test` **798** (bilo 797).
+- **CI je zelen na PR-u**: `Schema, RLS and tenant isolation` i `Analiza, format i testovi` oba
+  `SUCCESS` ([run 35727587537](https://github.com/htuco/salon-booking-platform/actions/runs/35727587537)).
+  To je dokaz iz čistog checkouta, koji lokalno ne postoji.
 
 **Nalaz koji ovaj task ne zatvara — ide u 39.** U `auto` modu salon ne dobija **nijednu**
 push obavijest o novoj rezervaciji. `private.queue_appointment_push` na `INSERT` reagira
@@ -81,6 +84,8 @@ obavijest ne stigne nijednom. Popravka traži novu vrijednost u `notification_ty
 **Ostalo za sljedećeg.**
 
 - **Hostovani projekat nema ovu migraciju.** Nastavlja se sa `npx supabase db push` —
-  jednosmjerna promjena nad demo bazom, pa čeka odluku.
+  jednosmjerna promjena nad demo bazom, pa čeka odluku. **Salon je već u `auto` modu**
+  (provjereno nad hostovanim `salon_settings`), dakle prekidač je uključen a ne radi ništa: to
+  je ovaj bug, zatečen uživo.
 - Ekran poslije rezervacije nije viđen uživo u `auto` modu; dokaz je za sada widget test.
-- Zeleni CI job `Supabase tests` na PR-u.
+  Blokiran prethodnom stavkom.
