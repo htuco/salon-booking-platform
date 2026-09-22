@@ -386,7 +386,17 @@ class _TopBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          Flexible(
+          // `Expanded`, ne `Flexible` + `Spacer`.
+          //
+          // Regresija koju je ovo popravilo: dugmad su stajala **na sredini** top bara,
+          // sa velikom prazninom do desne ivice. Uzrok nije bio kod akcija nego ovdje —
+          // `Flexible` i `Spacer` oba nose `flex: 1`, pa su **dijelili slobodan prostor
+          // na pola**. Breadcrumb je uzimao polovinu koja mu ne treba i gurao akcije do
+          // sredine.
+          //
+          // `Expanded` uzme sav ostatak, pa akcije sjednu uz desnu ivicu. Dugo ime salona
+          // se i dalje reže (`Flexible` + `ellipsis` ispod), ne gura dugmad van ekrana.
+          Expanded(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -421,7 +431,6 @@ class _TopBar extends ConsumerWidget {
               ],
             ),
           ),
-          const Spacer(),
           ...?actions,
         ],
       ),
