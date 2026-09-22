@@ -186,7 +186,7 @@ class _EmployeeCard extends ConsumerWidget {
     return Card(
       child: InkWell(
         onTap: () => _edit(context, employee),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AdminRadius.base),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(

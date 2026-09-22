@@ -288,7 +288,7 @@ class _ActivePill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: tone.background,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AdminRadius.pill),
         ),
         child: Text(
           active ? 'Aktivna' : 'Neaktivna',

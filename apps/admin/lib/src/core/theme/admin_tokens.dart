@@ -58,6 +58,17 @@ abstract final class AdminRadius {
   /// 58 pojava). Nije proizvoljna varijanta: pilula razlikuje **oznaku stanja** od
   /// **dugmeta**, koje je uvijek [base].
   static const double pill = 20;
+
+  /// 4 — sitni element: traka zauzetosti, ćelija datuma u mini kalendaru, progres
+  /// traka. Izmjeren iz canvasa, ne izveden iz [base].
+  ///
+  /// Postoji zato što ćelija od 20 px sa radijusom 6 izgleda kao pilula — [base] je
+  /// mjera kartice i dugmeta, a ne svega što ima ugao. Ispod 4 ide [dot].
+  static const double small = 4;
+
+  /// 3 — kvadratić uzorka boje u legendi (10×10 px). Jedina vrijednost ispod [small];
+  /// na tom formatu i 4 već zaobli ugao u krug.
+  static const double dot = 3;
 }
 
 /// Mjere ljuske i kontrola. Desktop vrijednosti troši shell iz taska 29; stoje ovdje da
