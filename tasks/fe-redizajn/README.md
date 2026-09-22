@@ -67,9 +67,9 @@ set klijenta, admin ostaje na Material `Icons.*`.** Ovdje je **opis u ovom fajlu
 tvrdio je da „u Flutteru ga danas nema nijedan paket" i da stoji „116 upotreba `Icons.*`". Stvarno
 stanje: `lucide_icons_flutter: ^3.1.19` je **već** u `apps/client/pubspec.yaml:68` i
 `packages/core_ui/pubspec.yaml:20`, uvezen u 12 fajlova klijenta i četiri `core_ui` komponente.
-Preostalih `Icons.*` je **109, ne 116**, i **71 od njih je u adminu**, koji se ne prevodi.
-**FE-104 je time sužen** — nije „uvedi set ikona" nego „ujednači debljinu i dovrši preostalih 34 u
-klijentu".
+Material ostatak u klijentu su bile **četiri upotrebe dvije ikone**, a **61 upotreba je u adminu**,
+koji se po ADR-0017 ne prevodi. **FE-104 je time sužen** — nije „uvedi set ikona" nego „zamijeni
+četiri ikone i ujednači veličine".
 
 **4. Šta je `prototype/adminv2/`.** ✅ **Riješeno —
 [ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md).**
@@ -143,7 +143,7 @@ Dvije od njih **smanjuju opseg epika**, ne povećavaju ga:
 
 - **FE-102 se ne radi** — Barlow je odbijen, postojeća pisma ostaju (ADR-0019).
 - **FE-104 je sužen** — Lucide je već uveden u klijentu; ostaje ujednačavanje debljine i
-  preostalih 34 `Icons.*` u klijentu (ADR-0017).
+  četiri Material upotrebe u klijentu i ujednačavanje veličina (ADR-0017).
 
 Preostaje **17 taskova**: FE-101, FE-103, FE-104, FE-2xx (5), FE-3xx (6) i FE-5xx (4).
 FE-5xx po definiciji idu zadnji.

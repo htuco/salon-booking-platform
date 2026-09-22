@@ -23,11 +23,12 @@ nijedne aplikacije". Izmjereno stanje:
 
 - `lucide_icons_flutter: ^3.1.19` **je** u `apps/client/pubspec.yaml:68` i
   `packages/core_ui/pubspec.yaml:20`; uvezen u 12 fajlova klijenta i četiri `core_ui` komponente.
-- Ukupno `Icons.*` je **109, ne 116**, i **71 je u `apps/admin`/`packages`** — admin se po
+- Material `Icons.*` je **61, sve u `apps/admin`** — admin se po
   ADR-0017 **ne prevodi**, pa to nije dug ovog taska.
-- **Zamka u brojanju:** `lucide_icons_flutter` svoju klasu zove **`Icons`**, isto kao Material.
-  Zato `grep "Icons\."` u klijentu daje 34 pogotka, ali su **`Icons.scissors`, `Icons.cloudOff`,
-  `Icons.calendarX`, `Icons.chevronRight` itd. već Lucide.**
+- **Zamka u brojanju:** Lucide svoju klasu zove `LucideIcons`, a taj identifikator se
+  **završava** na `Icons`. Zato naivni `grep "Icons\."` u klijentu daje 34 pogotka i hvata
+  `LucideIcons.scissors` kao da je Material. Pouzdan izraz traži negative lookbehind:
+  `grep -P "(?<!Lucide)\bIcons\."` — i tada klijent daje **četiri**.
 - **Stvarni Material ostatak u klijentu su četiri upotrebe dvije ikone**, prepoznatljive po
   `snake_case` imenu:
   - `Icons.cloud_off_outlined` — `about_screen.dart:57`, `home_screen.dart:470`,

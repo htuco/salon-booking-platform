@@ -16,8 +16,14 @@ Stvarno stanje, izmjereno u repou:
   `packages/core_ui/pubspec.yaml:20`.
 - Uvezen je u **12 fajlova** klijentske aplikacije i **četiri** komponente `core_ui`-ja
   (`back_header`, `calendar_month`, `link_row`, `selectable_row`).
-- Preostale `Icons.*` upotrebe su **109, ne 116**, i raspodjela nije ravnomjerna:
-  **71 u `apps/admin` i `packages`**, a samo **34 u `apps/client`**.
+- Klijent je na Lucideu **skoro u cijelosti**: Material ostatak su **četiri upotrebe dvije
+  ikone** (`Icons.cloud_off_outlined` ×3, `Icons.inbox_outlined` ×1), sve u `EmptyState`-u.
+- **61 upotreba Material `Icons.*` je u `apps/admin`**, gdje nijedan handoff ne traži Lucide.
+
+**Zamka u brojanju, zbog koje je opis u README-u bio netačan:** `LucideIcons` se **završava** na
+`Icons`, pa `grep "Icons\."` hvata i `LucideIcons.scissors`. Po tom brojanju je klijent izgledao
+kao da nosi 34 Material ikone. Pravilan izraz traži negative lookbehind
+(`(?<!Lucide)\bIcons\.`), i tada klijent daje **četiri**, a ne 34.
 
 Dakle odluka je već djelimično pala — u kodu, bez ADR-a — i pala je **po aplikaciji**: klijent je
 na Lucideu, admin nije. `prototype/ui/SPEC.md:118` traži Lucide stroke 1.5 za klijenta;
@@ -38,29 +44,28 @@ Mehanika:
 
 - Novi kod u klijentu i u `core_ui` uzima ikonu iz Lucidea. `Icons.*` u ta dva mjesta je nalaz
   pregleda, ne stil.
-- Preostalih 34 `Icons.*` u klijentu su **imenovan dug**, ne greška koja blokira. Mijenjaju se
-  kad se dirne ekran na kojem stoje, ne kampanjski.
+- Preostale četiri Material upotrebe u klijentu su **sitan dug**, ne prepreka. Zatvara ih FE-104.
 - **Admin se ne prevodi na Lucide.** Admin je interni alat jedne platforme, njegov handoff
-  (`prototype/admin/SPEC.md`, `prototype/adminv2/export/`) ne traži Lucide, i 71 upotreba
+  (`prototype/admin/SPEC.md`, `prototype/adminv2/export/`) ne traži Lucide, i 61 upotreba
   `Icons.*` tamo nema šta da dobije zamjenom.
 - Gdje Lucide nema oblik koji nosi **informaciju** (puna naspram prazne zvjezdice), crta se
   površina. Razlika nošena samo bojom ili samo debljinom linije je WCAG 1.4.1 problem i ne prolazi.
 
 ## Razmatrane opcije
 
-- **Lucide u obje aplikacije** — odbačeno: 71 upotreba `Icons.*` u adminu i `packages`, a nijedan
+- **Lucide u obje aplikacije** — odbačeno: 61 upotreba `Icons.*` u adminu, a nijedan
   admin handoff ne traži Lucide. To je rad bez tražioca, i uz to rizik prelivanja jer se metrike
   ikona razlikuju.
 - **Zapakovan icon font ili SVG set umjesto pub paketa** — odbačeno: paket je već u `pubspec.lock`
   i radi; njegov font se tree-shakuje po težini (`LucideVariable-w100…w600` u
   `build/unit_test_assets`). Zamjena bi bila trošak bez dobitka.
-- **Kampanjska zamjena svih 34 `Icons.*` u klijentu odmah** — odgođeno, ne odbačeno: vraća se na
+- **Kampanjska zamjena preostalih Material upotreba u klijentu odmah** — odgođeno, ne odbačeno: vraća se na
   sto uz FE-104, koji je zaseban task i nosi provjeru debljine linije.
 
 ## Posljedice
 
 - **FE-104 je odblokiran** i sužen: nije „uvedi set ikona" nego „ujednači debljinu i dovrši
-  preostalih 34 u klijentu".
+  preostale četiri u klijentu".
 - `tasks/fe-redizajn/README.md` je nosio netačan broj (116) i netačnu tvrdnju („nema nijedan
   paket"). Ispravlja se u istoj promjeni.
 - Postalo je teže: **dva seta ikona u jednom repou.** Ko piše `core_ui` komponentu mora znati da
