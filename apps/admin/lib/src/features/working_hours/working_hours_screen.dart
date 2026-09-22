@@ -32,6 +32,7 @@ import '../../core/format/datum.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'working_hours_dialogs.dart';
 import 'working_hours_providers.dart';
 
@@ -47,7 +48,10 @@ class AdminWorkingHoursScreen extends ConsumerWidget {
       title: 'Radno vrijeme',
       aktivna: AdminRoute.workingHours,
       body: raspored.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(AdminSpacing.xxl),
+          child: AdminSkeletonList(),
+        ),
         error: (error, _) =>
             _Greska(onRetry: () => ref.invalidate(radnoVrijemeProvider)),
         // Bez `key`: svježa sedmica se preuzima u `didUpdateWidget`, ne rušenjem stanja.
@@ -294,13 +298,7 @@ class _DugmeSacuvaj extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FilledButton(
     onPressed: onPressed,
-    child: snimam
-        ? const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : const Text('Sačuvaj izmjene'),
+    child: snimam ? const AdminButtonBusy() : const Text('Sačuvaj izmjene'),
   );
 }
 
@@ -588,7 +586,7 @@ class _Blokade extends ConsumerWidget {
         blokade.when(
           loading: () => const Padding(
             padding: EdgeInsets.all(AdminSpacing.lg),
-            child: Center(child: CircularProgressIndicator()),
+            child: AdminSkeletonList(redova: 3),
           ),
           // Isti izlaz kao gornji dio ekrana: bez ovoga je jedini način da se blokade
           // ponovo učitaju napustiti ekran i vratiti se.

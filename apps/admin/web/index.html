@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="bs">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,19 +18,42 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Melura — administracija salona.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="admin">
+  <meta name="apple-mobile-web-app-title" content="Melura">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>admin</title>
+  <title>Melura</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    FE-205: pozadina prije nego što Flutter nacrta prvi kadar.
+
+    Bez ovoga je to bijela stranica, pa se pri svakom otvaranju vidi bijeli bljesak
+    prije radne površine — a u tamnoj temi bijelo pa tamno, što je najgori slučaj.
+
+    Vrijednosti su iste kao `AdminColors.ground` u `admin_colors.dart` (`#FCFCF9`
+    svijetla, `#1A1B1E` tamna). **Ovo je jedino mjesto u repou gdje admin boja smije
+    stajati izvan tog fajla** — CSS ne može čitati Dart tokene. Kad se `ground`
+    promijeni, mijenja se i ovdje; `apps/admin/test/web_splash_test.dart` pada ako se
+    razmimoiđu.
+
+    `color-scheme` uz to kaže pregledniku da i sam scrollbar i pozadinu prije CSS-a
+    iscrta u istoj shemi.
+  -->
+  <style>
+    :root { color-scheme: light dark; }
+    html, body { margin: 0; padding: 0; background-color: #FCFCF9; }
+    @media (prefers-color-scheme: dark) {
+      html, body { background-color: #1A1B1E; }
+    }
+  </style>
 </head>
 <body>
   <!--

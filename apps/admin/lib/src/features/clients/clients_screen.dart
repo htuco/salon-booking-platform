@@ -8,6 +8,7 @@ import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../appointments/status_pill.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'clients_providers.dart';
 
 /// Ime klijenta kako ga ekran smije prikazati.
@@ -236,7 +237,7 @@ class _Lista extends ConsumerWidget {
     return klijenti.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(AdminSpacing.xxl),
-        child: LinearProgressIndicator(),
+        child: AdminSkeletonList(),
       ),
       error: (_, _) => _Greska(
         poruka: 'Klijenti se ne mogu učitati.',
@@ -505,7 +506,7 @@ class _Profil extends ConsumerWidget {
     return klijent.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(AdminSpacing.xxl),
-        child: LinearProgressIndicator(),
+        child: AdminSkeletonList(),
       ),
       error: (_, _) => _Greska(
         poruka: 'Profil se ne može učitati.',
@@ -564,7 +565,10 @@ class _ProfilSadrzaj extends ConsumerWidget {
         Text('Historija', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: AdminSpacing.md),
         istorija.when(
-          loading: () => const LinearProgressIndicator(),
+          loading: () => const Padding(
+            padding: EdgeInsets.all(AdminSpacing.xxl),
+            child: AdminSkeletonList(),
+          ),
           error: (_, _) => _Greska(
             poruka: 'Historija se ne može učitati.',
             ponovo: () => ref.invalidate(klijentIstorijaProvider(klijent.id)),
@@ -794,7 +798,7 @@ class _MobilnaLista extends ConsumerWidget {
     return klijenti.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(AdminSpacing.xxl),
-        child: LinearProgressIndicator(),
+        child: AdminSkeletonList(),
       ),
       error: (_, _) => _Greska(
         poruka: 'Klijenti se ne mogu učitati.',

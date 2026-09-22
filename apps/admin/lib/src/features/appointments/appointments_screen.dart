@@ -32,6 +32,7 @@ import '../../core/format/tekst.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'appointment_actions_bar.dart';
 import 'appointment_card.dart';
 import 'appointments_providers.dart';
@@ -128,7 +129,10 @@ class _AdminAppointmentsScreenState
           _Zaglavlje(filter: filter, zahtjevi: zahtjevi, lista: lista),
           Expanded(
             child: lista.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(AdminSpacing.xxl),
+                child: AdminSkeletonList(),
+              ),
               // Greška nosi dugme, ne samo tekst: admin koji izgubi vezu usred smjene mora
               // moći ponoviti bez zatvaranja app-e.
               error: (greska, _) => _Greska(

@@ -34,6 +34,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'settings_dialogs.dart';
 import 'settings_providers.dart';
 
@@ -55,7 +56,10 @@ class AdminSettingsScreen extends ConsumerWidget {
       title: 'Postavke',
       aktivna: AdminRoute.settings,
       body: switch ((ucitava, greska)) {
-        (true, _) => const Center(child: CircularProgressIndicator()),
+        (true, _) => const Padding(
+          padding: EdgeInsets.all(AdminSpacing.gutterDesktop),
+          child: AdminSkeletonList(),
+        ),
         (_, true) => _Greska(
           onRetry: () {
             ref.invalidate(postavkeSalonProvider);
@@ -618,11 +622,9 @@ class _SalonskaPravila extends ConsumerWidget {
           'Otkazivanje, kašnjenje i kontakt — sekcije koje salon piše sam. '
           'Prikazuju se u aplikaciji na „Pravila korištenja".',
       child: sekcije.when(
-        loading: () => const Center(
-          child: Padding(
-            padding: EdgeInsets.all(AdminSpacing.lg),
-            child: CircularProgressIndicator(),
-          ),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(AdminSpacing.lg),
+          child: AdminSkeletonList(redova: 3),
         ),
         error: (_, _) => const Text('Sekcije se ne mogu učitati.'),
         data: (lista) => Column(

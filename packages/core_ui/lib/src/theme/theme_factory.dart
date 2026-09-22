@@ -102,6 +102,10 @@ ThemeData buildAppTheme({
     useMaterial3: true,
     brightness: svjetlina,
     colorScheme: colorScheme,
+    // Bez ripplea (FE-205). Donja navigacija ga je već gasila kod sebe
+    // (`bottom_nav_bar.dart`); ovdje vrijedi za cijelu aplikaciju, pa svaki novi
+    // `InkWell` dobija isto ponašanje bez da ga neko upamti.
+    splashFactory: NoSplash.splashFactory,
     scaffoldBackgroundColor: neutrals.surface,
     textTheme: textTheme,
 

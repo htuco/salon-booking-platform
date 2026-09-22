@@ -28,6 +28,7 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../appointments/appointment_card.dart';
 import '../appointments/appointments_providers.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'calendar_day.dart';
 import 'calendar_providers.dart';
 
@@ -103,8 +104,10 @@ class _Desktop extends ConsumerWidget {
             children: [
               Expanded(
                 child: dan.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(AdminSpacing.xxl),
+                    child: AdminSkeletonList(),
+                  ),
                   error: (_, _) =>
                       _Greska(onPonovi: () => osvjeziKalendar(ref)),
                   data: (dan) => _Mreza(dan: dan),
@@ -1120,7 +1123,10 @@ class _Telefon extends ConsumerWidget {
         if (dan.valueOrNull case final ucitan?) _TrakaRadnika(dan: ucitan),
         Expanded(
           child: dan.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Padding(
+              padding: EdgeInsets.all(AdminSpacing.xxl),
+              child: AdminSkeletonList(),
+            ),
             error: (_, _) => _Greska(onPonovi: () => osvjeziKalendar(ref)),
             // `await` na `future`, ne goli `invalidate`: `invalidate` je sinhron, pa bi
             // se spinner ugasio prije nego ijedan od četiri upita vrati odgovor — korisnik

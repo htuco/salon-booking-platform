@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/router/admin_router.dart';
+import '../../core/widgets/admin_skeleton.dart';
+import '../../core/theme/admin_tokens.dart';
 import 'appointments_providers.dart';
 
 /// Ručni unos termina — salon upisuje klijenta koji je nazvao ili došao na vrata.
@@ -140,11 +142,7 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
           FilledButton(
             onPressed: _spremno && !_upisujem ? _upisi : null,
             child: _upisujem
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
+                ? const AdminButtonBusy()
                 : const Text('Upiši termin'),
           ),
           const SizedBox(height: 8),
@@ -305,12 +303,8 @@ class _IzborKlijentaState extends ConsumerState<_IzborKlijenta> {
             border: const OutlineInputBorder(),
             suffixIcon: _trazim
                 ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                    padding: EdgeInsets.all(AdminSpacing.md),
+                    child: AdminButtonBusy(),
                   )
                 : const Icon(Icons.search),
           ),
@@ -486,7 +480,7 @@ class _IzborUsluge extends ConsumerWidget {
     final usluge = ref.watch(adminServicesProvider);
 
     return usluge.when(
-      loading: () => const LinearProgressIndicator(),
+      loading: () => const AdminSkeletonList(redova: 2),
       error: (_, _) => const Text('Usluge se ne mogu učitati.'),
       data: (lista) => Wrap(
         spacing: 8,
@@ -521,7 +515,7 @@ class _IzborRadnika extends ConsumerWidget {
     final veze = ref.watch(adminEmployeeLinksProvider);
 
     if (radnici.isLoading || veze.isLoading) {
-      return const LinearProgressIndicator();
+      return const AdminSkeletonList(redova: 2);
     }
 
     final sviRadnici = radnici.valueOrNull ?? const <Employee>[];
@@ -660,7 +654,7 @@ class _IzborTerminaState extends ConsumerState<_IzborTermina> {
         ),
         const SizedBox(height: 12),
         if (_ucitavam)
-          const LinearProgressIndicator()
+          const AdminSkeletonList(redova: 2)
         else if (_slotovi case final slotovi?)
           if (slotovi.isEmpty)
             Text(
