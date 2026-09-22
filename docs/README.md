@@ -121,6 +121,7 @@ Ne otvaraj ih ponovo bez novog podatka:
 | **Radnik dobija sužen pristup svojim terminima**, ne umanjenu admin ulogu | [ADR-0013](adr/0013-radnik-dobija-suzen-pristup-svojim-terminima.md) |
 | Korak rezervacije je **po usluzi**, uz salonski kao podrazumijevani | [ADR-0014](adr/0014-korak-rezervacije-je-po-usluzi.md) |
 | Slike idu u **Supabase Storage**, javni bucket sa upisom po salonu | [ADR-0015](adr/0015-slike-idu-u-supabase-storage-javni-bucket.md) |
+| **`prototype/adminv2/`** je vizuelni izvor istine za admin; `admin/SPEC.md` ostaje kao tekst | [ADR-0016](adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |

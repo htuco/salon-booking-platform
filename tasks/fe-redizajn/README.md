@@ -44,6 +44,11 @@ Handoff traži četiri stvari koje se **kose sa pravilima koja ovaj repo već pr
 sitnica i nijedna se ne rješava usput u taskovu — svaka je ADR (`docs/adr/`), po pravilu iz
 `CLAUDE.md`: odluka koja se ne može pročitati iz koda.
 
+**Stanje: jedna od četiri je pala.** Odluka 4 (`adminv2/`) je riješena
+[ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md) i time su admin
+taskovi odblokirani. Preostale tri (Barlow, koralna u klijentu, Lucide) i dalje čekaju — prve dvije
+diraju **klijentsku** aplikaciju, pa blokiraju FE-1xx i FE-3xx, ne FE-4xx.
+
 **1. Barlow protiv dva postojeća para pisama.** Handoff traži Barlow + Barlow Condensed. Repo danas
 nosi **Space Grotesk + JetBrains Mono** u adminu i **DM Serif Display + Archivo** u klijentu, oba
 zapakovana lokalno uz OFL licence, i oba **izričito napisana** u `prototype/admin/SPEC.md:54` i
@@ -61,10 +66,17 @@ wireframe ga koristi (`lucide-react`) — ali u Flutteru ga danas nema nijedan p
 **116 upotreba `Icons.*`**. Bira se između pub paketa, zapakovanog icon fonta i SVG seta; to je
 izbor koji nosi licencu, veličinu bundla i tree-shaking, dakle ADR.
 
-**4. Šta je `prototype/adminv2/`.** Folder je stigao commitom `1edd73a` sa 21 PNG izvozom i
-**nije opisan u `prototype/CLAUDE.md`**, koji i dalje nabraja tri foldera i `admin/` vodi kao
-„vizuelni izvor istine za `apps/admin`". Dok se ne zapiše zamjenjuje li `adminv2/` stari `admin/`
-ili stoji uz njega, svaki FE-4xx task ima dva izvora istine koji se ne slažu.
+**4. Šta je `prototype/adminv2/`.** ✅ **Riješeno —
+[ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md).**
+
+`adminv2/` je vizuelni izvor istine za admin, `admin/` je zastario. Odluka je ispala uža nego što
+je izgledala: **oba foldera pokrivaju isti skup ekrana** — izvučeni identifikatori iz
+`adminv2/export/` daju `3a`–`3u`, isto što `admin/SPEC.md` nabraja u „Mapi prikaza", razlika nula
+u oba smjera. Dakle nije drugi handoff nego **redizajn istih 21 prikaza**, pa `SPEC.md` ostaje na
+snazi kao tekst (mapa na module, funkcionalne granice), a `adminv2/` je jači za vizual.
+`prototype/CLAUDE.md` to sada izričito piše.
+
+Time su **FE-401…FE-405 odblokirani**.
 
 ## Šta ovaj epik **ne** dira
 
@@ -77,8 +89,13 @@ ili stoji uz njega, svaki FE-4xx task ima dva izvora istine koji se ne slažu.
 
 Epik otvoren 2026-09-22.
 
-**U radu:** [FE-406](FE-406-desktop-fluidni-layout.md) — kod gotov i dokazan, [PR #65](https://github.com/htuco/salon-booking-platform/pull/65) je draft. Ostaje gledanje uživo.
+**Gotovo:** [FE-406](FE-406-desktop-fluidni-layout.md) — [PR #65](https://github.com/htuco/salon-booking-platform/pull/65)
+spojen u `main` (`824c98b`). Četiri pojasa širine, admin je fluidan do 2560 px. Viđeno uživo;
+browser je našao dvije greške koje 289 testova nije.
 
 FE-406 je počet prvi iako nije prvi po broju: ne zavisi ni od čega, blokira FE-402, FE-403 i
 FE-404, i **jedini je od šest admin taskova koji ne referencira nijedan PNG iz `prototype/adminv2/`**
-— pa je mogao naprijed dok četiri odluke iznad čekaju ADR.
+— pa je mogao naprijed dok su odluke iznad čekale ADR.
+
+**Sljedeće:** [FE-401](FE-401-admin-shell.md) — sada odblokiran ADR-om 0016. Ljuska, Melura
+wordmark i koralna; blokira FE-402…FE-405, pa ide prvi.

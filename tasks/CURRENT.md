@@ -1,6 +1,26 @@
-# Trenutni task: FE-406 — Desktop je fluidan, ne fiksni 1280
+# Trenutni task: ADR-0016 — `adminv2/` je vizuelni izvor istine za admin
+
+Nije task iz `tasks/`, nego odluka koja je blokirala pet od šest admin taskova FE epika. Grana
+`docs/adr-adminv2-izvor-istine`.
+
+**Nalaz koji je odluku sveo na usku.** `adminv2/export/` i `admin/SPEC.md` pokrivaju **isti skup
+ekrana** — izvučeni identifikatori daju `3a`–`3u` u oba smjera, razlika nula. Dakle `adminv2` nije
+drugi handoff nego **redizajn istih 21 prikaza**, pa `SPEC.md` ostaje kao tekst (mapa na module,
+funkcionalne granice), a `adminv2` je jači za vizual. Time su **FE-401…FE-405 odblokirani**.
+
+Uz ADR: `prototype/CLAUDE.md` dobio četvrti folder i pravilo „sliku iz `adminv2/`, tekst iz
+`admin/SPEC.md`", tabela odluka u `docs/README.md` dopunjena, FE-401 i epik README ažurirani.
+
+**Sljedeće:** [FE-401](fe-redizajn/FE-401-admin-shell.md) — ljuska, Melura wordmark i koralna.
+Blokira FE-402…FE-405, pa ide prvi.
+
+---
+
+# Prethodni task: FE-406 — Desktop je fluidan, ne fiksni 1280
 
 Učitan 2026-09-22 iz [fe-redizajn/FE-406](fe-redizajn/FE-406-desktop-fluidni-layout.md).
+**Gotov** — [PR #65](https://github.com/htuco/salon-booking-platform/pull/65) spojen u `main`
+(`824c98b`).
 
 **Dvije paralelne grane rada.** Ovaj fajl vodi FE epik (`tasks/fe-redizajn/`, izgled admina);
 Sprint 4 (`tasks/sprint-4/`, funkcionalnost) teče uporedo i njegov aktivni task je 37, čiji je
@@ -9,7 +29,7 @@ status niže na ovoj stranici nepromijenjen.
 ## Status
 
 Kod gotov i dokazan — grana `feat/fe-406-desktop-fluidni-layout`,
-[PR #65](https://github.com/htuco/salon-booking-platform/pull/65) je draft. Puni dokazi i
+[PR #65](https://github.com/htuco/salon-booking-platform/pull/65) spojen u `main`. Puni dokazi i
 zamke: [FE-406](fe-redizajn/FE-406-desktop-fluidni-layout.md).
 
 ## Ciljevi
@@ -23,17 +43,17 @@ Preostalo prije nego se PR skine sa drafta:
 - [x] **289 Flutter testova PASS** u `apps/admin` (bilo 278), čista analiza i format. Svaki novi
       test provjeren sabotažom — prva verzija je gledala samo desnu ivicu i prolazila je i kad se
       lista srozala na jednu razvučenu karticu.
-- [ ] **Zelen CI na PR-u** — dokaz iz čistog checkouta, koji lokalno ne postoji.
+- [x] **Zelen CI na PR-u** — `Analiza, format i testovi` pass (3m32s) na `37b0fe3`.
 - [x] **Viđeno uživo na širokom ekranu** (`/verify`) — 4 kolone na 2560 px, sadržaj do desne
       ivice. Browser je našao dvije greške koje suita nije; obje popravljene u `ca091af`.
 
 ## Napomene uz FE-406
 
-- **Epik je blokiran na ADR-u, ovaj task nije bio.** Četiri odluke iz
-  [fe-redizajn/README](fe-redizajn/README.md) (Barlow, koralna na klijentu, Lucide,
-  šta je `prototype/adminv2/`) i dalje nemaju ADR. FE-406 je jedini od šest admin taskova koji
-  **ne referencira nijedan PNG**, pa je mogao naprijed; FE-401…FE-405 ne mogu dok se ne zapiše
-  koji je handoff jači.
+- **Epik je bio blokiran na ADR-u, ovaj task nije.** FE-406 je jedini od šest admin taskova koji
+  **ne referencira nijedan PNG**, pa je mogao naprijed. Blokada je u međuvremenu skinuta
+  [ADR-om 0016](../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md); preostale tri
+  odluke iz [fe-redizajn/README](fe-redizajn/README.md) (Barlow, koralna u klijentu, Lucide)
+  diraju **klijentsku** aplikaciju i ne blokiraju FE-4xx.
 - **Dvije stavke DoD-a namjerno ostaju otvorene**: horizontalni skrol tabela pripada FE-404 (isti
   fajlovi), a prolaz kroz fiksne visine je FE-504. Pojasevi su uvedeni i primijenjeni na ekrane
   termina; ostali admin ekrani ih još ne koriste.
