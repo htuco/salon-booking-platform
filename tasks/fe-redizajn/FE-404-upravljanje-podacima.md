@@ -96,4 +96,4 @@ restrukturiranje ekrana koje ovaj task ne imenuje.
 
 Ostalo:
 
-- [ ] Zelen CI — dokaz iz čistog checkouta.
+- [x] **Zelen CI, oba joba** — `Analiza, format i testovi` pass (3m44s) i `Schema, RLS and tenant isolation` pass (2m42s). Drugi se pokrenuo jer promjena dira `core_api`, koji taj workflow prati.
