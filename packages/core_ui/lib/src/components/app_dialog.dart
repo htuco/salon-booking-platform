@@ -73,7 +73,8 @@ class AppDialog extends StatelessWidget {
     context: context,
     barrierDismissible: !dialog.busy,
     // Scrim je gotovo neproziran (`SPEC.md`: rgba(6,7,8,.72)) i ide **uz** blur ispod.
-    barrierColor: const Color(0xB80B0C0D),
+    // Vrijednost je token teme (`AppNeutrals.scrim`), jer se po temi razlikuje.
+    barrierColor: Theme.of(context).colorScheme.scrim,
     builder: (context) => BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
       child: dialog,
