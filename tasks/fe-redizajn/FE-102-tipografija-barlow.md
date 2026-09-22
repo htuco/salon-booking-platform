@@ -48,4 +48,21 @@ Ovo nije prazan teren nego **zamjena dva zapakovana para pisama**:
 
 ## Status
 
-Nije počet.
+**Neće se raditi.** Zatvoren
+[ADR-0019](../../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md) 2026-09-22:
+Barlow se ne uvodi, postojeća pisma ostaju.
+
+Odlučile su dvije činjenice iz „Zatečenog stanja" iznad, obje već zapisane u ovom fajlu:
+
+1. **Barlow nema mono rez**, a mono u adminu nosi inline podatak (`prototype/admin/SPEC.md:65`).
+   Nijedna zamjena tog sloja nije bolja od postojeće.
+2. **Zamjena pisma mijenja visinu svakog reda** — zamka koju ovaj task sam navodi. Admin blok
+   (FE-401…FE-406) je završen i dokazan protiv postojećih pisama, i zamjena bi taj dokaz
+   poništila.
+
+Iz handoffa se i dalje uzima **tipografska skala i hijerarhija** — veličine, težine,
+`line-height`, uppercase kickeri sa letterspacingom. Ne uzima se porodica pisma. To ide kroz
+FE-101 i FE-103, ne kroz ovaj task.
+
+Vraća se na sto samo ako stigne handoff koji **imenuje šta nosi inline podatak u adminu** umjesto
+JetBrains Mono, uz planiran QA prolaz kroz sve admin ekrane. Tada je to zaseban epik.

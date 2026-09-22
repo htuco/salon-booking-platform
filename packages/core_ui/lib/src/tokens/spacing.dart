@@ -112,4 +112,23 @@ abstract final class AppSize {
   /// 0.16 — uvlaka trake s obje strane, kao **udio širine ćelije**. Fiksna vrijednost bi
   /// na uskom telefonu progutala traku, a na tabletu je pretvorila u crticu.
   static const double navIndicatorInset = 0.16;
+
+  // --- Ikone (FE-104) ---
+  //
+  // Tri uloge, ne slobodna skala. `prototype/ui/SPEC.md:51` propisuje samo jednu
+  // vrijednost — 23 u donjoj navigaciji (`navIcon` iznad) — pa su ostale tri izvedene iz
+  // toga kako se ikona u ovoj aplikaciji stvarno koristi, a ne iz generičke 16/20/24 skale.
+  // Vrijednost se bira po **ulozi**, nikad se ne piše broj u ekranu.
+
+  /// 18 — ikona koja stoji **unutar reda teksta**: chevron u `LinkRow`-u, strelica uz
+  /// naslov sekcije. Veća bi razbila liniju teksta pored koje stoji.
+  static const double iconInline = 18;
+
+  /// 22 — ikona koja je **sama dodirna meta**: nazad, zatvori, ukloni. Meta ostaje 44
+  /// (`touchTarget`) — ovo je crtež unutar nje, ne njena veličina.
+  static const double iconAction = 22;
+
+  /// 48 — ikona **praznog stanja**. Jedina velika, i namjerno: ona je jedini sadržaj
+  /// ekrana na kojem se pojavi.
+  static const double iconEmptyState = 48;
 }

@@ -186,7 +186,10 @@ class _Zaglavlje extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(LucideIcons.arrowLeft, size: 22),
+                      const Icon(
+                        LucideIcons.arrowLeft,
+                        size: AppSize.iconAction,
+                      ),
                       const SizedBox(width: AppSpacing.md),
                       Text(backLabel, style: theme.textTheme.titleSmall),
                     ],

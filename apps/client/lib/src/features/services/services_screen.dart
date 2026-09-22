@@ -3,6 +3,7 @@ import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
@@ -77,7 +78,7 @@ class ServicesScreen extends ConsumerWidget {
                 hasScrollBody: false,
                 child: EmptyState(
                   message: l10n.servicesEmpty,
-                  icon: Icons.inbox_outlined,
+                  icon: LucideIcons.inbox,
                 ),
               ),
               AsyncData(:final value) => _Lista(
@@ -88,7 +89,7 @@ class ServicesScreen extends ConsumerWidget {
                 hasScrollBody: false,
                 child: EmptyState(
                   message: l10n.bookingServicesUnavailable,
-                  icon: Icons.cloud_off_outlined,
+                  icon: LucideIcons.cloudOff,
                   actionLabel: l10n.retry,
                   onAction: () => ref.invalidate(servicesProvider),
                 ),
