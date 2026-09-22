@@ -1,4 +1,13 @@
-# Salon OS admin — handoff specifikacija
+# Melura admin — handoff specifikacija
+
+> **Vizual ovog dokumenta je zastario; tekst nije.** Po
+> [ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md) izgled ekrana
+> dolazi iz `prototype/adminv2/export/` (isti skup prikaza, `3a`–`3u`), a ovdje ostaje ono što
+> slika ne nosi: mapa prikaza na Flutter module, funkcionalne granice, tokeni i redoslijed.
+> Gdje se njih dvoje razilaze, izvoz je jači, a ovaj dokument se ispravlja u istoj promjeni.
+>
+> Ispravljeno uz FE-401: ime proizvoda (bilo „Salon OS"), tamni sidebar i u svijetloj temi,
+> i raspodjela akcenta — v. napomene uz tabelu tokena.
 
 ## Status i opseg
 
@@ -89,6 +98,16 @@ izvorne OKLCH vrijednosti ostaju dizajnerski izvor istine.
 
 Vrijednosti prvo centralizovati u `apps/admin/lib/src/core/theme/`; ne ponavljati hex vrijednosti
 po ekranima. Admin akcent je platformski, nije tenant boja.
+
+**Dvije ispravke iz `adminv2` izvoza (FE-401), izmjerene iz `3b`, ne procijenjene:**
+
+- **Sidebar je taman i u svijetloj temi.** Tabela iznad daje `#F8F9FA` za light, ali red pod
+  „Status i opseg" oduvijek traži „stalni tamni sidebar" — izvoz mjeri `#141517` za pozadinu,
+  `#373A40` za aktivnu stavku, `#FFFFFF` za aktivni i `#C1C2C5` za neaktivni tekst. To su
+  **postojeće dark vrijednosti**; radna površina ostaje svijetla (`#FBFBF8` ≈ `ground`).
+- **Koralna nosi primarne oznake, ne samo radnje.** Pilula brojača uz „Zahtjeve" je u izvozu
+  `#EE6C4D`, a ne `#3D5A80`. Plava ostaje na selekciji i podacima. Tekst na koralu je
+  `#2C2C2C`, nikad bijel — bijela mjeri 3,05:1 i pada AA.
 
 Paleta se u Flutteru čuva kao semantički `ThemeExtension`; prilagođeni widgeti ne smiju čitati
 statične light vrijednosti jer tada ne bi pratili sistemski dark mode.

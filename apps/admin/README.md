@@ -1,13 +1,19 @@
-# Salon OS admin
+# Melura admin
 
 Generička Flutter admin aplikacija za sve salone. Admin ne bira `SALON_ID`: nakon
 email+password prijave salon i ovlasti dolaze iz server-side membershipa i Supabase RLS-a.
 
 ## Vizuelni handoff
 
-Puni admin dizajn je u [`prototype/admin`](../../prototype/admin/README.md): 10 desktop i 11
-mobilnih prikaza, uz [mapu prema rutama i modulima](../../prototype/admin/SPEC.md). HTML canvas je
-samo referenca; implementacija ostaje u ovom Flutter paketu.
+**Sliku uzimaš iz `adminv2/`, tekst iz `admin/SPEC.md`** — v.
+[ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md).
+
+- [`prototype/adminv2/export/`](../../prototype/adminv2/export/) — kako ekran **izgleda**: 21
+  prikaz (`3a`–`3u`), Melura redizajn. Vizuelni izvor istine.
+- [`prototype/admin/SPEC.md`](../../prototype/admin/SPEC.md) — šta ekran **radi**: mapa istih
+  prikaza na rute i module, funkcionalne granice, tokeni. Vizual u njemu je zastario.
+
+HTML canvas je samo referenca; implementacija ostaje u ovom Flutter paketu.
 
 ## Pokretanje
 

@@ -7,6 +7,7 @@
 library;
 
 import 'package:admin/src/features/auth/login_screen.dart';
+import 'package:admin/src/core/widgets/admin_wordmark.dart';
 import 'package:admin/src/core/theme/theme.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
@@ -118,7 +119,7 @@ void main() {
 
       // **Jednom**, ne dvaput: logotip je u bijeloj koloni, a tamna ploha nosi rečenicu o
       // pristupu. Prvi prolaz ga je crtao na oba mjesta i to se vidjelo tek na snimku.
-      expect(find.text('Salon OS'), findsOneWidget);
+      expect(find.text(kImeProizvoda), findsOneWidget);
       expect(
         find.text('Pristup imaju samo vlasnik i majstori lokacije.'),
         findsOneWidget,

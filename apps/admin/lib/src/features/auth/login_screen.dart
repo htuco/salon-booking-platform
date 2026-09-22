@@ -42,6 +42,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_wordmark.dart';
 
 /// Širina bijele kolone sa formom na desktopu (`3j`: `width:560px;flex:0 0 560px`).
 ///
@@ -172,7 +173,11 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _Logotip(naTamnom: false),
+                  const AdminWordmark(
+                    naTamnom: false,
+                    potpis: true,
+                    velicinaZnaka: 36,
+                  ),
                   const SizedBox(height: AdminSpacing.xxxl),
                   _forma(context),
                 ],
@@ -451,7 +456,11 @@ class _TamnaPloha extends StatelessWidget {
         child: Align(
           alignment: Alignment.bottomLeft,
           child: hero
-              ? const _Logotip(naTamnom: true)
+              ? const AdminWordmark(
+                  naTamnom: true,
+                  potpis: true,
+                  velicinaZnaka: 36,
+                )
               : Text(
                   kPristupNapomena,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -461,66 +470,6 @@ class _TamnaPloha extends StatelessWidget {
                 ),
         ),
       ),
-    );
-  }
-}
-
-/// Znak i ime proizvoda — `SO` u kvadratu, „Salon OS", pa mono potpis.
-///
-/// Isti blok stoji u obje ljuske ekrana; razlikuje se samo boja teksta.
-class _Logotip extends StatelessWidget {
-  const _Logotip({required this.naTamnom});
-
-  final bool naTamnom;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: context.adminColors.accent,
-            borderRadius: BorderRadius.circular(AdminRadius.base),
-          ),
-          child: Text(
-            'SO',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: context.adminColors.onAccent,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 11),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Salon OS',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: naTamnom
-                    ? context.adminColors.sidebarText
-                    : context.adminColors.ink,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              'administracija salona',
-              style: AdminText.eyebrow.copyWith(
-                color: naTamnom
-                    ? context.adminColors.sidebarText
-                    : context.adminColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }
