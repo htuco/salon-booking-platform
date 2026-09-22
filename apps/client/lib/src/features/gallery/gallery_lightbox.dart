@@ -193,7 +193,7 @@ class _Zaglavlje extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border.all(color: theme.colorScheme.outline),
                 ),
-                child: const Icon(LucideIcons.x, size: 22),
+                child: const Icon(LucideIcons.x, size: AppSize.iconAction),
               ),
             ),
           ),

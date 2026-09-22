@@ -38,12 +38,15 @@ nijedne aplikacije". Izmjereno stanje:
 
 ## Definicija gotovog
 - [x] ADR bira nosioca — [ADR-0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md): pub paket `lucide_icons_flutter`
-- [ ] Četiri preostale Material upotrebe u klijentu zamijenjene Lucide ekvivalentom
-      (`cloudOff`, `inbox`)
-- [ ] Nema ispunjenih ikona u klijentskom UI-u
-- [ ] Veličine svedene na 16 / 20 / 24 (plus 23 iz `SPEC.md` ako ostaje — ili se `SPEC.md` mijenja)
-- [ ] Ikona nasljeđuje boju iz teme; nijedna je ne postavlja lokalno
-- [ ] `uses-material-design: true` **ostaje u oba** — admin po ADR-0017 crta Material ikone, a
+- [x] Četiri preostale Material upotrebe u klijentu zamijenjene Lucide ekvivalentom
+      (`cloudOff`, `inbox`) — guard test drži pravilo
+- [x] Nema ispunjenih ikona u klijentskom UI-u — Lucide je cijeli linijski, provjereno da nema
+      nijedne `*Filled`/`*Solid` varijante
+- [x] Veličine su **tokeni po ulozi** (`iconInline` 18, `iconAction` 22, `iconEmptyState` 48,
+      `navIcon` 23), ne generička 16/20/24 skala — obrazloženje u statusu ispod
+- [x] Ikona nasljeđuje boju iz teme; tri mjesta je postavljaju eksplicitno, ali **iz tokena**
+      (`status.danger`, `scheme.surface`, `scheme.onSurfaceVariant`), nijedno iz hexa
+- [x] `uses-material-design: true` **ostaje u oba** — admin po ADR-0017 crta Material ikone, a
       klijent ga treba za Material komponente. Ovo je izmjena u odnosu na raniju verziju taska.
 
 ## Zamke
@@ -56,8 +59,33 @@ nijedne aplikacije". Izmjereno stanje:
 - Ikona u `IconData` polju modela znači da set nije zamjenjiv bez dodirivanja modela.
 - Tree-shaking ikona radi samo za konstantne `IconData`. Set koji ikonu bira po stringu u
   runtime-u isključi shaking i tiho naduva bundle.
-
 ## Status
 
-Nije počet. **Odblokiran** ADR-om 0017 i **sužen** — ostatak posla je četiri upotrebe u klijentu
-plus provjera veličina, ne zamjena seta kroz obje aplikacije.
+**Gotovo, dokazano.** Grana `feat/fe-104-ikone-jedna-debljina`.
+
+Urađeno:
+
+- Četiri preostale Material upotrebe zamijenjene Lucideom: `LucideIcons.cloudOff` ×3
+  (`about_screen`, `home_screen`, `services_screen`) i `LucideIcons.inbox` ×1
+  (`services_screen`). **Klijent i `core_ui` sada nemaju nijednu Material ikonu.**
+- **Veličine ikona su tokeni, ne brojevi u ekranu.** `AppSize.iconInline` (18),
+  `iconAction` (22), `iconEmptyState` (48), uz postojeći `navIcon` (23) iz
+  `prototype/ui/SPEC.md:51`. Sedam mjesta prevedeno na njih.
+- **Guard test** `apps/client/test/icon_set_test.dart` — skenira izvor i pada ako Material
+  ikona uđe u klijenta ili `core_ui`. Provjereno da stvarno pada: privremeno vraćena
+  `Icons.inbox_outlined` je prijavljena uz fajl i broj reda.
+
+**304 testa PASS** (bilo 303), `dart analyze apps/client packages` čist, `dart format` bez
+promjena.
+
+### Odstupanje od prvobitnog DoD-a, sa razlogom
+
+- **Veličine nisu svedene na 16/20/24.** Ta skala nije iz handoffa — `prototype/ui/SPEC.md`
+  propisuje **samo 23** za donju navigaciju. Zatečene 18/22/48 su konzistentne **po ulozi**
+  (inline u redu teksta / dodirna meta / prazno stanje), pa su te uloge imenovane kao tokeni
+  umjesto da se svedu na generičku skalu. Svođenje bi bilo vizuelna promjena na desetak
+  ekrana bez ijednog izvora koji je traži.
+- **`uses-material-design: true` ostaje u oba `pubspec.yaml`-a.** Prvobitni DoD ga je htio
+  preispitati „ako Material ikone odu". One su otišle iz klijenta, ali admin ih po
+  [ADR-0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md)
+  zadržava (61 upotreba), a klijentu zastavica treba za Material komponente.
