@@ -891,7 +891,7 @@ class _ZauzetostKartica extends ConsumerWidget {
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AdminRadius.small),
                         child: LinearProgressIndicator(
                           value: najvise == 0 ? 0 : radnik.minuta / najvise,
                           minHeight: 7,
