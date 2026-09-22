@@ -49,4 +49,15 @@ Sprint otvoren 2026-09-22.
 
 ### 37 — Automatsko potvrđivanje termina 🟡
 
-U toku od 2026-09-22, grana `fix/automatsko-potvrdjivanje`.
+Kod gotov i dokazan 2026-09-22, [PR #63](https://github.com/htuco/salon-booking-platform/pull/63)
+je draft. `booking_mode` je do sada postojao kroz cijeli stek i **nigdje se nije čitao**;
+sada `book_appointment` računa `v_auto` i nosi njime `status` i `pending_expires_at`, dok
+`source` ostaje `app` — status i porijeklo su dva različita pitanja. Dokazi: **455 pgTAP
+asercija** (novi `015` nosi 22), sabotaža starom verzijom funkcije obara tačno dvije, i
+`melos run test` **798**.
+
+**Nalaz za task 39:** u `auto` modu salon ne dobija nijednu push obavijest o novoj
+rezervaciji — `queue_appointment_push` na `INSERT` gleda samo `pending`. Zamka iz taska
+(dupla obavijest) ne postoji; problem je suprotan.
+
+Ostaje 🟡 dok ne prođe CI i dok migracija ne ode na hostovani projekat (`npx supabase db push`).

@@ -4,50 +4,44 @@ Učitan 2026-09-22 iz [sprint-4/37](sprint-4/37-automatsko-potvrdjivanje.md). Pr
 
 ## Status
 
-U toku — grana `fix/automatsko-potvrdjivanje`.
+Kod gotov i dokazan — grana `fix/automatsko-potvrdjivanje`,
+[PR #63](https://github.com/htuco/salon-booking-platform/pull/63) je draft. Puni dokazi i
+zamke: [task 37](sprint-4/37-automatsko-potvrdjivanje.md).
 
 ## Ciljevi
 
-- [ ] Nova migracija zamjenjuje `book_appointment` **istim potpisom** — `auto` daje `confirmed` i
-      `pending_expires_at = null`, `manual` ostaje `pending` sa rokom
-- [ ] Admin unos ostaje `confirmed` / `manual` bez obzira na postavku (task 24)
-- [ ] pgTAP (`015_...`) pokriva oba načina, plus negativan test: prebacivanje postavke ne dira
-      **postojeće** termine
-- [ ] Provjera `pg_proc` upitom da je stara verzija zamijenjena, a ne preopterećena
-- [ ] Klijentski ekran poslije rezervacije čita `appointment.status` — ne tvrdi „čeka potvrdu"
-      kad je termin `confirmed`
-- [ ] `supabase/IMPLEMENTATION.md` opisuje ugovor oba načina
+Preostalo prije nego se PR skine sa drafta:
+
+- [ ] **Zelen CI job `Supabase tests`** na PR-u — dirano je `supabase/`, pa lokalno zeleno nije dovoljno.
+- [ ] **Migracija na hostovanom projektu.** `npx supabase db push` je jedini korak koji fali da
+      `auto` mod postoji i izvan lokalnog Dockera; jednosmjerna promjena nad demo bazom, čeka odluku.
+- [ ] **Ekran poslije rezervacije viđen uživo u `auto` modu.** Dokaz je za sada widget test.
+      Blokiran prethodnom stavkom — dok migracija nije na hostovanom projektu, `auto` se uživo ne može ni izazvati.
 
 ## Napomene
 
-- **Žica nikad nije spojena, nije rubni slučaj.** `salon_settings.booking_mode` postoji od
-  `init_schema` (`check in ('manual','auto')`), task 36 ga piše kroz `rpc`, admin ekran ga prebacuje.
-  Zadnja definicija `book_appointment` je u `supabase/migrations/20260914150000_admin_akcije_nad_terminima.sql:160`
-  i status bira isključivo po pozivaocu: `(case when v_admin then 'confirmed' else 'pending' end)`.
-- **`v_settings` se već čita** u toj funkciji (red iznad `insert`-a, za `buffer_minutes` i
-  `pending_expiry_hours`), pa nova migracija ne dodaje upit — samo grana po `v_settings.booking_mode`.
-- **Isti `case when v_admin` odlučuje i o `source` i o `pending_expires_at`.** `source` se **ne**
-  mijenja: `auto` je i dalje termin iz aplikacije (`app`), samo odmah potvrđen. Mijenjaju se
-  `status` i `pending_expires_at`.
-- **Klijentski ekran danas hardkodira „Na čekanju".** `apps/client/lib/src/features/booking/booking_success_screen.dart`
-  upisuje `l10n.bookingStatusPending` sa `StatusTone.warning`, a doc komentar iznad klase tvrdi da
-  „`book_appointment` uvijek pravi `pending` red". Taj komentar postaje netačan ovim taskom i mora
-  ići u istoj promjeni. `Appointment` model već nosi `status`, pa nema promjene u `core_api`.
-- **Copy mora dobiti drugu granu, ne samo drugi badge.** `bookingSuccessKicker` („ZAHTJEV JE
-  POSLAN"), `bookingSuccessBody` („Termin još nije potvrđen…") i `bookingSuccessTitle` su svi
-  pisani za `manual`. Handoff `prototype/ui/screenshots/07-zahtjev-poslan.png` nema `auto` varijantu —
-  oblik ekrana ostaje isti, mijenja se tekst i ton badgea.
-- **Zamka iz taska, provjeriti je stvarno:** `create or replace` sa drugačijim potpisom je
-  preopterećenje, ne zamjena; obje verzije ostanu sa grantom. Potpis mora ostati
-  `(uuid, uuid, uuid, date, time, uuid, text, uuid)`.
-- **Push „termin potvrđen" ne smije stići dvaput kad je `auto`** — dodir sa taskom 39, provjeriti
-  `20260915140417_push_dispatch.sql` prije nego se migracija zatvori.
-- Naslijeđeno iz taska 36 (🟡, ne blokira ovaj task): `/settings` ekran nije viđen uživo, isti dug
-  stoji na 28 i 30. Zatvara se u jednom prolazu kad se admin pokrene protiv hostovanog projekta.
-- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, a `deno` je u `~/.deno/bin` i nije na
-  `PATH`-u — `tool/test_supabase.sh` pretpostavlja oba na `PATH`-u, pa se komande pokreću ručno.
-- **Sabotažu pokretati samo unutar transakcije testa.** `create or replace` kroz `psql -f` nad
-  fajlom bez `begin;` ostane komitovan u lokalnoj bazi. `npx supabase db reset` čisti.
+- **Nalaz koji ovaj task ne zatvara, ide u 39.** U `auto` modu salon ne dobija **nijednu** push
+  obavijest o novoj rezervaciji: `private.queue_appointment_push` na `INSERT` reagira samo na
+  `source='app' and status='pending'`, a `confirmed` red tu granu ne pogađa. Zamka koju task fajl
+  opisuje (dupla „termin potvrđen") zato **ne postoji** — problem je suprotan. Popravka traži novu
+  vrijednost u `notification_type` enumu, dakle šemu izvan DoD-a ovog taska.
+- **`source` namjerno ostaje `app` u `auto` modu.** Status i `source` odgovaraju na dva različita
+  pitanja — da li salon čeka odgovor, i odakle je termin stigao. Ako se dogovor promijeni, to
+  mijenja značenje izvještaja i traži svoj ADR.
+- **`bookingStatusPending` je obrisan iz `app_bs.arb`.** Ekran sada ide kroz
+  `statusLabel`/`statusTone`, isti helper koji koriste kartica i detalj termina; mrtav ključ sa
+  tekstom „Na čekanju" je poziv sljedećem da ga ponovo hardkodira.
+- **`dart format` ume da uđe u `apps/*/build/`** i tamo reformatira vendovani Firebase primjer, pa
+  `melos run format` padne na čistom repou. CI to ne vidi (čist checkout nema `build/`). Ako padne
+  lokalno, pogledaj mijenja li se išta van `build/` prije nego tražiš uzrok u svom kodu.
+- `supabase` CLI na ovoj mašini ide kroz **`npx supabase`**, `melos` je u `~/.pub-cache/bin` i nije
+  na `PATH`-u, a `deno` je u `~/.deno/bin` — `tool/test_supabase.sh` pretpostavlja sve na `PATH`-u.
+- **Hostovani projekat nije `link`-ovan** (`npx supabase link`), pa se `migration list --linked` ne
+  može pokrenuti; stanje njegove šeme za sada nije provjereno komandom.
+- **Sabotažu pokretati samo unutar transakcije.** `create or replace` kroz `psql -f` nad fajlom bez
+  `begin;` ostane komitovan u lokalnoj bazi. `npx supabase db reset` čisti.
+- Naslijeđeno iz taska 36 (🟡, ne blokira): `/settings` ekran nije viđen uživo, isti dug stoji na
+  28 i 30.
 
 ## Istorija
 
