@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/format/datum.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'working_hours_providers.dart';
 
 /// Termini koji ispadaju van novog rasporeda — vlasnik ih vidi **prije** nego što snimi.
@@ -324,11 +325,7 @@ class _UredjivacBlokadeState extends ConsumerState<_UredjivacBlokade> {
                   FilledButton(
                     onPressed: _snimam ? null : _sacuvaj,
                     child: _snimam
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                        ? const AdminButtonBusy()
                         : const Text('Sačuvaj'),
                   ),
                 ],

@@ -12,6 +12,7 @@ import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../appointments/appointments_providers.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'services_providers.dart';
 
 class AdminServicesScreen extends ConsumerWidget {
@@ -55,8 +56,10 @@ class _ServicesBody extends ConsumerWidget {
       loading: () => ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: const [
-          SizedBox(height: 260),
-          Center(child: CircularProgressIndicator()),
+          Padding(
+            padding: EdgeInsets.all(AdminSpacing.gutterMobile),
+            child: AdminSkeletonList(),
+          ),
         ],
       ),
       error: (error, _) => ListView(

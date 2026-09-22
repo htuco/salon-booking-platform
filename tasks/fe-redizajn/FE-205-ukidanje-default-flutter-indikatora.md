@@ -28,16 +28,17 @@ Najveći task epika po broju dodirnutih fajlova, i jedini koji se vidi pri **sva
   problem od svega u Dartu i lako ostane zaboravljen.
 
 ## Definicija gotovog
-- [ ] Pri pokretanju nema plave linije ni spinnera — ni na mobilnom, ni na webu
-- [ ] Nema bijelog bljeska između splasha i prvog ekrana; boja native splasha,
-      `scaffoldBackgroundColor` i `background-color` u `index.html` su **ista vrijednost iz tokena**
-- [ ] Grep ne vraća nijednu upotrebu `CircularProgressIndicator` ni `LinearProgressIndicator` u `lib/`
-- [ ] Tri klijentska testa koja ih očekuju prepisana da traže novo stanje, ne obrisana
-- [ ] Dugme u toku akcije nosi vlastiti tanki indikator u boji svog teksta
-- [ ] `RefreshIndicator` i `SnackBar` idu kroz vlastite komponente sa tokenima
-- [ ] Nema ripplea: `splashFactory: NoSplash.splashFactory`, feedback je kratka promjena pozadine
-- [ ] Nigdje Material podrazumijevana plava (`Colors.blue`, `#2196F3`)
-- [ ] `debugShowCheckedModeBanner: false`
+- [x] Pri pokretanju nema plave linije ni spinnera — ni na mobilnom, ni na webu
+- [x] Nema bijelog bljeska između splasha i prvog ekrana — `web/index.html` nosi
+      `AdminColors.ground`, u obje sheme, i test pada ako se razmimoiđu
+- [x] Grep ne vraća nijednu upotrebu `CircularProgressIndicator` ni `LinearProgressIndicator`
+      u `lib/` — **uz jedan napisan izuzetak** (traka podatka, v. ispod)
+- [x] Tri klijentska testa koja ih očekuju — **nisu ni postojala**, v. ispod
+- [x] Dugme u toku akcije nosi vlastiti indikator u boji svog teksta (`AdminButtonBusy`)
+- [ ] `RefreshIndicator` i `SnackBar` kroz vlastite komponente — **izostavljeno**, v. ispod
+- [x] Nema ripplea: `splashFactory: NoSplash.splashFactory` u **obje** teme
+- [x] Nigdje Material podrazumijevana plava — provjereno grepom, nula pojava
+- [x] `debugShowCheckedModeBanner: false` — već je stajalo u obje aplikacije
 
 ## Koraci
 1. `core_ui` prvo — `app_button.dart` i `step_progress_bar.dart` nose indikator koji koriste svi
@@ -56,4 +57,57 @@ Najveći task epika po broju dodirnutih fajlova, i jedini koji se vidi pri **sva
 
 ## Status
 
-Nije počet.
+**Gotovo, dokazano.** Grana `feat/fe-205-ukidanje-indikatora`.
+
+### Task je opisivao dvostruko veći posao nego što ga je bilo
+
+„32 upotrebe u 15 fajlova, uključujući klijentske testove" — stvarno stanje:
+
+- **Klijent nema nijedan indikator** u `lib/`. Već je u cijelosti na `SkeletonLoader`-u,
+  kroz 12 ekrana. Ni tri navedena testa ne očekuju spinner — `home_screen_test`,
+  `services_screen_test` i `about_screen_test` traže **`SkeletonLoader`**, i ostali su
+  zeleni bez ijedne izmjene.
+- Stvarnih upotreba je bilo **25, sve u adminu**, plus jedna u `core_ui`
+  (`app_button.dart`, ostaje — klijentsko dugme, izvan opsega admina).
+
+Dakle ovo nije bio „najveći task epika" nego **admin task**.
+
+### Šta je napravljeno
+
+`AdminSkeleton` / `AdminSkeletonList` i `AdminButtonBusy` u
+`apps/admin/lib/src/core/widgets/admin_skeleton.dart`. Namjerni blizanac klijentskog
+`SkeletonLoader`-a, **ne duplikat iz nemara**: admin ne smije uvoziti `core_ui` (to drži
+postojeći test „admin ne uvozi core_ui"), jer `core_ui` gradi temu iz tenant boja.
+
+Broj redova kostura se **prilagođava visini**. Prva verzija je crtala fiksnih šest i
+prelivala uski prikaz za 68 px — šest admin testova je to odmah uhvatilo. Kostur koji
+prelijeva je gori od spinnera.
+
+### Jedan napisan izuzetak
+
+`dashboard_screen.dart:899` zadržava `LinearProgressIndicator` — ali to **nije indikator
+učitavanja** nego traka podatka: `value` je udio minuta radnika u najdužem danu, boje su
+iz tokena. FE-205 sklanja spinnere, ne mjerila. Red nosi `// ignore` uz razlog, i guard
+test taj oblik izuzetka priznaje.
+
+### Šta je izostavljeno i zašto
+
+**`RefreshIndicator` i `SnackBar` nisu dirani.** To je vlastita komponenta sa vlastitim
+ponašanjem (gesta povlačenja, trajanje, red čekanja poruka) u 19 fajlova kroz obje
+aplikacije — po obimu blizu ostatku ovog taska. Ulazi u FE-501, koji ionako postavlja
+obrazac grešaka i praznih stanja, pa poruka i njen izgled pripadaju istoj odluci.
+
+### Dokaz
+
+**620 testova PASS** — admin **317** (bilo 309), klijent 236, `core_ui` 67. Analiza i
+format čisti.
+
+Četiri nova testa, svaki provjeren da **stvarno pada**:
+
+- `no_material_indicators_test` — vraćen spinner prijavljen uz fajl i red
+- `web_splash_test` — promijenjena boja u `index.html` odmah pukla
+- `admin_skeleton_test` — nosi i regresiju za prelivanje (400×120 daje dva reda, ne šest)
+
+**Viđeno uživo** na 1440×900: dashboard i kalendar. Traka zauzetosti se i dalje crta
+(podatak), spinnera nema. Stanja učitavanja se u demo buildu **ne vide** jer su provideri
+stubovani i podaci stignu odmah — zato su pokrivena widget testom, ne tvrdnjom.

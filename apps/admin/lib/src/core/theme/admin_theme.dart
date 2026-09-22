@@ -38,6 +38,10 @@ ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
     useMaterial3: true,
     brightness: brightness,
     colorScheme: _adminColorScheme(colors, brightness),
+    // Bez ripplea (FE-205): Material val je najprepoznatljiviji potpis koji redizajn
+    // sklanja. Potvrda dodira ostaje — `InkWell` i dalje crta `hoverColor` i
+    // `highlightColor` iz teme, pa dugme ne djeluje kao da ne reaguje.
+    splashFactory: NoSplash.splashFactory,
     textTheme: textTheme,
     // Widget koji ne gleda `textTheme` (npr. `Text` bez stila u tuđoj komponenti) mora i
     // dalje dobiti Space Grotesk, a ne Roboto.

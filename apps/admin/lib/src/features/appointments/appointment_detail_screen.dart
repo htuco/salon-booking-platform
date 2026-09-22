@@ -33,6 +33,7 @@ import '../../core/format/tekst.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'appointment_actions_bar.dart';
 import 'appointments_providers.dart';
 import 'status_pill.dart';
@@ -63,7 +64,10 @@ class AppointmentDetailScreen extends ConsumerWidget {
       aktivna: AdminRoute.appointments,
       sopstvenoZaglavlje: true,
       body: termin.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(AdminSpacing.xxl),
+          child: AdminSkeletonList(),
+        ),
         error: (_, _) => _Poruka(
           tekst: 'Termin se ne može učitati.',
           onNazad: () => _nazad(context),

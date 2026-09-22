@@ -9,6 +9,7 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../appointments/appointments_providers.dart';
 import '../calendar/calendar_providers.dart';
+import '../../core/widgets/admin_skeleton.dart';
 import 'employees_providers.dart';
 
 const _days = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
@@ -56,8 +57,8 @@ class AdminEmployeesScreen extends ConsumerWidget {
           loading: () => ListView(
             children: const [
               Padding(
-                padding: EdgeInsets.all(28),
-                child: LinearProgressIndicator(),
+                padding: EdgeInsets.all(AdminSpacing.gutterDesktop),
+                child: AdminSkeletonList(),
               ),
             ],
           ),
@@ -272,7 +273,10 @@ class _Shifts extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => ref
       .watch(kalendarRadnoVrijemeProvider)
       .when(
-        loading: () => const LinearProgressIndicator(),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(AdminSpacing.xxl),
+          child: AdminSkeletonList(),
+        ),
         error: (_, _) => Column(
           children: [
             const Text('Raspored se ne može učitati.'),
@@ -588,7 +592,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                         ),
                       )
                     else
-                      const LinearProgressIndicator(),
+                      const AdminSkeletonList(redova: 3),
                   ] else ...[
                     if (services.value!.isEmpty)
                       const Text(
