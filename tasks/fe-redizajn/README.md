@@ -97,7 +97,7 @@ FE-406 je počet prvi iako nije prvi po broju: ne zavisi ni od čega, blokira FE
 FE-404, i **jedini je od šest admin taskova koji ne referencira nijedan PNG iz `prototype/adminv2/`**
 — pa je mogao naprijed dok su odluke iznad čekale ADR.
 
-**U radu:** [FE-401](FE-401-admin-shell.md) — kod gotov i dokazan, grana
+**Gotovo:** [FE-401](FE-401-admin-shell.md) — kod gotov i dokazan, grana
 `feat/fe-401-admin-ljuska-melura`. Melura wordmark, tamni sidebar, verzal navigacija, uloga
 ispod imena. 294 testa, viđeno uživo na tri ekrana. Odblokirao ga je
 [ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md), spojen u `main`.

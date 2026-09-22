@@ -68,4 +68,4 @@ lijevo u koloni od 560, tamna ploha desno, dugme u koloni.
 
 Ostalo:
 
-- [ ] Zelen CI — dokaz iz čistog checkouta.
+- [x] Zelen CI — `Analiza, format i testovi` pass, 3m25s.
