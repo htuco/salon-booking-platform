@@ -28,14 +28,13 @@ Ne ono što task iz handoffa pretpostavlja:
   `packages/core_ui/lib/core_ui.dart`.
 
 ## Definicija gotovog
-- [ ] Dva preostala hex-a u `core_ui` idu u tokene ili dobiju napisan izuzetak
-- [ ] Klijent dobija svoj ekvivalent `no_hardcoded_colors_test` — danas ga nema, pa pravilo
-      „boja dolazi iz `tenant.yaml`" ništa ne provodi osim pregleda
-- [ ] Koralna ostaje **admin** akcent; klijentska brand boja i dalje dolazi iz `tenant.yaml`
-      kroz `buildAppTheme()`
-- [ ] Kontrast teksta na koralnoj ≥ 4,5:1 dokazan testom, ne okom (`packages/core_ui/test/contrast_test.dart`
-      već ima aparaturu)
-- [ ] Dark/light varijante klijenta ostaju van obima — zapisano kao dug, ne prećutano
+- [x] Dva preostala hex-a u `core_ui` idu u tokene — ispalo ih je **tri, ne dva** (v. ispod)
+- [x] Klijent dobija svoj ekvivalent `no_hardcoded_colors_test`
+- [x] Koralna ostaje **admin** akcent; klijentska brand boja i dalje dolazi iz `tenant.yaml`
+      kroz `buildAppTheme()` — sada i **provedeno testom**, ne samo pregledom
+- [x] Kontrast teksta na koralnoj ≥ 4,5:1 dokazan testom — `apps/admin/test/theme_contrast_test.dart`
+      to **već mjeri** na `filledButtonTheme` i na FAB-u, dakle na onome što se stvarno iscrtava
+- [x] Dark/light varijante klijenta ostaju van obima — zapisano kao dug u `README` epika
 
 ## Zamke
 - **Ovo je task u kojem je najlakše slomiti multi-tenant.** `primary` u klijentu nije boja nego
@@ -47,4 +46,44 @@ Ne ono što task iz handoffa pretpostavlja:
 
 ## Status
 
-Nije počet.
+**Gotovo, dokazano.** Grana `feat/fe-101-tokeni-boja`.
+
+### Hex-ova je bilo tri, ne dva
+
+Task je nabrajao `app_dialog.dart` i `core_ui.dart`. Stvarno stanje:
+
+- `core_ui.dart` je bio **lažan pogodak** — heks je tamo u doc komentaru, ne u kodu.
+- `app_dialog.dart:76` — scrim `Color(0xB80B0C0D)`, **jeste** bio hardkodiran.
+- `theme_factory.dart:73-74` — `error` i `onError`, koje task **nije spomenuo**. Bili su
+  heks uz `jeTamna` granu, pa su **dvije svijetle teme dijelile jednu vrijednost**, a
+  tamna dobijala svoju. To je bila greška koja se vidi tek na `elegantBeauty` temi.
+- `contrast.dart:34-35` — crna i bijela ostaju heks **namjerno**: to su konstante
+  algoritma koji bira čitljiviju od te dvije, ne paleta. Izuzetak je napisan, ne prećutan.
+
+Sva tri stvarna hex-a su sada tokeni u `AppNeutrals` (`scrim`, `error`, `onError`), po
+temi različiti, i idu u `ColorScheme` kroz `buildAppTheme()`.
+
+### Guard test je glavni dio, ne hex
+
+Hex-ovi su bili tri reda. Ono što task stvarno zatvara je `apps/client/test/no_hardcoded_colors_test.dart`
+— blizanac admin testa, ali sa jačim razlogom: u adminu pogrešna boja izgleda pogrešno
+svima **odmah**, a u klijentu prolazi svaki test i svaki pregled, jer testovi i demo crtaju
+**jedan** tenant. Vidi se tek kad drugi salon otvori aplikaciju, a tada je već u storeu.
+
+**Provjereno da stvarno pada:** privremeno upisana `Color(0xFFEE6C4D)` u
+`gallery_lightbox.dart` — tačno greška pred kojom
+[ADR-0018](../../docs/adr/0018-klijent-nema-fiksnu-koralnu-boja-ostaje-tenant-podatak.md)
+upozorava — prijavljena je uz fajl i broj reda.
+
+Dva napisana izuzetka: `lib/src/generated/` (registar tenanata nosi brand boje **kao
+podatak iz `tenant.yaml`**, što je i ispravan izvor) i `demo_main.dart` (glumi backend).
+
+### Dokaz
+
+**613 testova PASS** — admin 309, klijent 237, `core_ui` 67. Analiza i format čisti.
+
+**Zamka pri pokretanju:** testovi koji čitaju izvor (`no_hardcoded_colors_test` u obje
+aplikacije, `theme_tokens_test`) koriste **relativne** putanje, pa moraju ići iz korijena
+svog paketa. `flutter test apps/admin` iz korijena repoa im obori pet testova sa
+`PathNotFoundException: lib\*` — to nije regresija nego pogrešan radni folder.
+
