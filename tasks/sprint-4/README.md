@@ -98,7 +98,16 @@ prazni, pa `PUSH_ENABLED` ostaje `false`. `apps/admin` ima svoj `applicationId`
 (`ba.nasadomena.admin`) i traži **vlastitu Firebase Android aplikaciju**. U repou je ostalo samo da
 skripta o tome više ne ćuti i da `workflows.md` opiše postupak.
 
-**Ostaje 🟡:** migracija nije primijenjena na hostovani projekat (MCP je `--read-only`), i nema
-snimka sa uređaja. Zamka za sljedećeg: **admin u Chromeu ne može dokazati push** —
-`pushEnabledProvider` traži `!kIsWeb`.
+**Zatvoreno uživo 2026-09-22.** Migracija je primijenjena na hostovani projekat, Firebase Android
+aplikacija za `ba.nasadomena.admin` registrovana, i `devices` je prvi put dobio **staff uređaj sa
+tokenom**. Obavijesti stižu u oba smjera.
+
+Obavijesti su pritom bile **nijeme**, što ide u zasebnom PR-u: Android payload nije tražio zvuk
+(iOS jeste, od taska 25), admin nije imao notification kanal nego je padao na FCM-ov
+„Miscellaneous", a pravi uzrok tišine je **prvi plan** — FCM ne crta payload dok je aplikacija
+otvorena, a admin na `pushReceivedProvider` samo osvježi listu.
+
+Zamke za sljedećeg: **admin u Chromeu ne može dokazati push** (`pushEnabledProvider` traži
+`!kIsWeb`); **`run_tenant.sh` je pokvaren sa Flutterom 3.47.4** (`--build-name` više ne postoji na
+`flutter run`); **postojeći notification kanal se ne mijenja iz koda**, traži reinstalaciju.
 
