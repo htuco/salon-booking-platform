@@ -69,3 +69,7 @@ apps/*/lib/src/l10n/generated/
 
 # Izlaz playwright MCP servera (snapshotovi, screenshotovi) — alat, ne repo.
 .playwright-mcp/
+
+# Flutter tooling ga stvori pri prvom `flutter test` i nikad ga ne prati; bez ovog reda
+# stoji kao neprazan `git status` svakome ko pokrene testove.
+devtools_options.yaml
