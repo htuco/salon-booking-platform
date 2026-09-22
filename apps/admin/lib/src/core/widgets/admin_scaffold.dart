@@ -203,7 +203,12 @@ class AdminScaffold extends ConsumerWidget {
 // Desktop
 // ---------------------------------------------------------------------------
 
-/// Tamni sidebar iz `3b` — 236 px, osam stavki, ime prijavljenog na dnu.
+/// Tamni sidebar iz `3b` — 236 px: wordmark, kartica salona, osam stavki, nalog na dnu.
+///
+/// **Šta iz `3b` ovdje nema:** strelicu `▾` na kartici salona i „‹ Nazad na mrežu". Oba
+/// vode na `3a` (pregled mreže lokacija), koji nema ni rutu ni podatak — admin dobija
+/// tačno jedan salon iz membershipa (ADR-0016, `prototype/CLAUDE.md`). Strelica koja ne
+/// otvara ništa i link koji vodi nigdje su gori od praznog mjesta.
 class _Sidebar extends ConsumerWidget {
   const _Sidebar({this.aktivna});
 
@@ -212,20 +217,41 @@ class _Sidebar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final clan = ref.watch(currentStaffProvider).valueOrNull;
+    final salon = ref.watch(adminSalonProvider).valueOrNull;
 
     return Container(
       width: AdminSize.sidebarWidth,
       color: context.adminColors.sidebarBackground,
-      padding: const EdgeInsets.symmetric(vertical: 22),
+      padding: const EdgeInsets.only(top: 22, bottom: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Ime proizvoda, ne ime salona: admin je jedan build za sve salone. Ispod njega
-          // canvas crta „6 lokacija" i birač lokacije — to je `3a` i ostaje izvan sprinta.
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: AdminWordmark(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AdminWordmark(velicinaZnaka: 28),
+                // `3b`: „6 lokacija" ispod wordmarka. Broj je **stvaran**, ne iz canvasa:
+                // membership daje jedan salon, pa piše „1 lokacija".
+                if (salon != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '1 lokacija',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: context.adminColors.sidebarMuted,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
+          const SizedBox(height: 20),
+          if (salon != null) ...[
+            _SalonKartica(salon: salon),
+            const SizedBox(height: 16),
+          ],
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Column(
@@ -244,7 +270,91 @@ class _Sidebar extends ConsumerWidget {
   }
 }
 
-/// Jedan red sidebara. Canvas: `padding:10px 12px`, radius 6, izabrana `#232a2f`.
+/// Kartica salona ispod wordmarka (`3b`): slika 28 × 28 i ime, na `sidebarRaised`.
+class _SalonKartica extends StatelessWidget {
+  const _SalonKartica({required this.salon});
+
+  final Salon salon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(horizontal: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: context.adminColors.sidebarRaised,
+        borderRadius: BorderRadius.circular(AdminRadius.base),
+      ),
+      child: Row(
+        children: [
+          _Slika(url: salon.logoUrl, strana: 28, krug: false),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              salon.name,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: context.adminColors.sidebarAccentForeground,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Slika salona ili člana, sa placeholderom kad je nema.
+///
+/// Placeholder je **preliv**, kako ga `3b` crta (`canvas/assets/ph*.png`), a ne inicijal:
+/// siv kvadrat sa slovom izgleda kao greška u učitavanju slike, preliv kao mjesto za nju.
+class _Slika extends StatelessWidget {
+  const _Slika({required this.url, required this.strana, required this.krug});
+
+  final String? url;
+  final double strana;
+  final bool krug;
+
+  @override
+  Widget build(BuildContext context) {
+    final boje = context.adminColors;
+    final placeholder = DecoratedBox(
+      decoration: BoxDecoration(
+        shape: krug ? BoxShape.circle : BoxShape.rectangle,
+        borderRadius: krug ? null : BorderRadius.circular(AdminRadius.small),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [boje.sidebarMuted, boje.sidebarSelected],
+        ),
+      ),
+    );
+
+    final adresa = url;
+    final slika = adresa == null || adresa.isEmpty
+        ? placeholder
+        : Image.network(
+            adresa,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => placeholder,
+          );
+
+    return SizedBox(
+      width: strana,
+      height: strana,
+      child: krug
+          ? ClipOval(child: slika)
+          : ClipRRect(
+              borderRadius: BorderRadius.circular(AdminRadius.small),
+              child: slika,
+            ),
+    );
+  }
+}
+
+/// Jedan red sidebara. `3b`: verzal bez ikone, 37 px visine, izabrana `#373A40`.
 class _SidebarStavka extends ConsumerWidget {
   const _SidebarStavka({required this.cilj, required this.izabrana});
 
@@ -267,24 +377,23 @@ class _SidebarStavka extends ConsumerWidget {
         child: InkWell(
           onTap: () => context.go(cilj.putanja),
           borderRadius: BorderRadius.circular(AdminRadius.base),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Container(
+            height: 37,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
-                Icon(cilj.icon, size: 18, color: boja),
-                const SizedBox(width: AdminSpacing.md),
+                // **Bez ikone** — `3b` ih u sidebaru ne crta. Ikone ostaju u donjoj
+                // navigaciji telefona (`3k`), gdje ih izvoz crta.
                 Expanded(
                   child: Text(
                     // **Verzal je stil, ne podatak.** `cilj.label` ostaje „Danas", a
-                    // velika slova dolaze iz `toUpperCase()` ovdje — isti string se zato u
-                    // čitaču ekrana i u testu i dalje čita kao „Danas", a ne „DANAS".
-                    // Mijenjanje samog `kAdminDestinations` labela bi promijenilo i
-                    // donju navigaciju na telefonu, gdje `3k` crta mala slova.
+                    // velika slova dolaze iz `toUpperCase()` ovdje — donja navigacija na
+                    // telefonu čita isti label i crta ga malim slovima (`3k`).
                     cilj.label.toUpperCase(),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    semanticsLabel: cilj.label,
+                    style: AdminText.navigation.copyWith(
                       color: boja,
                       fontWeight: izabrana ? FontWeight.w600 : FontWeight.w500,
-                      letterSpacing: 0.8,
                     ),
                   ),
                 ),
@@ -298,19 +407,23 @@ class _SidebarStavka extends ConsumerWidget {
   }
 }
 
-/// Ime i uloga prijavljenog, iznad linije na dnu sidebara.
-class _SidebarPodnozje extends StatelessWidget {
+/// Avatar, ime i uloga prijavljenog, ispod linije na dnu sidebara (`3b`).
+///
+/// **Odjava je u meniju ovog reda**, ne ikona pored njega: `3b` ikonu ne crta, a odjava
+/// mora postojati. Red je zato dugme — klik otvara meni sa mailom i „Odjavi se", isti
+/// sadržaj kao `AdminNalogDugme` na telefonu.
+class _SidebarPodnozje extends ConsumerWidget {
   const _SidebarPodnozje({required this.clan});
 
   final StaffMember clan;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14),
-      padding: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.only(top: 15),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
@@ -319,36 +432,56 @@ class _SidebarPodnozje extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  clan.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: context.adminColors.sidebarText,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                // **Uloga, ne mail** (`3b`). Mail je i dalje dostupan — stoji u meniju
-                // naloga na telefonu — a u sidebaru je korisnija uloga: ko si ovdje, a ne
-                // čime si se prijavio. Nepoznata uloga ne ispisuje ništa, v. [labelaUloge].
-                if (labelaUloge(clan.role) case final uloga?)
-                  Text(
-                    uloga,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: context.adminColors.sidebarMuted,
-                    ),
-                  ),
-              ],
-            ),
+      child: PopupMenuButton<String>(
+        tooltip: 'Nalog',
+        position: PopupMenuPosition.over,
+        onSelected: (izbor) async {
+          if (izbor == 'odjava') await odjavi(context, ref);
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem<String>(
+            enabled: false,
+            child: Text(clan.email, style: theme.textTheme.bodySmall),
           ),
-          _OdjavaDugme(svijetla: true),
+          const PopupMenuDivider(),
+          const PopupMenuItem<String>(
+            value: 'odjava',
+            child: Text('Odjavi se'),
+          ),
         ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              const _Slika(url: null, strana: 32, krug: true),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      clan.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: context.adminColors.sidebarAccentForeground,
+                      ),
+                    ),
+                    // **Uloga, ne mail** (`3b`): ko si ovdje, a ne čime si se prijavio.
+                    // Mail je u meniju. Nepoznata uloga ne ispisuje ništa.
+                    if (labelaUloge(clan.role) case final uloga?)
+                      Text(
+                        uloga,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: context.adminColors.sidebarMuted,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -403,7 +536,10 @@ class _TopBar extends ConsumerWidget {
                 if (salon != null) ...[
                   Flexible(
                     child: Text(
-                      salon.name,
+                      // **Grad, ne puno ime** — `3b` piše „Vitez / Danas". Puno ime salona
+                      // stoji u kartici sidebara odmah lijevo; dvaput isto u istom redu
+                      // pogleda je šum. Bez grada ostaje ime.
+                      salon.city.trim().isEmpty ? salon.name : salon.city,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: context.adminColors.textMuted,
@@ -576,26 +712,10 @@ class AdminNalogDugme extends ConsumerWidget {
   }
 }
 
-/// Odjava iz podnožja sidebara — ikona, jer ime i mail već stoje pored nje.
-class _OdjavaDugme extends ConsumerWidget {
-  const _OdjavaDugme({this.svijetla = false});
-
-  final bool svijetla;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
-      tooltip: 'Odjavi se',
-      onPressed: () => odjavi(context, ref),
-      icon: const Icon(Icons.logout, size: 18),
-      color: svijetla ? context.adminColors.sidebarText : null,
-    );
-  }
-}
-
 /// Odjava, sa porukom kad ne prođe.
 ///
-/// Stoji kao funkcija jer je zovu tri mjesta: meni u `AppBar`-u, dugme u sidebaru i „Još".
+/// Stoji kao funkcija jer je zovu tri mjesta: meni u `AppBar`-u, meni podnožja sidebara i
+/// „Još".
 /// Preusmjeravanje na `/login` radi router kroz `currentStaffProvider`.
 Future<void> odjavi(BuildContext context, WidgetRef ref) async {
   try {

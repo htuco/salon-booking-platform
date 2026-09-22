@@ -59,7 +59,6 @@ class AdminWordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final boje = context.adminColors;
     final bojaTeksta = naTamnom ? boje.sidebarAccentForeground : boje.ink;
     final bojaPotpisa = naTamnom ? boje.sidebarMuted : boje.textMuted;
@@ -68,7 +67,7 @@ class AdminWordmark extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _LogoPlaceholder(strana: velicinaZnaka, naTamnom: naTamnom),
-        const SizedBox(width: AdminSpacing.sm),
+        const SizedBox(width: 10),
         Flexible(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -78,12 +77,16 @@ class AdminWordmark extends StatelessWidget {
                 // Velikim slovima kao u `3b` i `3j`. `toUpperCase()` se **ne** poziva ovdje:
                 // ime je vlastita imenica i tako se i čita naglas u čitaču ekrana, a vizuelni
                 // oblik je stvar stila. Handoff ga crta verzalom, pa ide `letterSpacing`.
-                kImeProizvoda,
+                kImeProizvoda.toUpperCase(),
+                semanticsLabel: kImeProizvoda,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleLarge?.copyWith(
+                // `3b`: 21 px, 600, razmak `.1em` — visina verzala 15 px na 2× izvozu.
+                style: barlow(
+                  size: 21,
+                  weight: 600,
+                  height: 1.1,
+                  tracking: 0.1,
                   color: bojaTeksta,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
                 ),
               ),
               if (potpis)

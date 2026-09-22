@@ -62,18 +62,15 @@ void main() {
     expect(opis.cijena, 20);
   });
 
-  testWidgets('vrijeme termina je JetBrains Mono, sa tabularnim ciframa', (
-    tester,
-  ) async {
+  testWidgets('vrijeme termina ima tabularne cifre', (tester) async {
     await tester.pumpWidget(_uTemi(AppointmentCard(termin: _termin())));
 
     final stil = _stilZa(tester, '13:00');
-    expect(stil.fontFamily, kAdminMonoFamily);
+    expect(stil.fontFamily, kAdminSansFamily);
     expect(stil.fontFeatures, contains(const FontFeature.tabularFigures()));
-    expect(stil.fontVariations, isNotEmpty);
   });
 
-  testWidgets('statusna oznaka je Space Grotesk i nosi tekst, ne samo boju', (
+  testWidgets('statusna oznaka je Barlow i nosi tekst, ne samo boju', (
     tester,
   ) async {
     await tester.pumpWidget(_uTemi(AppointmentCard(termin: _termin())));

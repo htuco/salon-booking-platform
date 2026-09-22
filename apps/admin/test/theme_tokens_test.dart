@@ -47,23 +47,28 @@ void main() {
   });
 
   group('pisma', () {
-    test('oba fajla stoje u repou, uz svoju OFL licencu', () {
+    test('četiri reza Barlowa stoje u repou, uz OFL licencu', () {
       // Fajl koji nedostaje ne obara build — Flutter tiho padne na fallback pismo, i to
       // se vidi tek na ekranu. Ovaj test je jedino mjesto gdje se to primijeti odmah.
       for (final ime in const [
-        'assets/fonts/SpaceGrotesk[wght].ttf',
-        'assets/fonts/JetBrainsMono[wght].ttf',
-        'assets/fonts/OFL-SpaceGrotesk.txt',
-        'assets/fonts/OFL-JetBrainsMono.txt',
+        'assets/fonts/Barlow-Regular.ttf',
+        'assets/fonts/Barlow-Medium.ttf',
+        'assets/fonts/Barlow-SemiBold.ttf',
+        'assets/fonts/Barlow-Bold.ttf',
+        'assets/fonts/OFL-Barlow.txt',
       ]) {
         expect(File(ime).existsSync(), isTrue, reason: 'nedostaje $ime');
       }
     });
 
-    test('pubspec pakuje obje porodice — nema Google Fonts zavisnosti', () {
+    test('pubspec pakuje Barlow po težini — nema Google Fonts zavisnosti', () {
       final pubspec = File('pubspec.yaml').readAsStringSync();
       expect(pubspec, contains('family: $kAdminSansFamily'));
-      expect(pubspec, contains('family: $kAdminMonoFamily'));
+      // Statični rezovi: bez `weight:` bi Flutter svaki fajl čitao kao 400 i `w600`
+      // bi sintetički podebljao Regular.
+      for (final tezina in const [400, 500, 600, 700]) {
+        expect(pubspec, contains('weight: $tezina'));
+      }
       expect(
         pubspec,
         isNot(contains('google_fonts')),
@@ -71,89 +76,52 @@ void main() {
       );
     });
 
-    test('tema postavlja Space Grotesk kao podrazumijevanu porodicu', () {
+    test('tema postavlja Barlow kao podrazumijevanu porodicu', () {
       final tema = buildAdminTheme();
       expect(tema.textTheme.bodyMedium?.fontFamily, kAdminSansFamily);
       expect(tema.textTheme.titleLarge?.fontFamily, kAdminSansFamily);
-      // `fontFamily` na `ThemeData` hvata widget koji ne gleda `textTheme`.
       expect(tema.textTheme.displayLarge?.fontFamily, kAdminSansFamily);
     });
 
-    test('svaki stil iz TextTheme-a nosi FontVariation za svoju težinu', () {
-      // Space Grotesk je varijabilan sa **defaultom na 300**. Bez `FontVariation` cijeli
-      // admin bi bio tanji od handoffa — ujednačeno, pa izgleda kao izbor, ne kao greška.
-      final tema = buildAdminTheme();
-      final stilovi = <String, TextStyle?>{
-        'displayLarge': tema.textTheme.displayLarge,
-        'titleMedium': tema.textTheme.titleMedium,
-        'bodyMedium': tema.textTheme.bodyMedium,
-        'labelLarge': tema.textTheme.labelLarge,
-      };
-
-      for (final unos in stilovi.entries) {
-        final stil = unos.value!;
-        final osa = stil.fontVariations?.singleWhere((v) => v.axis == 'wght');
-        expect(osa, isNotNull, reason: '${unos.key} nema wght osu');
-        expect(
-          osa!.value,
-          stil.fontWeight!.value.toDouble(),
-          reason: '${unos.key}: osa i fontWeight se ne slažu',
-        );
-      }
-    });
-
-    test('wght vrijednosti ostaju unutar ose oba pisma', () {
-      // Space Grotesk: 300–700. JetBrains Mono: 100–800. Vrijednost izvan raspona font
-      // tiho odsiječe na granicu.
-      for (final stil in [
-        AdminText.display,
-        AdminText.metricNumber,
-        buildAdminTheme().textTheme.labelLarge!,
-      ]) {
-        final w = stil.fontVariations!.single.value;
-        expect(w, inInclusiveRange(300, 700), reason: 'Space Grotesk osa');
-      }
+    test('svaki imenovani stil je Barlow — nema drugog pisma (ADR-0020)', () {
+      // `3b` je od naslova do vremena u tabeli jedna porodica. Stil koji tiho ostane na
+      // starom mono pismu se na ekranu vidi kao jedna kolona u drugom fontu.
       for (final stil in [
         AdminText.time,
         AdminText.timeLarge,
         AdminText.eyebrow,
         AdminText.dataInline,
+        AdminText.display,
+        AdminText.metricNumber,
+        AdminText.statusLabel,
+        AdminText.navigation,
+        AdminText.actionLabel,
       ]) {
-        final w = stil.fontVariations!.single.value;
-        expect(w, inInclusiveRange(100, 800), reason: 'JetBrains Mono osa');
+        expect(stil.fontFamily, kAdminSansFamily);
       }
     });
 
-    test('mono nosi vrijeme i podatak, Space Grotesk naslov i status', () {
-      // Podjela iz `SPEC.md`, uz dvije ispravke izmjerene iz finalnog canvasa: velika
-      // brojka i statusna oznaka **nisu** mono.
-      expect(AdminText.time.fontFamily, kAdminMonoFamily);
-      expect(AdminText.timeLarge.fontFamily, kAdminMonoFamily);
-      expect(AdminText.eyebrow.fontFamily, kAdminMonoFamily);
-      expect(AdminText.dataInline.fontFamily, kAdminMonoFamily);
-
-      expect(AdminText.display.fontFamily, kAdminSansFamily);
-      expect(AdminText.metricNumber.fontFamily, kAdminSansFamily);
-      expect(AdminText.statusLabel.fontFamily, kAdminSansFamily);
-    });
-
-    test('mono uvijek ima tabularne cifre', () {
-      // Lista termina se čita kao kolona; cifre moraju stajati jedna ispod druge i kad se
-      // promijeni tekstualna skala uređaja.
-      expect(
-        AdminText.time.fontFeatures,
-        contains(const FontFeature.tabularFigures()),
-      );
+    test('podatak ima tabularne cifre, tekst ih nema', () {
+      // Mono je do ADR-0020 držao cifre u koloni; sada to radi `tnum` nad Barlowom.
+      for (final stil in [
+        AdminText.time,
+        AdminText.timeLarge,
+        AdminText.dataInline,
+        AdminText.metricNumber,
+      ]) {
+        expect(stil.fontFeatures, contains(const FontFeature.tabularFigures()));
+      }
+      expect(AdminText.display.fontFeatures, isNull);
     });
 
     test('tracking je u em, pa raste sa veličinom', () {
-      // Handoff piše `letter-spacing:-.02em`. Prepisan u logičke piksele, isti potez bi
-      // na 13 i na 34 px izgledao drugačije.
-      final mali = grotesk(size: 10, tracking: -0.02);
-      final veliki = grotesk(size: 30, tracking: -0.02);
-      expect(mali.letterSpacing, closeTo(-0.2, 0.0001));
-      expect(veliki.letterSpacing, closeTo(-0.6, 0.0001));
-      expect(grotesk(size: 14).letterSpacing, isNull);
+      // Handoff piše `letter-spacing:.08em`. Prepisan u logičke piksele, isti razmak bi
+      // na 12 i na 34 px izgledao drugačije.
+      final mali = barlow(size: 10, tracking: 0.1);
+      final veliki = barlow(size: 30, tracking: 0.1);
+      expect(mali.letterSpacing, closeTo(1, 0.0001));
+      expect(veliki.letterSpacing, closeTo(3, 0.0001));
+      expect(barlow(size: 14).letterSpacing, isNull);
     });
   });
 

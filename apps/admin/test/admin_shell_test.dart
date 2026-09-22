@@ -94,7 +94,7 @@ void main() {
       final sidebar = tester.widget<Container>(
         find
             .ancestor(
-              of: find.text(kImeProizvoda),
+              of: find.text(kImeProizvoda.toUpperCase()),
               matching: find.byType(Container),
             )
             .last,
@@ -145,7 +145,7 @@ void main() {
     testWidgets('crta četiri ćelije, bez sidebara', (tester) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      expect(find.text(kImeProizvoda), findsNothing);
+      expect(find.text(kImeProizvoda.toUpperCase()), findsNothing);
 
       final navigacija = tester.widget<NavigationBar>(
         find.byType(NavigationBar),
@@ -239,7 +239,7 @@ void main() {
       expect(find.byType(NavigationBar), findsOneWidget);
 
       await _naSirini(tester, _desktop, _placeholder(AdminRoute.clients));
-      expect(find.text(kImeProizvoda), findsOneWidget);
+      expect(find.text(kImeProizvoda.toUpperCase()), findsOneWidget);
     });
 
     testWidgets('gutter prati širinu, ne ekran', (tester) async {
@@ -307,7 +307,7 @@ void main() {
       // čime si se prijavio. Mail ostaje dostupan u meniju naloga na telefonu.
       await _naSirini(tester, _desktop, _ekran());
 
-      expect(find.text(kImeProizvoda), findsOneWidget);
+      expect(find.text(kImeProizvoda.toUpperCase()), findsOneWidget);
       expect(find.text('vlasnik lokacije'), findsOneWidget);
       expect(find.text(_vlasnik.email), findsNothing);
     });

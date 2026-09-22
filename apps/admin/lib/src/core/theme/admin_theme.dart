@@ -44,7 +44,7 @@ ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
     splashFactory: NoSplash.splashFactory,
     textTheme: textTheme,
     // Widget koji ne gleda `textTheme` (npr. `Text` bez stila u tuđoj komponenti) mora i
-    // dalje dobiti Space Grotesk, a ne Roboto.
+    // dalje dobiti Barlow, a ne Roboto.
     fontFamily: kAdminSansFamily,
     scaffoldBackgroundColor: colors.ground,
     canvasColor: colors.ground,
@@ -60,7 +60,7 @@ ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
-        side: borderSide,
+        side: BorderSide(color: colors.cardEdge, width: AdminSize.hairline),
       ),
     ),
 

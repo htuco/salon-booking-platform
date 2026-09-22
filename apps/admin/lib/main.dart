@@ -80,7 +80,11 @@ class SalonAdminApp extends ConsumerWidget {
       routerConfig: ref.watch(adminRouterProvider),
       theme: buildAdminTheme(),
       darkTheme: buildAdminTheme(Brightness.dark),
-      themeMode: ThemeMode.system,
+      // **Svijetla, ne sistemska** (ADR-0020). `adminv2/export/` crta samo svijetlu
+      // radnu površinu uz tamni sidebar; sa `system` je svaki vlasnik u dark modu OS-a
+      // vidio ekran koji nije nacrtan nigdje. Tamna tema ostaje izgrađena i testirana —
+      // vraća se promjenom ovog reda kad handoff dobije tamnu varijantu.
+      themeMode: ThemeMode.light,
     );
   }
 }

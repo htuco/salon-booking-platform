@@ -3,18 +3,16 @@
 /// Odvojeno od ekrana da bi se moglo testirati bez `pumpWidget`: metrika koja pogrešno
 /// broji izgleda na ekranu tačno kao metrika koja broji ispravno.
 ///
-/// ## Šta canvas traži, a ovdje ne postoji
+/// ## Kapacitet dolazi iz smjena
 ///
-/// `3b` crta četiri kartice; ovdje ih ima **tri**. Izostavljena je „Slobodno vrijeme
-/// (2h 40m · najveća rupa 17:20–19:20)", jer bi bila izmišljena: slobodno vrijeme salona
-/// nije „otvoreno minus zauzeto" kad u smjeni radi troje ljudi, a smjene radnika dobijaju
-/// svoj ekran tek u tasku 33. Broj koji izgleda tačno, a računa se po pogrešnom modelu, je
-/// gori od kartice koje nema — vlasnik po njemu planira dan.
-///
-/// Iz istog razloga „Čeka potvrdu" nema podnaslov „najstariji prije 26 min": `appointments`
-/// nema `created_at` kolonu, pa se starost zahtjeva **ne može** izračunati.
+/// Do ADR-0020 su ovdje stajale tri kartice i traka bez procenta, uz obrazloženje da smjene
+/// i `created_at` ne postoje. Obje tvrdnje su bile netačne: `working_hours` od init
+/// migracije nosi red **po radniku** (sa pauzom), a `appointments.created_at` postoji od
+/// prvog dana. Kapacitet je zato smjena radnika minus pauza — ne „otvoreno salona puta broj
+/// ljudi", što bi brojalo i radnika koji danas ne radi.
 library;
 
+import 'package:core_api/core_api.dart' show workingHoursFor;
 import 'package:core_domain/core_domain.dart';
 
 /// Sažetak jednog dana.
@@ -115,6 +113,7 @@ class ZauzetostRadnika {
     required this.ime,
     required this.termina,
     required this.minuta,
+    this.kapacitetMinuta,
   });
 
   final String radnikId;
@@ -123,24 +122,41 @@ class ZauzetostRadnika {
 
   /// Zbir trajanja termina koji se broje u dan, u minutama.
   final int minuta;
+
+  /// Dužina današnje smjene bez pauze; `null` kad radnik danas nema smjenu.
+  final int? kapacitetMinuta;
+
+  /// `82` za 82% — zauzeto u odnosu na smjenu, odrezano na 100.
+  ///
+  /// `null` bez smjene: termin upisan radniku koji danas ne radi je greška u rasporedu, a
+  /// procenat „∞" ili „0%" bi je sakrio. Tada ekran piše minute, kao prije.
+  int? get procenat {
+    final kapacitet = kapacitetMinuta;
+    if (kapacitet == null || kapacitet <= 0) return null;
+    return (minuta * 100 / kapacitet).round().clamp(0, 100);
+  }
 }
 
-/// Zauzetost po radniku, najzauzetiji prvi.
+/// Zauzetost po radniku, najzauzetiji prvi — `3b`: „6 termina · 82%".
 ///
-/// **Bez procenta, za razliku od canvasa.** `3b` crta „6 termina · 82%" i traku te dužine;
-/// procenat traži kapacitet, tj. smjenu radnika, a smjene dolaze tek u tasku 33. Ovdje je
-/// mjera **relativna**: traka najzauzetijeg je puna, ostale su u odnosu na nju. Ta traka
-/// odgovara na pitanje „ko je danas najopterećeniji", što je ono zbog čega vlasnik u nju i
-/// gleda, a ne tvrdi koliko je kapaciteta iskorišteno.
+/// [smjene] daju kapacitet. Radnik sa smjenom a bez ijednog termina **ulazi u listu** sa
+/// 0%: slobodan majstor je upravo ono što vlasnik u ovoj kartici traži. Bez [smjene] je
+/// traka relativna (najzauzetiji je pun), kao prije ADR-0020.
 ///
 /// [imena] su `employeeId → ime`. Termin bez radnika (`employee_id` je nullable — salon
 /// pušta „bilo ko") se ne broji nikome; takav red se vidi u rasporedu, a ne u zauzetosti.
 List<ZauzetostRadnika> zauzetostPoRadniku(
   List<Appointment> termini,
-  Map<String, String> imena,
-) {
-  final termina = <String, int>{};
-  final minuta = <String, int>{};
+  Map<String, String> imena, {
+  List<SmjenaDana> smjene = const [],
+}) {
+  final termina = <String, int>{
+    for (final smjena in smjene) smjena.radnikId: 0,
+  };
+  final minuta = <String, int>{for (final smjena in smjene) smjena.radnikId: 0};
+  final kapacitet = {
+    for (final smjena in smjene) smjena.radnikId: smjena.minuta,
+  };
 
   for (final termin in termini) {
     if (!terminSeRacuna(termin)) continue;
@@ -159,6 +175,7 @@ List<ZauzetostRadnika> zauzetostPoRadniku(
             ime: imena[id] ?? 'Radnik',
             termina: termina[id]!,
             minuta: minuta[id]!,
+            kapacitetMinuta: kapacitet[id],
           ),
       ]..sort((a, b) {
         final poMinutama = b.minuta.compareTo(a.minuta);
@@ -169,4 +186,197 @@ List<ZauzetostRadnika> zauzetostPoRadniku(
       });
 
   return lista;
+}
+
+/// Smjena jednog radnika na jedan dan, u minutama od ponoći.
+class SmjenaDana {
+  const SmjenaDana({
+    required this.radnikId,
+    required this.od,
+    required this.doMinute,
+    this.pauzaOd,
+    this.pauzaDo,
+  });
+
+  final String radnikId;
+  final int od;
+  final int doMinute;
+  final int? pauzaOd;
+  final int? pauzaDo;
+
+  /// Radno vrijeme bez pauze.
+  int get minuta {
+    final pauza = switch ((pauzaOd, pauzaDo)) {
+      (final int pocetak, final int kraj) => kraj - pocetak,
+      _ => 0,
+    };
+    return doMinute - od - pauza;
+  }
+}
+
+/// Ko danas radi i od kad do kad.
+///
+/// Pravilo je [workingHoursFor]: radnikov red nadjačava salonski, a bez ijednog salon taj
+/// dan ne radi. Neradni dan (`is_closed`) nije smjena — i to je razlog zašto se broj „u
+/// smjeni" ne smije čitati iz broja aktivnih radnika.
+List<SmjenaDana> smjeneDana(
+  List<WorkingHour> raspored,
+  Iterable<String> radnici,
+  int isoDan,
+) => [
+  for (final id in radnici)
+    if (workingHoursFor(raspored, dayOfWeek: isoDan, employeeId: id)
+        case final red? when !red.isClosed)
+      SmjenaDana(
+        radnikId: id,
+        od: red.startTime.minutesFromMidnight,
+        doMinute: red.endTime.minutesFromMidnight,
+        pauzaOd: red.breakStartTime?.minutesFromMidnight,
+        pauzaDo: red.breakEndTime?.minutesFromMidnight,
+      ),
+];
+
+/// Neprekinut slobodan komad jednog radnika.
+class Rupa {
+  const Rupa({
+    required this.radnikId,
+    required this.od,
+    required this.doMinute,
+  });
+
+  final String radnikId;
+  final int od;
+  final int doMinute;
+
+  int get minuta => doMinute - od;
+}
+
+/// Slobodno vrijeme **od sada do kraja smjena** — kartica „Slobodno vrijeme".
+class SlobodnoVrijeme {
+  const SlobodnoVrijeme({required this.minuta, this.najvecaRupa});
+
+  /// Zbir slobodnih minuta svih radnika u smjeni.
+  final int minuta;
+
+  /// `null` kad više nema nijednog slobodnog komada.
+  final Rupa? najvecaRupa;
+}
+
+/// Koliko je danas još slobodno, i gdje je najveći komad.
+///
+/// **Od sada, ne od otvaranja.** Rupa u 10:00 koja je prošla nije vrijeme koje vlasnik
+/// može popuniti; kartica odgovara na pitanje „ima li još mjesta danas".
+///
+/// Zauzeto je: pauza iz smjene, termin koji se broji u dan (plus njegov `buffer_minutes`,
+/// koji i availability engine drži zauzetim), i blokada — radnikova ili salonska.
+SlobodnoVrijeme slobodnoVrijeme({
+  required List<SmjenaDana> smjene,
+  required List<Appointment> termini,
+  required int sadaMinuta,
+  List<BlockedSlot> blokade = const [],
+}) {
+  var ukupno = 0;
+  Rupa? najveca;
+
+  for (final smjena in smjene) {
+    final zauzeto = <(int, int)>[
+      if ((smjena.pauzaOd, smjena.pauzaDo) case (
+        final int pocetak,
+        final int kraj,
+      ))
+        (pocetak, kraj),
+      for (final termin in termini)
+        if (termin.employeeId == smjena.radnikId && terminSeRacuna(termin))
+          (
+            termin.startTime.minutesFromMidnight,
+            termin.endTime.minutesFromMidnight + termin.bufferMinutes,
+          ),
+      for (final blokada in blokade)
+        if (blokada.employeeId == null || blokada.employeeId == smjena.radnikId)
+          (
+            blokada.startTime.minutesFromMidnight,
+            blokada.endTime.minutesFromMidnight,
+          ),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
+
+    var kursor = smjena.od > sadaMinuta ? smjena.od : sadaMinuta;
+
+    void rupaDo(int granica) {
+      final kraj = granica < smjena.doMinute ? granica : smjena.doMinute;
+      if (kraj <= kursor) return;
+      ukupno += kraj - kursor;
+      final kandidat = Rupa(
+        radnikId: smjena.radnikId,
+        od: kursor,
+        doMinute: kraj,
+      );
+      if (najveca == null || kandidat.minuta > najveca!.minuta) {
+        najveca = kandidat;
+      }
+    }
+
+    for (final (pocetak, kraj) in zauzeto) {
+      rupaDo(pocetak);
+      if (kraj > kursor) kursor = kraj;
+    }
+    rupaDo(smjena.doMinute);
+  }
+
+  return SlobodnoVrijeme(minuta: ukupno, najvecaRupa: najveca);
+}
+
+/// Stanje salona sada — tačka i tekst desno od podnaslova u `3b`.
+enum StanjeSalona { otvoreno, uskoroOtvara, zatvoreno }
+
+/// „Otvoreno do 20:00" / „Otvara u 09:00" / „Danas zatvoreno" / „Zatvoreno".
+///
+/// Čita **salonski** red (`employee_id is null`), ne smjene: salon je otvoren i kad je
+/// jedan majstor na pauzi.
+({StanjeSalona stanje, String tekst}) otvorenoDo(
+  List<WorkingHour> raspored,
+  int isoDan,
+  int sadaMinuta,
+) {
+  final red = workingHoursFor(raspored, dayOfWeek: isoDan);
+  if (red == null || red.isClosed) {
+    return (stanje: StanjeSalona.zatvoreno, tekst: 'Danas zatvoreno');
+  }
+  if (sadaMinuta < red.startTime.minutesFromMidnight) {
+    return (
+      stanje: StanjeSalona.uskoroOtvara,
+      tekst: 'Otvara u ${red.startTime.format()}',
+    );
+  }
+  if (sadaMinuta < red.endTime.minutesFromMidnight) {
+    return (
+      stanje: StanjeSalona.otvoreno,
+      tekst: 'Otvoreno do ${red.endTime.format()}',
+    );
+  }
+  return (stanje: StanjeSalona.zatvoreno, tekst: 'Zatvoreno');
+}
+
+/// `prije 26 min`, `prije 3 h`, `prije 2 dana` — koliko zahtjev čeka.
+///
+/// `null` bez [poslan]: red iz upita koji ne bira `created_at` nema starost, a „prije 0
+/// min" bi tvrdilo da je upravo stigao.
+String? prijeKoliko(DateTime? poslan, DateTime sada) {
+  if (poslan == null) return null;
+  final razlika = sada.difference(poslan.toLocal());
+  if (razlika.inMinutes < 1) return 'upravo';
+  if (razlika.inMinutes < 60) return 'prije ${razlika.inMinutes} min';
+  if (razlika.inHours < 24) return 'prije ${razlika.inHours} h';
+  final dana = razlika.inDays;
+  return dana == 1 ? 'prije 1 dan' : 'prije $dana dana';
+}
+
+/// Najstariji zahtjev koji još čeka — „najstariji prije 26 min" u kartici „Čeka potvrdu".
+DateTime? najstarijiZahtjev(List<Appointment> zahtjevi) {
+  DateTime? najstariji;
+  for (final zahtjev in zahtjevi) {
+    final poslan = zahtjev.createdAt;
+    if (zahtjev.status != AppointmentStatus.pending || poslan == null) continue;
+    if (najstariji == null || poslan.isBefore(najstariji)) najstariji = poslan;
+  }
+  return najstariji;
 }
