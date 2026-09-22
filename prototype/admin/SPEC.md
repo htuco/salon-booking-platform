@@ -215,3 +215,10 @@ uskim desktop prozorima prelazi u listu, kao na telefonu. Editor je scrollable b
 4. Implementirati kalendar, zatim klijente, usluge, osoblje, radno vrijeme i postavke uz zasebne
    ugovore i testove.
 5. `3a` raditi tek kada platforma dobije definisan multi-location RBAC i serversku autorizaciju.
+
+**Zahtjev na odobrenju nosi isprekidan rub** (FE-403). `pending` se od `confirmed` do tada
+razlikovao samo nijansom podloge, a na mreži sa pet statusa to ne nosi razliku koja vlasniku
+mijenja radnju: potvrđen termin se gleda, zahtjev se rješava. Rub nosi razliku **oblikom**, pa
+radi i kad boje nema (WCAG 1.4.1) — isto načelo po kojem šrafura nosi neradno vrijeme. Ide na sva
+tri mjesta: mreža `3c`, mobilna lista `3l` i **uzorak u legendi**; legenda koja crta samo boju uči
+pola pravila.
