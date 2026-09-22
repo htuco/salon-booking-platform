@@ -533,3 +533,29 @@ deno check --config supabase/functions/send-push/deno.json supabase/functions/se
 test. Firebase i APNs tajne nisu potrebne za te testove. `FCM_SERVICE_ACCOUNT_JSON`,
 `PUSH_WORKER_SECRET` i Vault konfiguracija potrebni su tek za stvarno slanje. Build config,
 CI secret imena i dokaz na uređaju: `tasks/sprint-2/25-push-konfiguracija.md`.
+
+### Bez define fajla nema pusha, i to tiho
+
+`PUSH_ENABLED` je `const bool.fromEnvironment` — kad ga niko ne proslijedi, `pushServiceProvider`
+vraća `null`, aplikacija **nikad ne pozove `register_device`**, i u bazi nema uređaja kojem bi se
+slalo. Nijedan sloj na to ne pravi grešku: build prođe, ekran radi, push jednostavno ne stigne.
+
+Vrijednost dolazi iz privatnog define JSON-a na koji pokazuje `FIREBASE_CLIENT_DEFINES_FILE`
+odnosno `FIREBASE_ADMIN_DEFINES_FILE` u `.env.live`. Fajl se pravi iz `google-services.json`
+(odnosno `GoogleService-Info.plist`) tog **bundle ID-a**:
+
+```sh
+dart run tool/firebase_defines.dart <json|plist> <bundle-id> <izlaz.json>
+```
+
+Tri pozicijska argumenta, izlaz je fajl a ne `stdout`, i **postojeći izlaz se ne prepisuje**
+(`Izlaz vec postoji`). Generator sam dodaje `PUSH_ENABLED=true` i odbija config sa placeholderima.
+
+Otkad je task 39 na ovome izgubio trag, `tool/run_live_demo.sh` ispisuje upozorenje kad je
+varijabla prazna umjesto da tiho preskoči push.
+
+**Admin traži vlastitu Firebase Android aplikaciju.** `apps/admin` ima `applicationId`
+`ba.nasadomena.admin`, različit od klijentskog flavora, pa klijentski `google-services.json` za
+njega ne važi — `firebase_defines.dart` na njemu namjerno baca `Firebase package name se ne
+poklapa`. U Firebase projektu mora postojati zasebna Android app za taj ID; to je posao u konzoli,
+ne u repou.

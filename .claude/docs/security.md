@@ -678,7 +678,15 @@ klijentskom identitetu, uz postojeći kompozitni FK za salon. Sam salon nije dov
 tuđeg uređaja. Promjena naloga gasi poruke koje čekaju, a claim ponovo provjerava aktivan salon,
 identitet koji nije obrisan i postojeće staff članstvo.
 
-`notification_logs` se puni triggerom promjene termina. Samo `service_role` smije pozvati
+`notification_logs` se puni triggerom promjene termina. Na `INSERT` presuđuje **`source`**, pa tek
+onda status: `source = 'app'` javlja salonu, i to `new_request` kad je termin `pending`, a
+`new_booking` kad je `confirmed` jer je salon u `auto` modu (task 39). Ranije je grana tražila
+`status = 'pending'`, pa je salon u `auto` modu ostajao bez ijedne obavijesti — otud i tip više,
+umjesto naslova „Novi zahtjev" nad zahtjevom koji ne postoji. Klijent u `auto` modu namjerno ne
+dobija push: tip `confirmed` visi o *promjeni* statusa, koje tamo nema. Ručni unos (`source =
+'manual'`) ne javlja salonu o njemu samom.
+
+Samo `service_role` smije pozvati
 `claim_push_notifications`; korisnik ne bira ni primaoca ni sadržaj slanja. Unique ključ i
 `FOR UPDATE SKIP LOCKED` sprečavaju ponovno preuzimanje istog događaja. Klijentski SELECT nad
 logovima nije uveden; `/notifications` je i dalje prazno stanje.
@@ -694,6 +702,7 @@ su u `supabase/functions/send-push/README.md`. Već predatu poruku odjava ne mo�
 tekst generički i detalji se ponovo čitaju uz RLS.
 
 Dokaz: `009_push_devices.test.sql` (izolacija, claim, scenariji i transport u rollbacku),
+`016_push_u_auto_modu.test.sql` (oba moda, primalac je vlasnikov uređaj, ručni unos ćuti),
 `rest_push_devices.ts` (dva stvarna JWT-a i dva salona) i `send-push/handler_test.ts` (autorizacija,
 duplikati i nepoznat ishod). Anon registracija je javni RPC; produkcijski gateway mora ograničiti
 zloupotrebu broja registracija prije javnog puštanja. Mutacija `own_devices using(true)` je
