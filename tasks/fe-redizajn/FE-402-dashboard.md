@@ -68,4 +68,4 @@ Viđeno uživo (`flutter build web` + Chromium): **1100 px** — sve u jednoj ko
 
 Ostalo:
 
-- [ ] Zelen CI — dokaz iz čistog checkouta.
+- [x] Zelen CI — `Analiza, format i testovi` pass, 3m0s.
