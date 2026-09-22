@@ -103,14 +103,18 @@ class _Detalj extends ConsumerWidget {
         ? null
         : ref.watch(radniciPoIdProvider)[termin.employeeId];
 
-    return Align(
-      alignment: AlignmentDirectional.topStart,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _maxSirina),
-        child: Column(
-          children: [
-            _Zaglavlje(termin: termin),
-            Expanded(
+    // **Ograničenje ide oko sadržaja, ne oko cijelog ekrana.** Zaglavlje i traka radnji
+    // crtaju svoju površinu i hairline granicu; kad su stajali unutar `ConstrainedBox`-a,
+    // ta površina je na 1920 i 2560 px prestajala na 720 px i kroz stranicu je išao
+    // uspravan šav. Pozadina pripada radnoj površini, mjera čitljivosti tekstu u njoj.
+    return Column(
+      children: [
+        _Zaglavlje(termin: termin),
+        Expanded(
+          child: Align(
+            alignment: AlignmentDirectional.topStart,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _maxSirina),
               child: ListView(
                 padding: EdgeInsets.fromLTRB(
                   AdminShell.gutterOf(context),
@@ -168,10 +172,10 @@ class _Detalj extends ConsumerWidget {
                 ],
               ),
             ),
-            _Podnozje(termin: termin),
-          ],
+          ),
         ),
-      ),
+        _Podnozje(termin: termin),
+      ],
     );
   }
 }
@@ -205,31 +209,57 @@ class _Zaglavlje extends StatelessWidget {
       ),
       child: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                TextButton.icon(
-                  onPressed: () => AppointmentDetailScreen._nazad(context),
-                  icon: const Icon(Icons.chevron_left, size: 20),
-                  label: const Text('Termini'),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.only(right: AdminSpacing.md),
-                    foregroundColor: context.adminColors.accentInk,
+        child: _UzSadrzaj(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: () => AppointmentDetailScreen._nazad(context),
+                    icon: const Icon(Icons.chevron_left, size: 20),
+                    label: const Text('Termini'),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.only(right: AdminSpacing.md),
+                      foregroundColor: context.adminColors.accentInk,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                AppointmentStatusPill(status: termin.status),
-              ],
-            ),
-            const SizedBox(height: AdminSpacing.sm),
-            Text(
-              '${vrijemeHhMm(termin.startTime)} · ${termin.customerName}',
-              style: theme.textTheme.displaySmall,
-            ),
-          ],
+                  const Spacer(),
+                  AppointmentStatusPill(status: termin.status),
+                ],
+              ),
+              const SizedBox(height: AdminSpacing.sm),
+              Text(
+                '${vrijemeHhMm(termin.startTime)} · ${termin.customerName}',
+                style: theme.textTheme.displaySmall,
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+/// Drži sadržaj zaglavlja i trake radnji u istoj koloni kao i tijelo ekrana.
+///
+/// **Površina je puna, sadržaj nije.** Zaglavlje i podnožje crtaju pozadinu preko cijele
+/// radne površine — bez toga kroz stranicu ide uspravan šav na 720 px, što se i vidjelo na
+/// 1920 i 2560 px. Ali njihov *sadržaj* mora ostati u istoj koloni kao podaci ispod, inače
+/// se na 2560 px pilula statusa odvoji skroz desno, a dugmad „Potvrdi" i „Odbij" razvuku
+/// preko 2324 px dok tabela pored njih stoji na 720.
+class _UzSadrzaj extends StatelessWidget {
+  const _UzSadrzaj({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.topStart,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _maxSirina),
+        child: child,
       ),
     );
   }
@@ -443,7 +473,9 @@ class _Podnozje extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: AppointmentActionsBar(termin: termin, veliko: true),
+        child: _UzSadrzaj(
+          child: AppointmentActionsBar(termin: termin, veliko: true),
+        ),
       ),
     );
   }

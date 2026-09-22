@@ -48,6 +48,17 @@ import 'status_pill.dart';
 /// uža kartica lomi radnje u dva reda.
 const double _minSirinaKartice = 360;
 
+/// Najveća širina kartice zahtjeva (`3d`).
+///
+/// Zahtjev je jedini red koji ostaje u jednoj koloni — raspored `vrijeme | podaci | radnje`
+/// se ne da preklopiti u mrežu. Bez gornje granice bi na 2560 px dobio punu radnu površinu
+/// od 2324 px i tri zone bi stajale na suprotnim krajevima stola, sa prazninom u sredini.
+///
+/// Broj je isti onaj koji je stara implementacija koristila za cijelu listu (radna površina
+/// iz `3d`); tamo je bio pogrešan jer je ograničavao **stranicu**, ovdje je ispravan jer
+/// ograničava **karticu**.
+const double _maxSirinaZahtjeva = 1176;
+
 class AdminAppointmentsScreen extends ConsumerStatefulWidget {
   const AdminAppointmentsScreen({this.trazeniStatus, super.key});
 
@@ -413,6 +424,14 @@ class _Lista extends ConsumerWidget {
             ? 1
             : (band.kolone < stane ? band.kolone : stane.clamp(1, 4));
 
+        // **Zahtjev ipak ima gornju granicu, i to je namjerno druga odluka od liste.**
+        // Kad kartica u jednoj koloni dobije punu radnu površinu (2324 px na 2560), tri
+        // zone se razvuku na krajeve stola: ime lijevo, „Potvrdi" desno, između prazno.
+        // To je tačno ono protiv čega je stajala stara granica od 1176 px. Lista se od
+        // viška prostora brani kolonama, zahtjev nema tu mogućnost, pa se brani mjerom.
+        // **Viđeno u browseru na 1920 i 2560 px**, nije izvedeno iz koda.
+        final maxKartica = zahtjevi && jeDesktop ? _maxSirinaZahtjeva : null;
+
         Widget karticaZa(int i) {
           final termin = termini[i];
           final opis = opisTermina(termin, usluge: usluge, radnici: radnici);
@@ -446,11 +465,23 @@ class _Lista extends ConsumerWidget {
         // Jedna kolona ostaje `ListView`: lijeni build nosi duge liste, a `Wrap` bi gradio
         // svaku karticu odjednom.
         if (kolone == 1) {
-          return ListView.separated(
+          final lista = ListView.separated(
             padding: padding,
             itemCount: termini.length,
             separatorBuilder: (_, _) => SizedBox(height: razmak),
             itemBuilder: (context, i) => karticaZa(i),
+          );
+
+          if (maxKartica == null) return lista;
+
+          // Poravnato lijevo, ne centrirano: kartice stoje uz sidebar uz koji pripadaju,
+          // umjesto da vise u sredini stola.
+          return Align(
+            alignment: AlignmentDirectional.topStart,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxKartica + gutter * 2),
+              child: lista,
+            ),
           );
         }
 

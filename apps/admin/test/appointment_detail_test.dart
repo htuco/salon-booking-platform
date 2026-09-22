@@ -237,6 +237,47 @@ void main() {
     expect(sirina, lessThanOrEqualTo(720));
   });
 
+  testWidgets('na 2560 px površina je puna, a sadržaj i dalje u koloni', (
+    tester,
+  ) async {
+    // **Ovo je našao browser, ne test.** Prva verzija FE-406 je cijeli detalj — zajedno sa
+    // zaglavljem i trakom radnji, koji crtaju svoju pozadinu — držala u `ConstrainedBox`-u
+    // od 720 px. Pozadina je zato prestajala na 720 px i kroz stranicu je išao uspravan
+    // šav. Druga verzija je popravila šav, ali je pilulu statusa odbacila skroz desno, a
+    // „Potvrdi" razvukla preko 2324 px, jer je sadržaj ostao bez granice.
+    //
+    // Oba stanja prolaze test iznad (on mjeri samo `ListView`), pa granica mora biti
+    // izmjerena i na zaglavlju i na traci radnji.
+    await _naSirini(
+      tester,
+      const Size(2560, 1200),
+      _ekran(_termin(status: AppointmentStatus.pending)),
+    );
+
+    // Radna površina je 2560 − 236 (sidebar) = 2324.
+    final zaglavlje = tester
+        .getSize(
+          find
+              .ancestor(
+                of: find.text('Termini'),
+                matching: find.byType(Container),
+              )
+              .last,
+        )
+        .width;
+    expect(zaglavlje, greaterThan(2000), reason: 'pozadina mora biti puna');
+
+    // Sadržaj u njemu ostaje u koloni: dugme „Potvrdi" ne smije preći mjeru čitljivosti.
+    final potvrdi = tester.getSize(
+      find.widgetWithText(FilledButton, 'Potvrdi'),
+    );
+    expect(
+      potvrdi.width,
+      lessThanOrEqualTo(720),
+      reason: 'radnje ne smiju biti razvučene preko cijele radne površine',
+    );
+  });
+
   group('ruta', () {
     test('`/appointments/:id` ima tijelo, nije placeholder', () {
       // Rutu je do taska 30 pokrivala petlja placeholdera — enum ju je imao, ekran ne.
