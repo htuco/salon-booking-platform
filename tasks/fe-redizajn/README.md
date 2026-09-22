@@ -106,5 +106,23 @@ Dva nalaza iz izvoza koja task nije predvidio: **koralne oznake uz aktivnu stavk
 (skeniran cijeli sidebar — nula koralnih piksela), a **pilula brojača jeste koralna**, što task
 nije spomenuo. Oba zapisana u task fajlu.
 
-**Sljedeće:** FE-402…FE-405 su sada odblokirani i mogu paralelno — [FE-405](FE-405-login.md) je
-najmanji (0,5 dan) i dijelom je već urađen uz FE-401 (wordmark na prijavi).
+**Gotovo:** [FE-405](FE-405-login.md) ([PR #69](https://github.com/htuco/salon-booking-platform/pull/69)),
+[FE-402](FE-402-dashboard.md) ([PR #70](https://github.com/htuco/salon-booking-platform/pull/70)) i
+[FE-404](FE-404-upravljanje-podacima.md) ([PR #71](https://github.com/htuco/salon-booking-platform/pull/71)),
+svi spojeni u `main`.
+
+**Gotovo (redizajnerski dio):** [FE-403](FE-403-kalendar-termina.md) —
+[PR #72](https://github.com/htuco/salon-booking-platform/pull/72), draft. Zahtjev na odobrenju
+nosi isprekidan rub, na mreži `3c`, u listi `3l` i u legendi. 309 testova.
+
+Ekran je bio **već ispunjen do četiri od šest DoD stavki** iz taska 31 i FE-406, pa je stvarni
+posao bio jedna rupa, ne cijeli ekran. Dvije stavke su **izostavljene kao imenovan dug**:
+prekidač `Dan · Sedmica · Mjesec` (stoji u tabeli izostavljanja u `prototype/admin/SPEC.md`;
+ulazak traži ADR) i osvježavanje na realtime signal (funkcionalnost, a epik je vizuelni).
+
+**Time je admin blok (FE-401…FE-406) zatvoren.**
+
+**Sljedeće:** ostatak epika je **klijentska** aplikacija, i tu su i dalje **tri od četiri odluke
+neriješene** — Barlow, koralna u klijentu i Lucide. Dok ne padnu kao ADR, FE-1xx i FE-3xx se ne
+mogu početi bez pisanja koda protiv specifikacije koja tvrdi suprotno. To je usko grlo, ne broj
+preostalih dana.
