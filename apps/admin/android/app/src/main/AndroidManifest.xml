@@ -3,6 +3,12 @@
         android:label="admin"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Bez ovoga FCM crta obavijest na vlastitom fallback kanalu („Miscellaneous"),
+             pa vlasnik ne moze ni podesiti zvuk na jednom mjestu. Kanal pravi
+             MainActivity.onCreate, istim ID-em kao klijent. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="appointment_updates" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -126,6 +126,16 @@ Deno.test("Svi scenariji imaju salon, stabilan ID i samo dozvoljenu rutu", () =>
     assert(message.data.route === "/appointments", "Pogresan deep link");
     assert(message.data.salon_id === job.salon_id, "Nema tenant konteksta");
     assert(message.android.notification.tag === job.id, "Nema stabilnog ID-a");
+    // Nijema obavijest je promasena obavijest. iOS je zvuk imao od pocetka, Android nije.
+    assert(
+      message.android.notification.sound === "default" &&
+        message.apns.payload.aps.sound === "default",
+      "Obavijest je nijema na jednoj platformi",
+    );
+    assert(
+      message.android.notification.channel_id === "appointment_updates",
+      "Android obavijest pada na FCM fallback kanal",
+    );
     assert(
       !JSON.stringify(message.notification).includes(job.appointment_id),
       "Licni detalji na lock screenu",
