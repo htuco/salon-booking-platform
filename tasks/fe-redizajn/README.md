@@ -11,9 +11,9 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | # | Task | Aplikacija | Blokira | Procjena |
 |---|---|---|---|---|
 | [FE-101](FE-101-tokeni-boja.md) | Paleta kao tokeni | obje | FE-3xx, FE-4xx | 0,5–1 dan |
-| [FE-102](FE-102-tipografija-barlow.md) | Tipografija Barlow / Barlow Condensed | obje | FE-3xx, FE-4xx | 2–3 dana |
+| ~~[FE-102](FE-102-tipografija-barlow.md)~~ | ~~Tipografija Barlow~~ — **neće se raditi** ([ADR-0019](../../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md)) | — | — | — |
 | [FE-103](FE-103-skala-razmaka.md) | Skala razmaka i tretman rubova | obje | — | 0,5–1 dan |
-| [FE-104](FE-104-ikone.md) | Ikone: jedan set, jedna debljina | obje | — | 1–2 dana |
+| [FE-104](FE-104-ikone.md) | Ikone: jedna debljina (Lucide već uveden, [ADR-0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md)) | klijent | — | 0,5–1 dan |
 | [FE-201](FE-201-zamjena-default-tranzicije.md) | Jedna tranzicija na obje platforme | klijent | FE-302 | 1–2 dana |
 | [FE-202](FE-202-tab-navigacija.md) | Prelaz između tabova | klijent | — | 1 dan |
 | [FE-203](FE-203-modali-i-bottom-sheet.md) | Modali i bottom sheet | obje | FE-304 | 1 dan |
@@ -38,33 +38,38 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 
 Ukupno **32–48 dana**. To je tri do četiri sprinta i tako se planira, ne kao jedan „redizajn".
 
-## Četiri odluke koje moraju pasti prije prvog commita
+## Četiri odluke — sve četiri su pale
 
-Handoff traži četiri stvari koje se **kose sa pravilima koja ovaj repo već provodi**. Nijedna nije
-sitnica i nijedna se ne rješava usput u taskovu — svaka je ADR (`docs/adr/`), po pravilu iz
-`CLAUDE.md`: odluka koja se ne može pročitati iz koda.
+Handoff je tražio četiri stvari koje se **kose sa pravilima koja ovaj repo već provodi**. Nijedna
+se nije rješavala usput u taskovu — svaka je ADR (`docs/adr/`), po pravilu iz `CLAUDE.md`: odluka
+koja se ne može pročitati iz koda.
 
-**Stanje: jedna od četiri je pala.** Odluka 4 (`adminv2/`) je riješena
-[ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md) i time su admin
-taskovi odblokirani. Preostale tri (Barlow, koralna u klijentu, Lucide) i dalje čekaju — prve dvije
-diraju **klijentsku** aplikaciju, pa blokiraju FE-1xx i FE-3xx, ne FE-4xx.
+**Stanje: sve četiri su riješene. Epik je odblokiran u cijelosti.**
 
-**1. Barlow protiv dva postojeća para pisama.** Handoff traži Barlow + Barlow Condensed. Repo danas
-nosi **Space Grotesk + JetBrains Mono** u adminu i **DM Serif Display + Archivo** u klijentu, oba
-zapakovana lokalno uz OFL licence, i oba **izričito napisana** u `prototype/admin/SPEC.md:54` i
-`prototype/ui/SPEC.md:110`. Ovo nije zamjena fonta nego zamjena dva handoffa; dok ADR ne postoji,
-FE-102 mijenja kod protiv specifikacije koja i dalje tvrdi suprotno.
+**1. Barlow protiv dva postojeća para pisama.** ✅ **Riješeno —
+[ADR-0019](../../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md): Barlow se ne uvodi.**
+Odlučile su dvije činjenice: **Barlow nema mono rez**, a mono u adminu nosi inline podatak
+(`prototype/admin/SPEC.md:65` — `13:00`, `82%`, `26 MIN`), i **zamjena pisma mijenja visinu svakog
+reda**, čime bi poništila dokaz završenog admin bloka (šest taskova, preko 300 testova). Iz
+handoffa se uzima **tipografska skala i hijerarhija**, ne porodica pisma. Oba `SPEC.md`-a ostaju
+tačna. **FE-102 je time zatvoren kao „neće se raditi", ne kao gotov.**
 
-**2. Koralna na klijentu ruši multi-tenant branding.** `#EE6C4D` je akcent **Salon OS admina** i
-tako je i specificiran (`prototype/admin/SPEC.md:82`, tekst na koralu `#2C2C2C`). Klijentska
-aplikacija nema jednu boju: boja dolazi iz `tenants/<flavor>/tenant.yaml` kroz `buildAppTheme()`,
-i `CLAUDE.md` to vodi kao tvrdo pravilo („Iz `prototype/ui/` se uzima oblik, ne boja"). Fiksna
-koralna u klijentu je greška koja prolazi svaki test i vidi se tek na drugom salonu.
+**2. Koralna na klijentu ruši multi-tenant branding.** ✅ **Riješeno —
+[ADR-0018](../../docs/adr/0018-klijent-nema-fiksnu-koralnu-boja-ostaje-tenant-podatak.md): klijent
+je ne dobija.** `#EE6C4D` ostaje isključivo u adminu, koji je jedan platformski build za sve salone.
+Klijent je N brandiranih buildova i boja mu dolazi iz `tenants/<flavor>/tenant.yaml` kroz
+`buildAppTheme()` — mehanizam nije teorijski, dva postojeća tenanta nose `#C6A667` i `#B76E79`.
+Iz handoffa se uzima **oblik, ne boja**, kako `CLAUDE.md` već traži.
 
-**3. Lucide kao set ikona je nova zavisnost.** `prototype/ui/SPEC.md:51` traži Lucide stroke 1.5, i
-wireframe ga koristi (`lucide-react`) — ali u Flutteru ga danas nema nijedan paket, a u kodu stoji
-**116 upotreba `Icons.*`**. Bira se između pub paketa, zapakovanog icon fonta i SVG seta; to je
-izbor koji nosi licencu, veličinu bundla i tree-shaking, dakle ADR.
+**3. Lucide kao set ikona.** ✅ **Riješeno —
+[ADR-0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md): Lucide je
+set klijenta, admin ostaje na Material `Icons.*`.** Ovdje je **opis u ovom fajlu bio netačan**:
+tvrdio je da „u Flutteru ga danas nema nijedan paket" i da stoji „116 upotreba `Icons.*`". Stvarno
+stanje: `lucide_icons_flutter: ^3.1.19` je **već** u `apps/client/pubspec.yaml:68` i
+`packages/core_ui/pubspec.yaml:20`, uvezen u 12 fajlova klijenta i četiri `core_ui` komponente.
+Preostalih `Icons.*` je **109, ne 116**, i **71 od njih je u adminu**, koji se ne prevodi.
+**FE-104 je time sužen** — nije „uvedi set ikona" nego „ujednači debljinu i dovrši preostalih 34 u
+klijentu".
 
 **4. Šta je `prototype/adminv2/`.** ✅ **Riješeno —
 [ADR-0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md).**
@@ -76,7 +81,13 @@ u oba smjera. Dakle nije drugi handoff nego **redizajn istih 21 prikaza**, pa `S
 snazi kao tekst (mapa na module, funkcionalne granice), a `adminv2/` je jači za vizual.
 `prototype/CLAUDE.md` to sada izričito piše.
 
-Time su **FE-401…FE-405 odblokirani**.
+### Zajednička nit kroz sve tri nove odluke
+
+Sve tri govore isto: **iz handoffa se uzima oblik, a ne vrijednost.** Skala i hijerarhija da,
+porodica pisma ne. Raspored i značenje akcenta da, hex ne. Gdje handoff nosi vrijednost koja se u
+ovom repou već izvodi odnekud drugdje — iz `tenant.yaml`, iz zapakovanog pisma, iz postojećeg seta
+ikona — jači je repo. Ekrani se zato **neće poklapati sa PNG-ovima u boji ni u pismu**, i to je
+očekivano, ne bug.
 
 ## Šta ovaj epik **ne** dira
 
@@ -122,7 +133,17 @@ ulazak traži ADR) i osvježavanje na realtime signal (funkcionalnost, a epik je
 
 **Time je admin blok (FE-401…FE-406) zatvoren.**
 
-**Sljedeće:** ostatak epika je **klijentska** aplikacija, i tu su i dalje **tri od četiri odluke
-neriješene** — Barlow, koralna u klijentu i Lucide. Dok ne padnu kao ADR, FE-1xx i FE-3xx se ne
-mogu početi bez pisanja koda protiv specifikacije koja tvrdi suprotno. To je usko grlo, ne broj
-preostalih dana.
+**Sljedeće:** ostatak epika je **klijentska** aplikacija, i on je sada **odblokiran** — sve četiri
+odluke su pale kao ADR ([0016](../../docs/adr/0016-adminv2-je-vizuelni-izvor-istine-za-admin.md),
+[0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md),
+[0018](../../docs/adr/0018-klijent-nema-fiksnu-koralnu-boja-ostaje-tenant-podatak.md),
+[0019](../../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md)).
+
+Dvije od njih **smanjuju opseg epika**, ne povećavaju ga:
+
+- **FE-102 se ne radi** — Barlow je odbijen, postojeća pisma ostaju (ADR-0019).
+- **FE-104 je sužen** — Lucide je već uveden u klijentu; ostaje ujednačavanje debljine i
+  preostalih 34 `Icons.*` u klijentu (ADR-0017).
+
+Preostaje **17 taskova**: FE-101, FE-103, FE-104, FE-2xx (5), FE-3xx (6) i FE-5xx (4).
+FE-5xx po definiciji idu zadnji.
