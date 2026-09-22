@@ -235,4 +235,100 @@ void main() {
       expect(statusLabela(status), isNotEmpty);
     }
   });
+
+  group('fluidna širina (FE-406)', () {
+    /// Širina koju lista stvarno zauzme, mjerena preko kartica u njoj.
+    ///
+    /// Mjeri se **desna ivica najdešnje kartice**, jer to je ono što se vidi kao prazna
+    /// margina: ranija verzija je centrirala kolonu od 1176 px, pa je na 2560 px ostajalo
+    /// po ~690 px praznine sa svake strane.
+    double desnaIvica(WidgetTester tester) {
+      final kartice = find.byType(AppointmentCard);
+      expect(kartice, findsWidgets);
+      var desno = 0.0;
+      for (var i = 0; i < kartice.evaluate().length; i++) {
+        final r = tester.getRect(kartice.at(i));
+        if (r.right > desno) desno = r.right;
+      }
+      return desno;
+    }
+
+    Future<void> naSirini(WidgetTester tester, Size velicina) async {
+      tester.view.physicalSize = velicina;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _ekran([
+          _termin(ime: 'Adnan Music', sat: 9),
+          _termin(ime: 'Emir Hodzic', sat: 10),
+          _termin(ime: 'Lejla Begic', sat: 11),
+          _termin(ime: 'Ivana Maric', sat: 12),
+        ]),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// Koliko kartica stoji u prvom redu — broj kolona, mjeren iz rasporeda.
+    ///
+    /// **Ovo je prava provjera, a ne sama desna ivica.** Prva verzija ovog testa je gledala
+    /// samo dokle sadržaj seže i prolazila je i kad se lista srozala na *jednu* razvučenu
+    /// karticu preko cijelog stola — jer i ona dopire do desne ivice. Provjereno
+    /// sabotažom: `band` prikovan na `compact` nije oborio test.
+    int koloneUPrvomRedu(WidgetTester tester) {
+      final kartice = find.byType(AppointmentCard);
+      final prviVrh = tester.getRect(kartice.first).top;
+      var broj = 0;
+      for (var i = 0; i < kartice.evaluate().length; i++) {
+        if (tester.getRect(kartice.at(i)).top == prviVrh) broj++;
+      }
+      return broj;
+    }
+
+    testWidgets('na 2560 px četiri kolone, bez prazne desne polovine', (
+      tester,
+    ) async {
+      await naSirini(tester, const Size(2560, 1200));
+
+      // Radna površina je 2560 − 236 (sidebar) = 2324; sa guterom od 28 sadržaj ide do
+      // 2532. Prije FE-406 je kolona bila centrirana na 1176 px i stajala bi oko 1868.
+      expect(koloneUPrvomRedu(tester), 4);
+      expect(desnaIvica(tester), greaterThan(2400));
+    });
+
+    testWidgets('na 1920 px tri kolone', (tester) async {
+      await naSirini(tester, const Size(1920, 1080));
+
+      expect(koloneUPrvomRedu(tester), 3);
+      expect(desnaIvica(tester), greaterThan(1800));
+    });
+
+    testWidgets('na 1440 px dvije kolone — sidebar se oduzima', (tester) async {
+      // Radna površina je 1204 px, dakle pojas `regular`. Da se pojas računao iz širine
+      // prozora, ovdje bi stajale tri kolone.
+      await naSirini(tester, const Size(1440, 900));
+
+      expect(koloneUPrvomRedu(tester), 2);
+    });
+
+    testWidgets('kartica se ne sužava ispod čitljivog', (tester) async {
+      // Na 1100 px radna površina je 864 — dvije kolone bi dale kartice od ~420 px, što
+      // pojas `compact` (< 900) ionako ne dozvoljava. Jedna kolona, puna širina.
+      await naSirini(tester, const Size(1100, 900));
+
+      expect(koloneUPrvomRedu(tester), 1);
+      expect(tester.getRect(find.byType(AppointmentCard).first).width, 808);
+    });
+
+    testWidgets('telefon ostaje jedna kolona', (tester) async {
+      await naSirini(tester, const Size(402, 874));
+
+      // Sve kartice dijele istu lijevu ivicu — nema druge kolone.
+      final kartice = find.byType(AppointmentCard);
+      final prva = tester.getRect(kartice.first).left;
+      for (var i = 1; i < kartice.evaluate().length; i++) {
+        expect(tester.getRect(kartice.at(i)).left, prva);
+      }
+    });
+  });
 }

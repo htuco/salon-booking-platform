@@ -9,7 +9,10 @@ import '../navigation/admin_destinations.dart';
 import '../router/admin_router.dart';
 import '../theme/theme.dart';
 
-/// Širina na kojoj ljuska mijenja oblik.
+/// Širine na kojima admin mijenja oblik.
+///
+/// **Jedno mjesto za sve pragove.** Prag izveden u ekranu znači raspored koji se mijenja na
+/// jednoj širini, a razmak na drugoj — greška vidljiva samo u uskom pojasu između te dvije.
 abstract final class AdminBreakpoint {
   /// 840 — ispod nje donja navigacija, od nje sidebar.
   ///
@@ -19,7 +22,50 @@ abstract final class AdminBreakpoint {
   /// najbliža postojeća konvencija: tablet u portretu (768–834) dobija mobilni raspored,
   /// koji je za dodir ionako ispravniji, a sidebar se pojavi tek kad ima mjesta za 236 px
   /// plus radnu površinu.
+  ///
+  /// Ovaj prag je **stariji od pojaseva ispod i nezavisan od njih**: on bira ljusku
+  /// (sidebar ili donja navigacija), a [AdminWidthBand] bira koliko kolona stane u radnu
+  /// površinu. Novi pojasevi ga namjerno ne gaze — [AdminWidthBand.compact] ide do 900,
+  /// dakle obuhvata i pojas 840–900 u kojem sidebar već stoji.
   static const double desktop = 840;
+
+  /// 900 — ispod nje se sadržaj preslaže u jednu kolonu.
+  static const double compact = 900;
+
+  /// 1440 — širina koju canvas crta; od nje radna površina ima mjesta za treću kolonu.
+  static const double wide = 1440;
+
+  /// 1920 — od nje se sadržaj ne razvlači dalje nego što mu treba.
+  static const double ultraWide = 1920;
+}
+
+/// Pojas širine u kojem se sadržaj trenutno crta.
+///
+/// Handoff traži četiri pojasa (< 900, 900–1440, 1440–1920, > 1920). Ekran ih ne izvodi sam
+/// nego pita [AdminShell.bandZa] ili [AdminShell.bandOf] — v. obrazloženje uz
+/// [AdminBreakpoint].
+enum AdminWidthBand {
+  /// < 900 — jedna kolona.
+  compact,
+
+  /// 900–1440 — raspored iz canvasa.
+  regular,
+
+  /// 1440–1920 — ima mjesta za još jednu kolonu.
+  wide,
+
+  /// >= 1920 — puna širina.
+  ultraWide;
+
+  bool get jeCompact => this == AdminWidthBand.compact;
+
+  /// Koliko kolona stane u mrežu kartica ovog pojasa.
+  int get kolone => switch (this) {
+    AdminWidthBand.compact => 1,
+    AdminWidthBand.regular => 2,
+    AdminWidthBand.wide => 3,
+    AdminWidthBand.ultraWide => 4,
+  };
 }
 
 /// Šta ljuska zna o širini, za ekran koji stoji u njoj.
@@ -40,6 +86,30 @@ abstract final class AdminShell {
   static double gutterOf(BuildContext context) => jeDesktop(context)
       ? AdminSpacing.gutterDesktop
       : AdminSpacing.gutterMobile;
+
+  /// Pojas širine za datu **dostupnu** širinu.
+  ///
+  /// Uzima `double`, a ne `BuildContext`, baš zato da ekran proslijedi `constraints.maxWidth`
+  /// iz `LayoutBuilder`-a: ekran u sidebar rasporedu ima [AdminSize.sidebarWidth] manje
+  /// mjesta nego što `MediaQuery` kaže, pa bi pojas izveden iz širine prozora dao kolonu
+  /// viška. Za ljusku i ekrane bez `LayoutBuilder`-a postoji [bandOf].
+  static AdminWidthBand bandZa(double sirina) {
+    if (sirina < AdminBreakpoint.compact) return AdminWidthBand.compact;
+    if (sirina < AdminBreakpoint.wide) return AdminWidthBand.regular;
+    if (sirina < AdminBreakpoint.ultraWide) return AdminWidthBand.wide;
+    return AdminWidthBand.ultraWide;
+  }
+
+  /// Pojas širine iz `MediaQuery`, umanjen za sidebar kad on stoji.
+  ///
+  /// **Nije zamjena za `LayoutBuilder`.** Oduzima sidebar jer zna da ga ljuska crta, ali ne
+  /// zna za ostale okvire oko sadržaja. Ekran koji već ima `constraints` zove [bandZa].
+  static AdminWidthBand bandOf(BuildContext context) {
+    final sirina = MediaQuery.sizeOf(context).width;
+    return bandZa(
+      jeDesktop(context) ? sirina - AdminSize.sidebarWidth : sirina,
+    );
+  }
 }
 
 /// Ljuska admin ekrana: sidebar na desktopu, donja navigacija na telefonu.

@@ -1,4 +1,52 @@
-# Trenutni task: 37 — Automatsko potvrđivanje termina
+# Trenutni task: FE-406 — Desktop je fluidan, ne fiksni 1280
+
+Učitan 2026-09-22 iz [fe-redizajn/FE-406](fe-redizajn/FE-406-desktop-fluidni-layout.md).
+
+**Dvije paralelne grane rada.** Ovaj fajl vodi FE epik (`tasks/fe-redizajn/`, izgled admina);
+Sprint 4 (`tasks/sprint-4/`, funkcionalnost) teče uporedo i njegov aktivni task je 37, čiji je
+status niže na ovoj stranici nepromijenjen.
+
+## Status
+
+Kod gotov i dokazan — grana `feat/fe-406-desktop-fluidni-layout`,
+[PR #65](https://github.com/htuco/salon-booking-platform/pull/65) je draft. Puni dokazi i
+zamke: [FE-406](fe-redizajn/FE-406-desktop-fluidni-layout.md).
+
+## Ciljevi
+
+Preostalo prije nego se PR skine sa drafta:
+
+- [x] **Četiri pojasa širine na jednom mjestu** — `AdminBreakpoint` + `AdminWidthBand`; postojeći
+      prag 840 ostaje nezavisan (bira ljusku, ne broj kolona).
+- [x] **Nema praznih margina na 1920 i 2560 px** — izmjereno testom: sadržaj na 2560 ide do 2532.
+      4 kolone na 2560, 3 na 1920, 2 na 1440, 1 na 1100 i na telefonu.
+- [x] **289 Flutter testova PASS** u `apps/admin` (bilo 278), čista analiza i format. Svaki novi
+      test provjeren sabotažom — prva verzija je gledala samo desnu ivicu i prolazila je i kad se
+      lista srozala na jednu razvučenu karticu.
+- [ ] **Zelen CI na PR-u** — dokaz iz čistog checkouta, koji lokalno ne postoji.
+- [x] **Viđeno uživo na širokom ekranu** (`/verify`) — 4 kolone na 2560 px, sadržaj do desne
+      ivice. Browser je našao dvije greške koje suita nije; obje popravljene u `ca091af`.
+
+## Napomene uz FE-406
+
+- **Epik je blokiran na ADR-u, ovaj task nije bio.** Četiri odluke iz
+  [fe-redizajn/README](fe-redizajn/README.md) (Barlow, koralna na klijentu, Lucide,
+  šta je `prototype/adminv2/`) i dalje nemaju ADR. FE-406 je jedini od šest admin taskova koji
+  **ne referencira nijedan PNG**, pa je mogao naprijed; FE-401…FE-405 ne mogu dok se ne zapiše
+  koji je handoff jači.
+- **Dvije stavke DoD-a namjerno ostaju otvorene**: horizontalni skrol tabela pripada FE-404 (isti
+  fajlovi), a prolaz kroz fiksne visine je FE-504. Pojasevi su uvedeni i primijenjeni na ekrane
+  termina; ostali admin ekrani ih još ne koriste.
+- **Zahtjevi (`3d`) ostaju jedna kolona.** `_ZahtjevKartica` je raspored
+  `vrijeme | podaci | radnje` računat za punu radnu površinu i u koloni od ~560 px prelije za
+  303 px. Uhvatila ga je suita, ne pregled koda.
+- **`apps/client` je zatečeno crven**: 3 greške analize i 17 palih testova zbog negenerisanih
+  l10n gettera (`bookingSuccess*Confirmed`). Provjereno na čistom `main`-u — isti rezultat, dakle
+  nije regresija FE-406. Traži `flutter gen-l10n`.
+
+---
+
+# Sprint 4, aktivni task: 37 — Automatsko potvrđivanje termina
 
 Učitan 2026-09-22 iz [sprint-4/37](sprint-4/37-automatsko-potvrdjivanje.md). Prvi task Sprinta 4.
 

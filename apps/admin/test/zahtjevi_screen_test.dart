@@ -210,4 +210,30 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
     });
   });
+
+  group('široki ekrani (FE-406)', () {
+    testWidgets('na 2560 px zahtjevi ostaju jedna kolona, bez prelijevanja', (
+      tester,
+    ) async {
+      // **Ovu je našla suita, ne pregled koda.** Prva verzija fluidne mreže je i zahtjeve
+      // slagala u četiri kolone, a `_ZahtjevKartica` je raspored iz `3d`
+      // (vrijeme | podaci | radnje) računat za punu radnu površinu — u koloni od ~560 px
+      // `Row` je prelio za 303 px i oborio šest testova u ovom fajlu.
+      //
+      // Test stoji ovdje, a ne uz ostale FE-406 provjere u `appointments_screen_test.dart`:
+      // zahtjevi se čitaju iz `zahtjeviProvider`, pa tamošnji `_ekran` (koji override-uje
+      // `filtriraniTerminiProvider`) ne nacrta nijednu karticu i provjera bi bila prazna.
+      await _naSirini(tester, const Size(2560, 1200), _ekran());
+
+      expect(tester.takeException(), isNull);
+
+      // Jedna kolona: sve kartice dijele lijevu ivicu.
+      final kartice = find.byType(Card);
+      expect(kartice, findsWidgets);
+      final prva = tester.getRect(kartice.first).left;
+      for (var i = 1; i < kartice.evaluate().length; i++) {
+        expect(tester.getRect(kartice.at(i)).left, prva);
+      }
+    });
+  });
 }

@@ -75,4 +75,10 @@ ili stoji uz njega, svaki FE-4xx task ima dva izvora istine koji se ne slažu.
 
 ## Status
 
-Epik otvoren 2026-09-22. Nijedan task još nije počet.
+Epik otvoren 2026-09-22.
+
+**U radu:** [FE-406](FE-406-desktop-fluidni-layout.md) — kod gotov i dokazan, [PR #65](https://github.com/htuco/salon-booking-platform/pull/65) je draft. Ostaje gledanje uživo.
+
+FE-406 je počet prvi iako nije prvi po broju: ne zavisi ni od čega, blokira FE-402, FE-403 i
+FE-404, i **jedini je od šest admin taskova koji ne referencira nijedan PNG iz `prototype/adminv2/`**
+— pa je mogao naprijed dok četiri odluke iznad čekaju ADR.
