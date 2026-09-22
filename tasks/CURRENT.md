@@ -14,7 +14,7 @@ ekrana: desktop 1600, telefon 402 i prijava.
 - [x] Tamni sidebar i u svijetloj temi, izmjeren iz `adminv2/export/3b`
 - [x] Verzal navigacija, uloga umjesto maila, koralna pilula brojača
 - [x] Četiri testa sa „Salon OS" prepisana na `kImeProizvoda`, ne obrisana
-- [ ] **Zelen CI** — dokaz iz čistog checkouta, koji lokalno ne postoji
+- [x] **Zelen CI** — `Analiza, format i testovi` pass (3m47s)
 
 ## Napomene uz FE-401
 
