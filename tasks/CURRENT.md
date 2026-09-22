@@ -5,7 +5,8 @@ bez zavisnosti, **blokira task 42**. Grana `fix/push-na-androidu` sa svježeg `m
 
 ## Status
 
-U toku. Popravka u bazi je **dokazana u CI-ju**; dvije DoD stavke čekaju Firebase nalog i uređaj.
+U toku. Baza i lanac su **dokazani uživo**; otvoren je još samo zvuk, u grani
+`fix/push-zvuk-i-kanal`.
 
 ## Ciljevi
 

@@ -6,7 +6,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
 import android.os.Build
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -46,6 +48,17 @@ class MainActivity : FlutterActivity() {
             ).apply {
                 description = "Potvrde, odbijanja i otkazivanja termina"
                 enableVibration(true)
+                // Zvuk se postavlja izricito, iako mu je podrazumijevana vrijednost ista.
+                // Kanal je jedino mjesto koje na API 26+ odlucuje o zvuku — `setSound` na
+                // `Notification.Builder` se tu ignorise. Bez `AudioAttributes` sa
+                // `USAGE_NOTIFICATION` ton zna otici kroz pogresan kanal jacine zvuka.
+                setSound(
+                    Settings.System.DEFAULT_NOTIFICATION_URI,
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build(),
+                )
             },
         )
     }

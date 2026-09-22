@@ -91,7 +91,19 @@ export function messageFor(job: PushJob) {
         salon_id: job.salon_id,
         route: "/appointments",
       },
-      android: { priority: "high", notification: { tag: job.id } },
+      android: {
+        priority: "high",
+        notification: {
+          tag: job.id,
+          // Zvuk se mora **tražiti**. iOS ga je dobijao kroz `aps.sound` od početka, a
+          // Android nije imao nijedno polje — obavijest je stizala nijemo. Na API < 26
+          // ovo direktno bira ton, a na 26+ ga FCM koristi kad sam pravi fallback kanal.
+          sound: "default",
+          // Bez ovoga obavijest pada na FCM-ov `fcm_fallback_notification_channel`, čija
+          // importance i zvuk nisu naši. Kanal `appointment_updates` prave obje aplikacije.
+          channel_id: "appointment_updates",
+        },
+      },
       apns: {
         headers: { "apns-collapse-id": job.id, "apns-push-type": "alert" },
         payload: { aps: { sound: "default" } },

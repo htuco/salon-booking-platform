@@ -13,9 +13,9 @@ Push je prestao stizati na Androidu.
 ## Definicija gotovog
 - [x] Imenovano **gdje** lanac puca: **dva mjesta, oba uzvodno od FCM-a** — `queue_appointment_push`
       u `auto` modu i `register_device` koji se iz admina nikad ne pozove
-- [~] Dokaz iz `notification_logs` — stanje prije popravke pročitano nad hostovanom bazom, a nastanak
-      reda nakon nje dokazan u CI-ju; `attempts`/`error` nad hostovanom traže primijenjenu migraciju
-- [ ] Obavijest stigla na Android emulator ili uređaj, sa snimkom — **blokirano**, v. status
+- [x] Dokaz iz `notification_logs` — stanje prije popravke pročitano nad hostovanom bazom, nastanak
+      reda dokazan u CI-ju, a lanac zatim prošao i uživo nad hostovanim projektom
+- [x] Obavijest stigla na Android emulator — potvrđeno ručno 2026-09-22, oba smjera
 - [x] Ako je uzrok istekao ključ ili promjena konfiguracije, to je zapisano u `workflows.md`
 
 ## Koraci
@@ -65,7 +65,7 @@ rezervaciju" i „Jedna rezervacija u auto modu daje tacno jedan red". Ostalih 1
 zeleno, pa test ne visi o tuđem ponašanju. Worker: `deno test handler_test.ts` **6/6** i
 `deno check` nad `index.ts`.
 
-### Drugi prekid — admin nema staff uređaj, **nije popravljen u repou**
+### Drugi prekid — admin nema staff uređaj, **zatvoren 2026-09-22**
 
 U `devices` je **tačno jedan red i on je klijentski**. Bez staff uređaja grana `v_staff` bira nula
 redova, pa bi i popravljen trigger slao u prazno. `apps/admin/lib/main.dart` uredno postavlja
@@ -79,15 +79,52 @@ za `firebase_defines.dart`. Sam uzrok je izvan repoa: `apps/admin` ima `applicat
 `ba.nasadomena.admin`, pa traži **vlastitu Firebase Android aplikaciju** — klijentski
 `google-services.json` na njemu namjerno pada (`Firebase package name se ne poklapa`).
 
+## Dokaz uživo (2026-09-22, nakon PR #77)
+
+Migracija je primijenjena na hostovani projekat (`db push`, jedna migracija): enum ima
+`new_booking`, a stara grana više ne postoji u `prosrc` funkcije. Firebase Android aplikacija za
+`ba.nasadomena.admin` je registrovana, define fajl generisan iz njenog `google-services.json`, i
+admin pokrenut na drugom emulatoru.
+
+`devices` je time prvi put dobio **staff uređaj sa tokenom** (`1e60ef0e…`), pored klijentskog
+(`92fedc78…`). Do tada je tabela imala jedan jedini red, klijentski — zato grana `v_staff` nije
+imala kome slati ni prije ni poslije popravke trigera.
+
+Obavijesti stižu na oba smjera. Dvije zamke nađene pri tome:
+
+- **Emulator bez default rute.** Drugi AVD je imao `eth0` i `wlan0` na istoj podmreži i nijednu
+  default rutu, pa je aplikacija javljala `Failed host lookup`. Nije kvar aplikacije; rješenje je
+  `ip route add default via 10.0.2.2 dev eth0` ili nov AVD.
+- **`--dart-define-from-file` traži apsolutnu putanju.** `run_tenant.sh` uđe u `apps/client/` prije
+  `flutter run`, pa se relativna putanja iz `.env.live` lomi — a provjera postojanja fajla u
+  skripti prođe, jer se radi iz korijena.
+
+## Zvuk — nastavak u zasebnom PR-u
+
+Obavijesti su stizale **nijemo**. Tri nalaza, po težini:
+
+1. **Payload nije tražio zvuk na Androidu.** iOS je imao `aps.sound` od taska 25, Android nijedno
+   polje. Dodani `sound: "default"` i `channel_id`.
+2. **Admin nije imao notification kanal uopšte** — ni meta-data u manifestu ni kreiranje u
+   `MainActivity`. `dumpsys` je to i pokazao: postojao je samo FCM-ov
+   `fcm_fallback_notification_channel` („Miscellaneous", `mImportance=3`). Sada ima
+   `appointment_updates` sa `mImportance=4`, `mSound` i `USAGE_NOTIFICATION`.
+3. **Pravi uzrok tišine bio je prvi plan.** FCM na Androidu ne crta notification payload dok je
+   aplikacija otvorena. Klijent to rješava kroz `ForegroundNotifications.show(...)`; admin na istom
+   mjestu (`apps/admin/lib/main.dart`) zove samo `refreshAdminAppointments(ref)`. Sa adminom u
+   pozadini zvuk i banner rade — potvrđeno ručno.
+
 ## Ostalo za sljedećeg
 
-1. **Registrovati `ba.nasadomena.admin` u Firebase projektu** (`hades-75751`), skinuti
-   `google-services.json`, pa:
-   `dart run tool/firebase_defines.dart <json> ba.nasadomena.admin .firebase-config/admin.json`
-   i upisati putanju u `FIREBASE_ADMIN_DEFINES_FILE`. Traži pristup konzoli — nije posao u repou.
-2. **Primijeniti migraciju na hostovani projekat.** MCP veza je `--read-only`, pa je ovdje nije
-   dirala nijedna komanda. Bug je tamo i dalje živ.
-3. **Snimak sa uređaja i red sa `attempts`/`error`** tek nakon 1 i 2 — to su dvije DoD stavke koje
-   ostaju otvorene. Docker na ovoj mašini ne postoji, pa ni lokalni emulator preko `supabase start`
-   nije alternativa.
-4. **iOS ostaje imenovan dug** dok nema Apple developer naloga (bilo izvan DoD-a i prije ovoga).
+1. **`supabase functions deploy send-push` nije pokrenut** — blokiran kao produkcijska akcija.
+   Dok ne prođe, `sound`/`channel_id` iz payloada ne postoje na hostovanom. Zvuk na adminu ipak
+   radi, jer `default_notification_channel_id` iz manifesta sam usmjerava FCM.
+2. **Admin nema obavijest u prvom planu.** Dok je otvoren, push samo tiho osvježi listu. Popravka
+   znači preseliti `ForegroundNotifications` iz `apps/client/lib/src/core/` u `core_api` (da se ne
+   duplira) i dodati MethodChannel u admin `MainActivity`. **Zaseban task.**
+3. **Klijentov kanal na zatečenim instalacijama ostaje bez izmjene.** Android ignoriše naknadne
+   izmjene zvuka i importance na postojećem kanalu — traži reinstalaciju.
+4. **`tool/run_tenant.sh` je pokvaren sa Flutterom 3.47.4** — šalje `--build-name`/`--build-number`
+   koje `flutter run` više ne prima, pa svaki `run_live_demo.sh client` pada. Zaobiđeno shimom van
+   repoa. **Zaseban task.**
+5. **iOS ostaje imenovan dug** dok nema Apple developer naloga (bilo izvan DoD-a i prije ovoga).
