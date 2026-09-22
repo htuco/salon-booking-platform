@@ -47,42 +47,62 @@ Future<bool?> prikaziKonflikte(
               style: TextStyle(color: boje.textSecondary),
             ),
             const SizedBox(height: AdminSpacing.lg),
+            // `SingleChildScrollView`, ne `ListView`: `AlertDialog` mjeri sadržaj kroz
+            // `IntrinsicWidth`, a `RenderShrinkWrappingViewport` intrinsične dimenzije
+            // **ne podržava** — assertion je padao u `performLayout()`, izvan svakog
+            // `try/catch` oko poziva, jer nije greška poziva nego crtanja (task 38).
+            // Lijenost se ne gubi: `shrinkWrap: true` ju je ionako već isključio, a lista
+            // je ograničena brojem termina koji ispadaju iz jedne sedmice.
             Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: konflikti.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AdminSpacing.sm),
-                itemBuilder: (context, i) {
-                  final k = konflikti[i];
-                  final datum = DateTime(k.date.year, k.date.month, k.date.day);
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${datumSaGodinom(datum)} · '
-                              '${k.startTime.format()}–${k.endTime.format()}',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            Text(
-                              [
-                                k.customerName,
-                                if (k.employeeName != null) k.employeeName!,
-                                if (k.reason != null) k.reason!,
-                              ].join(' · '),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: boje.textSecondary),
-                            ),
-                          ],
-                        ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final (i, k) in konflikti.indexed) ...[
+                      if (i > 0) const SizedBox(height: AdminSpacing.sm),
+                      Builder(
+                        builder: (context) {
+                          final datum = DateTime(
+                            k.date.year,
+                            k.date.month,
+                            k.date.day,
+                          );
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${datumSaGodinom(datum)} · '
+                                      '${k.startTime.format()}–${k.endTime.format()}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall,
+                                    ),
+                                    Text(
+                                      [
+                                        k.customerName,
+                                        if (k.employeeName != null)
+                                          k.employeeName!,
+                                        if (k.reason != null) k.reason!,
+                                      ].join(' · '),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(color: boje.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
-                  );
-                },
+                  ],
+                ),
               ),
             ),
           ],

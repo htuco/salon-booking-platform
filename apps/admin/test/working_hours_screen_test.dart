@@ -4,6 +4,7 @@ library;
 import 'package:admin/src/core/theme/theme.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/working_hours/working_hours_providers.dart';
+import 'package:admin/src/features/working_hours/working_hours_dialogs.dart';
 import 'package:admin/src/features/working_hours/working_hours_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
@@ -68,9 +69,71 @@ final _blokada = BlockedSlot(
   reason: 'Kurban-bajram',
 );
 
+class _FakeWorkingHoursActions extends WorkingHoursActions {
+  _FakeWorkingHoursActions(super.ref, this._konflikti);
+
+  final List<ScheduleConflict> _konflikti;
+
+  @override
+  Future<List<ScheduleConflict>> konflikti(
+    List<WorkingHoursInput> dani, {
+    String? employeeId,
+  }) async => _konflikti;
+
+  @override
+  Future<void> sacuvaj(
+    List<WorkingHoursInput> dani, {
+    String? employeeId,
+  }) async {}
+}
+
+/// Termini koje `working_hours_conflicts` vrati kad se radno vrijeme suzi.
+List<ScheduleConflict> _konflikti(int koliko) => [
+  for (var i = 0; i < koliko; i++)
+    ScheduleConflict(
+      appointmentId: 'a$i',
+      date: LocalDate(2026, 5, 4 + (i % 7)),
+      startTime: const LocalTime(18, 30),
+      endTime: const LocalTime(19, 15),
+      customerName: 'Klijent $i',
+      employeeName: 'Emir Besic',
+      reason: 'Van radnog vremena',
+    ),
+];
+
+/// Otvara `prikaziKonflikte` iz stvarnog `BuildContext`-a — isto kako ga zovu oba ulaza:
+/// snimanje radnog vremena i snimanje blokade.
+Future<void> _otvoriKonflikte(
+  WidgetTester tester,
+  List<ScheduleConflict> konflikti, {
+  Size size = _desktop,
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: buildAdminTheme(),
+      home: Builder(
+        builder: (context) => Scaffold(
+          body: Center(
+            child: TextButton(
+              onPressed: () => prikaziKonflikte(context, konflikti),
+              child: const Text('otvori'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('otvori'));
+  await tester.pumpAndSettle();
+}
+
 Widget _screen({
   List<WorkingHour>? raspored,
   List<BlockedSlot> blokade = const [],
+  List<ScheduleConflict> konflikti = const [],
   Object? greska,
   List<Employee> osoblje = const [],
   TextScaler? skala,
@@ -88,6 +151,9 @@ Widget _screen({
     }),
     buduceBlokadeProvider.overrideWith((ref) async => blokade),
     osobljeZaBlokadeProvider.overrideWith((ref) async => osoblje),
+    workingHoursActionsProvider.overrideWith(
+      (ref) => _FakeWorkingHoursActions(ref, konflikti),
+    ),
   ],
   child: MaterialApp(
     theme: buildAdminTheme(),
@@ -331,5 +397,57 @@ void main() {
     );
 
     expect(find.text('+ Dodaj pauzu'), findsOneWidget);
+  });
+
+  // --- Dijalog konflikata (task 38) ---
+
+  testWidgets('snimanje sa konfliktom otvori dijalog umjesto da obori layout', (
+    tester,
+  ) async {
+    // Regresija za task 38. `AlertDialog` mjeri sadrzaj kroz `IntrinsicWidth`, a viewport
+    // intrinsicne dimenzije ne podrzava, pa je „Sacuvaj" sa ijednim konfliktom rusio
+    // ekran u `performLayout()` — izvan svakog `try/catch`, jer to nije greska poziva
+    // nego crtanja. Jedan konflikt je dovoljan: dijalog se otvara samo kad lista nije
+    // prazna, zbog cega demo ulaz bez termina ovo nikad nije pogodio.
+    await _pumpAt(tester, _desktop, _screen(konflikti: _konflikti(1)));
+    await tester.tap(find.byType(Switch).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sačuvaj izmjene'));
+    // Dugme pokazuje indeterminate spinner dok dijalog čeka odgovor, pa se animacija
+    // namjerno ne može `settle`-ovati. Dva framea su dovoljna da se dijalog izgradi.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('Jedan zakazan termin'), findsOneWidget);
+    expect(find.text('Sačuvaj ipak'), findsOneWidget);
+  });
+
+  testWidgets('duga lista konflikata se skrola umjesto da se prelije', (
+    tester,
+  ) async {
+    // Telefon je uza strana: 40 termina ne stane, pa dijalog mora skrolati. Bez ovoga bi
+    // popravka koja samo makne viewport prosla, a vratila preliv koji je task 34 vec
+    // jednom placao.
+    await _otvoriKonflikte(tester, _konflikti(40), size: _telefon);
+
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('40 zakazanih termina'), findsOneWidget);
+
+    final zadnji = find.text(
+      'Klijent 39 \u00b7 Emir Besic \u00b7 Van radnog vremena',
+    );
+    await tester.scrollUntilVisible(
+      zadnji,
+      -220,
+      scrollable: find
+          .descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(zadnji, findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
