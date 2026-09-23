@@ -31,7 +31,7 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-404](FE-404-upravljanje-podacima.md) | Usluge, osoblje i klijenti | admin | — | 2–3 dana |
 | [FE-405](FE-405-login.md) | Prijava (admin) | admin | — | 0,5 dan |
 | [FE-406](FE-406-desktop-fluidni-layout.md) | Desktop je fluidan, ne fiksni 1280 | admin | FE-402…FE-404 | 1–2 dana |
-| [FE-501](FE-501-stanja-i-skeletoni.md) | Stanja učitavanja, greške i prazna stanja | obje | — | 1–2 dana |
+| [FE-501](FE-501-stanja-i-skeletoni.md) | Stanja učitavanja, greške i prazna stanja ✅ | obje | — | 1–2 dana |
 | [FE-502](FE-502-pristupacnost.md) | Pristupačnost i kontrast | obje | — | 1–2 dana |
 | [FE-503](FE-503-ciscenje-legacy-stilova.md) | Čišćenje legacy stilova | obje | — | 1 dan |
 | [FE-504](FE-504-qa-prolaz.md) | QA prolaz kroz sve ekrane | obje | — | 1–2 dana |
