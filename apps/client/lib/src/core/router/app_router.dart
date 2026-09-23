@@ -21,6 +21,7 @@ import '../../features/notifications/notifications_screen.dart';
 import '../../features/placeholder/placeholder_screen.dart';
 import '../../features/services/services_screen.dart';
 import 'client_shell.dart';
+import 'tab_cross_fade.dart';
 
 /// Rute klijentske app-e, po `docs/01-mvp-spec.md` §12.
 ///
@@ -53,9 +54,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     // URL u traci i dalje piše `/book/slot`, što izgleda kao da sve valja. `GoRouter` bez
     // njega uzme trenutnu platformsku rutu, koja je na mobilnom ionako `/`.
     routes: [
-      StatefulShellRoute.indexedStack(
-        // `indexedStack`, ne `Navigator` po grani sa rušenjem stanja: pet tabova ostaju
-        // živi, pa skrol pozicija Početne preživi odlazak na Termine i nazad.
+      StatefulShellRoute(
+        // Kao `indexedStack` — pet tabova ostaju živi, pa skrol pozicija Početne preživi
+        // odlazak na Termine i nazad — ali se tab pretapa umjesto da skoči (FE-202).
+        navigatorContainerBuilder: (context, shell, children) =>
+            TabCrossFade(currentIndex: shell.currentIndex, children: children),
         builder: (context, state, shell) => ClientShell(shell: shell),
         branches: [
           // Redoslijed grana **je** redoslijed ćelija u traci: Početna je treća, tj. u

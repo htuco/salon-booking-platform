@@ -15,7 +15,7 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-103](FE-103-skala-razmaka.md) | Skala razmaka i tretman rubova | obje | — | 0,5–1 dan |
 | [FE-104](FE-104-ikone.md) | Ikone: jedna debljina (Lucide već uveden, [ADR-0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md)) | klijent | — | 0,5–1 dan |
 | [FE-201](FE-201-zamjena-default-tranzicije.md) | Jedna tranzicija na obje platforme 🟡 | klijent | FE-302 | 1–2 dana |
-| [FE-202](FE-202-tab-navigacija.md) | Prelaz između tabova | klijent | — | 1 dan |
+| [FE-202](FE-202-tab-navigacija.md) | Prelaz između tabova ✅ | klijent | — | 1 dan |
 | [FE-203](FE-203-modali-i-bottom-sheet.md) | Modali i bottom sheet | obje | FE-304 | 1 dan |
 | [FE-204](FE-204-lightbox-galerija.md) | Lightbox galerije | klijent | FE-305 | 1–2 dana |
 | [FE-205](FE-205-ukidanje-default-flutter-indikatora.md) | Ukinuti default Flutter indikatore | obje | FE-501 | 2–3 dana |
@@ -152,3 +152,6 @@ FE-5xx po definiciji idu zadnji.
 Jedan `AppPageTransitionsBuilder` za sve platforme, 220/180 ms, swipe-back na iOS-u zadržan.
 Dokazano testovima (`core_ui` 75, klijent 238); **fali snimak sa Android i iOS uređaja**. Admin
 ostaje na svom pretapanju (ADR-0020).
+
+**✅ [FE-202](FE-202-tab-navigacija.md)** — grana `feat/fe-202-prelaz-tabova`. Tab se pretapa
+120 ms preko prethodnog, stanje i skrol preživljavaju, ostali tabovi se ne grade iznova. 243 testa.
