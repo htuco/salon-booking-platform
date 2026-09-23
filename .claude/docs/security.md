@@ -287,13 +287,19 @@ generisanje tiho pregazi. Isto važi za `salon_settings`: `timezone` i `language
 **svih** već upisanih `time` vrijednosti u `working_hours` i `appointments` — to je migracija
 podataka, ne postavka — a `auth_providers` opisuje koji login uopšte postoji u buildu.
 
+Od taska 40 `p_name` u `update_salon_contact` više nije vrijednost za upis nego optimistička
+provjera postojećeg naziva. Različit naziv vraća `PT400`, a cijeli update ostaje bez efekta.
+Naziv aplikacije je build-time podatak iz `tenant.yaml`; mijenja se generatorom i novim store
+buildom, ne kroz admin RPC.
+
 **`salon_policies` je jedini admin modul koji namjerno nema `rpc`.** `staff_manage` već daje CRUD
 uz grant, a mimo `check` constrainta koji stoje (`sort_order > 0`, neprazan naslov i tijelo) nema
 šta da se validira — funkcija bi bila prosljeđivanje koje sakriva politiku umjesto da je pojača.
 Zapisano ovdje da se ne traži `rpc` kojeg nema. **`app_policies` se iz admina ne dira nikad**
 (ADR-0009); negativan test taska 21 to drži i ovaj task ga ponavlja kroz pravi PostgREST.
 
-Dokaz: `014_postavke_lokacije.test.sql` (48 asercija) i `rest_postavke_lokacije.ts` (19 provjera
+Dokaz: `014_postavke_lokacije.test.sql` (uključujući odbijanje promjene naziva bez djelimičnog
+upisa) i `rest_postavke_lokacije.ts` (19 provjera
 kroz stvarni JWT — promjena koju vlasnik snimi čita **`anon`**, bez tokena i bez novog builda, što
 je i cijeli cilj taska). Sabotaža koja guard u `update_salon_contact` oslabi na `true` obara 2
 asercije; uklanjanje guarda i validacije iz `update_salon_settings` obara 12.

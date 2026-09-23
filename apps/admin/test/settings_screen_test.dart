@@ -143,6 +143,22 @@ void main() {
     );
   });
 
+  testWidgets('objašnjenje naziva stane na telefonu s povećanim tekstom', (
+    tester,
+  ) async {
+    await _pumpAt(
+      tester,
+      _telefon,
+      _screen(skala: const TextScaler.linear(1.6)),
+    );
+
+    const poruka =
+        'Naziv aplikacije mijenja se kroz konfiguraciju i novi store build.';
+    final helper = tester.widget<Text>(find.text(poruka));
+    expect(helper.maxLines, 3);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('telefon `3t` pokaže isti ekran, bez desktop ljuske', (
     tester,
   ) async {
