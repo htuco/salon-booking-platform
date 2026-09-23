@@ -203,8 +203,9 @@ class _TopBarAkcije extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // Placeholder, i zato prvi otpada kad top bar postane uzak: raspored je
-        // ponavljajući, pa „prošla sedmica" danas nema šta kopirati.
-        if (MediaQuery.sizeOf(context).width >= 1000) ...[
+        // ponavljajući, pa „prošla sedmica" danas nema šta kopirati. Prag 1200 kao na
+        // dashboardu: na 1024 px pored sidebara breadcrumb je prelijevao top bar.
+        if (MediaQuery.sizeOf(context).width >= 1200) ...[
           SizedBox(
             height: 42,
             child: OutlinedButton(
