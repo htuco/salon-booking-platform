@@ -203,13 +203,10 @@ void main() {
       await _naSirini(tester, _desktop, _ekran());
 
       expect(find.text('Mirza Aliagić'), findsOneWidget);
-      // Drugi red bloka nosi i status, ne samo uslugu — v. `_opisBloka`. Status je tu
-      // jer se otkazan i potvrđen termin inače razlikuju samo bojom, koju čitač ekrana
-      // ne vidi. Test je ovo propustio jer je pisan prije te izmjene.
-      expect(
-        find.text('11:00–12:20 · Potvrđeno · Fade šišanje'),
-        findsOneWidget,
-      );
+      // Drugi red bloka je vrijeme i usluga, kako ga `3c` piše — status više nije u
+      // tekstu (ADR-0020); čitač ekrana ga dobija iz `oznakaTermina`.
+      expect(find.text('11:00–12:20 · Fade šišanje'), findsOneWidget);
+      expect(find.textContaining('Potvrđeno ·'), findsNothing);
     });
 
     testWidgets('pauza, blokada i neradno vrijeme se vide kao pojasevi', (
@@ -276,18 +273,41 @@ void main() {
       expect(find.text('U toku'), findsOneWidget);
     });
 
-    testWidgets('akcije koje nemaju RPC putanju nisu nacrtane', (tester) async {
-      await _naSirini(tester, _desktop, _ekran());
+    testWidgets(
+      'prekidač Dan/Sedmica/Mjesec: radi samo „Dan", ostalo je „Uskoro"',
+      (tester) async {
+        await _naSirini(tester, _desktop, _ekran());
 
-      // Prekidač prikaza i dvije radnje nad radnim vremenom traže task 34, odnosno
-      // sedmični i mjesečni prikaz kojih ovaj task nema.
-      expect(find.text('Sedmica'), findsNothing);
-      expect(find.text('Mjesec'), findsNothing);
-      expect(find.text('Dodaj pauzu'), findsNothing);
-      expect(find.text('Zatvori dan'), findsNothing);
-      // „Blokiraj vrijeme" ostaje: ruta postoji i vodi u ljusku.
-      expect(find.text('Blokiraj vrijeme'), findsWidgets);
-    });
+        // Segmenti su nacrtani jer ih `3c` crta, ali prikaza iza njih nema.
+        expect(find.text('Dan'), findsOneWidget);
+        expect(find.text('Sedmica'), findsOneWidget);
+        expect(find.text('Mjesec'), findsOneWidget);
+        expect(find.byTooltip('Uskoro'), findsNWidgets(2));
+        expect(
+          find.ancestor(
+            of: find.text('Sedmica'),
+            matching: find.byTooltip('Uskoro'),
+          ),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'bočna traka: „Dodaj pauzu" i „Zatvori dan", bez „Blokiraj vrijeme"',
+      (tester) async {
+        await _naSirini(tester, _desktop, _ekran());
+
+        // Obje radnje vode na radno vrijeme, pa moraju biti aktivne.
+        for (final tekst in ['Dodaj pauzu', 'Zatvori dan']) {
+          final dugme = find.widgetWithText(OutlinedButton, tekst);
+          expect(dugme, findsOneWidget);
+          expect(tester.widget<OutlinedButton>(dugme).onPressed, isNotNull);
+        }
+        // Uklonjeno iz bočne trake odlukom vlasnika proizvoda (ADR-0020).
+        expect(find.text('Blokiraj vrijeme'), findsNothing);
+      },
+    );
 
     testWidgets('salon bez radnika kaže zašto nema kolona', (tester) async {
       await _naSirini(
@@ -388,7 +408,8 @@ void main() {
     testWidgets('traka u dnu nosi novi termin i blokadu', (tester) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      expect(find.text('+ Novi termin'), findsOneWidget);
+      // Primarno dugme piše verzal kroz `AdminVerzal`.
+      expect(find.text('+ NOVI TERMIN'), findsOneWidget);
       expect(find.byIcon(Icons.block_outlined), findsOneWidget);
     });
 
@@ -402,7 +423,7 @@ void main() {
       final sirina = tester
           .getSize(
             find.ancestor(
-              of: find.text('+ Novi termin'),
+              of: find.text('+ NOVI TERMIN'),
               matching: find.byType(FilledButton),
             ),
           )

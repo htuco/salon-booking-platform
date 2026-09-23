@@ -387,7 +387,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
             height: 4,
             decoration: BoxDecoration(
               color: boje.border,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AdminRadius.dot),
             ),
           ),
         ),
@@ -597,9 +597,14 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
             height: AdminSize.touchTarget,
             child: Row(
               children: [
-                Text(
-                  sNazivom ? 'Naziv, kategorija i opis' : 'Kategorija i opis',
-                  style: tema.labelMedium?.copyWith(color: boje.accent),
+                // `Flexible`: uz veće pismo tekst bi gurnuo strelicu van ekrana.
+                Flexible(
+                  child: Text(
+                    sNazivom ? 'Naziv, kategorija i opis' : 'Kategorija i opis',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tema.labelMedium?.copyWith(color: boje.accent),
+                  ),
                 ),
                 Icon(
                   _detalji ? Icons.expand_less : Icons.expand_more,
