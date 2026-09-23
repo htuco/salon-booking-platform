@@ -111,7 +111,7 @@ class _Ucitan extends ConsumerWidget {
         SliverToBoxAdapter(
           child: HomeHero(
             salon: salon,
-            status: _statusTekst(l10n, status),
+            status: salonStatusLabel(l10n, status),
             otvoren: status is SalonOpen,
           ),
         ),
@@ -170,14 +170,6 @@ class _Ucitan extends ConsumerWidget {
     );
   }
 }
-
-/// Živi status iz `docs/02 §3`, računat iz `WorkingHour`-a, ne napisan.
-String _statusTekst(AppLocalizations l10n, SalonStatus status) =>
-    switch (status) {
-      SalonOpen(:final until) => l10n.openUntil(until.format()),
-      SalonOpensLater(:final at) => l10n.closedOpensAt(at.format()),
-      SalonClosedToday() => l10n.closedToday,
-    };
 
 /// Primarni CTA — jedini razlog postojanja ovog ekrana (`docs/02 §3`).
 ///
@@ -416,8 +408,9 @@ class _Kostur extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          const SkeletonLoader(height: 320, radius: 0),
-          const SizedBox(height: AppSpacing.xl),
+          // Ista visina kao pravi hero i **bez razmaka ispod** — CTA mora stajati tačno
+          // gdje će stajati kad salon stigne (FE-301, test „CTA stoji na istom mjestu").
+          const SkeletonLoader(height: HomeHero.visinaSlike, radius: 0),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
             child: SkeletonLoader(height: AppSize.ctaHeight),

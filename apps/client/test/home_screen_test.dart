@@ -62,6 +62,30 @@ void main() {
       );
     });
 
+    testWidgets(
+      'CTA stoji na istom mjestu u kosturu i kad salon stigne (FE-301)',
+      (tester) async {
+        // Visina nije dovoljna — bitan je **vrh**. Kostur je crtao hero od 320 i razmak
+        // ispod njega, a pravi hero je 420 bez razmaka: CTA je skakao 78 px nadolje
+        // tačno kad prst ide ka njemu.
+        final salon = Completer<Salon>();
+        await tester.pumpWidget(_app(salon: salon.future));
+        await tester.pump();
+
+        final kostur = find.byWidgetPredicate(
+          (w) => w is SkeletonLoader && w.height == AppSize.ctaHeight,
+        );
+        final vrhKostura = tester.getTopLeft(kostur.first).dy;
+
+        salon.complete(_salon);
+        await tester.pump();
+        await tester.pump();
+
+        final vrhDugmeta = tester.getTopLeft(find.byType(AppButton).first).dy;
+        expect(vrhDugmeta, vrhKostura);
+      },
+    );
+
     testWidgets('greška daje poruku i retry, ne prazan ekran', (tester) async {
       await tester.pumpWidget(
         // Greska se pravi **unutar** override-a, ne kao gotov `Future.error` u argumentu:
@@ -191,7 +215,7 @@ void main() {
       tester,
     ) async {
       // **Ovo je regresioni test, ne ukras.** Naslov i status su nekad stajali na
-      // `_visinaSlike * 0.55` — na fiksnom procentu visine fotografije — dok im je sadrzaj
+      // `visinaSlike * 0.55` — na fiksnom procentu visine fotografije — dok im je sadrzaj
       // fiksne visine. Svako povecanje heroja je zato pola piksela slalo iznad teksta a pola
       // u praznu traku ispod njega: na 320 je bila ~12 px, na 420 je narasla na ~57 i vidjela
       // se golim okom kao rupa izmedju statusa i dugmeta.

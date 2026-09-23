@@ -18,8 +18,8 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-202](FE-202-tab-navigacija.md) | Prelaz između tabova ✅ | klijent | — | 1 dan |
 | [FE-203](FE-203-modali-i-bottom-sheet.md) | Modali i bottom sheet ✅ | obje | FE-304 | 1 dan |
 | [FE-204](FE-204-lightbox-galerija.md) | Lightbox galerije ✅ | klijent | FE-305 | 1–2 dana |
-| [FE-205](FE-205-ukidanje-default-flutter-indikatora.md) | Ukinuti default Flutter indikatore | obje | FE-501 | 2–3 dana |
-| [FE-301](FE-301-pocetna-i-o-nama.md) | Početna i „O nama" | klijent | — | 1–2 dana |
+| [FE-205](FE-205-ukidanje-default-flutter-indikatora.md) | Ukinuti default Flutter indikatore ✅ | obje | FE-501 | 2–3 dana |
+| [FE-301](FE-301-pocetna-i-o-nama.md) | Početna i „O nama" ✅ | klijent | — | 1–2 dana |
 | [FE-302](FE-302-booking-flow.md) | Booking flow (4 koraka) | klijent | — | 2–3 dana |
 | [FE-303](FE-303-zahtjev-poslan.md) | Ekran „Zahtjev poslan" | klijent | — | 0,5 dan |
 | [FE-304](FE-304-moji-termini.md) | Moji termini | klijent | — | 1–2 dana |
@@ -162,3 +162,10 @@ dijalog 180 ms fade + scale 0,98, sheet 240 ms. Admin dio se ne radi (ADR-0020).
 **✅ [FE-204](FE-204-lightbox-galerija.md)** — grana `feat/fe-204-lightbox`. `Hero` 260 ms kroz
 `PageRoute` (dijalog ne pokreće let), mreža skroluje ispod da zatvaranje sa druge slike ne poskoči.
 Pinch sluša samo dva prsta, pa ne otima swipe. 250 testova; viđen na emulatoru, gdje su nađena i popravljena dva prazna leta.
+
+**✅ [FE-205](FE-205-ukidanje-default-flutter-indikatora.md)** — spojen u [PR #78](https://github.com/htuco/salon-booking-platform/pull/78);
+tabela ga do FE-301 nije označavala. Klijent spinnera nije ni imao — posao je bio admin.
+
+**✅ [FE-301](FE-301-pocetna-i-o-nama.md)** — grana `feat/fe-301-pocetna-i-o-nama`. Ekrani su već bili
+po handoffu; popravljen skok CTA-a od 78 px pri učitavanju (kostur 320 + razmak naspram heroja 420),
+na Početnoj i `/about`. Test mjeri vrh dugmeta, sabotaža ga obara. 252 testa.
