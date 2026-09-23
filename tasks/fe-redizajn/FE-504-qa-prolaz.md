@@ -89,3 +89,10 @@ Snimci nisu u repou (slike, 100+ fajlova). Ponavljaju se istim komandama.
   Admin `3a`, `3k`–`3u` gledani samo na telefonskoj širini, bez para uz izvoz.
 
 **Sljedeći korak:** FE-505, pa ponoviti ovaj prolaz. Uz njega uređaj za FE-201.
+
+### Dopuna poslije FE-505 (2026-09-23)
+
+Devet prikaza koje demo nije punio viđeno je na webu, na oba tenanta. Ekrani prate handoff.
+Među njima su Moji termini (`08`), Postavke (`11`), Galerija (`12`), Recenzije (`13`) i Pravila
+(`15`), plus admin `3e`, `3h` i `3i`. **FE-505 je time zatvoren**; FE-504 ostaje 🟡 samo zbog
+stavki koje traže uređaj ili interakciju kroz flow (v. „Šta nije provjereno" iznad).
