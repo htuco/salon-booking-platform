@@ -163,7 +163,7 @@ class AppointmentActions {
 
   final Ref _ref;
 
-  /// Osvježava sve tri liste koje termin dotiče.
+  /// Osvježava sve liste koje termin dotiče.
   ///
   /// I `pendingCount` — potvrda mijenja brojku na dashboardu, a brojka koja ostane stara
   /// poslije akcije izgleda kao da akcija nije prošla.
@@ -171,6 +171,9 @@ class AppointmentActions {
     _ref
       ..invalidate(filtriraniTerminiProvider)
       ..invalidate(danasnjiTerminiProvider)
+      // Ekran zahtjeva čita svoj upit kroz 60 dana; bez ovoga potvrđen zahtjev ostaje u
+      // listi dok se ekran ne otvori ponovo.
+      ..invalidate(zahtjeviProvider)
       ..invalidate(pendingCountProvider);
   }
 

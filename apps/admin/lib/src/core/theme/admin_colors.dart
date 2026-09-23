@@ -53,6 +53,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     required this.waitingTint,
     required this.waitingInk,
     required this.neutralTint,
+    required this.cardEdge,
   });
 
   static const light = AdminPalette(
@@ -63,8 +64,11 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     onAccent: Color(0xFFFFFFFF),
     action: Color(0xFFEE6C4D),
     onAction: Color(0xFF2C2C2C),
-    border: Color(0xFFE2E2E2),
-    separator: Color(0xFFF0F1F3),
+    // Izmjereno iz `adminv2/export/3b`: obrub **kontrole** (polje pretrage, „Blokiraj
+    // termin", „Odbij") je `#DEE2E6`, a linija između redova tabele i zahtjeva `#E2E2E2`.
+    // Ranije su stajali `#E2E2E2` i `#F0F1F3` — linija je bila blijeđa od izvoza.
+    border: Color(0xFFDEE2E6),
+    separator: Color(0xFFE2E2E2),
     textSecondary: Color(0xFF666666),
     textMuted: Color(0xFF666666),
     destructive: Color(0xFFC94C4C),
@@ -94,6 +98,9 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     waitingTint: Color(0xFFEE6C4D),
     waitingInk: Color(0xFF2C2C2C),
     neutralTint: Color(0xFFF0F1F3),
+    // Kartica u `3b` **nema obrub kontrole** — rub je `#F4F4F1`, jedva tamniji od
+    // `ground`. Sa `border` bi svaka kartica izgledala kao polje za unos.
+    cardEdge: Color(0xFFF4F4F1),
   );
 
   static const dark = AdminPalette(
@@ -127,6 +134,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     waitingTint: Color(0xFF2C2E33),
     waitingInk: Color(0xFFFF9776),
     neutralTint: Color(0xFF2C2E33),
+    cardEdge: Color(0xFF373A40),
   );
 
   final Color ink, ground, surface, accent, onAccent;
@@ -137,6 +145,9 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
   final Color sidebarBackground, sidebarAccentForeground;
   final Color breadcrumbSeparator, sidebarText, sidebarMuted;
   final Color positiveTint, positiveInk, waitingTint, waitingInk, neutralTint;
+
+  /// Rub kartice — mekši od [border], koji nose kontrole.
+  final Color cardEdge;
 
   @override
   AdminPalette copyWith() => this;
@@ -177,6 +188,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
       waitingTint: mix(waitingTint, other.waitingTint),
       waitingInk: mix(waitingInk, other.waitingInk),
       neutralTint: mix(neutralTint, other.neutralTint),
+      cardEdge: mix(cardEdge, other.cardEdge),
     );
   }
 }
@@ -193,7 +205,7 @@ abstract final class AdminColors {
       surface = Color(0xFFFFFFFF);
   static const accent = Color(0xFF3D5A80), onAccent = Color(0xFFFFFFFF);
   static const action = Color(0xFFEE6C4D), onAction = Color(0xFF2C2C2C);
-  static const border = Color(0xFFE2E2E2), separator = Color(0xFFF0F1F3);
+  static const border = Color(0xFFDEE2E6), separator = Color(0xFFE2E2E2);
   static const textSecondary = Color(0xFF666666), textMuted = Color(0xFF666666);
   static const destructive = Color(0xFFC94C4C),
       destructiveTint = Color(0xFFC94C4C);

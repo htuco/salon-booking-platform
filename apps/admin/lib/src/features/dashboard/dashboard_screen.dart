@@ -11,17 +11,16 @@
 /// vlastitog zaglavlja — tabela na 402 px nije tabela nego horizontalni skrol
 /// (`SPEC.md`: „Tabele na uskim širinama prelaze u kartice/liste").
 ///
-/// ## Šta canvas traži, a ovdje nije nacrtano
+/// ## 1:1 sa `3b` (ADR-0020)
 ///
-/// - **Kartica „Slobodno vrijeme"** i **procenat zauzetosti** traže smjene radnika, koje
-///   dolaze u tasku 33 — v. `dashboard_summary.dart`.
-/// - **„Otvoreno do 20:00"** traži radno vrijeme salona, koje dobija svoj ekran u tasku 34.
-/// - **Pretraga klijenta** u top baru traži modul klijenata (task 35); polje koje ne traži
-///   ništa je gore od polja kojeg nema.
-/// - **Birač lokacije** (`▾` uz ime salona) je `3a`, izvan sprinta: admin dobija tačno jedan
-///   salon iz membershipa.
-/// - **Avatar** uz zaglavlje: `employees.image_url` postoji, ali `public.users` nema sliku,
-///   a ovo je prijavljeni **član osoblja**, ne radnik iz kataloga.
+/// Do ADR-0020 je ovdje stajala lista od pet stvari koje canvas crta, a ekran ne. Tri su
+/// čekale taskove 33–35, koji su zatvoreni, a jedna (`created_at`) je tvrdila da kolona ne
+/// postoji, iako postoji od init migracije. Sve četiri su sada nacrtane: kartica „Slobodno
+/// vrijeme", procenat zauzetosti, „Otvoreno do", pretraga klijenta i „prije 26 min".
+///
+/// Jedino što `3b` crta, a ovdje ne postoji, je **prelaz na mrežu lokacija** (`▾` uz ime
+/// salona i „‹ Nazad na mrežu") — to je ekran `3a`, koji nema ni rutu ni podatak: admin
+/// dobija tačno jedan salon iz membershipa. V. `admin_scaffold.dart`.
 library;
 
 import 'package:core_api/core_api.dart';
@@ -36,9 +35,11 @@ import '../../core/navigation/admin_destinations.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointment_card.dart';
 import '../appointments/appointments_providers.dart';
 import '../appointments/status_pill.dart';
+import '../clients/clients_providers.dart';
 import 'dashboard_summary.dart';
 
 /// Koliko zahtjeva stane u karticu na desktopu prije „Vidi sve".
@@ -68,7 +69,9 @@ class AdminDashboardScreen extends ConsumerWidget {
           ref
             ..invalidate(danasnjiTerminiProvider)
             ..invalidate(pendingCountProvider)
-            ..invalidate(zahtjeviProvider);
+            ..invalidate(zahtjeviProvider)
+            ..invalidate(dashboardRasporedProvider)
+            ..invalidate(dashboardBlokadeProvider);
         },
         child: jeDesktop ? const _Desktop() : const _Telefon(),
       ),
@@ -87,19 +90,81 @@ class _TopBarAkcije extends StatelessWidget {
       // pocetku, a ne uz desnu ivicu.
       mainAxisSize: MainAxisSize.min,
       children: [
-        OutlinedButton(
-          // `/calendar/block` je do taska 34 placeholder, ali **ruta postoji** i vodi u
-          // ljusku sa navigacijom. Isto pravilo kao kod ćelija u tasku 29: ulaz koji
-          // pokazuje gdje će stvar biti je bolji od ulaza kojeg nema.
-          onPressed: () => context.go(AdminRoute.calendarBlock.path),
-          child: const Text('Blokiraj termin'),
+        // Pretraga ide samo kad stane uz obje akcije i breadcrumb. Ispod 1200 px prozora
+        // top bar je prelio za 43 px (test na 1100) — polje se tada izostavlja, a ne
+        // sužava: pretraga uža od imena koje se traži nije pretraga. `/clients` je u
+        // sidebaru jedan klik dalje.
+        if (MediaQuery.sizeOf(context).width >= 1200) ...[
+          const _PretragaKlijenta(),
+          const SizedBox(width: 10),
+        ],
+        SizedBox(
+          height: 42,
+          child: OutlinedButton(
+            onPressed: () => context.go(AdminRoute.calendarBlock.path),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: const Text('Blokiraj termin'),
+          ),
         ),
-        const SizedBox(width: AdminSpacing.md),
-        FilledButton(
-          onPressed: () => context.go(AdminRoute.appointmentNew.path),
-          child: const Text('+ Novi termin'),
+        const SizedBox(width: 10),
+        SizedBox(
+          height: 42,
+          child: FilledButton(
+            onPressed: () => context.go(AdminRoute.appointmentNew.path),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 17),
+              textStyle: AdminText.actionLabel,
+            ),
+            child: const AdminVerzal('+ Novi termin'),
+          ),
         ),
       ],
+    );
+  }
+}
+
+/// Polje „Pretraži klijenta" iz `3b` — 268 × 42.
+///
+/// Ne traži na licu mjesta: izraz se upiše u `clientsPretragaProvider` i otvori se
+/// `/clients`, koji ga već zna čitati (task 35). Druga lista rezultata u padajućem meniju
+/// top bara bi bila drugi adresar sa svojim upitom.
+class _PretragaKlijenta extends ConsumerStatefulWidget {
+  const _PretragaKlijenta();
+
+  @override
+  ConsumerState<_PretragaKlijenta> createState() => _PretragaKlijentaState();
+}
+
+class _PretragaKlijentaState extends ConsumerState<_PretragaKlijenta> {
+  final _kontroler = TextEditingController();
+
+  @override
+  void dispose() {
+    _kontroler.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 268,
+      height: 42,
+      child: TextField(
+        controller: _kontroler,
+        textInputAction: TextInputAction.search,
+        style: Theme.of(context).textTheme.bodyLarge,
+        decoration: const InputDecoration(
+          hintText: 'Pretraži klijenta',
+          isDense: true,
+          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        ),
+        onSubmitted: (izraz) {
+          ref.read(clientsPretragaProvider.notifier).postavi(izraz.trim());
+          context.go(AdminRoute.clients.path);
+        },
+      ),
     );
   }
 }
@@ -117,7 +182,7 @@ class _Desktop extends ConsumerWidget {
       padding: const EdgeInsets.all(AdminSpacing.gutterDesktop),
       children: const [
         _NaslovDana(),
-        SizedBox(height: 22),
+        SizedBox(height: 20),
         _KarticeMetrika(),
         SizedBox(height: AdminSpacing.xxl),
         _DvijeKolone(),
@@ -134,27 +199,84 @@ class _NaslovDana extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final termini = ref.watch(danasnjiTerminiProvider).valueOrNull ?? const [];
     final uDanu = termini.where(terminSeRacuna).toList();
+    final smjene = ref.watch(_smjeneProvider);
+    final salon = ref.watch(_otvorenoProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // `3b`: „3 majstora u smjeni · prvi termin 09:00 · zadnji 19:20". Broj u smjeni ide
+    // samo kad je raspored stigao — „0 majstora u smjeni" prije učitavanja bi tvrdilo da
+    // salon danas ne radi.
+    final dijelovi = [
+      if (smjene.isNotEmpty)
+        '${smjene.length} ${_majstoraTekst(smjene.length)} u smjeni',
+      if (uDanu.isEmpty)
+        'nema zakazanih termina'
+      else ...[
+        'prvi termin ${vrijemeHhMm(uDanu.first.startTime)}',
+        'zadnji ${vrijemeHhMm(uDanu.last.startTime)}',
+      ],
+    ];
+    final podnaslov = dijelovi.join(' · ');
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(datumDugo(DateTime.now()), style: AdminText.display),
-        const SizedBox(height: 7),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(datumDugo(DateTime.now()), style: AdminText.display),
+              const SizedBox(height: 7),
+              Text(
+                podnaslov[0].toUpperCase() + podnaslov.substring(1),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
+          ),
+        ),
+        if (salon != null)
+          _OtvorenoDo(stanje: salon.stanje, tekst: salon.tekst),
+      ],
+    );
+  }
+}
+
+/// „● Otvoreno do 20:00" desno od podnaslova (`3b`).
+class _OtvorenoDo extends StatelessWidget {
+  const _OtvorenoDo({required this.stanje, required this.tekst});
+
+  final StanjeSalona stanje;
+  final String tekst;
+
+  @override
+  Widget build(BuildContext context) {
+    // Zelena tačka samo kad je stvarno otvoreno — tačka iste boje uz „Zatvoreno" bi se
+    // čitala kao „radi".
+    final boja = stanje == StanjeSalona.otvoreno
+        ? context.adminColors.positiveInk
+        : context.adminColors.textMuted;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(color: boja, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 9),
         Text(
-          uDanu.isEmpty
-              ? 'Danas nema zakazanih termina.'
-              : '${terminaTekst(uDanu.length)} · prvi '
-                    '${vrijemeHhMm(uDanu.first.startTime)} · zadnji '
-                    '${vrijemeHhMm(uDanu.last.startTime)}',
-          style: Theme.of(context).textTheme.bodyLarge
-              ?.copyWith(color: context.adminColors.textSecondary),
+          tekst,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: context.adminColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
   }
 }
 
-/// Tri kartice sa brojkama. Četvrta iz canvasa traži smjene — v. `dashboard_summary.dart`.
+/// Četiri kartice sa brojkama iz `3b`.
 class _KarticeMetrika extends ConsumerWidget {
   const _KarticeMetrika();
 
@@ -162,6 +284,10 @@ class _KarticeMetrika extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sazetak = ref.watch(_sazetakProvider);
     final naCekanju = ref.watch(pendingCountProvider).valueOrNull ?? 0;
+    final zahtjevi = ref.watch(zahtjeviProvider).valueOrNull ?? const [];
+    final najstariji = prijeKoliko(najstarijiZahtjev(zahtjevi), DateTime.now());
+    final slobodno = ref.watch(_slobodnoProvider);
+    final rupa = slobodno?.najvecaRupa;
 
     final kartice = [
       _Metrika(
@@ -172,8 +298,22 @@ class _KarticeMetrika extends ConsumerWidget {
       _Metrika(
         labela: 'Čeka potvrdu',
         vrijednost: '$naCekanju',
-        opis: naCekanju == 0 ? 'nema novih zahtjeva' : 'traže odgovor',
+        opis: naCekanju == 0
+            ? 'nema novih zahtjeva'
+            : najstariji == null
+            ? 'traže odgovor'
+            : 'najstariji $najstariji',
         istaknuta: naCekanju > 0,
+      ),
+      _Metrika(
+        labela: 'Slobodno vrijeme',
+        // Crtica dok raspored ne stigne, ne „0m": nula bi rekla da je dan pun.
+        vrijednost: slobodno == null ? '—' : trajanjeKratko(slobodno.minuta),
+        opis: slobodno == null
+            ? 'nema smjena za danas'
+            : rupa == null
+            ? 'nema slobodnih rupa'
+            : 'najveća rupa ${_hhmm(rupa.od)}–${_hhmm(rupa.doMinute)}',
       ),
       _Metrika(
         labela: 'Promet danas',
@@ -249,12 +389,12 @@ class _Metrika extends StatelessWidget {
           // ostaje boja podatka; da su obje koralne, brojka bi se čitala kao upozorenje.
           color: istaknuta
               ? context.adminColors.action
-              : context.adminColors.border,
+              : context.adminColors.cardEdge,
           width: AdminSize.hairline,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
+        padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -360,9 +500,7 @@ class _RasporedDana extends ConsumerWidget {
                 Text('Raspored dana', style: theme.textTheme.headlineSmall),
                 const Spacer(),
                 Text(
-                  radnici.isEmpty
-                      ? ''
-                      : '${radnici.length} ${_majstoraTekst(radnici.length)}',
+                  radnici.isEmpty ? '' : _svihMajstora(radnici.length),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: context.adminColors.textMuted,
                   ),
@@ -567,16 +705,20 @@ class _RedTabele extends StatelessWidget {
         opacity: zatvoren ? 0.5 : 1,
         child: InkWell(
           onTap: () => context.go('/appointments/${termin.id}'),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+          child: Container(
+            // `3b`: red je 54 px, sa pilulom ili bez nje. Visina iz paddinga bi zavisila od
+            // toga koji je element u redu najviši.
+            height: 54,
+            padding: const EdgeInsets.symmetric(horizontal: 22),
             child: Row(
               children: [
                 SizedBox(
                   width: _kolonaVrijeme,
                   child: Text(
                     vrijemeHhMm(termin.startTime),
+                    // Vrijeme je u `3b` boje imena, ne sporednog teksta — ono je ključ reda.
                     style: AdminText.timeLarge.copyWith(
-                      color: context.adminColors.textSecondary,
+                      color: context.adminColors.ink,
                     ),
                   ),
                 ),
@@ -584,9 +726,7 @@ class _RedTabele extends StatelessWidget {
                   child: Text(
                     termin.customerName,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: uToku ? FontWeight.w600 : FontWeight.w500,
-                    ),
+                    style: theme.textTheme.titleSmall,
                   ),
                 ),
                 SizedBox(
@@ -603,8 +743,9 @@ class _RedTabele extends StatelessWidget {
                   width: _kolonaMajstor,
                   child: Text(
                     // Prazno, ne „—": termin bez radnika znači „bilo ko", a crtica se čita
-                    // kao nedostajući podatak.
-                    opis.majstor ?? 'bilo ko',
+                    // kao nedostajući podatak. **Samo ime** — `3b` piše „Emir", a kolona
+                    // od 92 px pod punim imenom i prezimenom reže svaki red.
+                    opis.majstor == null ? 'bilo ko' : _ime(opis.majstor!),
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: context.adminColors.textSecondary,
@@ -646,9 +787,11 @@ class _ZahtjeviKartica extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AdminRadius.base),
         side: BorderSide(
+          // Koralna, kao obrub kartice „Čeka potvrdu" — izmjereno iz `3b` (`#EE6C4D`).
+          // Plava je ovdje ostala kad je FE-402 prebacio samo karticu metrike.
           color: broj > 0
-              ? context.adminColors.accent
-              : context.adminColors.border,
+              ? context.adminColors.action
+              : context.adminColors.cardEdge,
           width: AdminSize.hairline,
         ),
       ),
@@ -703,10 +846,11 @@ class _ZahtjeviKartica extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
                 child: Text(
                   broj > kZahtjevaUKartici
-                      ? 'Vidi svih $broj ${_zahtjevaTekst(broj)} →'
+                      ? 'Vidi ${_sveSvih(broj)} $broj ${_zahtjevaTekst(broj)} →'
                       : 'Otvori zahtjeve →',
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: context.adminColors.accentInk,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -751,16 +895,38 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(termin.customerName, style: theme.textTheme.titleSmall),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  termin.customerName,
+                  style: theme.textTheme.titleSmall?.copyWith(fontSize: 16),
+                ),
+              ),
+              if (prijeKoliko(termin.createdAt, DateTime.now())
+                  case final prije?)
+                Text(
+                  prije,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: context.adminColors.textSecondary,
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(height: AdminSpacing.xs),
           Text(
             [
               ?widget.opis.usluga,
               '${naslovDanaZaDatum(termin.date).toLowerCase()} '
                   '${vrijemeHhMm(termin.startTime)}',
-              widget.opis.majstor ?? 'bilo ko',
+              if (widget.opis.majstor case final majstor?)
+                _ime(majstor)
+              else
+                'bilo ko',
             ].join(' · '),
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 14.5,
               color: context.adminColors.textSecondary,
             ),
           ),
@@ -773,8 +939,9 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
                   onPressed: _uToku ? null : _potvrdi,
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
+                    textStyle: AdminText.actionLabel,
                   ),
-                  child: const Text('Potvrdi'),
+                  child: const AdminVerzal('Potvrdi'),
                 ),
               ),
               const SizedBox(width: 9),
@@ -845,8 +1012,8 @@ class _ZauzetostKartica extends ConsumerWidget {
     final radnici = ref.watch(radniciPoIdProvider);
 
     final zauzetost = zauzetostPoRadniku(termini, {
-      for (final unos in radnici.entries) unos.key: unos.value.name,
-    });
+      for (final unos in radnici.entries) unos.key: _ime(unos.value.name),
+    }, smjene: ref.watch(_smjeneProvider));
     final najvise = zauzetost.isEmpty ? 0 : zauzetost.first.minuta;
 
     return Card(
@@ -884,10 +1051,13 @@ class _ZauzetostKartica extends ConsumerWidget {
                             // `terminaTekst` **nosi i broj** — prvi prolaz ga je ispisao
                             // dvaput („3 3 termina"). Testovi su gledali samo `40m`, pa to
                             // nije uhvatio nijedan; vidjelo se tek na snimku.
-                            '${terminaTekst(radnik.termina)}'
-                            ' · ${trajanjeKratko(radnik.minuta)}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: context.adminColors.textSecondary,
+                            '${terminaTekst(radnik.termina)} · '
+                            '${radnik.procenat == null ? trajanjeKratko(radnik.minuta) : '${radnik.procenat}%'}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: context.adminColors.ink,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
                             ),
                           ),
                         ],
@@ -900,7 +1070,13 @@ class _ZauzetostKartica extends ConsumerWidget {
                         // FE-205 sklanja spinnere, ne mjerila.
                         // ignore: FE-205 traka podatka
                         child: LinearProgressIndicator(
-                          value: najvise == 0 ? 0 : radnik.minuta / najvise,
+                          // Procenat smjene kad postoji (`3b`), inače relativno prema
+                          // najzauzetijem — radnik bez smjene nema kapacitet.
+                          value: radnik.procenat != null
+                              ? radnik.procenat! / 100
+                              : najvise == 0
+                              ? 0
+                              : radnik.minuta / najvise,
                           minHeight: 7,
                           backgroundColor: context.adminColors.neutralTint,
                           valueColor: AlwaysStoppedAnimation(
@@ -1212,6 +1388,63 @@ final _sazetakProvider = Provider<DashboardSazetak>((ref) {
   return DashboardSazetak.izracunaj(termini, ref.watch(cijenePoUsluziProvider));
 });
 
+/// Raspored salona — salonski redovi i oni po radniku, jedno čitanje.
+///
+/// Zaseban od `kalendarRadnoVrijemeProvider`: onaj je `autoDispose` uz kalendar, a
+/// dashboard ne smije zavisiti od toga da li je kalendar otvoren.
+final dashboardRasporedProvider = FutureProvider<List<WorkingHour>>((
+  ref,
+) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return const [];
+  return ref.watch(workingHoursRepositoryProvider).forSalon(salonId);
+});
+
+/// Današnje blokade — ulaze u „Slobodno vrijeme" kao zauzeto.
+final dashboardBlokadeProvider = FutureProvider<List<BlockedSlot>>((ref) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return const [];
+  return ref
+      .watch(blockedSlotRepositoryProvider)
+      .forDay(salonId: salonId, day: DateTime.now());
+});
+
+/// Ko je danas u smjeni. Prazno dok raspored ili radnici ne stignu.
+final _smjeneProvider = Provider<List<SmjenaDana>>((ref) {
+  final raspored = ref.watch(dashboardRasporedProvider).valueOrNull;
+  final radnici = ref.watch(radniciPoIdProvider);
+  if (raspored == null || radnici.isEmpty) return const [];
+  return smjeneDana(raspored, radnici.keys, DateTime.now().weekday);
+});
+
+/// Slobodno vrijeme od sada; `null` kad danas niko nije u smjeni.
+final _slobodnoProvider = Provider<SlobodnoVrijeme?>((ref) {
+  final smjene = ref.watch(_smjeneProvider);
+  if (smjene.isEmpty) return null;
+  final sada = DateTime.now();
+  return slobodnoVrijeme(
+    smjene: smjene,
+    termini: ref.watch(danasnjiTerminiProvider).valueOrNull ?? const [],
+    blokade: ref.watch(dashboardBlokadeProvider).valueOrNull ?? const [],
+    sadaMinuta: sada.hour * 60 + sada.minute,
+  );
+});
+
+/// „Otvoreno do 20:00"; `null` dok raspored ne stigne.
+final _otvorenoProvider = Provider<({StanjeSalona stanje, String tekst})?>((
+  ref,
+) {
+  final raspored = ref.watch(dashboardRasporedProvider).valueOrNull;
+  if (raspored == null) return null;
+  final sada = DateTime.now();
+  return otvorenoDo(raspored, sada.weekday, sada.hour * 60 + sada.minute);
+});
+
+/// Minute od ponoći kao `17:20`.
+String _hhmm(int minuta) =>
+    '${(minuta ~/ 60).toString().padLeft(2, '0')}:'
+    '${(minuta % 60).toString().padLeft(2, '0')}';
+
 String _zahtjevaTekst(int broj) {
   final zadnjeDvije = broj % 100;
   final zadnja = broj % 10;
@@ -1243,4 +1476,27 @@ String _majstoraTekst(int broj) {
   if (zadnjeDvije >= 11 && zadnjeDvije <= 14) return 'majstora';
   if (zadnja == 1) return 'majstor';
   return zadnja >= 2 && zadnja <= 4 ? 'majstora' : 'majstora';
+}
+
+/// Prvo ime — „Emir" iz „Emir Barucija", kako `3b` piše majstora u tabeli i zauzetosti.
+String _ime(String punoIme) {
+  final dijelovi = punoIme.trim().split(RegExp(r'\s+'));
+  return dijelovi.isEmpty || dijelovi.first.isEmpty ? punoIme : dijelovi.first;
+}
+
+/// „Sva tri majstora" (`3b`), „Oba majstora", „Svih 5 majstora".
+String _svihMajstora(int broj) => switch (broj) {
+  1 => '1 majstor',
+  2 => 'Oba majstora',
+  3 => 'Sva tri majstora',
+  4 => 'Sva četiri majstora',
+  _ => 'Svih $broj majstora',
+};
+
+/// „sva 4" za 2–4, „svih 12" za ostalo — „Vidi sva 4 zahtjeva" u `3b`.
+String _sveSvih(int broj) {
+  final zadnjeDvije = broj % 100;
+  final zadnja = broj % 10;
+  if (zadnjeDvije >= 11 && zadnjeDvije <= 14) return 'svih';
+  return zadnja >= 2 && zadnja <= 4 ? 'sva' : 'svih';
 }

@@ -74,6 +74,11 @@ abstract class Appointment with _$Appointment {
     /// `customer` · `salon` · `system`. `system` je istekao `pending`.
     @JsonKey(name: 'cancelled_by') String? cancelledBy,
     @JsonKey(name: 'pending_expires_at') DateTime? pendingExpiresAt,
+
+    /// Kad je red upisan — za zahtjev je to trenutak kad je klijent poslao rezervaciju
+    /// („najstariji prije 26 min" u `adminv2/export/3b`). Nullable jer ga ne bira svaki
+    /// upit: klijentski `AppointmentRepository` ga ne traži, admin ga traži.
+    @JsonKey(name: 'created_at') DateTime? createdAt,
   }) = _Appointment;
 
   const Appointment._();

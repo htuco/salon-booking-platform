@@ -226,8 +226,10 @@ void main() {
       find.byType(ListView),
       const Offset(0, -200),
     );
-    expect(find.text('Pauza'), findsWidgets);
-    expect(find.text('13:00'), findsWidgets);
+    // Pauza više nije u redu dana nego jedna pločica „Dnevne pauze" za cijeli salon;
+    // pet dana sa istim vremenom se sažme u jedan opis.
+    expect(find.text('Pauza'), findsOneWidget);
+    expect(find.textContaining('13:00–14:00 · cijeli salon'), findsOneWidget);
   });
 
   testWidgets('salon bez ijednog reda dobija sedam zatvorenih dana', (
@@ -249,7 +251,7 @@ void main() {
     await _pumpAt(tester, _desktop, _screen());
 
     final dugme = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Sačuvaj izmjene'),
+      find.widgetWithText(FilledButton, 'SAČUVAJ IZMJENE'),
     );
     expect(
       dugme.onPressed,
@@ -261,16 +263,16 @@ void main() {
   testWidgets('prekidač zatvara dan i aktivira snimanje', (tester) async {
     await _pumpAt(tester, _desktop, _screen());
 
-    // Bez skrolanja: prvi red na ekranu je ponedjeljak, pa je i prvi prekidač njegov.
-    // Nedjelja, jedini zatvoren dan u fixtureu, je ispod i još nije izgrađena.
-    expect(find.text('Zatvoreno'), findsNothing);
+    // Prvi prekidač je ponedjeljkov. U dvije kolone `3h` cijela sedmica stane u ekran,
+    // pa se vidi i nedjelja — jedini zatvoren dan u fixtureu.
+    expect(find.text('Zatvoreno'), findsOneWidget);
     await tester.tap(find.byType(Switch).first);
     await tester.pumpAndSettle();
 
-    // Ponedjeljak je sada zatvoren i to se vidi bez skrolanja.
-    expect(find.text('Zatvoreno'), findsOneWidget);
+    // Ponedjeljak je sada zatvoren uz nedjelju.
+    expect(find.text('Zatvoreno'), findsNWidgets(2));
     final dugme = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, 'Sačuvaj izmjene'),
+      find.widgetWithText(FilledButton, 'SAČUVAJ IZMJENE'),
     );
     expect(
       dugme.onPressed,
@@ -287,7 +289,10 @@ void main() {
     expect(find.text('Ponedjeljak'), findsOneWidget);
     await _doDna(tester);
     expect(find.text('Nedjelja'), findsOneWidget);
-    expect(find.text('Sačuvaj izmjene'), findsOneWidget);
+    // Red dana na telefonu piše vrijeme u jednom tekstu (subota je jedina 08–18).
+    expect(find.text('08:00 – 18:00'), findsOneWidget);
+    // Dugme je u traci na dnu, van liste — vidi se i bez skrolanja.
+    expect(find.text('SAČUVAJ IZMJENE'), findsOneWidget);
   });
 
   testWidgets('blokade se prikazuju sa razlogom i datumom', (tester) async {
@@ -295,8 +300,9 @@ void main() {
     await _doDna(tester);
 
     expect(find.text('Kurban-bajram'), findsOneWidget);
-    expect(find.textContaining('27. maj 2026.'), findsOneWidget);
-    expect(find.textContaining('cijeli salon'), findsOneWidget);
+    // Kratki datum iz `3h`: „27.05." (godina se dopisuje samo kad nije tekuća).
+    expect(find.textContaining('27.05.'), findsOneWidget);
+    expect(find.textContaining('salon zatvoren'), findsOneWidget);
   });
 
   testWidgets('bez blokada stoji prazno stanje, ne prazna lista', (
@@ -333,7 +339,7 @@ void main() {
     expect(
       tester
           .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Sačuvaj izmjene'),
+            find.widgetWithText(FilledButton, 'SAČUVAJ IZMJENE'),
           )
           .onPressed,
       isNotNull,
@@ -347,7 +353,7 @@ void main() {
     expect(
       tester
           .widget<FilledButton>(
-            find.widgetWithText(FilledButton, 'Sačuvaj izmjene'),
+            find.widgetWithText(FilledButton, 'SAČUVAJ IZMJENE'),
           )
           .onPressed,
       isNull,
@@ -388,13 +394,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('„Dodaj pauzu" stoji samo na danima bez pauze', (tester) async {
-    await _pumpAt(
-      tester,
-      _desktop,
-      // Subota i nedjelja su bez pauze; nedjelja je zatvorena pa nema ni dugme.
-      _screen(),
-    );
+  testWidgets('„Dodaj pauzu" je jedno dugme u kartici pauza', (tester) async {
+    // Pauza je sada sekcija za cijeli salon, ne kolona u redu dana: dugme stoji jednom,
+    // ispod pločica, bez obzira koliko dana nema pauzu.
+    await _pumpAt(tester, _desktop, _screen());
 
     expect(find.text('+ Dodaj pauzu'), findsOneWidget);
   });
@@ -412,7 +415,7 @@ void main() {
     await _pumpAt(tester, _desktop, _screen(konflikti: _konflikti(1)));
     await tester.tap(find.byType(Switch).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Sačuvaj izmjene'));
+    await tester.tap(find.text('SAČUVAJ IZMJENE'));
     // Dugme pokazuje indeterminate spinner dok dijalog čeka odgovor, pa se animacija
     // namjerno ne može `settle`-ovati. Dva framea su dovoljna da se dijalog izgradi.
     await tester.pump();
@@ -420,7 +423,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.textContaining('Jedan zakazan termin'), findsOneWidget);
-    expect(find.text('Sačuvaj ipak'), findsOneWidget);
+    expect(find.text('SAČUVAJ IPAK'), findsOneWidget);
   });
 
   testWidgets('duga lista konflikata se skrola umjesto da se prelije', (

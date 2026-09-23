@@ -134,7 +134,7 @@ void main() {
 
       // **Jednom**, ne dvaput: logotip je u bijeloj koloni, a tamna ploha nosi rečenicu o
       // pristupu. Prvi prolaz ga je crtao na oba mjesta i to se vidjelo tek na snimku.
-      expect(find.text(kImeProizvoda), findsOneWidget);
+      expect(find.text(kImeProizvoda.toUpperCase()), findsOneWidget);
       expect(
         find.text('Pristup imaju samo vlasnik i majstori lokacije.'),
         findsOneWidget,

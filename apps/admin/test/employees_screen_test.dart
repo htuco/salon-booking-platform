@@ -5,6 +5,7 @@ import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/calendar/calendar_providers.dart';
 import 'package:admin/src/features/employees/employees_providers.dart';
 import 'package:admin/src/features/employees/employees_screen.dart';
+import 'package:admin/src/features/working_hours/working_hours_providers.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -149,6 +150,10 @@ Future<_Actions> _pump(
           ];
         }),
         kalendarRadnoVrijemeProvider.overrideWith((ref) async => _hours),
+        // Ekran čita i odsustva; bez blokada test ne ide na mrežu.
+        buduceBlokadeProvider.overrideWith(
+          (ref) async => const <BlockedSlot>[],
+        ),
         employeeActionsProvider.overrideWith((ref) => actions = _Actions(ref)),
         if (vertikala != null)
           adminVerticalProvider.overrideWith((ref) async => vertikala),
@@ -203,7 +208,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
     expect(
       tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Sačuvaj'))
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'SAČUVAJ'))
           .onPressed,
       isNull,
     );
@@ -228,9 +233,12 @@ void main() {
   ]) {
     testWidgets('Osoblje i neaktivni radnik na $size', (tester) async {
       await _pump(tester, size: size);
-      expect(find.text('Osoblje i smjene'), findsOneWidget);
-      expect(find.text('Neaktivan'), findsOneWidget);
-      expect(find.text('Šišanje'), findsOneWidget);
+      // Naslov je i u navigaciji, zato findsWidgets.
+      expect(find.text('Osoblje'), findsWidgets);
+      // Pilula stanja piše malim slovima (`3g`/`3r`).
+      expect(find.text('neaktivan'), findsOneWidget);
+      // Titula i usluge u jednom redu.
+      expect(find.text('Barber · Šišanje'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }
@@ -249,15 +257,15 @@ void main() {
         find.widgetWithText(TextFormField, 'Ime'),
         'Amar Novi',
       );
-      await tester.ensureVisible(find.text('Sačuvaj'));
-      await tester.tap(find.text('Sačuvaj'));
+      await tester.ensureVisible(find.text('SAČUVAJ'));
+      await tester.tap(find.text('SAČUVAJ'));
       await tester.pumpAndSettle();
       expect(find.text('Probna greška'), findsOneWidget);
       expect(actions.saved!.name, 'Amar Novi');
       expect(actions.saved!.experienceYears, isNull);
       expect(actions.saved!.serviceIds, ['s1']);
       actions.fail = false;
-      await tester.tap(find.text('Sačuvaj'));
+      await tester.tap(find.text('SAČUVAJ'));
       await tester.pumpAndSettle();
       expect(find.text('Uredi radnika'), findsNothing);
     },
@@ -270,7 +278,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Sačuvaj'))
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'SAČUVAJ'))
           .onPressed,
       isNull,
     );
@@ -285,7 +293,7 @@ void main() {
     await tester.tap(find.text('Ponovo aktiviraj radnika'));
     await tester.pumpAndSettle();
     expect(actions.active, isNull);
-    await tester.tap(find.text('Potvrdi'));
+    await tester.tap(find.text('POTVRDI'));
     await tester.pumpAndSettle();
     expect(actions.active, isTrue);
   });
@@ -307,7 +315,7 @@ void main() {
   });
 
   group('terminologija po vertikali (FE-404)', () {
-    testWidgets('zaglavlje kolone je „Radnik" dok vertikala nije stigla', (
+    testWidgets('zaglavlje kolone je „RADNIK" dok vertikala nije stigla', (
       tester,
     ) async {
       // `Vertical.fallback` je ispravno stanje, ne greška: generički naziv u zaglavlju je
@@ -315,10 +323,12 @@ void main() {
       await _pump(tester, size: const Size(1440, 900));
       await tester.pumpAndSettle();
 
-      expect(find.text('Radnik'), findsWidgets);
+      // Zaglavlje tabele piše verzal; original ostaje u `semanticsLabel`.
+      expect(find.text('RADNIK'), findsWidgets);
       // **Riječ iz canvasa se ne smije pojaviti sama od sebe.** `adminv2` je crtan za
       // barber salon i svuda piše „Majstor"; u ordinaciji je to pogrešno.
       expect(find.text('Majstor'), findsNothing);
+      expect(find.text('MAJSTOR'), findsNothing);
     });
 
     testWidgets('zaglavlje prati vertikalu salona', (tester) async {
@@ -327,8 +337,8 @@ void main() {
       await _pump(tester, size: const Size(1440, 900), vertikala: _ordinacija);
       await tester.pumpAndSettle();
 
-      expect(find.text('Doktor'), findsWidgets);
-      expect(find.text('Radnik'), findsNothing);
+      expect(find.text('DOKTOR'), findsWidgets);
+      expect(find.text('RADNIK'), findsNothing);
     });
   });
 }

@@ -92,12 +92,31 @@ final _danasnji = [
   ),
 ];
 
+/// Smjena 09:00–17:00 sa pauzom 12:00–12:30 za oba radnika, **na današnji dan** — ekran
+/// čita `DateTime.now().weekday`, pa bi fiksan dan u testu prolazio samo jednom sedmično.
+List<WorkingHour> _smjene() => [
+  for (final id in ['e1', 'e2'])
+    WorkingHour(
+      id: 'wh-$id',
+      salonId: _salonId,
+      employeeId: id,
+      dayOfWeek: DateTime.now().weekday,
+      startTime: LocalTime(9, 0),
+      endTime: LocalTime(17, 0),
+      breakStartTime: LocalTime(12, 0),
+      breakEndTime: LocalTime(12, 30),
+    ),
+];
+
 Widget _ekran({
   List<Appointment>? termini,
   List<Appointment>? zahtjevi,
   int naCekanju = 2,
+  List<WorkingHour> raspored = const [],
 }) => ProviderScope(
   overrides: [
+    dashboardRasporedProvider.overrideWith((ref) async => raspored),
+    dashboardBlokadeProvider.overrideWith((ref) async => const []),
     currentStaffProvider.overrideWith(
       (ref) => Stream<StaffMember?>.value(_vlasnik),
     ),
@@ -145,7 +164,11 @@ void main() {
 
       expect(find.text(datumDugo(DateTime.now())), findsOneWidget);
       // Ime člana osoblja stoji u sidebaru; ekran je o danu, ne o korisniku.
-      expect(find.textContaining('prvi 12:00'), findsOneWidget);
+      // Bez smjena podnaslov počinje terminom, velikim slovom.
+      expect(
+        find.textContaining('Prvi termin 12:00 · zadnji 15:00'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('breadcrumb nosi ime salona pa naslov ekrana', (tester) async {
@@ -153,19 +176,22 @@ void main() {
       // do taska 30 je top bar imao samo naslov.
       await _naSirini(tester, _desktop, _ekran());
 
+      // `3b` piše „Vitez / Danas" — grad, jer puno ime stoji u kartici sidebara.
+      expect(find.text('Vitez'), findsOneWidget);
       expect(find.text('Barber Studio Vitez'), findsOneWidget);
       expect(find.text('/'), findsOneWidget);
       expect(find.text('Danas'), findsWidgets);
     });
 
-    testWidgets('tri kartice metrika, sa tačnim brojkama', (tester) async {
+    testWidgets('četiri kartice metrika, sa tačnim brojkama', (tester) async {
       await _naSirini(tester, _desktop, _ekran());
 
       expect(find.text('Termina danas'), findsOneWidget);
       expect(find.text('Čeka potvrdu'), findsOneWidget);
+      expect(find.text('Slobodno vrijeme'), findsOneWidget);
       expect(find.text('Promet danas'), findsOneWidget);
-      // Četvrta kartica iz canvasa traži smjene radnika (task 33) i namjerno je nema.
-      expect(find.text('Slobodno vrijeme'), findsNothing);
+      // Bez rasporeda nema kapaciteta — crtica, ne „0m", koja bi rekla da je dan pun.
+      expect(find.text('nema smjena za danas'), findsOneWidget);
 
       expect(find.text('1 završeno · 2 predstoji'), findsOneWidget);
       // Promet: završeni `s1` je 20 KM; prognoza dodaje `s1` i `s2` koji predstoje.
@@ -198,16 +224,16 @@ void main() {
 
       expect(find.text('Zahtjevi'), findsWidgets);
       expect(find.text('5 novih'), findsOneWidget);
-      expect(find.text('Potvrdi'), findsOneWidget);
+      // Primarno dugme je verzal (`3b`), sekundarno ostaje u rečenici.
+      expect(find.text('POTVRDI'), findsOneWidget);
       expect(find.text('Odbij'), findsOneWidget);
       expect(find.text('Vidi svih 5 zahtjeva →'), findsOneWidget);
     });
 
-    testWidgets('zauzetost mjeri minute, ne procenat kapaciteta', (
+    testWidgets('bez smjene zauzetost mjeri minute, ne procenat', (
       tester,
     ) async {
-      // Canvas piše „82%", što traži smjenu radnika; dok smjena nema, procenat bi bio
-      // izmišljen. Traka je relativna, a broj uz nju je ono što se stvarno zna.
+      // Radnik bez smjene nema kapacitet; procenat bi bio izmišljen.
       await _naSirini(tester, _desktop, _ekran());
 
       expect(find.text('Zauzetost majstora'), findsOneWidget);
@@ -220,8 +246,8 @@ void main() {
     testWidgets('radna površina se širi sa prozorom', (tester) async {
       // 1440 je mjesto gdje je canvas crtan, ne najveći monitor: tabela na 1920 mora
       // dobiti tih 480 px, a ne ostaviti prazan pojas desno.
-      // Mjeri se prva kartica metrike: tri su u redu preko cijele radne površine, pa joj
-      // pripada tačno trećina dobijenih 480 px.
+      // Mjeri se prva kartica metrike: četiri su u redu preko cijele radne površine, pa
+      // joj pripada tačno četvrtina dobijenih 480 px.
       await _naSirini(tester, _desktop, _ekran());
       final naUskom = tester.getSize(find.byType(Card).first).width;
 
@@ -231,18 +257,50 @@ void main() {
       expect(naSirokom, greaterThan(naUskom));
       expect(
         naSirokom - naUskom,
-        closeTo((_siroki.width - _desktop.width) / 3, 1),
+        closeTo((_siroki.width - _desktop.width) / 4, 1),
       );
     });
 
     testWidgets('top bar nosi akcije iz `3b`', (tester) async {
       await _naSirini(tester, _desktop, _ekran());
 
-      expect(find.text('+ Novi termin'), findsOneWidget);
+      expect(find.text('+ NOVI TERMIN'), findsOneWidget);
       expect(find.text('Blokiraj termin'), findsOneWidget);
-      // Pretraga klijenta traži modul klijenata (task 35); polje koje ne traži ništa je
-      // gore od polja kojeg nema.
-      expect(find.text('Pretraži klijenta'), findsNothing);
+      // Modul klijenata postoji od taska 35, pa pretraga ima kuda voditi.
+      expect(find.text('Pretraži klijenta'), findsOneWidget);
+    });
+
+    testWidgets('sa smjenama: „u smjeni", slobodno vrijeme i procenat', (
+      tester,
+    ) async {
+      await _naSirini(tester, _desktop, _ekran(raspored: _smjene()));
+
+      expect(find.textContaining('2 majstora u smjeni'), findsOneWidget);
+      expect(find.text('nema smjena za danas'), findsNothing);
+      // Svaki ima jedan termin od 40 min u smjeni od 450 min (8h minus pola sata pauze)
+      // → 9%. Termin „bilo ko" se ne broji nikome.
+      expect(find.text('1 termin · 9%'), findsNWidgets(2));
+      expect(find.textContaining('40m'), findsNothing);
+    });
+
+    testWidgets('zahtjev nosi koliko dugo čeka', (tester) async {
+      final poslan = DateTime.now().subtract(const Duration(minutes: 26));
+      await _naSirini(
+        tester,
+        _desktop,
+        _ekran(
+          zahtjevi: [
+            _termin(
+              ime: 'Nedim Hodžić',
+              sat: 15,
+              status: AppointmentStatus.pending,
+            ).copyWith(createdAt: poslan),
+          ],
+        ),
+      );
+
+      expect(find.text('prije 26 min'), findsOneWidget);
+      expect(find.text('najstariji prije 26 min'), findsOneWidget);
     });
   });
 
@@ -339,6 +397,7 @@ void main() {
       // U jednoj koloni sve tri kartice dijele lijevu ivicu.
       final lijeva = tester.getTopLeft(find.text('Termina danas')).dx;
       expect(tester.getTopLeft(find.text('Čeka potvrdu')).dx, lijeva);
+      expect(tester.getTopLeft(find.text('Slobodno vrijeme')).dx, lijeva);
       expect(tester.getTopLeft(find.text('Promet danas')).dx, lijeva);
     });
 

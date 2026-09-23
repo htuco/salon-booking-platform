@@ -11,16 +11,16 @@
 /// desktopu u radnoj površini, ograničen po širini, jer je detalj **jedan zapis**, a red od
 /// 1900 px između labele i vrijednosti se ne čita.
 ///
-/// ## Šta canvas traži, a ovdje nije nacrtano
+/// ## Placeholderi
 ///
-/// - **„Pozovi" i „Poruka"** — `tel:` i `sms:` traže `url_launcher`, kojeg admin nema u
-///   zavisnostima. Broj telefona zato stoji ispisan i može se kopirati.
-/// - **„Profil" i „Zadnji dolasci"** — istorija klijenta je modul iz taska 35.
-/// - **„11 dolazaka"** uz ime — isto.
-/// - **„Pomjeri"** — pomjeranje termina nema RPC putanju; `set_appointment_status` mijenja
-///   status, ne vrijeme.
-/// - **„Zakazano 16.05."** — `appointments` nema `created_at`; ostaje samo odakle je došao
-///   (`source`), što se zna.
+/// - **„Pozovi", „Poruka", „Profil"** su nacrtani (red iz `3n`), ali tap kaže „uskoro":
+///   `tel:` i `sms:` traže `url_launcher`, kojeg admin nema, a profil je istorija klijenta
+///   (task 35). Broj telefona zato stoji ispisan i može se kopirati.
+/// - **„Pomjeri"** u traci radnji — pomjeranje nema RPC putanju (v. `AppointmentActionsBar`).
+///
+/// ## Namjerno nije nacrtano
+///
+/// - **„11 dolazaka"** uz ime — istorija klijenta; brojka koja se ne računa bi lagala.
 library;
 
 import 'package:core_domain/core_domain.dart';
@@ -128,11 +128,13 @@ class _Detalj extends ConsumerWidget {
                 ),
                 children: [
                   _Klijent(termin: termin),
+                  const SizedBox(height: 10),
+                  const _BrzeRadnje(),
                   const SizedBox(height: AdminSpacing.lg),
                   _Podaci(termin: termin, usluga: usluga, radnik: radnik),
                   if (termin.customerNote case final napomena?
                       when napomena.isNotEmpty) ...[
-                    const SizedBox(height: 18),
+                    const SizedBox(height: AdminSpacing.xxl),
                     _Naslov('Napomena'),
                     const SizedBox(height: 10),
                     Card(
@@ -219,13 +221,15 @@ class _Zaglavlje extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  // `3n`: povratak je plavi link u rečenici, 16 px — sporedna radnja, ne dugme.
                   TextButton.icon(
                     onPressed: () => AppointmentDetailScreen._nazad(context),
                     icon: const Icon(Icons.chevron_left, size: 20),
                     label: const Text('Termini'),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.only(right: AdminSpacing.md),
-                      foregroundColor: context.adminColors.accentInk,
+                      foregroundColor: context.adminColors.accent,
+                      textStyle: theme.textTheme.bodyLarge,
                     ),
                   ),
                   const Spacer(),
@@ -352,16 +356,11 @@ class _Podaci extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final redovi = <(String, String)>[
-      (
-        'Datum',
-        datumSaGodinom(
-          DateTime(termin.date.year, termin.date.month, termin.date.day),
-        ),
-      ),
+      // `3n`: „ponedjeljak, 18.05." i „14:20–14:50" — trajanje se čita iz raspona.
+      ('Datum', '${_danUSedmici(termin.date)}, ${_ddMm(termin.date)}'),
       (
         'Vrijeme',
-        '${vrijemeHhMm(termin.startTime)}–${vrijemeHhMm(termin.endTime)}'
-            ' · ${trajanjeKratko(termin.durationMinutes)}',
+        '${vrijemeHhMm(termin.startTime)}–${vrijemeHhMm(termin.endTime)}',
       ),
       (
         'Usluga',
@@ -370,7 +369,13 @@ class _Podaci extends StatelessWidget {
       if ((termin.servicePrice ?? usluga?.price) case final cijena?)
         ('Cijena', iznosKm(cijena)),
       ('Majstor', termin.employeeName ?? radnik?.name ?? 'bilo ko'),
-      ('Zakazano', _izvor(termin.source)),
+      (
+        'Zakazano',
+        [
+          if (termin.createdAt case final kad?) _ddMmIzDatuma(kad.toLocal()),
+          _izvor(termin.source),
+        ].join(' · '),
+      ),
       if (termin.cancelledBy case final ko? when ko.isNotEmpty)
         ('Otkazao', ko == 'customer' ? 'klijent' : 'salon'),
     ];
@@ -389,12 +394,25 @@ class _Podaci extends StatelessWidget {
     );
   }
 
-  /// `source` je `app` ili `admin` — ko je termin upisao.
+  /// `source` — odakle je termin stigao, kratko kako ga `3n` piše („aplikacija").
   static String _izvor(String source) => switch (source) {
-    'app' => 'klijent kroz aplikaciju',
-    'admin' => 'salon, ručni unos',
+    'app' => 'aplikacija',
+    'web' => 'web',
+    'admin' || 'manual' => 'ručni unos',
+    'guest' => 'gost',
     _ => source,
   };
+
+  static String _danUSedmici(LocalDate dan) =>
+      kDaniSedmice[DateTime(dan.year, dan.month, dan.day).weekday - 1]
+          .toLowerCase();
+
+  static String _ddMm(LocalDate dan) =>
+      _ddMmIzDatuma(DateTime(dan.year, dan.month, dan.day));
+
+  static String _ddMmIzDatuma(DateTime dan) =>
+      '${dan.day.toString().padLeft(2, '0')}.'
+      '${dan.month.toString().padLeft(2, '0')}.';
 }
 
 class _Red extends StatelessWidget {
@@ -412,8 +430,9 @@ class _Red extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // `3n`: red je 47 px — 16 px tekst i 12 gore/dolje.
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
         border: zadnji
             ? null
@@ -481,6 +500,41 @@ class _Podnozje extends StatelessWidget {
           child: AppointmentActionsBar(termin: termin, veliko: true),
         ),
       ),
+    );
+  }
+}
+
+/// „Pozovi · Poruka · Profil" iz `3n` — placeholderi dok admin nema `url_launcher` i
+/// profil klijenta.
+class _BrzeRadnje extends StatelessWidget {
+  const _BrzeRadnje();
+
+  @override
+  Widget build(BuildContext context) {
+    final stil = OutlinedButton.styleFrom(
+      textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16),
+      backgroundColor: context.adminColors.surface,
+    );
+
+    Widget dugme(String labela, String sta) => Expanded(
+      child: SizedBox(
+        height: 50,
+        child: OutlinedButton(
+          onPressed: () => pokaziUskoro(context, sta),
+          style: stil,
+          child: Text(labela),
+        ),
+      ),
+    );
+
+    return Row(
+      children: [
+        dugme('Pozovi', 'Poziv iz aplikacije'),
+        const SizedBox(width: 10),
+        dugme('Poruka', 'Poruka iz aplikacije'),
+        const SizedBox(width: 10),
+        dugme('Profil', 'Profil klijenta'),
+      ],
     );
   }
 }

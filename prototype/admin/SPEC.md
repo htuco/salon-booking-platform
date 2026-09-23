@@ -157,6 +157,14 @@ obje ljuske crtaju brojač, pa je i on dio ljuske, ne ekrana.
 
 ### Šta canvas crta, a aplikacija namjerno nema (izmjereno u tasku 30)
 
+> **Od [ADR-0020](../../docs/adr/0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md) ova
+> tabela je istorija, ne pravilo.** Admin je 1:1 sa `adminv2/export/`: element se crta kad podatak
+> postoji, a kad ne postoji, crta se kao placeholder koji ne laže (ugašen ili „Uskoro"). Iz tabele
+> su nacrtani „Slobodno vrijeme", procenat zauzetosti, „Otvoreno do", „Pretraži klijenta", „prije
+> 26 min", `Dan · Sedmica · Mjesec`, „Dodaj pauzu"/„Zatvori dan", sljedeći termin u profilu i
+> placeholderi za „Ponudi drugo vrijeme", „Pomjeri", „Pozovi", „+ Novi klijent". Van opsega ostaje
+> samo prelaz na mrežu lokacija (`3a`). Pismo je Barlow, ne Space Grotesk + JetBrains Mono.
+
 Handoff crta i kontrole i brojke iza kojih danas ne stoji ni podatak ni RPC putanja. Svaka od njih
 je **izostavljena, ne odgođena na ekranu**: dugme koje ne radi i brojka koja se računa po pogrešnom
 modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.

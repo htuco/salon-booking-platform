@@ -71,19 +71,22 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Oba pisma su **varijabilna** (jedna `wght` osa), pa je po porodici jedan fajl umjesto
-  # reza po tezini. Tezina se zato u kodu postavlja kroz `FontVariation`, ne samo kroz
-  # `fontWeight` — v. `lib/src/core/theme/admin_typography.dart`.
+  # Jedna porodica, **Barlow**, u cetiri staticna reza (ADR-0020). Barlow nema varijabilni
+  # fajl na Google Fonts, pa je po tezini jedan fajl i Flutter bira rez iz `fontWeight`.
   #
-  # Fajlovi su zapakovani namjerno: canvas ih ucitava sa Google Fonts, aplikacija ne smije
-  # zavisiti od mreze za vlastiti izgled. OFL licence stoje uz njih u istom folderu.
+  # Fajlovi su zapakovani namjerno: aplikacija ne smije zavisiti od mreze za vlastiti
+  # izgled. OFL licenca stoji uz njih u istom folderu.
   fonts:
-    - family: Space Grotesk
+    - family: Barlow
       fonts:
-        - asset: assets/fonts/SpaceGrotesk[wght].ttf
-    - family: JetBrains Mono
-      fonts:
-        - asset: assets/fonts/JetBrainsMono[wght].ttf
+        - asset: assets/fonts/Barlow-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Barlow-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Barlow-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Barlow-Bold.ttf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

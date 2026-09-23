@@ -35,10 +35,11 @@ void main() {
     testWidgets('zahtjev na čekanju nudi potvrdu i odbijanje', (tester) async {
       await tester.pumpWidget(_traka(AppointmentStatus.pending));
 
-      expect(find.text('Potvrdi'), findsOneWidget);
+      // Primarna radnja je u verzalu (ADR-0020, `AdminVerzal`).
+      expect(find.text('POTVRDI'), findsOneWidget);
       expect(find.text('Odbij'), findsOneWidget);
       // Termin koji čeka nema šta da se „završi" prije nego je potvrđen.
-      expect(find.text('Završen'), findsNothing);
+      expect(find.text('ZAVRŠEN'), findsNothing);
       expect(find.text('Nije došao'), findsNothing);
     });
 
@@ -47,12 +48,12 @@ void main() {
     ) async {
       await tester.pumpWidget(_traka(AppointmentStatus.confirmed));
 
-      expect(find.text('Završen'), findsOneWidget);
+      expect(find.text('ZAVRŠEN'), findsOneWidget);
       expect(find.text('Nije došao'), findsOneWidget);
       expect(find.text('Otkaži'), findsOneWidget);
       // Dvaput potvrditi nema smisla; baza bi to primila idempotentno, ali dugme koje ne
       // radi ništa je gore od dugmeta kojeg nema.
-      expect(find.text('Potvrdi'), findsNothing);
+      expect(find.text('POTVRDI'), findsNothing);
     });
 
     // **Zatvoren termin nema nijednu akciju.** „Potvrdi" nad otkazanim terminom baza odbija
@@ -108,7 +109,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Traka je i dalje tu sa istim akcijama: ništa se nije desilo.
-      expect(find.text('Potvrdi'), findsOneWidget);
+      expect(find.text('POTVRDI'), findsOneWidget);
       expect(find.text('Odbij zahtjev'), findsNothing);
     });
 
@@ -126,7 +127,7 @@ void main() {
       // Dijalog na njoj bi bio trenje bez svrhe.
       await tester.pumpWidget(_traka(AppointmentStatus.pending));
 
-      await tester.tap(find.text('Potvrdi'));
+      await tester.tap(find.text('POTVRDI'));
       await tester.pump();
 
       expect(find.byType(AlertDialog), findsNothing);
@@ -140,7 +141,8 @@ void main() {
       // i oblik nisu jedini nosioci informacije).
       await tester.pumpWidget(_traka(AppointmentStatus.pending));
 
-      for (final labela in ['Potvrdi', 'Odbij']) {
+      // Primarna radnja piše verzal (ADR-0020), sporedna ostaje u rečenici.
+      for (final labela in ['POTVRDI', 'Odbij']) {
         expect(find.text(labela), findsOneWidget);
       }
     });

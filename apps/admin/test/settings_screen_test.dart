@@ -109,7 +109,11 @@ void main() {
   ) async {
     await _pumpAt(tester, _desktop, _screen());
 
-    expect(find.text('Osnovni podaci'), findsOneWidget);
+    // `3i` nema naslov „Osnovni podaci" — kartica počinje naslovnom fotografijom.
+    expect(find.text('Osnovni podaci'), findsNothing);
+    expect(find.text('Naslovna fotografija'), findsOneWidget);
+    // Jedno „SAČUVAJ" u top baru; original ostaje u `semanticsLabel`.
+    expect(find.text('SAČUVAJ'), findsOneWidget);
     // Vrijednosti su iz `salons`, ne placeholder tekst: polje koje se ne popuni izgleda
     // isto kao prazno, a vlasnik bi prvim snimanjem obrisao svoje podatke.
     expect(find.widgetWithText(TextFormField, 'Barber Studio Vitez'), findsOne);
@@ -122,9 +126,12 @@ void main() {
   ) async {
     await _pumpAt(tester, _telefon, _screen());
 
-    expect(find.text('Osnovni podaci'), findsOneWidget);
-    await _doVidljivog(tester, find.text('Zakazivanje'));
-    expect(find.text('Zakazivanje'), findsOneWidget);
+    expect(find.text('Naslovna fotografija'), findsOneWidget);
+    // Naslov „Postavke lokacije" je samo desktop; telefon ga nosi u zaglavlju.
+    expect(find.text('Postavke lokacije'), findsNothing);
+    // „Zakazivanje" je i kartica i platformska sekcija — prva je kartica.
+    await _doVidljivog(tester, find.text('Zakazivanje').first);
+    expect(find.text('Obavijesti klijentima'), findsOneWidget);
   });
 
   testWidgets('booking pravila stižu iz `salon_settings`, ne iz defaulta', (
@@ -143,7 +150,8 @@ void main() {
       ),
     );
 
-    await _doVidljivog(tester, find.text('Zakazivanje'));
+    await _doVidljivog(tester, find.text('Rezervacija i otkazivanje'));
+    await _doVidljivog(tester, find.widgetWithText(TextFormField, '12'));
     expect(find.widgetWithText(TextFormField, '12'), findsOne);
     expect(find.widgetWithText(TextFormField, '25'), findsOne);
   });
@@ -221,7 +229,7 @@ void main() {
     );
 
     expect(find.text('Postavke se ne mogu učitati.'), findsOneWidget);
-    expect(find.text('Osnovni podaci'), findsNothing);
+    expect(find.byType(TextFormField), findsNothing);
   });
 
   testWidgets('uvećan sistemski font ne preliva telefon', (tester) async {

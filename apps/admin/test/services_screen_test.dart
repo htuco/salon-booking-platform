@@ -4,6 +4,7 @@ library;
 import 'package:admin/src/core/theme/theme.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/services/services_screen.dart';
+import 'package:admin/src/features/services/usluge_dijelovi.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +50,33 @@ const _services = [
   ),
 ];
 
+const _radnici = [
+  Employee(id: 'e1', salonId: _salonId, name: 'Emir'),
+  Employee(id: 'e2', salonId: _salonId, name: 'Amar'),
+];
+
+// Šišanje rade oba radnika („svi"), bradu samo Amar.
+const _veze = [
+  EmployeeService(
+    id: 'l1',
+    salonId: _salonId,
+    employeeId: 'e1',
+    serviceId: 's1',
+  ),
+  EmployeeService(
+    id: 'l2',
+    salonId: _salonId,
+    employeeId: 'e2',
+    serviceId: 's1',
+  ),
+  EmployeeService(
+    id: 'l3',
+    salonId: _salonId,
+    employeeId: 'e2',
+    serviceId: 's2',
+  ),
+];
+
 Widget _screen({List<Service> services = _services, Object? error}) =>
     ProviderScope(
       key: UniqueKey(),
@@ -62,6 +90,8 @@ Widget _screen({List<Service> services = _services, Object? error}) =>
           if (error != null) throw error;
           return services;
         }),
+        adminEmployeesProvider.overrideWith((ref) async => _radnici),
+        adminEmployeeLinksProvider.overrideWith((ref) async => _veze),
       ],
       child: MaterialApp(
         theme: buildAdminTheme(),
@@ -77,39 +107,94 @@ Future<void> _pumpAt(WidgetTester tester, Size size, Widget child) async {
   await tester.pumpAndSettle();
 }
 
+/// Prekidač sa datom semantičkom oznakom.
+UslugaPrekidac _prekidac(WidgetTester tester, String oznaka) => tester
+    .widgetList<UslugaPrekidac>(find.byType(UslugaPrekidac))
+    .firstWhere((p) => p.oznaka == oznaka);
+
 void main() {
-  testWidgets('desktop crta tabelu, cijene i top-bar akciju', (tester) async {
+  testWidgets('desktop crta tabelu, radnike, panel i top-bar akciju', (
+    tester,
+  ) async {
     await _pumpAt(tester, _desktop, _screen());
 
     expect(find.text('Cjenovnik'), findsOneWidget);
-    expect(find.text('USLUGA'), findsOneWidget);
-    expect(find.text('TRAJANJE'), findsOneWidget);
-    expect(find.text('CIJENA'), findsOneWidget);
-    expect(find.text('Muško šišanje'), findsOneWidget);
+    for (final kolona in ['USLUGA', 'TRAJANJE', 'CIJENA', 'ONLINE']) {
+      expect(find.text(kolona), findsOneWidget);
+    }
+    expect(find.text('Muško šišanje'), findsWidgets);
     expect(find.text('12.50 KM'), findsOneWidget);
-    expect(find.text('Neaktivna'), findsOneWidget);
-    expect(find.text('+ Nova usluga'), findsOneWidget);
+    expect(find.text('svi'), findsOneWidget);
+    // „Amar" je i u tabeli (red Brade) i u panelu „Ko radi uslugu".
+    expect(find.text('Amar'), findsWidgets);
+    // Isključena usluga u tabeli piše zašto je blijeda; stara „Neaktivna" pilula je otišla.
+    expect(find.text('isključeno iz online zakazivanja'), findsOneWidget);
+    expect(_prekidac(tester, 'Online: Brada').vrijednost, isFalse);
+    expect(_prekidac(tester, 'Online: Muško šišanje').vrijednost, isTrue);
+    // Verzal u tekstu, original u semantici.
+    expect(find.text('+ NOVA USLUGA'), findsOneWidget);
+    expect(find.bySemanticsLabel('+ Nova usluga'), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byType(Switch), findsNothing);
+    // Desni panel bez modala: prva usluga je izabrana.
+    expect(find.text('Uredi uslugu'), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
   });
 
-  testWidgets('telefon crta kartice i floating akciju, ne desktop zaglavlje', (
+  testWidgets('desktop: tap reda puni panel, bez sheeta', (tester) async {
+    await _pumpAt(tester, _desktop, _screen());
+
+    await tester.tap(find.text('Brada').first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(_prekidac(tester, 'Vidljivo u aplikaciji').vrijednost, isFalse);
+    expect(
+      tester
+          .widgetList<TextFormField>(find.byType(TextFormField))
+          .where((field) => field.controller?.text == 'Brada'),
+      hasLength(1),
+      reason:
+          'naziv je u panelu vidljiv, kategorija čeka iza „Kategorija i opis"',
+    );
+
+    await tester.tap(find.text('+ NOVA USLUGA'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nova usluga'), findsOneWidget);
+    expect(find.text('Uredi uslugu'), findsNothing);
+  });
+
+  testWidgets('telefon crta kartice i donju akciju, ne tabelu ni FAB', (
     tester,
   ) async {
     await _pumpAt(tester, _telefon, _screen());
 
     expect(find.text('USLUGA'), findsNothing);
-    expect(find.text('30 min · 15 KM'), findsOneWidget);
-    expect(find.text('20 min · 12.50 KM'), findsOneWidget);
-    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.text('Usluge'), findsOneWidget);
+    expect(find.text('30 min · svi'), findsOneWidget);
+    expect(find.text('20 min · nije online'), findsOneWidget);
+    expect(find.text('15 KM'), findsOneWidget);
+    expect(find.text('12.50 KM'), findsOneWidget);
+    expect(find.text('+ NOVA USLUGA'), findsOneWidget);
+    expect(find.byType(FloatingActionButton), findsNothing);
   });
 
-  testWidgets('tap reda otvara popunjen editor sa statusom', (tester) async {
+  testWidgets('telefon: tap kartice otvara popunjen editor sa statusom', (
+    tester,
+  ) async {
     await _pumpAt(tester, _telefon, _screen());
 
     await tester.tap(find.text('Brada'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Uredi uslugu'), findsOneWidget);
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.text('Vidljivo u aplikaciji'), findsOneWidget);
+    expect(_prekidac(tester, 'Vidljivo u aplikaciji').vrijednost, isFalse);
+    expect(find.byType(Switch), findsNothing);
+
+    // Naziv i kategorija postojeće usluge stoje iza jednog reda.
+    await tester.tap(find.text('Naziv, kategorija i opis'));
+    await tester.pumpAndSettle();
     expect(
       tester
           .widgetList<TextFormField>(find.byType(TextFormField))
@@ -117,9 +202,6 @@ void main() {
       hasLength(2),
       reason: 'naziv i kategorija su oba Brada u ovom fixtureu',
     );
-    expect(find.text('Vidljivo u aplikaciji'), findsOneWidget);
-    expect(find.text('Ponovo aktiviraj uslugu'), findsOneWidget);
-    expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
   });
 
   testWidgets('nova usluga odbija neispravnu cijenu prije RPC-a', (
@@ -127,27 +209,29 @@ void main() {
   ) async {
     await _pumpAt(tester, _telefon, _screen());
 
-    await tester.tap(find.byType(FloatingActionButton));
+    await tester.tap(find.text('+ NOVA USLUGA'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Naziv'), 'Nova');
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Trajanje (min)'),
-      '30',
+    final sheet = find.byType(BottomSheet);
+    final polja = find.descendant(of: sheet, matching: find.byType(TextField));
+    // Prvo polje je naziv, drugo cijena u `3q` koracima.
+    await tester.enterText(polja.at(0), 'Nova');
+    await tester.enterText(polja.at(1), '12.999');
+    final sacuvaj = find.descendant(
+      of: sheet,
+      matching: find.widgetWithText(FilledButton, 'SAČUVAJ'),
     );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Cijena (KM)'),
-      '12.999',
-    );
-    await tester.tap(find.widgetWithText(FilledButton, 'Sačuvaj'));
+    await tester.ensureVisible(sacuvaj);
+    await tester.tap(sacuvaj);
     await tester.pump();
 
     expect(find.text('Npr. 15,00'), findsOneWidget);
+    expect(find.byType(BottomSheet), findsOneWidget);
   });
 
   testWidgets('prazan cjenovnik ima radnju, kvar ima retry', (tester) async {
     await _pumpAt(tester, _desktop, _screen(services: const []));
     expect(find.text('Cjenovnik je prazan.'), findsOneWidget);
-    expect(find.text('Dodaj prvu uslugu'), findsOneWidget);
+    expect(find.text('DODAJ PRVU USLUGU'), findsOneWidget);
 
     await _pumpAt(tester, _desktop, _screen(error: Exception('mreža')));
     expect(find.text('Cjenovnik se ne može učitati.'), findsOneWidget);

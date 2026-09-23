@@ -3,7 +3,45 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/theme/theme.dart';
+import '../../core/widgets/admin_verzal.dart';
 import 'appointments_providers.dart';
+
+/// Pita za obrazloženje odbijanja ili otkazivanja; `null` znači da je korisnik odustao.
+///
+/// Javno jer isti dijalog troše i kartice zahtjeva (`zahtjev_kartica.dart`) — drugi dijalog
+/// za istu radnju bi se prvi put razišao kad se promijeni tekst koji klijent vidi.
+Future<String?> pitajZaRazlog(
+  BuildContext context, {
+  required String naslov,
+  required String opis,
+  required String potvrda,
+}) => showDialog<String>(
+  context: context,
+  builder: (context) =>
+      _RazlogDijalog(naslov: naslov, opis: opis, potvrda: potvrda),
+);
+
+/// Greška iz baze prevedena u rečenicu koju vlasnik može iskoristiti.
+///
+/// `ConflictError` je ovdje **očekivan ishod, ne kvar**: neko je već promijenio termin
+/// (drugi uređaj, ili je `pending` istekao). Generička poruka bi vlasnika poslala da
+/// ponovo tapne isto dugme.
+String tekstGreskeAkcije(ApiError greska) => switch (greska) {
+  ConflictError() => 'Termin je u međuvremenu promijenjen. Osvježite listu.',
+  NotFoundError() => 'Termin više ne postoji.',
+  _ => 'Akcija nije uspjela. Pokušajte ponovo.',
+};
+
+/// Radnja koju handoff crta, a iza koje još nema podatka ni RPC-a.
+///
+/// Dugme stoji da raspored bude onaj iz `adminv2`, ali tap kaže istinu umjesto da glumi
+/// radnju.
+void pokaziUskoro(BuildContext context, String sta) {
+  ScaffoldMessenger.of(context)
+    ..clearSnackBars()
+    ..showSnackBar(SnackBar(content: Text('$sta — uskoro.')));
+}
 
 /// Akcije nad jednim terminom, ispod njegovog reda u listi.
 ///
@@ -55,6 +93,7 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
     if (akcije.isEmpty) return const SizedBox.shrink();
 
     if (widget.veliko) {
+      // `3n`: prva radnja preko cijele širine (54), ostale u redu ispod (50), razmak 10.
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -64,7 +103,7 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
             Row(
               children: [
                 for (final akcija in akcije.skip(1)) ...[
-                  Expanded(child: SizedBox(height: 48, child: akcija)),
+                  Expanded(child: SizedBox(height: 50, child: akcija)),
                   if (akcija != akcije.last) const SizedBox(width: 10),
                 ],
               ],
@@ -89,12 +128,14 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
         ikona: Icons.check,
         labela: 'Potvrdi',
         istaknuta: true,
+        veliko: widget.veliko,
         onTap: _uToku ? null : () => _potvrdi(termin),
       ),
       _Akcija(
         ikona: Icons.close,
         labela: 'Odbij',
         destruktivna: true,
+        veliko: widget.veliko,
         onTap: _uToku ? null : () => _odbij(termin),
       ),
     ],
@@ -102,19 +143,31 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
     AppointmentStatus.confirmed => [
       _Akcija(
         ikona: Icons.done_all,
-        labela: 'Završen',
+        // `3n` piše cijelu rečenicu na velikom dugmetu; u kartici nema mjesta za nju.
+        labela: widget.veliko ? 'Označi kao završeno' : 'Završen',
         istaknuta: true,
+        veliko: widget.veliko,
         onTap: _uToku ? null : () => _zavrsen(termin),
       ),
+      // `3n` crta „Pomjeri"; pomjeranje nema RPC putanju, pa je placeholder.
+      if (widget.veliko)
+        _Akcija(
+          ikona: Icons.schedule,
+          labela: 'Pomjeri',
+          veliko: true,
+          onTap: () => pokaziUskoro(context, 'Pomjeranje termina'),
+        ),
       _Akcija(
         ikona: Icons.person_off_outlined,
         labela: 'Nije došao',
+        veliko: widget.veliko,
         onTap: _uToku ? null : () => _nijeDosao(termin),
       ),
       _Akcija(
         ikona: Icons.event_busy_outlined,
         labela: 'Otkaži',
         destruktivna: true,
+        veliko: widget.veliko,
         onTap: _uToku ? null : () => _otkazi(termin),
       ),
     ],
@@ -206,11 +259,7 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
     required String naslov,
     required String opis,
     required String potvrda,
-  }) => showDialog<String>(
-    context: context,
-    builder: (context) =>
-        _RazlogDijalog(naslov: naslov, opis: opis, potvrda: potvrda),
-  );
+  }) => pitajZaRazlog(context, naslov: naslov, opis: opis, potvrda: potvrda);
 
   /// Zajedničko izvršavanje: zaključaj, pozovi, javi ishod.
   ///
@@ -227,7 +276,7 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
       _poruka(uspjeh);
     } on ApiError catch (greska) {
       if (!mounted) return;
-      _poruka(_tekstGreske(greska), greska: true);
+      _poruka(tekstGreskeAkcije(greska), greska: true);
     } finally {
       // `mounted` prije `setState`: lista se u međuvremenu osvježila i ovaj widget je
       // možda već zamijenjen novim.
@@ -249,17 +298,6 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
         ),
       );
   }
-
-  /// Greška iz baze prevedena u rečenicu koju vlasnik može iskoristiti.
-  ///
-  /// `ConflictError` je ovdje **očekivan ishod, ne kvar**: neko je već promijenio termin
-  /// (drugi uređaj, ili je `pending` istekao). Generička poruka bi vlasnika poslala da
-  /// ponovo tapne isto dugme.
-  static String _tekstGreske(ApiError greska) => switch (greska) {
-    ConflictError() => 'Termin je u međuvremenu promijenjen. Osvježite listu.',
-    NotFoundError() => 'Termin više ne postoji.',
-    _ => 'Akcija nije uspjela. Pokušajte ponovo.',
-  };
 }
 
 /// Dijalog koji traži obrazloženje za odbijanje ili otkazivanje.
@@ -344,9 +382,11 @@ class _RazlogDijalogState extends State<_RazlogDijalog> {
 
 /// Jedno dugme u traci akcija.
 ///
-/// Ikona **i** tekst, nikad samo ikona: „✓" i „✕" jedno pored drugog su dvije oznake koje
-/// se razlikuju samo oblikom, a odbijanje termina nije radnja koja smije zavisiti od toga
-/// je li vlasnik dobro pogledao.
+/// U kartici: ikona **i** tekst, nikad samo ikona — „✓" i „✕" jedno pored drugog se
+/// razlikuju samo oblikom. Na velikoj traci (`3n`) ikone nema, jer tamo tekst stoji sam i
+/// dovoljno je krupan.
+///
+/// Primarna radnja je koralna i **u verzalu** (`adminv2`); sporedna ostaje u rečenici.
 class _Akcija extends StatelessWidget {
   const _Akcija({
     required this.ikona,
@@ -354,6 +394,7 @@ class _Akcija extends StatelessWidget {
     required this.onTap,
     this.istaknuta = false,
     this.destruktivna = false,
+    this.veliko = false,
   });
 
   final IconData ikona;
@@ -361,31 +402,67 @@ class _Akcija extends StatelessWidget {
   final VoidCallback? onTap;
   final bool istaknuta;
   final bool destruktivna;
+  final bool veliko;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final boje = context.adminColors;
+    final tekst = Theme.of(context).textTheme;
 
     if (istaknuta) {
+      // `3n`: natpis velikog dugmeta je 16 px, u kartici 14.
+      final stil = FilledButton.styleFrom(
+        textStyle: veliko
+            ? AdminText.actionLabel.copyWith(fontSize: 16)
+            : AdminText.actionLabel,
+        visualDensity: veliko ? null : VisualDensity.compact,
+      );
+      if (veliko) {
+        return FilledButton(
+          onPressed: onTap,
+          style: stil,
+          child: AdminVerzal(labela),
+        );
+      }
       return FilledButton.icon(
         onPressed: onTap,
         icon: Icon(ikona, size: 18),
-        label: Text(labela),
-        // Akcent, ne crna iz teme: `3d` i `3m` „Potvrdi" crtaju plavo. Tema nosi crnu jer
-        // je takva svaka druga primarna radnja u adminu; ovdje je izuzetak jedan potez u
-        // toku odlučivanja, isti kao na kartici zahtjeva na dashboardu.
-        style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+        label: AdminVerzal(labela),
+        style: stil,
       );
     }
 
+    final stil = OutlinedButton.styleFrom(
+      textStyle: veliko
+          ? tekst.labelLarge?.copyWith(fontSize: 16)
+          : tekst.labelLarge,
+      visualDensity: veliko ? null : VisualDensity.compact,
+      foregroundColor: destruktivna ? boje.destructive : null,
+      // `3n`: „Otkaži" nosi blijedi crveni obrub, ne sivi — boja teksta sama je premalo
+      // za radnju koja se ne da vratiti.
+      side: destruktivna && veliko
+          ? BorderSide(
+              color: boje.destructive.withValues(alpha: 0.3),
+              width: AdminSize.hairline,
+            )
+          : null,
+      padding: veliko
+          ? const EdgeInsets.symmetric(horizontal: AdminSpacing.sm)
+          : null,
+    );
+
+    if (veliko) {
+      return OutlinedButton(
+        onPressed: onTap,
+        style: stil,
+        child: Text(labela, maxLines: 1, overflow: TextOverflow.ellipsis),
+      );
+    }
     return OutlinedButton.icon(
       onPressed: onTap,
       icon: Icon(ikona, size: 18),
       label: Text(labela),
-      style: OutlinedButton.styleFrom(
-        visualDensity: VisualDensity.compact,
-        foregroundColor: destruktivna ? scheme.error : null,
-      ),
+      style: stil,
     );
   }
 }
