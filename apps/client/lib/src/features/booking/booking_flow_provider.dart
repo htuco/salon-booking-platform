@@ -97,19 +97,38 @@ class BookingFlowNotifier extends AutoDisposeNotifier<BookingFlowState> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Pravila rezervacije: `salon_settings` prvo, vertikala kao rezerva (task 44)
+// ---------------------------------------------------------------------------
+// Vertikala nosi samo **podrazumijevane** vrijednosti pri kreiranju salona. Vlasnik ih
+// poslije mijenja u admin Postavkama, a to piše `salon_settings` — isti red koji baza čita.
+// Dok su ovi provideri čitali vertikalu, prekidači u adminu nisu mijenjali ništa na ekranu
+// klijenta (isti obrazac kao `minCancelHoursProvider`, task 36). Vertikala ostaje samo dok
+// postavke ne stignu.
+
 /// Da li salon bira samo datum (`date_only`), bez tačnog vremena.
-///
-/// Čita se iz vertikale, ne iz konstante: isti build služi i frizera (`exact_slot`) i
-/// ordinaciju (`date_only`) — v. `docs/05 §4.1`.
 final bookingDateOnlyProvider = Provider.autoDispose<bool>((ref) {
+  final postavke = ref.watch(salonSettingsProvider).valueOrNull;
+  if (postavke != null) return postavke.bookingGranularity == 'date_only';
   final vertical = ref.watch(verticalProvider).valueOrNull;
   return vertical?.rules.granularity == BookingGranularity.dateOnly;
 });
 
-/// Traži li vertikala izbor radnika — kad ne traži, korak nudi i "bilo koji".
+/// Traži li salon izbor radnika — kad ne traži, korak nudi i "bilo koji".
 final bookingRequiresStaffChoiceProvider = Provider.autoDispose<bool>((ref) {
+  final postavke = ref.watch(salonSettingsProvider).valueOrNull;
+  if (postavke != null) return postavke.requireStaffChoice;
   final vertical = ref.watch(verticalProvider).valueOrNull;
   return vertical?.rules.requireStaffChoice ?? false;
+});
+
+/// Koliko dana unaprijed traka datuma nudi. Baza ionako odbija dalje (`get_available_slots`).
+final bookingMaxAdvanceDaysProvider = Provider.autoDispose<int>((ref) {
+  final postavke = ref.watch(salonSettingsProvider).valueOrNull;
+  if (postavke != null) return postavke.maxAdvanceBookingDays;
+  final vertical = ref.watch(verticalProvider).valueOrNull;
+  return vertical?.rules.maxAdvanceBookingDays ??
+      BookingRules.fallback.maxAdvanceBookingDays;
 });
 
 /// Današnji dan u zidnom vremenu — početak raspona koji nudi traka datuma.

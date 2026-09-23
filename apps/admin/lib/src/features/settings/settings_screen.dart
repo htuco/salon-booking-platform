@@ -52,6 +52,7 @@ import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../../core/widgets/admin_wordmark.dart';
 import 'settings_dialogs.dart';
+import 'settings_primjeri.dart';
 import 'settings_providers.dart';
 
 /// Mjere izmjerene iz `3i` (2× izvoz). Stoje zajedno jer opisuju isti oblik kartice.
@@ -1095,7 +1096,9 @@ class _RezervacijaKartica extends StatelessWidget {
             children: [
               _PrekidacRed(
                 naslov: 'Klijent bira tačno vrijeme',
-                opis: 'isključeno = bira samo datum, salon rasporedi',
+                opis:
+                    'Klijent u aplikaciji bira sat termina. Isključeno: bira samo '
+                    'dan, a vrijeme mu javlja salon.',
                 ukljuceno: unos.bookingGranularity == 'exact_slot',
                 onChanged: promijeni == null
                     ? null
@@ -1107,6 +1110,9 @@ class _RezervacijaKartica extends StatelessWidget {
               ),
               _PrekidacRed(
                 naslov: 'Prikaži cijene u aplikaciji',
+                opis:
+                    'Klijent vidi cijenu u cjenovniku, pri zakazivanju i na svom '
+                    'terminu. Isključeno: cijene se nigdje ne prikazuju.',
                 ukljuceno: unos.showPricesInApp,
                 onChanged: promijeni == null
                     ? null
@@ -1119,11 +1125,13 @@ class _RezervacijaKartica extends StatelessWidget {
             lijevo: _BrojPolje(
               controller: buffer,
               labela: 'Pauza između termina (min)',
+              primjer: primjerPauze,
               validator: (v) => raspon(v, min: 0, max: 120),
             ),
             desno: _BrojPolje(
               controller: korak,
               labela: 'Korak ponuđenih termina (min)',
+              primjer: primjerKoraka,
               validator: (v) => raspon(v, min: 1, max: 120),
             ),
           ),
@@ -1132,11 +1140,13 @@ class _RezervacijaKartica extends StatelessWidget {
             lijevo: _BrojPolje(
               controller: najranije,
               labela: 'Najraniji termin (sati unaprijed)',
+              primjer: primjerNajranijeg,
               validator: (v) => raspon(v, min: 0, max: 720),
             ),
             desno: _BrojPolje(
               controller: najkasnije,
               labela: 'Kalendar otvoren (dana unaprijed)',
+              primjer: primjerKalendara,
               validator: (v) => raspon(v, min: 1, max: 365),
             ),
           ),
@@ -1147,7 +1157,7 @@ class _RezervacijaKartica extends StatelessWidget {
             lijevo: _BrojPolje(
               controller: rokOtkazivanja,
               labela: 'Rok za otkazivanje (sati prije termina)',
-              pomoc: 'Vrijedi odmah — i za već zakazane termine.',
+              primjer: primjerRokaOtkazivanja,
               validator: (v) => raspon(v, min: 0, max: 720),
             ),
           ),
@@ -1162,24 +1172,33 @@ class _BrojPolje extends StatelessWidget {
     required this.controller,
     required this.labela,
     required this.validator,
-    this.pomoc,
+    this.primjer,
   });
 
   final TextEditingController controller;
   final String labela;
-  final String? pomoc;
+
+  /// Živi primjer iz `settings_primjeri.dart` — računa se iz onoga što je **upisano**, ne iz
+  /// snimljenog, pa vlasnik vidi posljedicu prije nego što pritisne „Sačuvaj".
+  final String? Function(int?)? primjer;
   final String? Function(String?) validator;
 
   @override
   Widget build(BuildContext context) => _Polje(
     labela: labela,
-    child: TextFormField(
-      controller: controller,
-      style: AdminText.dataInline.copyWith(fontSize: 15),
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: _ukras(pomoc: pomoc),
-      validator: validator,
+    child: ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, vrijednost, _) => TextFormField(
+        controller: controller,
+        style: AdminText.dataInline.copyWith(fontSize: 15),
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: _ukras(
+          pomoc: primjer?.call(int.tryParse(vrijednost.text)),
+          helperMaxLines: 4,
+        ),
+        validator: validator,
+      ),
     ),
   );
 }
@@ -1208,7 +1227,9 @@ class _ZakazivanjeKartica extends StatelessWidget {
           // rezervacije: „čeka potvrdu" ili „potvrđeno".
           _PrekidacRed(
             naslov: 'Ručna potvrda termina',
-            opis: 'isključeno = termin se potvrđuje odmah',
+            opis:
+                'Klijent nakon rezervacije vidi „čeka potvrdu“ dok je ne odobrite. '
+                'Isključeno: termin je odmah potvrđen.',
             ukljuceno: unos.bookingMode == 'manual',
             onChanged: promijeni == null
                 ? null
@@ -1217,8 +1238,10 @@ class _ZakazivanjeKartica extends StatelessWidget {
                   ),
           ),
           _PrekidacRed(
-            naslov: 'Dozvoli izbor majstora',
-            opis: 'klijent bira ko ga uslužuje',
+            naslov: 'Klijent mora izabrati majstora',
+            opis:
+                'Klijent bira tačno kod koga dolazi. Isključeno: nudi mu se i '
+                '„Bilo ko od nas“, pa dobija prvog slobodnog.',
             ukljuceno: unos.requireStaffChoice,
             onChanged: promijeni == null
                 ? null
@@ -1227,7 +1250,7 @@ class _ZakazivanjeKartica extends StatelessWidget {
           // Nema kolone za listu čekanja — prekidač stoji ugašen i isključen.
           _PrekidacRed(
             naslov: 'Lista čekanja',
-            opis: 'nudi otkazane termine drugima',
+            opis: 'Otkazan termin bi se ponudio klijentima koji čekaju. Još ne radi.',
             ukljuceno: false,
             onChanged: null,
             naDodir: () => _uskoro(context, 'Lista čekanja stiže uskoro.'),
@@ -1256,6 +1279,9 @@ class _ObavijestiKartica extends StatelessWidget {
         children: [
           _PrekidacRed(
             naslov: 'Potvrda termina',
+            opis:
+                'Klijent dobija obavijest kad potvrdite, odbijete ili otkažete '
+                'njegov termin. Šalje se uvijek.',
             ukljuceno: true,
             onChanged: null,
             naDodir: () => _uskoro(
@@ -1265,12 +1291,14 @@ class _ObavijestiKartica extends StatelessWidget {
           ),
           _PrekidacRed(
             naslov: 'Podsjetnik dan prije',
+            opis: 'Klijent bi dobio podsjetnik 24 sata prije termina. Još ne radi.',
             ukljuceno: false,
             onChanged: null,
             naDodir: podsjetnici,
           ),
           _PrekidacRed(
             naslov: 'Podsjetnik sat prije',
+            opis: 'Klijent bi dobio podsjetnik sat prije termina. Još ne radi.',
             ukljuceno: false,
             onChanged: null,
             naDodir: podsjetnici,

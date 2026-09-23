@@ -8,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
-import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
 import 'widgets/booking_step_scaffold.dart';
+import '../../core/prikaz_cijena.dart';
 
 /// Korak 1 — izbor usluge (`prototype/ui/screenshots/03-korak1-usluga.png`).
 ///
@@ -57,7 +57,6 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final vertical = verticalOf(ref);
     final services = ref.watch(servicesProvider);
     final izabrana = ref.watch(bookingFlowProvider).serviceId;
 
@@ -84,7 +83,7 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
         AsyncData(:final value) => _Lista(
           services: value,
           izabranaId: izabrana,
-          prikaziCijene: vertical.features.prices,
+          prikaziCijene: ref.watch(prikaziCijeneProvider),
           onIzbor: (service) =>
               ref.read(bookingFlowProvider.notifier).chooseService(service.id),
         ),

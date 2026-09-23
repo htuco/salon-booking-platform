@@ -10,6 +10,7 @@ import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'service_groups.dart';
+import '../../core/prikaz_cijena.dart';
 
 /// `/services` — pun cjenovnik, `prototype/ui/SPEC.md` **5i** (`09-usluge.png`).
 ///
@@ -83,7 +84,7 @@ class ServicesScreen extends ConsumerWidget {
               ),
               AsyncData(:final value) => _Lista(
                 groups: groupByCategory(value),
-                prikaziCijene: vertical.features.prices,
+                prikaziCijene: ref.watch(prikaziCijeneProvider),
               ),
               AsyncError() => SliverFillRemaining(
                 hasScrollBody: false,
