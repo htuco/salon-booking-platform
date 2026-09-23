@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
+import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'booking_flow_provider.dart';
@@ -75,8 +76,10 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
       ),
       child: switch (services) {
         AsyncData(:final value) when value.isEmpty => EmptyState(
-          message: l10n.bookingEmptyList,
+          message: l10n.bookingNoServices,
           icon: LucideIcons.calendarX,
+          actionLabel: l10n.bookingNoServicesAction,
+          onAction: () => context.go(ClientRoute.home.path),
         ),
         AsyncData(:final value) => _Lista(
           services: value,

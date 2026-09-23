@@ -138,6 +138,61 @@ void main() {
   });
 
   group('prazan dan', () {
+    testWidgets('salon bez usluga: svoja rečenica i put na Početnu (FE-501)', (
+      tester,
+    ) async {
+      final repo = _MockBooking()..stubUspjesan();
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        ruta: ClientRoute.bookService.path,
+        usluge: const [],
+      );
+
+      expect(
+        find.text('Salon još nije objavio usluge za rezervaciju.'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Nazad na Početnu'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ServiceStepScreen), findsNothing);
+
+      container.dispose();
+    });
+
+    testWidgets(
+      'salon bez radnika: svoja rečenica, ne ona sa koraka 1 (FE-501)',
+      (tester) async {
+        final repo = _MockBooking()..stubUspjesan();
+
+        final container = await _pumpFlow(
+          tester,
+          repo: repo,
+          ruta: ClientRoute.bookEmployee.path,
+          radnici: const [],
+          traziIzborRadnika: true,
+          pocetniFlow: (notifier) => notifier.chooseService(_usluga.id),
+        );
+
+        expect(
+          find.text('Salon trenutno nema nikoga dostupnog za rezervaciju.'),
+          findsOneWidget,
+        );
+        // Ne ista rečenica kao prazan korak 1 — FE-501 traži rečenicu po ekranu.
+        expect(
+          find.text('Salon još nije objavio usluge za rezervaciju.'),
+          findsNothing,
+        );
+
+        await tester.tap(find.text('Nazad na Početnu'));
+        await tester.pumpAndSettle();
+        expect(find.byType(EmployeeStepScreen), findsNothing);
+
+        container.dispose();
+      },
+    );
+
     testWidgets('dan bez slobodnih termina je prazno stanje, ne greška', (
       tester,
     ) async {
@@ -541,6 +596,9 @@ Future<ProviderContainer> _pumpFlow(
   String? customerId,
   String? deviceId,
   AuthSession? sesija,
+  List<Service> usluge = const [_usluga],
+  List<Employee> radnici = const [_radnik],
+  bool? traziIzborRadnika,
   void Function(BookingFlowNotifier notifier)? pocetniFlow,
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
@@ -559,8 +617,10 @@ Future<ProviderContainer> _pumpFlow(
       appEnvProvider.overrideWithValue(_env),
       currentSalonIdProvider.overrideWithValue(_salonId),
       salonProvider.overrideWith((ref) async => _salon),
-      servicesProvider.overrideWith((ref) async => const [_usluga]),
-      employeesProvider.overrideWith((ref) async => const [_radnik]),
+      servicesProvider.overrideWith((ref) async => usluge),
+      if (traziIzborRadnika != null)
+        bookingRequiresStaffChoiceProvider.overrideWithValue(traziIzborRadnika),
+      employeesProvider.overrideWith((ref) async => radnici),
       employeeServiceLinksProvider.overrideWith(
         (ref) async => const <EmployeeService>[],
       ),
