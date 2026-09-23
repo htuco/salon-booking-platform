@@ -4,7 +4,7 @@ Puni task: [tasks/sprint-4/45-nalozi-za-osoblje.md](sprint-4/45-nalozi-za-osoblj
 
 ## Status
 
-U toku
+Gotov — čeka review i merge PR #105, pa `supabase db push` i `supabase functions deploy accept-staff-invite`
 
 ## Ciljevi
 
@@ -14,7 +14,7 @@ U toku
 - [x] Poziv ističe (7 dana) i može se povući
 - [x] pgTAP `020` + REST `rest_pozivi_osoblja.ts`
 - [x] Uklanjanje: pristup prestaje, istorija ostaje (`remove_staff_user`, `security.md`)
-- [ ] Viđeno uživo: poziv iz admina → `/pozivnica` → novi vlasnik na početnoj
+- [x] Viđeno uživo: poziv iz admina → `/pozivnica` → novi vlasnik na početnoj
 
 ## Napomene
 
