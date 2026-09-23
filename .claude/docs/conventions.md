@@ -206,6 +206,24 @@ radius 0, hairline granice umjesto sjenki, dodirne mete ≥44px, oblik komponent
 Hardkodiran hex ili hardkodiran naziv usluge u ekranu prolazi test i prolazi pregled screenshota —
 padne tek na drugom tenantu ili drugoj vertikali.
 
+### Pristupačnost (FE-502)
+
+- **Dodirna meta je ≥ 44 px, i u adminu.** Izmjeren piksel iz handoffa (36, 38, 42) je slabiji od
+  donje granice: visina ide kroz `AppSize.touchTarget` / `AdminSize.touchTarget`, a vidljivi
+  element koji je manji (prekidač, strelica) dobija veću nevidljivu metu oko sebe.
+- **Tap bez fokusa je greška.** Goli `GestureDetector` tastatura ne dohvata. Za kontrolu se uzima
+  `InkWell` ili Material dugme; za tap preko slike `AppTappable` iz `core_ui`, jer bi preklop
+  `InkWell`-a završio ispod slike.
+- **Verzal je stil, ne podatak.** String ostaje u normalnom obliku, `toUpperCase()` ide samo uz
+  `semanticsLabel` (`AdminVerzal` to radi u jednom redu). Izuzetak — skraćenica, inicijal, tekst pod
+  `ExcludeSemantics` — nosi `// verzal-ok: <razlog>`. Čuva ga `verzal_semantika_test.dart` u obje
+  aplikacije.
+- **Ikona bez teksta nosi labelu** (`Icon(..., semanticLabel:)`); `Tooltip` čitaču ne daje ime.
+- **Novi ekran ulazi u mjerenje.** U adminu jedan poziv `pristupacnostEkrana` iz
+  `test/support/pristupacnost.dart` u test fajlu ekrana (mete, labele, fokus, kontrast na obje
+  širine, 130 % fonta); u klijentu ruta u `test/accessibility_test.dart`, gdje se kontrast mjeri
+  na **svakom tenantu** iz registra.
+
 ## Web prototip (`prototype/wireframe/`)
 
 Radix + Tailwind (shadcn stil), `lucide-react` kao jedini jezik ikona kroz cijeli sistem.

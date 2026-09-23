@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/pristupacnost.dart';
+
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 
 const Size _desktop = Size(1440, 900);
@@ -116,6 +118,8 @@ Future<void> _naSirini(
 }
 
 void main() {
+  pristupacnostEkrana('Zahtjevi', _ekran);
+
   group('oba rasporeda', () {
     testWidgets('naslov broji zahtjeve, a ne termine dana', (tester) async {
       await _naSirini(tester, _desktop, _ekran());

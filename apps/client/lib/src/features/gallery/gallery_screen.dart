@@ -161,34 +161,33 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                                     childAspectRatio: 1,
                                   ),
                               itemCount: urls.length,
-                              itemBuilder: (context, i) => Semantics(
-                                button: true,
-                                label: l10n.galleryPhotoLabel(
+                              // `AppTappable`, ne `GestureDetector` (FE-502): slika se
+                              // otvara i sa tastature, a fokus se vidi preko nje.
+                              itemBuilder: (context, i) => AppTappable(
+                                semanticLabel: l10n.galleryPhotoLabel(
                                   i + 1,
                                   urls.length,
                                 ),
-                                child: GestureDetector(
-                                  onTap: () => GalleryLightbox.show(
-                                    context,
-                                    urls: urls,
-                                    initialIndex: i,
-                                    onIndeks: _pokaziCeliju,
-                                    sirinaSlicice: _celija,
-                                  ),
-                                  // `PhotoFrame` bez `size`-a bi crtao fiksni kvadrat; unutar
-                                  // grid ćelije veličinu diktira `gridDelegate`, pa slika ide
-                                  // preko `LayoutBuilder`-a.
-                                  child: Hero(
-                                    tag: GalleryLightbox.heroTag(i, urls[i]),
-                                    flightShuttleBuilder:
-                                        GalleryLightbox.letjelica,
-                                    child: LayoutBuilder(
-                                      builder: (context, constraints) =>
-                                          PhotoFrame(
-                                            imageUrl: urls[i],
-                                            size: constraints.maxWidth,
-                                          ),
-                                    ),
+                                onTap: () => GalleryLightbox.show(
+                                  context,
+                                  urls: urls,
+                                  initialIndex: i,
+                                  onIndeks: _pokaziCeliju,
+                                  sirinaSlicice: _celija,
+                                ),
+                                // `PhotoFrame` bez `size`-a bi crtao fiksni kvadrat; unutar
+                                // grid ćelije veličinu diktira `gridDelegate`, pa slika ide
+                                // preko `LayoutBuilder`-a.
+                                child: Hero(
+                                  tag: GalleryLightbox.heroTag(i, urls[i]),
+                                  flightShuttleBuilder:
+                                      GalleryLightbox.letjelica,
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) =>
+                                        PhotoFrame(
+                                          imageUrl: urls[i],
+                                          size: constraints.maxWidth,
+                                        ),
                                   ),
                                 ),
                               ),

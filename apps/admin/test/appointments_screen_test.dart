@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/pristupacnost.dart';
+
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 
 const _vlasnik = StaffMember(
@@ -51,6 +53,14 @@ Widget _ekran(List<Appointment> termini, {AppointmentStatus? trazeniStatus}) =>
     );
 
 void main() {
+  pristupacnostEkrana(
+    'Termini',
+    () => _ekran([
+      _termin(ime: 'Adnan Music', sat: 10),
+      _termin(ime: 'Emir Hodzic', sat: 11),
+    ]),
+  );
+
   testWidgets('lista prikazuje termine sa vremenom i imenom', (tester) async {
     await tester.pumpWidget(
       _ekran([

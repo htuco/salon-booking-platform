@@ -80,6 +80,19 @@ void main() {
         );
       });
 
+      // FE-502: `destructive` nosi i **tekst** („Otkaži" u obrubljenom dugmetu), ne samo
+      // ispunu. `#C94C4C` je na bijeloj mjerio 4,12:1; mjeri se na obje površine.
+      test('destructive kao tekst prolazi AA na površini i podlozi', () {
+        for (final povrsina in [palette.surface, palette.ground]) {
+          expect(
+            odnos(palette.destructive, povrsina),
+            greaterThanOrEqualTo(kAa),
+            reason:
+                '${odnos(palette.destructive, povrsina).toStringAsFixed(2)}:1',
+          );
+        }
+      });
+
       test('sidebar tekst i aktivna stavka prolaze AA', () {
         expect(
           odnos(palette.sidebarText, palette.sidebarBackground),

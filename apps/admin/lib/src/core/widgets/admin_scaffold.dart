@@ -387,7 +387,9 @@ class _SidebarStavka extends ConsumerWidget {
           onTap: () => context.go(cilj.putanja),
           borderRadius: BorderRadius.circular(AdminRadius.base),
           child: Container(
-            height: 37,
+            // `3b` crta 37 px; FE-502 traži 44 — stavka je meta i na dodirnom
+            // laptopu i u tablet pojasu, a razlika su 63 px na devet stavki.
+            height: AdminSize.touchTarget,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
@@ -458,7 +460,9 @@ class _SidebarPodnozje extends ConsumerWidget {
             child: Text('Odjavi se'),
           ),
         ],
-        child: Padding(
+        child: Container(
+          // Ime i uloga u dva reda daju 40 px; meta mora imati 44 (FE-502).
+          constraints: const BoxConstraints(minHeight: AdminSize.touchTarget),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
@@ -556,12 +560,16 @@ class _TopBar extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 11),
-                    child: Text(
-                      '/',
-                      style: TextStyle(
-                        color: context.adminColors.breadcrumbSeparator,
+                  // Separator je ukras, ne tekst (FE-502): čitač ekrana bi ga izgovorio
+                  // kao „kosa crta", a blijeda boja je namjerna, pa ga kontrast ne mjeri.
+                  ExcludeSemantics(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 11),
+                      child: Text(
+                        '/',
+                        style: TextStyle(
+                          color: context.adminColors.breadcrumbSeparator,
+                        ),
                       ),
                     ),
                   ),
