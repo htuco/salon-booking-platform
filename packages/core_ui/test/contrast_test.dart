@@ -117,4 +117,41 @@ void main() {
       );
     });
   });
+
+  // FE-502: tokeni koje je FE-101 uveo u `AppNeutrals` (`error`, `onError`) mjere se na
+  // **svakoj** temi, jer ih tema bira po svjetlini — dvije svijetle teme su do FE-101
+  // dijelile jednu vrijednost, a greška se vidjela tek na `elegant_beauty`.
+  group('error tokeni po temi — FE-502', () {
+    for (final tema in AppTheme.values) {
+      final t = buildAppTheme(
+        primary: beautyPrimary,
+        secondary: beautySecondary,
+        themeName: tema.key,
+      );
+      final s = t.colorScheme;
+
+      test('${tema.key}: tekst na error dugmetu prolazi AA', () {
+        expect(
+          contrastRatio(s.onError, s.error),
+          greaterThanOrEqualTo(kWcagAa),
+          reason: '${contrastRatio(s.onError, s.error).toStringAsFixed(2)}:1',
+        );
+      });
+
+      // Greška se piše i kao tekst (poruka ispod polja, `LoadError`) — na pozadini
+      // ekrana i na kartici, isto pravilo kao za brand boju.
+      for (final (ime, povrsina) in [
+        ('pozadini', t.scaffoldBackgroundColor),
+        ('kartici', s.surfaceContainer),
+      ]) {
+        test('${tema.key}: error kao tekst na $ime prolazi AA', () {
+          expect(
+            contrastRatio(s.error, povrsina),
+            greaterThanOrEqualTo(kWcagAa),
+            reason: '${contrastRatio(s.error, povrsina).toStringAsFixed(2)}:1',
+          );
+        });
+      }
+    }
+  });
 }

@@ -415,7 +415,6 @@ class _Akcija extends StatelessWidget {
         textStyle: veliko
             ? AdminText.actionLabel.copyWith(fontSize: 16)
             : AdminText.actionLabel,
-        visualDensity: veliko ? null : VisualDensity.compact,
       );
       if (veliko) {
         return FilledButton(
@@ -436,7 +435,6 @@ class _Akcija extends StatelessWidget {
       textStyle: veliko
           ? tekst.labelLarge?.copyWith(fontSize: 16)
           : tekst.labelLarge,
-      visualDensity: veliko ? null : VisualDensity.compact,
       foregroundColor: destruktivna ? boje.destructive : null,
       // `3n`: „Otkaži" nosi blijedi crveni obrub, ne sivi — boja teksta sama je premalo
       // za radnju koja se ne da vratiti.

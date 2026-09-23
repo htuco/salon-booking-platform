@@ -23,6 +23,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/pristupacnost.dart';
+
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 const _desktop = Size(1440, 900);
 const _telefon = Size(402, 874);
@@ -153,6 +155,8 @@ Future<void> _pumpAt(WidgetTester tester, Size size, Widget child) async {
 }
 
 void main() {
+  pristupacnostEkrana('Klijenti', _screen);
+
   group('lista', () {
     testWidgets('desktop crta adresar sa imenom, brojem i brojem dolazaka', (
       tester,

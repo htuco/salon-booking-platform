@@ -61,6 +61,13 @@ platformsku gestu (`RefreshIndicator.noSpinner`) i umjesto spinnera crta **hairl
 `reduce motion` je traka mirna. Sadržaj ostaje na ekranu, jer bi ga skeleton zamijenio i lista
 bi trepnula.
 
+### Fokus preko fotografije je prsten, ne preklop
+
+Handoff ne crta fokus, a fotografija u galeriji je meta. Materialov preklop fokusa crta se
+**ispod** slike i tamo se ne vidi. `AppTappable` u `core_ui` zato crta **unutrašnji uglati prsten
+od 2 px u `primary` boji tenanta**, iznad slike, samo kad fokus dolazi sa tastature. Meta se ne
+širi i ne mijenja raspored (FE-502).
+
 ### Zvjezdica je nacrtana, ne ikona
 
 `StarRating` u `core_ui` crta zvjezdicu kroz `CustomPainter`, iako je ostatak ikona Lucide.

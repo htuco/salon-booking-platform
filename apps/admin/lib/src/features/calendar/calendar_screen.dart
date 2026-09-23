@@ -83,9 +83,10 @@ class _TopBarAkcije extends StatelessWidget {
       children: [
         const _PrekidacPrikaza(),
         const SizedBox(width: AdminSpacing.md),
-        // `3c`: 130 × 39 px. Visina je izmjerena; širinu daje natpis.
+        // `3c`: 130 × 39 px; visina je 44 po FE-502 (donja granica dodirne mete).
+        // Širinu daje natpis.
         SizedBox(
-          height: 40,
+          height: AdminSize.touchTarget,
           child: FilledButton(
             onPressed: () => context.go(AdminRoute.appointmentNew.path),
             style: FilledButton.styleFrom(
@@ -291,13 +292,16 @@ class _StrelicaDana extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mjera = AdminShell.jeDesktop(context) ? 38.0 : AdminSize.touchTarget;
+    // Desktop je crtao 38 po canvasu; FE-502 traži 44 na obje širine.
+    const mjera = AdminSize.touchTarget;
 
     return Tooltip(
       message: opis,
       child: IconButton.outlined(
         onPressed: onTap,
-        icon: Icon(ikona),
+        // Labela ide na ikonu (FE-502): `Tooltip` čitaču daje samo nagovještaj, pa je
+        // strelica bila dugme bez imena. Ikona se spaja u čvor dugmeta.
+        icon: Icon(ikona, semanticLabel: opis),
         // Bez ovoga `IconButton` nosi Material default od 48 px i razmak između strelica
         // postaje veći nego u canvasu.
         constraints: BoxConstraints.tightFor(width: mjera, height: mjera),
@@ -871,8 +875,9 @@ class _TekstPojasa extends StatelessWidget {
             stavka.tekst ?? '',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            // `3c`: „Pauza" punom bojom, vrijeme ispod sekundarnom — isti par kao u bloku
-            // termina, samo na šrafuri.
+            // `3c`: „Pauza" punom bojom, vrijeme ispod sekundarnom. **Na šrafuri
+            // sekundarna ne prolazi** (FE-502): `#666` preko crta `separator` daje 4,43:1,
+            // pa vrijeme ide punom bojom, a razliku nosi rez — naslov je `titleSmall`.
             style: theme.textTheme.titleSmall,
           ),
           if (!usko)
@@ -880,9 +885,7 @@ class _TekstPojasa extends StatelessWidget {
               '${vrijemeOse(stavka.odMinuta)}–${vrijemeOse(stavka.doMinuta)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AdminText.time.copyWith(
-                color: context.adminColors.textSecondary,
-              ),
+              style: AdminText.time,
             ),
         ],
       ),
@@ -1029,6 +1032,7 @@ class _MiniMjesec extends ConsumerWidget {
           children: [
             Text(
               '${kMjeseci[izabran.month - 1].toUpperCase()} ${izabran.year}',
+              semanticsLabel: '${kMjeseci[izabran.month - 1]} ${izabran.year}',
               style: AdminText.eyebrow.copyWith(
                 color: context.adminColors.textSecondary,
               ),
@@ -1409,7 +1413,9 @@ class _CelijaDana extends ConsumerWidget {
           borderRadius: BorderRadius.circular(AdminRadius.base),
           child: Container(
             width: 56,
-            height: 68,
+            // Najmanja visina, ne fiksna (FE-502): na 130 % sistemskog fonta skraćenica i
+            // broj dana ne staju u 68 px i red se presijeca.
+            constraints: const BoxConstraints(minHeight: 68),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: izabran ? context.adminColors.accent : null,
@@ -1455,6 +1461,7 @@ class _CelijaDana extends ConsumerWidget {
 
 /// `PON`, `UTO` … — tri slova iz punog imena dana, bez druge tabele.
 String _kratkiDan(DateTime dan) =>
+    // verzal-ok: ćelija je pod `ExcludeSemantics`, labela je puni datum.
     kDaniSedmice[dan.weekday - 1].substring(0, 3).toUpperCase();
 
 /// Chip traka: „Svi" i jedan chip po radniku.
@@ -1823,7 +1830,13 @@ class _MobilnaTraka extends StatelessWidget {
             child: OutlinedButton(
               onPressed: () => context.go(AdminRoute.calendarBlock.path),
               style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
-              child: const Icon(Icons.block_outlined, size: 20),
+              // Dugme je samo ikona, pa labelu nosi ikona (FE-502) — bez nje je čitač
+              // javljao „dugme" bez imena.
+              child: const Icon(
+                Icons.block_outlined,
+                size: 20,
+                semanticLabel: 'Blokiraj vrijeme',
+              ),
             ),
           ),
         ],

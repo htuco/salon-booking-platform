@@ -85,8 +85,9 @@ abstract final class AdminSize {
   /// 44 — minimum svega što se tapa. Mobilni prikazi traže „velike touch mete".
   static const double touchTarget = 44;
 
-  /// 36 — visina dugmeta u kartici zahtjeva („Potvrdi" / „Odbij").
-  static const double buttonHeight = 36;
+  /// Visina dugmeta u kartici zahtjeva („Potvrdi" / „Odbij"). Handoff crta 36; FE-502
+  /// ga diže na [touchTarget] — donja granica dodirne mete jača je od piksela iz izvoza.
+  static const double buttonHeight = touchTarget;
 
   /// 1 — debljina hairline granice. Postoji kao token jer se pojavljuje u svakom obrubu,
   /// a `BorderSide` bez debljine tiho uzme Material default.

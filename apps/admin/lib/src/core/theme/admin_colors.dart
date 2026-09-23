@@ -71,7 +71,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     separator: Color(0xFFE2E2E2),
     textSecondary: Color(0xFF666666),
     textMuted: Color(0xFF666666),
-    destructive: Color(0xFFC94C4C),
+    destructive: Color(0xFFB83C3C),
     onDestructive: Color(0xFFFFFFFF),
     accentInk: Color(0xFF3D5A80),
     accentTint: Color(0xFFE9ECEF),
@@ -115,8 +115,10 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     separator: Color(0xFF373A40),
     textSecondary: Color(0xFF909296),
     textMuted: Color(0xFF909296),
-    destructive: Color(0xFFF03E3E),
-    // CSS predlaze bijelu, ali ona na #F03E3E daje samo 3.84:1. Najtamniji token iz
+    // `#F03E3E` je kao tekst na `surface` mjerio 3,93:1 (FE-502); ton iste crvene,
+    // svjetliji, prolazi AA i kao tekst i ispod `onDestructive`.
+    destructive: Color(0xFFFF6B6B),
+    // CSS predlaze bijelu, ali ona na crvenoj daje ispod 4,5:1. Najtamniji token iz
     // iste palete zadrzava karakter teme i prolazi WCAG AA.
     onDestructive: Color(0xFF141517),
     accentInk: Color(0xFF91A7FF),

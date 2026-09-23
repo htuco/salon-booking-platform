@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/pristupacnost.dart';
+
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 const _terminId = 'aa000000-0000-4000-8000-000000000001';
 
@@ -98,6 +100,8 @@ Future<void> _naSirini(
 }
 
 void main() {
+  pristupacnostEkrana('Detalj termina', () => _ekran(_termin()));
+
   testWidgets('naslov je vrijeme i ime, uz statusnu oznaku', (tester) async {
     await _naSirini(tester, _telefon, _ekran(_termin()));
 

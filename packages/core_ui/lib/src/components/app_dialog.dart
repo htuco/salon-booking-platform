@@ -108,6 +108,8 @@ class AppDialog extends StatelessWidget {
             if (kicker != null) ...[
               Text(
                 kicker!.toUpperCase(),
+                // Verzal je stil (FE-502): čitač ekrana dobija riječ, ne slova.
+                semanticsLabel: kicker,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                   letterSpacing: 2.5,
