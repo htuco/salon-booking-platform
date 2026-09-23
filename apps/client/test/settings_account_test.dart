@@ -41,6 +41,42 @@ void main() {
       expect(find.text('Izbriši račun'), findsOneWidget);
     });
 
+    testWidgets('odjava traži potvrdu — „Ostani prijavljen" ne odjavljuje', (
+      tester,
+    ) async {
+      // FE-306: odjava stoji odmah iznad brisanja i ne smije proći jednim dodirom.
+      final repo = FakeAuthRepository(pocetnaSesija: sesija);
+      addTearDown(repo.dispose);
+
+      await pumpEkran(tester, ruta: '/settings', authRepository: repo);
+
+      await tester.tap(find.widgetWithText(AppButton, 'Odjavi se'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppDialog), findsOneWidget);
+      expect(find.text('Odjaviti se?'), findsOneWidget);
+
+      await tester.tap(find.text('Ostani prijavljen'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppDialog), findsNothing);
+      expect(repo.brojOdjava, 0);
+      expect(find.text('emir@example.test'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(AppButton, 'Odjavi se'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppDialog),
+          matching: find.text('Odjavi se'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repo.brojOdjava, 1);
+      expect(find.text('Odjavljeni ste.'), findsOneWidget);
+    });
+
     // Ovo je asercija zbog koje je 5k ušao u task 17. Bez reda „Moj račun" je `/account`
     // nedostupan iz aplikacije, a nedostupan ekran za brisanje pada na Apple reviewu.
     testWidgets('red „Moj račun" vodi na /account', (tester) async {

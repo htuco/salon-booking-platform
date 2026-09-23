@@ -44,6 +44,9 @@ class FakeAuthRepository implements AuthRepository {
   /// odustajanje **ne** okine ništa.
   int brojBrisanja = 0;
 
+  /// Koliko je puta odjava pozvana — „Ostani prijavljen" ne smije okinuti nijednu (FE-306).
+  int brojOdjava = 0;
+
   int brojPrijava = 0;
   int brojRegistracija = 0;
 
@@ -86,6 +89,7 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    brojOdjava++;
     _sesija = null;
     _kontroler.add(null);
   }

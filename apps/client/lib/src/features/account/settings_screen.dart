@@ -108,6 +108,22 @@ class SettingsScreen extends ConsumerWidget {
                 variant: AppButtonVariant.secondary,
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
+                  // Odjava stoji tačno iznad „Izbriši račun"; dodir koji promaši dugme
+                  // ne smije tiho izbaciti korisnika. Tijelo kaže šta se **ne** gubi —
+                  // to je razlika prema brisanju ispod (FE-306).
+                  final potvrdio = await AppDialog.show(
+                    context,
+                    dialog: AppDialog(
+                      title: l10n.settingsSignOutTitle,
+                      message: l10n.settingsSignOutBody,
+                      confirmLabel: l10n.settingsSignOut,
+                      cancelLabel: l10n.settingsSignOutKeep,
+                      // Odjava se vraća prijavom; crvena je rezervisana za brisanje.
+                      destructive: false,
+                    ),
+                  );
+                  // `null` (dodir izvan, sistemski „nazad") i `false` su odustajanje.
+                  if (potvrdio != true) return;
                   try {
                     await ref.read(authRepositoryProvider).signOut();
                   } on ApiError {
