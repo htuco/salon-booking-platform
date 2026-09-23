@@ -98,8 +98,8 @@ void main() {
           .first,
     );
     final ukras = pilula.decoration! as BoxDecoration;
-    expect(ukras.color, AdminColors.positiveTint);
-    expect(ukras.color, isNot(AdminColors.accentTint));
+    expect(ukras.color, AdminPalette.light.positiveTint);
+    expect(ukras.color, isNot(AdminPalette.light.accentTint));
   });
 
   testWidgets('otkazan i „nije došao" se ne crtaju isto', (tester) async {

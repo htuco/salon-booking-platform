@@ -89,9 +89,6 @@ abstract final class AdminSize {
   /// ga diže na [touchTarget] — donja granica dodirne mete jača je od piksela iz izvoza.
   static const double buttonHeight = touchTarget;
 
-  /// Visina dugmeta u top baru. Handoff crta 34; FE-502, isto kao [buttonHeight].
-  static const double topBarButtonHeight = touchTarget;
-
   /// 1 — debljina hairline granice. Postoji kao token jer se pojavljuje u svakom obrubu,
   /// a `BorderSide` bez debljine tiho uzme Material default.
   static const double hairline = 1;

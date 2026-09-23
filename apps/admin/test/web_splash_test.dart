@@ -1,4 +1,4 @@
-/// Test koji pada ako se pozadina u `web/index.html` razmimoiđe sa `AdminColors.ground`.
+/// Test koji pada ako se pozadina u `web/index.html` razmimoiđe sa `AdminPalette.light.ground`.
 ///
 /// Admin je Flutter **web**, pa se prije prvog Flutter kadra vidi obična HTML stranica.
 /// Dok je `index.html` bio netaknut Flutter šablon, to je bila **bijela** stranica — pa
@@ -26,13 +26,13 @@ String _hex(Color boja) {
 void main() {
   final html = File('web/index.html').readAsStringSync();
 
-  test('svijetla pozadina u index.html je AdminColors.ground', () {
+  test('svijetla pozadina u index.html je AdminPalette.light.ground', () {
     expect(
       html,
-      contains('background-color: ${_hex(AdminColors.ground)}'),
+      contains('background-color: ${_hex(AdminPalette.light.ground)}'),
       reason:
           'Svijetla pozadina u web/index.html mora biti ista vrijednost kao '
-          '`AdminColors.ground`, inače se pri učitavanju vidi bljesak.',
+          '`AdminPalette.light.ground`, inače se pri učitavanju vidi bljesak.',
     );
   });
 

@@ -23,7 +23,7 @@ final List<(RegExp, String)> _zabranjeno = [
   // `Colors.transparent` je jedini izuzetak: nije boja nego odsustvo boje, i tema ga
   // koristi da ugasi Material `surfaceTint`.
   //
-  // Granica rijeci sprjecava da izraz uhvati rep `AdminColors.` — token iz teme je
+  // Granica rijeci sprjecava da izraz uhvati rep `context.adminColors.` — token iz teme je
   // upravo ono sto ovaj test trazi da ekran koristi.
   (RegExp(r'\bColors\.(?!transparent)\w+'), 'Material paleta u ekranu'),
 ];
@@ -57,7 +57,7 @@ void main() {
       prijave,
       isEmpty,
       reason:
-          'Boja se uzima iz `AdminColors` ili iz `Theme.of(context)`, ne piše u ekranu.\n'
+          'Boja se uzima iz `context.adminColors` ili iz `Theme.of(context)`, ne piše u ekranu.\n'
           '${prijave.join('\n')}',
     );
   });

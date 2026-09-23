@@ -410,7 +410,7 @@ class _Kostur extends StatelessWidget {
         children: [
           // Ista visina kao pravi hero i **bez razmaka ispod** — CTA mora stajati tačno
           // gdje će stajati kad salon stigne (FE-301, test „CTA stoji na istom mjestu").
-          const SkeletonLoader(height: HomeHero.visinaSlike, radius: 0),
+          const SkeletonLoader(height: HomeHero.visinaSlike),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
             child: SkeletonLoader(height: AppSize.ctaHeight),
