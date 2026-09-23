@@ -448,12 +448,21 @@ class _ZahtjevKarticaTelefonState extends ConsumerState<ZahtjevKarticaTelefon>
                     // `3m`: 26 px, 600, tabularne cifre.
                     style: AdminText.metricNumber.copyWith(fontSize: 26),
                   ),
-                  const Spacer(),
-                  Text(
-                    dan == 'danas' ? dan : '$dan, ${_datumKratko(termin.date)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 13,
-                      color: boje.textSecondary,
+                  const SizedBox(width: AdminSpacing.sm),
+                  // `Expanded`, ne `Spacer` + goli `Text`: „ponedjeljak, 18.05." uz veći
+                  // tekst sistema prelijevao je red na 402 px.
+                  Expanded(
+                    child: Text(
+                      dan == 'danas'
+                          ? dan
+                          : '$dan, ${_datumKratko(termin.date)}',
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 13,
+                        color: boje.textSecondary,
+                      ),
                     ),
                   ),
                 ],

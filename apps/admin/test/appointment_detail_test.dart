@@ -109,20 +109,21 @@ void main() {
   testWidgets('tabela nosi zapis iz `3n`', (tester) async {
     await _naSirini(tester, _telefon, _ekran(_termin()));
 
-    expect(find.text('18. maj 2026.'), findsOneWidget);
-    expect(find.text('14:20–14:50 · 30m'), findsOneWidget);
+    // `3n` (adminv2): dan u sedmici i dd.mm., trajanje se čita iz raspona.
+    expect(find.text('ponedjeljak, 18.05.'), findsOneWidget);
+    expect(find.text('14:20–14:50'), findsOneWidget);
     expect(find.text('Muško šišanje'), findsOneWidget);
     expect(find.text('15 KM'), findsOneWidget);
     expect(find.text('Emir'), findsOneWidget);
-    // „Zakazano 16.05." iz canvasa traži `created_at`, kojeg nema; ostaje odakle je došao.
-    expect(find.text('klijent kroz aplikaciju'), findsOneWidget);
+    // „Zakazano": bez `created_at` ostaje samo izvor.
+    expect(find.text('aplikacija'), findsOneWidget);
     expect(find.text('061 552 104'), findsOneWidget);
   });
 
   testWidgets('ručni unos se vidi kao unos salona', (tester) async {
     await _naSirini(tester, _telefon, _ekran(_termin(source: 'admin')));
 
-    expect(find.text('salon, ručni unos'), findsOneWidget);
+    expect(find.text('ručni unos'), findsOneWidget);
   });
 
   testWidgets('termin bez radnika piše „bilo ko"', (tester) async {
@@ -179,15 +180,26 @@ void main() {
   });
 
   group('radnje', () {
-    testWidgets('potvrđen termin nudi sve tri iz `3n`', (tester) async {
+    testWidgets('potvrđen termin nudi radnje iz `3n`', (tester) async {
       await _naSirini(tester, _telefon, _ekran(_termin()));
 
-      expect(find.text('Završen'), findsOneWidget);
+      // Primarna radnja je cijela rečenica, u verzalu (ADR-0020).
+      expect(find.text('OZNAČI KAO ZAVRŠENO'), findsOneWidget);
       expect(find.text('Nije došao'), findsOneWidget);
       expect(find.text('Otkaži'), findsOneWidget);
-      // „Pomjeri" iz canvasa nema RPC putanju — `set_appointment_status` mijenja status,
-      // ne vrijeme.
-      expect(find.text('Pomjeri'), findsNothing);
+      // „Pomjeri" je nacrtan kao u `3n`, ali nema RPC putanju — tap kaže „uskoro".
+      expect(find.text('Pomjeri'), findsOneWidget);
+    });
+
+    testWidgets('„Pomjeri" ne glumi radnju, nego kaže „uskoro"', (
+      tester,
+    ) async {
+      await _naSirini(tester, _telefon, _ekran(_termin()));
+
+      await tester.tap(find.text('Pomjeri'));
+      await tester.pump();
+
+      expect(find.text('Pomjeranje termina — uskoro.'), findsOneWidget);
     });
 
     testWidgets('zahtjev nudi potvrdu i odbijanje', (tester) async {
@@ -197,7 +209,7 @@ void main() {
         _ekran(_termin(status: AppointmentStatus.pending)),
       );
 
-      expect(find.text('Potvrdi'), findsOneWidget);
+      expect(find.text('POTVRDI'), findsOneWidget);
       expect(find.text('Odbij'), findsOneWidget);
     });
 
@@ -211,7 +223,10 @@ void main() {
       );
 
       expect(find.byType(FilledButton), findsNothing);
-      expect(find.byType(OutlinedButton), findsNothing);
+      // „Pozovi · Poruka · Profil" ostaju (OutlinedButton), ali nijedna radnja nad statusom.
+      for (final radnja in ['Nije došao', 'Otkaži', 'Pomjeri', 'Odbij']) {
+        expect(find.text(radnja), findsNothing);
+      }
     });
   });
 
@@ -269,7 +284,7 @@ void main() {
 
     // Sadržaj u njemu ostaje u koloni: dugme „Potvrdi" ne smije preći mjeru čitljivosti.
     final potvrdi = tester.getSize(
-      find.widgetWithText(FilledButton, 'Potvrdi'),
+      find.widgetWithText(FilledButton, 'POTVRDI'),
     );
     expect(
       potvrdi.width,

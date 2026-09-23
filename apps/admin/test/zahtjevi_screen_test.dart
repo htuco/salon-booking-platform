@@ -5,10 +5,11 @@
 /// radnje stoje uz zahtjev.
 library;
 
+import 'package:admin/src/core/format/datum.dart';
 import 'package:admin/src/core/theme/theme.dart';
-import 'package:admin/src/features/appointments/appointment_card.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/appointments/appointments_screen.dart';
+import 'package:admin/src/features/appointments/zahtjev_kartica.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
@@ -64,6 +65,10 @@ final _danas = DateTime.now();
 final _danasLocal = LocalDate(_danas.year, _danas.month, _danas.day);
 final _sutra = _danas.add(const Duration(days: 1));
 final _sutraLocal = LocalDate(_sutra.year, _sutra.month, _sutra.day);
+
+/// `18.05.` — kako kartica piše datum uz ime dana.
+String _ddMm(DateTime d) =>
+    '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.';
 
 Widget _ekran({List<Appointment>? zahtjevi}) => ProviderScope(
   overrides: [
@@ -129,9 +134,11 @@ void main() {
 
       expect(find.text('Nedim Hodžić'), findsOneWidget);
       expect(find.text('Almir Šahić'), findsOneWidget);
-      // Zato uz vrijeme stoji i dan — „15:00" bez datuma ne kaže za kada je.
-      expect(find.text('sutra'), findsOneWidget);
-      expect(find.text('danas'), findsOneWidget);
+      // Zato uz vrijeme stoji i dan — „15:00" bez datuma ne kaže za kada je. Za sutra
+      // handoff piše ime dana, ne „sutra" (`3d`).
+      final sutra = kDaniSedmice[_sutra.weekday - 1].toLowerCase();
+      expect(find.text('danas, ${_ddMm(_danas)}'), findsOneWidget);
+      expect(find.text('$sutra, ${_ddMm(_sutra)}'), findsOneWidget);
     });
 
     testWidgets('izbor dana se ne nudi u zahtjevima', (tester) async {
@@ -157,21 +164,32 @@ void main() {
 
       expect(find.text('15:00'), findsOneWidget);
       expect(find.text('80 minuta'), findsNWidgets(2));
-      expect(find.text('Fade + brada'), findsWidgets);
+      // Usluga i cijena stoje u jednom podatku: „Fade + brada · 30 KM".
+      expect(find.text('Fade + brada · 30 KM'), findsNWidgets(2));
       expect(find.text('Amar'), findsOneWidget);
       // Termin bez radnika: klijent je izabrao „bilo ko".
       expect(find.text('bilo ko'), findsOneWidget);
-      expect(find.text('30 KM'), findsWidgets);
     });
 
     testWidgets('uz svaki zahtjev stoje potvrda i odbijanje', (tester) async {
       await _naSirini(tester, _desktop, _ekran());
 
-      expect(find.text('Potvrdi'), findsNWidgets(2));
+      // Primarna radnja u verzalu (ADR-0020).
+      expect(find.text('POTVRDI'), findsNWidgets(2));
       expect(find.text('Odbij zahtjev'), findsNWidgets(2));
-      // „Ponudi drugo vrijeme" iz canvasa nema RPC putanju — pomjeranje termina ne
-      // postoji, a dugme koje ne radi je gore od dugmeta kojeg nema.
-      expect(find.text('Ponudi drugo vrijeme'), findsNothing);
+      // Srednja radnja iz `3d`: zahtjev sa majstorom nudi drugo vrijeme, „bilo ko"
+      // promjenu majstora.
+      expect(find.text('Ponudi drugo vrijeme'), findsOneWidget);
+      expect(find.text('Promijeni majstora'), findsOneWidget);
+    });
+
+    testWidgets('srednja radnja nema RPC, pa kaže „uskoro"', (tester) async {
+      await _naSirini(tester, _desktop, _ekran());
+
+      await tester.tap(find.text('Ponudi drugo vrijeme'));
+      await tester.pump();
+
+      expect(find.text('Ponuda drugog vremena — uskoro.'), findsOneWidget);
     });
 
     testWidgets('top bar nudi grupnu potvrdu', (tester) async {
@@ -179,7 +197,7 @@ void main() {
 
       expect(find.text('Potvrdi sve bez preklapanja'), findsOneWidget);
       // U zahtjevima se ne nudi ručni unos: to je radnja pune liste.
-      expect(find.text('+ Novi termin'), findsNothing);
+      expect(find.text('+ NOVI TERMIN'), findsNothing);
     });
 
     testWidgets('grupna potvrda je onemogućena kad nema zahtjeva', (
@@ -198,8 +216,10 @@ void main() {
     testWidgets('zahtjevi su kartice sa istim radnjama', (tester) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      expect(find.byType(AppointmentCard), findsNWidgets(2));
-      expect(find.text('Potvrdi'), findsNWidgets(2));
+      // `3m`: zahtjev ima svoju karticu, ne opštu `AppointmentCard`.
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ZahtjevKarticaTelefon), findsNWidgets(2));
+      expect(find.text('POTVRDI'), findsNWidgets(2));
       expect(find.text('Odbij'), findsNWidgets(2));
     });
 
