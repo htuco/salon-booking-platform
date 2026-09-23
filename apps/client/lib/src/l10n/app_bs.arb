@@ -698,7 +698,7 @@
 
   "appointmentCancelDeadline": "Otkazivanje je moguće najkasnije {hours} sati prije termina.",
   "@appointmentCancelDeadline": {
-    "description": "Objasnjenje uz onemogucen CTA. Rok dolazi iz vertical.rules.minCancelHours, nikad iz konstante.",
+    "description": "Objasnjenje uz onemogucen CTA. Rok dolazi iz salon_settings.min_cancel_hours, nikad iz konstante.",
     "placeholders": { "hours": { "type": "int" } }
   },
 
