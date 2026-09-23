@@ -126,7 +126,7 @@ void main() {
       tester,
     ) async {
       // Onemogućeno dugme bez objašnjenja izgleda kao kvar. Broj sati dolazi iz
-      // vertikale, ne iz konstante.
+      // `salon_settings`, ne iz konstante.
       final repo = _MockAppointments();
       when(repo.forCurrentCustomer)
           .thenAnswer((_) async => [_termin(dan: 15, sat: 14)]);
@@ -145,6 +145,76 @@ void main() {
         find.text('Otkazivanje je moguće najkasnije 3 sati prije termina.'),
         findsOneWidget,
       );
+
+      container.dispose();
+    });
+
+    testWidgets('rok dolazi iz salon_settings, ne iz vertikale', (
+      tester,
+    ) async {
+      // Vertikala kaže 3 h, salon je u postavkama podigao na 5 h. Baza
+      // (`cancel_appointment`) čita `salon_settings`, pa 4 h prije termina odbije
+      // otkazivanje — dugme to mora znati unaprijed, ne preko `PT403`.
+      final repo = _MockAppointments();
+      when(repo.forCurrentCustomer)
+          .thenAnswer((_) async => [_termin(dan: 15, sat: 14)]);
+
+      final container = await _pump(
+        tester,
+        repo: repo,
+        now: DateTime(2026, 9, 15, 10),
+        settings: const SalonSettings(
+          id: 'st-1',
+          salonId: _salonId,
+          minCancelHours: 5,
+        ),
+      );
+
+      final dugme = tester.widget<AppButton>(
+        find.widgetWithText(AppButton, 'Otkaži termin'),
+      );
+      expect(dugme.onPressed, isNull);
+      expect(
+        find.text('Otkazivanje je moguće najkasnije 5 sati prije termina.'),
+        findsOneWidget,
+      );
+
+      container.dispose();
+    });
+
+    testWidgets('prošli tab razlikuje ko je otkazao — salon, istek, korisnik', (
+      tester,
+    ) async {
+      // Istekao `pending` (`system`) ne smije izgledati kao odbijanje salona, a
+      // korisnikovo vlastito otkazivanje nema napomenu jer ga on zna.
+      final repo = _MockAppointments();
+      when(repo.forCurrentCustomer).thenAnswer(
+        (_) async => [
+          _termin(
+            dan: 20,
+            sat: 10,
+            status: AppointmentStatus.cancelled,
+          ).copyWith(cancelledBy: 'salon'),
+          _termin(
+            dan: 21,
+            sat: 11,
+            status: AppointmentStatus.cancelled,
+          ).copyWith(cancelledBy: 'system'),
+          _termin(
+            dan: 22,
+            sat: 12,
+            status: AppointmentStatus.cancelled,
+          ).copyWith(cancelledBy: 'customer'),
+        ],
+      );
+
+      final container = await _pump(tester, repo: repo);
+      await tester.tap(find.text('Prošli'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Otkazao salon'), findsOneWidget);
+      expect(find.text('Isteklo je vrijeme za potvrdu'), findsOneWidget);
+      expect(find.text('12:00'), findsOneWidget);
 
       container.dispose();
     });
@@ -423,6 +493,11 @@ Future<ProviderContainer> _pump(
   required _MockAppointments repo,
   DateTime? now,
   bool prijavljen = true,
+  SalonSettings settings = const SalonSettings(
+    id: 'st-1',
+    salonId: _salonId,
+    minCancelHours: 3,
+  ),
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue =
       ClientRoute.appointments.path;
@@ -447,6 +522,7 @@ Future<ProviderContainer> _pump(
       employeesProvider.overrideWith((ref) async => const <Employee>[]),
       workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
       verticalProvider.overrideWith((ref) async => _vertical),
+      salonSettingsProvider.overrideWith((ref) async => settings),
       authRepositoryProvider.overrideWithValue(auth),
       appointmentRepositoryProvider.overrideWithValue(repo),
       appointmentsNowProvider.overrideWithValue(now ?? _sada),
