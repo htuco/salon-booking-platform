@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/load_error.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/formatters.dart';
@@ -58,7 +59,16 @@ class ReviewsScreen extends ConsumerWidget {
             Expanded(
               child: switch (summary) {
                 AsyncLoading() => const _Kostur(),
-                AsyncError() => _Prazno(poruka: l10n.reviewsEmpty),
+                // Pao upit nije „još nema recenzija" (FE-501) — salon sa 25 ocjena bi
+                // inače izgledao kao salon bez ijedne.
+                AsyncError(:final error) => _Prazno(
+                  tijelo: LoadError(
+                    error: error,
+                    onRetry: () => ref
+                      ..invalidate(salonRatingProvider)
+                      ..invalidate(salonReviewsProvider),
+                  ),
+                ),
                 // Salon bez ijedne ocjene nema red u agregatu — `null`, ne red sa nulama.
                 AsyncData(value: null) => _Prazno(poruka: l10n.reviewsEmpty),
                 AsyncData(:final value?) => _Sadrzaj(
@@ -282,9 +292,12 @@ class _Kartica extends StatelessWidget {
 /// Prazno stanje pod back headerom — naslov ostaje, jer ekran bez naslova iznad poruke
 /// izgleda kao da se nije učitao.
 class _Prazno extends StatelessWidget {
-  const _Prazno({required this.poruka});
+  const _Prazno({this.poruka = '', this.tijelo});
 
   final String poruka;
+
+  /// Umjesto poruke — `LoadError` kad upit padne (FE-501). Naslov ostaje.
+  final Widget? tijelo;
 
   @override
   Widget build(BuildContext context) {
@@ -305,7 +318,7 @@ class _Prazno extends StatelessWidget {
             style: Theme.of(context).textTheme.displaySmall,
           ),
         ),
-        Expanded(child: EmptyState(message: poruka)),
+        Expanded(child: tijelo ?? EmptyState(message: poruka)),
       ],
     );
   }

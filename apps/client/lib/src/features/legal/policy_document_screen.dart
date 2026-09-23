@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/load_error.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../booking/date_labels.dart';
@@ -77,10 +78,22 @@ class PolicyDocumentScreen extends ConsumerWidget {
                   sekcije: lista,
                   vrijednosti: ref.watch(policyPlaceholdersProvider),
                 ),
-                // Prazna lista i greška se crtaju isto, i to je odluka: korisniku je
-                // svejedno je li tekst pao na mreži ili ga nema u bazi — oboje znači
-                // „nemam šta pokazati". Pravni ekran koji baci izuzetak je gori od oba.
-                AsyncData() || AsyncError() => _Prazno(naslov: naslov),
+                // Prazna lista i greška se **ne** crtaju isto (FE-501). „Pravila nisu
+                // objavljena" kad su objavljena a mreža je pala je netačna tvrdnja na
+                // pravnom ekranu, i korisniku ne nudi ništa. Greška dobija „Pokušaj
+                // ponovo"; izuzetak i dalje ne izlazi iz ekrana.
+                AsyncError(:final error) => _Prazno(
+                  naslov: naslov,
+                  tijelo: LoadError(
+                    error: error,
+                    onRetry: () => ref.invalidate(
+                      document == PolicyDocument.terms
+                          ? termsProvider
+                          : privacyPolicyProvider,
+                    ),
+                  ),
+                ),
+                AsyncData() => _Prazno(naslov: naslov),
                 _ => const _Kostur(),
               },
             ),
@@ -201,9 +214,12 @@ class _Sekcija extends StatelessWidget {
 /// Prazno stanje — naslov ostaje, jer ekran bez naslova iznad poruke izgleda kao da se
 /// nije učitao (isti obrazac kao `/reviews`).
 class _Prazno extends StatelessWidget {
-  const _Prazno({required this.naslov});
+  const _Prazno({required this.naslov, this.tijelo});
 
   final String naslov;
+
+  /// Umjesto poruke — `LoadError` kad upit padne (FE-501). Naslov ostaje.
+  final Widget? tijelo;
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +237,7 @@ class _Prazno extends StatelessWidget {
           ),
           child: Text(naslov, style: Theme.of(context).textTheme.displaySmall),
         ),
-        Expanded(child: EmptyState(message: l10n.policyEmpty)),
+        Expanded(child: tijelo ?? EmptyState(message: l10n.policyEmpty)),
       ],
     );
   }

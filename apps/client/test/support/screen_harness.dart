@@ -70,6 +70,10 @@ Future<ProviderContainer> pumpEkran(
   SalonSettings? postavke,
   PackageInfo? packageInfo,
   AuthRepository? authRepository,
+
+  /// Kad je zadana, galerija, ocjena i pravila bacaju ovu grešku (FE-501): greška mora
+  /// izgledati drukčije od praznog stanja.
+  Object? greskaIzvora,
   bool pumpaj = true,
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
@@ -104,15 +108,21 @@ Future<ProviderContainer> pumpEkran(
         (ref) async => const <EmployeeService>[],
       ),
       workingHoursProvider.overrideWith((ref) async => radnoVrijeme),
-      salonGalleryProvider.overrideWith((ref) async => galerija),
-      salonRatingProvider.overrideWith((ref) async => ocjena),
+      salonGalleryProvider.overrideWith(
+        (ref) async => greskaIzvora != null ? throw greskaIzvora : galerija,
+      ),
+      salonRatingProvider.overrideWith(
+        (ref) async => greskaIzvora != null ? throw greskaIzvora : ocjena,
+      ),
       salonReviewsProvider.overrideWith((ref) async => recenzije),
       verticalProvider.overrideWith((ref) async => vertical ?? vertikala()),
       // Pravni ekrani (task 21) i `policyPlaceholdersProvider` čitaju pravila i postavke.
       // `salonSettingsProvider` bez override-a posegne za `Supabase.instance`, pa stoji
       // ovdje čak i za ekrane koji pravila ne crtaju — provider se gradi lijeno, ali
       // `/about-app` i `/terms` ga traže odmah.
-      termsProvider.overrideWith((ref) async => pravila),
+      termsProvider.overrideWith(
+        (ref) async => greskaIzvora != null ? throw greskaIzvora : pravila,
+      ),
       privacyPolicyProvider.overrideWith((ref) async => privatnost),
       salonSettingsProvider.overrideWith(
         (ref) async =>

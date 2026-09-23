@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/load_error.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -74,7 +75,12 @@ class AboutAppScreen extends ConsumerWidget {
             Expanded(
               child: switch (salon) {
                 AsyncData(:final value) => _Sadrzaj(salon: value),
-                AsyncError() => EmptyState(message: l10n.policyEmpty),
+                // Ranije je ovdje stajala poruka o praznim pravilima, na ekranu koji
+                // nije pravilo nego podaci salona (FE-501).
+                AsyncError(:final error) => LoadError(
+                  error: error,
+                  onRetry: () => ref.invalidate(salonProvider),
+                ),
                 _ => const _Kostur(),
               },
             ),
