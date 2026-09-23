@@ -22,7 +22,7 @@ inače briše ono što još nije zamijenjeno. Konkretni kandidati nastaju tek to
 - zaobljene varijante komponenti i `borderRadius` koji nije `zero` ([FE-103](FE-103-skala-razmaka.md)).
 
 ## Definicija gotovog
-- [ ] Nema neiskorištenih pisama, boja ni widgeta — boje i widgeti čisti; **Barlow Bold ostaje** (ADR-0020), v. status
+- [x] Nema neiskorištenih pisama, boja ni widgeta — Barlow Bold izbačen ([ADR-0022](../../docs/adr/0022-barlow-bez-bold-reza.md))
 - [x] Grep provjere čiste: `Color(0x` van tokena, `fontFamily:` u ekranu, `borderRadius` koji nije `zero`
 - [ ] Veličina bundla **nije porasla** u odnosu na stanje prije epika — izmjereno, sa brojem u status bloku
 - [x] `no_hardcoded_colors_test` prošireni ekvivalent postoji i za klijenta
@@ -96,3 +96,11 @@ brisanje `AdminColors`/`topBarButtonHeight` pobjeđuje, a FE-502 vrijednosti (`d
 `buttonHeight = 36`, pa FE-502 testovi mete padnu, kako se u QA prolazu i desilo.
 
 Admin 392, klijent 309, `core_ui` 104 testova PASS na spojenom stanju, analiza čista.
+
+### Dopuna: Barlow Bold izbačen (2026-09-23)
+
+Vlasnik je odlučio da se rez 700 izbaci — [ADR-0022](../../docs/adr/0022-barlow-bez-bold-reza.md).
+Pisma admina su sada **316 KB, manje nego prije epika (324 KB)**. Ukupni admin bundle je i dalje
+oko **+134 KB** iznad polazne tačke, sve u `main.dart.js` — to je funkcionalnost epika, ne mrtav
+stil. Stavka „bundle nije porastao" zato ostaje otvorena kao svjesna odluka, a ne kao posao za
+čišćenje.

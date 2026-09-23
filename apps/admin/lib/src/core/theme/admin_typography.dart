@@ -1,4 +1,5 @@
-/// Tipografija admin aplikacije — **jedna porodica, Barlow**, u četiri reza (400–700).
+/// Tipografija admin aplikacije — **jedna porodica, Barlow**, u tri reza (400–600). Rez 700
+/// je izbačen (ADR-0022): nijedan stil ga nije tražio, a nosio je 108 KB.
 ///
 /// Do ADR-0020 je admin nosio Space Grotesk + JetBrains Mono (ADR-0019). Vlasnik
 /// proizvoda je tražio da admin bude **1:1 sa `prototype/adminv2/export/`**, a izvoz je
