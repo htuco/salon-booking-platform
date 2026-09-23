@@ -1,46 +1,56 @@
-# Trenutni task: 40 — Naziv lokala se ne mijenja iz admina
+# Trenutni task: 41 — Zakazivanje bez prijave se uklanja
 
-Učitan 2026-09-23 iz [sprint-4/40](sprint-4/40-naziv-lokala-se-ne-mijenja.md). Popravka,
-procjena 0,5 dana, bez zavisnosti i bez taskova koje blokira.
+Učitan 2026-09-23 iz [sprint-4/41](sprint-4/41-bez-zakazivanja-bez-prijave.md). Popravka,
+procjena 1 dan, bez zavisnosti i bez taskova koje blokira.
 
 ## Status
 
-U toku na grani `fix/naziv-lokala-zakljucan`.
+U toku na grani `fix/zakazivanje-trazi-prijavu`.
 
 ## Ciljevi
 
-- [x] U admin postavkama prikazati naziv salona samo za čitanje i objasniti da se naziv aplikacije
-      mijenja kroz novi store build
-- [ ] Novom migracijom učvrstiti `update_salon_contact`: pokušaj slanja drugačijeg naziva mora
-      vratiti grešku, dok ostali kontakt podaci ostaju promjenjivi
-- [x] Prilagoditi Dart ugovor i testove zaključanom nazivu bez otvaranja drugog puta pisanja
-- [ ] Dodati negativan pgTAP slučaj koji pokušava promijeniti naziv i dokazuje da je red netaknut
-- [x] Zapisati puni put promjene naziva: `tenants/<flavor>/tenant.yaml` →
-      `dart run tool/gen_flavors.dart` → novi store build/submission
+- [ ] Ukloniti `AuthConfig.allowGuest`, `AuthRepository.continueAsGuest` i anonimne grane iz
+      domenskog/API ugovora, implementacija, demo/fake repozitorija i testova
+- [ ] Ukloniti `allowGuestBooking` iz tenant konfiguracije i generatora te regenerisati tenant
+      registar; ne ostaviti neaktivni flag
+- [ ] Novom migracijom ukloniti `salon_settings.allow_guest_booking`, prilagoditi potpis
+      `update_salon_settings` bez paralelnog preopterećenja i zapisati odluku o uklanjanju kolone
+- [ ] Ukloniti gost prekidač i pripadajuće stanje iz admin postavki, repozitorija i testova
+- [ ] Učvrstiti `book_appointment` tako da odbija Supabase anonimni identitet i dokazati pgTAP
+      testom da termin nije nastao
+- [ ] Očistiti preostali guest ugovor (`appointment_source.guest`, `AuthSession.isAnonymous` i
+      zavisne grane) ili dokumentovati nužni odbrambeni ostatak, bez puta za guest rezervaciju
+- [ ] Sinhronizovati seed, REST/pgTAP testove i operativnu dokumentaciju sa obaveznom prijavom
 
 ## Napomene
 
-- Danas je naziv stvarno promjenjiv na oba sloja: `settings_screen.dart` crta obični
-  `TextFormField`, a `update_salon_contact` prima `p_name` i radi `set name = btrim(p_name)`.
-  Postojeći testovi čak tvrde „Naziv je upisan", pa moraju biti promijenjeni zajedno s ugovorom.
-- Direktan `UPDATE public.salons` je već oduzet roli `authenticated`; RPC iz taska 36 je jedini
-  aplikacijski put pisanja. Zaštita zato pripada novoj migraciji, ne izmjeni već deployane
-  `20260921180000_postavke_lokacije.sql`.
-- Postojeći potpis RPC-a može ostati kompatibilan tako da `p_name` služi kao tvrdnja o zatečenom
-  nazivu, ali mora odbiti različitu vrijednost i nikad je ne upisati. Time PostgREST i postojeći
-  klijenti ne dobijaju paralelno preopterećenje funkcije.
-- Build-time izvor već postoji: oba `tenant.yaml` fajla nose `app.displayName`, a
-  `tool/gen_flavors.dart` iz njega generiše Android `app_name`, iOS `PRODUCT_NAME` i Dart tenant
-  registar. Nedostaje eksplicitna uputa da promjena traži novi build i store submission.
-- `x-salon-id` ne daje pravo izmjene; RPC i dalje mora tražiti `private.is_admin(p_salon_id)`.
-  Nova `security definer` verzija zadržava `set search_path = ''` i potpuno kvalifikovane reference.
-- Otvoreno pitanje o zasebnom runtime prikaznom nazivu ostaje van ovog taska; nova kolona bez ADR-a
-  se ne uvodi.
-- Procjena ostaje 0,5 dana: šema i jedini write put već postoje, ali promjena prelazi migraciju,
-  pgTAP, `core_api`, admin ekran i njihove testove.
-- Dokaz u ovom prolazu: `settings_screen_test.dart` **16/16**, `catalog_repository_test.dart`
-  **18/18**, `flutter analyze apps/admin packages/core_api` čist i `gen_flavors --check` potvrđuje
-  dva ažurna tenanta. pgTAP još nije pokrenut jer na mašini nema ni `supabase` CLI-ja ni Dockera.
+- Guest tok nikad nije isporučen u produkcijskom UI-ju: login ekran nema akciju „Nastavi kao gost",
+  `SupabaseAuthRepository.continueAsGuest` samo baca grešku, a oba tenanta i template nose
+  `allowGuestBooking: false`. To nije dovoljno za ovaj task jer mrtvi ugovor i dalje prolazi kroz
+  generator, modele i testove.
+- `salon_settings.allow_guest_booking` je danas stvarno promjenjiv: task 36 ga je uključio u
+  `update_salon_settings`, `SettingsRepository` i admin prekidač. Nova migracija mora zamijeniti
+  RPC potpis i ukloniti staru overload verziju; izmjena već deployane migracije nije dovoljna.
+- Sam grant nije zaštita od gosta. `book_appointment` jeste grantovan samo `authenticated`, ali
+  Supabase anonimni korisnik dobija sesiju i tu rolu. Trenutni guard prihvata svakog klijenta koji
+  posjeduje `auth_identity`, dok `private.sync_auth_identity` već bilježi `is_anonymous`; nova
+  verzija RPC-a mora taj identitet eksplicitno odbiti.
+- Anonimna semantika nije samo komentar: `AuthSession.isAnonymous` ulazi u jednakost i mapira se iz
+  Supabase korisnika, a auth/customer provideri ga računaju kao prijavljenog. U repou nema poziva
+  `signInAnonymously`, ali odbrana mora pokriti postojeću ili spolja kreiranu anonimnu sesiju.
+- `appointment_source` još sadrži vrijednost `guest`, iako nijedan aktivni put ne upisuje takav
+  termin. Po cilju „iz koda, postavki i ugovora" to je dio čišćenja; migracija mora sigurno obraditi
+  eventualne stare redove prije zamjene enum-a.
+- Uklanjanje kolone je čišće od trajnog `false`: odluka iz ADR-0011 za Facebook kaže da isključen
+  flag i dalje naplaćuje održavanje, a task 41 izričito traži isti obrazac. Odluku treba zapisati uz
+  migraciju/status, ne uvoditi novi flag ili drugi put pisanja.
+- Stari dokumenti `docs/01`, `docs/02` i `docs/06` još opisuju guest flow. Oni su izvorni plan, ali
+  `docs/06` je i operativni auth dokument i mora dobiti jasnu bilješku da ga task 41 poništava;
+  ADR-0011 ostaje istorijski zapis da je gost tada bio samo odgođen.
+- Procjena ostaje 1 dan: UI tok ne treba uklanjati, ali promjena presijeca šemu i RPC potpis,
+  generator, oba Dart paketa, admin/klijent providere, seed i više pgTAP/REST ugovora.
+- Kod taska 40 je spojen u `main` kroz PR #99, ali njegov task fajl i sprint tabela još nisu
+  zatvoreni. Ta zatečena tracker nedosljednost nije dio taska 41 i nije prepisana u istoriju.
 
 ## Istorija
 
