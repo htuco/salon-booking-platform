@@ -25,13 +25,16 @@ import 'working_hours_providers.dart';
 /// bude nevidljiva, ne da je izvrši.
 Future<bool?> prikaziKonflikte(
   BuildContext context,
-  List<ScheduleConflict> konflikti,
-) => showDialog<bool>(
+  List<ScheduleConflict> konflikti, {
+  String naslov = 'Termini ostaju van radnog vremena',
+  String? opis,
+  String potvrda = 'Sačuvaj ipak',
+}) => showDialog<bool>(
   context: context,
   builder: (context) {
     final boje = context.adminColors;
     return AlertDialog(
-      title: const Text('Termini ostaju van radnog vremena'),
+      title: Text(naslov),
       // `maxWidth`, ne fiksnih `460`: na telefonu je dostupno ~322 px, pa fiksna širina
       // opisuje namjeru pogrešno („uvijek 460") iako je `AlertDialog` ionako stisne.
       content: ConstrainedBox(
@@ -41,12 +44,13 @@ Future<bool?> prikaziKonflikte(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              konflikti.length == 1
-                  ? 'Jedan zakazan termin ispada van novog radnog vremena. '
-                        'Ostaje zakazan — ne briše se i ne pomjera.'
-                  : '${konflikti.length} zakazanih termina ispada van novog '
-                        'radnog vremena. Ostaju zakazani — ne brišu se i ne '
-                        'pomjeraju.',
+              opis ??
+                  (konflikti.length == 1
+                      ? 'Jedan zakazan termin ispada van novog radnog vremena. '
+                            'Ostaje zakazan — ne briše se i ne pomjera.'
+                      : '${konflikti.length} zakazanih termina ispada van novog '
+                            'radnog vremena. Ostaju zakazani — ne brišu se i ne '
+                            'pomjeraju.'),
               style: TextStyle(color: boje.textSecondary),
             ),
             const SizedBox(height: AdminSpacing.lg),
@@ -119,7 +123,7 @@ Future<bool?> prikaziKonflikte(
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: FilledButton.styleFrom(textStyle: AdminText.actionLabel),
-          child: const AdminVerzal('Sačuvaj ipak'),
+          child: AdminVerzal(potvrda),
         ),
       ],
     );
@@ -151,6 +155,10 @@ class _UredjivacBlokadeState extends ConsumerState<_UredjivacBlokade> {
   /// `null` = cijeli salon. Isto pravilo kao `blocked_slots.employee_id`.
   String? _radnikId;
   bool _snimam = false;
+
+  /// Neradni dan (task 42): cijeli dan, cijeli salon, i **otkazivanje** termina tog dana.
+  /// Obična blokada termine ostavlja; ova ih otkazuje, pa broj ide pred vlasnika prije potvrde.
+  bool _neradniDan = false;
   String? _greska;
 
   @override
@@ -159,7 +167,58 @@ class _UredjivacBlokadeState extends ConsumerState<_UredjivacBlokade> {
     super.dispose();
   }
 
+  Future<void> _proglasiNeradniDan() async {
+    setState(() {
+      _snimam = true;
+      _greska = null;
+    });
+    final actions = ref.read(workingHoursActionsProvider);
+    final datum = LocalDate(_datum.year, _datum.month, _datum.day);
+    try {
+      final termini = await actions.terminiNeradnogDana(datum);
+      if (!mounted) return;
+      if (termini.isNotEmpty) {
+        // Nema tihe kaskade: vlasnik vidi tačno koje termine otkazuje prije nego što potvrdi.
+        final potvrdio = await prikaziKonflikte(
+          context,
+          termini,
+          naslov: 'Termini će biti otkazani',
+          opis: termini.length == 1
+              ? 'Jedan termin tog dana će biti otkazan, a klijent obaviješten.'
+              : '${termini.length} termina tog dana će biti otkazano, a svaki '
+                    'klijent obaviješten.',
+          potvrda: 'Otkaži i zatvori dan',
+        );
+        if (!mounted) return;
+        if (potvrdio != true) {
+          setState(() => _snimam = false);
+          return;
+        }
+      }
+      final razlog = _razlog.text.trim();
+      await actions.proglasiNeradniDan(
+        datum,
+        razlog: razlog.isEmpty ? null : razlog,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on ApiError catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _snimam = false;
+        _greska = porukaGreske(error);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _snimam = false;
+        _greska = 'Neradni dan se ne može sačuvati.';
+      });
+    }
+  }
+
   Future<void> _sacuvaj() async {
+    if (_neradniDan && _radnikId == null) return _proglasiNeradniDan();
     if (_do.minutesFromMidnight <= _od.minutesFromMidnight) {
       setState(() => _greska = 'Kraj mora biti poslije početka.');
       return;
@@ -250,26 +309,28 @@ class _UredjivacBlokadeState extends ConsumerState<_UredjivacBlokade> {
                   if (izabrano != null) setState(() => _datum = izabrano);
                 },
               ),
-              const SizedBox(height: AdminSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: _Polje(
-                      naslov: 'Od',
-                      vrijeme: _od,
-                      onChanged: (v) => setState(() => _od = v),
+              if (!(_neradniDan && _radnikId == null)) ...[
+                const SizedBox(height: AdminSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _Polje(
+                        naslov: 'Od',
+                        vrijeme: _od,
+                        onChanged: (v) => setState(() => _od = v),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AdminSpacing.md),
-                  Expanded(
-                    child: _Polje(
-                      naslov: 'Do',
-                      vrijeme: _do,
-                      onChanged: (v) => setState(() => _do = v),
+                    const SizedBox(width: AdminSpacing.md),
+                    Expanded(
+                      child: _Polje(
+                        naslov: 'Do',
+                        vrijeme: _do,
+                        onChanged: (v) => setState(() => _do = v),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
               const SizedBox(height: AdminSpacing.lg),
               DropdownButtonFormField<String?>(
                 initialValue: _radnikId,
@@ -299,6 +360,20 @@ class _UredjivacBlokadeState extends ConsumerState<_UredjivacBlokade> {
                 ],
                 onChanged: (v) => setState(() => _radnikId = v),
               ),
+              // Neradni dan je salonski pojam: odsustvo jednog radnika ne otkazuje salon.
+              if (_radnikId == null) ...[
+                const SizedBox(height: AdminSpacing.md),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Neradni dan — otkaži sve termine'),
+                  subtitle: const Text(
+                    'Cijeli dan se zatvara, a klijenti dobijaju obavijest. '
+                    'Danas se može prijaviti samo prije otvaranja.',
+                  ),
+                  value: _neradniDan,
+                  onChanged: (v) => setState(() => _neradniDan = v),
+                ),
+              ],
               const SizedBox(height: AdminSpacing.lg),
               TextFormField(
                 controller: _razlog,

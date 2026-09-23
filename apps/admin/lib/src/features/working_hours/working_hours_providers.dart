@@ -105,6 +105,20 @@ class WorkingHoursActions {
     ref.invalidate(buduceBlokadeProvider);
   }
 
+  /// Termini koje bi neradni dan otkazao — ekran ih pokazuje prije potvrde.
+  Future<List<ScheduleConflict>> terminiNeradnogDana(LocalDate datum) => ref
+      .read(blockedSlotRepositoryProvider)
+      .dayClosurePreview(salonId: _salon, date: datum);
+
+  /// Neradni dan: blokada cijelog dana i otkazivanje svih termina tog dana.
+  Future<int> proglasiNeradniDan(LocalDate datum, {String? razlog}) async {
+    final broj = await ref
+        .read(blockedSlotRepositoryProvider)
+        .closeDay(salonId: _salon, date: datum, reason: razlog);
+    ref.invalidate(buduceBlokadeProvider);
+    return broj;
+  }
+
   Future<void> obrisiBlokadu(String blokadaId) async {
     await ref
         .read(blockedSlotRepositoryProvider)

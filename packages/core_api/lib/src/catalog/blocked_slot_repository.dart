@@ -151,6 +151,39 @@ class BlockedSlotRepository {
     return scheduleConflictsFromRows(rows as List<dynamic>);
   });
 
+  /// Termini koje bi [closeDay] otkazao — prikazuju se **prije** potvrde (task 42).
+  ///
+  /// Isti guard kao upis: prošli dan i danas poslije otvaranja daju grešku već ovdje, pa
+  /// ekran ne nudi potvrdu koju bi `set_day_closed` odbio.
+  Future<List<ScheduleConflict>> dayClosurePreview({
+    required String salonId,
+    required LocalDate date,
+  }) => guard(() async {
+    final rows = await _client.rpc<dynamic>(
+      'day_closure_preview',
+      params: {'p_salon_id': salonId, 'p_date': date.format()},
+    );
+    return scheduleConflictsFromRows(rows as List<dynamic>);
+  });
+
+  /// Proglašava dan neradnim: blokira cijeli dan i **otkazuje** sve žive termine tog dana,
+  /// za razliku od [create], koji termine ostavlja. Vraća broj otkazanih.
+  Future<int> closeDay({
+    required String salonId,
+    required LocalDate date,
+    String? reason,
+  }) => guard(() async {
+    final broj = await _client.rpc<dynamic>(
+      'set_day_closed',
+      params: {
+        'p_salon_id': salonId,
+        'p_date': date.format(),
+        'p_reason': reason,
+      },
+    );
+    return (broj as num).toInt();
+  });
+
   /// `2026-05-18` — `date` kolona, bez zone i bez `toIso8601String()`.
   ///
   /// `DateTime.toIso8601String()` nosi vrijeme i, za UTC vrijednost, `Z`; PostgREST bi to
