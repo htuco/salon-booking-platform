@@ -5,7 +5,6 @@
 /// `buildAppTheme` prima dvije brand boje i ime teme, i sve ostalo izvodi.
 library;
 
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import '../tokens/spacing.dart';
@@ -13,6 +12,7 @@ import '../tokens/status_colors.dart';
 import '../tokens/typography.dart';
 import 'app_theme.dart';
 import 'contrast.dart';
+import 'page_transition.dart';
 
 /// Gradi temu iz dvije brand boje.
 ///
@@ -195,11 +195,12 @@ ThemeData buildAppTheme({
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     ),
 
-    // `docs/02 §14`: max 300 ms. Fade je najkraci prelaz koji jos citljivo povezuje ekrane.
-    pageTransitionsTheme: const PageTransitionsTheme(
+    // `docs/02 §14`: max 300 ms. Isti prelaz za **sve** platforme (FE-201) — i web i desktop,
+    // koji bi inače pali na Materialov zoom.
+    pageTransitionsTheme: PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{
-        TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        for (final platforma in TargetPlatform.values)
+          platforma: const AppPageTransitionsBuilder(),
       },
     ),
   );
