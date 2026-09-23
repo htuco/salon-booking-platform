@@ -90,7 +90,9 @@ statična reza Barlowa.
 
 ### Dokaz
 
-Admin 334, klijent 264, `core_ui` 87 testova PASS (grana je sa `main`-a, bez FE-502),
-analiza čista. **Konflikt sa FE-502 (PR #94) je očekivan** u `admin_colors.dart` i
-`admin_tokens.dart`: ovdje su obrisane konstante koje FE-502 mijenja. Rješenje: brisanje pobjeđuje, a
-nova vrijednost `destructive` iz FE-502 ostaje u `AdminPalette`.
+Grana je spojena sa FE-502 (PR #94), pa se **spaja poslije njega**. Konflikt je riješen ovdje:
+brisanje `AdminColors`/`topBarButtonHeight` pobjeđuje, a FE-502 vrijednosti (`destructive`,
+`buttonHeight = touchTarget`) ostaju. **Ne rješavati ga sa `--theirs`**: to vrati
+`buttonHeight = 36`, pa FE-502 testovi mete padnu, kako se u QA prolazu i desilo.
+
+Admin 392, klijent 309, `core_ui` 104 testova PASS na spojenom stanju, analiza čista.
