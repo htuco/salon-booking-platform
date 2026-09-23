@@ -95,7 +95,7 @@ select lives_ok($$
 $$, 'Vlasnik mijenja kontakt podatke svog salona');
 
 select is((select name from public.salons where id = (select salon from pfix)),
-  'Barber Studio Vitez', 'Naziv je upisan');
+  'Barber Studio Vitez', 'Zatečeni naziv ostaje nepromijenjen');
 select is((select city from public.salons where id = (select salon from pfix)),
   'Vitez', 'Grad je upisan');
 select is((select phone from public.salons where id = (select salon from pfix)),
@@ -117,12 +117,20 @@ select is((select email from public.salons where id = (select salon from pfix)),
 select is((select address from public.salons where id = (select salon from pfix)), '',
   'Adresa je not null kolona i prazno se pise kao prazan string');
 
--- Naziv i grad su jedina obavezna polja.
+-- Naziv je build-time identitet aplikacije: RPC ga prima samo kao tvrdnju o zatečenoj
+-- vrijednosti, a pokušaj promjene mora pasti prije upisa ostalih kontakt podataka.
 select throws_ok($$
-  select public.update_salon_contact((select salon from pfix), '   ', 'Adresa', 'Vitez')
-$$, 'PT400', 'Naziv je obavezan', 'Prazan naziv se odbija');
+  select public.update_salon_contact((select salon from pfix), 'Drugi naziv', 'Ne smije se upisati', 'Vitez')
+$$, 'PT400', 'Naziv aplikacije mijenja se kroz novi store build',
+  'Promjena naziva se odbija u bazi');
+select is((select name from public.salons where id = (select salon from pfix)),
+  'Barber Studio Vitez', 'Odbijeni poziv ne mijenja naziv');
+select isnt((select address from public.salons where id = (select salon from pfix)),
+  'Ne smije se upisati', 'Odbijeni poziv ne mijenja ni ostale podatke');
+
+-- Grad ostaje jedino obavezno promjenjivo polje.
 select throws_ok($$
-  select public.update_salon_contact((select salon from pfix), 'Naziv', 'Adresa', '  ')
+  select public.update_salon_contact((select salon from pfix), 'Barber Studio Vitez', 'Adresa', '  ')
 $$, 'PT400', 'Grad je obavezan', 'Prazan grad se odbija');
 
 -- ---------------------------------------------------------------------------

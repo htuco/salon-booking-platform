@@ -138,7 +138,7 @@ class BookingSettingsInput {
 /// Vrijednosti forme kontakt podataka.
 class ContactInput {
   const ContactInput({
-    required this.name,
+    required this.expectedName,
     required this.address,
     required this.city,
     required this.description,
@@ -148,7 +148,8 @@ class ContactInput {
     required this.facebookUrl,
   });
 
-  final String name;
+  /// Build-time naziv koji je forma učitala; baza odbija svaku drugu vrijednost.
+  final String expectedName;
   final String address;
   final String city;
   final String description;
@@ -175,7 +176,7 @@ class SettingsActions {
         .read(salonRepositoryProvider)
         .updateContact(
           salonId: _salon,
-          name: unos.name,
+          expectedName: unos.expectedName,
           address: unos.address,
           city: unos.city,
           description: unos.description,

@@ -12,7 +12,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | [37](37-automatsko-potvrdjivanje.md) 🟡 | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
 | [38](38-crash-radno-vrijeme.md) 🟡 | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
 | [39](39-push-na-androidu.md) 🟡 | Push obavijesti na Androidu | bug | 42 | 1–2 dana |
-| [40](40-naziv-lokala-se-ne-mijenja.md) | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
+| [40](40-naziv-lokala-se-ne-mijenja.md) 🟡 | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
 | [41](41-bez-zakazivanja-bez-prijave.md) | Zakazivanje bez prijave se uklanja | popravka | — | 1 dan |
 | [42](42-neradni-dan-i-zakljucana-proslost.md) | Neradni dan i zaključana prošlost | feature | — | 2–3 dana |
 | [43](43-korak-po-usluzi.md) | Korak rezervacije po usluzi | feature | — | 1–2 dana |

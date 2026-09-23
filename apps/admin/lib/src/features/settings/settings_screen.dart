@@ -402,7 +402,9 @@ class _PostavkeState extends ConsumerState<_Postavke> {
       final akcije = ref.read(settingsActionsProvider);
       await akcije.sacuvajKontakt(
         ContactInput(
-          name: _naziv.text,
+          // Saljemo vrijednost koju korisnik zaista vidi. Ako se provider osvjezi
+          // dok je forma otvorena, baza ce odbiti spremanje zastarjelog prikaza.
+          expectedName: _naziv.text,
           address: _adresa.text,
           city: _grad.text,
           description: _opis.text,
@@ -660,12 +662,13 @@ class _Polje extends StatelessWidget {
 }
 
 /// Polje od 46 px iz `3i`.
-InputDecoration _ukras({String? pomoc}) => InputDecoration(
-  isDense: true,
-  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-  helperText: pomoc,
-  helperMaxLines: 2,
-);
+InputDecoration _ukras({String? pomoc, int helperMaxLines = 2}) =>
+    InputDecoration(
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      helperText: pomoc,
+      helperMaxLines: helperMaxLines,
+    );
 
 /// Dva polja u redu kad stanu, jedno ispod drugog kad ne.
 class _ParPolja extends StatelessWidget {
@@ -932,10 +935,12 @@ class _OsnovnaKartica extends StatelessWidget {
             labela: 'Naziv',
             child: TextFormField(
               controller: naziv,
+              readOnly: true,
               style: polje,
-              decoration: _ukras(),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Naziv je obavezan.' : null,
+              decoration: _ukras(
+                pomoc: 'Naziv aplikacije mijenja se kroz konfiguraciju i novi store build.',
+                helperMaxLines: 3,
+              ),
             ),
           ),
           const SizedBox(height: 16),
