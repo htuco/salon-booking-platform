@@ -249,12 +249,6 @@ class SupabaseAuthRepository implements AuthRepository {
     return sesija;
   }
 
-  @override
-  Future<AuthSession> continueAsGuest({required String name}) =>
-      throw ServerError(
-        'Tok gosta nije implementiran — nema taska (docs/adr/0011-facebook-login-se-ne-implementira.md)',
-      );
-
   /// Brisanje naloga kroz Edge Function `delete-account` (task 17).
   ///
   /// **Ne zove se `auth.admin.deleteUser` odavde, i nikad neće.** To je admin API koji radi
@@ -297,13 +291,15 @@ class SupabaseAuthRepository implements AuthRepository {
   /// Supabaseova `Session` → domenski [AuthSession]. Jedina tačka prevoda.
   AuthSession? _sesija(Session? session) {
     final user = session?.user;
-    if (user == null) return null;
+    // Supabase anonymous auth izdaje pravi JWT sa rolom `authenticated`. Takva sesija
+    // više nije prijava u proizvodu: ne puštamo je u router ni u `ensure_customer`, a baza
+    // nezavisno ponavlja istu zabranu u `book_appointment` (task 41).
+    if (user == null || user.isAnonymous) return null;
 
     return AuthSession(
       userId: user.id,
       providers: _provideri(user),
       email: user.email,
-      isAnonymous: user.isAnonymous,
     );
   }
 

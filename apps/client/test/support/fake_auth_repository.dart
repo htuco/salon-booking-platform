@@ -104,10 +104,6 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthSession> signInWithGoogle() async =>
       throw prijavaGreska ?? const ServerError('Google prijava nije dostupna');
 
-  @override
-  Future<AuthSession> continueAsGuest({required String name}) async =>
-      throw const ServerError('Tok gosta nije implementiran');
-
   /// Brisanje naloga (task 17).
   ///
   /// **Odjava je dio brisanja**, isto kao u `SupabaseAuthRepository` — ekran se oslanja na

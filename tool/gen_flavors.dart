@@ -160,7 +160,6 @@ class Tenant {
     required this.android,
     required this.ios,
     required this.authProviders,
-    required this.allowGuestBooking,
     required this.googleReversedClientId,
   });
 
@@ -207,6 +206,13 @@ class Tenant {
     // `auth.providers` je tipfeler u konfiguraciji, pa je pad generatora u CI-ju jedino
     // mjesto gdje se vidi prije nego stigne do korisnika. Isti razlog kao za heks boje.
     final auth = yaml['auth'] as YamlMap? ?? YamlMap();
+    if (auth.containsKey('allowGuestBooking')) {
+      stderr.writeln(
+        '$flavor: auth.allowGuestBooking je uklonjen — svaki klijent se mora prijaviti '
+        '(task 41). Ukloni ključ iz tenant.yaml.',
+      );
+      exit(1);
+    }
     final provideri = auth['providers'] as YamlMap? ?? YamlMap();
     for (final kljuc in provideri.keys) {
       if (!_poznatiProvideri.contains(kljuc)) {
@@ -274,7 +280,6 @@ class Tenant {
       // Bez `auth:` bloka tenant dobija isto sto i AuthConfig.fallback — Apple, Google,
       // email. Postojeci tenant.yaml tako ne mora biti dopunjen da bi prijava radila.
       authProviders: auth.isEmpty ? _podrazumijevaniProvideri : ukljuceni,
-      allowGuestBooking: auth['allowGuestBooking'] as bool? ?? false,
       // Prazno je ispravno stanje: vecina tenanata jos nema Google klijenta.
       googleReversedClientId: auth['googleReversedClientId'] as String? ?? '',
     );
@@ -299,7 +304,6 @@ class Tenant {
   /// Imena providera ukljucenih u `auth.providers`, u redoslijedu `_poznatiProvideri`.
   /// Parsira se u `AuthProvider` tek u app-u (`AuthConfig.fromNames`).
   final List<String> authProviders;
-  final bool allowGuestBooking;
 
   /// Google `REVERSED_CLIENT_ID` za iOS — client ID sa obrnutim segmentima, koji ide u
   /// `CFBundleURLTypes`. Prazno dok konzola ne da ID; v. `12-konzole-checklist.md`.
@@ -506,7 +510,6 @@ String _renderDart(List<Tenant> tenants) {
     ..writeln('    required this.secondaryColor,')
     ..writeln('    required this.themeName,')
     ..writeln('    required this.authProviders,')
-    ..writeln('    required this.allowGuestBooking,')
     ..writeln('  });')
     ..writeln()
     ..writeln('  final String flavor;')
@@ -534,10 +537,6 @@ String _renderDart(List<Tenant> tenants) {
     )
     ..writeln('  /// filtriranje po platformi radi `AuthConfig.forPlatform`.')
     ..writeln('  final List<String> authProviders;')
-    ..writeln()
-    ..writeln('  /// Fallback dok backend ne odgovori — izvor istine je')
-    ..writeln('  /// `salon_settings.allow_guest_booking`.')
-    ..writeln('  final bool allowGuestBooking;')
     ..writeln('}')
     ..writeln()
     ..writeln(
@@ -558,7 +557,6 @@ String _renderDart(List<Tenant> tenants) {
         '    authProviders: <String>['
         '${tenant.authProviders.map((p) => "'$p'").join(', ')}],',
       )
-      ..writeln('    allowGuestBooking: ${tenant.allowGuestBooking},')
       ..writeln('  ),');
   }
   buffer.writeln('};');

@@ -193,7 +193,6 @@ void main() {
         'min_cancel_hours': 3,
         'require_staff_choice': false,
         'show_prices_in_app': true,
-        'allow_guest_booking': false,
         'timezone': 'Europe/Sarajevo',
         'language': 'bs',
       });

@@ -53,7 +53,6 @@ class BookingRules {
     required this.pendingExpiryHours,
     required this.requireStaffChoice,
     required this.showPricesInApp,
-    required this.allowGuestBooking,
   });
 
   /// `generic` red iz `docs/05 §4` — v. obrazloženje uz [VerticalTerms.fallback].
@@ -68,7 +67,6 @@ class BookingRules {
     pendingExpiryHours: 24,
     requireStaffChoice: false,
     showPricesInApp: true,
-    allowGuestBooking: false,
   );
 
   final BookingMode mode;
@@ -87,7 +85,6 @@ class BookingRules {
   /// `true` znači da "bilo koji dostupan" nije ponuđen — pacijent ide svom doktoru.
   final bool requireStaffChoice;
   final bool showPricesInApp;
-  final bool allowGuestBooking;
 
   factory BookingRules.fromJson(Map<String, dynamic> json) {
     int readInt(String key, int fallbackValue) {
@@ -125,10 +122,6 @@ class BookingRules {
         fallback.requireStaffChoice,
       ),
       showPricesInApp: readBool('showPricesInApp', fallback.showPricesInApp),
-      allowGuestBooking: readBool(
-        'allowGuestBooking',
-        fallback.allowGuestBooking,
-      ),
     );
   }
 
@@ -145,8 +138,7 @@ class BookingRules {
           other.minCancelHours == minCancelHours &&
           other.pendingExpiryHours == pendingExpiryHours &&
           other.requireStaffChoice == requireStaffChoice &&
-          other.showPricesInApp == showPricesInApp &&
-          other.allowGuestBooking == allowGuestBooking;
+          other.showPricesInApp == showPricesInApp;
 
   @override
   int get hashCode => Object.hash(
@@ -160,6 +152,5 @@ class BookingRules {
     pendingExpiryHours,
     requireStaffChoice,
     showPricesInApp,
-    allowGuestBooking,
   );
 }

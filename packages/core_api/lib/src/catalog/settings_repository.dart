@@ -19,7 +19,7 @@ class SettingsRepository {
 id, salon_id, booking_mode, booking_granularity, buffer_minutes,
 slot_step_minutes, min_advance_booking_hours, max_advance_booking_days,
 pending_expiry_hours, min_cancel_hours, require_staff_choice,
-show_prices_in_app, allow_guest_booking, timezone, language
+show_prices_in_app, timezone, language
 ''';
 
   /// Postavke salona, ili [NotFoundError] ako reda nema.
@@ -65,7 +65,6 @@ show_prices_in_app, allow_guest_booking, timezone, language
     required int minCancelHours,
     required bool requireStaffChoice,
     required bool showPricesInApp,
-    required bool allowGuestBooking,
   }) => guard(() async {
     final row = await _client.rpc<dynamic>(
       'update_salon_settings',
@@ -80,7 +79,6 @@ show_prices_in_app, allow_guest_booking, timezone, language
         'p_min_cancel_hours': minCancelHours,
         'p_require_staff_choice': requireStaffChoice,
         'p_show_prices_in_app': showPricesInApp,
-        'p_allow_guest_booking': allowGuestBooking,
       },
     );
     return salonSettingsFromRow(Map<String, dynamic>.from(row as Map));

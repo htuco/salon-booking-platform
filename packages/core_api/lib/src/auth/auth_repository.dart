@@ -71,13 +71,6 @@ abstract interface class AuthRepository {
     required String password,
   });
 
-  /// Rezervacija bez naloga; dozvoljeno samo kad je `AuthConfig.allowGuest`.
-  ///
-  /// **Nema task iza sebe.** Task 26 je nosio i tok gosta i Facebook; skinut je sa plana kad
-  /// je Facebook otpao ([ADR-0011](../../../../docs/adr/0011-facebook-login-se-ne-implementira.md)),
-  /// pa gost čeka novi raspis. Dotle implementacija baca grešku.
-  Future<AuthSession> continueAsGuest({required String name});
-
   Future<void> signOut();
 
   /// Brisanje naloga — **obavezno za store submission**, ne opciono (`docs/06 §8.2`).

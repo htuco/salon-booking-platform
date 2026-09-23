@@ -518,7 +518,6 @@ const _verticalDateOnly = Vertical(
     pendingExpiryHours: 24,
     requireStaffChoice: false,
     showPricesInApp: true,
-    allowGuestBooking: false,
   ),
   features: VerticalFeatures.fallback,
   defaultTheme: 'clinical_calm',

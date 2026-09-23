@@ -35,9 +35,6 @@ auth:
   # `CFBundleURLTypes`. Prazno dok konzola ne da ID; v. tasks/sprint-2/12-konzole-checklist.md.
   googleReversedClientId: ''
 
-  # Fallback dok backend ne odgovori; izvor istine je salon_settings.allow_guest_booking.
-  allowGuestBooking: false
-
 store:
   shortDescription: "Zakažite termin u Barber Studio Vitez u par tapova."
   categoryAndroid: LIFESTYLE
