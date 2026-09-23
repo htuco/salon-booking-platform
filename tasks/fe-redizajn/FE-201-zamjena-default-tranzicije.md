@@ -40,14 +40,19 @@ zabranjuje. Uz to:
   nijednu upotrebu. Korak „ukloniti pojedinačne implementacije po ekranima" je time već ispunjen.
 
 ## Definicija gotovog
-- [ ] Jedan `AppPageTransitionsBuilder` registrovan za **sve** `TargetPlatform` vrijednosti, ne za dvije
+- [x] Jedan `AppPageTransitionsBuilder` registrovan za **sve** `TargetPlatform` vrijednosti, ne za dvije
+      — `packages/core_ui/lib/src/theme/page_transition.dart`, test prolazi kroz `TargetPlatform.values`
 - [ ] Prelaz vizuelno identičan na Androidu i iOS-u — dokaz je snimak oba, ne tvrdnja
-- [ ] Trajanje 220 ms push / 180 ms pop, `easeOutCubic` ulaz, `easeInCubic` izlaz; ostaje unutar
+      — **nedokazano**: isti builder na obje platforme (test), ali snimka sa uređaja nema
+- [x] Trajanje 220 ms push / 180 ms pop, `easeOutCubic` ulaz, `easeInCubic` izlaz; ostaje unutar
       granice od 300 ms koju traži `docs/02 §14`
-- [ ] **iOS swipe-back i dalje radi** — vlastiti builder ga gubi ako se ne zadrži eksplicitno
-- [ ] Nema bijelog bljeska pozadine tokom prelaza
-- [ ] `MediaQuery.disableAnimationsOf` / *Reduce Motion*: samo fade, bez pomaka
-- [ ] Odlučeno i zapisano dobija li admin isti builder ili ostaje na podrazumijevanom
+- [x] **iOS swipe-back i dalje radi** — vlastiti builder ga gubi ako se ne zadrži eksplicitno
+      — vraćen kroz javni predictive-back ugovor rute; test, provjeren sabotažom
+- [ ] Nema bijelog bljeska pozadine tokom prelaza — po konstrukciji (stari ekran ostaje ispod,
+      novi se pretapa preko), ali **nije viđeno uživo**
+- [x] `MediaQuery.disableAnimationsOf` / *Reduce Motion*: samo fade, bez pomaka
+- [x] Odlučeno i zapisano dobija li admin isti builder ili ostaje na podrazumijevanom
+      — **admin ostaje na svom pretapanju od ~150 ms** ([ADR-0020](../../docs/adr/0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md) tačka 5)
 
 ## Zamke
 - **Swipe-back nije dio tranzicije nego `CupertinoRouteTransitionMixin`-a.** Zamjena buildera ga
@@ -60,4 +65,21 @@ zabranjuje. Uz to:
 
 ## Status
 
-Nije počet.
+**Kod gotov, dokazan testovima; uređaj nedostaje.** Grana `feat/fe-201-jedna-tranzicija`.
+
+- `AppPageTransitionsBuilder` u `core_ui` zamjenjuje par `FadeForwards` + `Cupertino` i
+  registrovan je za svih šest platformi. Trajanje nosi sam builder (`transitionDuration`), pa ga
+  `MaterialPage` iz `go_router`-a poštuje bez izmjena u rutama.
+- Swipe-back: Cupertino detektor je privatan, pa builder na iOS/macOS dodaje svoj rub od 20 px
+  koji vodi rutu kroz `handleStartBackGesture` / `handleCommitBackGesture`. Android ga nema.
+
+**Dokaz (2026-09-23):**
+- `packages/core_ui`: `flutter analyze` — No issues found; `flutter test` — **75 pass**
+  (8 novih u `page_transition_test.dart`). Sabotaža (uklonjen rub za povlačenje) obara tačno
+  test povlačenja.
+- `apps/client`: `flutter analyze` — No issues found; `flutter test` — **238 pass**.
+  Zamka: sa zastarjelim `*.freezed.dart` u `core_domain` (gitignored) 22 fajla ne kompajliraju;
+  `dart run build_runner build -d` u `packages/core_domain` to rješava. Nije regresija.
+
+**Ostalo za sljedećeg:** snimak push/pop i swipe-backa na Android i iOS uređaju
+(`flutter run --profile --flavor <f> -t lib/main.dart`), i potvrda da nema bljeska.
