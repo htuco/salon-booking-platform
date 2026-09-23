@@ -456,6 +456,13 @@ class _PretragaState extends ConsumerState<_Pretraga> {
   @override
   Widget build(BuildContext context) {
     final telefon = widget.telefon;
+    // Pretragu može poništiti i prazno stanje („Poništi pretragu", FE-501). Bez ovoga
+    // bi lista bila puna, a polje bi i dalje pokazivalo stari izraz.
+    ref.listen(clientsPretragaProvider, (_, izraz) {
+      if (_kontroler.text == izraz) return;
+      _kontroler.text = izraz;
+      setState(() {});
+    });
     return TextField(
       controller: _kontroler,
       style: Theme.of(context).textTheme.bodyMedium,
@@ -1546,14 +1553,37 @@ class _Prazno extends ConsumerWidget {
         ? 'Adresar je još prazan. Klijent se upiše kad zakaže prvi termin.'
         : 'Nema klijenta u grupi „${filter.label}".';
 
+    // Filtrirano prazno ima izlaz: prazna lista zbog filtera nije prazan adresar, i
+    // korisnik ne treba tražiti gdje se filter poništava (FE-501).
+    final (String, VoidCallback)? izlaz = pretraga.isNotEmpty
+        ? (
+            'Poništi pretragu',
+            () => ref.read(clientsPretragaProvider.notifier).postavi(''),
+          )
+        : filter == ClientsFilter.svi
+        ? null
+        : (
+            'Prikaži sve klijente',
+            () => ref
+                .read(clientsFilterProvider.notifier)
+                .postavi(ClientsFilter.svi),
+          );
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AdminSpacing.xxl),
-        child: Text(
-          poruka,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium
-              ?.copyWith(color: boje.textSecondary),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              poruka,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: boje.textSecondary),
+            ),
+            if (izlaz != null)
+              TextButton(onPressed: izlaz.$2, child: Text(izlaz.$1)),
+          ],
         ),
       ),
     );

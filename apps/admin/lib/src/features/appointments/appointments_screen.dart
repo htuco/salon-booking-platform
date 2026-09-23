@@ -693,15 +693,17 @@ class _PotvrdiSveDugmeState extends ConsumerState<_PotvrdiSveDugme> {
   }
 }
 
-class _PrazanDan extends StatelessWidget {
+class _PrazanDan extends ConsumerWidget {
   const _PrazanDan({required this.filter, required this.zahtjevi});
 
   final AppointmentsFilter filter;
   final bool zahtjevi;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // Prazno zbog statusa nije prazan dan; izlaz radi isto što i chip „Svi" (FE-501).
+    final filtrirano = !zahtjevi && filter.status != null;
 
     return Center(
       child: Padding(
@@ -726,6 +728,15 @@ class _PrazanDan extends StatelessWidget {
                 color: context.adminColors.textSecondary,
               ),
             ),
+            if (filtrirano) ...[
+              const SizedBox(height: AdminSpacing.md),
+              TextButton(
+                onPressed: () => ref
+                    .read(appointmentsFilterProvider.notifier)
+                    .postaviStatusTacno(null),
+                child: const Text('Prikaži sve statuse'),
+              ),
+            ],
           ],
         ),
       ),
