@@ -35,6 +35,7 @@ export 'src/components/step_progress_bar.dart';
 export 'src/components/time_slot_chip.dart';
 export 'src/theme/app_theme.dart';
 export 'src/theme/contrast.dart';
+export 'src/theme/page_transition.dart';
 export 'src/theme/theme_factory.dart';
 export 'src/tokens/spacing.dart';
 export 'src/tokens/status_colors.dart';
