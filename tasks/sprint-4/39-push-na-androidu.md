@@ -128,3 +128,9 @@ Obavijesti su stizale **nijemo**. Tri nalaza, po težini:
    koje `flutter run` više ne prima, pa svaki `run_live_demo.sh client` pada. Zaobiđeno shimom van
    repoa. **Zaseban task.**
 5. **iOS ostaje imenovan dug** dok nema Apple developer naloga (bilo izvan DoD-a i prije ovoga).
+
+## Status (2026-09-23) — ✅ zatvoren
+
+Spojen u `main` kroz [PR #77](https://github.com/htuco/salon-booking-platform/pull/77), zvuk i Android
+kanal kroz [PR #80](https://github.com/htuco/salon-booking-platform/pull/80). iOS push ostaje imenovan
+dug do Apple developer naloga.

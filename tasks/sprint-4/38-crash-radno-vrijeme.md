@@ -123,3 +123,7 @@ viewport prošla prvi test, a vratila preliv na telefonu koji je task 34 već je
   ekranu. Backend nije dio uzroka ni popravke.
 - `blocked_slot_conflicts` ne vraća `reason`, pa kod blokade red nosi samo ime i vrijeme —
   to je namjerno (v. `ScheduleConflict.reason`), ali test to ne pokriva.
+
+## Status (2026-09-23) — ✅ zatvoren
+
+Spojen u `main` kroz [PR #66](https://github.com/htuco/salon-booking-platform/pull/66).

@@ -9,10 +9,10 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 
 | # | Task | Vrsta | Blokira | Procjena |
 |---|---|---|---|---|
-| [37](37-automatsko-potvrdjivanje.md) 🟡 | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
-| [38](38-crash-radno-vrijeme.md) 🟡 | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
-| [39](39-push-na-androidu.md) 🟡 | Push obavijesti na Androidu | bug | 42 | 1–2 dana |
-| [40](40-naziv-lokala-se-ne-mijenja.md) 🟡 | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
+| [37](37-automatsko-potvrdjivanje.md) ✅ | Automatsko potvrđivanje termina | bug | — | 0,5–1 dan |
+| [38](38-crash-radno-vrijeme.md) ✅ | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
+| [39](39-push-na-androidu.md) ✅ | Push obavijesti na Androidu | bug | 42 | 1–2 dana |
+| [40](40-naziv-lokala-se-ne-mijenja.md) ✅ | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
 | [41](41-bez-zakazivanja-bez-prijave.md) ✅ | Zakazivanje bez prijave se uklanja | popravka | — | 1 dan |
 | [42](42-neradni-dan-i-zakljucana-proslost.md) | Neradni dan i zaključana prošlost | feature | — | 2–3 dana |
 | [43](43-korak-po-usluzi.md) | Korak rezervacije po usluzi | feature | — | 1–2 dana |
@@ -47,7 +47,7 @@ od rasprave, ali sam posao je Sprint 5.
 
 Sprint otvoren 2026-09-22.
 
-### 37 — Automatsko potvrđivanje termina 🟡
+### 37 — Automatsko potvrđivanje termina ✅
 
 Kod gotov i dokazan 2026-09-22, [PR #63](https://github.com/htuco/salon-booking-platform/pull/63)
 je draft. `booking_mode` je do sada postojao kroz cijeli stek i **nigdje se nije čitao**;
@@ -66,7 +66,7 @@ hostovanom bazom, u transakciji koja je vraćena: `status=confirmed source=app r
 
 Ostaje 🟡 samo do merge-a PR-a i dok se ekran ne vidi uživo u `auto` modu.
 
-### 38 — Crash pri izmjeni radnog vremena 🟡
+### 38 — Crash pri izmjeni radnog vremena ✅
 
 Kod gotov 2026-09-22 na grani `fix/crash-radno-vrijeme`. Kvar nije bio u RPC-u ni mapiranju:
 `ListView` unutar `AlertDialog.content` je pri intrinsic mjerenju bacao
@@ -78,7 +78,7 @@ stvarni ekran (izmjena dana → `Sačuvaj izmjene` → konfliktni dijalog), a dr
 40 konflikata na telefonu. Ostaje 🟡 do PR-a i zelenog CI-ja; post-fix klik protiv hostovanog
 projekta nije ponovljen, ali backend nije dio uzroka ni popravke.
 
-### 39 — Push obavijesti na Androidu 🟡
+### 39 — Push obavijesti na Androidu ✅
 
 Kod gotov i dokazan u CI-ju 2026-09-22, [PR #77](https://github.com/htuco/salon-booking-platform/pull/77)
 je draft. **Lanac nije pukao na FCM-u**: cron je aktivan, oba vault tajna postoje, a svih 24 redova
@@ -111,6 +111,12 @@ Zamke za sljedećeg: **admin u Chromeu ne može dokazati push** (`pushEnabledPro
 `!kIsWeb`); **`run_tenant.sh` je pokvaren sa Flutterom 3.47.4** (`--build-name` više ne postoji na
 `flutter run`); **postojeći notification kanal se ne mijenja iz koda**, traži reinstalaciju.
 
+
+### 40 — Naziv lokala se ne mijenja iz admina ✅
+
+Zatvoren 2026-09-23, [PR #99](https://github.com/htuco/salon-booking-platform/pull/99). Naziv je u
+adminu samo za čitanje, a `update_salon_contact` odbija promjenu (`PT400`); pgTAP `014` to dokazuje.
+Naziv se mijenja kroz `tenant.yaml` → `gen_flavors` → novi store build.
 
 ### 41 — Zakazivanje bez prijave se uklanja ✅
 
