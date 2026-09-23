@@ -33,6 +33,7 @@ export 'src/auth/auth_platform.dart';
 export 'src/auth/auth_provider.dart';
 export 'src/auth/auth_session.dart';
 export 'src/auth/staff_member.dart';
+export 'src/auth/staff_invite.dart';
 export 'src/catalog/appointment.dart';
 export 'src/catalog/appointment_status.dart';
 export 'src/catalog/available_slot.dart';

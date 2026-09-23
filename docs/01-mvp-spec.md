@@ -445,6 +445,7 @@ servira i tu stranicu.
 | Screen | Ruta | Prioritet |
 |---|---|---|
 | Login | `/login` | Must |
+| Imam poziv (nalog iz koda salona) | `/pozivnica` | Must |
 | Dashboard | `/dashboard` | Must |
 | Termini + filteri | `/appointments` | Must |
 | Detalji termina | `/appointments/:id` | Must |
@@ -470,6 +471,9 @@ otvara preko liste nema svoju stranicu.
 tabela nije imala iako `prototype/admin/SPEC.md` klijente broji kao modul. `/more` je prikaz `3t` i
 postoji zbog oblika navigacije, ne zbog novog sadržaja: sidebar na desktopu nosi osam modula, a
 donja navigacija telefona ima četiri ćelije, pa ostalih pet stoji iza „Još".
+
+**`/pozivnica` dodana u tasku 45** (ADR-0023). Nalog osoblja nastaje iz koda koji salon pošalje
+radniku; ruta je javna kao i `/login`, jer radnik u tom trenutku još nema nalog.
 
 ### Super admin (Next.js konzola — `web/app/super-admin`)
 

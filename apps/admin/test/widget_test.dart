@@ -77,6 +77,7 @@ void main() {
     // znacilo da enum vodi specifikaciju.
     const izSpecifikacije = {
       '/login',
+      '/pozivnica',
       '/dashboard',
       '/appointments',
       '/appointments/:id',

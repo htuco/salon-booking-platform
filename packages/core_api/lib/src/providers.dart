@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth/auth_repository.dart';
 import 'auth/customer_repository.dart';
+import 'auth/staff_access_repository.dart';
 import 'auth/staff_repository.dart';
 import 'auth/supabase_auth_repository.dart';
 import 'booking/appointment_repository.dart';
@@ -332,6 +333,11 @@ final staffRepositoryProvider = Provider<StaffRepository>(
     ref.watch(supabaseClientProvider),
     beforeSignOut: () async => ref.read(pushServiceProvider)?.beforeSignOut(),
   ),
+);
+
+/// Osoblje salona i pozivi za nalog (task 45).
+final staffAccessRepositoryProvider = Provider<StaffAccessRepository>(
+  (ref) => StaffAccessRepository(ref.watch(supabaseClientProvider)),
 );
 
 /// Termini salona, čitani iz admina.

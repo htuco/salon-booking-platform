@@ -39,7 +39,9 @@ library;
 import 'package:core_api/core_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_wordmark.dart';
@@ -350,6 +352,15 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
               ),
             ),
           ],
+          // Task 45: radnik sa pozivom nema nalog, pa mu prijava sama ne pomaže.
+          const SizedBox(height: AdminSpacing.md),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: () => context.go(AdminRoute.pozivnica.path),
+              child: const Text('Imam poziv od salona'),
+            ),
+          ),
         ],
       ),
     );
