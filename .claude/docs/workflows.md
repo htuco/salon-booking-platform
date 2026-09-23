@@ -233,6 +233,16 @@ flutter build web -t lib/demo_main.dart --dart-define=SALON_ID=<uuid> --output=b
 `demo_main.dart` postoji da se ekran može pogledati na mašini bez Supabase pristupa. Podaci u
 njemu vrijede tačno onoliko koliko odgovaraju seedu.
 
+**Podaci i override-i su u `lib/src/demo/demo_overrides.dart`**, u obje aplikacije (FE-505);
+`demo_main.dart` samo zove `demoOverrides(env)`. Istu listu podiže `test/demo_overrides_test.dart`
+na svakoj ruti (klijent: oba tenanta, prijavljen i odjavljen; admin: obje širine) i pada kad ekran
+pokaže grešku učitavanja. **Novi provider koji ide na mrežu mora dobiti demo override**, inače
+test pada — do FE-505 se takav ekran u demou rušio i vidio tek u QA prolazu.
+
+**Zamka pri ponovnom buildu:** Flutter web registruje service worker, pa browser na istom
+`localhost` portu zna servirati **stari** `main.dart.js` i poslije novog builda. Ekran tada izgleda
+kao da popravka ne radi. Svjež profil, *hard reload* bez keša ili drugi port.
+
 **Admin ima svoj, od taska 29** (`apps/admin/lib/demo_main.dart`). Njemu demo ulaz treba iz jačeg
 razloga nego klijentu: admin ekran se **ne vidi bez prijave**, jer router pušta dalje tek kad
 `currentStaffProvider` vrati `salon_admin`. Bez backenda se inače vidi samo login.

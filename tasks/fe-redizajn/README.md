@@ -35,7 +35,7 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-502](FE-502-pristupacnost.md) | Pristupačnost i kontrast ✅ | obje | — | 1–2 dana |
 | [FE-503](FE-503-ciscenje-legacy-stilova.md) | Čišćenje legacy stilova | obje | — | 1 dan |
 | [FE-504](FE-504-qa-prolaz.md) | QA prolaz kroz sve ekrane 🟡 | obje | — | 1–2 dana |
-| [FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md) | Demo ulazi pune sve ekrane (nalaz FE-504) | obje | FE-504 | 0,5–1 dan |
+| [FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md) | Demo ulazi pune sve ekrane (nalaz FE-504) ✅ | obje | FE-504 | 0,5–1 dan |
 | [FE-506](FE-506-o-nama-po-5b.md) | „O nama" po obliku iz `5b` (nalaz FE-504) | klijent | — | 0,5–1 dan |
 
 Ukupno **32–48 dana**. To je tri do četiri sprinta i tako se planira, ne kao jedan „redizajn".
@@ -201,3 +201,7 @@ i **[FE-506](FE-506-o-nama-po-5b.md)** (`/about` hero). Uređaj (FE-201) nije pr
 
 **Barlow Bold izbačen** ([ADR-0022](../../docs/adr/0022-barlow-bez-bold-reza.md)) — pisma admina su sada manja
 nego prije epika. FE-503 ostaje 🟡 samo zato što je JS kod admina porastao (funkcionalnost epika).
+
+**✅ [FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md)** — grana `fix/fe-505-demo-ulazi`. Demo override-i
+obje aplikacije su u `lib/src/demo/demo_overrides.dart`, a test podiže svaku rutu istom listom.
+Svih devet prikaza koje FE-504 nije mogao vidjeti sada je viđeno na webu.

@@ -3,9 +3,9 @@
 Učitan 2026-09-22 iz [sprint-4/39](sprint-4/39-push-na-androidu.md). Bug, procjena 1–2 dana,
 bez zavisnosti, **blokira task 42**. Grana `fix/push-na-androidu` sa svježeg `main`-a.
 
-> **Paralelno, FE redizajn:** FE-502 (#94) i FE-503 (#95) su spojeni u `main`. FE-504 (🟡, prvi QA
-> prolaz na webu) je na grani `docs/fe-504-qa-prolaz`. Otvoreni nalazi: FE-505 (demo ulazi) i FE-506
-> (`/about` hero). FE-302 i dalje čeka [ADR-0021](../docs/adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md).
+> **Paralelno, FE redizajn:** FE-502, FE-503 i FE-504 su spojeni u `main`. FE-505 (demo ulazi) je
+> gotov na grani `fix/fe-505-demo-ulazi`. Otvoreno: FE-506 (`/about` hero, čeka odluku) i FE-504
+> stavke koje traže uređaj. FE-302 i dalje čeka [ADR-0021](../docs/adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md).
 
 ## Status
 
