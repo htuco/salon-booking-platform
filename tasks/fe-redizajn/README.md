@@ -34,7 +34,9 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-501](FE-501-stanja-i-skeletoni.md) | Stanja učitavanja, greške i prazna stanja ✅ | obje | — | 1–2 dana |
 | [FE-502](FE-502-pristupacnost.md) | Pristupačnost i kontrast | obje | — | 1–2 dana |
 | [FE-503](FE-503-ciscenje-legacy-stilova.md) | Čišćenje legacy stilova | obje | — | 1 dan |
-| [FE-504](FE-504-qa-prolaz.md) | QA prolaz kroz sve ekrane | obje | — | 1–2 dana |
+| [FE-504](FE-504-qa-prolaz.md) | QA prolaz kroz sve ekrane 🟡 | obje | — | 1–2 dana |
+| [FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md) | Demo ulazi pune sve ekrane (nalaz FE-504) | obje | FE-504 | 0,5–1 dan |
+| [FE-506](FE-506-o-nama-po-5b.md) | „O nama" po obliku iz `5b` (nalaz FE-504) | klijent | — | 0,5–1 dan |
 
 Ukupno **32–48 dana**. To je tri do četiri sprinta i tako se planira, ne kao jedan „redizajn".
 
@@ -173,3 +175,9 @@ na Početnoj i `/about`. Test mjeri vrh dugmeta, sabotaža ga obara. 252 testa.
 **✅ [FE-303](FE-303-zahtjev-poslan.md)** — grana `feat/fe-303-zahtjev-poslan`. Ekran je bio po handoffu
 od taska 37; popravljena back gesta, koja je na Androidu zatvarala aplikaciju (ispod `/book/success`
 nema rute). Sada vodi na Početnu i čisti flow. Test sa sabotažom, 253 testa. Na uređaju nije viđeno.
+
+**🟡 [FE-504](FE-504-qa-prolaz.md)** — grana `docs/fe-504-qa-prolaz`. Prvi prolaz na webu, na stanju
+`main` + #94 + #95. Snimljeno 100 prikaza: klijent na oba tenanta (402 i 360 px), admin na 1440,
+2560, 768 i 402 px. Admin i veći dio klijenta prate izvoz. Dva nalaza su zasebni taskovi:
+**[FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md)** (demo ulazi ne pune devet prikaza, dva se sruše)
+i **[FE-506](FE-506-o-nama-po-5b.md)** (`/about` hero). Uređaj (FE-201) nije provjeren.
