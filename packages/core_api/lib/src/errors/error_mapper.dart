@@ -163,3 +163,31 @@ Future<T> guard<T>(Future<T> Function() call) async {
     throw mapError(error, stackTrace);
   }
 }
+
+/// Poruka koju smije vidjeti korisnik — ili `null` kad je [ApiError.message] tekst za
+/// razvoj (FE-501).
+///
+/// [ApiError.message] je po ugovoru poruka za log. Dio njih je ipak pisan za čovjeka i
+/// ima smisla na ekranu: tekstovi koje `mapError` sam sastavi za mrežu, konflikt i
+/// nepostojeći zapis, i validacije koje SQL funkcije dižu sa `errcode = 'PT…'`
+/// (`'Kraj mora biti poslije pocetka'`). Ostatak, poput `'Neočekivana greška: $error'`,
+/// `'Greška baze (…)'` i `MappingError` o šemi, je dijagnoza i korisniku ne govori ništa.
+///
+/// Odluka stoji ovdje, a ne u ekranu, jer samo ovaj fajl zna kako izgleda
+/// `PostgrestException`. Ekran uz `null` stavlja svoju opštu rečenicu i „Pokušaj ponovo".
+extension ApiErrorDisplay on ApiError {
+  String? get displayMessage => switch (this) {
+    NetworkError() || ConflictError() || NotFoundError() => message,
+    ServerError(:final cause)
+        when cause is PostgrestException &&
+            (cause.code?.startsWith('PT') ?? false) =>
+      message,
+    // Auth poruke dolaze od Supabase Autha na engleskom; ekran prijave ih prevodi po
+    // tipu. Rate limit i otkazivanje takođe obrađuje ekran, ne ovaj tekst.
+    ServerError() ||
+    MappingError() ||
+    AuthRejectedError() ||
+    AuthCancelledError() ||
+    RateLimitError() => null,
+  };
+}

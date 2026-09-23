@@ -47,6 +47,11 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
 - **Greška koju ekran može razlikovati** → `packages/core_api/lib/src/errors/`. `ApiError` je
   `sealed`, pa `switch` nad njim Dart provjerava na iscrpnost — novi tip obori build tamo gdje nije
   obrađen umjesto da padne u `default` i pojavi se kao pogrešna poruka u produkciji.
+- **`ApiError.message` ne ide na ekran direktno.** To je poruka za log i zna nositi SQL kod ili
+  ime tabele. Na ekran ide `error.displayMessage` (`error_mapper.dart`), koji propušta samo
+  tekst pisan za čovjeka (mreža, konflikt, `raise … using errcode = 'PT…'`) i za ostalo vraća
+  `null`. Ekran tada stavlja svoju opštu rečenicu. U adminu je to `porukaGreske(e, opsta:)`
+  (`apps/admin/lib/src/core/poruka_greske.dart`), u klijentu tekst iz `.arb`-a po tipu greške.
 - **Vrijednosni tip koji postoji da spriječi jednu grešku** → `LocalTime`/`LocalDate` u
   `packages/core_domain/lib/src/catalog/`. Baza drži zidno vrijeme salona bez zone; `DateTime` bi
   ga vezao za zonu uređaja i tiho pomjerio radno vrijeme. Tip nema konverziju u trenutak — namjerno.

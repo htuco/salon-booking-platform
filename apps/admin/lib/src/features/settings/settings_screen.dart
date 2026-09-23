@@ -43,6 +43,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/poruka_greske.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
@@ -415,7 +416,7 @@ class _PostavkeState extends ConsumerState<_Postavke> {
       poruka =
           'Sačuvano. Pravila vrijede odmah, bez nove verzije u prodavnici.';
     } on ApiError catch (error) {
-      poruka = error.message;
+      poruka = porukaGreske(error);
     } catch (_) {
       poruka = 'Postavke se ne mogu sačuvati.';
     }

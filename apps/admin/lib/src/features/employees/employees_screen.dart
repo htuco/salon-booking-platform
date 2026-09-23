@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/poruka_greske.dart';
 import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/terminologija.dart';
 import '../../core/router/admin_router.dart';
@@ -969,7 +970,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
       if (mounted) {
         setState(() {
           _saving = false;
-          _error = e is ApiError ? e.message : 'Promjena se ne može sačuvati.';
+          _error = porukaGreske(e, opsta: 'Promjena se ne može sačuvati.');
         });
       }
     }
@@ -1015,7 +1016,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
       if (mounted) {
         setState(() {
           _saving = false;
-          _error = e is ApiError ? e.message : 'Status se ne može promijeniti.';
+          _error = porukaGreske(e, opsta: 'Status se ne može promijeniti.');
         });
       }
     }
