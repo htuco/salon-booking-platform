@@ -32,6 +32,11 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   uses `coalesce(service, salon)`, and `book_appointment` re-validates through it. `create_service`/
   `update_service` take `p_slot_step_minutes` (1–120, `PT400` otherwise); update always writes it, so
   NULL resets the service to the salon step.
+- Staff accounts come from invites (task 45, ADR-0023): `create_staff_invite`/`revoke_staff_invite`/
+  `list_staff_users`/`remove_staff_user` for salon admins; `peek_staff_invite`/`accept_staff_invite`
+  are `service_role` only and run from the `accept-staff-invite` Edge Function, which creates
+  `auth.users` with `app_metadata` taken from the invite. Invites store a sha256 of the code and
+  expire after 7 days. Removing a member deletes only the `public.users` row.
 - `availability_signals` is the only public Realtime availability signal: it exposes only
   `(salon_id, revision_id)` for an active salon. Triggers rotate the opaque UUID after changes to
   services, employees, mappings, schedules, appointments, blocked slots or booking settings; the

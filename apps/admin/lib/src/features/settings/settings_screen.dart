@@ -50,8 +50,8 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
-import '../../core/widgets/admin_wordmark.dart';
 import 'settings_dialogs.dart';
+import 'pristup.dart';
 import 'settings_primjeri.dart';
 import 'settings_providers.dart';
 
@@ -812,11 +812,10 @@ class _PrekidacRed extends StatelessWidget {
 
 /// Slika sa prelivom kad je nema — isti placeholder kao u sidebaru.
 class _Slika extends StatelessWidget {
-  const _Slika({required this.url, required this.strana, this.krug = false});
+  const _Slika({required this.url, required this.strana});
 
   final String? url;
   final double strana;
-  final bool krug;
 
   @override
   Widget build(BuildContext context) {
@@ -842,12 +841,10 @@ class _Slika extends StatelessWidget {
     return SizedBox(
       width: strana,
       height: strana,
-      child: krug
-          ? ClipOval(child: slika)
-          : ClipRRect(
-              borderRadius: BorderRadius.circular(AdminRadius.small),
-              child: slika,
-            ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AdminRadius.small),
+        child: slika,
+      ),
     );
   }
 }
@@ -1310,81 +1307,16 @@ class _ObavijestiKartica extends StatelessWidget {
   }
 }
 
-/// „Pristup" iz `3i`.
-///
-/// Admin danas zna samo za sebe (membership, bez RBAC-a), pa lista ima jedan red — onaj
-/// koji je stvaran. Uređivanje i dodavanje korisnika nemaju RPC.
-class _PristupKartica extends ConsumerWidget {
+/// „Pristup" iz `3i` — članovi osoblja, pozivi na čekanju i novi poziv (task 45).
+class _PristupKartica extends StatelessWidget {
   const _PristupKartica();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final clan = ref.watch(currentStaffProvider).valueOrNull;
-
-    return _Kartica(
-      naslov: 'Pristup',
-      dno: _Mjera.kartica,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 6),
-          if (clan != null) ...[
-            Container(
-              // Najmanje 62 iz `3i`, ne tačno: uvećan sistemski font inače preliva red.
-              constraints: const BoxConstraints(minHeight: 62),
-              padding: const EdgeInsets.only(left: 14, right: 4),
-              decoration: BoxDecoration(
-                color: context.adminColors.ground,
-                borderRadius: BorderRadius.circular(AdminRadius.base),
-              ),
-              child: Row(
-                children: [
-                  const _Slika(url: null, strana: 36, krug: true),
-                  const SizedBox(width: AdminSpacing.md),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          clan.name,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall,
-                        ),
-                        Text(
-                          [?labelaUloge(clan.role), 'vi'].join(' · '),
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: context.adminColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        _uskoro(context, 'Uređivanje pristupa stiže uskoro.'),
-                    style: TextButton.styleFrom(
-                      textStyle: theme.textTheme.labelMedium,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                    ),
-                    child: const Text('Uredi'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
-          OutlinedButton(
-            onPressed: () =>
-                _uskoro(context, 'Dodavanje korisnika stiže uskoro.'),
-            child: const Text('+ Dodaj korisnika'),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const _Kartica(
+    naslov: 'Pristup',
+    dno: _Mjera.kartica,
+    child: PristupSadrzaj(),
+  );
 }
 
 // ---------------------------------------------------------------------------

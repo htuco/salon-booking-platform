@@ -20,6 +20,7 @@ library;
 export 'src/auth/auth_platform_mapper.dart';
 export 'src/auth/auth_repository.dart';
 export 'src/auth/customer_repository.dart';
+export 'src/auth/staff_access_repository.dart';
 export 'src/auth/staff_repository.dart';
 export 'src/auth/supabase_auth_repository.dart';
 export 'src/booking/appointment_mapper.dart';

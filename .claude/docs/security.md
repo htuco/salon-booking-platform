@@ -21,7 +21,7 @@ sigurnosti nego kao izbor konteksta; ono što ga ograničava su politike u bazi.
 |---|---|---|
 | **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke, **objavljene recenzije** (uz agregat `salon_rating_summary`), **pravila korištenja sa politikom privatnosti** i bezlični `availability_signals` red salona. **Nema nijedan write grant.** |
 | **klijent** | JWT bez privilegovane uloge (`private.is_client()`) | sve što i anon, plus **svoj** `auth_identities` red, i **svoj** `customers`/`appointments`/`devices` red **u salonu iz `x-salon-id`** |
-| **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` | upravljanje podacima **svog** salona; validirani upisi termina, uređaja i usluga idu kroz RPC |
+| **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` — oboje nastaje iz poziva (task 45) | upravljanje podacima **svog** salona; validirani upisi termina, uređaja i usluga idu kroz RPC |
 | **super admin** | `app_metadata.role = super_admin` **i** red u `public.users` sa `role='super_admin'` | sve; iznad tenant izolacije |
 
 **Uloga u tokenu sama po sebi ne znači ništa.** `private.is_super_admin()` i `private.is_admin()`
@@ -49,6 +49,32 @@ bazi** nego tek na ekranu za prijavu:
 
 Ovo drži `rest_admin_login.ts` — jedini test u repou koji pada ako se u admin app-i ne može
 prijaviti.
+
+### Nalog osoblja iz poziva — task 45
+
+Od taska 45 nalog osoblja ne pravi se rukom nego iz **poziva** (ADR-0023). Oba uslova iznad
+nastaju zajedno, na serveru:
+
+- `create_staff_invite` (admin salona) čuva **sha256 koda**, ulogu iz zatvorene liste
+  (`salon_admin`, `employee`; `super_admin` odbija i RPC i `check` na tabeli) i istek od 7 dana.
+  `revoke_staff_invite` ga povlači. Tuđi, nepostojeći i iskorišten poziv daju istu grešku.
+- `peek_staff_invite` i `accept_staff_invite` imaju `execute` **samo za `service_role`**. Zove ih
+  Edge Function `accept-staff-invite`, koja između njih pravi `auth.users` kroz admin API, sa
+  `app_metadata` **iz poziva** — uloga i salon iz tijela zahtjeva se ignorišu. Ako upis
+  `public.users` padne, `auth.users` red se briše.
+- `staff_invites` čita samo admin salona (`staff_read`); pisanja kroz grant nema.
+- **Lista osoblja ide kroz `list_staff_users`, ne kroz politiku.** `StaffRepository.membership()`
+  čita `public.users` bez filtera i oslanja se na `own_staff_profile`; politika koja bi adminu
+  pokazala cijelo osoblje srušila bi prijavu (`maybeSingle`). `020` provjerava da direktno čitanje
+  i dalje vraća jedan red.
+- **Uklanjanje (`remove_staff_user`) briše samo `public.users` red.** JWT i dalje nosi
+  `role = salon_admin`, ali `is_admin` traži i red, pa pristup prestaje od sljedećeg zahtjeva.
+  Termini, klijenti i istorija poziva ostaju. Vlasnik ne uklanja sebe.
+- Email koji već ima nalog ne postaje nalog osoblja (409) — spajanje bi klijentu tiho dalo prava.
+
+Dokaz: `020_pozivi_za_osoblje.test.sql` (37 asercija; sabotaža koja pusti iskorišten kod obara
+tačno onu koja to mjeri) i `rest_pozivi_osoblja.ts` (17 provjera kroz GoTrue i Edge Function,
+lokalno — CI Edge Functions ne pokreće).
 
 ## `private.*` — gdje živi autorizacija
 
@@ -679,6 +705,8 @@ ništa.
 | `015_automatsko_potvrdjivanje.test.sql` | automatsko potvrđivanje — mod se prebacuje **kroz `update_salon_settings`**, pa se odmah rezerviše: `manual` daje `pending` sa rokom, `auto` `confirmed` bez roka, `source` ostaje `app` u oba, admin unos ne zavisi od postavke, a **zatečeni `pending` termini se ne diraju** |
 | `018_neradni_dan.test.sql` | neradni dan — prošlost zaključana, danas samo prije otvaranja (u zoni salona, najraniji radnik), ne-admin i tuđi admin `42501`, otkazani tačno `pending`/`confirmed` sa `cancelled_by = salon`, obavijest po otkazanom terminu, tuđi salon netaknut |
 | `019_korak_po_usluzi.test.sql` | korak po usluzi — prazno = salonski, korak usluge nadjačava salonski u oba smjera, `book_appointment` odbija početak van koraka, RPC odbija korak van 1–120, `anon` ne zove novi potpis |
+| `020_pozivi_za_osoblje.test.sql` | pozivi za osoblje — samo admin svog salona, `super_admin` se ne dodjeljuje, hash umjesto koda, prihvatanje samo za `service_role` i samo jednom, istek i povlačenje, uklanjanje gasi `is_admin` |
+| `rest_pozivi_osoblja.ts` | isto kroz Edge Function i GoTrue: novi nalog nosi ulogu i salon **iz poziva**, ne iz zahtjeva; zauzet email 409; uklonjen nalog sa starim tokenom ne vidi ništa |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

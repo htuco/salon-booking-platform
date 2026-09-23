@@ -529,7 +529,8 @@ prije nego je fajl postojao ne mora biti pokupljena — otvori `/hooks` jednom i
 ## Push provjere i konfiguracija
 
 `tool/test_supabase.sh` sada uključuje `rest_push_devices.ts` i worker testove. Edge runtime mora
-biti aktivan (`supabase functions serve`) za postojeći test brisanja naloga; ugašen runtime daje
+biti aktivan (`supabase functions serve`) za testove brisanja naloga i poziva za osoblje
+(`rest_pozivi_osoblja.ts`, task 45); ugašen runtime daje
 503. Bez reseta lokalna baza može imati stari seed: `rest_admin_login.ts` tada može pasti na
 demo nalogu, iako testovi koji prave vlastite korisnike prolaze. Ne proglašavati cijelu suite
 zelenom u tom slučaju.
@@ -569,3 +570,12 @@ varijabla prazna umjesto da tiho preskoči push.
 njega ne važi — `firebase_defines.dart` na njemu namjerno baca `Firebase package name se ne
 poklapa`. U Firebase projektu mora postojati zasebna Android app za taj ID; to je posao u konzoli,
 ne u repou.
+
+## Edge Functions na hostovanom projektu
+
+Migracija ne donosi funkciju sa sobom. Nova ili izmijenjena funkcija ide zasebno, **poslije**
+`supabase db push` (funkcija zove RPC-eve koje migracija pravi):
+
+```sh
+supabase functions deploy accept-staff-invite   # task 45 — nalog osoblja iz poziva
+```

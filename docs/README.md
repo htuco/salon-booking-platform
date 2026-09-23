@@ -128,6 +128,7 @@ Ne otvaraj ih ponovo bez novog podatka:
 | **Admin je 1:1 sa `adminv2`**: Barlow sa tabularnim ciframa, svijetla tema, placeholder umjesto izostavljanja (za admin zamjenjuje ADR-0019) | [ADR-0020](adr/0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md) |
 | **Predložen:** klijent vidi samo slobodna vremena, zauzeti slotovi se ne prikazuju jer bi anonimnom posjetiocu otkrili raspored salona | [ADR-0021](adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md) |
 | **Admin Barlow bez reza 700** — nijedan stil ga ne traži, a nosio je 108 KB (mijenja detalj ADR-0020) | [ADR-0022](adr/0022-barlow-bez-bold-reza.md) |
+| Nalog osoblja nastaje iz **koda poziva** koji salon pošalje radniku, ne iz emaila — hostovani projekat nema SMTP | [ADR-0023](adr/0023-nalog-osoblja-nastaje-iz-koda-poziva.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |

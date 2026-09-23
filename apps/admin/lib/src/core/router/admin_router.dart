@@ -8,6 +8,7 @@ import '../../features/appointments/appointment_detail_screen.dart';
 import '../../features/appointments/appointments_screen.dart';
 import '../../features/appointments/new_appointment_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/pozivnica_screen.dart';
 import '../../features/clients/clients_screen.dart';
 import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
@@ -42,14 +43,16 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
 
       final clan = stanje.valueOrNull;
       final naLoginu = putanja == AdminRoute.login.path;
+      // Poziv je, kao i prijava, ekran za nekoga ko još nema pristup.
+      final javna = naLoginu || putanja == AdminRoute.pozivnica.path;
 
       // Prijavljen, ali nije osoblje nijednog salona: ostaje na loginu, koji mu objasni
       // zasto. Puštanje dalje bi dalo prazne ekrane bez ijednog objasnjenja.
       if (clan == null || !clan.isSalonAdmin) {
-        return naLoginu ? null : AdminRoute.login.path;
+        return javna ? null : AdminRoute.login.path;
       }
 
-      return naLoginu ? AdminRoute.dashboard.path : null;
+      return javna ? AdminRoute.dashboard.path : null;
     },
     // Router se mora osvjezavati kad se sesija promijeni, inace `redirect` nikad ne
     // odradi odjavu — `go_router` ga zove samo pri navigaciji.
@@ -59,6 +62,12 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         path: AdminRoute.login.path,
         name: AdminRoute.login.name,
         builder: (context, state) => const AdminLoginScreen(),
+      ),
+      GoRoute(
+        path: AdminRoute.pozivnica.path,
+        name: AdminRoute.pozivnica.name,
+        builder: (context, state) =>
+            AdminPozivnicaScreen(kod: state.uri.queryParameters['kod']),
       ),
       GoRoute(
         path: AdminRoute.dashboard.path,
@@ -160,6 +169,8 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
 const _napisane = {
   AdminRoute.employees,
   AdminRoute.login,
+  // Task 45.
+  AdminRoute.pozivnica,
   AdminRoute.dashboard,
   AdminRoute.appointments,
   // Task 24.
@@ -191,6 +202,9 @@ class _ProviderSlusac<T> extends ChangeNotifier {
 /// Sve rute admin app-e. Tijela pisu taskovi iz Sprinta 2.
 enum AdminRoute {
   login('/login', 'Prijava'),
+
+  /// „Imam poziv" (task 45) — javna kao i prijava: radnik još nema nalog.
+  pozivnica('/pozivnica', 'Poziv'),
   dashboard('/dashboard', 'Dashboard'),
   appointments('/appointments', 'Termini'),
   appointmentDetails('/appointments/:id', 'Detalji termina'),

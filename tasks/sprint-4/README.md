@@ -17,7 +17,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | [42](42-neradni-dan-i-zakljucana-proslost.md) ✅ | Neradni dan i zaključana prošlost | feature | — | 2–3 dana |
 | [43](43-korak-po-usluzi.md) ✅ | Korak rezervacije po usluzi | feature | — | 1–2 dana |
 | [44](44-postavke-jasnije.md) ✅ | Postavke i pravila salona jasnija | feature | — | 1–2 dana |
-| [45](45-nalozi-za-osoblje.md) | Kreiranje naloga za osoblje | feature | 46, 47 | 2–3 dana |
+| [45](45-nalozi-za-osoblje.md) ✅ | Kreiranje naloga za osoblje | feature | 46, 47 | 2–3 dana |
 | [46](46-uloga-employee-i-izolacija.md) | Uloga `employee` i sužena izolacija | feature | 47 | 2–3 dana |
 | [47](47-admin-ljuska-za-radnika.md) | Admin ljuska za radnika | feature | — | 1–2 dana |
 
@@ -145,3 +145,10 @@ klijentskom booking flowu. Nakon merge-a `supabase db push` prije deploya admina
 Gotov 2026-09-24 ([PR #104](https://github.com/htuco/salon-booking-platform/pull/104)). Objašnjenje i
 živi primjer uz postavke. **Nalaz:** četiri admin postavke nisu stizale do klijenta (čitao je
 vertikalu) — popravljeno, viđeno uživo. Bez migracije.
+
+### 45 — Kreiranje naloga za osoblje ✅
+
+Gotov 2026-09-24 ([PR #105](https://github.com/htuco/salon-booking-platform/pull/105), ADR-0023).
+Nalog nastaje iz koda poziva koji vlasnik pošalje radniku — bez SMTP-a. 551 pgTAP asercija,
+17 REST provjera kroz Edge Function, viđeno uživo na 1440 i 402. Poslije merge-a: `db push` pa
+`functions deploy accept-staff-invite`. **Redoslijed bloka je 45 → 46 → 47.**

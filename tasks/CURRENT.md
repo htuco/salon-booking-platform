@@ -1,29 +1,34 @@
-# Trenutni task: 44 — Postavke i pravila salona jasnija
+# Trenutni task: 45 — Kreiranje naloga za osoblje
 
-Puni task: [tasks/sprint-4/44-postavke-jasnije.md](sprint-4/44-postavke-jasnije.md) · učitan 2026-09-24
+Puni task: [tasks/sprint-4/45-nalozi-za-osoblje.md](sprint-4/45-nalozi-za-osoblje.md) · učitan 2026-09-24
 
 ## Status
 
-Gotov — čeka review i merge PR #104 (bez migracije)
+Gotov — čeka review i merge PR #105, pa `supabase db push` i `supabase functions deploy accept-staff-invite`
 
 ## Ciljevi
 
-- [x] Objašnjenje uz svaku postavku — rečenica šta mijenja za klijenta
-- [x] Grupisanje po temama — već isporučeno u tasku 36 (kartice), provjereno
-- [x] Živi primjer uz vremenske postavke (`settings_primjeri.dart`), tekst a ne slot
-- [x] `salon_policies` se uređuju iz admina — već isporučeno u tasku 36, provjereno
-- [x] Widget test: promjena roka mijenja tekst primjera
-- [x] **Proširenje (odluka 2026-09-24):** klijent čita `salon_settings` za granularnost, izbor
-      majstora, raspon kalendara i cijene; vertikala samo kao rezerva
-- [x] Viđeno uživo: prekidač u adminu mijenja klijentski ekran
+- [x] Poziv iz admina (odluka 2026-09-24: kod/link umjesto emaila — najlakše za vlasnika, bez SMTP-a; ADR-0023)
+- [x] Uloga iz zatvorene liste, `super_admin` isključen (RPC + `check`)
+- [x] `app_metadata` postavlja Edge Function `accept-staff-invite`, iz poziva
+- [x] Poziv ističe (7 dana) i može se povući
+- [x] pgTAP `020` + REST `rest_pozivi_osoblja.ts`
+- [x] Uklanjanje: pristup prestaje, istorija ostaje (`remove_staff_user`, `security.md`)
+- [x] Viđeno uživo: poziv iz admina → `/pozivnica` → novi vlasnik na početnoj
 
 ## Napomene
 
-- Nalaz: četiri admin postavke nisu imale efekta u klijentu — čitao je vertikalu.
-- „Dozvoli izbor majstora" je pisao `require_staff_choice = true`, što znači **obavezan**
-  izbor; labela preimenovana u „Klijent mora izabrati majstora".
+- Redoslijed bloka je 45 → 46 → 47 (task fajlovi), ne 47 → 46 → 45.
+- Radnik (`employee`) poslije poziva ima nalog, ali ga router pušta tek u 46/47.
+- Hostovani: `supabase db push`, pa `supabase functions deploy accept-staff-invite`.
 
 ## Istorija
+
+### 44 — Postavke i pravila salona jasnija (gotov)
+
+Spojen u `main` ([PR #104](https://github.com/htuco/salon-booking-platform/pull/104)) 2026-09-24.
+Objašnjenje i živi primjer uz postavke; četiri admin postavke koje nisu stizale do klijenta sada
+stižu. Bez migracije.
 
 ### 43 — Korak rezervacije po usluzi (gotov)
 

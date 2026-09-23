@@ -16,6 +16,7 @@ import '../core/env/app_env.dart';
 import '../features/appointments/appointments_providers.dart';
 import '../features/calendar/calendar_providers.dart';
 import '../features/clients/clients_providers.dart';
+import '../features/settings/pristup.dart';
 import '../features/settings/settings_providers.dart';
 import '../features/working_hours/working_hours_providers.dart';
 
@@ -52,6 +53,19 @@ List<Override> demoOverrides(AdminEnv env) => [
   // Bez toga bi snimak pokazao raspored bez ijednog opisa, što izgleda kao greška u
   // ekranu, a greška je u demou.
   adminSalonProvider.overrideWith((ref) async => _salon),
+  // „Pristup" u Postavkama (task 45): vlasnik i jedan poziv na čekanju. Bez ovoga kartica
+  // ide u bazu kojoj demo nema pristup i pokazuje grešku.
+  osobljePristupProvider.overrideWith((ref) async => [_vlasnik]),
+  poziviProvider.overrideWith(
+    (ref) async => [
+      StaffInvite(
+        id: 'poziv-demo',
+        name: 'Amar',
+        role: 'employee',
+        expiresAt: DateTime.now().add(const Duration(days: 6)),
+      ),
+    ],
+  ),
   adminServicesProvider.overrideWith((ref) async => _usluge),
   adminEmployeesProvider.overrideWith((ref) async => _radnici),
   // Isti razlog, ekran „Osoblje": kartica radnika ispisuje **koje usluge radi**, a
