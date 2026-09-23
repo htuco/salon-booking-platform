@@ -147,6 +147,12 @@
     "placeholders": { "rating": { "type": "int", "example": "5" } }
   },
 
+  "reviewsShowMore": "Prikaži više",
+  "@reviewsShowMore": { "description": "Otvara ostatak duge recenzije na /reviews." },
+
+  "reviewsShowLess": "Prikaži manje",
+  "@reviewsShowLess": { "description": "Skraćuje otvorenu recenziju nazad na četiri reda." },
+
   "reviewsHistogramLabel": "{star} zvjezdica: {count}",
   "@reviewsHistogramLabel": {
     "description": "Semantička labela jednog reda histograma na /reviews.",

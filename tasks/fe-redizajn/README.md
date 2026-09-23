@@ -23,7 +23,7 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-302](FE-302-booking-flow.md) | Booking flow (4 koraka) 🟡 | klijent | — | 2–3 dana |
 | [FE-303](FE-303-zahtjev-poslan.md) | Ekran „Zahtjev poslan" ✅ | klijent | — | 0,5 dan |
 | [FE-304](FE-304-moji-termini.md) | Moji termini 🟡 | klijent | — | 1–2 dana |
-| [FE-305](FE-305-usluge-galerija-recenzije.md) | Usluge, galerija, recenzije | klijent | — | 2–3 dana |
+| [FE-305](FE-305-usluge-galerija-recenzije.md) | Usluge, galerija, recenzije ✅ | klijent | — | 2–3 dana |
 | [FE-306](FE-306-obavijesti-i-postavke.md) | Obavijesti i postavke | klijent | — | 1–2 dana |
 | [FE-401](FE-401-admin-shell.md) | Admin ljuska i Melura branding | admin | FE-402…FE-405 | 1–2 dana |
 | [FE-402](FE-402-dashboard.md) | Dashboard | admin | — | 1–2 dana |

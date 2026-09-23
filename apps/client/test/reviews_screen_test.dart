@@ -108,6 +108,36 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('duga recenzija je skraćena, kratka nema „Prikaži više"', (
+      tester,
+    ) async {
+      final dugi = List.filled(
+        40,
+        'Šišanje je bilo odlično i sve je prošlo na vrijeme.',
+      ).join(' ');
+
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.reviews.path,
+        ocjena: ocjena,
+        recenzije: [
+          recenzija(id: 'r1', autor: 'Nedim H.', tekst: dugi),
+          recenzija(id: 'r2', autor: 'Haris M.', tekst: 'Kratko i jasno.'),
+        ],
+      );
+
+      // Samo jedno dugme: kratki komentar stane i ne obećava sadržaj kojeg nema.
+      expect(find.text('Prikaži više'), findsOneWidget);
+      final skracen = tester.widget<Text>(find.text(dugi));
+      expect(skracen.maxLines, 4);
+
+      await tester.tap(find.text('Prikaži više'));
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<Text>(find.text(dugi)).maxLines, isNull);
+      expect(find.text('Prikaži manje'), findsOneWidget);
+    });
+
     testWidgets('ocjene bez teksta dobiju objašnjenje umjesto prazne liste', (
       tester,
     ) async {
