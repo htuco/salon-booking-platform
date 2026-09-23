@@ -33,7 +33,10 @@ class _Lazni implements StaffAccessRepository {
   final povuceni = <String>[];
 
   @override
-  Future<List<StaffMember>> members(String salonId) async => [_vlasnik, _radnik];
+  Future<List<StaffMember>> members(String salonId) async => [
+    _vlasnik,
+    _radnik,
+  ];
 
   @override
   Future<List<StaffInvite>> pendingInvites(String salonId) async => [
@@ -88,9 +91,7 @@ Widget _ekran(_Lazni repo) => ProviderScope(
   ],
   child: MaterialApp(
     theme: buildAdminTheme(),
-    home: const Scaffold(
-      body: SingleChildScrollView(child: PristupSadrzaj()),
-    ),
+    home: const Scaffold(body: SingleChildScrollView(child: PristupSadrzaj())),
   ),
 );
 
