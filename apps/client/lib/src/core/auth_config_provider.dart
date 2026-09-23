@@ -13,23 +13,11 @@ import 'vertical_provider.dart';
 /// 2. [AuthConfig.fallback] — build bez tenanta u registru (test, `SALON_ID` koji nije
 ///    regenerisan).
 ///
-/// Preko toga ide jedan runtime override: `salon_settings.allow_guest_booking` je izvor
-/// istine za gosta i nadjačava vrijednost iz `tenant.yaml` čim stigne. Lista providera
-/// takvog izvora još nema — backend nema kolonu koja bi je nosila.
 final authConfigProvider = Provider<AuthConfig>((ref) {
   final tenant = ref.watch(tenantProvider);
-  final settings = ref.watch(salonSettingsProvider).valueOrNull;
-
-  final base = tenant == null
+  return tenant == null
       ? AuthConfig.fallback
-      : AuthConfig.fromNames(
-          tenant.authProviders,
-          allowGuest: tenant.allowGuestBooking,
-        );
-
-  return settings == null
-      ? base
-      : base.copyWith(allowGuest: settings.allowGuestBooking);
+      : AuthConfig.fromNames(tenant.authProviders);
 });
 
 /// Provideri koje login ekran stvarno crta — filtrirani po platformi na kojoj app radi.

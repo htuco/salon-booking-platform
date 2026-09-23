@@ -53,7 +53,6 @@ class BookingSettingsInput {
     required this.minCancelHours,
     required this.requireStaffChoice,
     required this.showPricesInApp,
-    required this.allowGuestBooking,
   });
 
   /// Postojeće postavke kao početno stanje forme.
@@ -67,7 +66,6 @@ class BookingSettingsInput {
     minCancelHours: s.minCancelHours,
     requireStaffChoice: s.requireStaffChoice,
     showPricesInApp: s.showPricesInApp,
-    allowGuestBooking: s.allowGuestBooking,
   );
 
   final String bookingMode;
@@ -79,7 +77,6 @@ class BookingSettingsInput {
   final int minCancelHours;
   final bool requireStaffChoice;
   final bool showPricesInApp;
-  final bool allowGuestBooking;
 
   BookingSettingsInput copyWith({
     String? bookingMode,
@@ -91,7 +88,6 @@ class BookingSettingsInput {
     int? minCancelHours,
     bool? requireStaffChoice,
     bool? showPricesInApp,
-    bool? allowGuestBooking,
   }) => BookingSettingsInput(
     bookingMode: bookingMode ?? this.bookingMode,
     bookingGranularity: bookingGranularity ?? this.bookingGranularity,
@@ -103,7 +99,6 @@ class BookingSettingsInput {
     minCancelHours: minCancelHours ?? this.minCancelHours,
     requireStaffChoice: requireStaffChoice ?? this.requireStaffChoice,
     showPricesInApp: showPricesInApp ?? this.showPricesInApp,
-    allowGuestBooking: allowGuestBooking ?? this.allowGuestBooking,
   );
 
   @override
@@ -117,8 +112,7 @@ class BookingSettingsInput {
       other.maxAdvanceBookingDays == maxAdvanceBookingDays &&
       other.minCancelHours == minCancelHours &&
       other.requireStaffChoice == requireStaffChoice &&
-      other.showPricesInApp == showPricesInApp &&
-      other.allowGuestBooking == allowGuestBooking;
+      other.showPricesInApp == showPricesInApp;
 
   @override
   int get hashCode => Object.hash(
@@ -131,7 +125,6 @@ class BookingSettingsInput {
     minCancelHours,
     requireStaffChoice,
     showPricesInApp,
-    allowGuestBooking,
   );
 }
 
@@ -207,7 +200,6 @@ class SettingsActions {
           minCancelHours: unos.minCancelHours,
           requireStaffChoice: unos.requireStaffChoice,
           showPricesInApp: unos.showPricesInApp,
-          allowGuestBooking: unos.allowGuestBooking,
         );
     _ref.invalidate(postavkeBookingProvider);
   }

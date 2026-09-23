@@ -46,20 +46,14 @@ void main() {
     });
 
     test('tenant ne može uključiti Apple na Androidu', () {
-      const config = AuthConfig(
-        enabled: {AuthProvider.apple},
-        allowGuest: false,
-      );
+      const config = AuthConfig(enabled: {AuthProvider.apple});
 
       expect(config.forPlatform(AuthPlatform.android), isEmpty);
       expect(config.forPlatform(AuthPlatform.ios), [AuthProvider.apple]);
     });
 
     test('platforma ne uvodi provider koji tenant nije uključio', () {
-      const config = AuthConfig(
-        enabled: {AuthProvider.email},
-        allowGuest: false,
-      );
+      const config = AuthConfig(enabled: {AuthProvider.email});
 
       expect(config.forPlatform(AuthPlatform.ios), [AuthProvider.email]);
       expect(
@@ -71,7 +65,6 @@ void main() {
     test('Apple je prvi na iOS-u — App Review 4.8', () {
       const config = AuthConfig(
         enabled: {AuthProvider.google, AuthProvider.email, AuthProvider.apple},
-        allowGuest: false,
       );
 
       expect(config.forPlatform(AuthPlatform.ios).first, AuthProvider.apple);
@@ -80,7 +73,6 @@ void main() {
     test('web nudi samo email — nativni tokovi tamo nemaju implementaciju', () {
       const config = AuthConfig(
         enabled: {AuthProvider.apple, AuthProvider.google, AuthProvider.email},
-        allowGuest: false,
       );
 
       expect(config.forPlatform(AuthPlatform.web), [AuthProvider.email]);
@@ -89,11 +81,7 @@ void main() {
 
   group('AuthConfig.fromNames', () {
     test('mapira imena iz tenant.yaml', () {
-      final config = AuthConfig.fromNames(const [
-        'apple',
-        'google',
-        'email',
-      ], allowGuest: false);
+      final config = AuthConfig.fromNames(const ['apple', 'google', 'email']);
 
       expect(config, AuthConfig.fallback);
     });
@@ -107,14 +95,13 @@ void main() {
         'passkey',
         'facebook',
         'email',
-      ], allowGuest: true);
+      ]);
 
       expect(config.enabled, {AuthProvider.google, AuthProvider.email});
-      expect(config.allowGuest, isTrue);
     });
 
     test('prazna lista daje prazan config, ne fallback', () {
-      final config = AuthConfig.fromNames(const [], allowGuest: false);
+      final config = AuthConfig.fromNames(const []);
 
       expect(config.enabled, isEmpty);
       expect(config.forPlatform(AuthPlatform.ios), isEmpty);
@@ -123,31 +110,19 @@ void main() {
 
   group('AuthConfig jednakost', () {
     test('poredi po sadržaju, ne po identitetu skupa', () {
-      const a = AuthConfig(
-        enabled: {AuthProvider.google, AuthProvider.email},
-        allowGuest: false,
-      );
-      const b = AuthConfig(
-        enabled: {AuthProvider.email, AuthProvider.google},
-        allowGuest: false,
-      );
+      const a = AuthConfig(enabled: {AuthProvider.google, AuthProvider.email});
+      const b = AuthConfig(enabled: {AuthProvider.email, AuthProvider.google});
 
       expect(a, b);
       expect(a.hashCode, b.hashCode);
     });
 
-    test('allowGuest ulazi u jednakost', () {
-      const a = AuthConfig(enabled: {AuthProvider.email}, allowGuest: false);
-      const b = AuthConfig(enabled: {AuthProvider.email}, allowGuest: true);
-
-      expect(a, isNot(b));
-    });
-
     test('copyWith mijenja samo traženo', () {
-      final config = AuthConfig.fallback.copyWith(allowGuest: true);
+      final config = AuthConfig.fallback.copyWith(
+        enabled: {AuthProvider.email},
+      );
 
-      expect(config.enabled, AuthConfig.fallback.enabled);
-      expect(config.allowGuest, isTrue);
+      expect(config.enabled, {AuthProvider.email});
     });
   });
 }

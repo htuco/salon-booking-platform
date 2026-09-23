@@ -464,7 +464,6 @@ const _vertical = Vertical(
     pendingExpiryHours: 12,
     requireStaffChoice: false,
     showPricesInApp: true,
-    allowGuestBooking: false,
   ),
   features: VerticalFeatures.fallback,
   defaultTheme: 'modern_barber',

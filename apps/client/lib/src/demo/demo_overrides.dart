@@ -273,9 +273,6 @@ class _DemoAuth implements AuthRepository {
   }) => _prijavi();
 
   @override
-  Future<AuthSession> continueAsGuest({required String name}) => _prijavi();
-
-  @override
   Future<void> signOut() async => _postavi(null);
 
   @override

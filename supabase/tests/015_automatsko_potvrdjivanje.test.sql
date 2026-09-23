@@ -111,7 +111,7 @@ set local role authenticated;
 select lives_ok($$
   select public.update_salon_settings(
     '550e8400-e29b-41d4-a716-446655440000', 'auto', 'exact_slot',
-    5, 15, 2, 30, 3, false, true, false)
+    5, 15, 2, 30, 3, false, true)
 $$, 'Vlasnik prebacuje salon na automatsko potvrdjivanje');
 reset role;
 

@@ -65,7 +65,7 @@ select ok(not has_function_privilege('anon',
   'public.update_salon_contact(uuid, text, text, text, text, text, text, text, text)', 'EXECUTE'),
   'Anon ne mijenja kontakt podatke');
 select ok(not has_function_privilege('anon',
-  'public.update_salon_settings(uuid, text, text, int, int, int, int, int, boolean, boolean, boolean)',
+  'public.update_salon_settings(uuid, text, text, int, int, int, int, int, boolean, boolean)',
   'EXECUTE'),
   'Anon ne mijenja booking pravila');
 
@@ -172,7 +172,7 @@ $$, 'Vlasnik pise svoju sekciju pravila');
 -- ---------------------------------------------------------------------------
 select lives_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'auto', 'exact_slot', 10, 30, 1, 60, 5, true, false, true)
+    (select salon from pfix), 'auto', 'exact_slot', 10, 30, 1, 60, 5, true, false)
 $$, 'Vlasnik mijenja booking pravila svog salona');
 select is((select booking_mode from public.salon_settings
            where salon_id = (select salon from pfix)), 'auto',
@@ -182,38 +182,34 @@ select is((select buffer_minutes from public.salon_settings
 select is((select max_advance_booking_days from public.salon_settings
            where salon_id = (select salon from pfix)), 60,
   'Maksimum unaprijed je upisan');
-select is((select allow_guest_booking from public.salon_settings
-           where salon_id = (select salon from pfix)), true,
-  'Gostujuce zakazivanje je upisano');
-
 -- Validacija: poruka uz polje koje je krivo, umjesto `23514` sa imenom constrainta.
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'poluautomatski', 'exact_slot', 5, 15, 2, 30, 3, false, true, false)
+    (select salon from pfix), 'poluautomatski', 'exact_slot', 5, 15, 2, 30, 3, false, true)
 $$, 'PT400', 'Nepoznat nacin potvrde', 'Nepoznat booking_mode se odbija');
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'kad_stigne', 5, 15, 2, 30, 3, false, true, false)
+    (select salon from pfix), 'manual', 'kad_stigne', 5, 15, 2, 30, 3, false, true)
 $$, 'PT400', 'Nepoznata granularnost', 'Nepoznata granularnost se odbija');
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'exact_slot', 500, 15, 2, 30, 3, false, true, false)
+    (select salon from pfix), 'manual', 'exact_slot', 500, 15, 2, 30, 3, false, true)
 $$, 'PT400', 'Pauza izmedju termina mora biti 0-120 minuta', 'Buffer van raspona se odbija');
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'exact_slot', 5, 0, 2, 30, 3, false, true, false)
+    (select salon from pfix), 'manual', 'exact_slot', 5, 0, 2, 30, 3, false, true)
 $$, 'PT400', 'Korak termina mora biti 1-120 minuta', 'Korak 0 se odbija');
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'exact_slot', 5, 15, -1, 30, 3, false, true, false)
+    (select salon from pfix), 'manual', 'exact_slot', 5, 15, -1, 30, 3, false, true)
 $$, 'PT400', 'Najraniji termin ne moze biti negativan', 'Negativan min_advance se odbija');
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 0, 3, false, true, false)
+    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 0, 3, false, true)
 $$, 'PT400', 'Kalendar mora biti otvoren bar jedan dan unaprijed', 'Nula dana unaprijed se odbija');
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 30, -3, false, true, false)
+    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 30, -3, false, true)
 $$, 'PT400', 'Rok otkazivanja ne moze biti negativan', 'Negativan rok otkazivanja se odbija');
 
 -- Zona i jezik nisu parametri: promjena zone mijenja znacenje svih vec upisanih `time`
@@ -231,7 +227,7 @@ select throws_ok($$
 $$, '42501', 'Nije dozvoljeno', 'Vlasnik A ne mijenja kontakt salona B ni sa njegovim headerom');
 select throws_ok($$
   select public.update_salon_settings(
-    (select drugi_salon from pfix), 'auto', 'exact_slot', 5, 15, 2, 30, 0, false, true, false)
+    (select drugi_salon from pfix), 'auto', 'exact_slot', 5, 15, 2, 30, 0, false, true)
 $$, '42501', 'Nije dozvoljeno', 'Vlasnik A ne mijenja postavke salona B');
 select is((select min_cancel_hours from public.salon_settings
            where salon_id = (select drugi_salon from pfix)), 6,
@@ -247,7 +243,7 @@ select throws_ok($$
 $$, '42501', 'Nije dozvoljeno', 'Klijent ne mijenja kontakt podatke salona');
 select throws_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'auto', 'exact_slot', 5, 15, 2, 30, 0, false, true, false)
+    (select salon from pfix), 'auto', 'exact_slot', 5, 15, 2, 30, 0, false, true)
 $$, '42501', 'Nije dozvoljeno', 'Klijent ne mijenja booking pravila');
 reset role;
 
@@ -290,7 +286,7 @@ set local request.jwt.claims = '{"sub":"cc000000-0000-4000-8000-000000000001","r
 set local role authenticated;
 select lives_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 30, 720, false, true, false)
+    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 30, 720, false, true)
 $$, 'Vlasnik podize rok otkazivanja na 30 dana');
 reset role;
 
@@ -308,7 +304,7 @@ set local request.jwt.claims = '{"sub":"cc000000-0000-4000-8000-000000000001","r
 set local role authenticated;
 select lives_ok($$
   select public.update_salon_settings(
-    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 30, 1, false, true, false)
+    (select salon from pfix), 'manual', 'exact_slot', 5, 15, 2, 30, 1, false, true)
 $$, 'Vlasnik spusta rok otkazivanja na jedan sat');
 reset role;
 

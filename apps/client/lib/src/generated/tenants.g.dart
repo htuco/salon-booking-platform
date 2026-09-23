@@ -14,7 +14,6 @@ class TenantConfig {
     required this.secondaryColor,
     required this.themeName,
     required this.authProviders,
-    required this.allowGuestBooking,
   });
 
   final String flavor;
@@ -36,10 +35,6 @@ class TenantConfig {
   /// `AuthProvider.fromWire` poznaje. Parsira se u `AuthConfig.fromNames`;
   /// filtriranje po platformi radi `AuthConfig.forPlatform`.
   final List<String> authProviders;
-
-  /// Fallback dok backend ne odgovori — izvor istine je
-  /// `salon_settings.allow_guest_booking`.
-  final bool allowGuestBooking;
 }
 
 const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
@@ -53,7 +48,6 @@ const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
     secondaryColor: 0xFF171717,
     themeName: 'modern_barber',
     authProviders: <String>['apple', 'google', 'email'],
-    allowGuestBooking: false,
   ),
   '550e8400-e29b-41d4-a716-446655440001': TenantConfig(
     flavor: 'beautystudiotravnik',
@@ -65,6 +59,5 @@ const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
     secondaryColor: 0xFFFFF5F5,
     themeName: 'elegant_beauty',
     authProviders: <String>['apple', 'google', 'email'],
-    allowGuestBooking: false,
   ),
 };

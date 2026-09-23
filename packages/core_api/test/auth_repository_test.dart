@@ -27,6 +27,25 @@ final _session = Session(
   user: _user,
 );
 
+const _anonymousUser = User(
+  id: 'anonymous-auth-user',
+  appMetadata: {
+    'provider': 'anonymous',
+    'providers': ['anonymous'],
+  },
+  userMetadata: {},
+  aud: 'authenticated',
+  createdAt: '2026-09-23T00:00:00Z',
+  isAnonymous: true,
+);
+
+final _anonymousSession = Session(
+  accessToken: 'anonymous-test-token',
+  refreshToken: 'anonymous-refresh-token',
+  tokenType: 'bearer',
+  user: _anonymousUser,
+);
+
 /// `SupabaseAuthRepository` — ono što se može dokazati **bez tuđih konzola**. Task 12/13.
 ///
 /// Sam Apple i Google tok se odavde ne može odigrati: traži nativni dijalog, potpisan
@@ -110,6 +129,12 @@ void main() {
         ),
       );
     });
+
+    test('Supabase anonymous sesija se ne računa kao prijavljen klijent', () {
+      when(() => auth.currentSession).thenReturn(_anonymousSession);
+
+      expect(repo.currentSession, isNull);
+    });
   });
 
   group('Google prijava bez konfiguracije', () {
@@ -168,7 +193,6 @@ void main() {
     test('Apple je prvi u listi za iOS — pravilo 4.8', () {
       const config = AuthConfig(
         enabled: {AuthProvider.google, AuthProvider.apple, AuthProvider.email},
-        allowGuest: false,
       );
 
       // Redoslijed dolazi iz deklaracije enuma, ne iz redoslijeda u `enabled` setu —
@@ -179,7 +203,6 @@ void main() {
     test('na Androidu Apple ispada iz liste, bez greške', () {
       const config = AuthConfig(
         enabled: {AuthProvider.apple, AuthProvider.google, AuthProvider.email},
-        allowGuest: false,
       );
 
       expect(config.forPlatform(AuthPlatform.android), [

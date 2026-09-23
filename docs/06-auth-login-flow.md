@@ -5,6 +5,12 @@ Prijava klijenta: Apple, Google i Email — sa identity modelom za multi-tenant 
 > **Facebook je skinut** ([ADR-0011](adr/0011-facebook-login-se-ne-implementira.md), 19.09.2026).
 > Ovaj dokument ga i dalje analizira u §7.4, jer je ta analiza razlog zbog kojeg je pao. Sve što
 > ovdje piše o Facebooku je **zapis, ne plan** — u kodu ga nema.
+>
+> **Zakazivanje bez prijave (gost) je uklonjeno** (task 41, 23.09.2026). Svaki klijent se
+> prijavljuje emailom, Googleom ili Appleom. Guest grane u §3 i `isAnonymous` / `source: guest` u §4
+> su **zapis izvornog plana**: `allow_guest_booking` je obrisan, a `private.is_client()` odbija
+> anonimnu Supabase sesiju. Enum vrijednost `appointment_source.guest` ostaje samo kao oznaka za
+> eventualne stare redove — nijedan put je više ne upisuje.
 
 | | |
 |---|---|

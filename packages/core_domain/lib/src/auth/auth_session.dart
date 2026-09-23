@@ -14,7 +14,6 @@ class AuthSession {
     required this.userId,
     required this.providers,
     this.email,
-    this.isAnonymous = false,
   });
 
   /// `auth.users.id` — ono što JWT nosi kao `sub`. Ne prelazi granicu salona sam po sebi:
@@ -26,13 +25,8 @@ class AuthSession {
   /// emailom, pa ovo nije jedna vrijednost nego skup.
   final Set<String> providers;
 
-  /// `null` za goste i za Apple private relay dok korisnik ne podijeli adresu.
+  /// `null` za Apple private relay dok korisnik ne podijeli adresu.
   final String? email;
-
-  /// Gost — rezervisao je bez naloga. Sam tok gosta još nije implementiran ni raspisan
-  /// ([ADR-0011](../../../../../docs/adr/0011-facebook-login-se-ne-implementira.md)); polje
-  /// postoji ovdje da ekran ne mora pitati backend šta je korisnik.
-  final bool isAnonymous;
 
   @override
   bool operator ==(Object other) =>
@@ -40,20 +34,14 @@ class AuthSession {
       other is AuthSession &&
           other.userId == userId &&
           other.email == email &&
-          other.isAnonymous == isAnonymous &&
           other.providers.length == providers.length &&
           other.providers.containsAll(providers);
 
   @override
-  int get hashCode => Object.hash(
-    userId,
-    email,
-    isAnonymous,
-    Object.hashAll(providers.toList()..sort()),
-  );
+  int get hashCode =>
+      Object.hash(userId, email, Object.hashAll(providers.toList()..sort()));
 
   @override
   String toString() =>
-      'AuthSession($userId, providers: ${providers.toList()..sort()}, '
-      'anonymous: $isAnonymous)';
+      'AuthSession($userId, providers: ${providers.toList()..sort()})';
 }

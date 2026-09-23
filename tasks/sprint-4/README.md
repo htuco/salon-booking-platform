@@ -13,7 +13,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | [38](38-crash-radno-vrijeme.md) 🟡 | Crash pri izmjeni radnog vremena | bug | 42 | 1 dan |
 | [39](39-push-na-androidu.md) 🟡 | Push obavijesti na Androidu | bug | 42 | 1–2 dana |
 | [40](40-naziv-lokala-se-ne-mijenja.md) 🟡 | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
-| [41](41-bez-zakazivanja-bez-prijave.md) | Zakazivanje bez prijave se uklanja | popravka | — | 1 dan |
+| [41](41-bez-zakazivanja-bez-prijave.md) ✅ | Zakazivanje bez prijave se uklanja | popravka | — | 1 dan |
 | [42](42-neradni-dan-i-zakljucana-proslost.md) | Neradni dan i zaključana prošlost | feature | — | 2–3 dana |
 | [43](43-korak-po-usluzi.md) | Korak rezervacije po usluzi | feature | — | 1–2 dana |
 | [44](44-postavke-jasnije.md) | Postavke i pravila salona jasnija | feature | — | 1–2 dana |
@@ -111,3 +111,12 @@ Zamke za sljedećeg: **admin u Chromeu ne može dokazati push** (`pushEnabledPro
 `!kIsWeb`); **`run_tenant.sh` je pokvaren sa Flutterom 3.47.4** (`--build-name` više ne postoji na
 `flutter run`); **postojeći notification kanal se ne mijenja iz koda**, traži reinstalaciju.
 
+
+### 41 — Zakazivanje bez prijave se uklanja ✅
+
+Zatvoren 2026-09-23, [PR #100](https://github.com/htuco/salon-booking-platform/pull/100). Gost je
+uklonjen iz koda, `tenant.yaml`-a, šeme (`allow_guest_booking` obrisan) i admin postavki;
+`private.is_client()` odbija anonimnu Supabase sesiju. Dokaz: 478 pgTAP asercija (novi `017`), 9 REST
+testova, `melos run test` zelen, CI zelen. **Zamka:** `register_device` je zavisio od `is_client()` —
+push registracija prije prijave je vraćena starom provjerom uloge. Nakon merge-a: `supabase db push`
+na hostovani projekat.

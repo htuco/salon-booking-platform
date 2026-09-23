@@ -30,9 +30,6 @@ auth:
     apple: true
     google: true
     email: true
-  # Fallback dok backend ne odgovori; izvor istine je salon_settings.allow_guest_booking.
-  allowGuestBooking: false
-
 store:
   shortDescription: "Zakažite termin u Beauty Studio Travnik u par tapova."
   categoryAndroid: LIFESTYLE

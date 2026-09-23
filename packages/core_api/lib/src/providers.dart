@@ -149,8 +149,8 @@ final currentAuthSessionProvider = Provider<AuthSession?>((ref) {
   return iz.valueOrNull ?? ref.watch(authRepositoryProvider).currentSession;
 });
 
-/// Da li je iko prijavljen. Gost (`isAnonymous`) se ovdje računa kao prijavljen — on ima
-/// sesiju i `customers` red; razlika ga tek tiče kod brisanja naloga (task 17).
+/// Da li je korisnik prijavljen podržanim providerom. Supabase anonimnu sesiju auth
+/// repozitorij mapira na `null`, pa ona ne otvara zaštićene rute.
 final isSignedInProvider = Provider<bool>(
   (ref) => ref.watch(currentAuthSessionProvider) != null,
 );
@@ -171,8 +171,6 @@ final customerRepositoryProvider = Provider<CustomerRepository>(
 /// upravo taj. Poziv je idempotentan (`on conflict do nothing` u bazi), pa ga svaka
 /// sljedeća prijava ponovi bez posljedice.
 ///
-/// Gost (`isAnonymous`) je namjerno uključen: i on ima `auth_identities` red i rezerviše
-/// pod svojim identitetom — tok gosta nije implementiran, ali ovdje se ne bi razlikovao.
 final currentCustomerIdProvider = FutureProvider<String?>((ref) async {
   if (ref.watch(currentAuthSessionProvider) == null) return null;
 

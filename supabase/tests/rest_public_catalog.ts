@@ -77,7 +77,7 @@ const RATING_COLUMNS = "salon_id,average,total,count_5,count_4,count_3,count_2,c
 const POLICY_COLUMNS = "id,document,sort_order,title,body,updated_at";
 const SALON_POLICY_COLUMNS = "id,salon_id,document,sort_order,title,body,updated_at";
 const SETTINGS_COLUMNS =
-  "id,salon_id,booking_mode,booking_granularity,buffer_minutes,slot_step_minutes,min_advance_booking_hours,max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice,show_prices_in_app,allow_guest_booking,timezone,language";
+  "id,salon_id,booking_mode,booking_granularity,buffer_minutes,slot_step_minutes,min_advance_booking_hours,max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice,show_prices_in_app,timezone,language";
 
 try {
   // ---------------------------------------------------------------------------

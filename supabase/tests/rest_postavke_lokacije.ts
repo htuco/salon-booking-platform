@@ -162,11 +162,10 @@ try {
     p_min_cancel_hours: 9,
     p_require_staff_choice: true,
     p_show_prices_in_app: false,
-    p_allow_guest_booking: true,
   });
 
   const javnePostavke = (await ok(
-    `/rest/v1/salon_settings?salon_id=eq.${salon}&select=booking_mode,min_cancel_hours,buffer_minutes,allow_guest_booking,timezone`,
+    `/rest/v1/salon_settings?salon_id=eq.${salon}&select=booking_mode,min_cancel_hours,buffer_minutes,timezone`,
     null,
   ))[0];
   assert(
@@ -176,10 +175,6 @@ try {
   assert(
     javnePostavke.min_cancel_hours === 9,
     `Anon vidi novi rok otkazivanja, dobio ${javnePostavke.min_cancel_hours}`,
-  );
-  assert(
-    javnePostavke.allow_guest_booking === true,
-    "Anon vidi da je gostujuce zakazivanje ukljuceno",
   );
   // Zona nije parametar funkcije i ostaje ista.
   assert(
@@ -199,7 +194,6 @@ try {
     p_min_cancel_hours: 3,
     p_require_staff_choice: false,
     p_show_prices_in_app: true,
-    p_allow_guest_booking: false,
   });
   assert(
     losa.status >= 400 &&
@@ -241,7 +235,6 @@ try {
       p_min_cancel_hours: 0,
       p_require_staff_choice: false,
       p_show_prices_in_app: true,
-      p_allow_guest_booking: false,
     },
     drugiSalon,
   );
@@ -311,7 +304,6 @@ try {
       p_min_cancel_hours: 0,
       p_require_staff_choice: false,
       p_show_prices_in_app: true,
-      p_allow_guest_booking: false,
     },
   );
   assert(
@@ -342,7 +334,6 @@ try {
     p_min_cancel_hours: polaznePostavke.min_cancel_hours,
     p_require_staff_choice: polaznePostavke.require_staff_choice,
     p_show_prices_in_app: polaznePostavke.show_prices_in_app,
-    p_allow_guest_booking: polaznePostavke.allow_guest_booking,
   });
 }
 

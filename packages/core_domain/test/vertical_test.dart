@@ -89,7 +89,6 @@ void main() {
         'pendingExpiryHours': 12,
         'requireStaffChoice': false,
         'showPricesInApp': true,
-        'allowGuestBooking': false,
       });
 
       expect(rules.mode, BookingMode.manual);

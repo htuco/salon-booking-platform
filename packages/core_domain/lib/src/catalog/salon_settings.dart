@@ -41,9 +41,6 @@ abstract class SalonSettings with _$SalonSettings {
     @Default(false)
     bool requireStaffChoice,
     @JsonKey(name: 'show_prices_in_app') @Default(true) bool showPricesInApp,
-    @JsonKey(name: 'allow_guest_booking')
-    @Default(false)
-    bool allowGuestBooking,
 
     /// IANA zona (`Europe/Sarajevo`). Jedino mjesto gdje `LocalTime` postaje stvarni
     /// trenutak — i to tek na prikazu, ne u ovom sloju.

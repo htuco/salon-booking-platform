@@ -1112,14 +1112,6 @@ class _RezervacijaKartica extends StatelessWidget {
                     ? null
                     : (v) => promijeni((u) => u.copyWith(showPricesInApp: v)),
               ),
-              _PrekidacRed(
-                naslov: 'Zakazivanje bez prijave',
-                opis: 'gost može zakazati bez naloga',
-                ukljuceno: unos.allowGuestBooking,
-                onChanged: promijeni == null
-                    ? null
-                    : (v) => promijeni((u) => u.copyWith(allowGuestBooking: v)),
-              ),
             ],
           ),
           const SizedBox(height: AdminSpacing.sm),
