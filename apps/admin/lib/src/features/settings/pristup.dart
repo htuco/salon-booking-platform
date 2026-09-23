@@ -232,6 +232,9 @@ class _NoviPoziv extends ConsumerStatefulWidget {
 class _NoviPozivState extends ConsumerState<_NoviPoziv> {
   final _ime = TextEditingController();
   String _uloga = 'employee';
+
+  /// Za ulogu radnik: red iz Osoblja za koji je nalog (task 46). Ime se uzima od njega.
+  Employee? _radnik;
   bool _saljem = false;
   String? _greska;
   StaffInviteCode? _kod;
@@ -242,8 +245,15 @@ class _NoviPozivState extends ConsumerState<_NoviPoziv> {
     super.dispose();
   }
 
+  String get _imeZaPoziv =>
+      _uloga == 'employee' ? (_radnik?.name ?? '') : _ime.text.trim();
+
   Future<void> _napravi() async {
-    final ime = _ime.text.trim();
+    if (_uloga == 'employee' && _radnik == null) {
+      setState(() => _greska = 'Izaberite radnika.');
+      return;
+    }
+    final ime = _imeZaPoziv;
     if (ime.isEmpty) {
       setState(() => _greska = 'Upišite ime.');
       return;
@@ -257,7 +267,12 @@ class _NoviPozivState extends ConsumerState<_NoviPoziv> {
     try {
       final kod = await ref
           .read(staffAccessRepositoryProvider)
-          .createInvite(salonId: salonId, role: _uloga, name: ime);
+          .createInvite(
+            salonId: salonId,
+            role: _uloga,
+            name: ime,
+            employeeId: _uloga == 'employee' ? _radnik?.id : null,
+          );
       ref.invalidate(poziviProvider);
       if (mounted) setState(() => _kod = kod);
     } on ApiError catch (e) {
@@ -299,43 +314,70 @@ class _NoviPozivState extends ConsumerState<_NoviPoziv> {
     );
   }
 
-  Widget _forma(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      TextField(
-        controller: _ime,
-        autofocus: true,
-        textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(labelText: 'Ime'),
-        onSubmitted: (_) => _napravi(),
-      ),
-      const SizedBox(height: AdminSpacing.lg),
-      SegmentedButton<String>(
-        segments: const [
-          ButtonSegment(value: 'employee', label: Text('Radnik')),
-          ButtonSegment(value: 'salon_admin', label: Text('Vlasnik')),
+  Widget _forma(BuildContext context) {
+    final radnici = (ref.watch(adminEmployeesProvider).valueOrNull ?? const [])
+        .where((r) => r.isActive)
+        .toList();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(value: 'employee', label: Text('Radnik')),
+            ButtonSegment(value: 'salon_admin', label: Text('Vlasnik')),
+          ],
+          selected: {_uloga},
+          onSelectionChanged: (s) => setState(() {
+            _uloga = s.first;
+            _greska = null;
+          }),
+        ),
+        const SizedBox(height: AdminSpacing.sm),
+        Text(
+          _uloga == 'employee' ? 'Radnik vidi i vodi samo svoje termine.' : 'Vlasnik ima pun pristup: termine, cjenovnik, osoblje i postavke.',
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: context.adminColors.textSecondary),
+        ),
+        const SizedBox(height: AdminSpacing.lg),
+        if (_uloga == 'employee')
+          // Nalog radnika se veže na red iz Osoblja, pa se bira, ne kuca — i ime dolazi
+          // odatle. Tako termini dodijeljeni tom radniku postaju njegovi.
+          DropdownButtonFormField<Employee>(
+            initialValue: _radnik,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Koji radnik'),
+            items: [
+              for (final r in radnici)
+                DropdownMenuItem(
+                  value: r,
+                  child: Text(r.name, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+            onChanged: (r) => setState(() {
+              _radnik = r;
+              _greska = null;
+            }),
+          )
+        else
+          TextField(
+            controller: _ime,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(labelText: 'Ime'),
+            onSubmitted: (_) => _napravi(),
+          ),
+        if (_greska case final g?) ...[
+          const SizedBox(height: AdminSpacing.md),
+          Text(g, style: TextStyle(color: context.adminColors.destructive)),
         ],
-        selected: {_uloga},
-        onSelectionChanged: (s) => setState(() => _uloga = s.first),
-      ),
-      const SizedBox(height: AdminSpacing.sm),
-      Text(
-        _uloga == 'employee' ? 'Radnik vidi i vodi samo svoje termine.' : 'Vlasnik ima pun pristup: termine, cjenovnik, osoblje i postavke.',
-        style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: context.adminColors.textSecondary),
-      ),
-      if (_greska case final g?) ...[
-        const SizedBox(height: AdminSpacing.md),
-        Text(g, style: TextStyle(color: context.adminColors.destructive)),
       ],
-    ],
-  );
+    );
+  }
 
   Widget _rezultat(BuildContext context, StaffInviteCode kod) {
     final salon = ref.read(adminSalonProvider).valueOrNull?.name ?? 'salona';
     final poruka = porukaPoziva(
-      ime: _ime.text.trim(),
+      ime: _imeZaPoziv,
       kod: kod.code,
       salon: salon,
       // Na webu je adresa admina poznata, pa poruka nosi link koji otvara ekran poziva.

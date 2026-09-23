@@ -59,6 +59,9 @@ deno run --allow-env --allow-net supabase/tests/rest_delete_account.ts
 echo "==> Pozivi za osoblje (Edge Function, nova prijava kroz GoTrue)"
 deno run --allow-env --allow-net supabase/tests/rest_pozivi_osoblja.ts
 
+echo "==> Radnik vidi samo svoje termine (stvaran JWT radnika)"
+deno run --allow-env --allow-net supabase/tests/rest_employee_izolacija.ts
+
 echo "==> Admin prijava i izolacija (seed admini kroz GoTrue)"
 deno run --allow-env --allow-net supabase/tests/rest_admin_login.ts
 deno run --allow-env --allow-net supabase/tests/rest_employee_crud.ts

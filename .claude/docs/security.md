@@ -22,6 +22,7 @@ sigurnosti nego kao izbor konteksta; ono što ga ograničava su politike u bazi.
 | **anon** (neprijavljen) | bez JWT-a | čita aktivne salone, njihove aktivne usluge i radnike, mapiranja, radno vrijeme, postavke, **objavljene recenzije** (uz agregat `salon_rating_summary`), **pravila korištenja sa politikom privatnosti** i bezlični `availability_signals` red salona. **Nema nijedan write grant.** |
 | **klijent** | JWT bez privilegovane uloge (`private.is_client()`) | sve što i anon, plus **svoj** `auth_identities` red, i **svoj** `customers`/`appointments`/`devices` red **u salonu iz `x-salon-id`** |
 | **osoblje** | `app_metadata.role = salon_admin` **i** red u `public.users` sa istim `salon_id` — oboje nastaje iz poziva (task 45) | upravljanje podacima **svog** salona; validirani upisi termina, uređaja i usluga idu kroz RPC |
+| **radnik** | `app_metadata.role = employee` **i** red u `public.users` sa vezom na `employees` (task 46) | čita **svoje** termine i salonske/svoje blokade; mijenja status i otkazuje **samo svoje** termine kroz RPC; ostalo samo kao anon |
 | **super admin** | `app_metadata.role = super_admin` **i** red u `public.users` sa `role='super_admin'` | sve; iznad tenant izolacije |
 
 **Uloga u tokenu sama po sebi ne znači ništa.** `private.is_super_admin()` i `private.is_admin()`
@@ -75,6 +76,34 @@ nastaju zajedno, na serveru:
 Dokaz: `020_pozivi_za_osoblje.test.sql` (37 asercija; sabotaža koja pusti iskorišten kod obara
 tačno onu koja to mjeri) i `rest_pozivi_osoblja.ts` (17 provjera kroz GoTrue i Edge Function,
 lokalno — CI Edge Functions ne pokreće).
+
+### Radnik (`employee`) — task 46
+
+Radnik dobija **sužen** pristup (ADR-0013), a promjena je aditivna: `is_admin()` se ne dira, pa
+nijedna postojeća `staff_manage` politika ni RPC pisanja (cjenovnik, osoblje, radno vrijeme,
+blokade, postavke, pozivi, neradni dan) ne prima radnika.
+
+- `public.users.employee_id` veže nalog za red u `employees` (FK po `(salon_id, id)`, jedan
+  radnik = jedan nalog). `check` traži vezu za ulogu `employee`; `not valid`, jer nalog radnika
+  iz taska 45 nema vezu — takav nalog nema prava i vlasnik ga poziva ponovo.
+- `private.is_employee(salon)` traži claim `role = employee` i `salon_id` **i** red u
+  `public.users` sa vezom. `private.current_employee_id()` vraća vezu samo uz iste uslove.
+  **Oboje traže i aktivnog radnika** (`employees.is_active`): vlasnik koji radnika deaktivira u
+  Osoblju gasi mu pristup odmah, iako nalog i JWT ostaju (nalaz `rls-auditor` prije merge-a).
+- `private.can_manage_appointment(salon, termin)` = admin, **ili** radnik kojem je termin
+  dodijeljen. Kroz nju idu `set_appointment_status` i `cancel_appointment`; radnik otkazuje kao
+  salon (`cancelled_by = salon`, bez klijentskog roka).
+- Politike: `employee_own` (termini gdje je `employee_id` njegov) i `employee_blocks` (salonske i
+  njegove blokade). Obje samo `select`.
+- **Termin bez radnika vidi samo admin** — radnik bi inače vidio klijente koji nisu njegovi.
+  Dodjela radniku je posao admina; termin ne nestaje ni iz jednog pogleda.
+- Adresar klijenata, pozivi i lista osoblja su radniku nula. Cjenovnik, osoblje, radno vrijeme i
+  postavke čita kroz `public_active`, kao svaki posjetilac aktivnog salona.
+- Poziv za radnika mora nositi radnika koji još nema nalog (`create_staff_invite`, PT400).
+
+Dokaz: `021_uloga_employee.test.sql` (46 asercija; politika bez uslova na radnika obara 3, kapija
+bez vlasništva termina obara 2, provjera bez `is_active` obara 5) i `rest_employee_izolacija.ts` (13 provjera sa stvarnim JWT-om
+radnika kroz GoTrue i PostgREST).
 
 ## `private.*` — gdje živi autorizacija
 
@@ -707,6 +736,8 @@ ništa.
 | `019_korak_po_usluzi.test.sql` | korak po usluzi — prazno = salonski, korak usluge nadjačava salonski u oba smjera, `book_appointment` odbija početak van koraka, RPC odbija korak van 1–120, `anon` ne zove novi potpis |
 | `020_pozivi_za_osoblje.test.sql` | pozivi za osoblje — samo admin svog salona, `super_admin` se ne dodjeljuje, hash umjesto koda, prihvatanje samo za `service_role` i samo jednom, istek i povlačenje, uklanjanje gasi `is_admin` |
 | `rest_pozivi_osoblja.ts` | isto kroz Edge Function i GoTrue: novi nalog nosi ulogu i salon **iz poziva**, ne iz zahtjeva; zauzet email 409; uklonjen nalog sa starim tokenom ne vidi ništa |
+| `021_uloga_employee.test.sql` | radnik vidi i mijenja samo svoje termine; ne termin radnika A2, ne termin bez radnika, ne salon B; ne piše cjenovnik, pozive, blokade; podmetnut token i nalog bez veze nemaju ništa |
+| `rest_employee_izolacija.ts` | isto kroz stvaran JWT radnika: PostgREST vraća samo njegov termin, tuđi RPC je 403, direktan PATCH odbijen |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

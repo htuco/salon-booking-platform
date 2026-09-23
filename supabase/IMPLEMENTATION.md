@@ -37,6 +37,10 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   are `service_role` only and run from the `accept-staff-invite` Edge Function, which creates
   `auth.users` with `app_metadata` taken from the invite. Invites store a sha256 of the code and
   expire after 7 days. Removing a member deletes only the `public.users` row.
+- Employees (task 46, ADR-0013): `users.employee_id` links the account to `employees`;
+  `private.is_employee`/`current_employee_id`/`can_manage_appointment`. Employees read only
+  their own appointments (`employee_own`) and salon/own blocks, and may change status or cancel
+  only their own appointments. Unassigned appointments are admin-only. `is_admin` is unchanged.
 - `availability_signals` is the only public Realtime availability signal: it exposes only
   `(salon_id, revision_id)` for an active salon. Triggers rotate the opaque UUID after changes to
   services, employees, mappings, schedules, appointments, blocked slots or booking settings; the
