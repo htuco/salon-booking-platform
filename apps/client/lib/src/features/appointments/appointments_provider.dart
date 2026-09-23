@@ -97,12 +97,20 @@ final splitAppointmentsProvider = Provider<AsyncValue<SplitAppointments>>((
       .whenData((sve) => splitAppointments(sve, now: now));
 });
 
-/// Koliko sati prije termina se još smije otkazati — iz vertikale, nikad iz konstante.
+/// Koliko sati prije termina se još smije otkazati — iz `salon_settings`, nikad iz
+/// konstante.
 ///
 /// Isto pravilo baza primjenjuje u `cancel_appointment`; ovdje se **samo prikazuje**.
 /// Dvije implementacije istog pravila su dvije prilike da se raziđu, pa ekran ne odlučuje
 /// ništa — kad se raziđu, baza je u pravu i njena greška izlazi na ekran.
+///
+/// **Izvor je `salon_settings.min_cancel_hours`, isti red koji čita baza.** Vertikala
+/// nosi samo podrazumijevanu vrijednost pri kreiranju salona; kad vlasnik rok promijeni u
+/// postavkama, vertikala ostaje na starom broju i dugme bi nudilo otkazivanje koje baza
+/// odbije sa `PT403`. Vertikala je ovdje samo rezerva dok postavke ne stignu.
 final minCancelHoursProvider = Provider<int>((ref) {
+  final settings = ref.watch(salonSettingsProvider).valueOrNull;
+  if (settings != null) return settings.minCancelHours;
   final vertical = ref.watch(verticalProvider).valueOrNull;
   return vertical?.rules.minCancelHours ?? 0;
 });

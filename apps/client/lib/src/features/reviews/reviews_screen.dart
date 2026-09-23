@@ -271,10 +271,87 @@ class _Kartica extends StatelessWidget {
           ),
           if (review.hasComment) ...[
             const SizedBox(height: AppSpacing.md),
-            Text(review.comment!, style: theme.textTheme.bodyLarge),
+            _Komentar(tekst: review.comment!),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Tekst recenzije, skraćen na [_redova] redova sa „Prikaži više".
+///
+/// **Dugme postoji samo kad tekst stvarno ne stane.** Da li je prelomljen zna tek
+/// `TextPainter` na stvarnoj širini kartice. Broj znakova je loša zamjena: isti komentar
+/// na 402 px pukne, a na tabletu stane. „Prikaži više" ispod kratkog komentara obeća
+/// sadržaj kojeg nema.
+class _Komentar extends StatefulWidget {
+  const _Komentar({required this.tekst});
+
+  final String tekst;
+
+  static const int _redova = 4;
+
+  @override
+  State<_Komentar> createState() => _KomentarState();
+}
+
+class _KomentarState extends State<_Komentar> {
+  var _otvoren = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final stil = theme.textTheme.bodyLarge;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mjera = TextPainter(
+          text: TextSpan(text: widget.tekst, style: stil),
+          maxLines: _Komentar._redova,
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: constraints.maxWidth);
+        final predug = mjera.didExceedMaxLines;
+        mjera.dispose();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.tekst,
+              style: stil,
+              maxLines: _otvoren ? null : _Komentar._redova,
+              overflow: _otvoren ? null : TextOverflow.ellipsis,
+            ),
+            if (predug)
+              Semantics(
+                button: true,
+                expanded: _otvoren,
+                child: InkWell(
+                  onTap: () => setState(() => _otvoren = !_otvoren),
+                  child: ConstrainedBox(
+                    // Tekstualno dugme je i dalje dodirna meta (`docs/02 §14`).
+                    constraints: const BoxConstraints(
+                      minHeight: AppSize.touchTarget,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: 1,
+                      child: Text(
+                        _otvoren ? l10n.reviewsShowLess : l10n.reviewsShowMore,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

@@ -147,6 +147,12 @@
     "placeholders": { "rating": { "type": "int", "example": "5" } }
   },
 
+  "reviewsShowMore": "Prikaži više",
+  "@reviewsShowMore": { "description": "Otvara ostatak duge recenzije na /reviews." },
+
+  "reviewsShowLess": "Prikaži manje",
+  "@reviewsShowLess": { "description": "Skraćuje otvorenu recenziju nazad na četiri reda." },
+
   "reviewsHistogramLabel": "{star} zvjezdica: {count}",
   "@reviewsHistogramLabel": {
     "description": "Semantička labela jednog reda histograma na /reviews.",
@@ -692,7 +698,7 @@
 
   "appointmentCancelDeadline": "Otkazivanje je moguće najkasnije {hours} sati prije termina.",
   "@appointmentCancelDeadline": {
-    "description": "Objasnjenje uz onemogucen CTA. Rok dolazi iz vertical.rules.minCancelHours, nikad iz konstante.",
+    "description": "Objasnjenje uz onemogucen CTA. Rok dolazi iz salon_settings.min_cancel_hours, nikad iz konstante.",
     "placeholders": { "hours": { "type": "int" } }
   },
 
