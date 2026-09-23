@@ -101,7 +101,7 @@ class _TopBarAkcije extends StatelessWidget {
           const SizedBox(width: 10),
         ],
         SizedBox(
-          height: 42,
+          height: AdminSize.touchTarget,
           child: OutlinedButton(
             onPressed: () => context.go(AdminRoute.calendarBlock.path),
             style: OutlinedButton.styleFrom(
@@ -112,7 +112,7 @@ class _TopBarAkcije extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         SizedBox(
-          height: 42,
+          height: AdminSize.touchTarget,
           child: FilledButton(
             onPressed: () => context.go(AdminRoute.appointmentNew.path),
             style: FilledButton.styleFrom(
@@ -152,7 +152,7 @@ class _PretragaKlijentaState extends ConsumerState<_PretragaKlijenta> {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 268,
-      height: 42,
+      height: AdminSize.touchTarget,
       child: TextField(
         controller: _kontroler,
         textInputAction: TextInputAction.search,
@@ -160,6 +160,8 @@ class _PretragaKlijentaState extends ConsumerState<_PretragaKlijenta> {
         decoration: const InputDecoration(
           hintText: 'Pretraži klijenta',
           isDense: true,
+          // FE-502: gusto polje ne smije pasti ispod dodirne mete.
+          constraints: BoxConstraints(minHeight: AdminSize.touchTarget),
           contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
         ),
         onSubmitted: (izraz) {
@@ -644,6 +646,7 @@ class _ZaglavljeTabele extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget celija(String tekst) => Text(
       tekst.toUpperCase(),
+      semanticsLabel: tekst,
       style: AdminText.eyebrow.copyWith(
         color: context.adminColors.textMuted,
         fontWeight: FontWeight.w500,
@@ -937,7 +940,7 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
           Row(
             children: [
               SizedBox(
-                height: AdminSize.buttonHeight + 2,
+                height: AdminSize.buttonHeight,
                 child: FilledButton(
                   onPressed: _uToku ? null : _potvrdi,
                   style: FilledButton.styleFrom(
@@ -949,7 +952,7 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
               ),
               const SizedBox(width: 9),
               SizedBox(
-                height: AdminSize.buttonHeight + 2,
+                height: AdminSize.buttonHeight,
                 child: OutlinedButton(
                   onPressed: _uToku ? null : _odbij,
                   style: OutlinedButton.styleFrom(

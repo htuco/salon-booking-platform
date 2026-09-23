@@ -629,15 +629,16 @@ class _PotvrdiSveDugmeState extends ConsumerState<_PotvrdiSveDugme> {
   Widget build(BuildContext context) {
     final zahtjevi = ref.watch(zahtjeviProvider).valueOrNull ?? const [];
 
-    // `3d`: dugme u top baru je 40 px visoko, tekst 16 px od ruba.
+    // `3d`: dugme u top baru je 40 px visoko, tekst 16 px od ruba. Visina je 44 po
+    // FE-502 — donja granica dodirne mete jača je od izmjerenog piksela.
     return SizedBox(
-      height: 40,
+      height: AdminSize.touchTarget,
       child: OutlinedButton(
         onPressed: _uToku || zahtjevi.isEmpty
             ? null
             : () => _potvrdiSve(zahtjevi),
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 40),
+          minimumSize: const Size(0, AdminSize.touchTarget),
           padding: const EdgeInsets.symmetric(horizontal: AdminSpacing.lg),
         ),
         child: Text(_uToku ? 'Potvrđujem…' : 'Potvrdi sve bez preklapanja'),

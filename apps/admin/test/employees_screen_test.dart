@@ -13,6 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
+import 'support/pristupacnost.dart';
+
 const _employee = Employee(
   id: 'e1',
   salonId: 'salon',
@@ -186,6 +188,10 @@ Future<_Actions> _pump(
 }
 
 void main() {
+  pristupacnostPodignutog('Osoblje', (tester, velicina) async {
+    await _pump(tester, size: velicina);
+  });
+
   testWidgets('Otvaranje tokom refresh-a ne vraca stare veze', (tester) async {
     var first = true;
     final pending = Completer<List<EmployeeService>>();

@@ -21,6 +21,7 @@ export 'src/components/app_button.dart';
 export 'src/components/app_dialog.dart';
 export 'src/components/app_modal.dart';
 export 'src/components/app_refresh.dart';
+export 'src/components/app_tappable.dart';
 export 'src/components/back_header.dart';
 export 'src/components/bottom_nav_bar.dart';
 export 'src/components/calendar_month.dart';

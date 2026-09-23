@@ -1,6 +1,8 @@
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
+
 /// Galerija salona — tri kolone kvadratnih fotografija (`01-pocetna.png`).
 ///
 /// Prikazuje najviše [maxPhotos] slika; ostatak dobija zaseban ekran (task 20). Početna
@@ -38,7 +40,10 @@ class GalleryGrid extends StatelessWidget {
           runSpacing: AppSpacing.sm,
           children: [
             for (final (index, url) in prikazane.indexed)
-              GestureDetector(
+              // `AppTappable` (FE-502): dohvatljivo tastaturom, fokus vidljiv preko slike.
+              AppTappable(
+                semanticLabel: AppLocalizations.of(context)
+                    .galleryPhotoLabel(index + 1, urls.length),
                 onTap: onTap == null ? null : () => onTap!(index),
                 child: PhotoFrame(imageUrl: url, size: strana),
               ),

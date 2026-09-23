@@ -173,30 +173,44 @@ class _Zaglavlje extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Strelica i riječ su jedna meta. Sama strelica je 22 px — ispod donje
               // granice iz `docs/02 §14`, i promaši se u hodu.
-              InkWell(
-                onTap: onBack,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.md,
-                    horizontal: AppSpacing.xs,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        LucideIcons.arrowLeft,
-                        size: AppSize.iconAction,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Text(backLabel, style: theme.textTheme.titleSmall),
-                    ],
+              //
+              // `Flexible` (FE-502): na 130 % sistemskog fonta riječ i oznaka koraka ne
+              // staju u 390 px. Skraćuje se riječ nazad — strelica ostaje meta, a oznaka
+              // koraka je podatak koji ne smije nestati.
+              Flexible(
+                child: InkWell(
+                  onTap: onBack,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                      horizontal: AppSpacing.xs,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          LucideIcons.arrowLeft,
+                          size: AppSize.iconAction,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Flexible(
+                          child: Text(
+                            backLabel,
+                            style: theme.textTheme.titleSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: AppSpacing.md),
               Text(
                 stepLabel,
                 style: theme.textTheme.titleSmall?.copyWith(

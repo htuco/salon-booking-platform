@@ -67,7 +67,7 @@ abstract final class _Mjera {
   static const double red = 14;
 
   /// Visina dugmeta u top baru.
-  static const double dugme = 42;
+  static const double dugme = AdminSize.touchTarget;
 }
 
 /// SnackBar za kontrolu koja je nacrtana, a funkcija iza nje još ne postoji.
@@ -906,7 +906,7 @@ class _OsnovnaKartica extends StatelessWidget {
                         constraints: const BoxConstraints(maxWidth: 190),
                         child: SizedBox(
                           width: double.infinity,
-                          height: 38,
+                          height: AdminSize.touchTarget,
                           child: OutlinedButton(
                             // Upload slike ne postoji ni u repozitoriju ni u bazi.
                             onPressed: () => _uskoro(
@@ -914,7 +914,7 @@ class _OsnovnaKartica extends StatelessWidget {
                               'Promjena fotografije stiže uskoro.',
                             ),
                             style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, 38),
+                              minimumSize: const Size(0, AdminSize.touchTarget),
                               textStyle: theme.textTheme.labelMedium,
                             ),
                             child: const Text('Promijeni'),

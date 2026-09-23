@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/pristupacnost.dart';
+
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 const _desktop = Size(1440, 900);
 const _telefon = Size(402, 874);
@@ -113,6 +115,8 @@ UslugaPrekidac _prekidac(WidgetTester tester, String oznaka) => tester
     .firstWhere((p) => p.oznaka == oznaka);
 
 void main() {
+  pristupacnostEkrana('Usluge', _screen);
+
   testWidgets('desktop crta tabelu, radnike, panel i top-bar akciju', (
     tester,
   ) async {

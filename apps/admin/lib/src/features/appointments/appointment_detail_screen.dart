@@ -222,7 +222,11 @@ class _Zaglavlje extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              // `Wrap`, ne `Row` sa `Spacer`-om (FE-502): na 130 % sistemskog fonta link i
+              // pilula statusa ne staju u 402 px, pa pilula prelazi u drugi red.
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   // `3n`: povratak je plavi link u rečenici, 16 px — sporedna radnja, ne dugme.
                   TextButton.icon(
@@ -235,7 +239,6 @@ class _Zaglavlje extends StatelessWidget {
                       textStyle: theme.textTheme.bodyLarge,
                     ),
                   ),
-                  const Spacer(),
                   AppointmentStatusPill(status: termin.status),
                 ],
               ),

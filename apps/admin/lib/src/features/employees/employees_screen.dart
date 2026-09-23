@@ -209,7 +209,7 @@ class _TopBarAkcije extends ConsumerWidget {
         // dashboardu: na 1024 px pored sidebara breadcrumb je prelijevao top bar.
         if (MediaQuery.sizeOf(context).width >= 1200) ...[
           SizedBox(
-            height: 42,
+            height: AdminSize.touchTarget,
             child: OutlinedButton(
               onPressed: () => _uskoro(
                 context,
@@ -225,7 +225,7 @@ class _TopBarAkcije extends ConsumerWidget {
           const SizedBox(width: 10),
         ],
         SizedBox(
-          height: 42,
+          height: AdminSize.touchTarget,
           child: FilledButton(
             onPressed: () => _uredi(context),
             style: FilledButton.styleFrom(
@@ -691,6 +691,7 @@ class _TrakaSedmice extends StatelessWidget {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             _vrijednost(dan),
+                            semanticsLabel: _procitano(dan),
                             style: AdminText.timeLarge.copyWith(
                               color: boje.ink,
                             ),
@@ -719,6 +720,23 @@ class _TrakaSedmice extends StatelessWidget {
       final RadiDan d => d.kratko,
       SlobodanDan() => '—',
       OdsutanDan(:final razlog) => skracenicaOdsustva(razlog),
+    };
+  }
+
+  /// Isto što i [_vrijednost], ali za čitač ekrana: skraćenica `GO` se sriče, pa
+  /// čitač dobija puni razlog (FE-502). `null` ostavlja vidljivi tekst.
+  String? _procitano(DateTime dan) {
+    final s = sati;
+    if (s == null) return null;
+    return switch (danRadnika(
+      sati: s,
+      blokade: blokade,
+      employeeId: radnik.id,
+      dan: dan,
+    )) {
+      OdsutanDan(:final razlog) => razlog ?? 'Odsutan',
+      SlobodanDan() => 'Ne radi',
+      RadiDan() => null,
     };
   }
 }
@@ -865,7 +883,7 @@ class _CelijaSmjene extends StatelessWidget {
     };
     if (pozadina == null) {
       return SizedBox(
-        height: 34,
+        height: AdminSize.touchTarget,
         child: Center(
           child: Text(
             '—',
@@ -882,7 +900,8 @@ class _CelijaSmjene extends StatelessWidget {
         onTap: () => _uskoroSmjene(context),
         borderRadius: BorderRadius.circular(AdminRadius.small),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 34),
+          // `3g` crta 34; ćelija se tapa, pa je 44 po FE-502.
+          constraints: const BoxConstraints(minHeight: AdminSize.touchTarget),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Align(
