@@ -173,3 +173,9 @@ na Početnoj i `/about`. Test mjeri vrh dugmeta, sabotaža ga obara. 252 testa.
 **✅ [FE-303](FE-303-zahtjev-poslan.md)** — grana `feat/fe-303-zahtjev-poslan`. Ekran je bio po handoffu
 od taska 37; popravljena back gesta, koja je na Androidu zatvarala aplikaciju (ispod `/book/success`
 nema rute). Sada vodi na Početnu i čisti flow. Test sa sabotažom, 253 testa. Na uređaju nije viđeno.
+
+**🟡 [FE-503](FE-503-ciscenje-legacy-stilova.md)** — grana `chore/fe-503-legacy-stilovi`. Uklonjen
+`AdminColors` (duplikat palete koji se već bio razišao, a čitali su ga samo testovi), mrtav token i
+zaobljena varijanta kostura. Grep provjere čiste. **Bundle je izmjeren i porastao je**: klijent
++23 KB (samo kod), admin +242 KB, od čega +100 KB pisma iz ADR-0020. Barlow Bold (108 KB) niko
+ne koristi, ali ga ADR-0020 propisuje, pa je to odluka za vlasnika.

@@ -11,13 +11,12 @@ class SkeletonLoader extends StatefulWidget {
   const SkeletonLoader({
     required this.height,
     this.width = double.infinity,
-    this.radius = AppRadius.none,
     super.key,
   });
 
   /// Kartica usluge u listi — tri reda visine kartice.
   factory SkeletonLoader.card({Key? key}) =>
-      SkeletonLoader(key: key, height: 96, radius: AppRadius.none);
+      SkeletonLoader(key: key, height: 96);
 
   /// Jedan red teksta.
   factory SkeletonLoader.text({Key? key, double width = 160}) =>
@@ -25,7 +24,6 @@ class SkeletonLoader extends StatefulWidget {
 
   final double height;
   final double width;
-  final double radius;
 
   @override
   State<SkeletonLoader> createState() => _SkeletonLoaderState();
@@ -54,10 +52,9 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
     final bezAnimacije = MediaQuery.disableAnimationsOf(context);
 
     final povrsina = DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(widget.radius),
-      ),
+      // Bez `borderRadius`: sistem je uglat (`SPEC.md`: radius 0), pa kostur nema
+      // zaobljenu varijantu — FE-503 je uklonio parametar koji ju je nudio.
+      decoration: BoxDecoration(color: scheme.surfaceContainerHighest),
       child: SizedBox(height: widget.height, width: widget.width),
     );
 

@@ -71,7 +71,7 @@ class AdminStatusColors extends ThemeExtension<AdminStatusColors> {
       foreground: colors.waitingInk,
     ),
     // Canvas: `background:#eef1f3;color:#6b757b` — „Završeno". **Taj par mjeri 4,15:1 i
-    // pada AA**, pa je tekst spušten na `AdminColors.textSecondary` (5,26:1). Razlika je
+    // pada AA**, pa je tekst spušten na `AdminPalette.light.textSecondary` (5,26:1). Razlika je
     // jedna nijansa sive i ne vidi se; pad ispod praga se vidi tek kome smeta.
     neutral: AdminStatusTone(
       background: colors.neutralTint,

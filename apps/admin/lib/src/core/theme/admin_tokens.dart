@@ -88,9 +88,6 @@ abstract final class AdminSize {
   /// 36 — visina dugmeta u kartici zahtjeva („Potvrdi" / „Odbij").
   static const double buttonHeight = 36;
 
-  /// 34 — visina dugmeta u top baru.
-  static const double topBarButtonHeight = 34;
-
   /// 1 — debljina hairline granice. Postoji kao token jer se pojavljuje u svakom obrubu,
   /// a `BorderSide` bez debljine tiho uzme Material default.
   static const double hairline = 1;
