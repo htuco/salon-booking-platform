@@ -10,13 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// spaja krajeve. Jedinični testovi u `core_domain` provjeravaju samo `AuthConfig`; ovdje
 /// se provjerava da generisani registar nosi ono što `tenant.yaml` kaže.
 void main() {
-  ProviderContainer container({
-    required TenantConfig tenant,
-  }) {
+  ProviderContainer container({required TenantConfig tenant}) {
     final c = ProviderContainer(
-      overrides: [
-        appEnvProvider.overrideWithValue(_env(tenant.salonId)),
-      ],
+      overrides: [appEnvProvider.overrideWithValue(_env(tenant.salonId))],
     );
     addTearDown(c.dispose);
     return c;

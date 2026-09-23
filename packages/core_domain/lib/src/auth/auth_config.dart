@@ -46,9 +46,8 @@ class AuthConfig {
   /// (`tool/gen_flavors.dart` pada na nepoznat ključ u `auth.providers`), pa odatle ne može
   /// stići smeće; ovaj put ostaje otvoren za vrijednosti sa backenda, gdje je app u storeu
   /// uvijek starija od podataka — isti razlog zbog kojeg `AppointmentStatus` ima `unknown`.
-  factory AuthConfig.fromNames(Iterable<String> names) => AuthConfig(
-    enabled: names.map(AuthProvider.fromWire).nonNulls.toSet(),
-  );
+  factory AuthConfig.fromNames(Iterable<String> names) =>
+      AuthConfig(enabled: names.map(AuthProvider.fromWire).nonNulls.toSet());
 
   AuthConfig copyWith({Set<AuthProvider>? enabled}) =>
       AuthConfig(enabled: enabled ?? this.enabled);
@@ -56,8 +55,7 @@ class AuthConfig {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AuthConfig &&
-          _isteVrijednosti(other.enabled, enabled);
+      other is AuthConfig && _isteVrijednosti(other.enabled, enabled);
 
   @override
   int get hashCode =>

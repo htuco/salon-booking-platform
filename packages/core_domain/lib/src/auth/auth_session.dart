@@ -38,11 +38,8 @@ class AuthSession {
           other.providers.containsAll(providers);
 
   @override
-  int get hashCode => Object.hash(
-    userId,
-    email,
-    Object.hashAll(providers.toList()..sort()),
-  );
+  int get hashCode =>
+      Object.hash(userId, email, Object.hashAll(providers.toList()..sort()));
 
   @override
   String toString() =>
