@@ -147,3 +147,26 @@ Dvije od njih **smanjuju opseg epika**, ne povećavaju ga:
 
 Preostaje **17 taskova**: FE-101, FE-103, FE-104, FE-2xx (5), FE-3xx (6) i FE-5xx (4).
 FE-5xx po definiciji idu zadnji.
+
+## FE-6 · Admin kao radni alat — prijedlog, blokiran
+
+Stigao 2026-09-23 kao UI prijedlog: admin kao radna površina, ne pregled brojki. **Kosi se sa
+[ADR-0020](../../docs/adr/0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md)** (admin je 1:1
+sa `adminv2`), pa je sve ispod blokirano
+[ADR-0021](../../docs/adr/0021-admin-kao-radni-alat-odstupanje-od-adminv2.md), koji je `predložen`
+i čeka vlasnika proizvoda. ADR dijeli prijedlog u tri grupe: bez odstupanja od crteža (1),
+odstupanje od crteža koje prvo ide u handoff (2), i promjena ponašanja sa svojim ADR-om (3).
+
+| # | Task | Grupa | Procjena |
+|---|---|---|---|
+| [FE-601](FE-601-stanja-u-adminu.md) | Stanja na svim admin ekranima (poslije FE-501) | 1 | 1–2 dana |
+| [FE-602](FE-602-dashboard-radna-povrsina.md) | Dashboard kao radna površina | 2 | 1–2 dana |
+| [FE-603](FE-603-hijerarhija-akcenta-i-naslova.md) | Koralna za jednu akciju, tri nivoa naslova, status tagovi | 2 | 1 dan |
+| [FE-604](FE-604-gusce-tabele.md) | Gušće tabele, sticky zaglavlje, bulk akcije | 2 | 2 dana |
+| [FE-605](FE-605-kalendar-radni.md) | Kalendar: sticky zaglavlje, linija vremena, povlačenje | 1 + 3 | 2–3 dana + ADR |
+| [FE-606](FE-606-paleta-i-precice.md) | ⌘K paleta i prečice | 1 | 2 dana |
+| [FE-607](FE-607-bocni-paneli.md) | Novi termin i kontekst u bočnom panelu | 2 | 2–3 dana |
+| [FE-608](FE-608-undo-umjesto-potvrde.md) | Undo umjesto potvrde | 3 | 1–2 dana + ADR |
+
+Dio prijedloga je **već zatečen** i nije dobio task: tabularne cifre (ADR-0020), isprekidan rub
+zahtjeva (FE-403), fluidni layout do 2560 px (FE-406).

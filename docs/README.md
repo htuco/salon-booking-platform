@@ -126,6 +126,7 @@ Ne otvaraj ih ponovo bez novog podatka:
 | Klijent **nema fiksnu koralnu** — boja ostaje tenant podatak kroz `buildAppTheme()` | [ADR-0018](adr/0018-klijent-nema-fiksnu-koralnu-boja-ostaje-tenant-podatak.md) |
 | **Barlow se ne uvodi**; Space Grotesk + JetBrains Mono i DM Serif + Archivo ostaju | [ADR-0019](adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md) |
 | **Admin je 1:1 sa `adminv2`**: Barlow sa tabularnim ciframa, svijetla tema, placeholder umjesto izostavljanja (za admin zamjenjuje ADR-0019) | [ADR-0020](adr/0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md) |
+| **Admin kao radni alat** (prijedlog): tri grupe odstupanja od `adminv2` — *predložen, čeka vlasnika* | [ADR-0021](adr/0021-admin-kao-radni-alat-odstupanje-od-adminv2.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |
