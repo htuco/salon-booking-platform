@@ -7,8 +7,10 @@
 ///   `auth_identity_id`. Oboje je ispravno stanje, i oboje bi lako palo na `!`.
 /// - **Preljevi na 402 px.** Task 34 je našao dva stvarna preljeva tek widget testom,
 ///   pa se svaka lista ovdje pumpa i na telefonu.
-/// - **„Nema podatka" se ne smije nacrtati kao nula.** Klijent bez ijedne cijene ne
-///   smije dobiti „0 KM", jer bi vlasnik pročitao da nije ništa potrošio.
+/// - **„Nema podatka" se ne smije nacrtati kao nula.** „KM ukupno" je sklonjen
+///   (ADR-0020), ali [potroseno] i dalje vraća `null`, ne nulu, kad cijene nema.
+/// - **Desktop sam otvara profil prvog reda**, pa se ime i broj tog klijenta nađu
+///   dvaput — u redu i u profilu.
 library;
 
 import 'package:admin/src/core/theme/theme.dart';
@@ -158,19 +160,24 @@ void main() {
       await _pumpAt(tester, _desktop, _screen());
 
       expect(find.text('Klijenti'), findsWidgets);
-      expect(find.text('Haris Delić'), findsOneWidget);
-      expect(find.text('061 552 104'), findsOneWidget);
+      // Desktop sam otvara profil prvog reda, pa ime i broj stoje dvaput: red i profil.
+      expect(find.text('Haris Delić'), findsNWidgets(2));
+      expect(find.text('061 552 104'), findsNWidgets(2));
       expect(find.text('11'), findsOneWidget);
       // Zadnji dolazak, ne datum upisa.
-      expect(find.text('2. maj 2026.'), findsOneWidget);
+      expect(find.text('02.05.2026.'), findsOneWidget);
     });
 
-    testWidgets('klijent bez dolaska dobija riječ, ne crticu', (tester) async {
+    testWidgets('klijent bez dolaska dobija crticu u koloni', (tester) async {
       await _pumpAt(tester, _desktop, _screen());
 
-      // `_walkin` i `_obrisan` nemaju `lastVisitAt` — „Nikad" kaže šta stoji u redu,
-      // dok bi crtica izgledala kao greška u učitavanju.
-      expect(find.text('Nikad'), findsNWidgets(2));
+      // `_walkin` i `_obrisan` nemaju `lastVisitAt`. Crtica se traži samo u redovima
+      // (`InkWell`), jer je ima i prazna kartica „Sljedeći termin" u profilu.
+      expect(
+        find.descendant(of: find.byType(InkWell), matching: find.text('—')),
+        findsNWidgets(2),
+      );
+      expect(find.text('Nikad'), findsNothing);
     });
 
     testWidgets('anonimiziran klijent ne pada i ne crta prazno ime', (
@@ -179,8 +186,9 @@ void main() {
       await _pumpAt(tester, _desktop, _screen(klijenti: [_obrisan]));
 
       expect(tester.takeException(), isNull);
-      expect(find.text('Bez imena'), findsOneWidget);
-      expect(find.text('Bez broja'), findsOneWidget);
+      // Red i automatski otvoren profil.
+      expect(find.text('Bez imena'), findsNWidgets(2));
+      expect(find.text('Bez broja'), findsNWidgets(2));
     });
 
     testWidgets('telefon crta kartice bez preljeva', (tester) async {
@@ -208,49 +216,76 @@ void main() {
   });
 
   group('profil', () {
-    testWidgets('otvara se klikom i crta brojače iz reda, ne iz istorije', (
+    testWidgets('desktop otvara prvi red i broji dolaske iz istorije', (
       tester,
     ) async {
       await _pumpAt(tester, _desktop, _screen());
-      await tester.tap(find.text('Haris Delić'));
-      await tester.pumpAndSettle();
 
-      // `visit_count` i `no_show_count` su kolone koje puni `set_appointment_status`;
-      // brojanje istorije bi dalo drugi broj, jer je istorija odrezana na `limit`.
-      expect(find.text('dolazaka'), findsOneWidget);
+      // Istorija ispod granice: 2 održana, 0 nedolazaka — ne `visit_count` 11 iz reda.
+      // (Brojač iz reda se uzima tek kad je istorija odrezana, v. grupu `brojDolazaka`.)
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('dolaska'), findsOneWidget);
+      expect(find.text('0'), findsOneWidget);
       expect(find.text('nedolazaka'), findsOneWidget);
       expect(find.text('Historija'), findsOneWidget);
       expect(find.text('Muško šišanje'), findsNWidgets(2));
     });
 
-    testWidgets('potrošeno broji samo održane termine', (tester) async {
+    testWidgets('potrošeno se više ne crta', (tester) async {
       await _pumpAt(tester, _desktop, _screen());
-      await tester.tap(find.text('Haris Delić'));
-      await tester.pumpAndSettle();
 
-      // 15 + 30 = 45; otkazanih 15 se **ne** broji. Da se broji, stajalo bi 60.
-      expect(find.text('45'), findsOneWidget);
-      expect(find.text('KM ukupno'), findsOneWidget);
+      // Vlasnik proizvoda je tražio da se „KM ukupno" skloni (ADR-0020).
+      expect(find.text('KM ukupno'), findsNothing);
+      expect(find.text('45'), findsNothing);
     });
 
-    testWidgets('bez ijedne cijene ne crta se nula', (tester) async {
+    testWidgets('prazna istorija kaže to, bez nule u KM', (tester) async {
       await _pumpAt(
         tester,
         _desktop,
         _screen(klijenti: [_haris], istorija: const []),
       );
-      await tester.tap(find.text('Haris Delić'));
-      await tester.pumpAndSettle();
 
-      // Nula bi tvrdila da klijent nije ništa potrošio — a ne zna se.
-      expect(find.text('nema cijena'), findsOneWidget);
-      expect(find.text('KM ukupno'), findsNothing);
+      expect(find.text('Nema ranijih termina.'), findsOneWidget);
+      expect(find.text('Nema zakazanog termina.'), findsOneWidget);
+      expect(find.textContaining('KM'), findsNothing);
+    });
+
+    testWidgets('sljedeći termin stoji u kartici, ne u istoriji', (
+      tester,
+    ) async {
+      final sutra = DateTime.now().add(const Duration(days: 1));
+      final buduci = Appointment(
+        id: 't0',
+        salonId: _salonId,
+        serviceId: 's2',
+        customerId: 'c1',
+        serviceName: 'Brijanje',
+        employeeName: 'Emir',
+        customerName: 'Haris Delić',
+        date: LocalDate(sutra.year, sutra.month, sutra.day),
+        startTime: const LocalTime(14, 20),
+        endTime: const LocalTime(14, 50),
+        status: AppointmentStatus.confirmed,
+      );
+      await _pumpAt(
+        tester,
+        _desktop,
+        _screen(klijenti: [_haris], istorija: [buduci, ..._istorija]),
+      );
+
+      expect(find.text('14:20'), findsOneWidget);
+      expect(find.text('sutra'), findsOneWidget);
+      expect(find.text('Brijanje · Emir'), findsOneWidget);
+      // Ne ponavlja se kao red istorije.
+      expect(find.text('Brijanje'), findsNothing);
     });
 
     testWidgets('telefonski klijent je označen, ne prikazan kao greška', (
       tester,
     ) async {
-      await _pumpAt(tester, _desktop, _screen(klijenti: [_walkin]));
+      await _pumpAt(tester, _desktop, _screen());
+      // Prvi red (Haris) je već otvoren; Nedim je zato samo u listi.
       await tester.tap(find.text('Nedim Hodžić'));
       await tester.pumpAndSettle();
 
@@ -261,10 +296,8 @@ void main() {
       tester,
     ) async {
       await _pumpAt(tester, _desktop, _screen());
-      await tester.tap(find.text('Haris Delić'));
-      await tester.pumpAndSettle();
 
-      // Istorija koja krije otkazane ne bi objasnila `no_show_count` u istom profilu.
+      // Istorija koja krije otkazane ne bi objasnila brojače u istom profilu.
       expect(find.text('Otkazano'), findsOneWidget);
     });
 
@@ -283,6 +316,20 @@ void main() {
       await tester.tap(find.byTooltip('Zatvori profil'));
       await tester.pumpAndSettle();
       expect(find.text('Nedim Hodžić'), findsOneWidget);
+    });
+  });
+
+  group('brojDolazaka', () {
+    test('ispod granice broji istoriju', () {
+      expect(brojDolazaka(_istorija, _haris), (dolasci: 2, nedolasci: 0));
+    });
+
+    test('odrezana istorija uzima brojač iz reda', () {
+      // Na granici `kLimitIstorije` lista ne sadrži sve termine.
+      final puna = List.filled(kLimitIstorije, _istorija.first);
+      final r = brojDolazaka(puna, _walkin.copyWith(visitCount: 80));
+      expect(r.dolasci, 80);
+      expect(r.nedolasci, 2);
     });
   });
 
