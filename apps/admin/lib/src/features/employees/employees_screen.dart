@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/terminologija.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
@@ -99,7 +100,7 @@ class AdminEmployeesScreen extends ConsumerWidget {
       sopstvenoZaglavlje: true,
       actions: desktop ? const [_TopBarAkcije()] : null,
       body: desktop
-          ? RefreshIndicator(
+          ? AdminRefresh(
               onRefresh: osvjezi,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -115,7 +116,7 @@ class AdminEmployeesScreen extends ConsumerWidget {
               children: [
                 const _ZaglavljeTelefon(),
                 Expanded(
-                  child: RefreshIndicator(
+                  child: AdminRefresh(
                     onRefresh: osvjezi,
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),

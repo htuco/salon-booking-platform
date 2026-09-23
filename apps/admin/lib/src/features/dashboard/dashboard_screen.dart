@@ -29,6 +29,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
 import '../../core/navigation/admin_destinations.dart';
@@ -64,7 +65,7 @@ class AdminDashboardScreen extends ConsumerWidget {
       // sitnim „Danas" bi stajao iznad njega i ponavljao istu riječ.
       sopstvenoZaglavlje: true,
       actions: jeDesktop ? const [_TopBarAkcije()] : null,
-      body: RefreshIndicator(
+      body: AdminRefresh(
         onRefresh: () async {
           ref
             ..invalidate(danasnjiTerminiProvider)

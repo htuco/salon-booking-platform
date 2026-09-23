@@ -51,18 +51,33 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('reduce motion: traka je mirna, bez segmenta koji klizi', (
+    tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+
+    final zavrsetak = await pumpaj(tester, onPoziv: () {});
+    await tester.fling(find.text('Red'), const Offset(0, 400), 1000);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(AppRefresh.trakaKey), findsOneWidget);
+    expect(find.byKey(AppRefresh.segmentKey), findsNothing);
+
+    zavrsetak.complete();
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('traka stoji dok traje, nestaje kad se završi', (tester) async {
     final zavrsetak = await pumpaj(tester, onPoziv: () {});
-
-    Finder traka() => find.descendant(
-      of: find.byType(AppRefresh),
-      matching: find.byType(AnimatedBuilder),
-    );
 
     await tester.fling(find.text('Red'), const Offset(0, 400), 1000);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(traka(), findsWidgets);
+    expect(find.byKey(AppRefresh.trakaKey), findsOneWidget);
+    expect(find.byKey(AppRefresh.segmentKey), findsOneWidget);
 
     zavrsetak.complete();
     await tester.pumpAndSettle();
@@ -73,5 +88,6 @@ void main() {
       ),
     );
     expect(opacity.opacity, 0);
+    expect(find.byKey(AppRefresh.trakaKey), findsNothing);
   });
 }

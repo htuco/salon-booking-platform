@@ -10,6 +10,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/tekst.dart';
 import '../../core/format/terminologija.dart';
 import '../../core/router/admin_router.dart';
@@ -103,7 +104,7 @@ class _AdminServicesScreenState extends ConsumerState<AdminServicesScreen> {
       // `3p` crta veliki naslov u tijelu; `AppBar` sa istom riječi bi stajao iznad njega.
       sopstvenoZaglavlje: true,
       actions: desktop ? [_NovaUslugaDugme(onPressed: _novaUsluga)] : null,
-      body: RefreshIndicator(
+      body: AdminRefresh(
         onRefresh: () {
           ref
             ..invalidate(adminEmployeesProvider)

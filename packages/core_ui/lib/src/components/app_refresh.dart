@@ -23,6 +23,13 @@ class AppRefresh extends StatefulWidget {
 
   final Widget child;
 
+  /// Traka dok traje osvježavanje — za testove, jer `RefreshIndicator` i sam nosi
+  /// `AnimatedBuilder`-e, pa pretraga po tipu nađe i ono što nije traka.
+  static const trakaKey = ValueKey('app-refresh-traka');
+
+  /// Segment koji klizi. Nema ga kad je `reduce motion` uključen.
+  static const segmentKey = ValueKey('app-refresh-segment');
+
   @override
   State<AppRefresh> createState() => _AppRefreshState();
 }
@@ -52,7 +59,9 @@ class _AppRefreshState extends State<AppRefresh> {
             child: AnimatedOpacity(
               opacity: _radi ? 1 : 0,
               duration: AppDuration.fast,
-              child: _radi ? const _Traka() : const SizedBox.shrink(),
+              child: _radi
+                  ? const _Traka(key: AppRefresh.trakaKey)
+                  : const SizedBox.shrink(),
             ),
           ),
         ),
@@ -64,7 +73,7 @@ class _AppRefreshState extends State<AppRefresh> {
 /// Segment koji klizi preko hairline trake. Širina je trećina, trajanje je gornja
 /// granica iz tokena (`AppDuration.slow`) puta četiri, da pokret ne bude nervozan.
 class _Traka extends StatefulWidget {
-  const _Traka();
+  const _Traka({super.key});
 
   @override
   State<_Traka> createState() => _TrakaState();
@@ -86,6 +95,14 @@ class _TrakaState extends State<_Traka> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    // `docs/02 §14`: `reduce motion` se poštuje. Segment koji klizi u krug je upravo
+    // pokret koji korisnik gasi, pa ostaje mirna puna traka.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return ExcludeSemantics(
+        child: SizedBox(height: 2, child: ColoredBox(color: scheme.onSurface)),
+      );
+    }
+
     return Semantics(
       // Traka je ukras stanja koje `RefreshIndicator` već najavljuje čitaču ekrana.
       excludeSemantics: true,
@@ -105,7 +122,10 @@ class _TrakaState extends State<_Traka> with SingleTickerProviderStateMixin {
                     top: 0,
                     bottom: 0,
                     width: segment,
-                    child: ColoredBox(color: scheme.onSurface),
+                    child: ColoredBox(
+                      key: AppRefresh.segmentKey,
+                      color: scheme.onSurface,
+                    ),
                   ),
                 ],
               ),
