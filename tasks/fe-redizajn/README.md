@@ -34,7 +34,9 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-501](FE-501-stanja-i-skeletoni.md) | Stanja učitavanja, greške i prazna stanja ✅ | obje | — | 1–2 dana |
 | [FE-502](FE-502-pristupacnost.md) | Pristupačnost i kontrast ✅ | obje | — | 1–2 dana |
 | [FE-503](FE-503-ciscenje-legacy-stilova.md) | Čišćenje legacy stilova | obje | — | 1 dan |
-| [FE-504](FE-504-qa-prolaz.md) | QA prolaz kroz sve ekrane | obje | — | 1–2 dana |
+| [FE-504](FE-504-qa-prolaz.md) | QA prolaz kroz sve ekrane 🟡 | obje | — | 1–2 dana |
+| [FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md) | Demo ulazi pune sve ekrane (nalaz FE-504) | obje | FE-504 | 0,5–1 dan |
+| [FE-506](FE-506-o-nama-po-5b.md) | „O nama" po obliku iz `5b` (nalaz FE-504) | klijent | — | 0,5–1 dan |
 
 Ukupno **32–48 dana**. To je tri do četiri sprinta i tako se planira, ne kao jedan „redizajn".
 
@@ -179,6 +181,7 @@ nema rute). Sada vodi na Početnu i čisti flow. Test sa sabotažom, 253 testa. 
 zaobljena varijanta kostura. Grep provjere čiste. **Bundle je izmjeren i porastao je**: klijent
 +23 KB (samo kod), admin +242 KB, od čega +100 KB pisma iz ADR-0020. Barlow Bold (108 KB) niko
 ne koristi, ali ga ADR-0020 propisuje, pa je to odluka za vlasnika.
+
 **✅ [FE-101](FE-101-tokeni-boja.md), [FE-103](FE-103-skala-razmaka.md), [FE-104](FE-104-ikone.md)** —
 spojeni u `main` ranije, tabela ih do FE-502 nije označavala. Status blok je u task fajlu.
 
@@ -190,4 +193,8 @@ mjere mete ≥ 44 px, labele, fokusabilnost, kontrast po WCAG-u i 130 % fonta. P
 popravljena prava greška: booking zaglavlje se lomilo na 390 px i na normalnom fontu.
 Fokus u browseru **nije viđen** — komanda je u task fajlu.
 
-Preostaju **FE-503** i **FE-504**, oba iz epika kvaliteta.
+**🟡 [FE-504](FE-504-qa-prolaz.md)** — grana `docs/fe-504-qa-prolaz`. Prvi prolaz na webu, na stanju
+`main` + #94 + #95. Snimljeno 100 prikaza: klijent na oba tenanta (402 i 360 px), admin na 1440,
+2560, 768 i 402 px. Admin i veći dio klijenta prate izvoz. Dva nalaza su zasebni taskovi:
+**[FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md)** (demo ulazi ne pune devet prikaza, dva se sruše)
+i **[FE-506](FE-506-o-nama-po-5b.md)** (`/about` hero). Uređaj (FE-201) nije provjeren.
