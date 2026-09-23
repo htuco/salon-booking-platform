@@ -199,6 +199,9 @@ Fokus u browseru **nije viđen** — komanda je u task fajlu.
 **[FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md)** (demo ulazi ne pune devet prikaza, dva se sruše)
 i **[FE-506](FE-506-o-nama-po-5b.md)** (`/about` hero). Uređaj (FE-201) nije provjeren.
 
+**Barlow Bold izbačen** ([ADR-0022](../../docs/adr/0022-barlow-bez-bold-reza.md)) — pisma admina su sada manja
+nego prije epika. FE-503 ostaje 🟡 samo zato što je JS kod admina porastao (funkcionalnost epika).
+
 **✅ [FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md)** — grana `fix/fe-505-demo-ulazi`. Demo override-i
 obje aplikacije su u `lib/src/demo/demo_overrides.dart`, a test podiže svaku rutu istom listom.
 Svih devet prikaza koje FE-504 nije mogao vidjeti sada je viđeno na webu.

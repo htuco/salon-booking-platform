@@ -3,7 +3,7 @@
 ## Status
 
 prihvaćen — za `apps/admin` zamjenjuje [ADR-0019](0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md).
-Klijentska aplikacija ostaje na ADR-0019.
+Klijentska aplikacija ostaje na ADR-0019. Rez 700 je izbačen [ADR-0022](0022-barlow-bez-bold-reza.md).
 
 ## Kontekst
 

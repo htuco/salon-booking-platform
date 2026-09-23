@@ -47,14 +47,13 @@ void main() {
   });
 
   group('pisma', () {
-    test('četiri reza Barlowa stoje u repou, uz OFL licencu', () {
+    test('tri reza Barlowa stoje u repou, uz OFL licencu', () {
       // Fajl koji nedostaje ne obara build — Flutter tiho padne na fallback pismo, i to
       // se vidi tek na ekranu. Ovaj test je jedino mjesto gdje se to primijeti odmah.
       for (final ime in const [
         'assets/fonts/Barlow-Regular.ttf',
         'assets/fonts/Barlow-Medium.ttf',
         'assets/fonts/Barlow-SemiBold.ttf',
-        'assets/fonts/Barlow-Bold.ttf',
         'assets/fonts/OFL-Barlow.txt',
       ]) {
         expect(File(ime).existsSync(), isTrue, reason: 'nedostaje $ime');
@@ -66,7 +65,7 @@ void main() {
       expect(pubspec, contains('family: $kAdminSansFamily'));
       // Statični rezovi: bez `weight:` bi Flutter svaki fajl čitao kao 400 i `w600`
       // bi sintetički podebljao Regular.
-      for (final tezina in const [400, 500, 600, 700]) {
+      for (final tezina in const [400, 500, 600]) {
         expect(pubspec, contains('weight: $tezina'));
       }
       expect(
