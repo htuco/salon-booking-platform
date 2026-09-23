@@ -1326,9 +1326,8 @@ class _MobilnoZaglavlje extends ConsumerWidget {
                 Text(
                   datumDugo(ref.watch(kalendarDatumProvider)),
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: context.adminColors.textSecondary,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: context.adminColors.textSecondary),
                 ),
               ],
             ),

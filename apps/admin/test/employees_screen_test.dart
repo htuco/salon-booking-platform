@@ -151,7 +151,9 @@ Future<_Actions> _pump(
         }),
         kalendarRadnoVrijemeProvider.overrideWith((ref) async => _hours),
         // Ekran čita i odsustva; bez blokada test ne ide na mrežu.
-        buduceBlokadeProvider.overrideWith((ref) async => const <BlockedSlot>[]),
+        buduceBlokadeProvider.overrideWith(
+          (ref) async => const <BlockedSlot>[],
+        ),
         employeeActionsProvider.overrideWith((ref) => actions = _Actions(ref)),
         if (vertikala != null)
           adminVerticalProvider.overrideWith((ref) async => vertikala),

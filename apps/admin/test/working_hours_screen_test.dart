@@ -229,10 +229,7 @@ void main() {
     // Pauza više nije u redu dana nego jedna pločica „Dnevne pauze" za cijeli salon;
     // pet dana sa istim vremenom se sažme u jedan opis.
     expect(find.text('Pauza'), findsOneWidget);
-    expect(
-      find.textContaining('13:00–14:00 · cijeli salon'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('13:00–14:00 · cijeli salon'), findsOneWidget);
   });
 
   testWidgets('salon bez ijednog reda dobija sedam zatvorenih dana', (
