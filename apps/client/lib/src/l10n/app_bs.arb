@@ -771,6 +771,15 @@
   "settingsSignOut": "Odjavi se",
   "@settingsSignOut": { "description": "Odjava sa ekrana Postavke (11-postavke.png)." },
 
+  "settingsSignOutTitle": "Odjaviti se?",
+  "@settingsSignOutTitle": { "description": "Naslov modala za potvrdu odjave (FE-306). Odjava je jedan dodir od brisanja računa, pa traži potvrdu." },
+
+  "settingsSignOutBody": "Termini ostaju sačuvani. Vidjet ćete ih kad se ponovo prijavite.",
+  "@settingsSignOutBody": { "description": "Tijelo modala odjave. Kaže šta se NE gubi, jer je to razlika u odnosu na brisanje računa ispod." },
+
+  "settingsSignOutKeep": "Ostani prijavljen",
+  "@settingsSignOutKeep": { "description": "Odustajanje u modalu odjave." },
+
   "settingsSignedOutNotice": "Odjavljeni ste.",
   "@settingsSignedOutNotice": { "description": "Potvrda nakon odjave. Bez nje ekran samo promijeni izgled i korisnik ne zna je li se išta desilo." },
 
