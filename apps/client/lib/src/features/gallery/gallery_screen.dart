@@ -17,14 +17,54 @@ import 'gallery_lightbox.dart';
 /// Slike dolaze iz `salons.gallery_urls`, iste liste koju Početna crta u izlogu od šest
 /// ([ADR-0008](../../../../../docs/adr/0008-galerija-ostaje-u-salons-gallery-urls.md)).
 /// Ovdje ih ide cijela lista — Početna je izlog, ovo je album.
-class GalleryScreen extends ConsumerWidget {
+class GalleryScreen extends ConsumerStatefulWidget {
   const GalleryScreen({super.key});
 
   /// Tri kolone, `gap 8`, kvadrat — doslovno iz DoD-a i handoffa.
   static const int _kolona = 3;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GalleryScreen> createState() => _GalleryScreenState();
+}
+
+class _GalleryScreenState extends ConsumerState<GalleryScreen> {
+  final _skrol = ScrollController();
+
+  /// Zaglavlje iznad mreže — njegova visina je pomak prvog reda ćelija.
+  final _zaglavlje = GlobalKey();
+
+  @override
+  void dispose() {
+    _skrol.dispose();
+    super.dispose();
+  }
+
+  /// Skroluje mrežu tako da je ćelija [indeks] vidljiva, da `Hero` ima gdje sletjeti kad
+  /// se lightbox zatvori sa druge slike (FE-204).
+  void _pokaziCeliju(int indeks) {
+    if (!_skrol.hasClients) return;
+    final pozicija = _skrol.position;
+    final sirina = context.size?.width ?? 0;
+    final celija =
+        (sirina -
+            2 * AppSpacing.gutter -
+            (GalleryScreen._kolona - 1) * AppSpacing.sm) /
+        GalleryScreen._kolona;
+    final vrhMreze = _zaglavlje.currentContext?.size?.height ?? 0;
+    final vrh =
+        vrhMreze + (indeks ~/ GalleryScreen._kolona) * (celija + AppSpacing.sm);
+    final dno = vrh + celija;
+    final pogled = pozicija.viewportDimension;
+    // Pomjera se samo kad ćelija nije cijela na ekranu — inače mreža ispod stoji mirno.
+    if (vrh < pozicija.pixels) {
+      _skrol.jumpTo(vrh.clamp(0, pozicija.maxScrollExtent));
+    } else if (dno > pozicija.pixels + pogled) {
+      _skrol.jumpTo((dno - pogled).clamp(0, pozicija.maxScrollExtent));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final gallery = ref.watch(salonGalleryProvider);
@@ -69,9 +109,11 @@ class GalleryScreen extends ConsumerWidget {
                         poruka: l10n.galleryEmpty,
                       )
                     : CustomScrollView(
+                        controller: _skrol,
                         slivers: [
                           SliverToBoxAdapter(
                             child: Padding(
+                              key: _zaglavlje,
                               padding: const EdgeInsets.fromLTRB(
                                 AppSpacing.gutter,
                                 AppSpacing.lg,
@@ -106,7 +148,7 @@ class GalleryScreen extends ConsumerWidget {
                             sliver: SliverGrid.builder(
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: _kolona,
+                                    crossAxisCount: GalleryScreen._kolona,
                                     crossAxisSpacing: AppSpacing.sm,
                                     mainAxisSpacing: AppSpacing.sm,
                                     childAspectRatio: 1,
@@ -123,16 +165,20 @@ class GalleryScreen extends ConsumerWidget {
                                     context,
                                     urls: urls,
                                     initialIndex: i,
+                                    onIndeks: _pokaziCeliju,
                                   ),
                                   // `PhotoFrame` bez `size`-a bi crtao fiksni kvadrat; unutar
                                   // grid ćelije veličinu diktira `gridDelegate`, pa slika ide
                                   // preko `LayoutBuilder`-a.
-                                  child: LayoutBuilder(
-                                    builder: (context, constraints) =>
-                                        PhotoFrame(
-                                          imageUrl: urls[i],
-                                          size: constraints.maxWidth,
-                                        ),
+                                  child: Hero(
+                                    tag: GalleryLightbox.heroTag(i, urls[i]),
+                                    child: LayoutBuilder(
+                                      builder: (context, constraints) =>
+                                          PhotoFrame(
+                                            imageUrl: urls[i],
+                                            size: constraints.maxWidth,
+                                          ),
+                                    ),
                                   ),
                                 ),
                               ),

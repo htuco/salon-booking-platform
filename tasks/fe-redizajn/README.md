@@ -17,7 +17,7 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-201](FE-201-zamjena-default-tranzicije.md) | Jedna tranzicija na obje platforme | klijent | FE-302 | 1–2 dana |
 | [FE-202](FE-202-tab-navigacija.md) | Prelaz između tabova | klijent | — | 1 dan |
 | [FE-203](FE-203-modali-i-bottom-sheet.md) | Modali i bottom sheet | obje | FE-304 | 1 dan |
-| [FE-204](FE-204-lightbox-galerija.md) | Lightbox galerije | klijent | FE-305 | 1–2 dana |
+| [FE-204](FE-204-lightbox-galerija.md) | Lightbox galerije ✅ | klijent | FE-305 | 1–2 dana |
 | [FE-205](FE-205-ukidanje-default-flutter-indikatora.md) | Ukinuti default Flutter indikatore | obje | FE-501 | 2–3 dana |
 | [FE-301](FE-301-pocetna-i-o-nama.md) | Početna i „O nama" | klijent | — | 1–2 dana |
 | [FE-302](FE-302-booking-flow.md) | Booking flow (4 koraka) | klijent | — | 2–3 dana |
@@ -147,3 +147,7 @@ Dvije od njih **smanjuju opseg epika**, ne povećavaju ga:
 
 Preostaje **17 taskova**: FE-101, FE-103, FE-104, FE-2xx (5), FE-3xx (6) i FE-5xx (4).
 FE-5xx po definiciji idu zadnji.
+
+**✅ [FE-204](FE-204-lightbox-galerija.md)** — grana `feat/fe-204-lightbox`. `Hero` 260 ms kroz
+`PageRoute` (dijalog ne pokreće let), mreža skroluje ispod da zatvaranje sa druge slike ne poskoči.
+Pinch sluša samo dva prsta, pa ne otima swipe. 245 testova klijenta.

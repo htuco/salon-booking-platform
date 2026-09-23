@@ -37,4 +37,18 @@ Slika iz galerije otvara se u fullscreen lightbox sa shared-element prelazom.
 
 ## Status
 
-Nije počet.
+Gotov u kodu, dokazan widget testovima; **nije viđen na uređaju**.
+
+- [x] `Hero` 260 ms — ruta je `PageRouteBuilder`, ne `showDialog`: `Hero` leti samo između
+      `PageRoute`-ova, u dijalogu let se tiho ne desi. Tag je `(indeks, url)`, pa dupla slika u
+      nizu ne ruši ekran.
+- [x] Swipe lijevo/desno lista, swipe dolje zatvara (prag 120 px ili brzina 700).
+- [x] Brojač gore desno, ✕ lijevo.
+- [x] Zatvaranje sa druge slike — lightbox javlja indeks (`onIndeks`), mreža skroluje da ćelija bude
+      na ekranu prije `pop`-a. Test na 402×874 sa 30 slika; sabotaža (bez skrola) obara tačno njega.
+- [x] Pinch ne otima swipe — na 1× nema `InteractiveViewer`-a; recognizer sluša samo dva prsta.
+      `InteractiveViewer` preuzima tek uvećanu sliku, a tada `PageView` i swipe dolje stoje.
+
+**Ostaje:** pogledati let i pinch na pravom uređaju (`/verify`) — widget test ne vidi „skok"
+animacije ni osjećaj geste. Nestanak struje je 2026-09-23 prepisao dva fajla ove grane NUL
+bajtovima; `gallery_lightbox.dart` i test su ponovo napisani od `main`-a.
