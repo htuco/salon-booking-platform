@@ -13,6 +13,7 @@ class ServiceInput {
     required this.category,
     required this.price,
     required this.durationMinutes,
+    this.slotStepMinutes,
   });
 
   final String name;
@@ -20,6 +21,9 @@ class ServiceInput {
   final String category;
   final String price;
   final int durationMinutes;
+
+  /// `null` = salonski korak.
+  final int? slotStepMinutes;
 }
 
 class ServiceActions {
@@ -40,6 +44,7 @@ class ServiceActions {
             category: input.category,
             price: input.price,
             durationMinutes: input.durationMinutes,
+            slotStepMinutes: input.slotStepMinutes,
           )
         : await repository.update(
             salonId: salonId,
@@ -49,6 +54,7 @@ class ServiceActions {
             category: input.category,
             price: input.price,
             durationMinutes: input.durationMinutes,
+            slotStepMinutes: input.slotStepMinutes,
             imageUrl: existing.imageUrl,
           );
     _ref.invalidate(adminServicesProvider);

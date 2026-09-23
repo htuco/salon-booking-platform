@@ -15,7 +15,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | [40](40-naziv-lokala-se-ne-mijenja.md) ✅ | Naziv lokala se ne mijenja iz admina | popravka | — | 0,5 dan |
 | [41](41-bez-zakazivanja-bez-prijave.md) ✅ | Zakazivanje bez prijave se uklanja | popravka | — | 1 dan |
 | [42](42-neradni-dan-i-zakljucana-proslost.md) ✅ | Neradni dan i zaključana prošlost | feature | — | 2–3 dana |
-| [43](43-korak-po-usluzi.md) | Korak rezervacije po usluzi | feature | — | 1–2 dana |
+| [43](43-korak-po-usluzi.md) 🟡 | Korak rezervacije po usluzi | feature | — | 1–2 dana |
 | [44](44-postavke-jasnije.md) | Postavke i pravila salona jasnija | feature | — | 1–2 dana |
 | [45](45-nalozi-za-osoblje.md) | Kreiranje naloga za osoblje | feature | 46, 47 | 2–3 dana |
 | [46](46-uloga-employee-i-izolacija.md) | Uloga `employee` i sužena izolacija | feature | 47 | 2–3 dana |

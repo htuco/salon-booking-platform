@@ -26,6 +26,11 @@ abstract class Service with _$Service {
     required double price,
     @JsonKey(name: 'duration_minutes') required int durationMinutes,
 
+    /// Korak ponuđenih početaka za ovu uslugu (task 43, ADR-0014). `null` = salonski
+    /// `salon_settings.slot_step_minutes`. Nije trajanje: trajanje puni termin, korak bira
+    /// dozvoljene početke. Nullable i bez `required`, pa red starijeg backenda prolazi.
+    @JsonKey(name: 'slot_step_minutes') int? slotStepMinutes,
+
     /// Admin vidi i ugašene redove kroz `staff_manage`; javni katalog ih RLS sakrije.
     /// Default čuva kompatibilnost sa starijim backendom koji kolonu nije birao.
     @JsonKey(name: 'is_active') @Default(true) bool isActive,
