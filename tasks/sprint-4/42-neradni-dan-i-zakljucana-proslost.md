@@ -28,7 +28,7 @@ dobiju obavijest. Prošlost se pri tome ne smije prepisivati.
 - [x] `completed` i već `cancelled` termini se ne diraju
 - [x] pgTAP: prošlost odbijena, danas-prije-otvaranja prihvaćen, danas-poslije-otvaranja odbijen,
       broj otkazanih tačan, tuđi salon nedirnut
-- [ ] Admin ekran pokazuje **koliko termina će biti otkazano** prije potvrde — nema tihe kaskade
+- [x] Admin ekran pokazuje **koliko termina će biti otkazano** prije potvrde — nema tihe kaskade
 
 ## Zamke
 - **Granica je „prije otvaranja", ne „prije 9".** Radno vrijeme je po danu i može biti po radniku;
@@ -41,7 +41,7 @@ dobiju obavijest. Prošlost se pri tome ne smije prepisivati.
 
 ## Status (2026-09-23)
 
-U toku — baza gotova i dokazana, admin ekran napisan, **nije viđen na ekranu**.
+Gotov — baza dokazana pgTAP-om, admin tok viđen uživo (admin web protiv lokalnog stacka).
 
 - Migracija `20260924100000_neradni_dan.sql`: `set_day_closed`, `day_closure_preview`,
   `private.assert_day_closable`. Otkazuje kroz `cancel_appointment` — zamka u ovom fajlu je
@@ -55,6 +55,14 @@ U toku — baza gotova i dokazana, admin ekran napisan, **nije viđen na ekranu*
 - Admin: prekidač „Neradni dan — otkaži sve termine" u uređivaču blokade (samo za cijeli salon),
   pregled termina sa brojem prije potvrde.
 
-**Ostalo za sljedećeg:** vidjeti tok na ekranu (`/verify`, admin web lokalno) — prošli dan,
-danas poslije otvaranja, dan sa terminima; zatim čekirati zadnju stavku DoD-a.
+- **Viđeno uživo 2026-09-24** (admin web, `admin@barberstudiovitez.test`, lokalni stack):
+  23.09. → „Prošli dan je zaključan…" u dijalogu, ništa upisano; 29.09. sa 2 termina →
+  dijalog „Termini će biti otkazani" sa oba termina i brojem, potvrda → oba `cancelled/salon`
+  uz razlog, blokada `00:00–23:59:59`, značka „Zahtjevi" 2 → 1, dan u listi neradnih dana.
+  Demo termini nemaju `device_id`, pa `notification_logs` ostaje prazan — očekivano po odluci (b);
+  red po uređaju dokazuje `018`.
+- Poruke greške dobile dijakritike nakon što se na ekranu vidjelo „Prosli… zakljucan".
+
+**Nije viđeno na ekranu:** danas poslije otvaranja (sesija je bila u 00:01) — dokazano samo u `018`
+sa zadatim `p_now`. Nakon merge-a: `supabase db push`.
 

@@ -40,7 +40,7 @@ begin
   v_lokalno := p_now at time zone coalesce(v_tz, 'Europe/Sarajevo');
 
   if p_date < v_lokalno::date then
-    raise exception 'Prosli dan je zakljucan i ne moze se proglasiti neradnim'
+    raise exception 'Prošli dan je zaključan i ne može se proglasiti neradnim.'
       using errcode = 'PT400';
   end if;
 
@@ -52,9 +52,9 @@ begin
       and not w.is_closed;
 
     if v_otvara is not null and v_lokalno::time >= v_otvara then
-      raise exception 'Salon je danas vec otvorio; neradni dan se prijavljuje prije otvaranja'
+      raise exception 'Salon je danas već otvorio. Neradni dan se prijavljuje prije otvaranja.'
         using errcode = 'PT400',
-              hint = 'Termine danas otkazite pojedinacno.';
+              hint = 'Termine danas otkažite pojedinačno.';
     end if;
   end if;
 end;

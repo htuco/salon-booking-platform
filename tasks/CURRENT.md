@@ -4,7 +4,7 @@ Puni task: [tasks/sprint-4/42-neradni-dan-i-zakljucana-proslost.md](sprint-4/42-
 
 ## Status
 
-U toku
+Gotov — čeka review i merge PR #102, pa `supabase db push`
 
 ## Ciljevi
 
@@ -14,7 +14,7 @@ U toku
 - [x] Obavijest klijentu se zapisuje za svaki otkazan termin
 - [x] Read-only pregled „koliko termina će biti otkazano" za admin dijalog
 - [x] pgTAP: prošlost odbijena, danas prije/poslije otvaranja, broj otkazanih tačan, tuđi salon nedirnut, ne-admin odbijen
-- [ ] Admin ekran: akcija „Neradni dan" sa brojem termina prije potvrde
+- [x] Admin ekran: akcija „Neradni dan" sa brojem termina prije potvrde
 - [x] `.claude/docs/security.md` (+ `supabase/IMPLEMENTATION.md`) ažurirani
 
 ## Napomene
