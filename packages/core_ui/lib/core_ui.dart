@@ -19,6 +19,7 @@ library;
 
 export 'src/components/app_button.dart';
 export 'src/components/app_dialog.dart';
+export 'src/components/app_modal.dart';
 export 'src/components/back_header.dart';
 export 'src/components/bottom_nav_bar.dart';
 export 'src/components/calendar_month.dart';
@@ -35,6 +36,7 @@ export 'src/components/step_progress_bar.dart';
 export 'src/components/time_slot_chip.dart';
 export 'src/theme/app_theme.dart';
 export 'src/theme/contrast.dart';
+export 'src/theme/page_transition.dart';
 export 'src/theme/theme_factory.dart';
 export 'src/tokens/spacing.dart';
 export 'src/tokens/status_colors.dart';
