@@ -68,9 +68,12 @@ class AppointmentDetailScreen extends ConsumerWidget {
           padding: EdgeInsets.all(AdminSpacing.xxl),
           child: AdminSkeletonList(),
         ),
+        // Greška nudi i ponovni pokušaj, ne samo izlaz (FE-501); „ne postoji" ispod ga
+        // nema, jer tamo ponovni upit vrati isto.
         error: (_, _) => _Poruka(
           tekst: 'Termin se ne može učitati.',
           onNazad: () => _nazad(context),
+          onPonovi: () => ref.invalidate(terminProvider(appointmentId)),
         ),
         // Obrisan termin i tuđi termin izgledaju isto, i to je namjerno: poruka „nemate
         // pravo" bi potvrdila da taj termin postoji u nekom drugom salonu.
@@ -550,10 +553,11 @@ class _Naslov extends StatelessWidget {
 }
 
 class _Poruka extends StatelessWidget {
-  const _Poruka({required this.tekst, required this.onNazad});
+  const _Poruka({required this.tekst, required this.onNazad, this.onPonovi});
 
   final String tekst;
   final VoidCallback onNazad;
+  final VoidCallback? onPonovi;
 
   @override
   Widget build(BuildContext context) {
@@ -571,10 +575,21 @@ class _Poruka extends StatelessWidget {
             const SizedBox(height: AdminSpacing.lg),
             Text(tekst, textAlign: TextAlign.center),
             const SizedBox(height: AdminSpacing.lg),
-            FilledButton(
-              onPressed: onNazad,
-              child: const Text('Nazad na termine'),
-            ),
+            if (onPonovi != null) ...[
+              FilledButton(
+                onPressed: onPonovi,
+                child: const Text('Pokušaj ponovo'),
+              ),
+              const SizedBox(height: AdminSpacing.sm),
+              TextButton(
+                onPressed: onNazad,
+                child: const Text('Nazad na termine'),
+              ),
+            ] else
+              FilledButton(
+                onPressed: onNazad,
+                child: const Text('Nazad na termine'),
+              ),
           ],
         ),
       ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/admin_load_error.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/theme/admin_tokens.dart';
@@ -481,7 +482,10 @@ class _IzborUsluge extends ConsumerWidget {
 
     return usluge.when(
       loading: () => const AdminSkeletonList(redova: 2),
-      error: (_, _) => const Text('Usluge se ne mogu učitati.'),
+      error: (_, _) => AdminLoadError(
+        poruka: 'Usluge se ne mogu učitati.',
+        onRetry: () => ref.invalidate(adminServicesProvider),
+      ),
       data: (lista) => Wrap(
         spacing: 8,
         runSpacing: 8,
