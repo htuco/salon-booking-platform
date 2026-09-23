@@ -105,3 +105,8 @@ Provjereno poslije: nula zaostalih naloga, nula zaostalih klijenata, broj termin
 - Hostovani projekat **nije `link`-ovan** i ne može biti bez Supabase access tokena, koji po
   pravilu repoa ne ide u `.env.live`. Direktna veza (`db.<ref>.supabase.co:5432`) je odbijena, pa
   komande idu kroz **session pooler**: `postgres.<ref>@aws-1-eu-west-1.pooler.supabase.com:5432`.
+
+## Status (2026-09-23) — ✅ zatvoren
+
+Spojen u `main` kroz [PR #63](https://github.com/htuco/salon-booking-platform/pull/63). Dokaz iz bloka
+iznad važi; `015_automatsko_potvrdjivanje` prolazi i na `main`-u (`supabase test db`, 478/478).
