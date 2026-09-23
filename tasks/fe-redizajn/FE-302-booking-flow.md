@@ -24,12 +24,12 @@ je već dokazano tim testovima:
   [FE-205](FE-205-ukidanje-default-flutter-indikatora.md).
 
 ## Definicija gotovog
-- [ ] Indikator koraka 1–4 po handoffu, oštre ivice, aktivni korak naglašen bojom tenanta
-- [ ] Korak 3: nedostupni slotovi **vidljivi i isključeni** (45 % opacity), ne skriveni
-- [ ] Slot je dodirna meta ≥ 44 px
-- [ ] Prelazi između koraka koriste tranziciju iz [FE-201](FE-201-zamjena-default-tranzicije.md) — nijedan korak nema svoju animaciju
-- [ ] Postojeće ponašanje (back čuva izbor, validacija po koraku, poruka umjesto sivog dugmeta) ostaje dokazano istim testovima
-- [ ] `PT409` („termin je upravo zauzet") i dalje vraća korisnika na korak sa vremenom, sa zadržanim danom
+- [x] Indikator koraka 1–4 po handoffu, oštre ivice — pređeni korak u boji teksta, ne brenda (v. Status)
+- [ ] Korak 3: nedostupni slotovi **vidljivi i isključeni** (45 % opacity), ne skriveni — **čeka [ADR-0021](../../docs/adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md)**
+- [x] Slot je dodirna meta ≥ 44 px
+- [x] Prelazi između koraka koriste tranziciju iz [FE-201](FE-201-zamjena-default-tranzicije.md) — nijedan korak nema svoju animaciju
+- [x] Postojeće ponašanje (back čuva izbor, validacija po koraku, poruka umjesto sivog dugmeta) ostaje dokazano istim testovima
+- [x] `PT409` („termin je upravo zauzet") i dalje vraća korisnika na korak sa vremenom, sa zadržanim danom
 
 ## Zamke
 - **Ovo je jedini klijentski ekran sa dokazanim ponašanjem u utrci.** Test za `PT409` provjerava da
@@ -41,4 +41,32 @@ je već dokazano tim testovima:
 
 ## Status
 
-Nije počet.
+🟡 **Pet od šest stavki je već bilo isporučeno. Šesta čeka odluku, ne kod.** Grana `feat/fe-302-booking-flow`.
+
+Provjereno čitanjem koda (2026-09-23), bez izmjene ekrana:
+
+- **Indikator** — `StepProgressBar` (`packages/core_ui/lib/src/components/step_progress_bar.dart`):
+  četiri segmenta, 5 px, razmak 5 px, `BorderRadius.zero`. Pređeni korak je u boji teksta
+  (`onSurface`), ne u boji tenanta. Tako kaže `prototype/ui/SPEC.md:70` (done `#F2F2F3`, pending
+  `#3A3F44`), a `prototype/ui/` je jači od handoffa. Brand ostaje na CTA ispod trake.
+- **Dodirna meta** — `TimeSlotChip` ima `minHeight: AppSize.timeSlot` (58 px) i
+  `minWidth: AppSize.touchTarget`.
+- **Tranzicija** — rute `/book/*` su obični `GoRoute` + `builder`, pa idu kroz
+  `AppPageTransitionsBuilder` iz FE-201. U `features/booking/` nema nijednog `AnimatedSwitcher`,
+  vlastitog `PageRoute` ni tranzicije.
+- **Ponašanje i `PT409`** — `apps/client`: `flutter test test/booking_flow_screens_test.dart` →
+  **10 pass** (grupa „409 — slot je otišao između prikaza i potvrde"). `packages/core_ui`:
+  `flutter test` → **84 pass**.
+- **Korak 4 ne nudi gosta** — `details_step_screen.dart` nema „nastavak kao gost", pa se ne kosi
+  sa taskom 41.
+
+**Otvoreno: zauzeti slotovi.** `get_available_slots` vraća samo slobodna vremena. Po
+`.claude/docs/security.md` upravo taj ugovor dopušta pristup i za `anon`. Da bi se zauzeti
+slotovi prikazali, anonimni posjetilac bi vidio raspored salona. To je odluka, pa je
+[ADR-0021](../../docs/adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md) napisan kao
+**predložen**. `TimeSlotChip` već ima stanje „zauzet" (precrtano, prigušeno, iznad AA praga), pa
+ekranu nedostaje samo podatak.
+
+**Ostalo za sljedećeg:** vlasnik proizvoda prihvata ili odbija ADR-0021. Ako ga odbije, slijedi
+migracija za `get_available_slots` + pgTAP + `security.md`, pa `_Grupa` u `slot_step_screen.dart`
+dobija `onTap: null` za zauzeta vremena. Na uređaju nije viđeno.

@@ -3,6 +3,10 @@
 Učitan 2026-09-22 iz [sprint-4/39](sprint-4/39-push-na-androidu.md). Bug, procjena 1–2 dana,
 bez zavisnosti, **blokira task 42**. Grana `fix/push-na-androidu` sa svježeg `main`-a.
 
+> **Paralelno, FE redizajn:** FE-303 spojen (PR #88). FE-302 zatvoren kao 🟡 na grani
+> `feat/fe-302-booking-flow`. Nije pisan kod, čeka [ADR-0021](../docs/adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md).
+> Sljedeći po tabeli je FE-304.
+
 ## Status
 
 U toku. Baza i lanac su **dokazani uživo**; otvoren je još samo zvuk, u grani

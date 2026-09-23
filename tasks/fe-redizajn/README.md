@@ -20,7 +20,7 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-204](FE-204-lightbox-galerija.md) | Lightbox galerije ✅ | klijent | FE-305 | 1–2 dana |
 | [FE-205](FE-205-ukidanje-default-flutter-indikatora.md) | Ukinuti default Flutter indikatore ✅ | obje | FE-501 | 2–3 dana |
 | [FE-301](FE-301-pocetna-i-o-nama.md) | Početna i „O nama" ✅ | klijent | — | 1–2 dana |
-| [FE-302](FE-302-booking-flow.md) | Booking flow (4 koraka) | klijent | — | 2–3 dana |
+| [FE-302](FE-302-booking-flow.md) | Booking flow (4 koraka) 🟡 | klijent | — | 2–3 dana |
 | [FE-303](FE-303-zahtjev-poslan.md) | Ekran „Zahtjev poslan" ✅ | klijent | — | 0,5 dan |
 | [FE-304](FE-304-moji-termini.md) | Moji termini | klijent | — | 1–2 dana |
 | [FE-305](FE-305-usluge-galerija-recenzije.md) | Usluge, galerija, recenzije | klijent | — | 2–3 dana |
