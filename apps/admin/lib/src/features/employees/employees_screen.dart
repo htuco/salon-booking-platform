@@ -1,18 +1,39 @@
+/// „Osoblje" — prikazi `3g` (desktop) i `3r` (telefon).
+///
+/// ## Isti ekran, dva rasporeda
+///
+/// Desktop crta red kartica radnika pa tabelu smjena ispod. Telefon (i desktop uži od
+/// `AdminBreakpoint.compact`) tabelu spušta **u karticu**: svaki radnik nosi svoju traku od
+/// sedam dana, jer tabela od osam kolona na 402 px nije tabela nego horizontalni skrol.
+///
+/// ## Šta je iz `3g`/`3r` placeholder
+///
+/// - **Broj termina u sedmici** („31 termin") — ekran nema sedmični upit termina, a novi
+///   ne pravi. Piše se „— termina", ne izmišljena brojka. Sati su stvarni: zbir smjena.
+/// - **„Kopiraj prošlu sedmicu"**, **„Uredi smjene"** i klik na polje smjene — raspored po
+///   radniku se danas ne uređuje nigdje u adminu, pa dugmad kažu „uskoro" i vode na
+///   „Radno vrijeme", gdje su salonski raspored i odsustva.
+library;
+
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/format/terminologija.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_skeleton.dart';
+import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointments_providers.dart';
 import '../calendar/calendar_providers.dart';
-import '../../core/widgets/admin_skeleton.dart';
+import '../working_hours/working_hours_providers.dart';
 import 'employees_providers.dart';
+import 'employees_sedmica.dart';
 
-const _days = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
+const _dani = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
 
 /// Ponavljajuci raspored iz working_hours, bez izmisljene sedmicne evidencije.
 String employeeShift(List<WorkingHour> hours, String employeeId, int day) {
@@ -21,48 +42,277 @@ String employeeShift(List<WorkingHour> hours, String employeeId, int day) {
   return '${shift.startTime.format()}–${shift.endTime.format()}';
 }
 
+/// „Majstor" → „majstora", „Kozmetičarka" → „kozmetičarku" — za „+ Dodaj …".
+///
+/// Vertikala nosi samo nominativ; ovo pokriva imenice kakve `terms.staffSingular` daje
+/// (muški rod na suglasnik, ženski na `-a`).
+String _akuzativ(String jednina) {
+  final r = jednina.toLowerCase();
+  return r.endsWith('a') ? '${r.substring(0, r.length - 1)}u' : '${r}a';
+}
+
+void _uskoro(BuildContext context, String poruka) {
+  final router = GoRouter.maybeOf(context);
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(poruka),
+        persist: false,
+        action: router == null
+            ? null
+            : SnackBarAction(
+                label: 'Radno vrijeme',
+                onPressed: () => router.go(AdminRoute.workingHours.path),
+              ),
+      ),
+    );
+}
+
+void _uskoroSmjene(BuildContext context) => _uskoro(
+  context,
+  'Uređivanje smjene po radniku stiže uskoro. Salonsko radno vrijeme i '
+  'odsustva su u Radnom vremenu.',
+);
+
 class AdminEmployeesScreen extends ConsumerWidget {
   const AdminEmployeesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final desktop = AdminShell.jeDesktop(context);
-    final employees = ref.watch(adminEmployeesProvider);
+
+    Future<void> osvjezi() async {
+      ref
+        ..invalidate(adminEmployeeLinksProvider)
+        ..invalidate(adminServicesProvider)
+        ..invalidate(kalendarRadnoVrijemeProvider)
+        ..invalidate(buduceBlokadeProvider)
+        ..invalidate(adminEmployeesProvider);
+      await ref.read(adminEmployeesProvider.future);
+    }
+
     return AdminScaffold(
       title: 'Osoblje',
       aktivna: AdminRoute.employees,
-      actions: desktop
-          ? [
-              FilledButton(
-                onPressed: () => _edit(context),
-                child: const Text('+ Dodaj radnika'),
+      // `3r` crta veliki naslov i sedmicu u bijelom zaglavlju, bez `AppBar`-a.
+      sopstvenoZaglavlje: true,
+      actions: desktop ? const [_TopBarAkcije()] : null,
+      body: desktop
+          ? RefreshIndicator(
+              onRefresh: osvjezi,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AdminSpacing.gutterDesktop),
+                children: const [
+                  _NaslovDesktop(),
+                  SizedBox(height: 22),
+                  _Sadrzaj(),
+                ],
               ),
-            ]
-          : null,
-      floatingActionButton: desktop
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => _edit(context),
-              icon: const Icon(Icons.add),
-              label: const Text('Dodaj radnika'),
+            )
+          : Column(
+              children: [
+                const _ZaglavljeTelefon(),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: osvjezi,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(
+                        AdminSpacing.gutterMobile,
+                        14,
+                        AdminSpacing.gutterMobile,
+                        AdminSpacing.xl,
+                      ),
+                      children: const [_Sadrzaj()],
+                    ),
+                  ),
+                ),
+                const _AkcijeTelefon(),
+              ],
             ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(adminEmployeeLinksProvider);
-          ref.invalidate(kalendarRadnoVrijemeProvider);
-          ref.invalidate(adminEmployeesProvider);
-          await ref.read(adminEmployeesProvider.future);
-        },
-        child: employees.when(
-          loading: () => ListView(
-            children: const [
-              Padding(
-                padding: EdgeInsets.all(AdminSpacing.gutterDesktop),
-                child: AdminSkeletonList(),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Zaglavlja i akcije
+// ---------------------------------------------------------------------------
+
+String _sedmicaDanas() => sedmicaTekst(ponedjeljakSedmice(DateTime.now()));
+
+class _NaslovDesktop extends StatelessWidget {
+  const _NaslovDesktop();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('Osoblje', style: AdminText.display),
+      const SizedBox(height: AdminSpacing.sm),
+      Text(_sedmicaDanas(), style: Theme.of(context).textTheme.bodyLarge),
+    ],
+  );
+}
+
+class _ZaglavljeTelefon extends StatelessWidget {
+  const _ZaglavljeTelefon();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+      color: context.adminColors.surface,
+      border: Border(
+        bottom: BorderSide(
+          color: context.adminColors.separator,
+          width: AdminSize.hairline,
+        ),
+      ),
+    ),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AdminSpacing.gutterMobile,
+          AdminSpacing.md,
+          AdminSpacing.gutterMobile,
+          AdminSpacing.lg,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Osoblje', style: Theme.of(context).textTheme.displaySmall),
+            const SizedBox(height: 6),
+            Text(_sedmicaDanas(), style: Theme.of(context).textTheme.bodyLarge),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// „Kopiraj prošlu sedmicu" i „+ DODAJ MAJSTORA" iz `3g`.
+class _TopBarAkcije extends ConsumerWidget {
+  const _TopBarAkcije();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Placeholder, i zato prvi otpada kad top bar postane uzak: raspored je
+        // ponavljajući, pa „prošla sedmica" danas nema šta kopirati.
+        if (MediaQuery.sizeOf(context).width >= 1000) ...[
+          SizedBox(
+            height: 42,
+            child: OutlinedButton(
+              onPressed: () => _uskoro(
+                context,
+                'Kopiranje sedmice stiže uskoro — raspored se danas ponavlja '
+                'svake sedmice.',
               ),
-            ],
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              child: const Text('Kopiraj prošlu sedmicu'),
+            ),
           ),
-          error: (_, _) => ListView(
+          const SizedBox(width: 10),
+        ],
+        SizedBox(
+          height: 42,
+          child: FilledButton(
+            onPressed: () => _uredi(context),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 17),
+              textStyle: AdminText.actionLabel,
+            ),
+            child: AdminVerzal('+ Dodaj ${_akuzativ(radnikJednina(ref))}'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// „UREDI SMJENE" i „+ Majstor" iznad donje navigacije (`3r`).
+class _AkcijeTelefon extends ConsumerWidget {
+  const _AkcijeTelefon();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // `3r`: natpisi su 18 px — veći od desktop dugmeta, jer je dugme 52 px visoko.
+    final natpis = AdminText.actionLabel.copyWith(fontSize: 18);
+    return Container(
+      decoration: BoxDecoration(
+        color: context.adminColors.surface,
+        border: Border(
+          top: BorderSide(
+            color: context.adminColors.separator,
+            width: AdminSize.hairline,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AdminSpacing.gutterMobile,
+        AdminSpacing.md,
+        AdminSpacing.gutterMobile,
+        AdminSpacing.md,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: FilledButton(
+              onPressed: () => _uskoroSmjene(context),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(0, 52),
+                textStyle: natpis,
+              ),
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: AdminVerzal('Uredi smjene'),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => _uredi(context),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 52),
+                textStyle: natpis.copyWith(
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                ),
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('+ ${radnikJednina(ref)}'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sadržaj
+// ---------------------------------------------------------------------------
+
+class _Sadrzaj extends ConsumerWidget {
+  const _Sadrzaj();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref
+        .watch(adminEmployeesProvider)
+        .when(
+          loading: () => const AdminSkeletonList(),
+          error: (_, _) => Column(
             children: [
               const SizedBox(height: 80),
               const Center(child: Text('Osoblje se ne može učitati.')),
@@ -74,166 +324,577 @@ class AdminEmployeesScreen extends ConsumerWidget {
               ),
             ],
           ),
-          data: (rows) => ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(
-              AdminShell.gutterOf(context),
-              24,
-              AdminShell.gutterOf(context),
-              100,
-            ),
-            children: [
-              Text(
-                'Osoblje i smjene',
-                style: desktop
-                    ? AdminText.display
-                    : Theme.of(context).textTheme.headlineLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${rows.where((e) => e.isActive).length} aktivnih radnika · sedmični raspored',
-                style: TextStyle(color: context.adminColors.textSecondary),
-              ),
-              const SizedBox(height: 24),
-              if (rows.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(28),
-                    child: Column(
-                      children: [
-                        const Text('Još nema radnika.'),
-                        TextButton(
-                          onPressed: () => _edit(context),
-                          child: const Text('Dodaj prvog radnika'),
-                        ),
+          data: (radnici) {
+            if (radnici.isEmpty) return const _Prazno();
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final sirina = constraints.maxWidth;
+                // Pojas iz dostupne širine, ne iz prozora: pored sidebara je uže.
+                if (AdminShell.bandZa(sirina).jeCompact) {
+                  return Column(
+                    children: [
+                      for (final (i, r) in radnici.indexed) ...[
+                        if (i > 0) const SizedBox(height: AdminSpacing.md),
+                        _KarticaRadnika(radnik: r, saTrakom: true),
                       ],
-                    ),
-                  ),
-                )
-              else if (desktop)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final scale =
-                        MediaQuery.textScalerOf(context).scale(14) / 14;
-                    final columns = (constraints.maxWidth / (280 * scale))
-                        .floor()
-                        .clamp(1, 3);
-                    return Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
+                    ],
+                  );
+                }
+                final skala = MediaQuery.textScalerOf(context).scale(14) / 14;
+                final kolone = (sirina / (340 * skala)).floor().clamp(
+                  2,
+                  AdminShell.bandZa(sirina).kolone.clamp(3, 4),
+                );
+                final sirinaKartice =
+                    (sirina - AdminSpacing.lg * (kolone - 1)) / kolone;
+                final aktivni = radnici.where((r) => r.isActive).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: AdminSpacing.lg,
+                      runSpacing: AdminSpacing.lg,
                       children: [
-                        for (final employee in rows)
+                        for (final r in radnici)
                           SizedBox(
-                            width:
-                                (constraints.maxWidth - 16 * (columns - 1)) /
-                                columns,
-                            child: _EmployeeCard(employee: employee),
+                            width: sirinaKartice,
+                            child: _KarticaRadnika(radnik: r, saTrakom: false),
                           ),
                       ],
-                    );
-                  },
-                )
-              else ...[
-                for (final employee in rows) ...[
-                  _EmployeeCard(employee: employee),
-                  const SizedBox(height: 12),
-                ],
-              ],
-              if (rows.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Text(
-                  'Raspored smjena',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Redovni raspored po danima. Pauze i blokade provjerite u kalendaru.',
-                ),
-                const SizedBox(height: 16),
-                LayoutBuilder(
-                  builder: (context, constraints) => _Shifts(
-                    employees: rows.where((e) => e.isActive).toList(),
-                    desktop:
-                        constraints.maxWidth >=
-                        900 * MediaQuery.textScalerOf(context).scale(12) / 12,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
+                    ),
+                    if (aktivni.isNotEmpty) ...[
+                      const SizedBox(height: AdminSpacing.gutterDesktop),
+                      Text(
+                        'Smjene',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: AdminSpacing.md),
+                      _TabelaSmjena(radnici: aktivni),
+                      const SizedBox(height: AdminSpacing.lg),
+                      Text(
+                        'Praznine znače da ${radnikJednina(ref).toLowerCase()} '
+                        'ne radi i termini se ne nude u aplikaciji · odsustva se '
+                        'unose u Radnom vremenu.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ],
+                );
+              },
+            );
+          },
+        );
   }
 }
 
-class _EmployeeCard extends ConsumerWidget {
-  const _EmployeeCard({required this.employee});
-  final Employee employee;
+class _Prazno extends ConsumerWidget {
+  const _Prazno();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(28),
+      child: Column(
+        children: [
+          const Text('Još nema radnika.'),
+          TextButton(
+            onPressed: () => _uredi(context),
+            child: Text('Dodaj prvog ${_akuzativ(radnikJednina(ref))}'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Kartica radnika
+// ---------------------------------------------------------------------------
+
+/// Kartica iz `3g`; sa [saTrakom] i sedmična traka ispod, kako je crta `3r`.
+class _KarticaRadnika extends ConsumerWidget {
+  const _KarticaRadnika({required this.radnik, required this.saTrakom});
+
+  final Employee radnik;
+  final bool saTrakom;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final links = ref.watch(adminEmployeeLinksProvider);
-    final services = ref.watch(adminServicesProvider);
-    final ids =
-        links.valueOrNull
-            ?.where((l) => l.employeeId == employee.id)
-            .map((l) => l.serviceId)
-            .toSet() ??
-        <String>{};
-    final names = services.valueOrNull
-        ?.where((s) => ids.contains(s.id))
+    final boje = context.adminColors;
+    final tema = Theme.of(context).textTheme;
+    final sati = ref.watch(kalendarRadnoVrijemeProvider).valueOrNull;
+    // Blokade su dodatak: bez njih se smjena i dalje prikazuje, samo bez odsustva.
+    final blokade =
+        ref.watch(buduceBlokadeProvider).valueOrNull ?? const <BlockedSlot>[];
+    // `DateTime.now()` u buildu, ne sat koji kuca: pilula se osvježi sa ekranom i na
+    // povlačenje, a periodični tajmer bi radio dok god je lista otvorena.
+    final stanje = sati == null
+        ? null
+        : stanjeDanas(
+            radnik: radnik,
+            sati: sati,
+            blokade: blokade,
+            sada: DateTime.now(),
+          );
+
+    final opis = [
+      if (radnik.role.trim().isNotEmpty) radnik.role.trim(),
+      _uslugeTekst(ref),
+    ].join(' · ');
+    final brojke =
+        '— termina · ${sati == null ? '— h' : satiTekst(minuteSedmice(sati, radnik.id))}';
+
+    final sporedni = (saTrakom ? tema.bodyLarge : tema.bodyMedium)?.copyWith(
+      color: boje.textSecondary,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+    final vrh = Padding(
+      padding: saTrakom
+          ? const EdgeInsets.fromLTRB(16, 20, 16, 20)
+          : const EdgeInsets.all(20),
+      child: Row(
+        children: [
+          _Avatar(radnik: radnik, precnik: saTrakom ? 52 : 64),
+          SizedBox(width: saTrakom ? 14 : AdminSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        radnik.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: saTrakom ? tema.headlineSmall : tema.titleLarge,
+                      ),
+                    ),
+                    if (stanje != null) ...[
+                      const SizedBox(width: AdminSpacing.sm),
+                      Flexible(
+                        child: _PilulaStanja(stanje: stanje, kratko: saTrakom),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  opis,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: sporedni,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  brojke,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: sporedni,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            button: true,
+            label: 'Uredi ${radnik.name}',
+            child: InkWell(onTap: () => _uredi(context, radnik), child: vrh),
+          ),
+          if (saTrakom && radnik.isActive)
+            _TrakaSedmice(radnik: radnik, sati: sati, blokade: blokade),
+        ],
+      ),
+    );
+  }
+
+  /// `sve usluge`, ili nazivi dodijeljenih usluga.
+  String _uslugeTekst(WidgetRef ref) {
+    final veze = ref.watch(adminEmployeeLinksProvider);
+    final usluge = ref.watch(adminServicesProvider);
+    if (veze.hasError || usluge.hasError) return 'usluge nisu učitane';
+    if (!veze.hasValue || !usluge.hasValue) return 'učitavanje usluga…';
+    final ids = {
+      for (final v in veze.value!)
+        if (v.employeeId == radnik.id) v.serviceId,
+    };
+    final dodijeljene = usluge.value!.where((s) => ids.contains(s.id)).toList();
+    if (dodijeljene.isEmpty) return 'bez dodijeljenih usluga';
+    final aktivne = usluge.value!.where((s) => s.isActive).toList();
+    if (aktivne.length > 1 && aktivne.every((s) => ids.contains(s.id))) {
+      return 'sve usluge';
+    }
+    return dodijeljene
         .map((s) => '${s.name}${s.isActive ? '' : ' (neaktivna)'}')
         .join(', ');
-    return Card(
-      child: InkWell(
-        onTap: () => _edit(context, employee),
-        borderRadius: BorderRadius.circular(AdminRadius.base),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _Avatar(employee: employee),
-                  const SizedBox(width: 14),
-                  Expanded(
+  }
+}
+
+/// „u smjeni", „počinje 12:00" — boja kaže stanje, tekst ga imenuje.
+class _PilulaStanja extends StatelessWidget {
+  const _PilulaStanja({required this.stanje, required this.kratko});
+
+  final StanjeDanas stanje;
+
+  /// Telefon: „od 12:00" umjesto „počinje 12:00" — pilula dijeli red sa imenom.
+  final bool kratko;
+
+  @override
+  Widget build(BuildContext context) {
+    final boje = context.adminColors;
+    final (tekst, pozadina, tinta) = switch (stanje) {
+      USmjeni() => ('u smjeni', boje.positiveTint, boje.positiveInk),
+      Pocinje(:final od) => (
+        '${kratko ? 'od' : 'počinje'} ${od.format()}',
+        boje.waitingTint,
+        boje.waitingInk,
+      ),
+      NaPauzi() => ('na pauzi', boje.neutralTint, boje.textSecondary),
+      SmjenaGotova() => ('smjena gotova', boje.neutralTint, boje.textSecondary),
+      NeRadiDanas() => ('ne radi danas', boje.neutralTint, boje.textSecondary),
+      OdsutanSada() => ('odsutan', boje.neutralTint, boje.textSecondary),
+      Neaktivan() => ('neaktivan', boje.neutralTint, boje.textSecondary),
+    };
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: kratko ? 14 : 10,
+        vertical: kratko ? 4 : 3,
+      ),
+      decoration: BoxDecoration(
+        color: pozadina,
+        borderRadius: BorderRadius.circular(AdminRadius.pill),
+      ),
+      child: Text(
+        tekst,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AdminText.statusLabel.copyWith(
+          color: tinta,
+          fontSize: kratko ? 16 : null,
+        ),
+      ),
+    );
+  }
+}
+
+/// Fotografija, a bez nje sivi preliv kakav `3g` crta — ne slomljena slika.
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.radnik, required this.precnik});
+
+  final Employee radnik;
+  final double precnik;
+
+  @override
+  Widget build(BuildContext context) {
+    final boje = context.adminColors;
+    final zamjena = Container(
+      width: precnik,
+      height: precnik,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          center: const Alignment(-0.3, -0.6),
+          radius: 1.1,
+          colors: [boje.sidebarMuted, boje.sidebarRaised],
+        ),
+      ),
+    );
+    final url = radnik.imageUrl;
+    return Semantics(
+      image: true,
+      label: 'Fotografija: ${radnik.name}',
+      child: url == null || url.isEmpty
+          ? zamjena
+          : ClipOval(
+              child: Image.network(
+                url,
+                width: precnik,
+                height: precnik,
+                fit: BoxFit.cover,
+                loadingBuilder: (_, slika, napredak) =>
+                    napredak == null ? slika : zamjena,
+                errorBuilder: (_, _, _) => zamjena,
+              ),
+            ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Smjene
+// ---------------------------------------------------------------------------
+
+/// Sedam ćelija ispod kartice na telefonu (`3r`).
+class _TrakaSedmice extends StatelessWidget {
+  const _TrakaSedmice({
+    required this.radnik,
+    required this.sati,
+    required this.blokade,
+  });
+
+  final Employee radnik;
+  final List<WorkingHour>? sati;
+  final List<BlockedSlot> blokade;
+
+  @override
+  Widget build(BuildContext context) {
+    final boje = context.adminColors;
+    final linija = BorderSide(color: boje.separator, width: AdminSize.hairline);
+    final dani = daniSedmice(ponedjeljakSedmice(DateTime.now()));
+    return Container(
+      decoration: BoxDecoration(border: Border(top: linija)),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (i, dan) in dani.indexed)
+              Expanded(
+                child: InkWell(
+                  onTap: () => _uskoroSmjene(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: i == 0 ? null : Border(left: linija),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 2,
+                      vertical: 11,
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          employee.name,
-                          style: Theme.of(context).textTheme.titleLarge,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _dani[i].toUpperCase(),
+                            semanticsLabel: _dani[i],
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: boje.textSecondary,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                          ),
                         ),
-                        if (employee.role.isNotEmpty) Text(employee.role),
+                        const SizedBox(height: 4),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _vrijednost(dan),
+                            style: AdminText.timeLarge.copyWith(
+                              color: boje.ink,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.edit_outlined, size: 20),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                employee.isActive ? 'Aktivan' : 'Neaktivan',
-                style: TextStyle(
-                  color: employee.isActive
-                      ? context.adminColors.textSecondary
-                      : Theme.of(context).colorScheme.error,
                 ),
               ),
-              if (employee.experienceYears != null)
-                Text('Staž: ${employee.experienceYears} god.'),
-              const SizedBox(height: 8),
-              Text(
-                links.hasError || services.hasError
-                    ? 'Usluge nisu učitane.'
-                    : links.isLoading || services.isLoading
-                    ? 'Učitavanje usluga…'
-                    : names == null || names.isEmpty
-                    ? 'Bez dodijeljenih usluga'
-                    : names,
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _vrijednost(DateTime dan) {
+    final s = sati;
+    if (s == null) return '…';
+    return switch (danRadnika(
+      sati: s,
+      blokade: blokade,
+      employeeId: radnik.id,
+      dan: dan,
+    )) {
+      final RadiDan d => d.kratko,
+      SlobodanDan() => '—',
+      OdsutanDan(:final razlog) => skracenicaOdsustva(razlog),
+    };
+  }
+}
+
+/// Tabela smjena iz `3g`: radnik po redu, dan po koloni.
+class _TabelaSmjena extends ConsumerWidget {
+  const _TabelaSmjena({required this.radnici});
+
+  final List<Employee> radnici;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ref
+        .watch(kalendarRadnoVrijemeProvider)
+        .when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(AdminSpacing.xxl),
+            child: AdminSkeletonList(),
+          ),
+          error: (_, _) => Column(
+            children: [
+              const Text('Raspored se ne može učitati.'),
+              TextButton(
+                onPressed: () => ref.invalidate(kalendarRadnoVrijemeProvider),
+                child: const Text('Ponovi učitavanje rasporeda'),
               ),
             ],
+          ),
+          data: (sati) => _tabela(context, ref, sati),
+        );
+  }
+
+  Widget _tabela(BuildContext context, WidgetRef ref, List<WorkingHour> sati) {
+    final boje = context.adminColors;
+    final tema = Theme.of(context).textTheme;
+    final blokade =
+        ref.watch(buduceBlokadeProvider).valueOrNull ?? const <BlockedSlot>[];
+    final dani = daniSedmice(ponedjeljakSedmice(DateTime.now()));
+    // Naziv kolone iz vertikale, ne iz canvasa: `3g` je barber i piše „Majstor".
+    final radnik = radnikJednina(ref);
+
+    Widget danZaglavlje(int i, DateTime dan) {
+      // Dan u kojem niko ne radi je siv, kao nedjelja u `3g`.
+      final iko = radnici.any(
+        (r) =>
+            danRadnika(sati: sati, blokade: blokade, employeeId: r.id, dan: dan)
+                is! SlobodanDan,
+      );
+      final labela = '${_dani[i]} ${dan.day}.';
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(0, 14, 14, 14),
+        child: Text(
+          labela.toUpperCase(),
+          semanticsLabel: labela,
+          maxLines: 1,
+          overflow: TextOverflow.fade,
+          softWrap: false,
+          style: tema.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: iko ? boje.ink : boje.textMuted,
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Table(
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        // `3g`: kolona imena je ~1,1 dnevne kolone.
+        columnWidths: const {0: FlexColumnWidth(1.12)},
+        border: TableBorder(
+          horizontalInside: BorderSide(
+            color: boje.separator,
+            width: AdminSize.hairline,
+          ),
+        ),
+        children: [
+          TableRow(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 8, 14),
+                child: Text(
+                  radnik.toUpperCase(),
+                  semanticsLabel: radnik,
+                  maxLines: 1,
+                  overflow: TextOverflow.fade,
+                  softWrap: false,
+                  style: AdminText.eyebrow.copyWith(color: boje.textSecondary),
+                ),
+              ),
+              for (final (i, dan) in dani.indexed) danZaglavlje(i, dan),
+            ],
+          ),
+          for (final r in radnici)
+            TableRow(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 10, 8, 10),
+                  child: Text(
+                    r.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: tema.titleSmall,
+                  ),
+                ),
+                for (final dan in dani)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 10, 14, 10),
+                    child: _CelijaSmjene(
+                      dan: danRadnika(
+                        sati: sati,
+                        blokade: blokade,
+                        employeeId: r.id,
+                        dan: dan,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Polje smjene: plavo sa vremenom, koralno za odsustvo, crtica za slobodan dan.
+class _CelijaSmjene extends StatelessWidget {
+  const _CelijaSmjene({required this.dan});
+
+  final DanRadnika dan;
+
+  @override
+  Widget build(BuildContext context) {
+    final boje = context.adminColors;
+    final (tekst, pozadina, tinta) = switch (dan) {
+      final RadiDan d => (d.kratko, boje.accentTint, boje.accent),
+      OdsutanDan(:final razlog) => (
+        razlog ?? 'Odsutan',
+        boje.action,
+        boje.onAction,
+      ),
+      SlobodanDan() => ('', null, null),
+    };
+    if (pozadina == null) {
+      return SizedBox(
+        height: 34,
+        child: Center(
+          child: Text(
+            '—',
+            semanticsLabel: 'Ne radi',
+            style: AdminText.time.copyWith(color: boje.textMuted),
+          ),
+        ),
+      );
+    }
+    return Material(
+      color: pozadina,
+      borderRadius: BorderRadius.circular(AdminRadius.small),
+      child: InkWell(
+        onTap: () => _uskoroSmjene(context),
+        borderRadius: BorderRadius.circular(AdminRadius.small),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 34),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  tekst,
+                  style: AdminText.time.copyWith(
+                    color: tinta,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -241,138 +902,11 @@ class _EmployeeCard extends ConsumerWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.employee});
-  final Employee employee;
-  @override
-  Widget build(BuildContext context) {
-    final fallback = CircleAvatar(
-      radius: 28,
-      child: Text(employee.name.isEmpty ? '?' : employee.name.characters.first),
-    );
-    if (employee.imageUrl == null || employee.imageUrl!.isEmpty) {
-      return fallback;
-    }
-    return ClipOval(
-      child: Image.network(
-        employee.imageUrl!,
-        width: 56,
-        height: 56,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => fallback,
-      ),
-    );
-  }
-}
+// ---------------------------------------------------------------------------
+// Uređivanje radnika — kreiranje, izmjena, usluge, (de)aktivacija
+// ---------------------------------------------------------------------------
 
-class _Shifts extends ConsumerWidget {
-  const _Shifts({required this.employees, required this.desktop});
-  final List<Employee> employees;
-  final bool desktop;
-  @override
-  Widget build(BuildContext context, WidgetRef ref) => ref
-      .watch(kalendarRadnoVrijemeProvider)
-      .when(
-        loading: () => const Padding(
-          padding: EdgeInsets.all(AdminSpacing.xxl),
-          child: AdminSkeletonList(),
-        ),
-        error: (_, _) => Column(
-          children: [
-            const Text('Raspored se ne može učitati.'),
-            TextButton(
-              onPressed: () => ref.invalidate(kalendarRadnoVrijemeProvider),
-              child: const Text('Ponovi učitavanje rasporeda'),
-            ),
-          ],
-        ),
-        data: (hours) => desktop
-            ? Card(
-                child: Table(
-                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                  columnWidths: const {0: FlexColumnWidth(1.4)},
-                  children: [
-                    TableRow(
-                      children: [
-                        // **Naziv kolone dolazi iz vertikale, ne iz canvasa.** `adminv2` je
-                        // crtan za barber salon i svuda piše „Majstor"; u ordinaciji je to
-                        // „Doktor". Dok vertikala stiže, `Vertical.fallback` daje „Radnik".
-                        for (final label in [radnikJednina(ref), ..._days])
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Text(
-                              label,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    for (final e in employees)
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Text(e.name),
-                          ),
-                          for (var day = 1; day <= 7; day++)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 14,
-                              ),
-                              child: Text(
-                                employeeShift(hours, e.id, day),
-                                style: AdminText.dataInline,
-                              ),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              )
-            : Column(
-                children: [
-                  for (final e in employees)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              e.name,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 10),
-                            for (var day = 1; day <= 7; day++)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 5,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(_days[day - 1]),
-                                    Text(
-                                      employeeShift(hours, e.id, day),
-                                      style: AdminText.time,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-      );
-}
-
-Future<void> _edit(BuildContext context, [Employee? employee]) =>
+Future<void> _uredi(BuildContext context, [Employee? employee]) =>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -459,7 +993,8 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Potvrdi'),
+            style: FilledButton.styleFrom(textStyle: AdminText.actionLabel),
+            child: const AdminVerzal('Potvrdi'),
           ),
         ],
       ),
@@ -510,7 +1045,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AdminSpacing.xxl),
           child: AbsorbPointer(
             absorbing: _saving,
             child: Form(
@@ -523,7 +1058,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                     widget.employee == null ? 'Novi radnik' : 'Uredi radnika',
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AdminSpacing.xl),
                   TextFormField(
                     controller: _name,
                     decoration: const InputDecoration(labelText: 'Ime'),
@@ -532,18 +1067,18 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                         ? 'Ime je obavezno.'
                         : null,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AdminSpacing.md),
                   TextFormField(
                     controller: _role,
                     decoration: const InputDecoration(labelText: 'Titula'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AdminSpacing.md),
                   TextFormField(
                     controller: _bio,
                     decoration: const InputDecoration(labelText: 'Biografija'),
                     maxLines: 2,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AdminSpacing.md),
                   TextFormField(
                     controller: _years,
                     keyboardType: TextInputType.number,
@@ -558,7 +1093,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                           : null;
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AdminSpacing.md),
                   TextFormField(
                     controller: _image,
                     keyboardType: TextInputType.url,
@@ -575,7 +1110,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                           : null;
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AdminSpacing.xl),
                   Text(
                     'Usluge koje radnik pruža',
                     style: Theme.of(context).textTheme.titleMedium,
@@ -616,7 +1151,9 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                   ],
                   if (_error != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AdminSpacing.md,
+                      ),
                       child: Text(
                         _error!,
                         style: TextStyle(
@@ -624,12 +1161,15 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                         ),
                       ),
                     ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AdminSpacing.lg),
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: ready && !_saving ? _save : null,
-                      child: Text(_saving ? 'Čuvanje…' : 'Sačuvaj'),
+                      style: FilledButton.styleFrom(
+                        textStyle: AdminText.actionLabel,
+                      ),
+                      child: AdminVerzal(_saving ? 'Čuvanje…' : 'Sačuvaj'),
                     ),
                   ),
                   if (widget.employee != null)

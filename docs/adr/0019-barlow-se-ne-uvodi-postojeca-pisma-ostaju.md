@@ -2,7 +2,8 @@
 
 ## Status
 
-prihvaćen
+prihvaćen za `apps/client`; za `apps/admin` zamijenjen
+[ADR-0020](0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md).
 
 ## Kontekst
 

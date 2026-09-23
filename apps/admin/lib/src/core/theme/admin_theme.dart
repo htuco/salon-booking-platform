@@ -42,6 +42,16 @@ ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
     // sklanja. Potvrda dodira ostaje — `InkWell` i dalje crta `hoverColor` i
     // `highlightColor` iz teme, pa dugme ne djeluje kao da ne reaguje.
     splashFactory: NoSplash.splashFactory,
+    // **Kratko pretapanje umjesto „dizanja" ekrana.** Material default na webu i Androidu
+    // diže novi ekran odozdo; u adminu je prelaz sa „Danas" na „Kalendar" promjena taba,
+    // ne otvaranje novog sloja. Pretapanje je jedini prelaz koji ovdje ne pomjera sidebar:
+    // ljuska se crta u svakom ekranu, a isti pikseli pretopljeni u iste ostaju mirni.
+    pageTransitionsTheme: PageTransitionsTheme(
+      builders: {
+        for (final platforma in TargetPlatform.values)
+          platforma: const _Pretapanje(),
+      },
+    ),
     textTheme: textTheme,
     // Widget koji ne gleda `textTheme` (npr. `Text` bez stila u tuđoj komponenti) mora i
     // dalje dobiti Barlow, a ne Roboto.
@@ -253,3 +263,28 @@ ColorScheme _adminColorScheme(AdminPalette colors, Brightness brightness) =>
       inverseSurface: colors.ink,
       onInverseSurface: colors.ground,
     );
+
+/// Pretapanje od ~150 ms, u oba smjera.
+///
+/// Trajanje rute ostaje Materialovih 300 ms (tema ga ne može mijenjati), pa se pretapanje
+/// odradi u **prvoj polovini** animacije. `reverseCurve` isto radi pri povratku: bez njega
+/// bi ekran pri zatvaranju 150 ms stajao nepomično, pa tek onda nestao.
+class _Pretapanje extends PageTransitionsBuilder {
+  const _Pretapanje();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => FadeTransition(
+    opacity: CurvedAnimation(
+      parent: animation,
+      curve: const Interval(0, 0.5, curve: Curves.easeOut),
+      reverseCurve: const Interval(0.5, 1, curve: Curves.easeIn),
+    ),
+    child: child,
+  );
+}

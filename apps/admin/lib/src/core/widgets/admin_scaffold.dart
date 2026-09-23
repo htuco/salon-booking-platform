@@ -127,6 +127,7 @@ class AdminScaffold extends ConsumerWidget {
     this.actions,
     this.floatingActionButton,
     this.sopstvenoZaglavlje = false,
+    this.podstranica = false,
     super.key,
   });
 
@@ -151,6 +152,12 @@ class AdminScaffold extends ConsumerWidget {
   /// nacrtati sama jer podnaslov zna samo ekran. Desktop ovim nije dotaknut: tamo top bar
   /// pripada ljusci, jer nosi breadcrumb i akcije koje su iste za sve ekrane.
   final bool sopstvenoZaglavlje;
+
+  /// Ekran je podstranica ispod „Još" na telefonu, pa nema donju navigaciju.
+  ///
+  /// `3s` crta „‹ Još" i vlastitu traku sa „Sačuvaj" na dnu; donja navigacija ispod nje
+  /// bi dala dvije trake na dnu ekrana. Desktop ovim nije dotaknut.
+  final bool podstranica;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -194,7 +201,9 @@ class AdminScaffold extends ConsumerWidget {
             ),
       body: body,
       floatingActionButton: floatingActionButton,
-      bottomNavigationBar: _DonjaNavigacija(aktivna: aktivna),
+      bottomNavigationBar: podstranica
+          ? null
+          : _DonjaNavigacija(aktivna: aktivna),
     );
   }
 }

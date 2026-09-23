@@ -35,6 +35,7 @@ import '../../core/navigation/admin_destinations.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointment_card.dart';
 import '../appointments/appointments_providers.dart';
 import '../appointments/status_pill.dart';
@@ -116,7 +117,7 @@ class _TopBarAkcije extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 17),
               textStyle: AdminText.actionLabel,
             ),
-            child: const _Verzal('+ Novi termin'),
+            child: const AdminVerzal('+ Novi termin'),
           ),
         ),
       ],
@@ -166,20 +167,6 @@ class _PretragaKlijentaState extends ConsumerState<_PretragaKlijenta> {
       ),
     );
   }
-}
-
-/// Tekst primarnog dugmeta **u verzalu** — `+ NOVI TERMIN`, `POTVRDI` (`3b`).
-///
-/// Flutter nema `text-transform`, pa verzal mora biti u stringu. `semanticsLabel` zato
-/// nosi original: čitač ekrana „POTVRDI" čita slovo po slovo kao skraćenicu.
-class _Verzal extends StatelessWidget {
-  const _Verzal(this.tekst);
-
-  final String tekst;
-
-  @override
-  Widget build(BuildContext context) =>
-      Text(tekst.toUpperCase(), semanticsLabel: tekst);
 }
 
 // ---------------------------------------------------------------------------
@@ -954,7 +941,7 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                     textStyle: AdminText.actionLabel,
                   ),
-                  child: const _Verzal('Potvrdi'),
+                  child: const AdminVerzal('Potvrdi'),
                 ),
               ),
               const SizedBox(width: 9),
@@ -1405,7 +1392,9 @@ final _sazetakProvider = Provider<DashboardSazetak>((ref) {
 ///
 /// Zaseban od `kalendarRadnoVrijemeProvider`: onaj je `autoDispose` uz kalendar, a
 /// dashboard ne smije zavisiti od toga da li je kalendar otvoren.
-final dashboardRasporedProvider = FutureProvider<List<WorkingHour>>((ref) async {
+final dashboardRasporedProvider = FutureProvider<List<WorkingHour>>((
+  ref,
+) async {
   final salonId = ref.watch(adminSalonIdProvider);
   if (salonId == null) return const [];
   return ref.watch(workingHoursRepositoryProvider).forSalon(salonId);

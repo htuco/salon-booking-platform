@@ -9,16 +9,17 @@
 /// pa filter dana u tom licu ekrana ne stoji. Puna lista bez filtera statusa je i dalje
 /// dnevna, jer se raspored gleda po danu.
 ///
-/// ## Šta canvas traži, a ovdje nije nacrtano
+/// ## Placeholderi i ono što namjerno nije nacrtano
 ///
-/// - **„Preklapa se s pauzom Amara 15:00–15:30"** — pauze i blokade dolaze u tasku 34.
-///   Upozorenje koje se ne računa iz podataka bilo bi ukras koji tvrdi da je provjera.
-/// - **„12 dolazaka · bez nedolazaka"** i **„Tri nedolaska u 6 mjeseci"** — istorija
-///   klijenta je modul iz taska 35.
-/// - **„Ponudi drugo vrijeme" / „Ponudi 15:30"** — pomjeranje termina nema RPC putanju;
-///   `set_appointment_status` mijenja status, ne vrijeme. Dok je nema, salon otkaže i
-///   upiše novi termin, što oba koraka već rade.
-/// - **„prosjek odgovora 8 min"** — `appointments` nema `created_at`.
+/// Kartice zahtjeva su u `zahtjev_kartica.dart`; tamo je i popis njihovih placeholdera.
+/// Na nivou ekrana:
+///
+/// - **Tabovi „Odbijeni" i „Otkazali klijenti"** (`3d`) stoje bez brojke i tap kaže
+///   „uskoro": brojka traži upit po `cancelled_by` kroz više dana, kojeg nema.
+///   „Potvrđeni danas" ima brojku iz današnjih termina i vodi u punu listu.
+/// - **„prosjek odgovora 8 min"** (`3m`) nema podatak (vrijeme odgovora se ne bilježi).
+///   Na njegovom mjestu stoji starost najstarijeg zahtjeva, koja se zna iz `created_at`.
+/// - **„Sukobi su označeni"** iz podnaslova `3d` se ne piše — sukobi se ne računaju.
 library;
 
 import 'package:core_api/core_api.dart';
@@ -28,15 +29,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format/datum.dart';
-import '../../core/format/tekst.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_skeleton.dart';
+import '../../core/widgets/admin_verzal.dart';
+import '../dashboard/dashboard_summary.dart'
+    show najstarijiZahtjev, prijeKoliko;
 import 'appointment_actions_bar.dart';
 import 'appointment_card.dart';
 import 'appointments_providers.dart';
-import 'status_pill.dart';
+import 'zahtjev_kartica.dart';
 
 /// Najmanja širina na kojoj se kartica termina još da složiti.
 ///
@@ -48,17 +51,6 @@ import 'status_pill.dart';
 /// kolona ograničava ovo — ime klijenta, vrijeme i tri dugmeta u redu traže oko 360 px, pa
 /// uža kartica lomi radnje u dva reda.
 const double _minSirinaKartice = 360;
-
-/// Najveća širina kartice zahtjeva (`3d`).
-///
-/// Zahtjev je jedini red koji ostaje u jednoj koloni — raspored `vrijeme | podaci | radnje`
-/// se ne da preklopiti u mrežu. Bez gornje granice bi na 2560 px dobio punu radnu površinu
-/// od 2324 px i tri zone bi stajale na suprotnim krajevima stola, sa prazninom u sredini.
-///
-/// Broj je isti onaj koji je stara implementacija koristila za cijelu listu (radna površina
-/// iz `3d`); tamo je bio pogrešan jer je ograničavao **stranicu**, ovdje je ispravan jer
-/// ograničava **karticu**.
-const double _maxSirinaZahtjeva = 1176;
 
 class AdminAppointmentsScreen extends ConsumerStatefulWidget {
   const AdminAppointmentsScreen({this.trazeniStatus, super.key});
@@ -175,15 +167,32 @@ class _Zaglavlje extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final jeDesktop = AdminShell.jeDesktop(context);
-    final broj = lista.valueOrNull?.length ?? 0;
+    final termini = lista.valueOrNull ?? const <Appointment>[];
+    final broj = termini.length;
 
-    final naslov = zahtjevi
-        ? (broj == 0 ? 'Nema zahtjeva' : '$broj ${_cekajuTekst(broj)}')
-        : naslovDana(filter.dan);
-
-    final podnaslov = zahtjevi
-        ? 'Klijent vidi „na čekanju" dok ne odgovorite.'
-        : datumSaGodinom(filter.dan);
+    // `3m` na telefonu naslovljava ekran imenom modula i broj spušta u podnaslov; `3d` na
+    // desktopu broj stavlja u naslov, jer je ime modula već u breadcrumbu.
+    final String naslov;
+    final String podnaslov;
+    if (!zahtjevi) {
+      naslov = naslovDana(filter.dan);
+      podnaslov = datumSaGodinom(filter.dan);
+    } else if (jeDesktop) {
+      naslov = broj == 0 ? 'Nema zahtjeva' : '$broj ${_cekajuTekst(broj)}';
+      podnaslov = 'Klijent vidi „na čekanju" dok ne odgovorite.';
+    } else {
+      naslov = 'Zahtjevi';
+      final najstariji = prijeKoliko(
+        najstarijiZahtjev(termini),
+        DateTime.now(),
+      );
+      podnaslov = broj == 0
+          ? 'Nijedan ne čeka'
+          : [
+              '$broj ${_cekajuTekst(broj).split(' ').last}',
+              if (najstariji != null) 'najstariji $najstariji',
+            ].join(' · ');
+    }
 
     return Container(
       width: double.infinity,
@@ -191,7 +200,12 @@ class _Zaglavlje extends ConsumerWidget {
         AdminShell.gutterOf(context),
         jeDesktop ? AdminSpacing.gutterDesktop : AdminSpacing.md,
         AdminShell.gutterOf(context),
-        AdminSpacing.lg,
+        // Desktop zahtjevi: razmak do prve kartice daje lista (20, `3d`).
+        zahtjevi && jeDesktop
+            ? 0
+            : zahtjevi
+            ? AdminSpacing.md
+            : AdminSpacing.lg,
       ),
       decoration: BoxDecoration(
         // Na telefonu je zaglavlje bijela traka iznad sive radne površine (`3m`); na
@@ -224,25 +238,34 @@ class _Zaglavlje extends ConsumerWidget {
                             ? AdminText.display
                             : theme.textTheme.displaySmall,
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: AdminSpacing.xs),
                       Text(
                         podnaslov,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: context.adminColors.textSecondary,
-                        ),
+                        // `3d` 16 px, `3m` 15 px.
+                        style:
+                            (jeDesktop
+                                    ? theme.textTheme.bodyLarge
+                                    : theme.textTheme.bodyMedium)
+                                ?.copyWith(
+                                  color: context.adminColors.textSecondary,
+                                ),
                       ),
                     ],
                   ),
                 ),
-                if (!jeDesktop) const AdminNalogDugme(ikona: true),
+                // `3m` zahtjevi nemaju dugme naloga u zaglavlju; nalog je iza „Još".
+                if (!jeDesktop && !zahtjevi) const AdminNalogDugme(ikona: true),
               ],
             ),
             if (!zahtjevi) ...[
               const SizedBox(height: AdminSpacing.md),
               _IzborDana(filter: filter),
+              const SizedBox(height: AdminSpacing.lg),
+              _Cipovi(filter: filter),
+            ] else if (jeDesktop) ...[
+              const SizedBox(height: AdminSpacing.xl),
+              _ZahtjeviTabovi(broj: broj),
             ],
-            const SizedBox(height: AdminSpacing.lg),
-            _Cipovi(filter: filter),
           ],
         ),
       ),
@@ -334,6 +357,58 @@ class _Cipovi extends ConsumerWidget {
   }
 }
 
+/// Tabovi iz `3d`: „Nepotvrđeni" je ovaj ekran, ostali vode dalje.
+class _ZahtjeviTabovi extends ConsumerWidget {
+  const _ZahtjeviTabovi({required this.broj});
+
+  final int broj;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(appointmentsFilterProvider.notifier);
+    // Brojka dolazi iz današnjih termina koje dashboard već drži, ne iz novog upita.
+    final potvrdjeniDanas = ref
+        .watch(danasnjiTerminiProvider)
+        .valueOrNull
+        ?.where((t) => t.status == AppointmentStatus.confirmed)
+        .length;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _Cip(labela: 'Nepotvrđeni ($broj)', izabran: true, onTap: () {}),
+          _Cip(
+            labela: potvrdjeniDanas == null
+                ? 'Potvrđeni danas'
+                : 'Potvrđeni danas ($potvrdjeniDanas)',
+            izabran: false,
+            onTap: () {
+              final sada = DateTime.now();
+              notifier
+                ..postaviDan(DateTime(sada.year, sada.month, sada.day))
+                ..postaviStatusTacno(AppointmentStatus.confirmed);
+            },
+          ),
+          // Bez brojke: nema upita po `cancelled_by` kroz više dana.
+          _Cip(
+            labela: 'Odbijeni',
+            izabran: false,
+            onTap: () => pokaziUskoro(context, 'Pregled odbijenih'),
+          ),
+          _Cip(
+            labela: 'Otkazali klijenti',
+            izabran: false,
+            onTap: () => pokaziUskoro(context, 'Pregled otkazivanja'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Jedan tab/čip. Izabrani je koralna ispuna sa verzalom (`3d` „NEPOTVRĐENI (4)"),
+/// ostali su bijeli sa obrubom kontrole i pišu se u rečenici.
 class _Cip extends StatelessWidget {
   const _Cip({
     required this.labela,
@@ -345,24 +420,25 @@ class _Cip extends StatelessWidget {
   final bool izabran;
   final VoidCallback onTap;
 
+  /// `3d`: tab je 38 px visok, tekst 18 px od ruba.
+  static const double _visina = 38;
+  static const double _uvlaka = 18;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final boje = context.adminColors;
 
     return Padding(
       padding: const EdgeInsets.only(right: 9),
       child: Material(
-        color: izabran
-            ? context.adminColors.accent
-            : context.adminColors.surface,
+        color: izabran ? boje.action : boje.surface,
         // Obrub ide kroz `shape`, pa `borderRadius` uz njega **nije dozvoljen** —
         // `Material` to provjerava assertom i ruši ekran, ne samo čip.
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AdminRadius.base),
           side: BorderSide(
-            color: izabran
-                ? context.adminColors.accent
-                : context.adminColors.border,
+            color: izabran ? boje.action : boje.border,
             width: AdminSize.hairline,
           ),
         ),
@@ -370,18 +446,20 @@ class _Cip extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(AdminRadius.base),
           child: Container(
-            height: AdminSize.buttonHeight,
+            height: _visina,
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              labela,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: izabran
-                    ? context.adminColors.onAccent
-                    : context.adminColors.ink,
-                fontWeight: izabran ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: _uvlaka),
+            child: izabran
+                ? DefaultTextStyle.merge(
+                    style: AdminText.actionLabel.copyWith(color: boje.onAction),
+                    child: AdminVerzal(labela),
+                  )
+                : Text(
+                    labela,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: boje.ink,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -420,7 +498,7 @@ class _Lista extends ConsumerWidget {
             ((constraints.maxWidth - gutter * 2 + AdminSpacing.md) /
                     (_minSirinaKartice + AdminSpacing.md))
                 .floor();
-        // **Zahtjevi ostaju jedna kolona.** `_ZahtjevKartica` je raspored iz `3d`: vrijeme
+        // **Zahtjevi ostaju jedna kolona.** `ZahtjevRedDesktop` je raspored iz `3d`: vrijeme
         // lijevo, podaci u sredini, radnje desno — tri zone u `Row`-u, računate za punu
         // radnu površinu. U koloni od ~560 px taj red prelije za 300 px. Handoff `3d` i
         // crta zahtjeve kao listu preko cijele širine, pa mreža ovdje nije ni tražena.
@@ -434,34 +512,40 @@ class _Lista extends ConsumerWidget {
         // To je tačno ono protiv čega je stajala stara granica od 1176 px. Lista se od
         // viška prostora brani kolonama, zahtjev nema tu mogućnost, pa se brani mjerom.
         // **Viđeno u browseru na 1920 i 2560 px**, nije izvedeno iz koda.
-        final maxKartica = zahtjevi && jeDesktop ? _maxSirinaZahtjeva : null;
+        // Vlasnik je tražio punu širinu kao na „Danas", pa granice više nema.
+        const double? maxKartica = null;
 
         Widget karticaZa(int i) {
           final termin = termini[i];
           final opis = opisTermina(termin, usluge: usluge, radnici: radnici);
 
-          if (zahtjevi && jeDesktop) {
-            return _ZahtjevKartica(termin: termin, opis: opis);
+          void otvori() => context.go('/appointments/${termin.id}');
+
+          if (zahtjevi) {
+            return jeDesktop
+                ? ZahtjevRedDesktop(termin: termin, opis: opis, onTap: otvori)
+                : ZahtjevKarticaTelefon(
+                    termin: termin,
+                    opis: opis,
+                    onTap: otvori,
+                  );
           }
 
           return AppointmentCard(
             termin: termin,
             opis: opis,
-            // Zahtjev se može odnositi na bilo koji dan, pa vrijeme bez datuma ne kaže
-            // dovoljno; u dnevnoj listi je datum u zaglavlju i ponavljao bi se u svakom
-            // redu.
-            datum: zahtjevi
-                ? naslovDanaZaDatum(termin.date).toLowerCase()
-                : null,
-            onTap: () => context.go('/appointments/${termin.id}'),
+            onTap: otvori,
             podnozje: AppointmentActionsBar(termin: termin),
           );
         }
 
-        final razmak = zahtjevi ? AdminSpacing.lg : AdminSpacing.md;
+        // `3d`: 16 između redova zahtjeva, 20 od tabova do prvog; `3m`: 12 i 16.
+        final razmak = zahtjevi && jeDesktop
+            ? AdminSpacing.lg
+            : AdminSpacing.md;
         final padding = EdgeInsets.fromLTRB(
           gutter,
-          AdminSpacing.lg,
+          zahtjevi && jeDesktop ? AdminSpacing.xl : AdminSpacing.lg,
           gutter,
           40,
         );
@@ -509,232 +593,6 @@ class _Lista extends ConsumerWidget {
   }
 }
 
-/// Kartica zahtjeva iz `3d`: vrijeme lijevo, podaci u sredini, radnje desno.
-class _ZahtjevKartica extends ConsumerStatefulWidget {
-  const _ZahtjevKartica({required this.termin, required this.opis});
-
-  final Appointment termin;
-  final TerminOpis opis;
-
-  @override
-  ConsumerState<_ZahtjevKartica> createState() => _ZahtjevKarticaState();
-}
-
-class _ZahtjevKarticaState extends ConsumerState<_ZahtjevKartica> {
-  bool _uToku = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final termin = widget.termin;
-
-    return Card(
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Vrijeme je najkrupnije na cijeloj kartici: zahtjev se prvo mjeri time kada
-            // je, pa tek onda ko ga je poslao.
-            Container(
-              width: 160,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    color: context.adminColors.separator,
-                    width: AdminSize.hairline,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    vrijemeHhMm(termin.startTime),
-                    style: theme.textTheme.displaySmall,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    naslovDanaZaDatum(termin.date).toLowerCase(),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: context.adminColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${termin.durationMinutes} minuta',
-                    style: AdminText.dataInline.copyWith(
-                      color: context.adminColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          termin.customerName,
-                          style: theme.textTheme.headlineSmall,
-                        ),
-                        const SizedBox(width: AdminSpacing.md),
-                        AppointmentStatusPill(status: termin.status),
-                      ],
-                    ),
-                    if (termin.customerPhone case final telefon?
-                        when telefon.isNotEmpty) ...[
-                      const SizedBox(height: AdminSpacing.xs),
-                      Text(
-                        telefon,
-                        style: AdminText.dataInline.copyWith(
-                          color: context.adminColors.textMuted,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: AdminSpacing.lg),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _Podatak(
-                          labela: 'Usluga',
-                          vrijednost: widget.opis.usluga ?? '—',
-                        ),
-                        const SizedBox(width: 30),
-                        _Podatak(
-                          labela: 'Majstor',
-                          vrijednost: widget.opis.majstor ?? 'bilo ko',
-                        ),
-                        if (widget.opis.cijena case final cijena?) ...[
-                          const SizedBox(width: 30),
-                          _Podatak(
-                            labela: 'Cijena',
-                            vrijednost: iznosKm(cijena),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (termin.customerNote case final napomena?
-                        when napomena.isNotEmpty) ...[
-                      const SizedBox(height: AdminSpacing.lg),
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(13, 11, 13, 11),
-                        decoration: BoxDecoration(
-                          color: context.adminColors.neutralTint,
-                          borderRadius: BorderRadius.circular(AdminRadius.base),
-                        ),
-                        child: Text(
-                          napomena,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: context.adminColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              width: 280,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: context.adminColors.separator,
-                    width: AdminSize.hairline,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: 44,
-                    child: FilledButton(
-                      onPressed: _uToku ? null : _potvrdi,
-                      child: const Text('Potvrdi'),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 44,
-                    child: OutlinedButton(
-                      onPressed: _uToku ? null : _odbij,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.adminColors.destructive,
-                      ),
-                      child: const Text('Odbij zahtjev'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _potvrdi() => _izvrsi(
-    () => ref.read(appointmentActionsProvider).potvrdi(widget.termin.id),
-    uspjeh: 'Termin je potvrđen.',
-  );
-
-  Future<void> _odbij() => _izvrsi(
-    () => ref.read(appointmentActionsProvider).odbij(widget.termin.id),
-    uspjeh: 'Zahtjev je odbijen.',
-  );
-
-  Future<void> _izvrsi(
-    Future<Appointment?> Function() poziv, {
-    required String uspjeh,
-  }) async {
-    setState(() => _uToku = true);
-    try {
-      await poziv();
-      if (!mounted) return;
-      _poruka(context, uspjeh);
-    } on ApiError catch (_) {
-      if (!mounted) return;
-      _poruka(context, 'Akcija nije uspjela. Pokušajte ponovo.');
-    } finally {
-      if (mounted) setState(() => _uToku = false);
-    }
-  }
-}
-
-class _Podatak extends StatelessWidget {
-  const _Podatak({required this.labela, required this.vrijednost});
-
-  final String labela;
-  final String vrijednost;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          labela,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: context.adminColors.textMuted,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(vrijednost, style: theme.textTheme.titleSmall),
-      ],
-    );
-  }
-}
-
 /// „+ Novi termin" u top baru pune liste.
 class _NoviTerminDugme extends StatelessWidget {
   const _NoviTerminDugme();
@@ -743,7 +601,8 @@ class _NoviTerminDugme extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilledButton(
       onPressed: () => context.go(AdminRoute.appointmentNew.path),
-      child: const Text('+ Novi termin'),
+      style: FilledButton.styleFrom(textStyle: AdminText.actionLabel),
+      child: const AdminVerzal('+ Novi termin'),
     );
   }
 }
@@ -769,11 +628,19 @@ class _PotvrdiSveDugmeState extends ConsumerState<_PotvrdiSveDugme> {
   Widget build(BuildContext context) {
     final zahtjevi = ref.watch(zahtjeviProvider).valueOrNull ?? const [];
 
-    return OutlinedButton(
-      onPressed: _uToku || zahtjevi.isEmpty
-          ? null
-          : () => _potvrdiSve(zahtjevi),
-      child: Text(_uToku ? 'Potvrđujem…' : 'Potvrdi sve bez preklapanja'),
+    // `3d`: dugme u top baru je 40 px visoko, tekst 16 px od ruba.
+    return SizedBox(
+      height: 40,
+      child: OutlinedButton(
+        onPressed: _uToku || zahtjevi.isEmpty
+            ? null
+            : () => _potvrdiSve(zahtjevi),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 40),
+          padding: const EdgeInsets.symmetric(horizontal: AdminSpacing.lg),
+        ),
+        child: Text(_uToku ? 'Potvrđujem…' : 'Potvrdi sve bez preklapanja'),
+      ),
     );
   }
 
@@ -793,7 +660,8 @@ class _PotvrdiSveDugmeState extends ConsumerState<_PotvrdiSveDugme> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Potvrdi sve'),
+            style: FilledButton.styleFrom(textStyle: AdminText.actionLabel),
+            child: const AdminVerzal('Potvrdi sve'),
           ),
         ],
       ),

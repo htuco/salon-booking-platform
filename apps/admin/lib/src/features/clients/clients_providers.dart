@@ -132,7 +132,17 @@ final klijentProvider = FutureProvider.family<Customer?, String>((
       .byId(salonId: salonId, customerId: customerId);
 });
 
-/// Istorija dolazaka jednog klijenta, najskoriji termin prvi.
+/// Gornja granica istorije koju upit vraća (`StaffCustomerRepository.istorija`, `limit`).
+///
+/// Ekran je mora znati: brojač izračunat nad odrezanom listom bi tvrdio manje dolazaka
+/// nego što ih je bilo. Kad lista dosegne granicu, v. [brojDolazaka].
+const int kLimitIstorije = 50;
+
+/// Istorija termina jednog klijenta, najskoriji termin prvi.
+///
+/// **Sadrži i buduće termine.** Upit ne filtrira po datumu — sortira `date desc`, pa su
+/// zakazani termini baš na vrhu liste i granica [kLimitIstorije] ih ne odsiječe. Iz iste
+/// liste se zato računa i [sljedeciTermin].
 final klijentIstorijaProvider =
     FutureProvider.family<List<Appointment>, String>((ref, customerId) async {
       final salonId = ref.watch(adminSalonIdProvider);
@@ -143,7 +153,72 @@ final klijentIstorijaProvider =
           .istorija(salonId: salonId, customerId: customerId);
     });
 
+/// Najbliži termin koji klijent ima pred sobom, ili `null`.
+///
+/// Broji se samo termin koji **drži slot** (`pending`, `confirmed`) — otkazan termin u
+/// budućnosti nije termin na koji klijent dolazi. Termin koji upravo traje (počeo, nije
+/// završio) je i dalje „sljedeći": klijent je u stolici i salon to treba vidjeti.
+///
+/// Datum i vrijeme su zidno vrijeme salona (v. `LocalDate`), pa se porede sa lokalnim
+/// `DateTime`-om uređaja — admin se koristi u salonu, u istoj zoni.
+Appointment? sljedeciTermin(List<Appointment> istorija, DateTime sada) {
+  Appointment? najblizi;
+  DateTime? pocetakNajblizeg;
+
+  for (final termin in istorija) {
+    if (!termin.blocksSlot) continue;
+    final d = termin.date;
+    final kraj = DateTime(
+      d.year,
+      d.month,
+      d.day,
+      termin.endTime.hour,
+      termin.endTime.minute,
+    );
+    if (!kraj.isAfter(sada)) continue;
+
+    final pocetak = DateTime(
+      d.year,
+      d.month,
+      d.day,
+      termin.startTime.hour,
+      termin.startTime.minute,
+    );
+    if (pocetakNajblizeg == null || pocetak.isBefore(pocetakNajblizeg)) {
+      najblizi = termin;
+      pocetakNajblizeg = pocetak;
+    }
+  }
+  return najblizi;
+}
+
+/// Broj dolazaka (`completed`) i nedolazaka (`no_show`) iz istorije klijenta.
+///
+/// **Kad istorija dosegne [kLimitIstorije], lista je odrezana** i brojanje nad njom bi
+/// dalo premalo. Tada se uzima veći od dva broja: izračunati, ili brojač iz reda
+/// `customers` ([Customer.visitCount], [Customer.noShowCount]), koji broji sve termine.
+({int dolasci, int nedolasci}) brojDolazaka(
+  List<Appointment> istorija,
+  Customer klijent,
+) {
+  var dolasci = 0;
+  var nedolasci = 0;
+  for (final termin in istorija) {
+    if (termin.status == AppointmentStatus.completed) dolasci++;
+    if (termin.status == AppointmentStatus.noShow) nedolasci++;
+  }
+
+  if (istorija.length >= kLimitIstorije) {
+    if (klijent.visitCount > dolasci) dolasci = klijent.visitCount;
+    if (klijent.noShowCount > nedolasci) nedolasci = klijent.noShowCount;
+  }
+  return (dolasci: dolasci, nedolasci: nedolasci);
+}
+
 /// Zbir cijena **održanih** termina — „Potrošeno" iz `3e`.
+///
+/// **Ekran ga više ne crta**: vlasnik proizvoda je tražio da se „KM ukupno" i kolona
+/// „Potrošeno" sklone. Funkcija ostaje dok je `test/clients_screen_test.dart` koristi.
 ///
 /// **Broji se samo `completed`.** Canvas crta jednu brojku bez objašnjenja, a zbir preko
 /// svih termina bi u nju uračunao i otkazane i nedošle — vlasnik bi vidio novac koji nije
