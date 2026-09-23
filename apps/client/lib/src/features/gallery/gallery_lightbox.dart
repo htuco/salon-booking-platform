@@ -41,6 +41,7 @@ class GalleryLightbox extends StatefulWidget {
     required this.urls,
     required this.initialIndex,
     this.onIndeks,
+    this.sirinaSlicice,
     super.key,
   });
 
@@ -49,6 +50,13 @@ class GalleryLightbox extends StatefulWidget {
 
   /// Javlja indeks slike koja se gleda — mreža ispod po njemu drži ćeliju na ekranu.
   final ValueChanged<int>? onIndeks;
+
+  /// Strana ćelije mreže u logičkim pikselima. Placeholder pune slike je sličica iste
+  /// širine — isti `ResizeImage` ključ koji `PhotoFrame` već drži u memoriji.
+  ///
+  /// Bez ovoga `Hero` leti **prazan**: let crta stranicu lightboxa, a puna slika se u tih
+  /// 260 ms još dekodira. Viđeno na emulatoru, widget test to ne vidi (FE-204).
+  final double? sirinaSlicice;
 
   /// 260 ms iz DoD-a FE-204. Između `AppDuration.normal` i `slow`: let preko cijelog
   /// ekrana je duži put od prelaza unutar ekrana, a tokena za njega nema.
@@ -59,12 +67,29 @@ class GalleryLightbox extends StatefulWidget {
   /// Pozicija ga čini jedinstvenim, URL ga veže za sliku.
   static Object heroTag(int indeks, String url) => ('galerija', indeks, url);
 
+  /// Šta leti između mreže i lightboxa. Flutter po defaultu uvijek crta dijete
+  /// **odredišnog** `Hero`-a; pri zatvaranju je to ćelija mreže, čiji `PhotoFrame` u letu
+  /// dobije drugu širinu, traži sličicu koju keš nema i leti prazan okvir (viđeno na
+  /// emulatoru). Zato pri zatvaranju leti slika iz lightboxa — ona je već dekodirana.
+  static Widget letjelica(
+    BuildContext flightContext,
+    Animation<double> animation,
+    HeroFlightDirection smjer,
+    BuildContext odakle,
+    BuildContext kamo,
+  ) {
+    final hero =
+        (smjer == HeroFlightDirection.pop ? odakle : kamo).widget as Hero;
+    return hero.child;
+  }
+
   /// Otvara lightbox preko cijelog ekrana.
   static Future<void> show(
     BuildContext context, {
     required List<String> urls,
     required int initialIndex,
     ValueChanged<int>? onIndeks,
+    double? sirinaSlicice,
   }) {
     if (urls.isEmpty) return Future.value();
 
@@ -80,6 +105,7 @@ class GalleryLightbox extends StatefulWidget {
             urls: urls,
             initialIndex: initialIndex,
             onIndeks: onIndeks,
+            sirinaSlicice: sirinaSlicice,
           ),
         ),
       ),
@@ -205,6 +231,7 @@ class _GalleryLightboxState extends State<GalleryLightbox> {
                         },
                         child: Hero(
                           tag: GalleryLightbox.heroTag(i, widget.urls[i]),
+                          flightShuttleBuilder: GalleryLightbox.letjelica,
                           child: CachedNetworkImage(
                             imageUrl: widget.urls[i],
                             // `contain`, ne `cover`: ovo je pregled fotografije, a ne ćelija
@@ -217,8 +244,10 @@ class _GalleryLightboxState extends State<GalleryLightbox> {
                                 color: scheme.onSurfaceVariant,
                               ),
                             ),
-                            placeholder: (context, url) =>
-                                const SizedBox.shrink(),
+                            placeholder: (context, url) => _Slicica(
+                              url: url,
+                              sirina: widget.sirinaSlicice,
+                            ),
                           ),
                         ),
                       ),
@@ -452,5 +481,33 @@ class _DvaPrsta extends ScaleGestureRecognizer {
   void rejectGesture(int pointer) {
     _prsti.remove(pointer);
     super.rejectGesture(pointer);
+  }
+}
+
+/// Sličica iz mreže kao placeholder pune slike. `ResizeImage` iste širine kao u
+/// `PhotoFrame`-u je isti ključ u memorijskom kešu, pa je slika tu od prvog framea leta —
+/// a `contain` je drži u proporciji u kojoj će je puna verzija zamijeniti.
+class _Slicica extends StatelessWidget {
+  const _Slicica({required this.url, required this.sirina});
+
+  final String url;
+  final double? sirina;
+
+  @override
+  Widget build(BuildContext context) {
+    final sirina = this.sirina;
+    if (sirina == null || sirina <= 0) return const SizedBox.shrink();
+
+    return Image(
+      image: ResizeImage.resizeIfNeeded(
+        (sirina * MediaQuery.devicePixelRatioOf(context)).round(),
+        null,
+        CachedNetworkImageProvider(url),
+      ),
+      fit: BoxFit.contain,
+      width: double.infinity,
+      gaplessPlayback: true,
+      errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+    );
   }
 }

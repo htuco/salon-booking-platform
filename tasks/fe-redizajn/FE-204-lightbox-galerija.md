@@ -35,20 +35,37 @@ Slika iz galerije otvara se u fullscreen lightbox sa shared-element prelazom.
 - Storage još ne postoji (Sprint 5), pa su svi URL-ovi vanjski — keširanje i mjerenje se rade nad
   tim stanjem, ne nad budućim bucketom.
 
-## Status
+## Status (2026-09-23)
 
-Gotov u kodu, dokazan widget testovima; **nije viđen na uređaju**.
+Gotov u kodu i **viđen na emulatoru** (Pixel 9, API 36, flavor `barberstudiovitez`, 30 slika,
+animacije usporene 10× preko `ext.flutter.timeDilation` da se let uhvati screenshotom).
 
 - [x] `Hero` 260 ms — ruta je `PageRouteBuilder`, ne `showDialog`: `Hero` leti samo između
       `PageRoute`-ova, u dijalogu let se tiho ne desi. Tag je `(indeks, url)`, pa dupla slika u
       nizu ne ruši ekran.
-- [x] Swipe lijevo/desno lista, swipe dolje zatvara (prag 120 px ili brzina 700).
+- [x] Swipe lijevo/desno lista (na uređaju 20 swipeova, 5 → 25 / 30), swipe dolje zatvara
+      (prag 120 px ili brzina 700; na uređaju 14 / 30 → mreža).
 - [x] Brojač gore desno, ✕ lijevo.
 - [x] Zatvaranje sa druge slike — lightbox javlja indeks (`onIndeks`), mreža skroluje da ćelija bude
-      na ekranu prije `pop`-a. Test na 402×874 sa 30 slika; sabotaža (bez skrola) obara tačno njega.
+      na ekranu prije `pop`-a. Na uređaju: ušlo sa 5, izašlo sa 25, slika sleti u svoju ćeliju.
+      Widget test na 402×874 sa 30 slika; sabotaža (bez skrola) obara tačno njega.
 - [x] Pinch ne otima swipe — na 1× nema `InteractiveViewer`-a; recognizer sluša samo dva prsta.
       `InteractiveViewer` preuzima tek uvećanu sliku, a tada `PageView` i swipe dolje stoje.
 
-**Ostaje:** pogledati let i pinch na pravom uređaju (`/verify`) — widget test ne vidi „skok"
-animacije ni osjećaj geste. Nestanak struje je 2026-09-23 prepisao dva fajla ove grane NUL
-bajtovima; `gallery_lightbox.dart` i test su ponovo napisani od `main`-a.
+**Emulator je našao dvije greške koje 15 widget testova nije** — oba leta su bila prazna:
+
+- **Otvaranje:** let crta dijete lightboxa, a puna slika se u 260 ms još dekodira → leti prazan
+  pravougaonik. Placeholder je sada sličica (`ResizeImage` iste širine kao u `PhotoFrame`-u, isti
+  ključ u memorijskom kešu), pa slika postoji od prvog framea.
+- **Zatvaranje:** Flutter po defaultu crta dijete *odredišnog* `Hero`-a, tj. ćeliju mreže. Njen
+  `LayoutBuilder` u letu dobije veliku širinu, `PhotoFrame` traži sličicu koju keš nema → leti
+  prazan okvir. `GalleryLightbox.letjelica` pri zatvaranju crta sliku iz lightboxa.
+
+**Nije dokazano:** pinch na uređaju (`adb input` nema multi-touch — samo widget test), iOS, i
+osjećaj brzine na pravom telefonu (emulator je debug build).
+
+**Usput viđeno, nije FE-204:** `home/widgets/staff_grid.dart:30` u prvom frameu dobije negativnu
+širinu (`w=-4.0`) i crta crveni `ErrorWidget` u debug buildu; nestane nakon prvog layouta.
+
+Nestanak struje je 2026-09-23 prepisao dva fajla ove grane NUL bajtovima; `gallery_lightbox.dart`
+i test su ponovo napisani od `main`-a.

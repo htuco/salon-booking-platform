@@ -39,17 +39,19 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     super.dispose();
   }
 
+  /// Strana ćelije — ista računica koju `gridDelegate` radi za `LayoutBuilder` u ćeliji.
+  double get _celija =>
+      ((context.size?.width ?? 0) -
+          2 * AppSpacing.gutter -
+          (GalleryScreen._kolona - 1) * AppSpacing.sm) /
+      GalleryScreen._kolona;
+
   /// Skroluje mrežu tako da je ćelija [indeks] vidljiva, da `Hero` ima gdje sletjeti kad
   /// se lightbox zatvori sa druge slike (FE-204).
   void _pokaziCeliju(int indeks) {
     if (!_skrol.hasClients) return;
     final pozicija = _skrol.position;
-    final sirina = context.size?.width ?? 0;
-    final celija =
-        (sirina -
-            2 * AppSpacing.gutter -
-            (GalleryScreen._kolona - 1) * AppSpacing.sm) /
-        GalleryScreen._kolona;
+    final celija = _celija;
     final vrhMreze = _zaglavlje.currentContext?.size?.height ?? 0;
     final vrh =
         vrhMreze + (indeks ~/ GalleryScreen._kolona) * (celija + AppSpacing.sm);
@@ -166,12 +168,15 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                                     urls: urls,
                                     initialIndex: i,
                                     onIndeks: _pokaziCeliju,
+                                    sirinaSlicice: _celija,
                                   ),
                                   // `PhotoFrame` bez `size`-a bi crtao fiksni kvadrat; unutar
                                   // grid ćelije veličinu diktira `gridDelegate`, pa slika ide
                                   // preko `LayoutBuilder`-a.
                                   child: Hero(
                                     tag: GalleryLightbox.heroTag(i, urls[i]),
+                                    flightShuttleBuilder:
+                                        GalleryLightbox.letjelica,
                                     child: LayoutBuilder(
                                       builder: (context, constraints) =>
                                           PhotoFrame(
