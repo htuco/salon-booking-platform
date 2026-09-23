@@ -42,6 +42,27 @@ void main() {
     // Nedjelja namjerno nedostaje — dan bez reda je zatvoren dan.
   ];
 
+  testWidgets(
+    'dugme stoji na istom mjestu u kosturu i kad salon stigne (FE-301)',
+    (tester) async {
+      // Isti kvar kao na Početnoj: kostur je crtao hero od 320 plus razmak, pravi hero je
+      // 420 bez razmaka. Dugme je skakalo 78 px kad salon stigne.
+      final salon = Completer<Salon>();
+      await pumpEkran(tester, ruta: ruta, salonBuilder: () => salon.future);
+
+      final kostur = find.byWidgetPredicate(
+        (w) => w is SkeletonLoader && w.height == AppSize.ctaHeight,
+      );
+      final vrhKostura = tester.getTopLeft(kostur.first).dy;
+
+      salon.complete(demoSalon);
+      await tester.pump();
+      await tester.pump();
+
+      expect(tester.getTopLeft(find.byType(AppButton).first).dy, vrhKostura);
+    },
+  );
+
   group('regresija taska 18 je zatvorena', () {
     testWidgets('radno vrijeme je opet u aplikaciji, i to puna sedmica', (
       tester,

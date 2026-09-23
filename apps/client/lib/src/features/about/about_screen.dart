@@ -87,7 +87,7 @@ class _Ucitan extends ConsumerWidget {
         SliverToBoxAdapter(
           child: HomeHero(
             salon: salon,
-            status: _statusTekst(l10n, status),
+            status: salonStatusLabel(l10n, status),
             otvoren: status is SalonOpen,
           ),
         ),
@@ -129,13 +129,6 @@ class _Ucitan extends ConsumerWidget {
   }
 }
 
-String _statusTekst(AppLocalizations l10n, SalonStatus status) =>
-    switch (status) {
-      SalonOpen(:final until) => l10n.openUntil(until.format()),
-      SalonOpensLater(:final at) => l10n.closedOpensAt(at.format()),
-      SalonClosedToday() => l10n.closedToday,
-    };
-
 /// Skeleton koji ponavlja raspored ekrana, pa sadržaj ne poskoči kad stigne.
 class _Kostur extends StatelessWidget {
   const _Kostur();
@@ -145,8 +138,9 @@ class _Kostur extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          const SkeletonLoader(height: 320, radius: 0),
-          const SizedBox(height: AppSpacing.xl),
+          // Ista visina kao pravi hero i **bez razmaka ispod** — CTA mora stajati tačno
+          // gdje će stajati kad salon stigne (FE-301, test „CTA stoji na istom mjestu").
+          const SkeletonLoader(height: HomeHero.visinaSlike, radius: 0),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
             child: Column(

@@ -21,11 +21,11 @@ koje handoff zove `design_handoff_salon_booking/screenshots/`, samo pod putanjom
 površina se zato gradi tako da dolazak prave slike ne pomjeri ništa ispod nje.
 
 ## Definicija gotovog
-- [ ] Primarni CTA je jedini naglašeni element na ekranu
-- [ ] Hero se učitava sa placeholderom, bez pomjeranja sadržaja kad slika stigne
-- [ ] Tekst dolazi iz `vertical.terms`, ne iz canvasa — „Majstori" je barber terminologija
-- [ ] Boja naglaska dolazi iz `tenant.yaml`, ne iz handoff hex-a
-- [ ] Postojeći testovi ekrana prepisani, ne obrisani
+- [x] Primarni CTA je jedini naglašeni element na ekranu
+- [x] Hero se učitava sa placeholderom, bez pomjeranja sadržaja kad slika stigne
+- [x] Tekst dolazi iz `vertical.terms`, ne iz canvasa — „Majstori" je barber terminologija
+- [x] Boja naglaska dolazi iz `tenant.yaml`, ne iz handoff hex-a
+- [x] Postojeći testovi ekrana prepisani, ne obrisani
 
 ## Zamke
 - **Iz handoffa se uzima oblik, ne boja i ne tekst** (`CLAUDE.md`, tvrdo pravilo). Hardkodiran hex
@@ -35,4 +35,35 @@ površina se zato gradi tako da dolazak prave slike ne pomjeri ništa ispod nje.
 
 ## Status
 
-Nije počet.
+**Gotovo, dokazano.** Grana `feat/fe-301-pocetna-i-o-nama`.
+
+### Ekrani su već bili po handoffu — posao je bio jedan stvaran kvar
+
+Oba ekrana su redizajnirana još u taskovima 18–20: hero, CTA, Cjenovnik, tim, Galerija,
+Recenzije, „O nama" sa pričom, radnim vremenom i kontaktom. Četiri od pet DoD stavki su
+stajale prije prve izmjene:
+
+- **CTA je jedini naglašen** — „Prikaži svih N" i CTA na `/about` su `outline`.
+- **Tekst iz `vertical.terms`** — CTA (`bookCta`), naslov tima (`staffPlural`) i
+  naslov bez cijena (`servicePlural`); drži ih postojeći test „naslovi sekcija i CTA
+  dolaze iz vertical.terms".
+- **Boja iz tenanta** — grep `0x…`/`Color(`/`Colors.` u `home/` i `about/` ne vraća ništa.
+- **Testovi ekrana** — zadržani i dopunjeni, nijedan obrisan.
+
+### Šta je popravljeno: hero je skakao pri učitavanju
+
+Kostur je crtao hero od **320** i razmak `xl` ispod njega; pravi hero je **420** bez
+razmaka. CTA je zato poskočio **78 px** nadolje tačno kad salon stigne — na obje rute.
+`HomeHero.visinaSlike` je sada javna konstanta i oba kostura je koriste; razmak je uklonjen.
+
+Usput: `_statusTekst` je bio prepisan u oba ekrana — sada je jedan `salonStatusLabel`
+uz `HomeHero`.
+
+### Dokaz
+
+- Dva nova testa (`home_screen_test`, `about_screen_test`) mjere **vrh** CTA-a u kosturu
+  i nakon učitavanja. Sabotaža (vraćen razmak) daje `Expected 442.0, Actual 420.0`.
+- Klijent **252 testa PASS**, `flutter analyze` čist.
+- Demo web build na 402×874: raspored prati `01-pocetna.png`, CTA u boji tenanta.
+  Sam skok se u demou **ne vidi** — provideri su stubovani i podaci stižu odmah — zato
+  je pokriven testom, ne tvrdnjom.

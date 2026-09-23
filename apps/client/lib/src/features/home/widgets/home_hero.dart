@@ -3,6 +3,20 @@ import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 
+import '../../../l10n/generated/app_localizations.dart';
+import '../salon_schedule.dart';
+
+/// Živi status iz `docs/02 §3`, računat iz `WorkingHour`-a, ne napisan.
+///
+/// Stoji uz hero jer ga crtaju dva ekrana (Početna i `/about`) — dvije kopije istog
+/// `switch`-a bi se razišle pri prvom novom stanju salona.
+String salonStatusLabel(AppLocalizations l10n, SalonStatus status) =>
+    switch (status) {
+      SalonOpen(:final until) => l10n.openUntil(until.format()),
+      SalonOpensLater(:final at) => l10n.closedOpensAt(at.format()),
+      SalonClosedToday() => l10n.closedToday,
+    };
+
 /// Vrh Početne — fotografija preko cijele širine, ime salona u serifu, živi status.
 ///
 /// `prototype/ui/` `01-pocetna.png`: slika se **stapa sa pozadinom** umjesto da se
@@ -41,7 +55,7 @@ class HomeHero extends StatelessWidget {
   /// 420 je sredina: fotografija dobija zraka, a CTA i prva usluga i dalje ulaze u prvi ekran
   /// na telefonu od 812 pt. Naslov i status vise ne zavise od ove vrijednosti — lijepe se za
   /// dno (v. `Positioned` u `build`) — pa se ovaj broj mijenja sam, bez pomjeranja teksta.
-  static const double _visinaSlike = 420;
+  static const double visinaSlike = 420;
 
   @override
   Widget build(BuildContext context) {
@@ -50,18 +64,18 @@ class HomeHero extends StatelessWidget {
     return Stack(
       children: [
         SizedBox(
-          height: _visinaSlike,
+          height: visinaSlike,
           width: double.infinity,
           child: _Cover(salon: salon),
         ),
-        Positioned.fill(child: _Scrim(visina: _visinaSlike)),
+        Positioned.fill(child: _Scrim(visina: visinaSlike)),
         // **Naslov i status se lijepe za dno fotografije, ne za procenat njene visine.**
-        // Ranije je ovo bio `Padding` sa `top: _visinaSlike * 0.55`. Kako je sadrzaj ispod
+        // Ranije je ovo bio `Padding` sa `top: visinaSlike * 0.55`. Kako je sadrzaj ispod
         // fiksne visine (~132), svaki piksel dodan heroju isao je pola u razmak iznad teksta
         // a pola u **praznu traku ispod njega**: na 320 je ta traka bila ~12 px, na 420 je
         // narasla na ~57 i vidjela se kao rupa izmedju statusa i CTA dugmeta.
         //
-        // Ovako razmak do dna je konstanta, pa je `_visinaSlike` stvarno jedan broj koji se
+        // Ovako razmak do dna je konstanta, pa je `visinaSlike` stvarno jedan broj koji se
         // mijenja bez posljedica po raspored — sto je ranija verzija obecavala a nije radila.
         Positioned(
           left: AppSpacing.gutter,
