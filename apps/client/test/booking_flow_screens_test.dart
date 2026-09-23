@@ -3,6 +3,7 @@ import 'package:client/src/core/env/app_env.dart';
 import 'package:client/src/core/router/app_router.dart';
 import 'package:client/src/features/booking/booking_flow_provider.dart';
 import 'package:client/src/features/booking/booking_identity.dart';
+import 'package:client/src/features/booking/booking_submit_provider.dart';
 import 'package:client/src/features/booking/details_step_screen.dart';
 import 'package:client/src/features/booking/employee_step_screen.dart';
 import 'package:client/src/features/booking/service_step_screen.dart';
@@ -351,6 +352,46 @@ void main() {
       expect(find.text('ZAHTJEV JE POSLAN'), findsNothing);
       expect(find.text('Na čekanju'), findsNothing);
       await tester.pump(AppDuration.slow);
+
+      container.dispose();
+    });
+
+    testWidgets('back sa success ekrana vodi na Početnu i čisti flow', (
+      tester,
+    ) async {
+      // Flow ide kroz `context.go`, pa ispod success ekrana nema rute. Bez `PopScope`
+      // sistemski back na Androidu zatvara aplikaciju umjesto da vodi na Početnu.
+      final repo = _MockBooking()..stubUspjesan();
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        ruta: ClientRoute.bookDetails.path,
+        customerId: _customerId,
+        deviceId: 'registered-device-id',
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
+      );
+
+      await tester.pump();
+      await tester.tap(find.text('Pošalji zahtjev'));
+      await tester.pump();
+      await tester.pump();
+      expect(container.read(lastBookingProvider), isNotNull);
+
+      final obradjeno = await tester.binding.handlePopRoute();
+      await tester.pump();
+      await tester.pump(AppDuration.slow);
+
+      expect(obradjeno, isTrue, reason: 'back ne smije izaći iz aplikacije');
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        ClientRoute.home.path,
+      );
+      // Zapamćeni termin se čisti na izlasku — sljedeći booking ne smije zateći stari.
+      expect(container.read(lastBookingProvider), isNull);
 
       container.dispose();
     });

@@ -57,121 +57,135 @@ class BookingSuccessScreen extends ConsumerWidget {
         ? null
         : services.where((s) => s.id == appointment.serviceId).firstOrNull;
 
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                // Hero površina. Prave fotografije još nema (`prototype/ui/README.md`:
-                // svih 45 slotova su placeholderi), pa stoji brand prelaz — ne prazan
-                // prostor, koji bi skratio ekran i pomjerio sve ispod kad slika stigne.
-                const _Hero(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.gutter,
-                    AppSpacing.xxl,
-                    AppSpacing.gutter,
-                    AppSpacing.xxl,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        potvrdjen
-                            ? l10n.bookingSuccessKickerConfirmed
-                            : l10n.bookingSuccessKicker,
-                        style: kicker(color: scheme.onSurfaceVariant),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        potvrdjen
-                            ? l10n.bookingSuccessHeadlineConfirmed
-                            : l10n.bookingSuccessHeadline,
-                        style: theme.textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        potvrdjen
-                            ? l10n.bookingSuccessBodyConfirmed
-                            : l10n.bookingSuccessBody,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
+    // Flow i zapamćeni termin se čiste **na izlasku**, ne pri otvaranju ovog ekrana:
+    // `pop` na uređaju bi inače vratio korisnika na prazan sažetak.
+    void izadji(String ruta) {
+      ref.read(bookingFlowProvider.notifier).reset();
+      ref.read(lastBookingProvider.notifier).clear();
+      context.go(ruta);
+    }
+
+    // Flow ide kroz `context.go`, pa ispod ovog ekrana nema ničega: sistemski back bi
+    // na Androidu zatvorio aplikaciju. Termin je poslan — u flow se ne vraća, back vodi
+    // na Početnu.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) izadji(ClientRoute.home.path);
+      },
+      child: Scaffold(
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  // Hero površina. Prave fotografije još nema (`prototype/ui/README.md`:
+                  // svih 45 slotova su placeholderi), pa stoji brand prelaz — ne prazan
+                  // prostor, koji bi skratio ekran i pomjerio sve ispod kad slika stigne.
+                  const _Hero(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.gutter,
+                      AppSpacing.xxl,
+                      AppSpacing.gutter,
+                      AppSpacing.xxl,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          potvrdjen
+                              ? l10n.bookingSuccessKickerConfirmed
+                              : l10n.bookingSuccessKicker,
+                          style: kicker(color: scheme.onSurfaceVariant),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.xxl),
-                      if (appointment != null)
-                        SpecCard(
-                          header: Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                appointment.startTime.format(),
-                                style: theme.textTheme.displayMedium,
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          potvrdjen
+                              ? l10n.bookingSuccessHeadlineConfirmed
+                              : l10n.bookingSuccessHeadline,
+                          style: theme.textTheme.displaySmall,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
+                          potvrdjen
+                              ? l10n.bookingSuccessBodyConfirmed
+                              : l10n.bookingSuccessBody,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xxl),
+                        if (appointment != null)
+                          SpecCard(
+                            header: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  appointment.startTime.format(),
+                                  style: theme.textTheme.displayMedium,
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Text(
+                                    formatDateWithWeekday(
+                                      l10n,
+                                      appointment.date,
+                                    ),
+                                    style: theme.textTheme.titleSmall,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            rows: [
+                              SpecRow(
+                                label: vertical.terms.serviceSingular,
+                                value: usluga == null
+                                    ? null
+                                    : vertical.features.prices
+                                    ? '${usluga.name} · ${formatPrice(usluga.price)}'
+                                    : usluga.name,
                               ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Text(
-                                  formatDateWithWeekday(l10n, appointment.date),
-                                  style: theme.textTheme.titleSmall,
+                              SpecRow(
+                                label: l10n.bookingStatusLabel,
+                                trailing: StatusBadge(
+                                  label: statusLabel(l10n, appointment.status),
+                                  tone: statusTone(appointment.status),
                                 ),
                               ),
                             ],
                           ),
-                          rows: [
-                            SpecRow(
-                              label: vertical.terms.serviceSingular,
-                              value: usluga == null
-                                  ? null
-                                  : vertical.features.prices
-                                  ? '${usluga.name} · ${formatPrice(usluga.price)}'
-                                  : usluga.name,
-                            ),
-                            SpecRow(
-                              label: l10n.bookingStatusLabel,
-                              trailing: StatusBadge(
-                                label: statusLabel(l10n, appointment.status),
-                                tone: statusTone(appointment.status),
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: AppSpacing.lg),
+                        AppButton(
+                          label: l10n.bookingAddToCalendar,
+                          variant: AppButtonVariant.outline,
+                          // Kalendar uređaja dolazi sa "Moji termini" u Sprintu 2 —
+                          // dugme stoji jer je dio ekrana, ali se ne pretvara da radi.
+                          onPressed: null,
                         ),
-                      const SizedBox(height: AppSpacing.lg),
-                      AppButton(
-                        label: l10n.bookingAddToCalendar,
-                        variant: AppButtonVariant.outline,
-                        // Kalendar uređaja dolazi sa "Moji termini" u Sprintu 2 —
-                        // dugme stoji jer je dio ekrana, ali se ne pretvara da radi.
-                        onPressed: null,
-                      ),
-                    ],
-                  ).animate().fadeIn(duration: AppDuration.slow),
-                ),
-              ],
+                      ],
+                    ).animate().fadeIn(duration: AppDuration.slow),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.gutter,
-              0,
-              AppSpacing.gutter,
-              AppSpacing.lg,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.gutter,
+                0,
+                AppSpacing.gutter,
+                AppSpacing.lg,
+              ),
+              child: AppButton(
+                label: vertical.terms.myAppointments,
+                onPressed: () => izadji(ClientRoute.appointments.path),
+              ),
             ),
-            child: AppButton(
-              label: vertical.terms.myAppointments,
-              onPressed: () {
-                // Flow i zapamćeni termin se čiste **na izlasku**, ne pri otvaranju ovog
-                // ekrana: `pop` na uređaju bi inače vratio korisnika na prazan sažetak.
-                ref.read(bookingFlowProvider.notifier).reset();
-                ref.read(lastBookingProvider.notifier).clear();
-                context.go(ClientRoute.appointments.path);
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
