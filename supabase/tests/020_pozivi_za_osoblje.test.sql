@@ -141,7 +141,8 @@ select lives_ok(format($$ select public.revoke_staff_invite('550e8400-e29b-41d4-
 select throws_ok(format($$ select public.revoke_staff_invite('550e8400-e29b-41d4-a716-446655440000', %L) $$,
   (select invite_id from poziv)), 'PT404', null, 'Iskoristen poziv se ne povlaci');
 create temporary table poziv_istekao as
-select * from public.create_staff_invite('550e8400-e29b-41d4-a716-446655440000', 'employee', 'Emir');
+select * from public.create_staff_invite('550e8400-e29b-41d4-a716-446655440000', 'employee', 'Emir',
+  '20000000-0000-4000-8000-000000000002');
 reset role;
 grant select on poziv_istekao to public;
 update public.staff_invites set expires_at = now() - interval '1 minute'

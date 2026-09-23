@@ -18,15 +18,15 @@ isključuje `employee`. Takav nalog danas nema **nijedno** pravo. Uz to, `public
 koja bi nalog vezala za red u `employees`.
 
 ## Definicija gotovog
-- [ ] `public.users.employee_id` — FK na `employees(salon_id, id)`, obavezan kad je uloga `employee`
-- [ ] `private.is_employee(p_salon)` i `private.current_employee_id()`
-- [ ] Politike: radnik čita i mijenja **svoje** termine; cjenovnik, osoblje i postavke su mu čitanje
+- [x] `public.users.employee_id` — FK na `employees(salon_id, id)`, obavezan kad je uloga `employee`
+- [x] `private.is_employee(p_salon)` i `private.current_employee_id()`
+- [x] Politike: radnik čita i mijenja **svoje** termine; cjenovnik, osoblje i postavke su mu čitanje
       ili ništa, po odluci iz ADR-a
-- [ ] `set_appointment_status` i `cancel_appointment` prihvataju radnika **samo** za njegove termine
-- [ ] pgTAP: radnik A ne vidi termine radnika B; ne mijenja tuđi termin; ne mijenja cjenovnik; ne
+- [x] `set_appointment_status` i `cancel_appointment` prihvataju radnika **samo** za njegove termine
+- [x] pgTAP: radnik A ne vidi termine radnika B; ne mijenja tuđi termin; ne mijenja cjenovnik; ne
       vidi drugi salon
-- [ ] Deno REST test sa **stvarnim** JWT-om radnika — pgTAP ne dokazuje PostgREST sloj
-- [ ] `.claude/docs/security.md` dobija red za `employee` u tabeli uloga
+- [x] Deno REST test sa **stvarnim** JWT-om radnika — pgTAP ne dokazuje PostgREST sloj
+- [x] `.claude/docs/security.md` dobija red za `employee` u tabeli uloga
 
 ## Zamke
 - **Ovo mijenja model autorizacije.** Do sada je `is_admin()` bila jedina kapija za osoblje. Svaka
@@ -35,6 +35,21 @@ koja bi nalog vezala za red u `employees`.
   i zapiši; tiho izostavljanje znači da termin nestane iz svih pogleda.
 - `rls-auditor` subagent ide prije PR-a.
 
-## Status
+## Status (2026-09-24)
 
-Nije počet.
+Kod gotov i dokazan — PR čeka `rls-auditor` pregled prije merge-a (zamka iz ovog fajla).
+
+- Migracija `20260924160000_uloga_employee.sql` je **aditivna**: `is_admin()` netaknut, sve
+  `staff_manage` politike i RPC-evi pisanja ostaju admin-only (pregled svake je u zaglavlju
+  migracije). Nove: `users.employee_id`, `is_employee`, `current_employee_id`,
+  `can_manage_appointment`, politike `employee_own` i `employee_blocks`.
+- **Termin bez radnika vidi samo admin** — zapisano u `security.md` i ADR-0013.
+- Poziv za radnika mora nositi radnika bez naloga; pozivi iz taska 45 bez radnika su povučeni,
+  a nalog radnika bez veze nema prava (`check` je `not valid` za stare redove).
+- Admin: poziv za radnika bira radnika iz Osoblja umjesto kucanja imena.
+- Dokaz: `supabase test db` **588 PASS** (`021` nosi 37). Sabotaže: politika bez uslova na
+  radnika obara 3, kapija bez vlasništva termina obara 2. `rest_employee_izolacija.ts` **13 PASS**
+  sa stvarnim JWT-om radnika; svih 12 REST testova zeleno (284 provjere). `melos run test` PASS
+  (admin 429), analyze i format čisti.
+- Nije viđeno uživo: radnik se još ne može prijaviti u aplikaciju — to je task 47.
+

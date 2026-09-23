@@ -1,28 +1,33 @@
-# Trenutni task: 45 — Kreiranje naloga za osoblje
+# Trenutni task: 46 — Uloga `employee` i sužena izolacija
 
-Puni task: [tasks/sprint-4/45-nalozi-za-osoblje.md](sprint-4/45-nalozi-za-osoblje.md) · učitan 2026-09-24
+Puni task: [tasks/sprint-4/46-uloga-employee-i-izolacija.md](sprint-4/46-uloga-employee-i-izolacija.md) · učitan 2026-09-24
 
 ## Status
 
-Gotov — čeka review i merge PR #105, pa `supabase db push` i `supabase functions deploy accept-staff-invite`
+U toku — kod i dokaz gotovi, čeka `rls-auditor` i review
 
 ## Ciljevi
 
-- [x] Poziv iz admina (odluka 2026-09-24: kod/link umjesto emaila — najlakše za vlasnika, bez SMTP-a; ADR-0023)
-- [x] Uloga iz zatvorene liste, `super_admin` isključen (RPC + `check`)
-- [x] `app_metadata` postavlja Edge Function `accept-staff-invite`, iz poziva
-- [x] Poziv ističe (7 dana) i može se povući
-- [x] pgTAP `020` + REST `rest_pozivi_osoblja.ts`
-- [x] Uklanjanje: pristup prestaje, istorija ostaje (`remove_staff_user`, `security.md`)
-- [x] Viđeno uživo: poziv iz admina → `/pozivnica` → novi vlasnik na početnoj
+- [x] `users.employee_id`, `is_employee`, `current_employee_id`
+- [x] Politike: radnik čita svoje termine; ostalo admin-only ili javno čitanje
+- [x] `set_appointment_status` / `cancel_appointment` samo za njegov termin
+- [x] pgTAP `021` + REST `rest_employee_izolacija.ts` sa stvarnim JWT-om
+- [x] `security.md` red za radnika
+- [ ] `rls-auditor` pregled prije merge-a
 
 ## Napomene
 
-- Redoslijed bloka je 45 → 46 → 47 (task fajlovi), ne 47 → 46 → 45.
-- Radnik (`employee`) poslije poziva ima nalog, ali ga router pušta tek u 46/47.
-- Hostovani: `supabase db push`, pa `supabase functions deploy accept-staff-invite`.
+- Sljedeći: task 47 (admin ljuska za radnika) — zadnji u sprintu 4. Poslije toga nema
+  raspisanih taskova; Sprint 5 (slike, ADR-0015) treba raspisati.
+- Hostovani poslije merge-a: `supabase db push`.
 
 ## Istorija
+
+### 45 — Kreiranje naloga za osoblje (gotov)
+
+Spojen u `main` ([PR #105](https://github.com/htuco/salon-booking-platform/pull/105)) 2026-09-24,
+migracija i `accept-staff-invite` na hostovanom projektu. Nalog osoblja nastaje iz koda poziva
+(ADR-0023).
 
 ### 44 — Postavke i pravila salona jasnija (gotov)
 

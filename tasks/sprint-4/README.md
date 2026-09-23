@@ -18,7 +18,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | [43](43-korak-po-usluzi.md) ✅ | Korak rezervacije po usluzi | feature | — | 1–2 dana |
 | [44](44-postavke-jasnije.md) ✅ | Postavke i pravila salona jasnija | feature | — | 1–2 dana |
 | [45](45-nalozi-za-osoblje.md) ✅ | Kreiranje naloga za osoblje | feature | 46, 47 | 2–3 dana |
-| [46](46-uloga-employee-i-izolacija.md) | Uloga `employee` i sužena izolacija | feature | 47 | 2–3 dana |
+| [46](46-uloga-employee-i-izolacija.md) 🟡 | Uloga `employee` i sužena izolacija | feature | 47 | 2–3 dana |
 | [47](47-admin-ljuska-za-radnika.md) | Admin ljuska za radnika | feature | — | 1–2 dana |
 
 Ukupno 13–19 dana. **To je više nego jedan sprint** i tako je i planirano: 37–41 su obavezni,

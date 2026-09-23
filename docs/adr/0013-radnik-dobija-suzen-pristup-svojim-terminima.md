@@ -49,6 +49,8 @@ PostgREST; ekran prati politiku, ne zamjenjuje je.
 - Termin **bez** dodijeljenog radnika (`employee_id is null`) nije ničiji. Vidi li ga radnik je
   odluka koja se donosi u tasku 46 i zapisuje — tiho izostavljanje znači da termin nestane iz svih
   pogleda osim admin.
+  **Odlučeno u tasku 46:** takav termin vidi samo admin. Radnik bi inače vidio klijente koji nisu
+  njegovi; dodjela radniku je posao admina, a termin i dalje stoji u admin pogledu.
 - Deno REST test sa stvarnim JWT-om radnika je obavezan uz pgTAP: pgTAP ne dokazuje PostgREST sloj.
 - Prije ovoga mora postojati način da se nalog uopšte napravi (task 45) — danas ga nema ni za
   `salon_admin`.

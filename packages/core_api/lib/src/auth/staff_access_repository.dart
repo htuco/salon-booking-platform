@@ -65,10 +65,17 @@ class StaffAccessRepository {
     required String salonId,
     required String role,
     required String name,
+    String? employeeId,
   }) => guard(() async {
     final rows = await _client.rpc<dynamic>(
       'create_staff_invite',
-      params: {'p_salon_id': salonId, 'p_role': role, 'p_name': name},
+      params: {
+        'p_salon_id': salonId,
+        'p_role': role,
+        'p_name': name,
+        // Obavezan za radnika (task 46): nalog se veže na red u `employees`.
+        'p_employee_id': employeeId,
+      },
     );
     final dynamic red = rows is List ? rows.single : rows;
     try {

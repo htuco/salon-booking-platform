@@ -56,10 +56,10 @@ async function prijava(email: string, password: string) {
   return r.body as { access_token: string; user: { id: string; app_metadata: Record<string, unknown> } };
 }
 
-async function poziv(token: string, role: string, name: string) {
+async function poziv(token: string, role: string, name: string, employeeId?: string) {
   const r = await call("/rest/v1/rpc/create_staff_invite", token, {
     method: "POST",
-    body: JSON.stringify({ p_salon_id: salonA, p_role: role, p_name: name }),
+    body: JSON.stringify({ p_salon_id: salonA, p_role: role, p_name: name, p_employee_id: employeeId ?? null }),
   });
   if (r.status !== 200) throw new Error(`create_staff_invite: HTTP ${r.status} ${JSON.stringify(r.body)}`);
   return (Array.isArray(r.body) ? r.body[0] : r.body) as { invite_id: string; code: string };
@@ -101,7 +101,7 @@ try {
   assert(tudje.status === 200 && tudje.body.length === 0, "Novi vlasnik ne vidi pozive drugog salona");
 
   // --- Uloga iz tijela zahtjeva se ignorise --------------------------------
-  const p2 = await poziv(vlasnikA.access_token, "employee", "Novi Radnik");
+  const p2 = await poziv(vlasnikA.access_token, "employee", "Novi Radnik", "20000000-0000-4000-8000-000000000001");
   const ok2 = await prihvati({
     code: p2.code,
     email: noviRadnik,
@@ -116,7 +116,7 @@ try {
   assert(nr.user.app_metadata.salon_id === salonA, "Salon dolazi iz poziva, ne iz zahtjeva");
 
   // --- Email koji vec ima nalog --------------------------------------------
-  const p3 = await poziv(vlasnikA.access_token, "employee", "Treci");
+  const p3 = await poziv(vlasnikA.access_token, "employee", "Treci", "20000000-0000-4000-8000-000000000002");
   const zauzet = await prihvati({ code: p3.code, email: "admin@barberstudiovitez.test", password: lozinka });
   assert(zauzet.status === 409, `Postojeci email daje 409, dobijeno ${zauzet.status}`);
   // Poziv ostaje ziv: neuspjelo prihvatanje ga ne trosi.
