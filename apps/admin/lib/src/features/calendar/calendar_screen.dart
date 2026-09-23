@@ -1311,13 +1311,26 @@ class _MobilnoZaglavlje extends ConsumerWidget {
           // „Termini". `metricNumber` je brojka u kartici metrike i promjena njene
           // veličine ne smije pomjeriti naslov.
           //
-          // **Bez datuma ispod**, kako `3l` crta: izabrani dan je istaknut u traci odmah
-          // ispod, a pun datum čitač ekrana dobija iz oznake ćelije.
+          // **Datum ispod, iako ga `3l` ne crta:** bez njega pri prelasku u drugu sedmicu
+          // nigdje ne piše mjesec — traka dana nosi samo dan i broj.
           Expanded(
-            child: Text(
-              'Kalendar',
-              style: AdminText.display,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Kalendar',
+                  style: AdminText.display,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  datumDugo(ref.watch(kalendarDatumProvider)),
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.adminColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
           _StrelicaDana(

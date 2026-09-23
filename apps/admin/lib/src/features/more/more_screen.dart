@@ -340,6 +340,12 @@ class _Upravljanje extends ConsumerWidget {
 
     return _Redovi(
       children: [
+        // Jedini ulaz u punu listu termina na telefonu: `3m` ekranu zahtjeva ne crta
+        // čipove koji su ranije vodili na „Svi", a `3t` nema drugo mjesto za nju.
+        _Red(
+          naslov: 'Svi termini',
+          onTap: () => context.go(AdminRoute.appointments.path),
+        ),
         for (final cilj in moduli)
           _Red(
             naslov: cilj.label,
