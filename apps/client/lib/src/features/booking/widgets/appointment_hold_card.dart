@@ -8,6 +8,7 @@ import '../../../core/vertical_provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../booking_flow_provider.dart';
 import '../date_labels.dart';
+import '../../../core/prikaz_cijena.dart';
 
 /// „Čuvamo vam — 14:30, srijeda 20.05. — Fade šišanje kod Emira".
 ///
@@ -88,7 +89,7 @@ class AppointmentHoldCard extends ConsumerWidget {
           ],
           const SizedBox(height: AppSpacing.md),
           Text(opis, style: theme.textTheme.bodyMedium),
-          if (usluga != null && vertical.features.prices) ...[
+          if (usluga != null && ref.watch(prikaziCijeneProvider)) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               '${formatDurationLong(usluga.durationMinutes)} · '

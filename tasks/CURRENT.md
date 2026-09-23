@@ -1,31 +1,35 @@
-# Trenutni task: 43 — Korak rezervacije po usluzi
+# Trenutni task: 44 — Postavke i pravila salona jasnija
 
-Puni task: [tasks/sprint-4/43-korak-po-usluzi.md](sprint-4/43-korak-po-usluzi.md) · učitan 2026-09-24
+Puni task: [tasks/sprint-4/44-postavke-jasnije.md](sprint-4/44-postavke-jasnije.md) · učitan 2026-09-24
 
 ## Status
 
-Gotov — čeka review i merge PR #103, pa `supabase db push`
+Gotov — čeka review i merge PR #104 (bez migracije)
 
 ## Ciljevi
 
-- [x] Migracija: `services.slot_step_minutes int null`, `check between 1 and 120` (isti raspon kao salonski)
-- [x] `get_available_slots` koristi `coalesce(usluga, salon)`; `book_appointment` ga već zove, pa provodi isti ugovor
-- [x] Upis koraka kroz postojeći RPC usluge (task 32) + `core_domain` model + `core_api`
-- [x] Admin editor usluge: polje „Korak" sa objašnjenjem i praznim = salonski
-- [x] pgTAP: korak 15 vs 30 daje različit broj slotova, prazno = salonski, rezervacija van koraka odbijena
-- [x] Viđeno uživo: klijentski booking flow nudi početke po koraku usluge
-- [x] `security.md`/`IMPLEMENTATION.md` ako se mijenja ugovor RPC-a
+- [x] Objašnjenje uz svaku postavku — rečenica šta mijenja za klijenta
+- [x] Grupisanje po temama — već isporučeno u tasku 36 (kartice), provjereno
+- [x] Živi primjer uz vremenske postavke (`settings_primjeri.dart`), tekst a ne slot
+- [x] `salon_policies` se uređuju iz admina — već isporučeno u tasku 36, provjereno
+- [x] Widget test: promjena roka mijenja tekst primjera
+- [x] **Proširenje (odluka 2026-09-24):** klijent čita `salon_settings` za granularnost, izbor
+      majstora, raspon kalendara i cijene; vertikala samo kao rezerva
+- [x] Viđeno uživo: prekidač u adminu mijenja klijentski ekran
 
 ## Napomene
 
-- Zavisnosti nema. Ništa nije isporučeno ranije — `services` nema kolonu koraka.
-- **Jedno mjesto računa korak:** `get_available_slots` u `20260914150000_admin_akcije_nad_terminima.sql`
-  (`cfg.step = st.slot_step_minutes`). `book_appointment` re-validira kroz njega, pa promjena tamo
-  pokriva i klijenta i admin ručni unos.
-- ADR-0014 je odluka; ne otvara se ponovo.
-- Zamka: trajanje ≠ korak. Snapshot termina ne nosi korak.
+- Nalaz: četiri admin postavke nisu imale efekta u klijentu — čitao je vertikalu.
+- „Dozvoli izbor majstora" je pisao `require_staff_choice = true`, što znači **obavezan**
+  izbor; labela preimenovana u „Klijent mora izabrati majstora".
 
 ## Istorija
+
+### 43 — Korak rezervacije po usluzi (gotov)
+
+Spojen u `main` ([PR #103](https://github.com/htuco/salon-booking-platform/pull/103)) 2026-09-24,
+migracija na hostovanom projektu. `services.slot_step_minutes`, prazno = salonski; 514 pgTAP
+asercija, viđeno uživo u adminu i klijentskom booking flowu.
 
 ### 42 — Neradni dan i zaključana prošlost (gotov)
 

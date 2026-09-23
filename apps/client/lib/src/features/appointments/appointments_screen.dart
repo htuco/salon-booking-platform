@@ -9,11 +9,11 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/load_error.dart';
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
-import '../../core/vertical_provider.dart';
 import '../../features/booking/date_labels.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'appointment_labels.dart';
 import 'appointments_provider.dart';
+import '../../core/prikaz_cijena.dart';
 
 /// `/appointments` — „Moji termini", `prototype/ui/SPEC.md` **5h**.
 ///
@@ -233,7 +233,6 @@ class _Kartica extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final vertical = verticalOf(ref);
 
     final usluge = ref.watch(servicesProvider).valueOrNull;
     final usluga = usluge
@@ -286,7 +285,7 @@ class _Kartica extends ConsumerWidget {
               ),
             ],
           ),
-          if (usluga != null && vertical.features.prices) ...[
+          if (usluga != null && ref.watch(prikaziCijeneProvider)) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
               '${formatDurationLong(usluga.durationMinutes)} · '

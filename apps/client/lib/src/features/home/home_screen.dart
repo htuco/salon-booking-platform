@@ -17,6 +17,7 @@ import 'widgets/home_hero.dart';
 import 'widgets/home_section.dart';
 import 'widgets/rating_summary.dart';
 import 'widgets/staff_grid.dart';
+import '../../core/prikaz_cijena.dart';
 
 /// Home ekran — prvi pravi ekran i šablon za sve ostale (`docs/02 §3`).
 ///
@@ -129,7 +130,7 @@ class _Ucitan extends ConsumerWidget {
         SliverToBoxAdapter(
           child: _CjenovnikSekcija(
             services: services,
-            prikaziCijene: vertical.features.prices,
+            prikaziCijene: ref.watch(prikaziCijeneProvider),
             naslovBezCijena: vertical.terms.servicePlural,
           ),
         ),

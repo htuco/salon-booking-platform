@@ -5,7 +5,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
@@ -47,7 +46,6 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final vertical = verticalOf(ref);
     final flow = ref.watch(bookingFlowProvider);
     final dateOnly = ref.watch(bookingDateOnlyProvider);
     final danas = ref.watch(bookingTodayProvider);
@@ -65,7 +63,7 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
 
     final spreman = flow.isStepComplete(BookingStep.slot, dateOnly: dateOnly);
     final mjesec = monthOffsetFrom(danas, _pomakMjeseci);
-    final raspon = daysFrom(danas, vertical.rules.maxAdvanceBookingDays);
+    final raspon = daysFrom(danas, ref.watch(bookingMaxAdvanceDaysProvider));
 
     final dostupniDani = ref.watch(
       availableDatesProvider(

@@ -195,17 +195,33 @@ void main() {
   });
 
   testWidgets('rok otkazivanja kaže da vrijedi odmah', (tester) async {
-    // DoD traži da promjena `min_cancel_hours` odmah mijenja klijentsko otkazivanje.
-    // Baza to provodi (`014_postavke_lokacije.test.sql`); ekran to mora i **reći**, jer
-    // vlasnik inače pretpostavi da pravilo vrijedi tek za nove termine.
+    // DoD taska 36 traži da promjena `min_cancel_hours` odmah mijenja klijentsko
+    // otkazivanje. Baza to provodi (`014_postavke_lokacije.test.sql`); ekran to mora i
+    // **reći**, jer vlasnik inače pretpostavi da pravilo vrijedi tek za nove termine.
     await _pumpAt(tester, _desktop, _screen());
 
-    await _doVidljivog(
-      tester,
-      find.text('Vrijedi odmah — i za već zakazane termine.'),
+    final poruka = find.textContaining(
+      'Vrijedi odmah — i za već zakazane termine.',
     );
+    await _doVidljivog(tester, poruka);
+    expect(poruka, findsOneWidget);
+  });
+
+  testWidgets('primjer uz rok otkazivanja prati upisani broj', (tester) async {
+    // Task 44: primjer se računa iz onoga što je **upisano**, ne iz snimljenog — vlasnik
+    // vidi posljedicu prije „Sačuvaj". `_postavke` nosi rok 3 h.
+    await _pumpAt(tester, _desktop, _screen());
+
+    final sa3 = find.textContaining('najkasnije u 6:00');
+    await _doVidljivog(tester, sa3);
+    expect(sa3, findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextFormField, '3'), '12');
+    await tester.pump();
+
+    expect(find.textContaining('najkasnije u 6:00'), findsNothing);
     expect(
-      find.text('Vrijedi odmah — i za već zakazane termine.'),
+      find.textContaining('najkasnije prethodnog dana u 21:00'),
       findsOneWidget,
     );
   });

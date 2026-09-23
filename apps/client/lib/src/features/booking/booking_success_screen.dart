@@ -14,6 +14,7 @@ import '../appointments/appointment_labels.dart';
 import 'booking_flow_provider.dart';
 import 'booking_submit_provider.dart';
 import 'date_labels.dart';
+import '../../core/prikaz_cijena.dart';
 
 /// Ekran nakon slanja (`prototype/ui/screenshots/07-zahtjev-poslan.png`).
 ///
@@ -145,7 +146,7 @@ class BookingSuccessScreen extends ConsumerWidget {
                                 label: vertical.terms.serviceSingular,
                                 value: usluga == null
                                     ? null
-                                    : vertical.features.prices
+                                    : ref.watch(prikaziCijeneProvider)
                                     ? '${usluga.name} · ${formatPrice(usluga.price)}'
                                     : usluga.name,
                               ),
