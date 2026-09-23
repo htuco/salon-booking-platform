@@ -10,10 +10,10 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 
 | # | Task | Aplikacija | Blokira | Procjena |
 |---|---|---|---|---|
-| [FE-101](FE-101-tokeni-boja.md) | Paleta kao tokeni | obje | FE-3xx, FE-4xx | 0,5–1 dan |
+| [FE-101](FE-101-tokeni-boja.md) | Paleta kao tokeni ✅ | obje | FE-3xx, FE-4xx | 0,5–1 dan |
 | ~~[FE-102](FE-102-tipografija-barlow.md)~~ | ~~Tipografija Barlow~~ — **neće se raditi** ([ADR-0019](../../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md)) | — | — | — |
-| [FE-103](FE-103-skala-razmaka.md) | Skala razmaka i tretman rubova | obje | — | 0,5–1 dan |
-| [FE-104](FE-104-ikone.md) | Ikone: jedna debljina (Lucide već uveden, [ADR-0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md)) | klijent | — | 0,5–1 dan |
+| [FE-103](FE-103-skala-razmaka.md) | Skala razmaka i tretman rubova ✅ | obje | — | 0,5–1 dan |
+| [FE-104](FE-104-ikone.md) | Ikone: jedna debljina (Lucide već uveden, [ADR-0017](../../docs/adr/0017-lucide-je-set-ikona-klijenta-material-ostaje-u-adminu.md)) ✅ | klijent | — | 0,5–1 dan |
 | [FE-201](FE-201-zamjena-default-tranzicije.md) | Jedna tranzicija na obje platforme 🟡 | klijent | FE-302 | 1–2 dana |
 | [FE-202](FE-202-tab-navigacija.md) | Prelaz između tabova ✅ | klijent | — | 1 dan |
 | [FE-203](FE-203-modali-i-bottom-sheet.md) | Modali i bottom sheet ✅ | obje | FE-304 | 1 dan |
@@ -32,7 +32,7 @@ pitanje. Svaki task zato nosi `## Zatečeno stanje` sa stvarnim fajlom i brojem 
 | [FE-405](FE-405-login.md) | Prijava (admin) | admin | — | 0,5 dan |
 | [FE-406](FE-406-desktop-fluidni-layout.md) | Desktop je fluidan, ne fiksni 1280 | admin | FE-402…FE-404 | 1–2 dana |
 | [FE-501](FE-501-stanja-i-skeletoni.md) | Stanja učitavanja, greške i prazna stanja ✅ | obje | — | 1–2 dana |
-| [FE-502](FE-502-pristupacnost.md) | Pristupačnost i kontrast | obje | — | 1–2 dana |
+| [FE-502](FE-502-pristupacnost.md) | Pristupačnost i kontrast ✅ | obje | — | 1–2 dana |
 | [FE-503](FE-503-ciscenje-legacy-stilova.md) | Čišćenje legacy stilova | obje | — | 1 dan |
 | [FE-504](FE-504-qa-prolaz.md) | QA prolaz kroz sve ekrane 🟡 | obje | — | 1–2 dana |
 | [FE-505](FE-505-demo-ulazi-pune-sve-ekrane.md) | Demo ulazi pune sve ekrane (nalaz FE-504) | obje | FE-504 | 0,5–1 dan |
@@ -175,6 +175,23 @@ na Početnoj i `/about`. Test mjeri vrh dugmeta, sabotaža ga obara. 252 testa.
 **✅ [FE-303](FE-303-zahtjev-poslan.md)** — grana `feat/fe-303-zahtjev-poslan`. Ekran je bio po handoffu
 od taska 37; popravljena back gesta, koja je na Androidu zatvarala aplikaciju (ispod `/book/success`
 nema rute). Sada vodi na Početnu i čisti flow. Test sa sabotažom, 253 testa. Na uređaju nije viđeno.
+
+**🟡 [FE-503](FE-503-ciscenje-legacy-stilova.md)** — grana `chore/fe-503-legacy-stilovi`. Uklonjen
+`AdminColors` (duplikat palete koji se već bio razišao, a čitali su ga samo testovi), mrtav token i
+zaobljena varijanta kostura. Grep provjere čiste. **Bundle je izmjeren i porastao je**: klijent
++23 KB (samo kod), admin +242 KB, od čega +100 KB pisma iz ADR-0020. Barlow Bold (108 KB) niko
+ne koristi, ali ga ADR-0020 propisuje, pa je to odluka za vlasnika.
+
+**✅ [FE-101](FE-101-tokeni-boja.md), [FE-103](FE-103-skala-razmaka.md), [FE-104](FE-104-ikone.md)** —
+spojeni u `main` ranije, tabela ih do FE-502 nije označavala. Status blok je u task fajlu.
+
+**✅ [FE-502](FE-502-pristupacnost.md)** — grana `feat/fe-502-pristupacnost`. Mjerenje prvo, popravke
+poslije: klijent (11 ruta, kontrast **na svakom tenantu**) i admin (11 ekrana, obje širine) sada
+mjere mete ≥ 44 px, labele, fokusabilnost, kontrast po WCAG-u i 130 % fonta. Prvi prolaz je pao
+24 puta. **Admin dugmad i kontrole su na 44 px**, svjesno iznad piksela iz `adminv2/`. Novi
+`AppTappable` u `core_ui` za tap preko slike, čuvar verzala u obje aplikacije. Nađena i
+popravljena prava greška: booking zaglavlje se lomilo na 390 px i na normalnom fontu.
+Fokus u browseru **nije viđen** — komanda je u task fajlu.
 
 **🟡 [FE-504](FE-504-qa-prolaz.md)** — grana `docs/fe-504-qa-prolaz`. Prvi prolaz na webu, na stanju
 `main` + #94 + #95. Snimljeno 100 prikaza: klijent na oba tenanta (402 i 360 px), admin na 1440,

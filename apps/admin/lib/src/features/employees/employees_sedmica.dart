@@ -137,10 +137,12 @@ String skracenicaOdsustva(String? razlog) {
     ..removeWhere((r) => r.isEmpty);
   if (rijeci.isEmpty) return 'ODS';
   if (rijeci.length >= 2) {
+    // verzal-ok: skraćenica, ne riječ; ćelija nosi puni razlog kao `semanticsLabel`.
     return (rijeci[0].characters.first + rijeci[1].characters.first)
         .toUpperCase();
   }
   final r = rijeci.first;
+  // verzal-ok: skraćenica, ne riječ; ćelija nosi puni razlog kao `semanticsLabel`.
   return (r.length <= 3 ? r : r.substring(0, 3)).toUpperCase();
 }
 

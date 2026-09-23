@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/pristupacnost.dart';
+
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 const _desktop = Size(1440, 900);
 const _telefon = Size(402, 874);
@@ -187,6 +189,8 @@ Future<void> _doDna(WidgetTester tester) async {
 }
 
 void main() {
+  pristupacnostEkrana('Radno vrijeme', _screen);
+
   testWidgets('desktop crta svih sedam dana, pauzu i zatvorenu nedjelju', (
     tester,
   ) async {

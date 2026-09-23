@@ -128,8 +128,8 @@ void main() {
   group('statusni tonovi', () {
     test('svaki status ima svoj par, a otkazan i no-show se razlikuju', () {
       final tonovi = AdminStatusColors.standard();
-      expect(tonovi.positive.background, AdminColors.positiveTint);
-      expect(tonovi.waiting.background, AdminColors.waitingTint);
+      expect(tonovi.positive.background, AdminPalette.light.positiveTint);
+      expect(tonovi.waiting.background, AdminPalette.light.waitingTint);
       // Otkazao je neko; „nije se pojavio" se prosto desilo. Ista pilula za oboje briše
       // razliku koju vlasnik koristi kad gleda ko mu ne dolazi.
       expect(

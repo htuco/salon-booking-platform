@@ -267,11 +267,11 @@ class _NovaUslugaDugme extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    height: 40,
+    height: AdminSize.touchTarget,
     child: FilledButton(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        minimumSize: const Size(0, 40),
+        minimumSize: const Size(0, AdminSize.touchTarget),
         padding: const EdgeInsets.symmetric(horizontal: 17),
         textStyle: AdminText.actionLabel,
       ),
@@ -467,7 +467,13 @@ class _Zaglavlje extends StatelessWidget {
     );
     Widget celija(int flex, String tekst) => Expanded(
       flex: flex,
-      child: Text(tekst, style: stil, overflow: TextOverflow.ellipsis),
+      // Verzal je stil, ne podatak (FE-502): čitač ekrana dobija riječ, ne slova.
+      child: Text(
+        tekst.toUpperCase(),
+        semanticsLabel: tekst,
+        style: stil,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
     return Container(
       height: 43,
@@ -482,12 +488,12 @@ class _Zaglavlje extends StatelessWidget {
       ),
       child: Row(
         children: [
-          celija(_flexUsluga, 'USLUGA'),
-          celija(_flexTrajanje, 'TRAJANJE'),
-          celija(_flexCijena, 'CIJENA'),
-          // Riječ za radnika dolazi iz vertikale; jednina, kao i „USLUGA".
-          if (saRadnicima) celija(_flexRadnici, radnik.toUpperCase()),
-          celija(_flexOnline, 'ONLINE'),
+          celija(_flexUsluga, 'Usluga'),
+          celija(_flexTrajanje, 'Trajanje'),
+          celija(_flexCijena, 'Cijena'),
+          // Riječ za radnika dolazi iz vertikale; jednina, kao i „Usluga".
+          if (saRadnicima) celija(_flexRadnici, radnik),
+          celija(_flexOnline, 'Online'),
         ],
       ),
     );

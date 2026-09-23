@@ -71,7 +71,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     separator: Color(0xFFE2E2E2),
     textSecondary: Color(0xFF666666),
     textMuted: Color(0xFF666666),
-    destructive: Color(0xFFC94C4C),
+    destructive: Color(0xFFB83C3C),
     onDestructive: Color(0xFFFFFFFF),
     accentInk: Color(0xFF3D5A80),
     accentTint: Color(0xFFE9ECEF),
@@ -115,8 +115,10 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     separator: Color(0xFF373A40),
     textSecondary: Color(0xFF909296),
     textMuted: Color(0xFF909296),
-    destructive: Color(0xFFF03E3E),
-    // CSS predlaze bijelu, ali ona na #F03E3E daje samo 3.84:1. Najtamniji token iz
+    // `#F03E3E` je kao tekst na `surface` mjerio 3,93:1 (FE-502); ton iste crvene,
+    // svjetliji, prolazi AA i kao tekst i ispod `onDestructive`.
+    destructive: Color(0xFFFF6B6B),
+    // CSS predlaze bijelu, ali ona na crvenoj daje ispod 4,5:1. Najtamniji token iz
     // iste palete zadrzava karakter teme i prolazi WCAG AA.
     onDestructive: Color(0xFF141517),
     accentInk: Color(0xFF91A7FF),
@@ -196,28 +198,4 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
 extension AdminPaletteContext on BuildContext {
   AdminPalette get adminColors =>
       Theme.of(this).extension<AdminPalette>() ?? AdminPalette.light;
-}
-
-/// Light aliases for non-widget code and backwards-compatible token tests.
-abstract final class AdminColors {
-  static const ink = Color(0xFF2C2C2C),
-      ground = Color(0xFFFCFCF9),
-      surface = Color(0xFFFFFFFF);
-  static const accent = Color(0xFF3D5A80), onAccent = Color(0xFFFFFFFF);
-  static const action = Color(0xFFEE6C4D), onAction = Color(0xFF2C2C2C);
-  static const border = Color(0xFFDEE2E6), separator = Color(0xFFE2E2E2);
-  static const textSecondary = Color(0xFF666666), textMuted = Color(0xFF666666);
-  static const destructive = Color(0xFFC94C4C),
-      destructiveTint = Color(0xFFC94C4C);
-  static const accentInk = Color(0xFF3D5A80), accentTint = Color(0xFFE9ECEF);
-  static const sidebarRaised = Color(0xFFE9ECEF),
-      sidebarSelected = Color(0xFFE9ECEF);
-  static const sidebarDivider = Color(0xFFDEE2E6),
-      breadcrumbSeparator = Color(0xFFE2E2E2);
-  static const sidebarText = Color(0xFF333333),
-      sidebarMuted = Color(0xFF666666);
-  static const positiveTint = Color(0xFFE0F2F1),
-      positiveInk = Color(0xFF004D40);
-  static const waitingTint = Color(0xFFEE6C4D), waitingInk = Color(0xFF2C2C2C);
-  static const neutralTint = Color(0xFFF0F1F3);
 }

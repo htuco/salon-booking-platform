@@ -18,6 +18,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'support/pristupacnost.dart';
+
 const Size _desktop = Size(1440, 900);
 
 /// Širi od handoffa. Postoji jer je 1440 mjesto gdje je crtano, a ne najveći ekran na
@@ -103,6 +105,8 @@ Future<void> _prijavi(WidgetTester tester) async {
 }
 
 void main() {
+  pristupacnostEkrana('Prijava', _ekran);
+
   group('desktop `3j`', () {
     testWidgets('forma stoji u koloni od 560 px, tamna ploha uzima ostatak', (
       tester,

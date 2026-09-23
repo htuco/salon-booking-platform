@@ -218,7 +218,7 @@ class _AdminWorkingHoursScreenState
       actions: desktop
           ? [
               SizedBox(
-                height: 42,
+                height: AdminSize.touchTarget,
                 child: _DugmeSacuvaj(onPressed: onSacuvaj, snimam: _snimam),
               ),
             ]
@@ -739,19 +739,23 @@ class _Prekidac extends StatelessWidget {
     // Sedam prekidača u nizu bez labele čitač ekrana javlja kao sedam puta „uključeno,
     // prekidač" — ime dana stoji u zasebnom `Text`-u i ne veže se.
     return Semantics(
+      toggled: otvoren,
       label: semantika,
-      // Na telefonu je vidljivi prekidač niži od 44 px, pa tap oko njega mora raditi isto.
-      child: velik
-          ? GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => onChanged(!otvoren),
-              child: SizedBox(
-                width: sirina + AdminSpacing.sm,
-                height: AdminSize.touchTarget,
-                child: Center(child: prekidac),
-              ),
-            )
-          : prekidac,
+      // Vidljivi prekidač je niži od 44 px na obje širine, pa tap oko njega mora raditi
+      // isto — FE-502 je to proširio i na desktop, gdje je meta bila 42 × 24.
+      child: InkWell(
+        // `InkWell`, ne `GestureDetector` (FE-502): prekidač se dohvata tastaturom na
+        // webu i fokus crta preklop oko staze.
+        borderRadius: BorderRadius.circular(AdminRadius.base),
+        onTap: () => onChanged(!otvoren),
+        child: SizedBox(
+          width: sirina + AdminSpacing.sm,
+          height: AdminSize.touchTarget,
+          // Stanje i labelu nosi `Semantics` iznad; `Switch` bi dodao drugi, manji
+          // čvor sa istom radnjom, koji čitač i mjerač mete vide odvojeno.
+          child: Center(child: ExcludeSemantics(child: prekidac)),
+        ),
+      ),
     );
   }
 }
@@ -784,10 +788,10 @@ class _Sat extends StatelessWidget {
     excludeSemantics: true,
     child: SizedBox(
       width: double.infinity,
-      height: 42,
+      height: AdminSize.touchTarget,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 42),
+          minimumSize: const Size(0, AdminSize.touchTarget),
           padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.centerLeft,
           textStyle: AdminText.timeLarge,

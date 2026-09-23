@@ -69,7 +69,7 @@ Izvodjaci izvodjaciAdmina(WidgetRef ref) {
 /// Prekidač iz `3f`/`3q` — uži od Material `Switch` (42×24 u tabeli, 50×28 na telefonu).
 ///
 /// Material `Switch` je 52×32 i ne da se suziti bez `Transform.scale`, koji bi smanjio i
-/// dodirnu metu. Ovdje traka ostaje izmjerena, a meta je najmanje 44 px visoka.
+/// dodirnu metu. Ovdje traka ostaje izmjerena, a meta je najmanje 44 × 44 px (FE-502).
 class UslugaPrekidac extends StatelessWidget {
   const UslugaPrekidac({
     required this.vrijednost,
@@ -97,11 +97,15 @@ class UslugaPrekidac extends StatelessWidget {
       toggled: vrijednost,
       enabled: aktivan,
       label: oznaka,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: InkWell(
+        // `InkWell`, ne `GestureDetector` (FE-502): prekidač se dohvata tastaturom na
+        // webu i fokus crta preklop oko staze.
+        borderRadius: BorderRadius.circular(AdminRadius.base),
         onTap: aktivan ? () => onChanged!(!vrijednost) : null,
         child: SizedBox(
-          width: sirina,
+          width: sirina < AdminSize.touchTarget
+              ? AdminSize.touchTarget
+              : sirina,
           height: visina < AdminSize.touchTarget
               ? AdminSize.touchTarget
               : visina,

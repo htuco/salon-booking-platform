@@ -83,11 +83,11 @@ class _TopBarAkcije extends StatelessWidget {
           const SizedBox(width: AdminSpacing.md),
         ],
         SizedBox(
-          height: 42,
+          height: AdminSize.touchTarget,
           child: FilledButton(
             onPressed: () => _uskoro(context, 'Novi klijent'),
             style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 42),
+              minimumSize: const Size(0, AdminSize.touchTarget),
               padding: const EdgeInsets.symmetric(horizontal: AdminSpacing.lg),
               textStyle: AdminText.actionLabel,
             ),
@@ -469,6 +469,8 @@ class _PretragaState extends ConsumerState<_Pretraga> {
       decoration: InputDecoration(
         hintText: 'Ime ili broj telefona',
         isDense: true,
+        // FE-502: gusto polje ne smije pasti ispod dodirne mete.
+        constraints: const BoxConstraints(minHeight: AdminSize.touchTarget),
         contentPadding: EdgeInsets.symmetric(
           horizontal: AdminSpacing.md,
           vertical: telefon ? 13 : 10,
@@ -509,7 +511,8 @@ class _FilteriDesktop extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final izabran = ref.watch(clientsFilterProvider);
     final labela = Theme.of(context).textTheme.labelMedium;
-    const visina = 38.0;
+    // `3e` crta 38; FE-502 traži dodirnu metu.
+    const visina = AdminSize.touchTarget;
     const padding = EdgeInsets.symmetric(horizontal: AdminSpacing.lg);
 
     // `Wrap`: na uskoj tabeli dugmad prelaze u drugi red umjesto da prelijevaju (task 34).
@@ -601,6 +604,7 @@ class _CelijaZaglavlja extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     tekst.toUpperCase(),
+    semanticsLabel: tekst,
     style: AdminText.eyebrow.copyWith(color: context.adminColors.textSecondary),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
@@ -1007,12 +1011,12 @@ class _ProfilSadrzaj extends ConsumerWidget {
                 runSpacing: AdminSpacing.sm,
                 children: [
                   SizedBox(
-                    height: 42,
+                    height: AdminSize.touchTarget,
                     child: FilledButton(
                       onPressed: () =>
                           _uskoro(context, 'Zakazivanje iz profila'),
                       style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, 42),
+                        minimumSize: const Size(0, AdminSize.touchTarget),
                         padding: const EdgeInsets.symmetric(
                           horizontal: AdminSpacing.xxl,
                         ),
@@ -1022,11 +1026,11 @@ class _ProfilSadrzaj extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(
-                    height: 42,
+                    height: AdminSize.touchTarget,
                     child: OutlinedButton(
                       onPressed: () => _uskoro(context, 'Poziv iz profila'),
                       style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 42),
+                        minimumSize: const Size(0, AdminSize.touchTarget),
                         padding: const EdgeInsets.symmetric(
                           horizontal: AdminSpacing.xxl,
                         ),
