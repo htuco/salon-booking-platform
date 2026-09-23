@@ -63,7 +63,7 @@ prepisuješ uslov — prepisan uslov je uslov koji se sljedeći put ispravi na j
 | `private.is_admin(uuid)` | super admin, ili `salon_admin` čiji se claim `salon_id` poklapa sa argumentom **i** sa redom u `users` |
 | `private.client_salon_id()` | koji salon je klijent izabrao kroz `x-salon-id`, ako je aktivan; inače `NULL` |
 | `private.owns_identity(uuid)` | je li taj `auth_identities` red moj i nije obrisan |
-| `private.is_client()` | nije `super_admin`, `salon_admin` ni `employee` |
+| `private.is_client()` | nije `super_admin`, `salon_admin` ni `employee`, **i** pozivalac ima aktivan `auth_identities` red sa `is_anonymous = false` (task 41 — Supabase anonimna sesija nije klijent) |
 
 `search_path = ''` nije stil: bez toga `security definer` funkcija može biti navučena na tabelu iz
 tuđe sheme. Sve reference su zato potpuno kvalifikovane (`public.users`, ne `users`).
@@ -669,8 +669,9 @@ Svaki novi REST test zato mora tretirati `300` kao grešku, ne kao uspjeh.
 ## Push uređaji — Task 25
 
 `register_device` dozvoljava anonimnu registraciju u aktivnom salonu iz `x-salon-id`, zatim
-vezanje na vlastiti `auth_identities` red iz JWT-a. Gost iz budućeg auth toka takođe ima svoj
-JWT/identitet. `p_staff=true` zahtijeva admin claim i odgovarajući `public.users` red u salonu;
+vezanje na vlastiti `auth_identities` red iz JWT-a. Od taska 41 **ne** koristi `private.is_client()`
+(koji traži prijavljen nalog), nego samo provjeru neprivilegovane uloge — registracija uređaja prije
+prijave nije zakazivanje. Zakazivanje bez prijave više ne postoji. `p_staff=true` zahtijeva admin claim i odgovarajući `public.users` red u salonu;
 admin app salon izvodi iz članstva. ID identiteta i vlasnika nisu RPC argumenti.
 
 UUID instalacije nije dokaz vlasništva. Aplikacija čuva zasebnu nasumičnu tajnu od 32 bajta u
