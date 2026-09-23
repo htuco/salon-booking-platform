@@ -402,7 +402,7 @@ class _PostavkeState extends ConsumerState<_Postavke> {
       final akcije = ref.read(settingsActionsProvider);
       await akcije.sacuvajKontakt(
         ContactInput(
-          name: _naziv.text,
+          expectedName: widget.salon.name,
           address: _adresa.text,
           city: _grad.text,
           description: _opis.text,
@@ -932,10 +932,11 @@ class _OsnovnaKartica extends StatelessWidget {
             labela: 'Naziv',
             child: TextFormField(
               controller: naziv,
+              readOnly: true,
               style: polje,
-              decoration: _ukras(),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Naziv je obavezan.' : null,
+              decoration: _ukras(
+                pomoc: 'Naziv aplikacije mijenja se kroz konfiguraciju i novi store build.',
+              ),
             ),
           ),
           const SizedBox(height: 16),

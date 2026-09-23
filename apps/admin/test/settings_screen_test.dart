@@ -125,6 +125,24 @@ void main() {
     expect(find.widgetWithText(TextFormField, '030 711 220'), findsOne);
   });
 
+  testWidgets('naziv je samo za čitanje i objašnjava novi store build', (
+    tester,
+  ) async {
+    await _pumpAt(tester, _desktop, _screen());
+
+    final naziv = find.widgetWithText(TextFormField, 'Barber Studio Vitez');
+    final unos = tester.widget<EditableText>(
+      find.descendant(of: naziv, matching: find.byType(EditableText)),
+    );
+    expect(unos.readOnly, isTrue);
+    expect(
+      find.text(
+        'Naziv aplikacije mijenja se kroz konfiguraciju i novi store build.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('telefon `3t` pokaže isti ekran, bez desktop ljuske', (
     tester,
   ) async {

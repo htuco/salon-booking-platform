@@ -178,6 +178,11 @@ Pitanje na koje se svodi svaka dilema: **može li se ovo promijeniti bez novog s
 Boje su u oba: u `tenant.yaml` kao **fallback dok backend ne odgovori** (sprječava bijeli flash), u
 bazi kao izvor istine. Moraju biti iste vrijednosti; kad se razilaze, baza je u pravu.
 
+**Naziv aplikacije nema runtime kopiju koju salon mijenja.** Promjena ide isključivo kroz
+`app.displayName` u `tenants/<flavor>/tenant.yaml`, zatim `dart run tool/gen_flavors.dart`, novi
+Android/iOS build i store submission. Admin postavke naziv samo prikazuju; `update_salon_contact`
+odbija drugačiji naziv kako stari klijent ili ručni RPC poziv ne bi napravio dvije istine.
+
 `versionName` je zajednički za sve tenante, `androidVersionCode`/`iosBuildNumber` su po tenantu —
 to direktno utiče na CI matricu (`docs/04 §8.1`).
 ## Firebase za push

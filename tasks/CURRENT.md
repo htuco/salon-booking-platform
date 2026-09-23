@@ -1,79 +1,46 @@
-# Trenutni task: 39 — Push obavijesti na Androidu
+# Trenutni task: 40 — Naziv lokala se ne mijenja iz admina
 
-Učitan 2026-09-22 iz [sprint-4/39](sprint-4/39-push-na-androidu.md). Bug, procjena 1–2 dana,
-bez zavisnosti, **blokira task 42**. Grana `fix/push-na-androidu` sa svježeg `main`-a.
-
-> **Paralelno, FE redizajn:** FE-502, FE-503 i FE-504 su spojeni u `main`. FE-505 (demo ulazi) je
-> gotov na grani `fix/fe-505-demo-ulazi`. Otvoreno: FE-506 (`/about` hero, čeka odluku) i FE-504
-> stavke koje traže uređaj. FE-302 i dalje čeka [ADR-0021](../docs/adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md).
+Učitan 2026-09-23 iz [sprint-4/40](sprint-4/40-naziv-lokala-se-ne-mijenja.md). Popravka,
+procjena 0,5 dana, bez zavisnosti i bez taskova koje blokira.
 
 ## Status
 
-U toku. Baza i lanac su **dokazani uživo**; otvoren je još samo zvuk, u grani
-`fix/push-zvuk-i-kanal`.
+U toku na grani `fix/naziv-lokala-zakljucan`.
 
 ## Ciljevi
 
-- [x] Imenovati **gdje** lanac puca — dva mjesta, oba uzvodno od FCM-a
-- [x] **`auto` mod guši obje putanje** — `queue_appointment_push` na `INSERT` tražio je `pending`;
-      sada presuđuje `source`, a status bira tip (`new_request` / novi `new_booking`)
-- [x] Dokaz u CI-ju — pgTAP `Files=16, Tests=469, PASS`; sabotaža obara tačno 2 od 14 u `016`
-- [x] Worker zna novi tip — `deno test` **6/6**, `deno check` čist
-- [x] Konfiguracijski uzrok zapisan u `workflows.md`, a `run_live_demo.sh` više ne ćuti
-- [ ] **Migracija na hostovani projekat** — MCP je `--read-only`, bug je tamo i dalje živ
-- [ ] **Admin nema staff uređaj** — traži Firebase Android app za `ba.nasadomena.admin`
-- [ ] **Snimak sa Android uređaja** i red sa `attempts`/`error` — čeka prethodne dvije
+- [x] U admin postavkama prikazati naziv salona samo za čitanje i objasniti da se naziv aplikacije
+      mijenja kroz novi store build
+- [ ] Novom migracijom učvrstiti `update_salon_contact`: pokušaj slanja drugačijeg naziva mora
+      vratiti grešku, dok ostali kontakt podaci ostaju promjenjivi
+- [x] Prilagoditi Dart ugovor i testove zaključanom nazivu bez otvaranja drugog puta pisanja
+- [ ] Dodati negativan pgTAP slučaj koji pokušava promijeniti naziv i dokazuje da je red netaknut
+- [x] Zapisati puni put promjene naziva: `tenants/<flavor>/tenant.yaml` →
+      `dart run tool/gen_flavors.dart` → novi store build/submission
 
-## Napomene uz 39
+## Napomene
 
-Nalazi su iz čitanja koda i **read-only upita nad hostovanim projektom** (`olggovhqwirxamggkwuf`),
-prije ijedne izmjene.
-
-- **Transport radi — kvar je uzvodno od FCM-a.** `cron.job` `send-push-queued` je `active`, oba
-  vault tajna (`push_worker_url`, `push_worker_secret`) postoje, a svih **24 redova u
-  `notification_logs` su `sent`, `attempts = 1`, `error = null`**. Nijedan red nije `failed` ni
-  `sending`. Ne troši dan na `send-push` i odgovor FCM-a — lanac ne dolazi dotle.
-- **Red se prestao puniti 2026-09-16 22:44.** Aplikacija je 2026-09-21 napravila **17 `app`
-  termina**, a `notification_logs` za njih nema **nijedan** red. To je tačka prekida.
-- **Tipa `new_request` nema nijednog, ikad.** Postoje samo `confirmed` (17), `rejected` (6),
-  `cancelled` (1) — sve ka klijentu. Salon nije dobio obavijest o novoj rezervaciji od početka.
-- **U `devices` je tačno jedan red, i to klijentski** (`android`, `staff_user_id is null`,
-  `last_seen_at` 2026-09-16). Staff uređaja nema, pa grana `v_staff` u `queue_appointment_push`
-  bira nula redova bez obzira na sve ostalo.
-- **Zašto ga nema:** `apps/admin/lib/main.dart:20` uredno postavlja `pushStaffProvider` na `true`,
-  ali `pushServiceProvider` vraća `null` dok je `pushEnabledProvider` `false`, a on visi o
-  `const bool.fromEnvironment('PUSH_ENABLED')`. `tool/run_live_demo.sh` dodaje
-  `--dart-define-from-file` samo ako je `FIREBASE_ADMIN_DEFINES_FILE` neprazan — **u `.env.live` su
-  prazna oba**, i klijentski i admin. `.firebase-config/` sadrži samo `barberstudiovitez.json`.
-  Admin ima svoj `applicationId` (`ba.nasadomena.admin`), pa traži **zasebnu Firebase Android app**
-  u projektu, ne kopiju klijentskog fajla.
-- **Drugi prekid je logički, ne konfiguracijski.** Salon `Barber Studio VItez` je u
-  `salon_settings.booking_mode = 'auto'`. Trigger `queue_appointment_push`:
-  - na `INSERT` odustaje ako `status <> 'pending'` → u `auto` modu nema `new_request`;
-  - `confirmed` šalje samo kad se `status` **promijeni** → u `auto` modu termin je `confirmed` već
-    na `INSERT`, pa **ni klijent ne dobije potvrdu**.
-
-  Isti nalaz stoji u status bloku taska 37 (`sprint-4/README.md`). Popravka je vjerovatno novi
-  uslov u trigeru, ne u aplikaciji — to je **migracija**, znači `security.md` + `supabase test db`.
-- **Zamka iz task fajla i dalje važi:** `devices.device_id` je instalacioni identifikator (`text`),
-  `appointments.device_id` je FK na `devices.id`. Zamjena prolazi tipove i tiho lomi push.
-- **`booking_mode` je na `salon_settings`, ne na `salons`.** Upit po `salons.booking_mode` pada.
-- **Tajne su čiste:** `.firebase-config/` i `.dart_tool/` su u `.gitignore`, `git ls-files` ih ne
-  vraća. Izlaz `supabase status -o env` i dalje ne ide ni u commit ni u sažetak.
-- **Korigovana procjena:** posao je bliži gornjoj granici. Dva nezavisna uzroka, jedan traži
-  migraciju i pgTAP, drugi Firebase registraciju admin aplikacije — a taj drugi je **izvan repoa**
-  i može čekati na tuđi pristup Firebase konzoli.
-- **iOS ostaje imenovan dug** dok nema Apple developer naloga. Nije dio DoD-a.
-
-## Šta je sljedeće
-
-Ručna provjera na uređaju. **Admin u Chromeu ne dokazuje push** — `pushEnabledProvider` traži
-`!kIsWeb`, pa je na webu `pushServiceProvider` uvijek `null` i `register_device` se ne zove.
-Chrome pokazuje samo da termin stigne u kalendar; za obavijest admin mora na Android, sa
-Firebase define fajlom za `ba.nasadomena.admin`.
-
-Redoslijed: (1) migracija na hostovani projekat, (2) Firebase app za admin `applicationId`,
-(3) klijent rezerviše na emulatoru → vlasnikov Android dobija „Nova rezervacija".
+- Danas je naziv stvarno promjenjiv na oba sloja: `settings_screen.dart` crta obični
+  `TextFormField`, a `update_salon_contact` prima `p_name` i radi `set name = btrim(p_name)`.
+  Postojeći testovi čak tvrde „Naziv je upisan", pa moraju biti promijenjeni zajedno s ugovorom.
+- Direktan `UPDATE public.salons` je već oduzet roli `authenticated`; RPC iz taska 36 je jedini
+  aplikacijski put pisanja. Zaštita zato pripada novoj migraciji, ne izmjeni već deployane
+  `20260921180000_postavke_lokacije.sql`.
+- Postojeći potpis RPC-a može ostati kompatibilan tako da `p_name` služi kao tvrdnja o zatečenom
+  nazivu, ali mora odbiti različitu vrijednost i nikad je ne upisati. Time PostgREST i postojeći
+  klijenti ne dobijaju paralelno preopterećenje funkcije.
+- Build-time izvor već postoji: oba `tenant.yaml` fajla nose `app.displayName`, a
+  `tool/gen_flavors.dart` iz njega generiše Android `app_name`, iOS `PRODUCT_NAME` i Dart tenant
+  registar. Nedostaje eksplicitna uputa da promjena traži novi build i store submission.
+- `x-salon-id` ne daje pravo izmjene; RPC i dalje mora tražiti `private.is_admin(p_salon_id)`.
+  Nova `security definer` verzija zadržava `set search_path = ''` i potpuno kvalifikovane reference.
+- Otvoreno pitanje o zasebnom runtime prikaznom nazivu ostaje van ovog taska; nova kolona bez ADR-a
+  se ne uvodi.
+- Procjena ostaje 0,5 dana: šema i jedini write put već postoje, ali promjena prelazi migraciju,
+  pgTAP, `core_api`, admin ekran i njihove testove.
+- Dokaz u ovom prolazu: `settings_screen_test.dart` **16/16**, `catalog_repository_test.dart`
+  **18/18**, `flutter analyze apps/admin packages/core_api` čist i `gen_flavors --check` potvrđuje
+  dva ažurna tenanta. pgTAP još nije pokrenut jer na mašini nema ni `supabase` CLI-ja ni Dockera.
 
 ## Istorija
 
@@ -89,3 +56,10 @@ izostavlja. Time je admin blok FE-401…FE-406 zatvoren.
 
 Spojen u `main` ([PR #71](https://github.com/htuco/salon-booking-platform/pull/71)).
 Terminologija po vertikali umjesto „Majstor" iz canvasa, zelen CI na oba joba.
+
+### 39 — Push obavijesti na Androidu (gotov)
+
+Zatvoren uživo 2026-09-22 i spojen u `main`: migracija za `auto` mod je na hostovanom projektu,
+admin Firebase aplikacija i staff uređaj su registrovani, a push je dokazan u oba smjera. Zvuk i
+vlastiti Android kanal spojeni su zasebno kroz PR #80. iOS push ostaje imenovan dug do Apple
+developer naloga.

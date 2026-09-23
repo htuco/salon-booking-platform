@@ -60,7 +60,7 @@ phone, email, instagram_url, facebook_url, vertical_pack_key
   /// je prazan" su isto stanje i ne razdvajaju se ovdje.
   Future<Salon> updateContact({
     required String salonId,
-    required String name,
+    required String expectedName,
     required String address,
     required String city,
     String description = '',
@@ -73,7 +73,9 @@ phone, email, instagram_url, facebook_url, vertical_pack_key
       'update_salon_contact',
       params: {
         'p_salon_id': salonId,
-        'p_name': name,
+        // Naziv je build-time podatak. RPC ga prima kao optimistic assertion da forma
+        // nije pokušala promjenu, ne kao vrijednost koju treba upisati.
+        'p_name': expectedName,
         'p_address': address,
         'p_city': city,
         'p_description': description,
