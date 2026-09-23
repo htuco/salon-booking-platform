@@ -185,7 +185,7 @@ class _Lista extends ConsumerWidget {
     }
 
     if (termini.isEmpty) {
-      return RefreshIndicator(
+      return AppRefresh(
         onRefresh: osvjezi,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -205,7 +205,7 @@ class _Lista extends ConsumerWidget {
       );
     }
 
-    return RefreshIndicator(
+    return AppRefresh(
       onRefresh: osvjezi,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
