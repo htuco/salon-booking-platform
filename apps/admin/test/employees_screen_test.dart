@@ -11,6 +11,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 const _employee = Employee(
   id: 'e1',
@@ -84,7 +85,13 @@ class _Actions extends EmployeeActions {
   @override
   Future<Employee> save(Employee? employee, EmployeeInput input) async {
     saved = input;
-    if (fail) throw const ServerError('Probna greška');
+    // Realan oblik validacije: SQL funkcija diže `PT400`, a `mapError` ga pretvara u
+    // `ServerError` čija poruka smije na ekran (`displayMessage`, FE-501).
+    if (fail) {
+      throw mapError(
+        const PostgrestException(message: 'Probna greška', code: 'PT400'),
+      );
+    }
     return _employee;
   }
 

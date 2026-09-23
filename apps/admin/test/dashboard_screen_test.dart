@@ -113,6 +113,8 @@ Widget _ekran({
   List<Appointment>? zahtjevi,
   int naCekanju = 2,
   List<WorkingHour> raspored = const [],
+  Object? greskaTermina,
+  void Function()? onCitanjeTermina,
 }) => ProviderScope(
   overrides: [
     dashboardRasporedProvider.overrideWith((ref) async => raspored),
@@ -121,7 +123,11 @@ Widget _ekran({
       (ref) => Stream<StaffMember?>.value(_vlasnik),
     ),
     adminSalonProvider.overrideWith((ref) async => _salon),
-    danasnjiTerminiProvider.overrideWith((ref) async => termini ?? _danasnji),
+    danasnjiTerminiProvider.overrideWith((ref) async {
+      onCitanjeTermina?.call();
+      if (greskaTermina != null) throw greskaTermina;
+      return termini ?? _danasnji;
+    }),
     zahtjeviProvider.overrideWith(
       (ref) async =>
           zahtjevi ??
@@ -445,5 +451,35 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
+  });
+
+  group('greška rasporeda (FE-501)', () {
+    for (final (opis, velicina) in [
+      ('desktop', _desktop),
+      ('telefon', _telefon),
+    ]) {
+      testWidgets('$opis: „Pokušaj ponovo" ponovo čita termine', (
+        tester,
+      ) async {
+        var citanja = 0;
+        await _naSirini(
+          tester,
+          velicina,
+          _ekran(
+            greskaTermina: const NetworkError('Nema veze sa serverom'),
+            onCitanjeTermina: () => citanja++,
+          ),
+        );
+
+        expect(find.text('Termini se ne mogu učitati.'), findsWidgets);
+        final prije = citanja;
+
+        await tester.tap(find.text('Pokušaj ponovo').first);
+        await tester.pumpAndSettle();
+
+        // Invalidacija, ne prikaz keširane greške: izvor je stvarno pozvan ponovo.
+        expect(citanja, greaterThan(prije));
+      });
+    }
   });
 }

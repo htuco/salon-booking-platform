@@ -119,6 +119,30 @@ void main() {
     expect(find.text('Nema termina za ovaj dan.'), findsOneWidget);
   });
 
+  testWidgets('prazno zbog statusa nudi „Prikaži sve statuse" (FE-501)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_ekran(const []));
+    await tester.pumpAndSettle();
+    // Prazan dan bez filtera nema šta poništiti.
+    expect(find.text('Prikaži sve statuse'), findsNothing);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(AdminAppointmentsScreen)),
+    );
+    container
+        .read(appointmentsFilterProvider.notifier)
+        .postaviStatusTacno(AppointmentStatus.confirmed);
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Nema termina sa statusom'), findsOneWidget);
+    await tester.tap(find.text('Prikaži sve statuse'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(appointmentsFilterProvider).status, isNull);
+    expect(find.text('Nema termina za ovaj dan.'), findsOneWidget);
+  });
+
   testWidgets('status se uz boju uvijek pise i tekstom', (tester) async {
     // WCAG 1.4.1: boja ne smije biti jedini nosilac informacije.
     await tester.pumpWidget(

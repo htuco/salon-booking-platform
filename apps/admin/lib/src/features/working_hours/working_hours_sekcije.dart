@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/poruka_greske.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_skeleton.dart';
@@ -430,7 +431,7 @@ class _RedBlokadeState extends ConsumerState<_RedBlokade> {
     try {
       await ref.read(workingHoursActionsProvider).obrisiBlokadu(blokada.id);
     } on ApiError catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+      messenger.showSnackBar(SnackBar(content: Text(porukaGreske(error))));
       if (mounted) setState(() => _brisem = false);
     }
   }

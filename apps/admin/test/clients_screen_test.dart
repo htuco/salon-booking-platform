@@ -212,6 +212,31 @@ void main() {
       await _pumpAt(tester, _desktop, _screen(klijenti: const []));
 
       expect(find.textContaining('Adresar je još prazan'), findsOneWidget);
+      // Nema filtera, pa nema ni šta poništiti.
+      expect(find.text('Poništi pretragu'), findsNothing);
+    });
+
+    testWidgets('prazna pretraga nudi poništavanje i čisti polje (FE-501)', (
+      tester,
+    ) async {
+      await _pumpAt(tester, _desktop, _screen(klijenti: const []));
+
+      await tester.enterText(find.byType(TextField), 'Zlatan');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Nema klijenta koji odgovara pretrazi „Zlatan".'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Poništi pretragu'));
+      await tester.pumpAndSettle();
+
+      // Polje mora pratiti stanje; inače bi stari izraz ostao upisan iznad pune liste.
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).controller!.text,
+        '',
+      );
+      expect(find.textContaining('Adresar je još prazan'), findsOneWidget);
     });
   });
 

@@ -10,6 +10,8 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/poruka_greske.dart';
+import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/tekst.dart';
 import '../../core/format/terminologija.dart';
 import '../../core/router/admin_router.dart';
@@ -81,7 +83,7 @@ class _AdminServicesScreenState extends ConsumerState<AdminServicesScreen> {
     try {
       await ref.read(serviceActionsProvider).setActive(service, vrijednost);
     } on ApiError catch (e) {
-      greska = e.message;
+      greska = porukaGreske(e);
     } catch (_) {
       greska = 'Status se ne može promijeniti.';
     }
@@ -103,7 +105,7 @@ class _AdminServicesScreenState extends ConsumerState<AdminServicesScreen> {
       // `3p` crta veliki naslov u tijelu; `AppBar` sa istom riječi bi stajao iznad njega.
       sopstvenoZaglavlje: true,
       actions: desktop ? [_NovaUslugaDugme(onPressed: _novaUsluga)] : null,
-      body: RefreshIndicator(
+      body: AdminRefresh(
         onRefresh: () {
           ref
             ..invalidate(adminEmployeesProvider)

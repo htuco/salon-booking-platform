@@ -234,4 +234,52 @@ void main() {
       );
     });
   });
+
+  group('displayMessage — šta smije na ekran (FE-501)', () {
+    test('validacija iz SQL-a (PT400) ide korisniku', () {
+      final greska = mapError(
+        const PostgrestException(
+          message: 'Kraj mora biti poslije pocetka',
+          code: 'PT400',
+        ),
+      );
+      expect(greska.displayMessage, 'Kraj mora biti poslije pocetka');
+    });
+
+    test('nepoznata greška baze ne nosi kod na ekran', () {
+      final greska = mapError(
+        const PostgrestException(message: '', code: '42P01'),
+      );
+      expect(greska, isA<ServerError>());
+      expect(greska.message, contains('42P01'));
+      expect(greska.displayMessage, isNull);
+    });
+
+    test('poruka Postgresa bez PT koda ostaje u logu', () {
+      final greska = mapError(
+        const PostgrestException(
+          message: 'relation "public.x" does not exist',
+          code: '42P01',
+        ),
+      );
+      expect(greska.displayMessage, isNull);
+    });
+
+    test('neočekivan izuzetak i razilazak šeme ne idu korisniku', () {
+      expect(mapError(StateError('boom')).displayMessage, isNull);
+      expect(mapError(const FormatException('x')).displayMessage, isNull);
+    });
+
+    test('mreža i konflikt su već pisani za čovjeka', () {
+      expect(
+        mapError(const SocketException('x')).displayMessage,
+        'Nema veze sa serverom',
+      );
+      expect(
+        mapError(const PostgrestException(message: 'x', code: 'PT409'))
+            .displayMessage,
+        'Termin je u međuvremenu zauzet',
+      );
+    });
+  });
 }

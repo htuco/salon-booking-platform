@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'booking_flow_provider.dart';
@@ -75,9 +76,14 @@ class EmployeeStepScreen extends ConsumerWidget {
           );
 
           if (zaUslugu.isEmpty && traziIzbor) {
+            // Prazno je samo kad salon nema nijednog aktivnog radnika —
+            // `_radniciZaUslugu` bez veza vraća sve. Druga usluga tada ne pomaže, pa
+            // izlaz vodi na Početnu, gdje su kontakt i radno vrijeme.
             return EmptyState(
-              message: l10n.bookingEmptyList,
+              message: l10n.bookingNoStaff,
               icon: LucideIcons.userX,
+              actionLabel: l10n.bookingNoServicesAction,
+              onAction: () => context.go(ClientRoute.home.path),
             );
           }
 

@@ -452,9 +452,17 @@
     "description": "Labela reda sa statusom u tabeli termina."
   },
 
-  "bookingEmptyList": "Ovdje trenutno nema nijedne stavke.",
-  "@bookingEmptyList": {
-    "description": "Prazna lista usluga ili radnika u booking flowu — podaci su stigli, ali ih nema. Razlicito od greske."
+  "bookingNoServices": "Salon još nije objavio usluge za rezervaciju.",
+  "@bookingNoServices": {
+    "description": "Korak 1 bez ijedne aktivne usluge (FE-501). Podaci su stigli, ali ih nema — razlicito od greske."
+  },
+
+  "bookingNoServicesAction": "Nazad na Početnu",
+  "@bookingNoServicesAction": { "description": "CTA uz bookingNoServices. Na Pocetnoj su kontakt i radno vrijeme salona." },
+
+  "bookingNoStaff": "Salon trenutno nema nikoga dostupnog za rezervaciju.",
+  "@bookingNoStaff": {
+    "description": "Korak 2 kad salon nema nijednog aktivnog radnika, a vertikala trazi izbor (FE-501). Usluga bez veza ionako vraca sve radnike, pa ovo nije 'uslugu niko ne radi'. CTA ide na Pocetnu, jer druga usluga ne pomaze."
   },
 
   "bookingDayFull": "Ovaj dan je popunjen.",

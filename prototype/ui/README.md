@@ -52,6 +52,15 @@ Materialov `AppBar` daje mali sans naslov i platformski chevron. Razlika je upol
 tuđa ikona, ne vidi se ni u jednom testu, i vidi se u sekundi kad ekran stoji pored Cjenovnika.
 Komponenta je `BackHeader` u `core_ui`; `AppBar` u ekranu je greška.
 
+### Povlačenje za osvježavanje nema spinner
+
+Handoff ne crta osvježavanje. Materialov `RefreshIndicator` crta kružni spinner, a on je isti
+Material potpis koji je FE-205 uklonio iz učitavanja. `AppRefresh` u `core_ui` zadržava
+platformsku gestu (`RefreshIndicator.noSpinner`) i umjesto spinnera crta **hairline traku od
+2 px na vrhu**: `surfaceContainerHighest` kao podloga, segment u `onSurface` koji klizi. Sa
+`reduce motion` je traka mirna. Sadržaj ostaje na ekranu, jer bi ga skeleton zamijenio i lista
+bi trepnula.
+
 ### Zvjezdica je nacrtana, ne ikona
 
 `StarRating` u `core_ui` crta zvjezdicu kroz `CustomPainter`, iako je ostatak ikona Lucide.

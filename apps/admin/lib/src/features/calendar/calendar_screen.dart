@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
 import '../../core/router/admin_router.dart';
@@ -1267,7 +1268,7 @@ class _Telefon extends ConsumerWidget {
             // `await` na `future`, ne goli `invalidate`: `invalidate` je sinhron, pa bi
             // se spinner ugasio prije nego ijedan od četiri upita vrati odgovor — korisnik
             // vidi „osvježeno" dok se još učitava.
-            data: (dan) => RefreshIndicator(
+            data: (dan) => AdminRefresh(
               onRefresh: () async {
                 osvjeziKalendar(ref);
                 await ref.read(kalendarDanProvider.future);

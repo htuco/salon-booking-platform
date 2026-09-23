@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/load_error.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'gallery_lightbox.dart';
@@ -95,12 +96,16 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
             Expanded(
               child: gallery.when(
                 loading: () => const _Kostur(),
-                // Greška se crta kao prazno stanje, ne kao poruka o grešci: galerija je
-                // ukras, a crveni okvir zbog neuspjelog ukrasa uznemiri više nego što
-                // informiše.
+                // Greška nije „nema slika" (FE-501): salon koji ima trideset fotografija
+                // ne smije izgledati kao da nema nijednu. `LoadError` je miran kao i
+                // prazno stanje, pa brigu da „crveni okvir uznemiri" ne treba rješavati
+                // laganjem.
                 error: (error, stack) => _Prazno(
                   naslov: l10n.galleryTitle,
-                  poruka: l10n.galleryEmpty,
+                  tijelo: LoadError(
+                    error: error,
+                    onRetry: () => ref.invalidate(salonGalleryProvider),
+                  ),
                 ),
                 data: (urls) => urls.isEmpty
                     // **Ekran postoji i kad slika nema.** Sekcija na Početnoj se u tom
@@ -203,10 +208,14 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
 /// Prazno stanje pod back headerom — naslov ostaje, jer ekran bez naslova iznad poruke
 /// izgleda kao da se nije učitao.
 class _Prazno extends StatelessWidget {
-  const _Prazno({required this.naslov, required this.poruka});
+  const _Prazno({required this.naslov, this.poruka = '', this.tijelo});
 
   final String naslov;
   final String poruka;
+
+  /// Umjesto poruke — `LoadError` kad upit padne. Naslov ostaje, jer ekran bez njega
+  /// izgleda kao da se nije ni otvorio.
+  final Widget? tijelo;
 
   @override
   Widget build(BuildContext context) {
@@ -222,7 +231,7 @@ class _Prazno extends StatelessWidget {
           ),
           child: Text(naslov, style: Theme.of(context).textTheme.displaySmall),
         ),
-        Expanded(child: EmptyState(message: poruka)),
+        Expanded(child: tijelo ?? EmptyState(message: poruka)),
       ],
     );
   }

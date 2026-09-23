@@ -28,6 +28,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/datum.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
@@ -137,7 +138,7 @@ class _AdminAppointmentsScreenState
               ),
               data: (termini) => termini.isEmpty
                   ? _PrazanDan(filter: filter, zahtjevi: zahtjevi)
-                  : RefreshIndicator(
+                  : AdminRefresh(
                       onRefresh: () async => ref.invalidate(
                         zahtjevi ? zahtjeviProvider : filtriraniTerminiProvider,
                       ),
@@ -692,15 +693,17 @@ class _PotvrdiSveDugmeState extends ConsumerState<_PotvrdiSveDugme> {
   }
 }
 
-class _PrazanDan extends StatelessWidget {
+class _PrazanDan extends ConsumerWidget {
   const _PrazanDan({required this.filter, required this.zahtjevi});
 
   final AppointmentsFilter filter;
   final bool zahtjevi;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // Prazno zbog statusa nije prazan dan; izlaz radi isto što i chip „Svi" (FE-501).
+    final filtrirano = !zahtjevi && filter.status != null;
 
     return Center(
       child: Padding(
@@ -725,6 +728,15 @@ class _PrazanDan extends StatelessWidget {
                 color: context.adminColors.textSecondary,
               ),
             ),
+            if (filtrirano) ...[
+              const SizedBox(height: AdminSpacing.md),
+              TextButton(
+                onPressed: () => ref
+                    .read(appointmentsFilterProvider.notifier)
+                    .postaviStatusTacno(null),
+                child: const Text('Prikaži sve statuse'),
+              ),
+            ],
           ],
         ),
       ),

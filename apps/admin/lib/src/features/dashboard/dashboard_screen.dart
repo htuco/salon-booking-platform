@@ -29,6 +29,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/admin_load_error.dart';
+import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
 import '../../core/navigation/admin_destinations.dart';
@@ -64,7 +66,7 @@ class AdminDashboardScreen extends ConsumerWidget {
       // sitnim „Danas" bi stajao iznad njega i ponavljao istu riječ.
       sopstvenoZaglavlje: true,
       actions: jeDesktop ? const [_TopBarAkcije()] : null,
-      body: RefreshIndicator(
+      body: AdminRefresh(
         onRefresh: () async {
           ref
             ..invalidate(danasnjiTerminiProvider)
@@ -511,9 +513,10 @@ class _RasporedDana extends ConsumerWidget {
           const _ZaglavljeTabele(),
           termini.when(
             loading: () => const _SkeletonRasporeda(),
-            error: (_, _) => const Padding(
-              padding: EdgeInsets.all(AdminSpacing.xxl),
-              child: Text('Termini se ne mogu učitati.'),
+            error: (_, _) => AdminLoadError(
+              padding: const EdgeInsets.all(AdminSpacing.xxl),
+              poruka: 'Termini se ne mogu učitati.',
+              onRetry: () => ref.invalidate(danasnjiTerminiProvider),
             ),
             data: (lista) => lista.isEmpty
                 ? const Padding(
@@ -1133,9 +1136,10 @@ class _Telefon extends ConsumerWidget {
               const SizedBox(height: 10),
               termini.when(
                 loading: () => const _SkeletonRasporeda(redova: 3),
-                error: (_, _) => const Padding(
-                  padding: EdgeInsets.all(AdminSpacing.lg),
-                  child: Text('Termini se ne mogu učitati.'),
+                error: (_, _) => AdminLoadError(
+                  padding: const EdgeInsets.all(AdminSpacing.lg),
+                  poruka: 'Termini se ne mogu učitati.',
+                  onRetry: () => ref.invalidate(danasnjiTerminiProvider),
                 ),
                 data: (lista) => lista.isEmpty
                     ? const Padding(

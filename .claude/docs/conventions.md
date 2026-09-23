@@ -47,6 +47,11 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
 - **Greška koju ekran može razlikovati** → `packages/core_api/lib/src/errors/`. `ApiError` je
   `sealed`, pa `switch` nad njim Dart provjerava na iscrpnost — novi tip obori build tamo gdje nije
   obrađen umjesto da padne u `default` i pojavi se kao pogrešna poruka u produkciji.
+- **`ApiError.message` ne ide na ekran direktno.** To je poruka za log i zna nositi SQL kod ili
+  ime tabele. Na ekran ide `error.displayMessage` (`error_mapper.dart`), koji propušta samo
+  tekst pisan za čovjeka (mreža, konflikt, `raise … using errcode = 'PT…'`) i za ostalo vraća
+  `null`. Ekran tada stavlja svoju opštu rečenicu. U adminu je to `porukaGreske(e, opsta:)`
+  (`apps/admin/lib/src/core/poruka_greske.dart`), u klijentu tekst iz `.arb`-a po tipu greške.
 - **Vrijednosni tip koji postoji da spriječi jednu grešku** → `LocalTime`/`LocalDate` u
   `packages/core_domain/lib/src/catalog/`. Baza drži zidno vrijeme salona bez zone; `DateTime` bi
   ga vezao za zonu uređaja i tiho pomjerio radno vrijeme. Tip nema konverziju u trenutak — namjerno.
@@ -81,6 +86,13 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
   a to se ne vidi dok se ne otvori treći tenant. Tri stanja se pišu **prije** sretnog slučaja
   (skeleton, greška sa retryjem, sakrivena prazna sekcija); ekran napisan obrnutim redom dobije
   spinner preko bijele površine i to ostane.
+- **Greška učitavanja, prazno stanje i osvježavanje** (FE-501). Greška je `LoadError`
+  (`apps/client/lib/src/core/load_error.dart`) ili `AdminLoadError` u adminu: rečenica po tipu
+  greške i „Pokušaj ponovo", koje radi `ref.invalidate` izvora. **Greška se nikad ne crta kao
+  prazno stanje**: „nema slika" kad je upit pao je netačna tvrdnja. Prazno stanje ima svoju
+  rečenicu po ekranu i relevantan CTA. Prazno zbog filtera nudi poništavanje filtera.
+  Povlačenje za osvježavanje je `AppRefresh` (`core_ui`) ili `AdminRefresh`, nikad
+  `RefreshIndicator(`. Admin guard `no_material_indicators_test.dart` to hvata.
 - **Logika koja bi se sakrila u `build`** → `apps/client/lib/src/features/home/salon_schedule.dart`.
   Živi status "Otvoreno do 20:00" se računa iz `WorkingHour`-a u zasebnoj klasi koja prima `now`
   kao parametar, pa test može stajati u srijedu u 08:00 bez `pumpWidget`-a i bez čekanja srijede.

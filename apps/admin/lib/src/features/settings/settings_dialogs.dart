@@ -6,6 +6,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/poruka_greske.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import 'settings_providers.dart';
@@ -80,7 +81,7 @@ class _UredjivacSekcijeState extends ConsumerState<_UredjivacSekcije> {
       if (!mounted) return;
       setState(() {
         _snimam = false;
-        _greska = error.message;
+        _greska = porukaGreske(error);
       });
     } catch (_) {
       if (!mounted) return;

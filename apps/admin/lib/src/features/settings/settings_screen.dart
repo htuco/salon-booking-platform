@@ -43,6 +43,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/admin_load_error.dart';
+import '../../core/poruka_greske.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
@@ -415,7 +417,7 @@ class _PostavkeState extends ConsumerState<_Postavke> {
       poruka =
           'Sačuvano. Pravila vrijede odmah, bez nove verzije u prodavnici.';
     } on ApiError catch (error) {
-      poruka = error.message;
+      poruka = porukaGreske(error);
     } catch (_) {
       poruka = 'Postavke se ne mogu sačuvati.';
     }
@@ -1389,9 +1391,10 @@ class _SalonskaPravila extends ConsumerWidget {
               padding: EdgeInsets.symmetric(vertical: AdminSpacing.lg),
               child: AdminSkeletonList(redova: 3),
             ),
-            error: (_, _) => const Padding(
-              padding: EdgeInsets.symmetric(vertical: AdminSpacing.md),
-              child: Text('Sekcije se ne mogu učitati.'),
+            error: (_, _) => AdminLoadError(
+              padding: const EdgeInsets.symmetric(vertical: AdminSpacing.md),
+              poruka: 'Sekcije se ne mogu učitati.',
+              onRetry: () => ref.invalidate(postavkeSekcijeProvider),
             ),
             data: (lista) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

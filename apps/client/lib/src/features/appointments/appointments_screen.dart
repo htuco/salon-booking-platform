@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/load_error.dart';
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
 import '../../core/vertical_provider.dart';
@@ -139,7 +140,11 @@ class _Tabovi extends ConsumerWidget {
                   ],
                 ),
               ),
-              AsyncError(:final error) => _Greska(error: error),
+              // „Pokušaj ponovo" čita iz baze, ne ponavlja keširanu grešku (FE-501).
+              AsyncError(:final error) => LoadError(
+                error: error,
+                onRetry: () => ref.invalidate(myAppointmentsProvider),
+              ),
               AsyncValue(:final value?) => TabBarView(
                 children: [
                   _Lista(
@@ -185,7 +190,7 @@ class _Lista extends ConsumerWidget {
     }
 
     if (termini.isEmpty) {
-      return RefreshIndicator(
+      return AppRefresh(
         onRefresh: osvjezi,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -205,7 +210,7 @@ class _Lista extends ConsumerWidget {
       );
     }
 
-    return RefreshIndicator(
+    return AppRefresh(
       onRefresh: osvjezi,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -380,20 +385,4 @@ class _Prazno extends StatelessWidget {
     actionLabel: akcija,
     onAction: onAkcija,
   );
-}
-
-class _Greska extends StatelessWidget {
-  const _Greska({required this.error});
-
-  final Object error;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return EmptyState(
-      message: error is NetworkError ? l10n.noConnection : l10n.genericError,
-      icon: LucideIcons.circleAlert,
-    );
-  }
 }

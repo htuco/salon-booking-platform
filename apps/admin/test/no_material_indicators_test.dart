@@ -7,6 +7,9 @@
 /// **Jedan izuzetak je dopušten i napisan:** `LinearProgressIndicator` sa zadanim
 /// `value`-om nije indikator učitavanja nego **traka podatka** (zauzetost radnika na
 /// dashboardu). Takav red nosi `// ignore` uz razlog.
+///
+/// FE-501 je dodao i `RefreshIndicator(`: njegov spinner je isti Material potpis.
+/// Povlačenje ide kroz `AdminRefresh`.
 library;
 
 import 'dart:io';
@@ -15,7 +18,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('nijedan admin ekran ne koristi Material indikator', () {
-    final izraz = RegExp(r'\b(Circular|Linear)ProgressIndicator\b');
+    // `RefreshIndicator(` crta Material spinner; `.noSpinner(` ne crta i dopušten je
+    // (nosi ga `AdminRefresh`, FE-501).
+    final izraz = RegExp(
+      r'\b((Circular|Linear)ProgressIndicator\b|RefreshIndicator\s*\()',
+    );
 
     final prijave = <String>[];
 
@@ -42,7 +49,8 @@ void main() {
       prijave,
       isEmpty,
       reason:
-          'Učitavanje nosi `AdminSkeletonList`, radnja u dugmetu `AdminButtonBusy`. '
+          'Učitavanje nosi `AdminSkeletonList`, radnja u dugmetu `AdminButtonBusy`, '
+          'povlačenje `AdminRefresh`. '
           'Traka podatka (sa `value`) je izuzetak i nosi `// ignore` uz razlog.\n'
           '${prijave.join('\n')}',
     );
