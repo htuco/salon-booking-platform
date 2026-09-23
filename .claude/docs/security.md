@@ -88,6 +88,8 @@ blokade, postavke, pozivi, neradni dan) ne prima radnika.
   iz taska 45 nema vezu — takav nalog nema prava i vlasnik ga poziva ponovo.
 - `private.is_employee(salon)` traži claim `role = employee` i `salon_id` **i** red u
   `public.users` sa vezom. `private.current_employee_id()` vraća vezu samo uz iste uslove.
+  **Oboje traže i aktivnog radnika** (`employees.is_active`): vlasnik koji radnika deaktivira u
+  Osoblju gasi mu pristup odmah, iako nalog i JWT ostaju (nalaz `rls-auditor` prije merge-a).
 - `private.can_manage_appointment(salon, termin)` = admin, **ili** radnik kojem je termin
   dodijeljen. Kroz nju idu `set_appointment_status` i `cancel_appointment`; radnik otkazuje kao
   salon (`cancelled_by = salon`, bez klijentskog roka).
@@ -99,8 +101,8 @@ blokade, postavke, pozivi, neradni dan) ne prima radnika.
   postavke čita kroz `public_active`, kao svaki posjetilac aktivnog salona.
 - Poziv za radnika mora nositi radnika koji još nema nalog (`create_staff_invite`, PT400).
 
-Dokaz: `021_uloga_employee.test.sql` (37 asercija; politika bez uslova na radnika obara 3, kapija
-bez vlasništva termina obara 2) i `rest_employee_izolacija.ts` (13 provjera sa stvarnim JWT-om
+Dokaz: `021_uloga_employee.test.sql` (46 asercija; politika bez uslova na radnika obara 3, kapija
+bez vlasništva termina obara 2, provjera bez `is_active` obara 5) i `rest_employee_izolacija.ts` (13 provjera sa stvarnim JWT-om
 radnika kroz GoTrue i PostgREST).
 
 ## `private.*` — gdje živi autorizacija

@@ -59,6 +59,10 @@ language sql stable security definer set search_path = '' as $$
       select 1 from public.users u
       where u.id = auth.uid() and u.role = 'employee'
         and u.salon_id = p_salon and u.employee_id is not null
+        -- Deaktiviran radnik (`set_employee_active`) gubi pristup odmah — nalog ostaje,
+        -- ali ne otvara nista. Nadjeno pregledom `rls-auditor`.
+        and exists (select 1 from public.employees e
+                    where e.salon_id = u.salon_id and e.id = u.employee_id and e.is_active)
     );
 $$;
 
@@ -67,7 +71,9 @@ language sql stable security definer set search_path = '' as $$
   select u.employee_id from public.users u
   where u.id = auth.uid() and u.role = 'employee'
     and coalesce(auth.jwt()->'app_metadata'->>'role' = 'employee', false)
-    and coalesce(auth.jwt()->'app_metadata'->>'salon_id' = u.salon_id::text, false);
+    and coalesce(auth.jwt()->'app_metadata'->>'salon_id' = u.salon_id::text, false)
+    and exists (select 1 from public.employees e
+                where e.salon_id = u.salon_id and e.id = u.employee_id and e.is_active);
 $$;
 
 -- Admin salona, ili radnik **kojem termin pripada**. Termin bez radnika nije ciji.

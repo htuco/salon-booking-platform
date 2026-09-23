@@ -88,7 +88,10 @@ reset role;
 
 set local request.jwt.claims = '{"sub":"fe000000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
-select is((select count(*)::int from public.staff_invites), 2, 'Admin A vidi svoja dva poziva');
+-- Samo pozivi ovog testa: baza moze nositi pozive drugih testova (REST), pa brojanje svih bi
+-- zavisilo od stanja baze, ne od politike (nalaz `rls-auditor`, task 46).
+select is((select count(*)::int from public.staff_invites
+    where created_by = 'fe000000-0000-4000-8000-000000000001'), 2, 'Admin A vidi svoja dva poziva');
 reset role;
 
 -- ---------------------------------------------------------------------------

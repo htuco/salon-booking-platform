@@ -20,6 +20,7 @@ const noviVlasnik = `vlasnik-${sufiks}@poziv45.invalid`;
 const noviRadnik = `radnik-${sufiks}@poziv45.invalid`;
 const lozinka = "lozinka-" + sufiks;
 const napravljeni: string[] = [];
+const pozivi: string[] = [];
 let assertions = 0;
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -62,7 +63,9 @@ async function poziv(token: string, role: string, name: string, employeeId?: str
     body: JSON.stringify({ p_salon_id: salonA, p_role: role, p_name: name, p_employee_id: employeeId ?? null }),
   });
   if (r.status !== 200) throw new Error(`create_staff_invite: HTTP ${r.status} ${JSON.stringify(r.body)}`);
-  return (Array.isArray(r.body) ? r.body[0] : r.body) as { invite_id: string; code: string };
+  const p = (Array.isArray(r.body) ? r.body[0] : r.body) as { invite_id: string; code: string };
+  pozivi.push(p.invite_id);
+  return p;
 }
 
 function prihvati(body: Record<string, unknown>) {
@@ -146,6 +149,10 @@ try {
 
   console.log(`rest_pozivi_osoblja: ${assertions} provjera PASS`);
 } finally {
+  // Pozivi se brisu: zaostao ziv poziv je mijenjao brojanje u pgTAP-u (nalaz `rls-auditor`).
+  for (const id of pozivi) {
+    await call(`/rest/v1/staff_invites?id=eq.${id}`, service, { method: "DELETE" });
+  }
   for (const id of napravljeni) {
     await call(`/auth/v1/admin/users/${id}`, service, { method: "DELETE" });
   }

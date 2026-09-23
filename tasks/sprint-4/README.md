@@ -18,7 +18,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | [43](43-korak-po-usluzi.md) ✅ | Korak rezervacije po usluzi | feature | — | 1–2 dana |
 | [44](44-postavke-jasnije.md) ✅ | Postavke i pravila salona jasnija | feature | — | 1–2 dana |
 | [45](45-nalozi-za-osoblje.md) ✅ | Kreiranje naloga za osoblje | feature | 46, 47 | 2–3 dana |
-| [46](46-uloga-employee-i-izolacija.md) 🟡 | Uloga `employee` i sužena izolacija | feature | 47 | 2–3 dana |
+| [46](46-uloga-employee-i-izolacija.md) ✅ | Uloga `employee` i sužena izolacija | feature | 47 | 2–3 dana |
 | [47](47-admin-ljuska-za-radnika.md) | Admin ljuska za radnika | feature | — | 1–2 dana |
 
 Ukupno 13–19 dana. **To je više nego jedan sprint** i tako je i planirano: 37–41 su obavezni,
@@ -152,3 +152,10 @@ Gotov 2026-09-24 ([PR #105](https://github.com/htuco/salon-booking-platform/pull
 Nalog nastaje iz koda poziva koji vlasnik pošalje radniku — bez SMTP-a. 551 pgTAP asercija,
 17 REST provjera kroz Edge Function, viđeno uživo na 1440 i 402. Poslije merge-a: `db push` pa
 `functions deploy accept-staff-invite`. **Redoslijed bloka je 45 → 46 → 47.**
+
+### 46 — Uloga `employee` i sužena izolacija ✅
+
+Gotov 2026-09-24 ([PR #106](https://github.com/htuco/salon-booking-platform/pull/106)). Radnik čita
+i mijenja samo svoje termine; `is_admin` netaknut. `rls-auditor` našao da deaktiviran radnik
+zadržava pristup — zatvoreno. 597 pgTAP, 13 REST sa stvarnim JWT-om. Realtime nije pokriven
+testom (v. status taska). Poslije merge-a `supabase db push`.

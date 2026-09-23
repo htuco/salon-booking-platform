@@ -4,7 +4,7 @@ Puni task: [tasks/sprint-4/46-uloga-employee-i-izolacija.md](sprint-4/46-uloga-e
 
 ## Status
 
-U toku — kod i dokaz gotovi, čeka `rls-auditor` i review
+Gotov — čeka review i merge PR #106, pa `supabase db push`
 
 ## Ciljevi
 
@@ -13,7 +13,7 @@ U toku — kod i dokaz gotovi, čeka `rls-auditor` i review
 - [x] `set_appointment_status` / `cancel_appointment` samo za njegov termin
 - [x] pgTAP `021` + REST `rest_employee_izolacija.ts` sa stvarnim JWT-om
 - [x] `security.md` red za radnika
-- [ ] `rls-auditor` pregled prije merge-a
+- [x] `rls-auditor` pregled — nalazi zatvoreni (deaktiviran radnik, krhko brojanje u `020`)
 
 ## Napomene
 

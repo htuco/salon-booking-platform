@@ -94,6 +94,14 @@ select is((public.cancel_appointment((select salon from fix), 'fa400000-0000-400
   'salon', 'A1 otkazuje svoj termin kao salon');
 select throws_ok($$ select public.cancel_appointment('550e8400-e29b-41d4-a716-446655440000', 'fa400000-0000-4000-8000-000000000002', 'x') $$,
   '42501', null, 'A1 ne otkazuje termin radnika A2');
+select throws_ok($$ select public.cancel_appointment('550e8400-e29b-41d4-a716-446655440000', 'fa400000-0000-4000-8000-000000000003', 'x') $$,
+  '42501', null, 'A1 ne otkazuje termin bez radnika');
+select throws_ok($$ select public.cancel_appointment('550e8400-e29b-41d4-a716-446655440001', 'fa400000-0000-4000-8000-000000000009', 'x') $$,
+  '42501', null, 'A1 ne otkazuje termin salona B');
+select throws_ok($$ select public.cancel_appointment('550e8400-e29b-41d4-a716-446655440000', 'fa400000-0000-4000-8000-0000000000ff', 'x') $$,
+  '42501', null, 'Nepostojeci termin kroz cancel daje istu gresku kao tudji');
+select throws_ok($$ select public.set_appointment_status('550e8400-e29b-41d4-a716-446655440000', 'fa400000-0000-4000-8000-0000000000ff', 'confirmed') $$,
+  '42501', null, 'Nepostojeci termin kroz set_appointment_status daje istu gresku kao tudji');
 select throws_ok($$ update public.appointments set status = 'cancelled' where id = 'fa400000-0000-4000-8000-000000000001' $$,
   '42501', null, 'A1 ne pise termin direktno');
 
@@ -122,6 +130,20 @@ select is((select name from public.services where id = '10000000-0000-4000-8000-
   'Muško šišanje', 'Cjenovnik je netaknut');
 
 -- ---------------------------------------------------------------------------
+-- Deaktiviran radnik gubi pristup odmah (nalaz `rls-auditor`, task 46). Nalog i JWT ostaju.
+update public.employees set is_active = false where id = '20000000-0000-4000-8000-000000000001';
+set local request.jwt.claims = '{"sub":"fa000000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"role":"employee","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
+set local role authenticated;
+select ok(not private.is_employee('550e8400-e29b-41d4-a716-446655440000'), 'Deaktiviran radnik nije radnik');
+select is((select count(*)::int from public.appointments), 0, 'Deaktiviran radnik ne vidi svoje termine');
+select is((select count(*)::int from public.blocked_slots), 0, 'ni blokade');
+select throws_ok($$ select public.set_appointment_status('550e8400-e29b-41d4-a716-446655440000', 'fa400000-0000-4000-8000-000000000001', 'completed') $$,
+  '42501', null, 'Deaktiviran radnik ne mijenja svoj termin');
+select throws_ok($$ select public.cancel_appointment('550e8400-e29b-41d4-a716-446655440000', 'fa400000-0000-4000-8000-000000000001', 'x') $$,
+  '42501', null, 'Deaktiviran radnik ne otkazuje svoj termin');
+reset role;
+update public.employees set is_active = true where id = '20000000-0000-4000-8000-000000000001';
+
 -- 5. Tokeni bez pokrica
 -- ---------------------------------------------------------------------------
 -- JWT kaze `employee`, a reda u `public.users` nema.

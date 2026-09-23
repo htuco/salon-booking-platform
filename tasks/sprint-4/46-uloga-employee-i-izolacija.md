@@ -37,7 +37,7 @@ koja bi nalog vezala za red u `employees`.
 
 ## Status (2026-09-24)
 
-Kod gotov i dokazan — PR čeka `rls-auditor` pregled prije merge-a (zamka iz ovog fajla).
+Gotov — `rls-auditor` pregled urađen, nalazi zatvoreni.
 
 - Migracija `20260924160000_uloga_employee.sql` je **aditivna**: `is_admin()` netaknut, sve
   `staff_manage` politike i RPC-evi pisanja ostaju admin-only (pregled svake je u zaglavlju
@@ -47,9 +47,23 @@ Kod gotov i dokazan — PR čeka `rls-auditor` pregled prije merge-a (zamka iz o
 - Poziv za radnika mora nositi radnika bez naloga; pozivi iz taska 45 bez radnika su povučeni,
   a nalog radnika bez veze nema prava (`check` je `not valid` za stare redove).
 - Admin: poziv za radnika bira radnika iz Osoblja umjesto kucanja imena.
-- Dokaz: `supabase test db` **588 PASS** (`021` nosi 37). Sabotaže: politika bez uslova na
-  radnika obara 3, kapija bez vlasništva termina obara 2. `rest_employee_izolacija.ts` **13 PASS**
+- Dokaz: `supabase test db` **597 PASS** (`021` nosi 46). Sabotaže: politika bez uslova na
+  radnika obara 3, kapija bez vlasništva termina obara 2, bez `is_active` obara 5. `rest_employee_izolacija.ts` **13 PASS**
   sa stvarnim JWT-om radnika; svih 12 REST testova zeleno (284 provjere). `melos run test` PASS
   (admin 429), analyze i format čisti.
 - Nije viđeno uživo: radnik se još ne može prijaviti u aplikaciju — to je task 47.
 
+
+**`rls-auditor` (2026-09-24), nalazi i ishod:**
+- **Deaktiviran radnik je zadržavao pristup** — `is_employee`/`current_employee_id` nisu gledali
+  `employees.is_active`. Popravljeno u istoj migraciji (još nije na hostovanom), 5 novih asercija.
+- `020` je brojao sve pozive u bazi, a REST test ih je ostavljao — pgTAP je padao na prljavoj bazi.
+  `020` broji samo svoje, REST test briše svoje pozive; provjereno REST-om pa pgTAP-om zaredom.
+- Dopunjeni negativni slučajevi: otkazivanje termina bez radnika, salona B i nepostojećeg termina,
+  nepostojeći termin kroz `set_appointment_status` — ista `42501`.
+- Curenja preko granice salona, pristupa samo na osnovu claima, ni puta da radnik sam sebi
+  promijeni ulogu/vezu auditor nije našao.
+
+**Ostalo za sljedećeg:** Realtime nad `appointments` nije pokriven testom. `postgres_changes`
+poštuje RLS pa `employee_own` važi i tu, ali nijedan test to ne drži — task 47 ga treba vidjeti
+uživo (radnik ne dobija događaj za tuđi termin).
