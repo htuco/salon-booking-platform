@@ -85,6 +85,10 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   koji bi ispali iz novog rasporeda ili pali pod blokadu. Postojeći termin se **ne briše i ne
   pomjera** — pozivalac ih prikazuje prije upisa. Prva vraća i `reason`
   (`Dan je zatvoren` / `Van radnog vremena` / `Unutar pauze`), druga ne.
+- `set_day_closed(salon_id, date, reason=null)` (task 42) blokira cijeli dan i **otkazuje** sve
+  `pending`/`confirmed` termine tog dana kroz `cancel_appointment`; vraća broj otkazanih. `PT400` za
+  prošli dan i za danas poslije najranijeg početka radnog vremena (zona salona).
+  `day_closure_preview(salon_id, date)` vraća te termine u obliku `blocked_slot_conflicts`, sa istim guardom.
 - Direktni INSERT/UPDATE/DELETE grantovi nad `working_hours` i `blocked_slots` su oduzeti
   `authenticated` roli; ostao je samo SELECT.
 

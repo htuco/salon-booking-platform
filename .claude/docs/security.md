@@ -265,6 +265,27 @@ Dokaz: `013_working_hours_crud.test.sql` (57 asercija) i `rest_working_hours.ts`
 stvarni JWT i PostgREST — skraćeno radno vrijeme, pauza, zatvoren dan i blokada svaki put mijenjaju
 ono što `get_available_slots` vrati klijentu, a direktan `insert` vraća `401/403`).
 
+### Neradni dan — task 42
+
+`set_day_closed(salon_id, date, reason)` je jedini put kojim salon otkazuje cijeli dan. Guard je
+isti `private.assert_salon_access` kao za blokade, plus `private.assert_day_closable`: **prošli dan
+je zaključan**, a danas je otvoren samo **prije najranijeg početka radnog vremena tog dana**
+(salonskog ili bilo kojeg radnika), računato u `salon_settings.timezone`. Obje greške su `PT400`,
+ne `PT409` — `error_mapper.dart` svaki `PT409` prevodi u „Termin je u međuvremenu zauzet".
+
+**Otkazivanje ide kroz `cancel_appointment`, ne kroz `set_appointment_status`** (koji `cancelled`
+odbija) i ne direktnim `update`. Tako `cancelled_by = 'salon'`, razlog i push trigger ostaju na
+jednom mjestu. Ista funkcija u istoj transakciji upisuje blokadu cijelog dana (`00:00–23:59:59`,
+bez radnika), pa novi termin ne može uletjeti između otkazivanja i zatvaranja. Ponovljen poziv ne
+pravi drugu blokadu i vraća `0`.
+
+`day_closure_preview` vraća termine koji bi bili otkazani, sa istim guardom — ekran pokazuje broj
+prije potvrde. Obavijest je red u `notification_logs` **po uređaju** klijenta; klijent bez
+registrovanog uređaja ne dobija red (odluka 2026-09-23).
+
+Dokaz: `018_neradni_dan.test.sql`. Guard prima `p_now`, pa test pokriva obje strane granice
+otvaranja bez zavisnosti od doba dana; sabotaža koja isključi provjeru otvaranja obara 3 asercije.
+
 ### Postavke lokacije — task 36
 
 `authenticated` ima samo SELECT nad `salons` i `salon_settings`. Pisanje ide kroz
@@ -650,6 +671,7 @@ ništa.
 | `014_postavke_lokacije.test.sql` | postavke lokacije — grant je granica nad `salons` i `salon_settings`, platformska polja (boja, `slug`, `plan`, zona) ostaju van dohvata vlasnika, i **promjena `min_cancel_hours` odmah mijenja ishod `cancel_appointment`** za isti termin |
 | `rest_postavke_lokacije.ts` | isto kroz PostgREST: direktan `PATCH` pada, a ono što vlasnik snimi čita **`anon` bez tokena** — dokaz da promjena vrijedi bez novog builda |
 | `015_automatsko_potvrdjivanje.test.sql` | automatsko potvrđivanje — mod se prebacuje **kroz `update_salon_settings`**, pa se odmah rezerviše: `manual` daje `pending` sa rokom, `auto` `confirmed` bez roka, `source` ostaje `app` u oba, admin unos ne zavisi od postavke, a **zatečeni `pending` termini se ne diraju** |
+| `018_neradni_dan.test.sql` | neradni dan — prošlost zaključana, danas samo prije otvaranja (u zoni salona, najraniji radnik), ne-admin i tuđi admin `42501`, otkazani tačno `pending`/`confirmed` sa `cancelled_by = salon`, obavijest po otkazanom terminu, tuđi salon netaknut |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao
