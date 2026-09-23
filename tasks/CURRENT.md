@@ -4,7 +4,7 @@ Puni task: [tasks/sprint-4/44-postavke-jasnije.md](sprint-4/44-postavke-jasnije.
 
 ## Status
 
-U toku
+Gotov — čeka review i merge PR #104 (bez migracije)
 
 ## Ciljevi
 
@@ -15,7 +15,7 @@ U toku
 - [x] Widget test: promjena roka mijenja tekst primjera
 - [x] **Proširenje (odluka 2026-09-24):** klijent čita `salon_settings` za granularnost, izbor
       majstora, raspon kalendara i cijene; vertikala samo kao rezerva
-- [ ] Viđeno uživo: prekidač u adminu mijenja klijentski ekran
+- [x] Viđeno uživo: prekidač u adminu mijenja klijentski ekran
 
 ## Napomene
 

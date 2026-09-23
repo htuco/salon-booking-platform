@@ -1195,7 +1195,8 @@ class _BrojPolje extends StatelessWidget {
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         decoration: _ukras(
           pomoc: primjer?.call(int.tryParse(vrijednost.text)),
-          helperMaxLines: 4,
+          // Primjer roka ima tri rečenice; sa 4 reda se u uskoj koloni `3i` rezao.
+          helperMaxLines: 8,
         ),
         validator: validator,
       ),

@@ -291,6 +291,12 @@ Dvije odluke koje se ne vide iz potpisa:
 - **Parsiranje nikad ne baca.** Nepoznat `key`, ključ koji nedostaje i vrijednost pogrešnog tipa
   padaju na generic default, jer je app u storeu uvijek starija od baze — vertikala dodana
   migracijom ne smije srušiti ekran.
+- **Booking pravila vertikale su samo početna vrijednost** (task 44). Salon ih poslije mijenja u
+  admin Postavkama, a to piše `salon_settings` — isti red koji baza provodi. Klijent zato čita
+  `salonSettingsProvider` prvo i pada na `vertical.rules` samo dok postavke ne stignu
+  (`bookingDateOnlyProvider`, `bookingRequiresStaffChoiceProvider`, `bookingMaxAdvanceDaysProvider`,
+  `minCancelHoursProvider`). Cijene traže oba: `features.prices` vertikale **i**
+  `show_prices_in_app` salona (`prikaziCijeneProvider`).
 
 ## Dizajn (`prototype/ui/`) i wireframe (`prototype/`)
 
