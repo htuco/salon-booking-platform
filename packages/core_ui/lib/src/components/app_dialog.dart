@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../tokens/spacing.dart';
 import 'app_button.dart';
+import 'app_modal.dart';
 
 /// Dijalog potvrde — `prototype/ui/SPEC.md`, modal **5p**.
 ///
@@ -69,12 +70,12 @@ class AppDialog extends StatelessWidget {
   static Future<bool?> show(
     BuildContext context, {
     required AppDialog dialog,
-  }) => showDialog<bool>(
-    context: context,
+  }) => AppModal.dialog<bool>(
+    context,
     barrierDismissible: !dialog.busy,
     // Scrim je gotovo neproziran (`SPEC.md`: rgba(6,7,8,.72)) i ide **uz** blur ispod.
-    // Vrijednost je token teme (`AppNeutrals.scrim`), jer se po temi razlikuje.
-    barrierColor: Theme.of(context).colorScheme.scrim,
+    // Vrijednost je token teme (`AppNeutrals.scrim`), jer se po temi razlikuje; postavlja
+    // ga `AppModal`, zajedno sa animacijom ulaza (FE-203).
     builder: (context) => BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
       child: dialog,
