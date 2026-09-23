@@ -1303,7 +1303,8 @@ class _PristupKartica extends ConsumerWidget {
           const SizedBox(height: 6),
           if (clan != null) ...[
             Container(
-              height: 62,
+              // Najmanje 62 iz `3i`, ne tačno: uvećan sistemski font inače preliva red.
+              constraints: const BoxConstraints(minHeight: 62),
               padding: const EdgeInsets.only(left: 14, right: 4),
               decoration: BoxDecoration(
                 color: context.adminColors.ground,
@@ -1315,7 +1316,7 @@ class _PristupKartica extends ConsumerWidget {
                   const SizedBox(width: AdminSpacing.md),
                   Expanded(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
