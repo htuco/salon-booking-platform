@@ -1,42 +1,38 @@
-# Trenutni task: 42 — Neradni dan: zaključana prošlost i kaskadno otkazivanje
+# Trenutni task: 43 — Korak rezervacije po usluzi
 
-Puni task: [tasks/sprint-4/42-neradni-dan-i-zakljucana-proslost.md](sprint-4/42-neradni-dan-i-zakljucana-proslost.md) · učitan 2026-09-23
+Puni task: [tasks/sprint-4/43-korak-po-usluzi.md](sprint-4/43-korak-po-usluzi.md) · učitan 2026-09-24
 
 ## Status
 
-Gotov — čeka review i merge PR #102, pa `supabase db push`
+Gotov — čeka review i merge PR #103, pa `supabase db push`
 
 ## Ciljevi
 
-- [x] Migracija: RPC `public.set_day_closed(p_salon_id, p_date, p_reason)` — `security definer`, `private.is_admin`, grant samo `authenticated`
-- [x] Odbija prošli datum i danas **poslije** najranijeg početka radnog vremena tog dana (zona iz `salon_settings.timezone`), razumljiva greška
-- [x] Otkazuje sve `pending`/`confirmed` termine tog dana uz `cancel_reason` i `cancelled_by = 'salon'`; `completed`/`cancelled` ne dira
-- [x] Obavijest klijentu se zapisuje za svaki otkazan termin
-- [x] Read-only pregled „koliko termina će biti otkazano" za admin dijalog
-- [x] pgTAP: prošlost odbijena, danas prije/poslije otvaranja, broj otkazanih tačan, tuđi salon nedirnut, ne-admin odbijen
-- [x] Admin ekran: akcija „Neradni dan" sa brojem termina prije potvrde
-- [x] `.claude/docs/security.md` (+ `supabase/IMPLEMENTATION.md`) ažurirani
+- [x] Migracija: `services.slot_step_minutes int null`, `check between 1 and 120` (isti raspon kao salonski)
+- [x] `get_available_slots` koristi `coalesce(usluga, salon)`; `book_appointment` ga već zove, pa provodi isti ugovor
+- [x] Upis koraka kroz postojeći RPC usluge (task 32) + `core_domain` model + `core_api`
+- [x] Admin editor usluge: polje „Korak" sa objašnjenjem i praznim = salonski
+- [x] pgTAP: korak 15 vs 30 daje različit broj slotova, prazno = salonski, rezervacija van koraka odbijena
+- [x] Viđeno uživo: klijentski booking flow nudi početke po koraku usluge
+- [x] `security.md`/`IMPLEMENTATION.md` ako se mijenja ugovor RPC-a
 
 ## Napomene
 
-- **Zavisnosti 38 i 39 su ✅.** Ništa nije isporučeno ranije — `set_day_closed` ne postoji u repou.
-- **Zamka u task fajlu je netačna:** `set_appointment_status`
-  (`20260914150000_admin_akcije_nad_terminima.sql`) izričito **odbija** otkazivanje (PT400).
-  Kanonska putanja je `public.cancel_appointment` (`20260912140000_cancel_appointment.sql`), koja za
-  admina već postavlja `cancelled_by='salon'` i `cancel_reason`. Otkazivati kroz nju ili zajednički
-  `private.*` helper, ne direktnim `update`. Provjeriti ima li vremensko ograničenje koje blokira admina.
-- **`notification_logs` je po uređaju** (`device_id`); puni ga trigger iz
-  `20260922140000_push_u_auto_modu.sql` na promjenu statusa. Klijent bez registrovanog uređaja
-  dobija nula redova — DoD „red za svaki termin" treba pojasniti ili dodati red bez uređaja.
-  Odluka ide u status blok (ADR ako mijenja ugovor).
-- „Prošlost zaključana" za radno vrijeme i blokade (`working_hours_dialogs.dart`, `blocked_slots`)
-  nije u DoD-u — samo za `set_day_closed`. Ne širiti bez odluke.
-- Neradni dan vjerovatno treba i `blocked_slots` red za cijeli dan, da availability ne nudi slotove
-  nakon otkazivanja — provjeriti oblik iz taska 34.
-- Prije pisanja: `.claude/docs/security.md`. Dokaz: `supabase start && supabase test db` + `/verify`.
-- Procjena 2–3 dana ostaje.
+- Zavisnosti nema. Ništa nije isporučeno ranije — `services` nema kolonu koraka.
+- **Jedno mjesto računa korak:** `get_available_slots` u `20260914150000_admin_akcije_nad_terminima.sql`
+  (`cfg.step = st.slot_step_minutes`). `book_appointment` re-validira kroz njega, pa promjena tamo
+  pokriva i klijenta i admin ručni unos.
+- ADR-0014 je odluka; ne otvara se ponovo.
+- Zamka: trajanje ≠ korak. Snapshot termina ne nosi korak.
 
 ## Istorija
+
+### 42 — Neradni dan i zaključana prošlost (gotov)
+
+Spojen u `main` ([PR #102](https://github.com/htuco/salon-booking-platform/pull/102)) 2026-09-24,
+migracija na hostovanom projektu (`supabase db push`). `set_day_closed` otkazuje kroz
+`cancel_appointment` i blokira cijeli dan; prošlost i danas-poslije-otvaranja odbija sa `PT400`.
+497 pgTAP asercija, `melos run test` zelen, tok viđen uživo na admin webu.
 
 ### FE-403 — Kalendar termina (gotov)
 

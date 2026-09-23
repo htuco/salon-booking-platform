@@ -17,11 +17,11 @@ minuta koje sistem vodi kao slobodne.
 ostaje podrazumijevani kad usluga svoj nema. Odbijene alternative i razlog: [ADR-0014](../../docs/adr/0014-korak-rezervacije-je-po-usluzi.md).
 
 ## Definicija gotovog
-- [ ] `services.slot_step_minutes` — nullable, `check` na razuman raspon, fallback na salonsku vrijednost
-- [ ] `get_available_slots` koristi korak usluge; `book_appointment` provodi isti ugovor
-- [ ] Admin editor usluge nudi korak, sa objašnjenjem šta mijenja i šta znači prazno
-- [ ] pgTAP: ista usluga sa korakom 15 i 30 daje različit broj slotova; prazan korak = salonski
-- [ ] Postojeće usluge ostaju netaknute — migracija ne mijenja nijedno ponašanje dok se korak ne upiše
+- [x] `services.slot_step_minutes` — nullable, `check` na razuman raspon, fallback na salonsku vrijednost
+- [x] `get_available_slots` koristi korak usluge; `book_appointment` provodi isti ugovor
+- [x] Admin editor usluge nudi korak, sa objašnjenjem šta mijenja i šta znači prazno
+- [x] pgTAP: ista usluga sa korakom 15 i 30 daje različit broj slotova; prazan korak = salonski
+- [x] Postojeće usluge ostaju netaknute — migracija ne mijenja nijedno ponašanje dok se korak ne upiše
 
 ## Zamke
 - **Trajanje i korak nisu ista stvar.** Trajanje puni termin, korak bira dozvoljene početke. Usluga
@@ -31,6 +31,19 @@ ostaje podrazumijevani kad usluga svoj nema. Odbijene alternative i razlog: [ADR
 - Snapshot termina (task 32) ne nosi korak i ne treba ga: korak utiče na **izbor** početka, ne na
   ono što je dogovoreno.
 
-## Status
+## Status (2026-09-24)
 
-Nije počet.
+Gotov — [PR #103](https://github.com/htuco/salon-booking-platform/pull/103).
+
+- Migracija `20260924120000_korak_po_usluzi.sql`: nullable `services.slot_step_minutes` (1–120),
+  `get_available_slots` sa `coalesce(usluga, salon)` — jedino mjesto koje računa korak;
+  `book_appointment` re-validira kroz njega. `create_service`/`update_service` dobili
+  `p_slot_step_minutes` (stari potpisi obrisani).
+- Dokaz: `supabase test db` **514 PASS** (`019` nosi 17); vraćen salonski korak obara 6.
+  `melos run test` PASS, `flutter analyze` čist.
+- **Viđeno uživo 2026-09-24** (lokalni stack): admin editor „Korak početaka" → „svakih 30 min" za
+  Muško šišanje, sačuvano (`slot_step_minutes = 30`, ostale usluge NULL). Klijentski web, 29.09.:
+  početci 09:00, 09:30, 10:00… Brada (bez koraka) i dalje 09:00, 09:15, 09:30 — salonski 15.
+- Nakon merge-a: `supabase db push`, **prije** deploya admina — novi admin šalje
+  `p_slot_step_minutes`, koji stara baza ne zna.
+

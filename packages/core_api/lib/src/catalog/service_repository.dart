@@ -15,7 +15,8 @@ class ServiceRepository {
   final SupabaseClient _client;
 
   static const _columns =
-      'id, salon_id, name, description, category, price, duration_minutes, is_active, image_url';
+      'id, salon_id, name, description, category, price, duration_minutes, slot_step_minutes, '
+      'is_active, image_url';
 
   /// Sve aktivne usluge salona, sortirane **uzlazno** po kategoriji pa po imenu — isti
   /// redoslijed koji ekran prikazuje, da se ne sortira ponovo na klijentu.
@@ -57,6 +58,7 @@ class ServiceRepository {
     required String price,
     required int durationMinutes,
     String? imageUrl,
+    int? slotStepMinutes,
   }) => guard(() async {
     final row = await _client.rpc<dynamic>(
       'create_service',
@@ -68,6 +70,8 @@ class ServiceRepository {
         'p_price': price,
         'p_duration_minutes': durationMinutes,
         'p_image_url': imageUrl,
+        // Uvijek se šalje: `null` znači salonski korak, ne „ne diraj".
+        'p_slot_step_minutes': slotStepMinutes,
       },
     );
     return serviceFromRpc(row);
@@ -82,6 +86,7 @@ class ServiceRepository {
     required String price,
     required int durationMinutes,
     String? imageUrl,
+    int? slotStepMinutes,
   }) => guard(() async {
     final row = await _client.rpc<dynamic>(
       'update_service',
@@ -94,6 +99,8 @@ class ServiceRepository {
         'p_price': price,
         'p_duration_minutes': durationMinutes,
         'p_image_url': imageUrl,
+        // Uvijek se šalje: `null` znači salonski korak, ne „ne diraj".
+        'p_slot_step_minutes': slotStepMinutes,
       },
     );
     return serviceFromRpc(row);

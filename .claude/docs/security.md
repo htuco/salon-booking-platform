@@ -211,6 +211,12 @@ Termin snapshotuje `service_name`, `service_price` i `service_duration_minutes` 
 upisa. Pozivalac te vrijednosti ne bira. Promjena cjenovnika zato utiče na budući availability i
 nove rezervacije, ali ne prepisuje dogovorenu cijenu ni trajanje postojećeg termina.
 
+**Korak po usluzi (task 43).** `services.slot_step_minutes` je nullable; `get_available_slots` uzima
+korak usluge, pa salonski. Potpisi `create_service`/`update_service` su dobili parametar i stari su
+**obrisani**, ne ostavljeni kao overload — PostgREST bira po imenima argumenata, pa bi stara verzija
+ostala dohvatljiva. Grantovi su vraćeni taksativno (`authenticated`), `anon` dobija `42501` —
+dokaz `019_korak_po_usluzi.test.sql`.
+
 ### Osoblje — task 33
 
 `authenticated` ima samo SELECT nad `employees` i `employee_services`. `create_employee`
@@ -672,6 +678,7 @@ ništa.
 | `rest_postavke_lokacije.ts` | isto kroz PostgREST: direktan `PATCH` pada, a ono što vlasnik snimi čita **`anon` bez tokena** — dokaz da promjena vrijedi bez novog builda |
 | `015_automatsko_potvrdjivanje.test.sql` | automatsko potvrđivanje — mod se prebacuje **kroz `update_salon_settings`**, pa se odmah rezerviše: `manual` daje `pending` sa rokom, `auto` `confirmed` bez roka, `source` ostaje `app` u oba, admin unos ne zavisi od postavke, a **zatečeni `pending` termini se ne diraju** |
 | `018_neradni_dan.test.sql` | neradni dan — prošlost zaključana, danas samo prije otvaranja (u zoni salona, najraniji radnik), ne-admin i tuđi admin `42501`, otkazani tačno `pending`/`confirmed` sa `cancelled_by = salon`, obavijest po otkazanom terminu, tuđi salon netaknut |
+| `019_korak_po_usluzi.test.sql` | korak po usluzi — prazno = salonski, korak usluge nadjačava salonski u oba smjera, `book_appointment` odbija početak van koraka, RPC odbija korak van 1–120, `anon` ne zove novi potpis |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

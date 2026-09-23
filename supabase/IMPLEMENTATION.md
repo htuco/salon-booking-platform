@@ -28,6 +28,10 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   rows are visible only to staff of their salon. Deactivation preserves appointments and employee
   mappings. Appointments snapshot service name, numeric price and duration at insert time so later
   price-list edits affect only future bookings.
+- `services.slot_step_minutes` (task 43) is nullable: NULL means the salon step. `get_available_slots`
+  uses `coalesce(service, salon)`, and `book_appointment` re-validates through it. `create_service`/
+  `update_service` take `p_slot_step_minutes` (1–120, `PT400` otherwise); update always writes it, so
+  NULL resets the service to the salon step.
 - `availability_signals` is the only public Realtime availability signal: it exposes only
   `(salon_id, revision_id)` for an active salon. Triggers rotate the opaque UUID after changes to
   services, employees, mappings, schedules, appointments, blocked slots or booking settings; the

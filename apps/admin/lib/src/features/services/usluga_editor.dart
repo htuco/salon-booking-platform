@@ -39,6 +39,9 @@ const double _radijusSheeta = 16;
 const _trajanjaTelefon = [20, 30, 40, 60, 80];
 
 /// Ponuđena trajanja u padajućem meniju `3f`.
+/// Ponuđeni koraci početaka — isti raspon kao salonski (1–120).
+const _koraci = [5, 10, 15, 20, 30, 45, 60];
+
 const _trajanjaDesktop = [
   10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 80, 90, 105, 120, 150, 180, 240, //
 ];
@@ -73,6 +76,9 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
   late final TextEditingController _kategorija;
   late final TextEditingController _cijena;
   int? _trajanje;
+
+  /// Korak početaka (task 43). `null` = salonski.
+  int? _korak;
   late bool _aktivna;
   bool _detalji = false;
 
@@ -94,6 +100,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
       text: s == null ? '' : _centiUTekst(_uCente(s.price.toStringAsFixed(2))!),
     );
     _trajanje = s?.durationMinutes ?? 30;
+    _korak = s?.slotStepMinutes;
     _aktivna = s?.isActive ?? true;
   }
 
@@ -137,6 +144,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
           category: _kategorija.text.trim(),
           price: normalizeServicePrice(_cijena.text)!,
           durationMinutes: _trajanje!,
+          slotStepMinutes: _korak,
         ),
       );
       if (rezultat.isActive != _aktivna) {
@@ -270,6 +278,9 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
           ],
         ),
         const SizedBox(height: izmedju),
+        _Labela('Korak početaka'),
+        _korakMeni(),
+        const SizedBox(height: izmedju),
         _Labela('Ko radi uslugu'),
         KoRadiUslugu(serviceId: service?.id, visina: 42),
         const SizedBox(height: izmedju),
@@ -333,6 +344,31 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
           ],
         ),
       ],
+    );
+  }
+
+  /// Korak ponuđenih početaka. Nije trajanje: usluga od 15 minuta sa korakom 30 je
+  /// legitimna. Prazno (`null`) znači salonski korak iz Postavki.
+  Widget _korakMeni() {
+    final tema = Theme.of(context).textTheme;
+    final boje = context.adminColors;
+    return DropdownButtonFormField<int?>(
+      initialValue: _korak,
+      isExpanded: true,
+      style: tema.bodyLarge?.copyWith(color: boje.ink),
+      icon: Icon(Icons.arrow_drop_down, size: 18, color: boje.textSecondary),
+      decoration: _polje(context).copyWith(
+        helperText:
+            'Na koliko minuta se nude početci za ovu uslugu. '
+            '„Kao salon" koristi korak iz Postavki.',
+        helperMaxLines: 3,
+      ),
+      items: [
+        const DropdownMenuItem<int?>(child: Text('Kao salon')),
+        for (final m in {..._koraci, ?_korak}.toList()..sort())
+          DropdownMenuItem<int?>(value: m, child: Text('svakih $m min')),
+      ],
+      onChanged: (v) => setState(() => _korak = v),
     );
   }
 
@@ -413,6 +449,9 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
         ],
         _Labela('Trajanje'),
         _trajanjeDugmad(),
+        const SizedBox(height: izmedju),
+        _Labela('Korak početaka'),
+        _korakMeni(),
         const SizedBox(height: izmedju),
         _Labela('Cijena'),
         _cijenaKoraci(context),
