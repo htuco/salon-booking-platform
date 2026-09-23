@@ -4,17 +4,17 @@ Puni task: [tasks/sprint-4/43-korak-po-usluzi.md](sprint-4/43-korak-po-usluzi.md
 
 ## Status
 
-U toku
+Gotov — čeka review i merge PR #103, pa `supabase db push`
 
 ## Ciljevi
 
-- [ ] Migracija: `services.slot_step_minutes int null`, `check between 1 and 120` (isti raspon kao salonski)
-- [ ] `get_available_slots` koristi `coalesce(usluga, salon)`; `book_appointment` ga već zove, pa provodi isti ugovor
-- [ ] Upis koraka kroz postojeći RPC usluge (task 32) + `core_domain` model + `core_api`
-- [ ] Admin editor usluge: polje „Korak" sa objašnjenjem i praznim = salonski
-- [ ] pgTAP: korak 15 vs 30 daje različit broj slotova, prazno = salonski, rezervacija van koraka odbijena
-- [ ] Viđeno uživo: klijentski booking flow nudi početke po koraku usluge
-- [ ] `security.md`/`IMPLEMENTATION.md` ako se mijenja ugovor RPC-a
+- [x] Migracija: `services.slot_step_minutes int null`, `check between 1 and 120` (isti raspon kao salonski)
+- [x] `get_available_slots` koristi `coalesce(usluga, salon)`; `book_appointment` ga već zove, pa provodi isti ugovor
+- [x] Upis koraka kroz postojeći RPC usluge (task 32) + `core_domain` model + `core_api`
+- [x] Admin editor usluge: polje „Korak" sa objašnjenjem i praznim = salonski
+- [x] pgTAP: korak 15 vs 30 daje različit broj slotova, prazno = salonski, rezervacija van koraka odbijena
+- [x] Viđeno uživo: klijentski booking flow nudi početke po koraku usluge
+- [x] `security.md`/`IMPLEMENTATION.md` ako se mijenja ugovor RPC-a
 
 ## Napomene
 
