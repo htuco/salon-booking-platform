@@ -122,7 +122,7 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       // `null` znaci: token je ispravan, ali reda u `public.users` nema. To **nije**
       // pogresna lozinka nego pogresno postavljen nalog, i mora imati svoju poruku —
       // inace vlasnik bezuspjesno pokusava lozinku koja je sve vrijeme bila tacna.
-      if (clan == null || !clan.isSalonAdmin) {
+      if (clan == null || !clan.imaPristup) {
         await ref.read(staffRepositoryProvider).signOut();
         if (!mounted) return;
         setState(() {

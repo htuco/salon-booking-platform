@@ -266,7 +266,7 @@ class _Sidebar extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final cilj in kAdminDestinations)
+                for (final cilj in ref.watch(adminNavigacijaProvider))
                   _SidebarStavka(cilj: cilj, izabrana: cilj.route == aktivna),
               ],
             ),
@@ -603,12 +603,13 @@ class _DonjaNavigacija extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final celije = [...adminPrimarne, kAdminJos];
+    final navigacija = ref.watch(adminNavigacijaProvider);
+    final celije = [...adminPrimarne(navigacija), kAdminJos];
 
     // Modul iza „Još" označava četvrtu ćeliju: ko je na `/services`, mora vidjeti gdje se
     // nalazi. Bez ovoga pet od osam ekrana stoji bez ijedne označene ćelije.
     final izabrani = celije.indexWhere((c) => c.route == aktivna);
-    final krozJos = adminSporedne.any((c) => c.route == aktivna);
+    final krozJos = adminSporedne(navigacija).any((c) => c.route == aktivna);
     final indeks = izabrani >= 0
         ? izabrani
         : krozJos

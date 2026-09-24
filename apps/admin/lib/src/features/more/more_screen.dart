@@ -1,3 +1,4 @@
+import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,8 @@ class AdminMoreScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final postavke = ref.watch(postavkeBookingProvider).valueOrNull;
+    final radnik =
+        ref.watch(currentStaffProvider).valueOrNull?.isEmployee ?? false;
     void uPostavke() => context.go(AdminRoute.settings.path);
 
     return AdminScaffold(
@@ -47,95 +50,24 @@ class AdminMoreScreen extends ConsumerWidget {
                 AdminSpacing.xxxl,
               ),
               children: [
-                const _SalonKartica(),
-                const _Grupa(naslov: 'Upravljanje', child: _Upravljanje()),
-                _Grupa(
-                  naslov: 'Zakazivanje',
-                  child: _Redovi(
-                    children: [
-                      _Red(
-                        naslov: 'Ručna potvrda termina',
-                        vrijednost: postavke == null
-                            ? null
-                            : postavke.bookingMode == 'manual'
-                            ? 'uključeno'
-                            : 'isključeno',
-                        onTap: uPostavke,
-                      ),
-                      _Red(
-                        naslov: 'Izbor majstora',
-                        vrijednost: postavke == null
-                            ? null
-                            : postavke.requireStaffChoice
-                            ? 'dozvoljeno'
-                            : 'isključeno',
-                        onTap: uPostavke,
-                      ),
-                      // Kolona ne postoji; „isključeno" je stanje koje stvarno vrijedi.
-                      _Red(
-                        naslov: 'Lista čekanja',
-                        vrijednost: 'isključeno',
-                        onTap: () =>
-                            _uskoro(context, 'Lista čekanja stiže uskoro.'),
-                      ),
-                      _Red(
-                        naslov: 'Pravila otkazivanja',
-                        vrijednost: postavke == null
-                            ? null
-                            : '${postavke.minCancelHours} h prije',
-                        onTap: uPostavke,
-                      ),
-                    ],
-                  ),
-                ),
-                // Potvrdu `send-push` šalje uvijek; podsjetnike (`send-reminders`) još niko.
-                _Grupa(
-                  naslov: 'Obavijesti',
-                  child: _Redovi(
-                    children: [
-                      _Red(
-                        naslov: 'Potvrda termina',
-                        vrijednost: 'uvijek',
-                        onTap: () => _uskoro(
-                          context,
-                          'Potvrda termina se šalje uvijek i ne može se isključiti.',
+                // Radniku „Još" nosi samo odjavu (task 47): svaki drugi red vodi u modul ili
+                // postavku koju ne smije otvoriti, a red koji vodi u zabranu je gori od
+                // reda kojeg nema.
+                if (radnik)
+                  _Grupa(
+                    naslov: 'Račun',
+                    child: _Redovi(
+                      children: [
+                        _Red(
+                          naslov: 'Odjavi se',
+                          opasno: true,
+                          onTap: () => odjavi(context, ref),
                         ),
-                      ),
-                      _Red(
-                        naslov: 'Podsjetnik dan prije',
-                        vrijednost: 'uskoro',
-                        onTap: () =>
-                            _uskoro(context, 'Podsjetnici stižu uskoro.'),
-                      ),
-                      _Red(
-                        naslov: 'Podsjetnik sat prije',
-                        vrijednost: 'uskoro',
-                        onTap: () =>
-                            _uskoro(context, 'Podsjetnici stižu uskoro.'),
-                      ),
-                    ],
-                  ),
-                ),
-                _Grupa(
-                  naslov: 'Račun',
-                  child: _Redovi(
-                    children: [
-                      _Red(
-                        naslov: 'Pristup i uloge',
-                        vrijednost: 'uskoro',
-                        onTap: () => _uskoro(
-                          context,
-                          'Upravljanje pristupom stiže uskoro.',
-                        ),
-                      ),
-                      _Red(
-                        naslov: 'Odjavi se',
-                        opasno: true,
-                        onTap: () => odjavi(context, ref),
-                      ),
-                    ],
-                  ),
-                ),
+                      ],
+                    ),
+                  )
+                else
+                  ..._vlasnik(context, ref, postavke, uPostavke),
               ],
             ),
           ),
@@ -143,6 +75,98 @@ class AdminMoreScreen extends ConsumerWidget {
       ),
     );
   }
+
+  List<Widget> _vlasnik(
+    BuildContext context,
+    WidgetRef ref,
+    SalonSettings? postavke,
+    void Function() uPostavke,
+  ) => [
+    const _SalonKartica(),
+    const _Grupa(naslov: 'Upravljanje', child: _Upravljanje()),
+    _Grupa(
+      naslov: 'Zakazivanje',
+      child: _Redovi(
+        children: [
+          _Red(
+            naslov: 'Ručna potvrda termina',
+            vrijednost: postavke == null
+                ? null
+                : postavke.bookingMode == 'manual'
+                ? 'uključeno'
+                : 'isključeno',
+            onTap: uPostavke,
+          ),
+          _Red(
+            naslov: 'Izbor majstora',
+            vrijednost: postavke == null
+                ? null
+                : postavke.requireStaffChoice
+                ? 'dozvoljeno'
+                : 'isključeno',
+            onTap: uPostavke,
+          ),
+          // Kolona ne postoji; „isključeno" je stanje koje stvarno vrijedi.
+          _Red(
+            naslov: 'Lista čekanja',
+            vrijednost: 'isključeno',
+            onTap: () => _uskoro(context, 'Lista čekanja stiže uskoro.'),
+          ),
+          _Red(
+            naslov: 'Pravila otkazivanja',
+            vrijednost: postavke == null
+                ? null
+                : '${postavke.minCancelHours} h prije',
+            onTap: uPostavke,
+          ),
+        ],
+      ),
+    ),
+    // Potvrdu `send-push` šalje uvijek; podsjetnike (`send-reminders`) još niko.
+    _Grupa(
+      naslov: 'Obavijesti',
+      child: _Redovi(
+        children: [
+          _Red(
+            naslov: 'Potvrda termina',
+            vrijednost: 'uvijek',
+            onTap: () => _uskoro(
+              context,
+              'Potvrda termina se šalje uvijek i ne može se isključiti.',
+            ),
+          ),
+          _Red(
+            naslov: 'Podsjetnik dan prije',
+            vrijednost: 'uskoro',
+            onTap: () => _uskoro(context, 'Podsjetnici stižu uskoro.'),
+          ),
+          _Red(
+            naslov: 'Podsjetnik sat prije',
+            vrijednost: 'uskoro',
+            onTap: () => _uskoro(context, 'Podsjetnici stižu uskoro.'),
+          ),
+        ],
+      ),
+    ),
+    _Grupa(
+      naslov: 'Račun',
+      child: _Redovi(
+        children: [
+          _Red(
+            naslov: 'Pristup i uloge',
+            vrijednost: 'uskoro',
+            onTap: () =>
+                _uskoro(context, 'Upravljanje pristupom stiže uskoro.'),
+          ),
+          _Red(
+            naslov: 'Odjavi se',
+            opasno: true,
+            onTap: () => odjavi(context, ref),
+          ),
+        ],
+      ),
+    ),
+  ];
 }
 
 void _uskoro(BuildContext context, String poruka) {
@@ -334,7 +358,7 @@ class _Upravljanje extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final moduli = adminSporedne
+    final moduli = adminSporedne(ref.watch(adminNavigacijaProvider))
         .where((c) => c.route != AdminRoute.settings)
         .toList(growable: false);
 

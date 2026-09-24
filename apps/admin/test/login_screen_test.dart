@@ -243,6 +243,38 @@ void main() {
       );
     });
 
+    testWidgets('radnik prolazi prijavu, ne dobija „nije vezan"', (
+      tester,
+    ) async {
+      // Task 47 — ovo je našao browser, ne test: guard je puštao radnika, a ekran prijave
+      // ga je sam odjavljivao jer je pitao `isSalonAdmin`.
+      await _naSirini(
+        tester,
+        _desktop,
+        _ekran(
+          clan: const StaffMember(
+            id: '22222222-0000-4000-8000-000000000002',
+            name: 'Emir',
+            email: 'emir@primjer.test',
+            role: 'employee',
+            salonId: '550e8400-e29b-41d4-a716-446655440000',
+            employeeId: 'e1',
+          ),
+        ),
+      );
+      await tester.enterText(
+        find.byType(TextFormField).first,
+        'emir@primjer.test',
+      );
+      await tester.enterText(find.byType(TextFormField).last, 'tajna');
+      await tester.tap(find.widgetWithText(FilledButton, 'Prijavi se'));
+      // Uspjeh drži indikator dok router ne odvede dalje, pa `pumpAndSettle` ne staje.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.textContaining('nije vezan'), findsNothing);
+    });
+
     testWidgets('prazna polja se ne šalju na server', (tester) async {
       await _naSirini(tester, _desktop, _ekran());
 

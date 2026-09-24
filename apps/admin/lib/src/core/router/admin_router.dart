@@ -48,11 +48,18 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
 
       // Prijavljen, ali nije osoblje nijednog salona: ostaje na loginu, koji mu objasni
       // zasto. Puštanje dalje bi dalo prazne ekrane bez ijednog objasnjenja.
-      if (clan == null || !clan.isSalonAdmin) {
+      if (clan == null || !clan.imaPristup) {
         return javna ? null : AdminRoute.login.path;
       }
+      if (javna) return AdminRoute.dashboard.path;
 
-      return javna ? AdminRoute.dashboard.path : null;
+      // Radnik ne dobija modul koji navigacija ne nudi ni kad ga otkuca u adresu (task 47).
+      // Ovo je urednost, ne izolacija: podatke tih modula ionako drže admin-only politike,
+      // pa bi radnik na `/clients` vidio prazan adresar — koji izgleda kao greška.
+      if (clan.isEmployee && !dozvoljenaRadniku(putanja)) {
+        return AdminRoute.dashboard.path;
+      }
+      return null;
     },
     // Router se mora osvjezavati kad se sesija promijeni, inace `redirect` nikad ne
     // odradi odjavu — `go_router` ga zove samo pri navigaciji.
@@ -191,6 +198,42 @@ const _napisane = {
   // Task 36 — `/settings` je bila zadnja ruta koja je padala u placeholder petlju.
   AdminRoute.settings,
 };
+
+/// Rute koje radnik smije otvoriti — njegov dan, kalendar i termini (task 47).
+///
+/// **Lista dozvoljenih, ne zabranjenih:** modul koji se tek doda ostaje radniku zatvoren
+/// dok ga neko svjesno ne upiše ovdje. `/appointments/new` i `/calendar/block` nisu tu jer
+/// ručno zakazivanje i blokade traže `is_admin` u bazi.
+const kRuteRadnika = {
+  AdminRoute.dashboard,
+  AdminRoute.calendar,
+  AdminRoute.appointments,
+  AdminRoute.appointmentDetails,
+  // „Još" je na telefonu jedini ulaz u odjavu; radniku nosi samo nju.
+  AdminRoute.more,
+};
+
+/// Da li [putanja] vodi na neku od [kRuteRadnika].
+///
+/// `/appointments/new` se provjerava izričito jer ga `/appointments/:id` inače uhvati kao
+/// termin sa `id`-em „new".
+bool dozvoljenaRadniku(String putanja) {
+  if (putanja == AdminRoute.appointmentNew.path) return false;
+  final segmenti = Uri.parse(putanja).pathSegments;
+  for (final ruta in kRuteRadnika) {
+    final uzorak = Uri.parse(ruta.path).pathSegments;
+    if (uzorak.length != segmenti.length) continue;
+    var poklapa = true;
+    for (var i = 0; i < uzorak.length; i++) {
+      if (!uzorak[i].startsWith(':') && uzorak[i] != segmenti[i]) {
+        poklapa = false;
+        break;
+      }
+    }
+    if (poklapa) return true;
+  }
+  return false;
+}
 
 /// Premoscuje Riverpod provider i `Listenable` koji `go_router` ocekuje.
 class _ProviderSlusac<T> extends ChangeNotifier {

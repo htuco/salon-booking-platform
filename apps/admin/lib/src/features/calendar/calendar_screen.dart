@@ -18,6 +18,7 @@
 ///   Slike radnika dobijaju svoj modul u tasku 33.
 library;
 
+import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,6 +60,8 @@ class AdminCalendarScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final jeDesktop = AdminShell.jeDesktop(context);
+    // Ručno zakazivanje i blokade traže `is_admin` u bazi — radniku dugmad ne vode nikud.
+    final radnik = ref.watch(adminRadnikIdProvider) != null;
 
     return AdminScaffold(
       title: 'Kalendar',
@@ -66,7 +69,7 @@ class AdminCalendarScreen extends ConsumerWidget {
       // `3l` iznad sadržaja crta veliki naslov „Kalendar" sa strelicama za dan; `AppBar` sa
       // sitnim naslovom bi istu riječ napisao dvaput.
       sopstvenoZaglavlje: true,
-      actions: jeDesktop ? const [_TopBarAkcije()] : null,
+      actions: jeDesktop ? [_TopBarAkcije(radnik: radnik)] : null,
       body: jeDesktop ? const _Desktop() : const _Telefon(),
     );
   }
@@ -74,7 +77,9 @@ class AdminCalendarScreen extends ConsumerWidget {
 
 /// Akcije desktop top bara — prekidač prikaza i `+ NOVI TERMIN`, kako ih `3c` crta.
 class _TopBarAkcije extends StatelessWidget {
-  const _TopBarAkcije();
+  const _TopBarAkcije({required this.radnik});
+
+  final bool radnik;
 
   @override
   Widget build(BuildContext context) {
@@ -82,20 +87,22 @@ class _TopBarAkcije extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const _PrekidacPrikaza(),
-        const SizedBox(width: AdminSpacing.md),
-        // `3c`: 130 × 39 px; visina je 44 po FE-502 (donja granica dodirne mete).
-        // Širinu daje natpis.
-        SizedBox(
-          height: AdminSize.touchTarget,
-          child: FilledButton(
-            onPressed: () => context.go(AdminRoute.appointmentNew.path),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 17),
-              textStyle: AdminText.actionLabel,
+        if (!radnik) ...[
+          const SizedBox(width: AdminSpacing.md),
+          // `3c`: 130 × 39 px; visina je 44 po FE-502 (donja granica dodirne mete).
+          // Širinu daje natpis.
+          SizedBox(
+            height: AdminSize.touchTarget,
+            child: FilledButton(
+              onPressed: () => context.go(AdminRoute.appointmentNew.path),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 17),
+                textStyle: AdminText.actionLabel,
+              ),
+              child: const AdminVerzal('+ Novi termin'),
             ),
-            child: const AdminVerzal('+ Novi termin'),
           ),
-        ),
+        ],
       ],
     );
   }
@@ -975,13 +982,16 @@ class _BocnaTraka extends ConsumerWidget {
           const _MiniMjesec(),
           const SizedBox(height: AdminSpacing.xl),
           const _Legenda(),
-          const SizedBox(height: AdminSpacing.xl),
           // Oba vode na radno vrijeme: tamo pauze i blokade već postoje, sa validacijom
           // koju bi kalendar morao ponoviti. Dva dugmeta za isti cilj su ovdje namjerna —
-          // vlasnik traži radnju po imenu, ne po ekranu na kojem ona živi.
-          const _DugmeTrake(tekst: 'Dodaj pauzu'),
-          const SizedBox(height: 10),
-          const _DugmeTrake(tekst: 'Zatvori dan'),
+          // vlasnik traži radnju po imenu, ne po ekranu na kojem ona živi. Radniku ne
+          // stoje: `/working-hours` mu je zatvoren (task 47).
+          if (ref.watch(adminRadnikIdProvider) == null) ...[
+            const SizedBox(height: AdminSpacing.xl),
+            const _DugmeTrake(tekst: 'Dodaj pauzu'),
+            const SizedBox(height: 10),
+            const _DugmeTrake(tekst: 'Zatvori dan'),
+          ],
         ],
       ),
     );
@@ -1281,7 +1291,8 @@ class _Telefon extends ConsumerWidget {
             ),
           ),
         ),
-        const _MobilnaTraka(),
+        // Radniku traka nema šta ponuditi: oba dugmeta traže `is_admin` (task 47).
+        if (ref.watch(adminRadnikIdProvider) == null) const _MobilnaTraka(),
       ],
     );
   }

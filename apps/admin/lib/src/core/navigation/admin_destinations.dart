@@ -24,6 +24,7 @@
 /// Salon i dalje dolazi iz membershipa.
 library;
 
+import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -133,13 +134,30 @@ final String kZahtjeviPutanja =
 /// Tri, pa četvrta ćelija bude „Još" — canvas `3k` i `3t`.
 const int kAdminPrimarneCelije = 3;
 
+/// Navigacija za ulogu prijavljenog — [kAdminDestinations], za radnika filtrirana (task 47).
+///
+/// **Filter, ne druga lista.** Radnik dobija podskup iste liste po `kRuteRadnika`, istim
+/// redom, pa sidebar, donja navigacija i „Još" ostaju tri pogleda na jedno. Ćelija koja
+/// vodi u zabranu je gora od ćelije koje nema — zato modul ispada, a ne ostaje zaključan.
+List<AdminDestination> adminDestinationsZa(StaffMember? clan) =>
+    clan != null && clan.isEmployee
+    ? kAdminDestinations
+          .where((c) => kRuteRadnika.contains(c.route))
+          .toList(growable: false)
+    : kAdminDestinations;
+
+/// [adminDestinationsZa] prijavljenog člana — ono što ljuske crtaju.
+final adminNavigacijaProvider = Provider<List<AdminDestination>>(
+  (ref) => adminDestinationsZa(ref.watch(currentStaffProvider).valueOrNull),
+);
+
 /// Stavke koje telefon nosi kao ćelije.
-List<AdminDestination> get adminPrimarne =>
-    kAdminDestinations.take(kAdminPrimarneCelije).toList(growable: false);
+List<AdminDestination> adminPrimarne(List<AdminDestination> navigacija) =>
+    navigacija.take(kAdminPrimarneCelije).toList(growable: false);
 
 /// Stavke koje telefon skriva iza „Još" — rep iste liste, ne druga lista.
-List<AdminDestination> get adminSporedne =>
-    kAdminDestinations.skip(kAdminPrimarneCelije).toList(growable: false);
+List<AdminDestination> adminSporedne(List<AdminDestination> navigacija) =>
+    navigacija.skip(kAdminPrimarneCelije).toList(growable: false);
 
 /// Četvrta ćelija telefona. Nije modul nego ulaz u [adminSporedne].
 const AdminDestination kAdminJos = AdminDestination(

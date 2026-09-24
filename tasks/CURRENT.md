@@ -1,27 +1,32 @@
-# Trenutni task: 46 — Uloga `employee` i sužena izolacija
+# Trenutni task: 47 — Admin ljuska za radnika
 
-Puni task: [tasks/sprint-4/46-uloga-employee-i-izolacija.md](sprint-4/46-uloga-employee-i-izolacija.md) · učitan 2026-09-24
+Puni task: [tasks/sprint-4/47-admin-ljuska-za-radnika.md](sprint-4/47-admin-ljuska-za-radnika.md) · učitan 2026-09-24
 
 ## Status
 
-Gotov — čeka review i merge PR #106, pa `supabase db push`
+Gotov — čeka review i merge PR #107. Bez migracije.
 
 ## Ciljevi
 
-- [x] `users.employee_id`, `is_employee`, `current_employee_id`
-- [x] Politike: radnik čita svoje termine; ostalo admin-only ili javno čitanje
-- [x] `set_appointment_status` / `cancel_appointment` samo za njegov termin
-- [x] pgTAP `021` + REST `rest_employee_izolacija.ts` sa stvarnim JWT-om
-- [x] `security.md` red za radnika
-- [x] `rls-auditor` pregled — nalazi zatvoreni (deaktiviran radnik, krhko brojanje u `020`)
+- [x] Router guard prima `employee`; zabranjene adrese vode na `/dashboard`
+- [x] Navigacija: ista lista, filtrirana po ulozi; „Još" radniku nosi samo odjavu
+- [x] Danas, kalendar i termini pokazuju samo njegove termine, bez prekidača
+- [x] Promet i vlasnikove akcije radniku se ne prikazuju
+- [x] Widget testovi za obje uloge nad istim ekranom
+- [x] Viđeno uživo, obje prijave, na 1440 i 402
 
 ## Napomene
 
-- Sljedeći: task 47 (admin ljuska za radnika) — zadnji u sprintu 4. Poslije toga nema
-  raspisanih taskova; Sprint 5 (slike, ADR-0015) treba raspisati.
-- Hostovani poslije merge-a: `supabase db push`.
+- Sprint 4 je time zatvoren. Nema raspisanih taskova; Sprint 5 (slike, ADR-0015) treba raspisati.
+- Lokalni nalog radnika za živu provjeru nije u seedu — pravi se SQL-om po obrascu vlasnika iz
+  `supabase/seed.sql` (v. status taska 47).
 
 ## Istorija
+
+### 46 — Uloga `employee` i sužena izolacija (gotov)
+
+Spojen u `main` ([PR #106](https://github.com/htuco/salon-booking-platform/pull/106)) 2026-09-24.
+Radnik čita i vodi samo svoje termine; `is_admin` netaknut. Poslije merge-a `supabase db push`.
 
 ### 45 — Kreiranje naloga za osoblje (gotov)
 

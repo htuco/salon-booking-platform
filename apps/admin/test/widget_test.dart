@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:admin/main.dart';
 import 'package:admin/src/core/env/app_env.dart';
 import 'package:admin/src/core/router/admin_router.dart';
+import 'package:admin/src/features/calendar/calendar_providers.dart';
 import 'package:admin/src/features/dashboard/dashboard_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
@@ -27,6 +28,10 @@ const _vlasnik = StaffMember(
 ProviderContainer _container({StaffMember? clan, bool loading = false}) {
   final container = ProviderContainer(
     overrides: [
+      // Kalendar inače kuca svake minute i ostavi tajmer poslije testa.
+      sadaProvider.overrideWith(
+        (ref) => Stream.value(DateTime(2026, 9, 14, 10)),
+      ),
       adminEnvProvider.overrideWithValue(_env),
       currentStaffProvider.overrideWith(
         (ref) => loading
@@ -183,5 +188,61 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(container.read(adminRouterProvider).state.uri.path, '/login');
+  });
+
+  // Task 47 — guard pušta radnika, ali samo na njegove rute. Sakriven modul koji se
+  // otvara kucanjem adrese nije sakriven.
+  group('radnik', () {
+    const radnik = StaffMember(
+      id: '22222222-0000-4000-8000-000000000002',
+      name: 'Radnik Barber Studio Vitez',
+      email: 'radnik@barberstudiovitez.test',
+      role: 'employee',
+      salonId: '550e8400-e29b-41d4-a716-446655440000',
+      employeeId: 'e1',
+    );
+
+    for (final (adresa, ocekivano) in [
+      ('/login', '/dashboard'),
+      ('/dashboard', '/dashboard'),
+      ('/calendar', '/calendar'),
+      ('/appointments', '/appointments'),
+      ('/employees', '/dashboard'),
+      ('/clients', '/dashboard'),
+      ('/settings', '/dashboard'),
+      ('/working-hours', '/dashboard'),
+      ('/services', '/dashboard'),
+      ('/appointments/new', '/dashboard'),
+      ('/calendar/block', '/dashboard'),
+    ]) {
+      testWidgets('$adresa → $ocekivano', (tester) async {
+        tester.view.physicalSize = const Size(1440, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        tester.binding.platformDispatcher.defaultRouteNameTestValue = adresa;
+        addTearDown(
+          tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+        );
+
+        final container = _container(clan: radnik);
+        await tester.pumpWidget(_app(container));
+        await tester.pump();
+        await tester.pump();
+
+        expect(container.read(adminRouterProvider).state.uri.path, ocekivano);
+        // Ekrani čitaju Supabase kojeg u testu nema; stablo se skida prije kraja testa.
+        await tester.pumpWidget(const SizedBox.shrink());
+      });
+    }
+
+    test('detalj termina je njegov, `new` nije termin', () {
+      expect(dozvoljenaRadniku('/appointments/abc-123'), isTrue);
+      expect(dozvoljenaRadniku('/appointments/new'), isFalse);
+    });
+
+    test('vlasnik nije radnik — njega guard ne sužava', () {
+      expect(_vlasnik.isEmployee, isFalse);
+      expect(_vlasnik.imaPristup, isTrue);
+    });
   });
 }

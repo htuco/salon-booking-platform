@@ -28,7 +28,7 @@ class StaffRepository {
 
   final SupabaseClient _client;
 
-  static const _columns = 'id, salon_id, name, email, role';
+  static const _columns = 'id, salon_id, name, email, role, employee_id';
 
   /// Prijava email-om i lozinkom.
   ///
@@ -77,6 +77,7 @@ class StaffRepository {
       email: red['email'] as String,
       role: red['role'] as String,
       salonId: red['salon_id'] as String?,
+      employeeId: red['employee_id'] as String?,
     );
   }
 }

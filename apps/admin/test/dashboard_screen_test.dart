@@ -33,6 +33,15 @@ const _vlasnik = StaffMember(
   salonId: _salonId,
 );
 
+const _radnik = StaffMember(
+  id: '22222222-0000-4000-8000-000000000002',
+  name: 'Emir Radnik',
+  email: 'emir.radnik@primjer.test',
+  role: 'employee',
+  salonId: _salonId,
+  employeeId: 'e1',
+);
+
 final _salon = Salon(
   id: _salonId,
   name: 'Barber Studio Vitez',
@@ -117,12 +126,13 @@ Widget _ekran({
   List<WorkingHour> raspored = const [],
   Object? greskaTermina,
   void Function()? onCitanjeTermina,
+  StaffMember clan = _vlasnik,
 }) => ProviderScope(
   overrides: [
     dashboardRasporedProvider.overrideWith((ref) async => raspored),
     dashboardBlokadeProvider.overrideWith((ref) async => const []),
     currentStaffProvider.overrideWith(
-      (ref) => Stream<StaffMember?>.value(_vlasnik),
+      (ref) => Stream<StaffMember?>.value(clan),
     ),
     adminSalonProvider.overrideWith((ref) async => _salon),
     danasnjiTerminiProvider.overrideWith((ref) async {
@@ -485,5 +495,44 @@ void main() {
         expect(citanja, greaterThan(prije));
       });
     }
+  });
+
+  // Task 47 — isti ekran, druga uloga. Radnik iz `_radnik` je vezan za `e1`.
+  group('radnik', () {
+    testWidgets('desktop: bez prometa i bez vlasnikovih akcija', (
+      tester,
+    ) async {
+      await _naSirini(tester, _desktop, _ekran(clan: _radnik));
+
+      expect(find.text('Termina danas'), findsOneWidget);
+      expect(find.text('Promet danas'), findsNothing);
+      expect(find.text('+ NOVI TERMIN'), findsNothing);
+      expect(find.text('Blokiraj termin'), findsNothing);
+      expect(find.text('Pretraži klijenta'), findsNothing);
+    });
+
+    testWidgets('vlasnik na istom ekranu vidi promet', (tester) async {
+      await _naSirini(tester, _desktop, _ekran());
+      expect(find.text('Promet danas'), findsOneWidget);
+    });
+
+    testWidgets('telefon: bez „Promet do sada"', (tester) async {
+      await _naSirini(tester, _telefon, _ekran(clan: _radnik));
+
+      expect(find.text('Predstoji danas'), findsOneWidget);
+      expect(find.text('Promet do sada'), findsNothing);
+    });
+
+    testWidgets('smjene: računa se samo njegova', (tester) async {
+      await _naSirini(
+        tester,
+        _desktop,
+        _ekran(clan: _radnik, raspored: _smjene()),
+      );
+
+      // Vlasnik ovdje vidi „2 majstora u smjeni"; radniku kolega ne ulazi u račun.
+      expect(find.textContaining('2 majstora u smjeni'), findsNothing);
+      expect(find.text('1 termin · 9%'), findsOneWidget);
+    });
   });
 }

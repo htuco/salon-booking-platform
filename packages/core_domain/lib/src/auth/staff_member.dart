@@ -21,6 +21,7 @@ class StaffMember {
     required this.email,
     required this.role,
     this.salonId,
+    this.employeeId,
   });
 
   /// Isti `uuid` kao `auth.users.id` i kao `sub` u JWT-u — `public.users.id` je FK na
@@ -49,6 +50,21 @@ class StaffMember {
   /// kao greška.
   bool get isSalonAdmin => role == 'salon_admin' && salonId != null;
 
+  /// `public.users.employee_id` — red u `employees` za koji je nalog vezan (task 46).
+  ///
+  /// Popunjen samo za ulogu `employee`; baza to traži `check` ograničenjem.
+  final String? employeeId;
+
+  /// Radnik salona: vidi i vodi samo **svoje** termine (task 46, 47).
+  ///
+  /// Traži i vezu na radnika, ne samo ulogu — radnik bez veze nema čije termine da vidi, a
+  /// `private.is_employee()` ga ionako odbija. Pušten u app, gledao bi prazne ekrane.
+  bool get isEmployee =>
+      role == 'employee' && salonId != null && employeeId != null;
+
+  /// Smije li uopšte u admin app — vlasnik ili radnik. Šta vidi unutra određuje uloga.
+  bool get imaPristup => isSalonAdmin || isEmployee;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -57,12 +73,14 @@ class StaffMember {
           other.name == name &&
           other.email == email &&
           other.role == role &&
-          other.salonId == salonId;
+          other.salonId == salonId &&
+          other.employeeId == employeeId;
 
   @override
-  int get hashCode => Object.hash(id, name, email, role, salonId);
+  int get hashCode => Object.hash(id, name, email, role, salonId, employeeId);
 
   @override
   String toString() =>
-      'StaffMember(id: $id, email: $email, role: $role, salonId: $salonId)';
+      'StaffMember(id: $id, email: $email, role: $role, salonId: $salonId, '
+      'employeeId: $employeeId)';
 }

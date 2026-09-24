@@ -382,6 +382,16 @@ final adminSalonIdProvider = Provider<String?>(
   (ref) => ref.watch(currentStaffProvider).valueOrNull?.salonId,
 );
 
+/// Radnik na čije je termine admin app sužena; `null` za vlasnika (task 47).
+///
+/// Kao i [adminSalonIdProvider], dolazi **samo** iz članstva — ne postoji kontrola koja ga
+/// mijenja ni isključuje. Upit ga koristi za preciznost; izolaciju drži politika
+/// `employee_own` iz taska 46, pa bi radnik i bez ovog filtera dobio samo svoje termine.
+final adminRadnikIdProvider = Provider<String?>((ref) {
+  final clan = ref.watch(currentStaffProvider).valueOrNull;
+  return clan != null && clan.isEmployee ? clan.employeeId : null;
+});
+
 /// Vertikala salona kojim admin upravlja — terminologija za admin ekrane.
 ///
 /// **Postoji odvojeno od [verticalProvider] iz istog razloga kao `adminServicesProvider`:**

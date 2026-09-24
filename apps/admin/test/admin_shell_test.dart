@@ -30,27 +30,39 @@ const _vlasnik = StaffMember(
   salonId: _salonId,
 );
 
+const _radnik = StaffMember(
+  id: '22222222-0000-4000-8000-000000000002',
+  name: 'Vedad Radnik',
+  email: 'vedad@primjer.test',
+  role: 'employee',
+  salonId: _salonId,
+  employeeId: 'e2',
+);
+
 const Size _desktop = Size(1440, 900);
 const Size _telefon = Size(402, 874);
 
 /// Isti ekran u oba slučaja — samo se mijenja širina prozora.
-Widget _ekran({int naCekanju = 4, AdminRoute aktivna = AdminRoute.dashboard}) =>
-    ProviderScope(
-      overrides: [
-        currentStaffProvider.overrideWith(
-          (ref) => Stream<StaffMember?>.value(_vlasnik),
-        ),
-        pendingCountProvider.overrideWith((ref) async => naCekanju),
-      ],
-      child: MaterialApp(
-        theme: buildAdminTheme(),
-        home: AdminScaffold(
-          title: 'Pregled',
-          aktivna: aktivna,
-          body: const Center(child: Text('tijelo ekrana')),
-        ),
-      ),
-    );
+Widget _ekran({
+  int naCekanju = 4,
+  AdminRoute aktivna = AdminRoute.dashboard,
+  StaffMember clan = _vlasnik,
+}) => ProviderScope(
+  overrides: [
+    currentStaffProvider.overrideWith(
+      (ref) => Stream<StaffMember?>.value(clan),
+    ),
+    pendingCountProvider.overrideWith((ref) async => naCekanju),
+  ],
+  child: MaterialApp(
+    theme: buildAdminTheme(),
+    home: AdminScaffold(
+      title: 'Pregled',
+      aktivna: aktivna,
+      body: const Center(child: Text('tijelo ekrana')),
+    ),
+  ),
+);
 
 /// Isti obrazac, ali sa placeholder ekranom jedne od nenapisanih ruta.
 Widget _placeholder(AdminRoute route) => ProviderScope(
@@ -160,7 +172,7 @@ void main() {
     testWidgets('moduli iza „Još" nisu ćelije', (tester) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      for (final cilj in adminSporedne) {
+      for (final cilj in adminSporedne(kAdminDestinations)) {
         expect(
           find.text(cilj.label),
           findsNothing,
@@ -436,6 +448,87 @@ void main() {
         greaterThan(sredina),
         reason: 'Prva radnja je lijevo od sredine — red se razvukao.',
       );
+    });
+  });
+
+  // Task 47 — radnik dobija **istu** ljusku, samo nad filtriranom listom. Test je nad
+  // istim `_ekran`-om kao vlasnikov: dvije ljuske bi prolazile i kad filter ne radi.
+  group('radnik', () {
+    const vlasnickiModuli = [
+      'Klijenti',
+      'Usluge',
+      'Osoblje',
+      'Radno vrijeme',
+      'Postavke',
+    ];
+
+    testWidgets('sidebar nosi samo njegove module', (tester) async {
+      await _naSirini(tester, _desktop, _ekran(clan: _radnik));
+
+      for (final labela in ['Danas', 'Kalendar', 'Zahtjevi']) {
+        expect(
+          find.text(labela.toUpperCase()).evaluate().isNotEmpty ||
+              find.text(labela).evaluate().isNotEmpty,
+          isTrue,
+          reason: labela,
+        );
+      }
+      for (final labela in vlasnickiModuli) {
+        expect(find.text(labela), findsNothing, reason: labela);
+        expect(find.text(labela.toUpperCase()), findsNothing, reason: labela);
+      }
+      expect(find.text('radnik'), findsOneWidget);
+    });
+
+    testWidgets('vlasnik na istom ekranu vidi svih osam', (tester) async {
+      await _naSirini(tester, _desktop, _ekran());
+
+      for (final labela in vlasnickiModuli) {
+        expect(
+          find.text(labela).evaluate().isNotEmpty ||
+              find.text(labela.toUpperCase()).evaluate().isNotEmpty,
+          isTrue,
+          reason: labela,
+        );
+      }
+    });
+
+    testWidgets('telefon: tri ćelije i „Još", koji nosi samo odjavu', (
+      tester,
+    ) async {
+      await _naSirini(tester, _telefon, _ekran(clan: _radnik));
+
+      final navigacija = tester.widget<NavigationBar>(
+        find.byType(NavigationBar),
+      );
+      expect(navigacija.destinations, hasLength(4));
+      expect(
+        adminSporedne(adminDestinationsZa(_radnik)),
+        isEmpty,
+        reason: 'iza „Još" radniku ne smije stajati nijedan modul',
+      );
+    });
+
+    test('nijedan radnikov modul nije van ruta koje router pušta', () {
+      for (final cilj in adminDestinationsZa(_radnik)) {
+        expect(dozvoljenaRadniku(cilj.route.path), isTrue, reason: cilj.label);
+      }
+      for (final cilj in kAdminDestinations) {
+        if (adminDestinationsZa(_radnik).contains(cilj)) continue;
+        expect(dozvoljenaRadniku(cilj.route.path), isFalse, reason: cilj.label);
+      }
+    });
+
+    test('radnik bez veze na `employees` nije radnik', () {
+      const bezVeze = StaffMember(
+        id: 'x',
+        name: 'x',
+        email: 'x@x.test',
+        role: 'employee',
+        salonId: _salonId,
+      );
+      expect(bezVeze.imaPristup, isFalse);
+      expect(adminDestinationsZa(bezVeze), kAdminDestinations);
     });
   });
 }

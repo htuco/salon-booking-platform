@@ -19,7 +19,7 @@ nad aplikacijom u koju vlasnik nema povjerenja.
 | [44](44-postavke-jasnije.md) ✅ | Postavke i pravila salona jasnija | feature | — | 1–2 dana |
 | [45](45-nalozi-za-osoblje.md) ✅ | Kreiranje naloga za osoblje | feature | 46, 47 | 2–3 dana |
 | [46](46-uloga-employee-i-izolacija.md) ✅ | Uloga `employee` i sužena izolacija | feature | 47 | 2–3 dana |
-| [47](47-admin-ljuska-za-radnika.md) | Admin ljuska za radnika | feature | — | 1–2 dana |
+| [47](47-admin-ljuska-za-radnika.md) ✅ | Admin ljuska za radnika | feature | — | 1–2 dana |
 
 Ukupno 13–19 dana. **To je više nego jedan sprint** i tako je i planirano: 37–41 su obavezni,
 42–44 idu ako ostane vremena, a 45–47 su cjelina koja se ne cijepa — nalog bez uloge i uloga bez
@@ -159,3 +159,11 @@ Gotov 2026-09-24 ([PR #106](https://github.com/htuco/salon-booking-platform/pull
 i mijenja samo svoje termine; `is_admin` netaknut. `rls-auditor` našao da deaktiviran radnik
 zadržava pristup — zatvoreno. 597 pgTAP, 13 REST sa stvarnim JWT-om. Realtime nije pokriven
 testom (v. status taska). Poslije merge-a `supabase db push`.
+
+### 47 — Admin ljuska za radnika ✅
+
+Gotov 2026-09-24 ([PR #107](https://github.com/htuco/salon-booking-platform/pull/107)). Radnik se
+prijavljuje u istu admin app i vidi Danas, kalendar i termine — samo svoje, bez prometa i
+vlasnikovih akcija. Jedna lista navigacije, filtrirana po ulozi; guard vraća zabranjene adrese na
+`/dashboard`. Živa provjera je našla da ga ekran prijave sam odjavljuje — popravljeno. Bez
+migracije. Time je blok 45–47 zatvoren; Sprint 5 treba raspisati.

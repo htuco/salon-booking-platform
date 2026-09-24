@@ -113,6 +113,7 @@ final filtriraniTerminiProvider = FutureProvider<List<Appointment>>((
     from: filter.dan,
     to: filter.dan,
     status: filter.status,
+    employeeId: ref.watch(adminRadnikIdProvider),
   );
 });
 
@@ -123,7 +124,10 @@ final pendingCountProvider = FutureProvider<int>((ref) async {
 
   return ref
       .watch(staffAppointmentRepositoryProvider)
-      .pendingCount(salonId: salonId);
+      .pendingCount(
+        salonId: salonId,
+        employeeId: ref.watch(adminRadnikIdProvider),
+      );
 });
 
 /// Današnji termini — dashboard ih pokazuje bez obzira na filter liste.
@@ -133,7 +137,11 @@ final danasnjiTerminiProvider = FutureProvider<List<Appointment>>((ref) async {
 
   return ref
       .watch(staffAppointmentRepositoryProvider)
-      .forDay(salonId: salonId, day: DateTime.now());
+      .forDay(
+        salonId: salonId,
+        day: DateTime.now(),
+        employeeId: ref.watch(adminRadnikIdProvider),
+      );
 });
 
 /// Naziv statusa na bosanskom.
@@ -364,6 +372,7 @@ final zahtjeviProvider = FutureProvider<List<Appointment>>((ref) async {
           danas.day,
         ).add(const Duration(days: kZahtjeviHorizontDana)),
         status: AppointmentStatus.pending,
+        employeeId: ref.watch(adminRadnikIdProvider),
       );
 });
 
