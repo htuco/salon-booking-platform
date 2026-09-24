@@ -56,6 +56,9 @@ class AdminDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final jeDesktop = AdminShell.jeDesktop(context);
+    // Pretraga klijenata, blokada i novi termin su vlasnikovi (task 47): adresar, blokade
+    // i ručni unos traže `is_admin` u bazi.
+    final radnik = ref.watch(adminRadnikIdProvider) != null;
 
     return AdminScaffold(
       // Navigacija ovaj modul zove „Danas" (`kAdminDestinations`), a ekran se do taska 30
@@ -65,7 +68,7 @@ class AdminDashboardScreen extends ConsumerWidget {
       // `3k` iznad sadržaja crta veliki naslov sa datumom i brojem termina; `AppBar` sa
       // sitnim „Danas" bi stajao iznad njega i ponavljao istu riječ.
       sopstvenoZaglavlje: true,
-      actions: jeDesktop ? const [_TopBarAkcije()] : null,
+      actions: jeDesktop && !radnik ? const [_TopBarAkcije()] : null,
       body: AdminRefresh(
         onRefresh: () async {
           ref
@@ -319,11 +322,13 @@ class _KarticeMetrika extends ConsumerWidget {
             ? 'nema slobodnih rupa'
             : 'najveća rupa ${_hhmm(rupa.od)}–${_hhmm(rupa.doMinute)}',
       ),
-      _Metrika(
-        labela: 'Promet danas',
-        vrijednost: iznosKm(sazetak.prometDoSada),
-        opis: 'prognoza ${iznosKm(sazetak.prometPrognoza)}',
-      ),
+      // Promet je salonska brojka, ne radnikova (task 47) — kartica ispada, ne prazni se.
+      if (ref.watch(adminRadnikIdProvider) == null)
+        _Metrika(
+          labela: 'Promet danas',
+          vrijednost: iznosKm(sazetak.prometDoSada),
+          opis: 'prognoza ${iznosKm(sazetak.prometPrognoza)}',
+        ),
     ];
 
     // **`LayoutBuilder`, ne `MediaQuery`** — isti razlog kao u FE-406: ovaj ekran stoji u
@@ -1334,13 +1339,16 @@ class _MobilneMetrike extends ConsumerWidget {
               vrijednost: '${sazetak.predstoji}',
             ),
           ),
-          const SizedBox(width: AdminSpacing.md),
-          Expanded(
-            child: _MalaMetrika(
-              labela: 'Promet do sada',
-              vrijednost: iznosKm(sazetak.prometDoSada),
+          // Promet je salonska brojka, ne radnikova (task 47).
+          if (ref.watch(adminRadnikIdProvider) == null) ...[
+            const SizedBox(width: AdminSpacing.md),
+            Expanded(
+              child: _MalaMetrika(
+                labela: 'Promet do sada',
+                vrijednost: iznosKm(sazetak.prometDoSada),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -1421,7 +1429,13 @@ final _smjeneProvider = Provider<List<SmjenaDana>>((ref) {
   final raspored = ref.watch(dashboardRasporedProvider).valueOrNull;
   final radnici = ref.watch(radniciPoIdProvider);
   if (raspored == null || radnici.isEmpty) return const [];
-  return smjeneDana(raspored, radnici.keys, DateTime.now().weekday);
+  // Radniku se računa samo njegova smjena (task 47): tuđe smjene bez tuđih termina bi
+  // „Slobodno vrijeme" i zauzetost napunile kolegama koji izgledaju besposleni.
+  final radnikId = ref.watch(adminRadnikIdProvider);
+  final kljucevi = radnikId == null
+      ? radnici.keys
+      : radnici.keys.where((id) => id == radnikId);
+  return smjeneDana(raspored, kljucevi, DateTime.now().weekday);
 });
 
 /// Slobodno vrijeme od sada; `null` kad danas niko nije u smjeni.

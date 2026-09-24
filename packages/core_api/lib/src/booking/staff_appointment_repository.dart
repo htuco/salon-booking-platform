@@ -79,17 +79,22 @@ created_at
   Future<List<Appointment>> forDay({
     required String salonId,
     required DateTime day,
+    String? employeeId,
   }) => guard(() async {
-    final rows = await _client
-        .from('appointments')
-        .select(_columns)
-        .eq('salon_id', salonId)
-        .eq('date', _datum(day))
-        // `ascending: true` je **obavezan**: u ovom paketu `order()` podrazumijeva
-        // **descending**, suprotno od SQL-a i od postgrest-js. Bez njega raspored dana
-        // ide unatraske, sto na ekranu izgleda kao pogresni podaci, a ne kao propusten
-        // parametar (isti propust je vec zabiljezen u `policy_repository.dart`).
-        .order('start_time', ascending: true);
+    final rows =
+        await _poRadniku(
+              _client
+                  .from('appointments')
+                  .select(_columns)
+                  .eq('salon_id', salonId),
+              employeeId,
+            )
+            .eq('date', _datum(day))
+            // `ascending: true` je **obavezan**: u ovom paketu `order()` podrazumijeva
+            // **descending**, suprotno od SQL-a i od postgrest-js. Bez njega raspored dana
+            // ide unatraske, sto na ekranu izgleda kao pogresni podaci, a ne kao propusten
+            // parametar (isti propust je vec zabiljezen u `policy_repository.dart`).
+            .order('start_time', ascending: true);
 
     return appointmentsFromRows(rows);
   });
@@ -104,13 +109,12 @@ created_at
     required DateTime from,
     required DateTime to,
     AppointmentStatus? status,
+    String? employeeId,
   }) => guard(() async {
-    var upit = _client
-        .from('appointments')
-        .select(_columns)
-        .eq('salon_id', salonId)
-        .gte('date', _datum(from))
-        .lte('date', _datum(to));
+    var upit = _poRadniku(
+      _client.from('appointments').select(_columns).eq('salon_id', salonId),
+      employeeId,
+    ).gte('date', _datum(from)).lte('date', _datum(to));
 
     // Filter po statusu je opcion: `null` znači „svi", ne „nijedan". Ekran ga šalje samo
     // kad je korisnik izabrao status u filteru.
@@ -134,13 +138,14 @@ created_at
   ///
   /// **Bez datumskog ograničenja.** `pending` zahtjev od prije tri dana je i dalje zahtjev
   /// koji niko nije pogledao; skrivanje starih bi sakrilo baš one koji su ispali iz vida.
-  Future<int> pendingCount({required String salonId}) => guard(() async {
-    final odgovor = await _client
-        .from('appointments')
-        .select(_columns)
-        .eq('salon_id', salonId)
-        .eq('status', AppointmentStatus.pending.wireName)
-        .count(CountOption.exact);
+  Future<int> pendingCount({
+    required String salonId,
+    String? employeeId,
+  }) => guard(() async {
+    final odgovor = await _poRadniku(
+      _client.from('appointments').select(_columns).eq('salon_id', salonId),
+      employeeId,
+    ).eq('status', AppointmentStatus.pending.wireName).count(CountOption.exact);
 
     return odgovor.count;
   });
@@ -445,4 +450,14 @@ created_at
       '${dan.year.toString().padLeft(4, '0')}-'
       '${dan.month.toString().padLeft(2, '0')}-'
       '${dan.day.toString().padLeft(2, '0')}';
+
+  /// Suzi upit na termine jednog radnika kad je [employeeId] dat (task 47).
+  ///
+  /// Kao i `salonId`, ovo je preciznost a ne zaštita: radniku `employee_own` politika ionako
+  /// vraća samo njegove termine. Filter postoji da vlasnik i radnik čitaju **isti** upit
+  /// kroz iste metode, a da ekran ne mora znati koja je uloga ispred njega.
+  static PostgrestFilterBuilder<T> _poRadniku<T>(
+    PostgrestFilterBuilder<T> upit,
+    String? employeeId,
+  ) => employeeId == null ? upit : upit.eq('employee_id', employeeId);
 }

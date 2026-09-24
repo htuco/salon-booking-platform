@@ -71,7 +71,11 @@ final kalendarTerminiProvider = FutureProvider.autoDispose<List<Appointment>>((
 
   return ref
       .watch(staffAppointmentRepositoryProvider)
-      .forDay(salonId: salonId, day: ref.watch(kalendarDatumProvider));
+      .forDay(
+        salonId: salonId,
+        day: ref.watch(kalendarDatumProvider),
+        employeeId: ref.watch(adminRadnikIdProvider),
+      );
 });
 
 /// Radno vrijeme salona — svi redovi, i salonski i po radniku.
@@ -122,9 +126,19 @@ final kalendarDanProvider = FutureProvider.autoDispose<KalendarDan>((
     ref.watch(kalendarBlokadeProvider.future),
   ).wait;
 
+  // Radnik vidi **svoju** kolonu, ne salon (task 47). Katalog radnika je javan, pa bi bez
+  // ovoga crtao i tuđe kolone — prazne, jer tuđe termine politika ne vraća, i zato lažne:
+  // prazna kolona kolege izgleda kao slobodan dan kolege.
+  final radnikId = ref.watch(adminRadnikIdProvider);
+
   return izgradiDan(
     dan: dan,
-    radnici: radnici,
+    radnici: radnikId == null
+        ? radnici
+        : [
+            for (final r in radnici)
+              if (r.id == radnikId) r,
+          ],
     termini: termini,
     radnoVrijeme: radnoVrijeme,
     blokade: blokade,

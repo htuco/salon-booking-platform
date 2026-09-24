@@ -91,6 +91,8 @@ class _AdminAppointmentsScreenState
     final filter = ref.watch(appointmentsFilterProvider);
     final jeDesktop = AdminShell.jeDesktop(context);
     final zahtjevi = filter.status == AppointmentStatus.pending;
+    // Ručni unos traži `is_admin` u bazi; radniku ulaz u `/appointments/new` ne vodi nikud.
+    final radnik = ref.watch(adminRadnikIdProvider) != null;
 
     // Zahtjevi gledaju naprijed kroz dane, puna lista gleda jedan dan.
     final lista = zahtjevi
@@ -105,12 +107,17 @@ class _AdminAppointmentsScreenState
       aktivna: AdminRoute.appointments,
       sopstvenoZaglavlje: true,
       actions: jeDesktop
-          ? [zahtjevi ? const _PotvrdiSveDugme() : const _NoviTerminDugme()]
+          ? [
+              if (zahtjevi)
+                const _PotvrdiSveDugme()
+              else if (!radnik)
+                const _NoviTerminDugme(),
+            ]
           : null,
       // Ručni unos je jedini ulaz u `/appointments/new` — bez njega ekran postoji ali se do
       // njega ne može doći iz aplikacije, što je rupa koju je task 17 već jednom našao sa
       // `/account`. Na desktopu isto dugme stoji u top baru, pa se FAB ne crta dvaput.
-      floatingActionButton: jeDesktop || zahtjevi
+      floatingActionButton: jeDesktop || zahtjevi || radnik
           ? null
           : FloatingActionButton.extended(
               onPressed: () => context.go(AdminRoute.appointmentNew.path),

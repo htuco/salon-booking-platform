@@ -25,4 +25,4 @@ Prijavljen radnik dobija istu aplikaciju, ali suženu na ono što smije.
 
 ## Status
 
-Nije počet.
+U toku (2026-09-24) — grana `feat/admin-ljuska-za-radnika`.

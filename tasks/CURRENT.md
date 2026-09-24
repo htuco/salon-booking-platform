@@ -4,7 +4,7 @@ Puni task: [tasks/sprint-4/46-uloga-employee-i-izolacija.md](sprint-4/46-uloga-e
 
 ## Status
 
-Gotov — čeka review i merge PR #106, pa `supabase db push`
+U toku — task 47, grana `feat/admin-ljuska-za-radnika`
 
 ## Ciljevi
 
