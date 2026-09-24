@@ -509,7 +509,10 @@ class _RasporedDana extends ConsumerWidget {
                 Text('Raspored dana', style: theme.textTheme.headlineSmall),
                 const Spacer(),
                 Text(
-                  radnici.isEmpty ? '' : _svihMajstora(radnici.length),
+                  // Radniku raspored nije salonski (task 47), pa ne broji kolege.
+                  radnici.isEmpty || ref.watch(adminRadnikIdProvider) != null
+                      ? ''
+                      : _svihMajstora(radnici.length),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: context.adminColors.textMuted,
                   ),

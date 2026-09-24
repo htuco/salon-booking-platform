@@ -68,16 +68,16 @@ class _AdminPozivnicaScreenState extends ConsumerState<AdminPozivnicaScreen> {
           .read(staffRepositoryProvider)
           .signIn(email: email, password: _lozinka.text);
       if (!mounted) return;
-      // Radnički pristup (`employee`) otvaraju taskovi 46 i 47. Do tada je nalog napravljen,
-      // ali ga router ne pušta dalje od prijave — ekran to mora reći, ne ćutati.
-      if (clan == null || !clan.isSalonAdmin) {
+      // Radnik i vlasnik ulaze odmah (task 47). Nalog koji ni jedno ni drugo nije — npr.
+      // radnik bez veze na `employees` — router ne pušta, pa ekran to mora reći.
+      if (clan == null || !clan.imaPristup) {
         await ref.read(staffRepositoryProvider).signOut();
         if (!mounted) return;
         setState(() {
           _uToku = false;
           _info =
-              'Nalog je napravljen. Radnički pristup aplikaciji se uključuje '
-              'uskoro — prijavićete se istim emailom i lozinkom.';
+              'Nalog je napravljen, ali još nije vezan za radnika. '
+              'Javite se vlasniku salona.';
         });
       }
       // Vlasnika router sam odvodi na početnu, kao poslije svake prijave.

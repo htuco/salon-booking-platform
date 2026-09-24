@@ -71,6 +71,14 @@ Dvije posljedice koje se lako prekrše:
   iz adrese — kao filter statusa na `/appointments?status=pending` — čita ga **route builder** i
   predaje kao argument konstruktora. Tako ekran ostaje podiziv u widget testu bez pravog routera.
 
+**Uloga sužava listu, ne pravi drugu (task 47).** Ljuske čitaju `adminNavigacijaProvider`, koji
+radniku (`StaffMember.isEmployee`) filtrira istu listu po `kRuteRadnika` iz `admin_router.dart` —
+listi *dozvoljenih* ruta, pa novi modul radniku ostaje zatvoren dok ga neko ne upiše. Isti skup
+čita i guard: adresa van njega vraća radnika na `/dashboard`. Upiti termina dobijaju
+`adminRadnikIdProvider` kao `employeeId`; to je preciznost, izolaciju drži politika
+`employee_own` (`security.md`). Ekran koji ima vlasničku radnju (promet, novi termin, blokada)
+pita isti provider i radnju izostavlja, ne zaključava.
+
 Ovo je folder navigacije, ne sloj: smije uvesti feature providere (brojač zahtjeva), isto kao što
 router uvozi svaki feature ekran.
 
