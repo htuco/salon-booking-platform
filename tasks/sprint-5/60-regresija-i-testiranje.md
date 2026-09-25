@@ -12,7 +12,7 @@ Cijeli sistem prođen rukom, kraj na kraj. Bugovi se ne nagađaju unaprijed — 
 zapisuju u tabelu ispod.
 
 ## Definicija gotovog
-- [ ] Klijent, svi tenanti (barber, beauty, health ako je stigao): početna, zakazivanje od koraka 1
+- [ ] Klijent, svi tenanti (barber, beauty, masaža i fizio ako je 53 stigao): početna, zakazivanje od koraka 1
       do potvrde, moji termini, otkazivanje, prijava, reset lozinke, brisanje računa
 - [ ] Admin, obje uloge (vlasnik, radnik): prijava, Danas, kalendar, termini, odobri/odbij/otkaži,
       novi termin sa telefonskim klijentom, usluge, osoblje i poziv, radno vrijeme, blokade, postavke, slike

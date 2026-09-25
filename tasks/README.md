@@ -14,7 +14,7 @@ njemu urađeno. `CURRENT.md` je **derivat**: kad se raziđe sa task fajlom ili r
 | [Sprint 2](sprint-2/) | 12–25, 27 | Auth, identitet, ostatak handoffa, admin i push | 11 ✅, 3 🟡 |
 | [Sprint 3](sprint-3/) | 28–36 | Admin aplikacija po handoffu iz `prototype/admin/` | 6 ✅, 3 🟡 |
 | [Sprint 4](sprint-4/) | 37–47 | Popravke onoga što laže vlasniku, pa Faza 2 — radnik sa vlastitom prijavom | 11 ✅ |
-| [Sprint 5](sprint-5/) | 48–60 | Slike, beauty i `health` vertikala, čist admin, rupe iz MVP-a, regresija | otvoren |
+| [Sprint 5](sprint-5/) | 48–60 | Slike, beauty, masaža i fizio (`health`), čist admin, rupe iz MVP-a, regresija | otvoren |
 | [FE redizajn](fe-redizajn/) | FE-101–FE-504 | Izgled obje aplikacije po Melura handoffu | otvoren |
 
 **FE redizajn nije sprint nego epik.** Sprintovi nose funkcionalnost i idu redom; `fe-redizajn/`

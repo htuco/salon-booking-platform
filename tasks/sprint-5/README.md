@@ -4,7 +4,7 @@ Sprint 4 je zatvorio pristup zaposlenih. Admin danas pokriva svakodnevni rad sal
 dalje ne može postaviti nijednu svoju sliku, beauty izgleda prazno, a dva obećanja iz MVP-a
 (`docs/01` §6.2 — podsjetnici D-1/H-3 i povratak zaboravljene lozinke) nigdje ne postoje.
 
-**Redoslijed je namjeran.** Slike idu prve jer ih traže i beauty (52) i salon za masažu (53) — tenant bez
+**Redoslijed je namjeran.** Slike idu prve jer ih traže i beauty (52) i health tenanti (53) — tenant bez
 fotografija ne može se ni procijeniti, a kamoli dotjerati. Rupe iz MVP-a (56–58) ne zavise ni od
 čega i mogu ići paralelno. Regresija (60) je zadnja: prolazi kroz sve što je sprint dirao i hvata
 bugove usput, umjesto da se oni nagađaju unaprijed.
@@ -16,7 +16,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover | feature | 52, 53 | 2 dana |
 | [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja | feature | — | 1–2 dana |
 | [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran | refinement | — | 1–2 dana |
-| [53](53-vertikala-health.md) | Vertikala `health` — salon za masažu | feature | — | 2–3 dana |
+| [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje | feature | — | 4–5 dana |
 | [54](54-uklanjanje-nepotrebnog-iz-admina.md) | Uklanjanje nepotrebnog iz admina | popravka | 55 | 0,5–1 dan |
 | [55](55-prerada-dashboarda.md) | Prerada admin dashboarda | redizajn | — | 2–3 dana |
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | feature | — | 2 dana |
@@ -25,7 +25,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [59](59-radnik-u-seedu.md) | Radnik u lokalnom seedu | chore | 60 | 0,5 dan |
 | [60](60-regresija-i-testiranje.md) | Regresija i testiranje | test | — | 2–3 dana |
 
-Ukupno 16–24 dana — više od jednog sprinta, kao i Sprint 4. **Obavezni su 48–50, 56 i 57**:
+Ukupno 18–26 dana — više od jednog sprinta, kao i Sprint 4. **Obavezni su 48–50, 56 i 57**:
 bez njih ni salon ni klijent nemaju ono što MVP obećava. 52–55 i 58 idu redom kako stignu; 59 i 60
 zatvaraju sprint bez obzira na to koliko je ostalih stiglo.
 
@@ -50,6 +50,7 @@ Da li je još MVP ili se odgađa je odluka za ADR, ne za ovaj sprint.
 | Slike idu u Supabase Storage, javni bucket sa upisom po salonu | [ADR-0015](../../docs/adr/0015-slike-idu-u-supabase-storage-javni-bucket.md) |
 | Admin je 1:1 sa `adminv2` — **tasks 54 i 55 ga mijenjaju i počinju dopunom ADR-a** | [ADR-0020](../../docs/adr/0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md) |
 | Iz handoffa se uzima oblik, ne boja — vertikala se razlikuje podatkom, ne kodom | [ADR-0018](../../docs/adr/0018-klijent-nema-fiksnu-koralnu-boja-ostaje-tenant-podatak.md) |
+| Klijent ima jedan par pisama — **task 53 ga veže za temu i počinje novim ADR-om** | [ADR-0019](../../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md) |
 
 ## Status
 
