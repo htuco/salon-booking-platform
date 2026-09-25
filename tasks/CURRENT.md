@@ -1,27 +1,32 @@
-# Trenutni task: 47 — Admin ljuska za radnika
+# Trenutni task: 48 — Storage bucket po salonu
 
-Puni task: [tasks/sprint-4/47-admin-ljuska-za-radnika.md](sprint-4/47-admin-ljuska-za-radnika.md) · učitan 2026-09-24
+Puni task: [tasks/sprint-5/48-storage-bucket-po-salonu.md](sprint-5/48-storage-bucket-po-salonu.md) · raspisan 2026-09-25
 
 ## Status
 
-Gotov — čeka review i merge PR #107. Bez migracije.
+Nije počet — Sprint 5 je raspisan ([tasks/sprint-5/README.md](sprint-5/README.md)), 48 je prvi
+jer blokira 49–51. Počinje se sa `/task start`.
 
 ## Ciljevi
 
-- [x] Router guard prima `employee`; zabranjene adrese vode na `/dashboard`
-- [x] Navigacija: ista lista, filtrirana po ulozi; „Još" radniku nosi samo odjavu
-- [x] Danas, kalendar i termini pokazuju samo njegove termine, bez prekidača
-- [x] Promet i vlasnikove akcije radniku se ne prikazuju
-- [x] Widget testovi za obje uloge nad istim ekranom
-- [x] Viđeno uživo, obje prijave, na 1440 i 402
+- [ ] Bucket sa javnim čitanjem, putanja počinje sa `salon_id`
+- [ ] Upis, izmjena i brisanje samo vlasniku tog salona; radnik i anon ne upisuju
+- [ ] Ograničenje tipa i veličine fajla na bucketu
+- [ ] pgTAP za oba salona i obje uloge, `Supabase tests` zelen
 
 ## Napomene
 
-- Sprint 4 je time zatvoren. Nema raspisanih taskova; Sprint 5 (slike, ADR-0015) treba raspisati.
-- Lokalni nalog radnika za živu provjeru nije u seedu — pravi se SQL-om po obrascu vlasnika iz
-  `supabase/seed.sql` (v. status taska 47).
+- Zubari su namjerno van Sprinta 5 (`docs/05`: tek nakon 3+ beauty klijenta, uz DPA).
+- Taskovi 54 i 55 mijenjaju ADR-0020 i počinju dopunom ADR-a, ne kodom.
+- Bugovi se ne raspisuju unaprijed — nalaze se i zapisuju u tasku 60 (regresija).
 
 ## Istorija
+
+### 47 — Admin ljuska za radnika (gotov)
+
+Spojen u `main` ([PR #107](https://github.com/htuco/salon-booking-platform/pull/107)) 2026-09-24.
+Radnik dobija istu admin aplikaciju, suženu na Danas, kalendar i svoje termine. Bez migracije.
+Time je Sprint 4 zatvoren.
 
 ### 46 — Uloga `employee` i sužena izolacija (gotov)
 
