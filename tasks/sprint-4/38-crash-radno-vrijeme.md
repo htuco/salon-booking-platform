@@ -38,7 +38,7 @@ greška koja dolazi iz RPC-a ili iz mapiranja odgovora tamo ne postoji.
 
 ## Status (2026-09-22)
 
-Uzrok nađen i popravljen na grani `fix/crash-radno-vrijeme`; spremno za draft PR.
+✅ Spojen u `main` kroz [PR #66](https://github.com/htuco/salon-booking-platform/pull/66). Uzrok nađen i popravljen na grani `fix/crash-radno-vrijeme`.
 
 ### Reprodukcija
 

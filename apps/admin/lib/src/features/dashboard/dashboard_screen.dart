@@ -1082,7 +1082,7 @@ class _ZauzetostKartica extends ConsumerWidget {
                         // Traka podatka, ne indikator ucitavanja: `value` je udio
                         // minuta tog radnika u najduzem danu, boje su iz tokena.
                         // FE-205 sklanja spinnere, ne mjerila.
-                        // ignore: FE-205 traka podatka
+                        // Izuzetak od FE-205: traka podatka, ne spinner.
                         child: LinearProgressIndicator(
                           // Procenat smjene kad postoji (`3b`), inače relativno prema
                           // najzauzetijem — radnik bez smjene nema kapacitet.
