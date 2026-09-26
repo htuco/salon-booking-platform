@@ -72,6 +72,9 @@ deno run --allow-env --allow-net supabase/tests/rest_working_hours.ts
 echo "==> Postavke lokacije: sto vlasnik snimi, klijent vidi bez novog builda"
 deno run --allow-env --allow-net supabase/tests/rest_postavke_lokacije.ts
 
+echo "==> Storage: upis samo u svoj salon, bucket odbija ne-sliku i prevelik fajl"
+deno run --allow-env --allow-net supabase/tests/rest_storage.ts
+
 echo "==> Push registracija i izolacija"
 deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
 deno test supabase/functions/send-push/handler_test.ts

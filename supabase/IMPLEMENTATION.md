@@ -56,6 +56,10 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Reviews are read-only for the client app: anon and authenticated hold `select` only, writes belong to staff via `staff_manage`. `public.salon_rating_summary` is a `security_invoker` view exposing average/total/histogram per salon; a salon without reviews has no row there, never a row of zeroes.
 - Legal text lives in two tables (docs/adr/0009). `public.app_policies` has **no `salon_id`**: it holds the platform sections of the terms and the entire privacy policy, is readable by `anon`, and is writable only by `private.is_super_admin()`. `public.salon_policies` holds the salon-authored terms sections, is readable per active salon, and is CRUD-able by `private.is_admin(salon_id)`. `check (document = 'terms')` keeps the privacy policy platform-only. The displayed section number (`01..NN`) is **not stored** — it is the position in the merged, `sort_order`-ordered list, platform first on a tie. Bodies may carry `{minCancelHours}`, `{phone}`, `{email}` and `{appointmentSingular}`, which the client fills from live data; an unresolved placeholder is left visible on purpose.
 - Gallery photos stay in `salons.gallery_urls` (jsonb array, array order is display order). There is no `gallery_photos` table — see docs/adr/0008.
+- Slike salona (task 48, ADR-0015): bucket `salon-media`, javno čitanje, putanja
+  `<salon_id>/<vrsta>/<fajl>` (npr. `usluge`, `radnici`, `galerija`, `logo`, `cover`). Piše samo
+  admin tog salona; `image/jpeg|png|webp`, najviše 5 MiB. Kolone (`image_url`, `gallery_urls`)
+  čuvaju javni URL objekta — mijenja se izvor vrijednosti, ne oblik zapisa.
 
 ## Assumptions where documentation is incomplete
 

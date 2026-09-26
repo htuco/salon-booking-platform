@@ -407,6 +407,12 @@ dokaže da migracije i seed prolaze od nule. Skripta ga zato zove po defaultu.
 auth podešavanja — confirmation, password policy, email templatei ili redirect URL-ovi — traži
 `supabase stop` pa `supabase start`. Zato reset baze sam ne dokazuje novo auth ponašanje.
 
+**Treća, Storage (task 48):** kontejner dignut prije `supabase link` ostaje na staroj verziji
+Storagea, dok je šema `storage` već migrirana verzijom iz `supabase/.temp/storage-version`
+(hostovana). Svaki upload tada pada sa `500 DatabaseError 42P10` (`ON CONFLICT` bez indeksa) — liči
+na grešku u politici, a nije. `docker ps --format '{{.Image}}' | grep storage` mora pokazati istu
+verziju kao `.temp`; ako ne pokazuje, `supabase stop` pa `supabase start`.
+
 - **Napisana politika nije dokazana politika.** Dok suite nije prošla, u sažetku piše "napisano,
   nije pokrenuto", ne "radi".
 - **Isto vrijedi za `core_api` repozitorije.** Da li upit stvarno prolazi kao `anon` i da li kolone

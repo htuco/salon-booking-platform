@@ -96,6 +96,7 @@ jobs:
           export SUPABASE_ANON_KEY="$ANON_KEY"
           export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY"
           deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
+          deno run --allow-env --allow-net supabase/tests/rest_storage.ts
 
       # REST level: two real Auth users, two real JWTs, PostgREST + RLS end to end.
       - name: Run REST isolation test
