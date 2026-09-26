@@ -28,6 +28,7 @@ import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_skeleton.dart';
+import '../../core/widgets/slika_polje.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointments_providers.dart';
 import '../calendar/calendar_providers.dart';
@@ -951,14 +952,14 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
   late final _years = TextEditingController(
     text: widget.employee?.experienceYears?.toString(),
   );
-  late final _image = TextEditingController(text: widget.employee?.imageUrl);
+  late String? _slika = widget.employee?.imageUrl;
   Set<String>? _selected;
   bool _saving = false;
   String? _error;
 
   @override
   void dispose() {
-    for (final c in [_name, _role, _bio, _years, _image]) {
+    for (final c in [_name, _role, _bio, _years]) {
       c.dispose();
     }
     super.dispose();
@@ -980,7 +981,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
               role: _role.text.trim(),
               bio: _bio.text.trim(),
               experienceYears: int.tryParse(_years.text.trim()),
-              imageUrl: _image.text.trim(),
+              imageUrl: _slika,
               serviceIds: _selected!.toList(),
             ),
           );
@@ -1116,21 +1117,16 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                     },
                   ),
                   const SizedBox(height: AdminSpacing.md),
-                  TextFormField(
-                    controller: _image,
-                    keyboardType: TextInputType.url,
-                    decoration: const InputDecoration(
-                      labelText: 'URL fotografije (opcionalno)',
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      final uri = Uri.tryParse(v.trim());
-                      return uri == null ||
-                              uri.scheme != 'https' ||
-                              uri.host.isEmpty
-                          ? 'Unesite HTTPS adresu fotografije.'
-                          : null;
-                    },
+                  Text(
+                    'Fotografija (opcionalno)',
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: AdminSpacing.xs),
+                  SlikaPolje(
+                    url: _slika,
+                    kind: MediaKind.radnici,
+                    krug: true,
+                    onChanged: (url) => setState(() => _slika = url),
                   ),
                   const SizedBox(height: AdminSpacing.xl),
                   Text(
