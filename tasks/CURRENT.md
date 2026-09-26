@@ -4,8 +4,8 @@ Puni task: [tasks/sprint-5/49-slike-usluga-i-radnika.md](sprint-5/49-slike-uslug
 
 ## Status
 
-U toku, 🟡. PR #112 sa grane `feat/slike-usluga-i-radnika`, spreman za pregled. Upload iz admina
-i prikaz u klijentu su dokazani uživo za Vitez (usluga i radnik).
+U toku, 🟡. PR #112 spojen u `main`. Upload iz admina i prikaz u klijentu dokazani su uživo na oba
+tenanta (Vitez i beauty), za uslugu i radnika. Ostaje samo provjera na uređaju.
 
 ## Ciljevi
 
@@ -14,7 +14,7 @@ i prikaz u klijentu su dokazani uživo za Vitez (usluga i radnik).
 - [x] Napredak i greška; neuspio upload ne mijenja sliku; snimanje čeka upload
 - [x] Uklanjanje vraća praznu površinu
 - [x] Klijent prikazuje novu sliku u cjenovniku i u timu (Vitez, uživo)
-- [ ] Drugi tenant (beauty) uživo
+- [x] Drugi tenant (beauty) uživo
 - [ ] Izbor iz galerije na Android/iOS uređaju
 
 ## Napomene

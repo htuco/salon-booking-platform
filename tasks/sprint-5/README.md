@@ -69,5 +69,6 @@ Mergan kao #110, migracija je na hostovanom projektu (`supabase migration list` 
 
 ### 49 — Slike usluga i radnika (🟡, 2026-09-26)
 
-PR #112. Upload iz admina → slika u klijentu viđena uživo za Vitez, i za uslugu i za radnika.
-Ostaje beauty uživo i izbor na uređaju.
+PR #112 spojen. Upload iz admina → slika u klijentu viđena uživo **na oba tenanta** (Vitez i
+beauty), za uslugu i za radnika. Ostaje samo izbor iz galerije na Android/iOS uređaju (isti kod,
+traži fizički uređaj) i test sa fontom 130 %. Nalaz usput: dijalog osoblja ne koristi `vertical.terms`.
