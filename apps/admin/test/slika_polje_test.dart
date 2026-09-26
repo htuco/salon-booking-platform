@@ -41,6 +41,7 @@ Future<List<String?>> _podigni(
   _LaziMedia media, {
   String? url = _stari,
   IzabranaSlika? izbor,
+  double scale = 1,
 }) async {
   final promjene = <String?>[];
   await tester.pumpWidget(
@@ -59,6 +60,11 @@ Future<List<String?>> _podigni(
       ],
       child: MaterialApp(
         theme: buildAdminTheme(),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(scale)),
+          child: child!,
+        ),
         home: Scaffold(
           body: StatefulBuilder(
             builder: (context, setState) => SlikaPolje(
@@ -153,4 +159,29 @@ void main() {
     expect(find.byKey(const Key('slika-ukloni')), findsNothing);
     expect(find.byType(Image), findsNothing);
   });
+
+  testWidgets(
+    'font 130 % na uskom telefonu: slika, dugmad i greška bez prelijevanja',
+    (tester) async {
+      // Najuži telefon iz `/verify` (320) i povećan font iz postavki sistema: red sa
+      // slikom, „Zamijeni sliku" i „Ukloni" mora se prelomiti, ne prelijevati.
+      tester.view
+        ..physicalSize = const Size(320, 640)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final media = _LaziMedia(
+        () async => throw mapError(
+          const StorageException('too large', statusCode: '413'),
+        ),
+      );
+      await _podigni(tester, media, scale: 1.3);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('Zamijeni sliku'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Slika je veća od 5 MB.'), findsOneWidget);
+    },
+  );
 }

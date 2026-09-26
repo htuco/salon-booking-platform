@@ -56,6 +56,30 @@ const _hours = [
 ///
 /// Pisana doslovno, a ne kroz `copyWith`: `Vertical` i `VerticalTerms` ga nemaju, i ne
 /// vrijedi ga dodavati u domenski model zbog jednog testa.
+/// Beauty salon — ženski rod, pa „Uredi stilisticu", ne „Uredi stilisticua".
+const _beauty = Vertical(
+  key: 'beauty',
+  displayName: 'Beauty',
+  terms: VerticalTerms(
+    businessSingular: 'Salon',
+    customerSingular: 'Klijentica',
+    customerPlural: 'Klijentice',
+    serviceSingular: 'Usluga',
+    servicePlural: 'Usluge',
+    staffSingular: 'Stilistica',
+    staffPlural: 'Naš tim',
+    appointmentSingular: 'Termin',
+    bookCta: 'Rezerviši termin',
+    noteLabel: 'Napomena',
+    myAppointments: 'Moji termini',
+    priceLabel: 'Cijena',
+    durationLabel: 'Trajanje',
+  ),
+  rules: BookingRules.fallback,
+  features: VerticalFeatures.fallback,
+  defaultTheme: 'elegant_beauty',
+);
+
 const _ordinacija = Vertical(
   key: 'dental',
   displayName: 'Ordinacija',
@@ -312,7 +336,7 @@ void main() {
   });
   testWidgets('Prazno stanje i greska imaju akciju', (tester) async {
     await _pump(tester, employees: []);
-    expect(find.text('Dodaj prvog radnika'), findsOneWidget);
+    expect(find.text('Dodaj radnika'), findsOneWidget);
     await _pump(tester, listError: true);
     expect(find.text('Pokušaj ponovo'), findsOneWidget);
   });
@@ -352,6 +376,27 @@ void main() {
 
       expect(find.text('DOKTOR'), findsWidgets);
       expect(find.text('RADNIK'), findsNothing);
+    });
+
+    testWidgets('dijalog osoblja piše termin vertikale, i u ženskom rodu', (
+      tester,
+    ) async {
+      // Beauty je javio „Uredi radnika" nad stilisticom (task 49, uživo). Naslov,
+      // lista usluga, dugme i potvrda deaktivacije idu kroz `staffSingular`.
+      await _pump(tester, size: const Size(1440, 900), vertikala: _beauty);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Amar').first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Uredi stilisticu'), findsOneWidget);
+      expect(find.text('Usluge koje stilistica pruža'), findsOneWidget);
+      expect(find.textContaining('radnik'), findsNothing);
+
+      await tester.ensureVisible(find.text('Deaktiviraj stilisticu'));
+      await tester.tap(find.text('Deaktiviraj stilisticu'));
+      await tester.pumpAndSettle();
+      expect(find.text('Deaktivirati stilisticu?'), findsOneWidget);
+      expect(find.textContaining('Stilistica se više ne nudi'), findsOneWidget);
     });
   });
 }
