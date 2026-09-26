@@ -72,3 +72,10 @@ Mergan kao #110, migracija je na hostovanom projektu (`supabase migration list` 
 PR #112 i #113. Upload iz admina → slika u klijentu, viđeno uživo **na oba tenanta** (Vitez i
 beauty), za uslugu i za radnika. Dijalog osoblja sada piše termin vertikale („Uredi stilisticu“).
 Admin testovi daju 459 PASS. Izbor iz galerije na Android/iOS uređaju prebačen je u 60.
+
+### 50 — Galerija salona, logo i cover (🟡, 2026-09-26)
+
+PR #114. RPC `set_salon_image` / `set_salon_gallery` (nova slika samo iz svog foldera, konflikt
+dva taba je `PT409`), admin postavke i kartica galerije, klijent bez promjene koda. 671 pgTAP,
+`rest_galerija` 26, `melos run test` zelen. Uživo na Vitezu i beautyju, 1440 i 402, uključujući
+konflikt i prazno stanje. Čeka CI na PR-u i `supabase db push` poslije merge-a.

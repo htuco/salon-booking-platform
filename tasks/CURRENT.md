@@ -4,21 +4,21 @@ Puni task: `tasks/sprint-5/50-galerija-logo-cover.md` · učitan 2026-09-26
 
 ## Status
 
-U toku
+U toku — sve dokazano lokalno; čeka `Supabase tests` na PR-u #114, merge i `supabase db push`
 
 ## Ciljevi
 
-- [ ] Migracija: RPC za logo/cover i RPC za galeriju (`security definer`, `private.is_admin`),
+- [x] Migracija: RPC za logo/cover i RPC za galeriju (`security definer`, `private.is_admin`),
       galerija sa optimističkom provjerom zatečenog niza — drugi tab ne pregazi tiho prvi
-- [ ] RPC prima samo URL iz `salon-media/<svoj salon_id>/<vrsta>/` (ili prazno) — nema tuđih ni
+- [x] RPC prima samo URL iz `salon-media/<svoj salon_id>/<vrsta>/` (ili prazno) — nema tuđih ni
       vanjskih URL-ova
-- [ ] pgTAP (pozitivno, tuđi salon, radnik, anon, konflikt) + Deno REST test; `supabase test db` zelen
-- [ ] `core_api`: upis logo/cover/galerije + mapiranje konflikta u poruku
-- [ ] Admin postavke: cover i logo umjesto „uskoro"; tekst da ikona i splash dolaze iz builda
-- [ ] Admin editor galerije: dodaj, obriši, promijeni redoslijed; widget testovi
-- [ ] Klijent: nova galerija i cover na početnoj i u lightboxu; prazna galerija = prazno stanje
-- [ ] Uživo na oba tenanta (Vitez i beauty), 1440 i 402
-- [ ] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, doc komentar `settings_screen.dart`
+- [x] pgTAP (pozitivno, tuđi salon, radnik, anon, konflikt) + Deno REST test; `supabase test db` zelen
+- [x] `core_api`: upis logo/cover/galerije + mapiranje konflikta u poruku
+- [x] Admin postavke: cover i logo umjesto „uskoro"; tekst da ikona i splash dolaze iz builda
+- [x] Admin editor galerije: dodaj, obriši, promijeni redoslijed; widget testovi
+- [x] Klijent: nova galerija i cover na početnoj i u lightboxu; prazna galerija = prazno stanje
+- [x] Uživo na oba tenanta (Vitez i beauty), 1440 i 402
+- [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, doc komentar `settings_screen.dart`
 
 ## Napomene
 
