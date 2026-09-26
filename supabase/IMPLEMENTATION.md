@@ -60,6 +60,11 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   `<salon_id>/<vrsta>/<fajl>` (npr. `usluge`, `radnici`, `galerija`, `logo`, `cover`). Piše samo
   admin tog salona; `image/jpeg|png|webp`, najviše 5 MiB. Kolone (`image_url`, `gallery_urls`)
   čuvaju javni URL objekta — mijenja se izvor vrijednosti, ne oblik zapisa.
+- Logo, cover i galerija (task 50): `set_salon_image(salon_id, kind, url)` za `logo`/`cover`
+  (jedna kolona po pozivu, `null` briše) i `set_salon_gallery(salon_id, expected, urls)` koji
+  zamjenjuje cijeli niz samo ako je zatečeni jednak `expected`, inače `PT409`. Nova slika mora
+  biti `salon-media/<salon_id>/<vrsta>/…` tog salona (`PT400`); zatečeni URL u galeriji smije
+  ostati. Najviše 30 slika, bez duplikata.
 
 ## Assumptions where documentation is incomplete
 
@@ -116,7 +121,7 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   (`PT400`); prazan string u opcionim poljima se snima kao NULL, adresa i opis kao prazan string
   jer su `not null` kolone.
 - **Kolone su nabrojane u potpisu.** `status`, `plan`, `slug`, `vertical_pack_key`,
-  `terminology_override`, boje i logo **nisu parametri** i ne mogu se promijeniti iz admina:
+  `terminology_override` i boje **nisu parametri** i ne mogu se promijeniti iz admina:
   branding dolazi iz `tenant.yaml` kroz generator, ostalo je platformsko.
 - `update_salon_settings(salon_id, booking_mode, booking_granularity, buffer_minutes,
   slot_step_minutes, min_advance_booking_hours, max_advance_booking_days, min_cancel_hours,

@@ -363,9 +363,10 @@ pročita. Vlasnik i dalje mora čitati svoje postavke kad salon nije aktivan, pa
 
 **Kolone su nabrojane u potpisu, ne proslijeđene kroz.** `salons` nosi `status`, `plan`, `slug`,
 `vertical_pack_key`, `terminology_override` i boje — sve platformsko. Funkcija koja bi primila red
-i spojila ga preko postojećeg dala bi vlasniku put do svih njih. Branding posebno: boje i logo
-dolaze iz `tenant.yaml` kroz generator, pa bi polje u adminu bilo drugi izvor istine koji sljedeće
-generisanje tiho pregazi. Isto važi za `salon_settings`: `timezone` i `language` mijenjaju značenje
+i spojila ga preko postojećeg dala bi vlasniku put do svih njih. Branding posebno: boje, app ikona
+i splash dolaze iz `tenant.yaml` kroz generator, pa bi polje u adminu bilo drugi izvor istine koji
+sljedeće generisanje tiho pregazi. `logo_url` **nije** u `tenant.yaml` — to je runtime slika
+salona i od taska 50 ima svoj uski put (v. „Galerija, logo i cover"). Isto važi za `salon_settings`: `timezone` i `language` mijenjaju značenje
 **svih** već upisanih `time` vrijednosti u `working_hours` i `appointments` — to je migracija
 podataka, ne postavka — a `auth_providers` opisuje koji login uopšte postoji u buildu.
 
@@ -435,6 +436,30 @@ objekta, `move`/`copy` u tuđi salon, brisanje).
 redova i kad je njihov `using` oslabljen — test bi bio zelen bez mjerenja. `022` zato privremeno
 (u transakciji) dodaje široku SELECT politiku prije tih provjera. Isto važi za svaku buduću
 tabelu gdje SELECT uži od UPDATE/DELETE-a.
+
+### Galerija, logo i cover — task 50
+
+Grant nad `salons` ostaje samo SELECT. Slike salona se pišu kroz dvije `security definer`
+funkcije, obje iza `private.is_admin(p_salon_id) is true`:
+
+- `set_salon_image(salon, 'logo'|'cover', url)` mijenja **jednu** kolonu. Namjerno ne obje u
+  jednom pozivu: forma koja šalje oba URL-a bi promjenom loga vratila cover koji je drugi tab u
+  međuvremenu promijenio. `null` briše.
+- `set_salon_gallery(salon, p_expected, p_urls)` zamjenjuje cijeli `gallery_urls` (redoslijed =
+  redoslijed niza, ADR-0008), ali samo ako je zatečeni niz jednak `p_expected`. Inače `PT409`
+  (HTTP 409) i ništa se ne upisuje — dva taba ne pregaze jedan drugog tiho. Najviše 30 slika,
+  bez duplikata.
+
+**Nova slika mora biti objekat tog salona.** `private.is_salon_media_url(salon, vrsta, url)`
+traži putanju `/storage/v1/object/public/salon-media/<salon>/<vrsta>/<fajl>` do kraja stringa
+(host se ne provjerava jer se lokalni i hostovani razlikuju). Bez toga bi vlasnik mogao u svoj
+salon upisati objekat tuđeg salona ili vanjski URL koji klijentska app onda učitava. U galeriji
+**zatečeni** URL smije ostati (seed ima vanjske slike), pa promjena redoslijeda i brisanje rade i
+nad njima — ali obrisana vanjska slika se ne može vratiti.
+
+Dokaz: `023_galerija_logo_cover.test.sql` (47 asercija; helper oslabljen na `true` obara 15,
+uklonjena provjera `p_expected` 4, guard oslabljen na „bilo ko prijavljen" 7) i `rest_galerija.ts`
+(26 provjera kroz stvaran JWT, upload i javni URL).
 
 ## Šta još nije zatvoreno
 
@@ -766,6 +791,8 @@ ništa.
 | `rest_employee_izolacija.ts` | isto kroz stvaran JWT radnika: PostgREST vraća samo njegov termin, tuđi RPC je 403, direktan PATCH odbijen |
 | `022_storage_bucket.test.sql` | bucket `salon-media` — vlasnik piše i briše samo pod svojim `salon_id`, ne seli objekat u tuđi salon; radnik, klijent, anon i podmetnut claim ne pišu i ne listaju |
 | `rest_storage.ts` | isto kroz Storage API, plus ono što sprovodi samo servis: tip slike, 5 MiB, javni URL bez tokena |
+| `023_galerija_logo_cover.test.sql` | logo, cover i galerija — samo kroz RPC i samo vlasnik svog salona; nova slika mora biti objekat tog salona u folderu svoje vrste; zastarjela galerija daje `PT409` bez upisa |
+| `rest_galerija.ts` | cijeli put ekrana: upload → javni URL → RPC → `anon` čita; konflikt stiže kao HTTP 409, tuđi objekat kao 400 |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

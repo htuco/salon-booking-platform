@@ -25,6 +25,11 @@ insert into public.users(id, salon_id, name, email, role, employee_id) values
 ('fb000000-0000-4000-8000-000000000002', '550e8400-e29b-41d4-a716-446655440001', 'Vlasnik B', 'vlasnik-b@t48.invalid', 'salon_admin', null),
 ('fb000000-0000-4000-8000-000000000003', '550e8400-e29b-41d4-a716-446655440000', 'Radnik A', 'radnik-a@t48.invalid', 'employee', '20000000-0000-4000-8000-000000000001');
 
+-- Brojanja ispod traze prazan bucket. Lokalni stack na kojem je upload isproban uzivo (task
+-- 49, 50) vec ima stvarne objekte, pa se polazno stanje postavlja ovdje; `rollback` na kraju
+-- ih vraca.
+delete from storage.objects where bucket_id = 'salon-media';
+
 -- Objekat salona B, upisan mimo RLS-a, da vlasnik A ima sta pokusati mijenjati i brisati.
 insert into storage.objects(bucket_id, name, owner)
 values ('salon-media', '550e8400-e29b-41d4-a716-446655440001/usluge/b.jpg', 'fb000000-0000-4000-8000-000000000002');

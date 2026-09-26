@@ -75,6 +75,9 @@ deno run --allow-env --allow-net supabase/tests/rest_postavke_lokacije.ts
 echo "==> Storage: upis samo u svoj salon, bucket odbija ne-sliku i prevelik fajl"
 deno run --allow-env --allow-net supabase/tests/rest_storage.ts
 
+echo "==> Galerija, logo i cover: samo svoje slike, konflikt je 409, anon vidi odmah"
+deno run --allow-env --allow-net supabase/tests/rest_galerija.ts
+
 echo "==> Push registracija i izolacija"
 deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
 deno test supabase/functions/send-push/handler_test.ts
