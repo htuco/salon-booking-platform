@@ -12,7 +12,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | # | Task | Vrsta | Blokira | Procjena |
 |---|---|---|---|---|
 | [48](48-storage-bucket-po-salonu.md) | Storage bucket po salonu ✅ | feature | 49, 50, 51 | 1–2 dana |
-| [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika 🟡 | feature | 52, 53 | 1–2 dana |
+| [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika ✅ | feature | 52, 53 | 1–2 dana |
 | [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover | feature | 52, 53 | 2 dana |
 | [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja | feature | — | 1–2 dana |
 | [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran | refinement | — | 1–2 dana |
@@ -67,8 +67,8 @@ mogu krenuti na stacked grani.
 Mergan kao #110, migracija je na hostovanom projektu (`supabase migration list` pokazuje
 `20260926100000` i lokalno i remote).
 
-### 49 — Slike usluga i radnika (🟡, 2026-09-26)
+### 49 — Slike usluga i radnika (✅, 2026-09-26)
 
-PR #112 spojen. Upload iz admina → slika u klijentu viđena uživo **na oba tenanta** (Vitez i
-beauty), za uslugu i za radnika. Ostaje samo izbor iz galerije na Android/iOS uređaju (isti kod,
-traži fizički uređaj) i test sa fontom 130 %. Nalaz usput: dijalog osoblja ne koristi `vertical.terms`.
+PR #112 i #113. Upload iz admina → slika u klijentu, viđeno uživo **na oba tenanta** (Vitez i
+beauty), za uslugu i za radnika. Dijalog osoblja sada piše termin vertikale („Uredi stilisticu“).
+Admin testovi daju 459 PASS. Izbor iz galerije na Android/iOS uređaju prebačen je u 60.

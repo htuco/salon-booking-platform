@@ -23,7 +23,11 @@ Vlasnik iz admina doda ili zamijeni sliku usluge i radnika, a klijent je vidi u 
   ali putanja mora biti takva da 51 zna šta je siroče.
 - Veličina: telefon šalje 4–12 MB. Smanjenje prije uploada ili limit na bucketu — ne oboje napola.
 
-## Status (2026-09-26)
+## Status (2026-09-26) — ✅ zatvoren
+
+Zatvoren za web na oba tenanta. Izbor iz galerije na Android/iOS uređaju prebačen je u task 60
+(stavka u DoD-u), jer traži fizički uređaj, a kod je isti kao na webu (`image_picker`).
+
 
 🟡 **Gotov za Vitez; ostaje drugi tenant uživo i mobilni izbor.** Grana `feat/slike-usluga-i-radnika`,
 PR #112 (#111 je zatvoren kad je obrisana baza #110).
@@ -52,8 +56,16 @@ na 4320 i beauty klijent (`SALON_ID=…0001`) na 4321, prijava `admin@beautystud
 - beauty klijent (402×874) prikazuje „Pramenovi“ sa slikom u cjenovniku i Aminu sa slikom u timu. Lejla ostaje prazna površina, bez slomljene slike.
 - Usput: dijalog osoblja piše „Uredi radnika“, „Usluge koje radnik pruža“ i „Deaktiviraj radnika“ bez `vertical.terms` (`employees_screen.dart:1086`, `:1139`, `:1205`). To je od ranije, nije uvedeno u 49; kandidat za 54 ili 60.
 
-**Ostalo za sljedećeg:**
-- Android/iOS izbor iz galerije — traži uređaj.
-- Test sa fontom od 130 % za `SlikaPolje`.
-- Tokom Playwright testa konzola je pokazala jednu grešku iz `change` događaja na file inputu. Pretpostavka je dvostruko `setFiles` (skript i MCP modal); u ručnom toku to nije provjereno.
+**Zatvaranje (PR #113):**
+- Dijalog osoblja sada čita `vertical.terms.staffSingular`: naslov, lista usluga, dugme i potvrda
+  (de)aktivacije. Rečenice su složene tako da rod ne zavisi od termina („Stilistica se više ne
+  nudi“). Uživo na beautyju: „Uredi stilisticu“, „Usluge koje stilistica pruža“, „Deaktiviraj
+  stilisticu“. Isti popravak je skinuo i „Dodaj prvog stilisticu“ iz praznog stanja.
+- Novi testovi: `SlikaPolje` sa fontom 130 % na širini 320 i greškom bez prelijevanja; beauty
+  termini u dijalogu osoblja. Admin `flutter test` daje 459 PASS, `flutter analyze` je čist.
+- Konzolna greška iz `change` događaja se sa jednim `setFiles` ne javlja. U beauty toku konzola ima
+  samo tri `ERR_NAME_NOT_RESOLVED` za demo URL-ove iz seeda (`images.demo.invalid`).
+
+**Prebačeno u 60:**
+- Izbor iz galerije na Android/iOS uređaju.
 - Zamka: poslije `pub add` web build može zadržati stari plugin registrant (v. `workflows.md`).
