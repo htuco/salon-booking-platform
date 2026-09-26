@@ -616,3 +616,18 @@ bi se ista obavijest pojavila dvaput.
 Client koristi build salon, admin članstvo. Worker uzima događaje iz baze i dobija kratkotrajni
 Vault HMAC kroz cron, bez klijentskog pozivanja funkcije za slanje. Operativni ugovor:
 `supabase/functions/send-push/README.md`.
+
+## Slike salona — upload iz admina (task 49)
+
+Tok je `SlikaPolje` (admin, `core/widgets/`) → `MediaRepository.upload` (`core_api`) → bucket
+`salon-media` → javni URL u postojećoj koloni (`image_url`, kasnije `gallery_urls`, `logo_url`).
+Klijent ne zna za Storage: čita URL iz kolone kao i prije, pa nova slika stiže bez novog builda.
+
+- **Upload ide odmah po izboru, kolona tek na „Sačuvaj".** Neuspio upload ne mijenja vrijednost u
+  obrascu. Odustajanje od obrasca ostavlja poslani fajl kao siroče; njega čisti task 51.
+- **Svaki upload dobija novo ime** (`<salon>/<vrsta>/<vrijeme>-<nasumično>.<ext>`), jer isti URL
+  keš prikazuje staru sliku. Vrsta je `MediaKind`, drugi segment putanje. Po njemu task 51 zna
+  koju kolonu da uporedi sa folderom.
+- **Smanjenje je na uređaju** (`image_picker`, 1600 px, kvalitet 85). Bucket (5 MiB) je samo granica.
+- `StorageException` izlazi iz `core_api` kao `ApiError`, isto kao `PostgrestException`. Poruke o
+  tipu, veličini i neuspjehu su na bosanskom i `displayMessage` ih pušta do ekrana.

@@ -84,6 +84,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
 
   /// Javni URL slike (task 49); mijenja ga [SlikaPolje] tek kad upload uspije.
   String? _slika;
+  bool _slikaSeSalje = false;
   bool _detalji = false;
 
   /// Mijenja ključ padajućeg menija da zaboravi „Drugo…" i opet pokaže pravo trajanje.
@@ -128,6 +129,10 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
   }
 
   Future<void> _sacuvaj() async {
+    if (_slikaSeSalje) {
+      setState(() => _greska = 'Slika se još šalje. Sačekajte trenutak.');
+      return;
+    }
     final ispravno = _form.currentState!.validate();
     // Naziv se na telefonu kod postojeće usluge krije u „detaljima"; greška ne smije
     // ostati sakrivena.
@@ -226,6 +231,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
     kind: MediaKind.usluge,
     velicina: 56,
     onChanged: (url) => setState(() => _slika = url),
+    onSaljeChanged: (v) => _slikaSeSalje = v,
   );
 
   Widget _panel(BuildContext context) {
@@ -656,7 +662,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
                 // `Flexible`: uz veće pismo tekst bi gurnuo strelicu van ekrana.
                 Flexible(
                   child: Text(
-                    sNazivom ? 'Naziv, kategorija i opis' : 'Kategorija i opis',
+                    sNazivom ? 'Detalji i slika' : 'Opis i slika',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: tema.labelMedium?.copyWith(color: boje.accent),

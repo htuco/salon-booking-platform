@@ -953,6 +953,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
     text: widget.employee?.experienceYears?.toString(),
   );
   late String? _slika = widget.employee?.imageUrl;
+  bool _slikaSeSalje = false;
   Set<String>? _selected;
   bool _saving = false;
   String? _error;
@@ -966,6 +967,10 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
   }
 
   Future<void> _save() async {
+    if (_slikaSeSalje) {
+      setState(() => _error = 'Slika se još šalje. Sačekajte trenutak.');
+      return;
+    }
     if (_saving || _selected == null || !_form.currentState!.validate()) return;
     setState(() {
       _saving = true;
@@ -1127,6 +1132,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                     kind: MediaKind.radnici,
                     krug: true,
                     onChanged: (url) => setState(() => _slika = url),
+                    onSaljeChanged: (v) => _slikaSeSalje = v,
                   ),
                   const SizedBox(height: AdminSpacing.xl),
                   Text(

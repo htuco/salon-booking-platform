@@ -54,6 +54,7 @@ class SlikaPolje extends ConsumerStatefulWidget {
     required this.url,
     required this.kind,
     required this.onChanged,
+    this.onSaljeChanged,
     this.krug = false,
     this.velicina = 72,
     super.key,
@@ -62,6 +63,10 @@ class SlikaPolje extends ConsumerStatefulWidget {
   final String? url;
   final MediaKind kind;
   final ValueChanged<String?> onChanged;
+
+  /// Obrazac blokira „Sačuvaj" dok upload traje — inače bi snimio staru sliku, a nova bi
+  /// završila kao siroče.
+  final ValueChanged<bool>? onSaljeChanged;
 
   /// Radnik je krug (kao u listi osoblja), usluga kvadrat.
   final bool krug;
@@ -74,6 +79,11 @@ class SlikaPolje extends ConsumerStatefulWidget {
 class _SlikaPoljeState extends ConsumerState<SlikaPolje> {
   bool _salje = false;
   String? _greska;
+
+  void _postaviSalje(bool v) {
+    setState(() => _salje = v);
+    widget.onSaljeChanged?.call(v);
+  }
 
   Future<void> _izaberi() async {
     final salon = ref.read(adminSalonIdProvider);
@@ -89,10 +99,8 @@ class _SlikaPoljeState extends ConsumerState<SlikaPolje> {
       setState(() => _greska = opstaPorukaGreske);
       return;
     }
-    setState(() {
-      _salje = true;
-      _greska = null;
-    });
+    _greska = null;
+    _postaviSalje(true);
     try {
       final url = await ref
           .read(mediaRepositoryProvider)
@@ -103,14 +111,12 @@ class _SlikaPoljeState extends ConsumerState<SlikaPolje> {
             contentType: slika.contentType,
           );
       if (!mounted) return;
-      setState(() => _salje = false);
+      _postaviSalje(false);
       widget.onChanged(url);
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _salje = false;
-        _greska = porukaGreske(e, opsta: 'Slika se ne može poslati.');
-      });
+      _greska = porukaGreske(e, opsta: 'Slika se ne može poslati.');
+      _postaviSalje(false);
     }
   }
 
@@ -157,7 +163,11 @@ class _SlikaPoljeState extends ConsumerState<SlikaPolje> {
           children: [
             Semantics(
               image: true,
-              label: ima ? 'Trenutna slika' : 'Bez slike',
+              label: _salje
+                  ? 'Slika se šalje'
+                  : ima
+                  ? 'Trenutna slika'
+                  : 'Bez slike',
               child: pregled,
             ),
             const SizedBox(width: AdminSpacing.md),
@@ -196,9 +206,12 @@ class _SlikaPoljeState extends ConsumerState<SlikaPolje> {
         ),
         if (_greska != null) ...[
           const SizedBox(height: AdminSpacing.xs),
-          Text(
-            _greska!,
-            style: tema.bodySmall?.copyWith(color: boje.destructive),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              _greska!,
+              style: tema.bodySmall?.copyWith(color: boje.destructive),
+            ),
           ),
         ],
       ],

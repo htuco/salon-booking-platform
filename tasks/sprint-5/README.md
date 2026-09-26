@@ -11,8 +11,8 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 
 | # | Task | Vrsta | Blokira | Procjena |
 |---|---|---|---|---|
-| [48](48-storage-bucket-po-salonu.md) | Storage bucket po salonu 🟡 | feature | 49, 50, 51 | 1–2 dana |
-| [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika | feature | 52, 53 | 1–2 dana |
+| [48](48-storage-bucket-po-salonu.md) | Storage bucket po salonu ✅ | feature | 49, 50, 51 | 1–2 dana |
+| [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika 🟡 | feature | 52, 53 | 1–2 dana |
 | [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover | feature | 52, 53 | 2 dana |
 | [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja | feature | — | 1–2 dana |
 | [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran | refinement | — | 1–2 dana |
@@ -61,3 +61,13 @@ Sprint raspisan 2026-09-25.
 Bucket `salon-media` i politike po salonu gotovi i dokazani lokalno (624 pgTAP, `rest_storage` 19).
 Čeka `Supabase tests` na PR-u (CI kvota do 29.09.) i `supabase db push` poslije merge-a. 49 i 50
 mogu krenuti na stacked grani.
+
+### 48 — zatvoren (2026-09-26)
+
+Mergan kao #110, migracija je na hostovanom projektu (`supabase migration list` pokazuje
+`20260926100000` i lokalno i remote).
+
+### 49 — Slike usluga i radnika (🟡, 2026-09-26)
+
+PR #112. Upload iz admina → slika u klijentu viđena uživo za Vitez, i za uslugu i za radnika.
+Ostaje beauty uživo i izbor na uređaju.

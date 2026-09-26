@@ -143,10 +143,16 @@ ApiError _mapStorage(StorageException error) {
   if (error.statusCode == '415' || poruka.contains('mime type')) {
     return ServerError('Podržane su JPG, PNG i WebP slike.', cause: error);
   }
-  if (error.statusCode == '401' ||
-      error.statusCode == '403' ||
-      poruka.contains('row-level security')) {
-    return NotFoundError('Traženi zapis ne postoji', cause: error);
+  // Nema tuđeg zapisa čije postojanje bi poruka odala (putanju gradi aplikacija), pa ovdje
+  // može reći šta se desilo — „Traženi zapis ne postoji" ispod slike ne kaže ništa.
+  if (error.statusCode == '401') {
+    return ServerError('Sesija je istekla. Prijavite se ponovo.', cause: error);
+  }
+  if (error.statusCode == '403' || poruka.contains('row-level security')) {
+    return ServerError(
+      'Nemate pravo da mijenjate slike ovog salona.',
+      cause: error,
+    );
   }
   return ServerError(
     'Slika se ne može poslati. Pokušajte ponovo.',

@@ -413,6 +413,12 @@ Storagea, dok je šema `storage` već migrirana verzijom iz `supabase/.temp/stor
 na grešku u politici, a nije. `docker ps --format '{{.Image}}' | grep storage` mora pokazati istu
 verziju kao `.temp`; ako ne pokazuje, `supabase stop` pa `supabase start`.
 
+**Web plugin dodan u postojeći build (task 49):** poslije `flutter pub add <plugin>` u
+`apps/admin` ili `apps/client`, `flutter build web` može zadržati stari
+`web_plugin_registrant.dart` iz `.dart_tool/flutter_build/`, pa plugin tiho ne postoji. Dugme se
+tada ne buni, ne otvara ništa i ne baca grešku. Provjera je `grep -c flt-image-picker-inputs
+build/web/main.dart.js` (ili ime klase plugina); ako je `0`, uradi `flutter clean` pa ponovo build.
+
 - **Napisana politika nije dokazana politika.** Dok suite nije prošla, u sažetku piše "napisano,
   nije pokrenuto", ne "radi".
 - **Isto vrijedi za `core_api` repozitorije.** Da li upit stvarno prolazi kao `anon` i da li kolone
