@@ -25,7 +25,7 @@ Prijavljen radnik dobija istu aplikaciju, ali suženu na ono što smije.
 
 ## Status (2026-09-24)
 
-Gotov — čeka review i merge [PR #107](https://github.com/htuco/salon-booking-platform/pull/107).
+✅ Spojen u `main` kroz [PR #107](https://github.com/htuco/salon-booking-platform/pull/107).
 Bez migracije.
 
 - Guard pušta `employee` sa vezom na `employees`; `kRuteRadnika` je lista dozvoljenih ruta
