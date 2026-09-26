@@ -74,7 +74,7 @@ void _uskoro(BuildContext context, String poruka) {
 
 void _uskoroSmjene(BuildContext context) => _uskoro(
   context,
-  'Uređivanje smjene po radniku stiže uskoro. Salonsko radno vrijeme i '
+  'Uređivanje smjene po osobi stiže uskoro. Salonsko radno vrijeme i '
   'odsustva su u Radnom vremenu.',
 );
 
@@ -400,10 +400,10 @@ class _Prazno extends ConsumerWidget {
       padding: const EdgeInsets.all(28),
       child: Column(
         children: [
-          const Text('Još nema radnika.'),
+          const Text('Osoblje je još prazno.'),
           TextButton(
             onPressed: () => _uredi(context),
-            child: Text('Dodaj prvog ${_akuzativ(radnikJednina(ref))}'),
+            child: Text('Dodaj ${_akuzativ(radnikJednina(ref))}'),
           ),
         ],
       ),
@@ -1003,16 +1003,19 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
 
   Future<void> _toggle() async {
     final employee = widget.employee!;
+    final jednina = radnikJednina(ref);
     final accepted = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          employee.isActive ? 'Deaktivirati radnika?' : 'Aktivirati radnika?',
+          employee.isActive
+              ? 'Deaktivirati ${_akuzativ(jednina)}?'
+              : 'Aktivirati ${_akuzativ(jednina)}?',
         ),
         content: Text(
           employee.isActive
-              ? 'Radnik više neće biti ponuđen za nove rezervacije. Postojeći termini ostaju zakazani; pregledajte ih u kalendaru.'
-              : 'Radnik će ponovo biti dostupan za rezervacije prema rasporedu i dodijeljenim uslugama.',
+              ? '$jednina se više ne nudi za nove rezervacije. Postojeći termini ostaju zakazani; pregledajte ih u kalendaru.'
+              : '$jednina se ponovo nudi za rezervacije prema rasporedu i dodijeljenim uslugama.',
         ),
         actions: [
           TextButton(
@@ -1083,7 +1086,9 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    widget.employee == null ? 'Novi radnik' : 'Uredi radnika',
+                    widget.employee == null
+                        ? 'Dodaj ${_akuzativ(radnikJednina(ref))}'
+                        : 'Uredi ${_akuzativ(radnikJednina(ref))}',
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   const SizedBox(height: AdminSpacing.xl),
@@ -1136,7 +1141,7 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                   ),
                   const SizedBox(height: AdminSpacing.xl),
                   Text(
-                    'Usluge koje radnik pruža',
+                    'Usluge koje ${radnikJednina(ref).toLowerCase()} pruža',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   if (!ready) ...[
@@ -1202,8 +1207,8 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                         onPressed: _saving ? null : _toggle,
                         child: Text(
                           widget.employee!.isActive
-                              ? 'Deaktiviraj radnika'
-                              : 'Ponovo aktiviraj radnika',
+                              ? 'Deaktiviraj ${_akuzativ(radnikJednina(ref))}'
+                              : 'Ponovo aktiviraj ${_akuzativ(radnikJednina(ref))}',
                         ),
                       ),
                     ),

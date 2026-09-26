@@ -1,28 +1,14 @@
-# Trenutni task: 49 — Vlasnik postavlja sliku usluge i radnika
+# Trenutni task
 
-Puni task: [tasks/sprint-5/49-slike-usluga-i-radnika.md](sprint-5/49-slike-usluga-i-radnika.md) · učitan 2026-09-26
+Nijedan task nije učitan. Sljedeći po redu je 50 (galerija, logo, cover) — `/task load 50`.
 
 ## Status
 
-U toku, 🟡. PR #112 sa grane `feat/slike-usluga-i-radnika`, spreman za pregled. Upload iz admina
-i prikaz u klijentu su dokazani uživo za Vitez (usluga i radnik).
+—
 
 ## Ciljevi
 
-- [x] Izbor slike u obrascu usluge i radnika (admin web; mobilni isti kod)
-- [x] Upload u `salon-media`, `image_url` dobija javni URL
-- [x] Napredak i greška; neuspio upload ne mijenja sliku; snimanje čeka upload
-- [x] Uklanjanje vraća praznu površinu
-- [x] Klijent prikazuje novu sliku u cjenovniku i u timu (Vitez, uživo)
-- [ ] Drugi tenant (beauty) uživo
-- [ ] Izbor iz galerije na Android/iOS uređaju
-
 ## Napomene
-
-- Sljedeći je 50 (galerija, logo, cover). `SlikaPolje` i `MediaKind.galerija|logo|cover` već postoje.
-- Poslije `flutter pub add` u web appu: `flutter clean` prije web builda, inače plugin tiho izostane
-  (`.claude/docs/workflows.md`).
-- Lokalni Storage kontejner mora odgovarati `supabase/.temp/storage-version`.
 
 ## Istorija
 
@@ -94,3 +80,10 @@ push registraciju prije prijave. Nakon merge-a: `supabase db push`.
 Spojen u `main` ([PR #110](https://github.com/htuco/salon-booking-platform/pull/110)) 2026-09-26,
 migracija na hostovanom projektu. Bucket `salon-media`, upis samo vlasniku salona iz prvog
 segmenta putanje; 624 pgTAP, `rest_storage` 19 provjera.
+
+### 49 — Vlasnik postavlja sliku usluge i radnika (gotov)
+
+Spojen u `main` ([PR #112](https://github.com/htuco/salon-booking-platform/pull/112) i
+[#113](https://github.com/htuco/salon-booking-platform/pull/113)) 2026-09-26. Upload iz admina u
+`salon-media`, a klijent prikazuje sliku; viđeno uživo na Vitezu i beautyju. Dijalog osoblja piše
+termin vertikale. Izbor iz galerije na uređaju je prebačen u 60.

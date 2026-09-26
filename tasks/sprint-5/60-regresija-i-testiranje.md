@@ -16,6 +16,7 @@ zapisuju u tabelu ispod.
       do potvrde, moji termini, otkazivanje, prijava, reset lozinke, brisanje računa
 - [ ] Admin, obje uloge (vlasnik, radnik): prijava, Danas, kalendar, termini, odobri/odbij/otkaži,
       novi termin sa telefonskim klijentom, usluge, osoblje i poziv, radno vrijeme, blokade, postavke, slike
+- [ ] Izbor slike iz galerije na Android i iOS uređaju (task 49: dokazan samo web; isti `image_picker` kod)
 - [ ] Push u oba smjera na Android uređaju: novi zahtjev salonu, potvrda i podsjetnik klijentu
 - [ ] Izolacija: `supabase test db` + oba Deno REST testa zeleni; vlasnik A ne vidi ništa od B
 - [ ] Širine 1440, 2560 i 402 za admin; telefon za klijenta
