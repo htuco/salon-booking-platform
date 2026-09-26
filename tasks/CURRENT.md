@@ -1,14 +1,39 @@
-# Trenutni task
+# Trenutni task: 50 — Galerija salona, logo i cover
 
-Nijedan task nije učitan. Sljedeći po redu je 50 (galerija, logo, cover) — `/task load 50`.
+Puni task: `tasks/sprint-5/50-galerija-logo-cover.md` · učitan 2026-09-26
 
 ## Status
 
-—
+U toku — sve dokazano lokalno; čeka `Supabase tests` na PR-u #114, merge i `supabase db push`
 
 ## Ciljevi
 
+- [x] Migracija: RPC za logo/cover i RPC za galeriju (`security definer`, `private.is_admin`),
+      galerija sa optimističkom provjerom zatečenog niza — drugi tab ne pregazi tiho prvi
+- [x] RPC prima samo URL iz `salon-media/<svoj salon_id>/<vrsta>/` (ili prazno) — nema tuđih ni
+      vanjskih URL-ova
+- [x] pgTAP (pozitivno, tuđi salon, radnik, anon, konflikt) + Deno REST test; `supabase test db` zelen
+- [x] `core_api`: upis logo/cover/galerije + mapiranje konflikta u poruku
+- [x] Admin postavke: cover i logo umjesto „uskoro"; tekst da ikona i splash dolaze iz builda
+- [x] Admin editor galerije: dodaj, obriši, promijeni redoslijed; widget testovi
+- [x] Klijent: nova galerija i cover na početnoj i u lightboxu; prazna galerija = prazno stanje
+- [x] Uživo na oba tenanta (Vitez i beauty), 1440 i 402
+- [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, doc komentar `settings_screen.dart`
+
 ## Napomene
+
+- **Put upisa ne postoji.** `authenticated` ima samo SELECT nad `salons` (task 36 oduzeo grant);
+  pisanje ide isključivo kroz RPC. Kolone postoje od init migracije; `seed.sql` puni galeriju
+  barbera, a beautyju ostavlja `[]`.
+- ADR-0008: galerija ostaje jsonb niz, redoslijed = redoslijed niza. Task to izričito zadržava,
+  pa `gallery_photos` **ne** nastaje.
+- `security.md` („Postavke lokacije") i doc komentar `settings_screen.dart` tvrde da logo dolazi
+  iz `tenant.yaml` — za `logo_url` to nije tačno (u `tenant.yaml` ga nema). Iz builda su **ikona
+  i splash**. Ispraviti u istoj promjeni.
+- Već postoji: `MediaRepository.upload` sa `MediaKind.galerija/logo/cover`, admin `SlikaPolje`
+  (task 49), klijent `salonGalleryProvider` i `GalleryGrid`, `home_hero.dart` čita cover, admin
+  sidebar i „Još" čitaju logo.
+- Stari objekti nakon zamjene/brisanja su siročad — čisti ih task 51, ne ovaj.
 
 ## Istorija
 

@@ -152,6 +152,8 @@ List<Override> demoOverrides(AdminEnv env) => [
     (ref) async => const SalonSettings(id: 'demo-settings', salonId: _salonId),
   ),
   postavkeSekcijeProvider.overrideWith((ref) async => const <PolicySection>[]),
+  // Demo nema bucket; prazna galerija je i stanje novog salona.
+  postavkeGalerijaProvider.overrideWith((ref) async => const <String>[]),
 ];
 
 /// Klijenti iz demo rasporeda — isti ljudi koji stoje u terminima, da profil otvoren iz

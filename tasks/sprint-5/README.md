@@ -13,7 +13,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 |---|---|---|---|---|
 | [48](48-storage-bucket-po-salonu.md) | Storage bucket po salonu ✅ | feature | 49, 50, 51 | 1–2 dana |
 | [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika ✅ | feature | 52, 53 | 1–2 dana |
-| [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover | feature | 52, 53 | 2 dana |
+| [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover 🟡 | feature | 52, 53 | 2 dana |
 | [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja | feature | — | 1–2 dana |
 | [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran | refinement | — | 1–2 dana |
 | [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje | feature | — | 4–5 dana |
@@ -72,3 +72,10 @@ Mergan kao #110, migracija je na hostovanom projektu (`supabase migration list` 
 PR #112 i #113. Upload iz admina → slika u klijentu, viđeno uživo **na oba tenanta** (Vitez i
 beauty), za uslugu i za radnika. Dijalog osoblja sada piše termin vertikale („Uredi stilisticu“).
 Admin testovi daju 459 PASS. Izbor iz galerije na Android/iOS uređaju prebačen je u 60.
+
+### 50 — Galerija salona, logo i cover (🟡, 2026-09-26)
+
+PR #114. RPC `set_salon_image` / `set_salon_gallery` (nova slika samo iz svog foldera, konflikt
+dva taba je `PT409`), admin postavke i kartica galerije, klijent bez promjene koda. 671 pgTAP,
+`rest_galerija` 26, `melos run test` zelen. Uživo na Vitezu i beautyju, 1440 i 402, uključujući
+konflikt i prazno stanje. Čeka CI na PR-u i `supabase db push` poslije merge-a.
