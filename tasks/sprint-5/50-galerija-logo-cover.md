@@ -24,7 +24,12 @@ prestaje biti „uskoro".
 - Redoslijed galerije je redoslijed niza; dva taba koja istovremeno mijenjaju niz ne smiju tiho
   pregaziti jedan drugog.
 
-## Status (2026-09-26) — 🟡 dokazan lokalno, čeka CI na PR-u #114 i `supabase db push` poslije merge-a
+## Status (2026-09-26) — ✅ zatvoren
+
+Spojen kao #114. CI na PR-u zelen (`Schema, RLS and tenant isolation`, `Analiza, format i testovi`),
+`supabase migration list` pokazuje `20260926120000` i lokalno i remote.
+
+### Dokaz prije merge-a
 
 Grana `feat/galerija-logo-cover`, PR #114.
 
@@ -58,8 +63,8 @@ Grana `feat/galerija-logo-cover`, PR #114.
   - Beauty **poslije**: cover + dvije slike; klijent 1440 cover i galerija na Početnoj, 402 lightbox 1/2.
   - Konzola: samo namjerni 409 i poznati `images.demo.invalid` iz beauty seeda.
 
-**Nije dokazano / ostaje:**
-- `Supabase tests` na PR-u (CI) i `supabase db push` na hostovani projekat poslije merge-a.
+**Ostalo za sljedećeg (nije dio DoD-a):**
+- ~~CI na PR-u i `supabase db push`~~ — zatvoreno, v. gore.
 - Admin 402 na beautyju nije posebno otvaran (isti kod kao Vitez 402).
 - Klijent nema osvježavanje dok je otvoren: nova galerija i cover stižu pri sljedećem pokretanju
   aplikacije. DoD to ne traži; kandidat za 52 ili 60.
