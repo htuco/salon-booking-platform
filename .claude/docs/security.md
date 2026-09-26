@@ -410,6 +410,32 @@ Povezani klijent može zaključiti da se availability nekad promijenio — to je
 osvježila — ali tabela ne čuva vrijeme ni brojač prometa. Grantovi, RLS, oblik kolona, izolacija
 drugog salona i članstvo u publikaciji drži `010_availability_realtime.test.sql`.
 
+## Slike — Storage bucket `salon-media` (task 48)
+
+Jedan bucket za sve salone, **javno čitanje** (ADR-0015): javni URL `/object/public/...` ne ide
+kroz RLS, pa anon nema i ne treba politiku nad `storage.objects`. URL slike zato **nije tajna** —
+ništa što identifikuje klijenta ne ide u ovaj bucket.
+
+- Putanja je `<salon_id>/<vrsta>/<fajl>`. `private.storage_salon_id(name)` vraća prvi segment kao
+  UUID, a `NULL` kad nije UUID ili putanja nema vrstu i fajl. `is_admin(NULL)` nije istina, pa se
+  pogrešna putanja odbija umjesto da baci grešku pri castu.
+- Četiri politike (`salon_media_admin_select|insert|update|delete`), sve za `authenticated` i sve
+  `private.is_admin(private.storage_salon_id(name)) is true`. Radnik, klijent i podmetnut claim
+  bez reda u `users` ne pišu i ne listaju ništa. `update` provjerava i novu putanju, pa se objekat
+  ne može preseliti u tuđi salon.
+- Tip (`image/jpeg|png|webp`, **bez SVG-a** jer nosi skriptu) i veličinu (5 MiB) sprovodi bucket, ne
+  aplikacija — to se vidi samo kroz Storage API, ne u pgTAP-u.
+
+Dokaz: `022_storage_bucket.test.sql` (27 asercija; `insert`/`select` oslabljeni na samo
+`bucket_id` obaraju 12, `update` sam 1, `delete` sam 1) i `rest_storage.ts` (19 provjera kroz
+stvaran Storage API: tuđi salon, anon, `text/plain`, SVG, 5 MiB + 1 bajt, javni URL, prepis tuđeg
+objekta, `move`/`copy` u tuđi salon, brisanje).
+
+**Zamka za test:** SELECT politika sakriva tuđi objekat, pa `update`/`delete` nad njim pogode 0
+redova i kad je njihov `using` oslabljen — test bi bio zelen bez mjerenja. `022` zato privremeno
+(u transakciji) dodaje široku SELECT politiku prije tih provjera. Isto važi za svaku buduću
+tabelu gdje SELECT uži od UPDATE/DELETE-a.
+
 ## Šta još nije zatvoreno
 
 Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvorene:
@@ -738,6 +764,8 @@ ništa.
 | `rest_pozivi_osoblja.ts` | isto kroz Edge Function i GoTrue: novi nalog nosi ulogu i salon **iz poziva**, ne iz zahtjeva; zauzet email 409; uklonjen nalog sa starim tokenom ne vidi ništa |
 | `021_uloga_employee.test.sql` | radnik vidi i mijenja samo svoje termine; ne termin radnika A2, ne termin bez radnika, ne salon B; ne piše cjenovnik, pozive, blokade; podmetnut token i nalog bez veze nemaju ništa |
 | `rest_employee_izolacija.ts` | isto kroz stvaran JWT radnika: PostgREST vraća samo njegov termin, tuđi RPC je 403, direktan PATCH odbijen |
+| `022_storage_bucket.test.sql` | bucket `salon-media` — vlasnik piše i briše samo pod svojim `salon_id`, ne seli objekat u tuđi salon; radnik, klijent, anon i podmetnut claim ne pišu i ne listaju |
+| `rest_storage.ts` | isto kroz Storage API, plus ono što sprovodi samo servis: tip slike, 5 MiB, javni URL bez tokena |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

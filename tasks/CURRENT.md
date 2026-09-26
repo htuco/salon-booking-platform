@@ -1,24 +1,28 @@
 # Trenutni task: 48 — Storage bucket po salonu
 
-Puni task: [tasks/sprint-5/48-storage-bucket-po-salonu.md](sprint-5/48-storage-bucket-po-salonu.md) · raspisan 2026-09-25
+Puni task: [tasks/sprint-5/48-storage-bucket-po-salonu.md](sprint-5/48-storage-bucket-po-salonu.md) · učitan 2026-09-26
 
 ## Status
 
-Nije počet — Sprint 5 je raspisan ([tasks/sprint-5/README.md](sprint-5/README.md)), 48 je prvi
-jer blokira 49–51. Počinje se sa `/task start`.
+U toku — gotov lokalno, PR otvoren sa grane `feat/storage-bucket-po-salonu`. Čeka `Supabase tests`
+na PR-u (GitHub Actions blokiran do 29.09.2026.) i `supabase db push` poslije merge-a.
 
 ## Ciljevi
 
-- [ ] Bucket sa javnim čitanjem, putanja počinje sa `salon_id`
-- [ ] Upis, izmjena i brisanje samo vlasniku tog salona; radnik i anon ne upisuju
-- [ ] Ograničenje tipa i veličine fajla na bucketu
-- [ ] pgTAP za oba salona i obje uloge, `Supabase tests` zelen
+- [x] Bucket sa javnim čitanjem, putanja počinje sa `salon_id`
+- [x] Upis, izmjena i brisanje samo vlasniku tog salona; radnik i anon ne upisuju
+- [x] Ograničenje tipa i veličine fajla na bucketu
+- [x] pgTAP za oba salona i obje uloge — lokalno 624 PASS, `rest_storage` 19
+- [ ] `Supabase tests` zelen na PR-u
+- [ ] `supabase db push` poslije merge-a
 
 ## Napomene
 
-- Zubari su namjerno van Sprinta 5 (`docs/05`: tek nakon 3+ beauty klijenta, uz DPA).
-- Taskovi 54 i 55 mijenjaju ADR-0020 i počinju dopunom ADR-a, ne kodom.
-- Bugovi se ne raspisuju unaprijed — nalaze se i zapisuju u tasku 60 (regresija).
+- Sljedeći je 49 (slike usluga i radnika), na stacked grani sa `feat/storage-bucket-po-salonu`
+  dok 48 nije mergan.
+- Lokalni Storage kontejner mora odgovarati `supabase/.temp/storage-version`, inače upload daje
+  `500 42P10` (`.claude/docs/workflows.md`).
+- Zubari su namjerno van Sprinta 5. Taskovi 54 i 55 počinju dopunom ADR-0020, ne kodom.
 
 ## Istorija
 
