@@ -1,39 +1,14 @@
-# Trenutni task: 50 — Galerija salona, logo i cover
+# Trenutni task
 
-Puni task: `tasks/sprint-5/50-galerija-logo-cover.md` · učitan 2026-09-26
+Nijedan task nije učitan. Sljedeći po redu je 51 (čišćenje bucketa i prijava sadržaja) — `/task load 51`.
 
 ## Status
 
-U toku — sve dokazano lokalno; čeka `Supabase tests` na PR-u #114, merge i `supabase db push`
+—
 
 ## Ciljevi
 
-- [x] Migracija: RPC za logo/cover i RPC za galeriju (`security definer`, `private.is_admin`),
-      galerija sa optimističkom provjerom zatečenog niza — drugi tab ne pregazi tiho prvi
-- [x] RPC prima samo URL iz `salon-media/<svoj salon_id>/<vrsta>/` (ili prazno) — nema tuđih ni
-      vanjskih URL-ova
-- [x] pgTAP (pozitivno, tuđi salon, radnik, anon, konflikt) + Deno REST test; `supabase test db` zelen
-- [x] `core_api`: upis logo/cover/galerije + mapiranje konflikta u poruku
-- [x] Admin postavke: cover i logo umjesto „uskoro"; tekst da ikona i splash dolaze iz builda
-- [x] Admin editor galerije: dodaj, obriši, promijeni redoslijed; widget testovi
-- [x] Klijent: nova galerija i cover na početnoj i u lightboxu; prazna galerija = prazno stanje
-- [x] Uživo na oba tenanta (Vitez i beauty), 1440 i 402
-- [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, doc komentar `settings_screen.dart`
-
 ## Napomene
-
-- **Put upisa ne postoji.** `authenticated` ima samo SELECT nad `salons` (task 36 oduzeo grant);
-  pisanje ide isključivo kroz RPC. Kolone postoje od init migracije; `seed.sql` puni galeriju
-  barbera, a beautyju ostavlja `[]`.
-- ADR-0008: galerija ostaje jsonb niz, redoslijed = redoslijed niza. Task to izričito zadržava,
-  pa `gallery_photos` **ne** nastaje.
-- `security.md` („Postavke lokacije") i doc komentar `settings_screen.dart` tvrde da logo dolazi
-  iz `tenant.yaml` — za `logo_url` to nije tačno (u `tenant.yaml` ga nema). Iz builda su **ikona
-  i splash**. Ispraviti u istoj promjeni.
-- Već postoji: `MediaRepository.upload` sa `MediaKind.galerija/logo/cover`, admin `SlikaPolje`
-  (task 49), klijent `salonGalleryProvider` i `GalleryGrid`, `home_hero.dart` čita cover, admin
-  sidebar i „Još" čitaju logo.
-- Stari objekti nakon zamjene/brisanja su siročad — čisti ih task 51, ne ovaj.
 
 ## Istorija
 
@@ -112,3 +87,10 @@ Spojen u `main` ([PR #112](https://github.com/htuco/salon-booking-platform/pull/
 [#113](https://github.com/htuco/salon-booking-platform/pull/113)) 2026-09-26. Upload iz admina u
 `salon-media`, a klijent prikazuje sliku; viđeno uživo na Vitezu i beautyju. Dijalog osoblja piše
 termin vertikale. Izbor iz galerije na uređaju je prebačen u 60.
+
+### 50 — Galerija salona, logo i cover (gotov)
+
+Spojen u `main` ([PR #114](https://github.com/htuco/salon-booking-platform/pull/114)) 2026-09-26,
+migracija na hostovanom projektu. `set_salon_image` / `set_salon_gallery` (samo svoje slike,
+konflikt dva taba je `PT409`), admin postavke i kartica galerije. 671 pgTAP, `rest_galerija` 26;
+viđeno uživo na Vitezu i beautyju, 1440 i 402.
