@@ -23,6 +23,10 @@ ApiError mapError(Object error, [StackTrace? stackTrace]) {
   // tekst koji korisnik vidi, a koji ne kaze nista ni njemu ni onome ko cita prijavu.
   if (error is FunctionException) return _mapFunction(error);
 
+  // Storage (task 49). Bucket sam odbija tip i veličinu, a politika tuđi salon — sve tri
+  // stižu ovdje, ne kao PostgrestException.
+  if (error is StorageException) return _mapStorage(error);
+
   if (error is SocketException || error is HttpException) {
     return NetworkError('Nema veze sa serverom', cause: error);
   }
@@ -129,6 +133,33 @@ ApiError _mapPostgrest(PostgrestException error) {
   );
 }
 
+/// `StorageException.statusCode` je HTTP status kao tekst. Tuđi salon (`403`) je
+/// [NotFoundError] iz istog razloga kao `42501` kod PostgREST-a.
+ApiError _mapStorage(StorageException error) {
+  final poruka = error.message.toLowerCase();
+  if (error.statusCode == '413' || poruka.contains('maximum allowed size')) {
+    return ServerError('Slika je veća od 5 MB.', cause: error);
+  }
+  if (error.statusCode == '415' || poruka.contains('mime type')) {
+    return ServerError('Podržane su JPG, PNG i WebP slike.', cause: error);
+  }
+  // Nema tuđeg zapisa čije postojanje bi poruka odala (putanju gradi aplikacija), pa ovdje
+  // može reći šta se desilo — „Traženi zapis ne postoji" ispod slike ne kaže ništa.
+  if (error.statusCode == '401') {
+    return ServerError('Sesija je istekla. Prijavite se ponovo.', cause: error);
+  }
+  if (error.statusCode == '403' || poruka.contains('row-level security')) {
+    return ServerError(
+      'Nemate pravo da mijenjate slike ovog salona.',
+      cause: error,
+    );
+  }
+  return ServerError(
+    'Slika se ne može poslati. Pokušajte ponovo.',
+    cause: error,
+  );
+}
+
 /// `FunctionException` nosi HTTP status i tijelo odgovora Edge Function-a.
 ///
 /// Status se cita iz `status`, a poruka iz tijela — funkcije u ovom repou vracaju
@@ -182,6 +213,8 @@ extension ApiErrorDisplay on ApiError {
         when cause is PostgrestException &&
             (cause.code?.startsWith('PT') ?? false) =>
       message,
+    // Storage poruke sastavlja `_mapStorage` na bosanskom (task 49).
+    ServerError(:final cause) when cause is StorageException => message,
     // Auth poruke dolaze od Supabase Autha na engleskom; ekran prijave ih prevodi po
     // tipu. Rate limit i otkazivanje takođe obrađuje ekran, ne ovaj tekst.
     ServerError() ||

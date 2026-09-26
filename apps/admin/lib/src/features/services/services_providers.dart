@@ -14,6 +14,7 @@ class ServiceInput {
     required this.price,
     required this.durationMinutes,
     this.slotStepMinutes,
+    this.imageUrl,
   });
 
   final String name;
@@ -24,6 +25,9 @@ class ServiceInput {
 
   /// `null` = salonski korak.
   final int? slotStepMinutes;
+
+  /// Javni URL iz bucketa `salon-media`; `null` = bez slike (task 49).
+  final String? imageUrl;
 }
 
 class ServiceActions {
@@ -45,6 +49,7 @@ class ServiceActions {
             price: input.price,
             durationMinutes: input.durationMinutes,
             slotStepMinutes: input.slotStepMinutes,
+            imageUrl: input.imageUrl,
           )
         : await repository.update(
             salonId: salonId,
@@ -55,7 +60,7 @@ class ServiceActions {
             price: input.price,
             durationMinutes: input.durationMinutes,
             slotStepMinutes: input.slotStepMinutes,
-            imageUrl: existing.imageUrl,
+            imageUrl: input.imageUrl,
           );
     _ref.invalidate(adminServicesProvider);
     return result;

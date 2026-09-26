@@ -197,7 +197,7 @@ void main() {
     expect(find.byType(Switch), findsNothing);
 
     // Naziv i kategorija postojeće usluge stoje iza jednog reda.
-    await tester.tap(find.text('Naziv, kategorija i opis'));
+    await tester.tap(find.text('Detalji i slika'));
     await tester.pumpAndSettle();
     expect(
       tester

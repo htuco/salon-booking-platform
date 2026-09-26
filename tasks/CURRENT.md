@@ -1,28 +1,28 @@
-# Trenutni task: 48 — Storage bucket po salonu
+# Trenutni task: 49 — Vlasnik postavlja sliku usluge i radnika
 
-Puni task: [tasks/sprint-5/48-storage-bucket-po-salonu.md](sprint-5/48-storage-bucket-po-salonu.md) · učitan 2026-09-26
+Puni task: [tasks/sprint-5/49-slike-usluga-i-radnika.md](sprint-5/49-slike-usluga-i-radnika.md) · učitan 2026-09-26
 
 ## Status
 
-U toku — gotov lokalno, PR otvoren sa grane `feat/storage-bucket-po-salonu`. Čeka `Supabase tests`
-na PR-u (GitHub Actions blokiran do 29.09.2026.) i `supabase db push` poslije merge-a.
+U toku, 🟡. PR #112 sa grane `feat/slike-usluga-i-radnika`, spreman za pregled. Upload iz admina
+i prikaz u klijentu su dokazani uživo za Vitez (usluga i radnik).
 
 ## Ciljevi
 
-- [x] Bucket sa javnim čitanjem, putanja počinje sa `salon_id`
-- [x] Upis, izmjena i brisanje samo vlasniku tog salona; radnik i anon ne upisuju
-- [x] Ograničenje tipa i veličine fajla na bucketu
-- [x] pgTAP za oba salona i obje uloge — lokalno 624 PASS, `rest_storage` 19
-- [ ] `Supabase tests` zelen na PR-u
-- [ ] `supabase db push` poslije merge-a
+- [x] Izbor slike u obrascu usluge i radnika (admin web; mobilni isti kod)
+- [x] Upload u `salon-media`, `image_url` dobija javni URL
+- [x] Napredak i greška; neuspio upload ne mijenja sliku; snimanje čeka upload
+- [x] Uklanjanje vraća praznu površinu
+- [x] Klijent prikazuje novu sliku u cjenovniku i u timu (Vitez, uživo)
+- [ ] Drugi tenant (beauty) uživo
+- [ ] Izbor iz galerije na Android/iOS uređaju
 
 ## Napomene
 
-- Sljedeći je 49 (slike usluga i radnika), na stacked grani sa `feat/storage-bucket-po-salonu`
-  dok 48 nije mergan.
-- Lokalni Storage kontejner mora odgovarati `supabase/.temp/storage-version`, inače upload daje
-  `500 42P10` (`.claude/docs/workflows.md`).
-- Zubari su namjerno van Sprinta 5. Taskovi 54 i 55 počinju dopunom ADR-0020, ne kodom.
+- Sljedeći je 50 (galerija, logo, cover). `SlikaPolje` i `MediaKind.galerija|logo|cover` već postoje.
+- Poslije `flutter pub add` u web appu: `flutter clean` prije web builda, inače plugin tiho izostane
+  (`.claude/docs/workflows.md`).
+- Lokalni Storage kontejner mora odgovarati `supabase/.temp/storage-version`.
 
 ## Istorija
 
@@ -88,3 +88,9 @@ Zatvoren 2026-09-23 ([PR #100](https://github.com/htuco/salon-booking-platform/p
 uklonjen iz koda, `tenant.yaml`-a, šeme i admin postavki; `private.is_client()` odbija anonimnu
 sesiju. 478 pgTAP asercija, 9 REST testova, `melos run test` i CI zeleni. `register_device` zadržava
 push registraciju prije prijave. Nakon merge-a: `supabase db push`.
+
+### 48 — Storage bucket po salonu (gotov)
+
+Spojen u `main` ([PR #110](https://github.com/htuco/salon-booking-platform/pull/110)) 2026-09-26,
+migracija na hostovanom projektu. Bucket `salon-media`, upis samo vlasniku salona iz prvog
+segmenta putanje; 624 pgTAP, `rest_storage` 19 provjera.
