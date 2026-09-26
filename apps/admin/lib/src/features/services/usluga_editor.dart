@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/poruka_greske.dart';
 import '../../core/theme/theme.dart';
+import '../../core/widgets/slika_polje.dart';
 import '../../core/widgets/admin_verzal.dart';
 import 'services_providers.dart';
 import 'usluge_dijelovi.dart';
@@ -80,6 +81,9 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
   /// Korak početaka (task 43). `null` = salonski.
   int? _korak;
   late bool _aktivna;
+
+  /// Javni URL slike (task 49); mijenja ga [SlikaPolje] tek kad upload uspije.
+  String? _slika;
   bool _detalji = false;
 
   /// Mijenja ključ padajućeg menija da zaboravi „Drugo…" i opet pokaže pravo trajanje.
@@ -102,6 +106,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
     _trajanje = s?.durationMinutes ?? 30;
     _korak = s?.slotStepMinutes;
     _aktivna = s?.isActive ?? true;
+    _slika = s?.imageUrl;
   }
 
   @override
@@ -145,6 +150,7 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
           price: normalizeServicePrice(_cijena.text)!,
           durationMinutes: _trajanje!,
           slotStepMinutes: _korak,
+          imageUrl: _slika,
         ),
       );
       if (rezultat.isActive != _aktivna) {
@@ -215,6 +221,13 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
   // `3f` — desni panel
   // -------------------------------------------------------------------------
 
+  Widget _slikaPolje() => SlikaPolje(
+    url: _slika,
+    kind: MediaKind.usluge,
+    velicina: 56,
+    onChanged: (url) => setState(() => _slika = url),
+  );
+
   Widget _panel(BuildContext context) {
     final boje = context.adminColors;
     final tema = Theme.of(context).textTheme;
@@ -242,6 +255,9 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
         const SizedBox(height: AdminSpacing.lg),
         _Labela('Naziv'),
         _nazivPolje(),
+        const SizedBox(height: izmedju),
+        _Labela('Slika'),
+        _slikaPolje(),
         const SizedBox(height: izmedju),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,6 +691,9 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
             style: tema.bodyLarge,
             decoration: _polje(context),
           ),
+          const SizedBox(height: AdminSpacing.md),
+          _Labela('Slika'),
+          _slikaPolje(),
           const SizedBox(height: AdminSpacing.sm),
         ],
       ],

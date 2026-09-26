@@ -12,6 +12,7 @@ import 'booking/booking_repository.dart';
 import 'booking/staff_appointment_repository.dart';
 import 'catalog/blocked_slot_repository.dart';
 import 'catalog/employee_repository.dart';
+import 'catalog/media_repository.dart';
 import 'catalog/policy_repository.dart';
 import 'catalog/review_repository.dart';
 import 'catalog/salon_repository.dart';
@@ -407,3 +408,8 @@ final adminVerticalProvider = FutureProvider<Vertical?>((ref) async {
 
   return ref.watch(verticalRepositoryProvider).fetchForSalon(salonId);
 });
+
+/// Slike salona u Storageu (task 49). Samo admin piše; klijent čita javni URL iz kolone.
+final mediaRepositoryProvider = Provider<MediaRepository>(
+  (ref) => MediaRepository(ref.watch(supabaseClientProvider)),
+);
