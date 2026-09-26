@@ -2,6 +2,8 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../appointments/appointments_providers.dart' show adminSalonProvider;
+
 /// Kontakt podaci salona — `salons` red koji klijent vidi na Početnoj.
 ///
 /// `autoDispose`: postavke se otvore, promijene i napuste, pa cache preko života ekrana
@@ -11,6 +13,20 @@ final postavkeSalonProvider = FutureProvider.autoDispose<Salon?>((ref) async {
   if (salonId == null) return null;
 
   return ref.watch(salonRepositoryProvider).byId(salonId);
+});
+
+/// Galerija salona — `salons.gallery_urls`, redoslijed niza je redoslijed prikaza (ADR-0008).
+///
+/// Zaseban od [postavkeSalonProvider] iz istog razloga kao klijentski `salonGalleryProvider`:
+/// lista nije polje `Salon` modela. Ova vrijednost je ujedno `p_expected` sljedećeg upisa —
+/// zato se poslije svakog upisa i konflikta ponovo učitava, ne krpi lokalno.
+final postavkeGalerijaProvider = FutureProvider.autoDispose<List<String>>((
+  ref,
+) async {
+  final salonId = ref.watch(adminSalonIdProvider);
+  if (salonId == null) return const [];
+
+  return ref.watch(salonRepositoryProvider).galleryUrls(salonId);
 });
 
 /// Booking pravila — `salon_settings`, tačno jedan red.
@@ -202,6 +218,33 @@ class SettingsActions {
           showPricesInApp: unos.showPricesInApp,
         );
     _ref.invalidate(postavkeBookingProvider);
+  }
+
+  /// Logo ili naslovna slika (task 50). Jedna kolona po pozivu — v. `SalonRepository.setImage`.
+  ///
+  /// Osvježava i [adminSalonProvider], jer sidebar i „Još" crtaju logo iz njega.
+  Future<void> sacuvajSliku(SalonImage vrsta, String? url) async {
+    await _ref
+        .read(salonRepositoryProvider)
+        .setImage(salonId: _salon, kind: vrsta, url: url);
+    _ref
+      ..invalidate(postavkeSalonProvider)
+      ..invalidate(adminSalonProvider);
+  }
+
+  /// Nova galerija, ako je zatečena još uvijek [zatecena]. Inače [ConflictError] — i
+  /// galerija se svejedno ponovo učita, da sljedeći pokušaj krene od stvarnog stanja.
+  Future<void> sacuvajGaleriju({
+    required List<String> zatecena,
+    required List<String> nova,
+  }) async {
+    try {
+      await _ref
+          .read(salonRepositoryProvider)
+          .setGallery(salonId: _salon, expected: zatecena, urls: nova);
+    } finally {
+      _ref.invalidate(postavkeGalerijaProvider);
+    }
   }
 
   Future<void> sacuvajSekciju({

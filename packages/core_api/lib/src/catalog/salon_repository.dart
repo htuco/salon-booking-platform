@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../errors/errors.dart';
+import 'media_repository.dart';
 
 /// Čita salon po `id`-u — jedan red iz `public.salons`.
 ///
@@ -49,9 +50,10 @@ phone, email, instagram_url, facebook_url, vertical_pack_key
   /// **Nema `update` nad `salons` iz aplikacije.** Grant je oduzet u tasku 36, pa je ovo
   /// jedini put; tuđi salon i pozivalac koji nije njegov admin daju istu `42501`.
   ///
-  /// **Boje, logo, `status`, `plan` i `slug` nisu ovdje i to nije propust.** Branding
-  /// dolazi iz `tenant.yaml` kroz generator — polje za boju u adminu bi napravilo drugi
-  /// izvor istine za isti podatak, i sljedeće generisanje bi ga vratilo na staro.
+  /// **Boje, `status`, `plan` i `slug` nisu ovdje i to nije propust.** Boje dolaze iz
+  /// `tenant.yaml` kroz generator — polje za boju u adminu bi napravilo drugi izvor
+  /// istine za isti podatak, i sljedeće generisanje bi ga vratilo na staro. Logo i cover
+  /// su runtime slike salona i idu kroz [setImage].
   ///
   /// [facebookUrl] je **stranica salona kao kontakt**, ne prijava Facebookom; ta ne
   /// postoji (`docs/adr/0011-facebook-login-se-ne-implementira.md`).
@@ -86,6 +88,42 @@ phone, email, instagram_url, facebook_url, vertical_pack_key
       },
     );
     return salonFromRow(Map<String, dynamic>.from(row as Map));
+  });
+
+  /// Postavlja ili briše logo ili naslovnu sliku — `public.set_salon_image` (task 50).
+  ///
+  /// Jedna kolona po pozivu: forma koja bi slala obje vrijednosti bi zamjenom loga vratila
+  /// cover koji je drugi tab u međuvremenu promijenio. [url] mora biti javni URL objekta
+  /// ovog salona iz [MediaRepository.upload] sa istom vrstom; `null` briše sliku.
+  ///
+  /// App ikona i splash **nisu** ovo — oni su build artefakti iz `tenant.yaml`.
+  Future<Salon> setImage({
+    required String salonId,
+    required SalonImage kind,
+    required String? url,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'set_salon_image',
+      params: {'p_salon_id': salonId, 'p_kind': kind.name, 'p_url': url},
+    );
+    return salonFromRow(Map<String, dynamic>.from(row as Map));
+  });
+
+  /// Zamjenjuje galeriju — `public.set_salon_gallery` (task 50, ADR-0008).
+  ///
+  /// [expected] je niz koji je ekran učitao. Ako ga je u međuvremenu promijenio drugi tab
+  /// ili uređaj, baza ne upisuje ništa i ovo baca [ConflictError] — ekran tada ponovo učita
+  /// galeriju, umjesto da tiho pregazi tuđu izmjenu. Redoslijed [urls] je redoslijed prikaza.
+  Future<List<String>> setGallery({
+    required String salonId,
+    required List<String> expected,
+    required List<String> urls,
+  }) => guard(() async {
+    final row = await _client.rpc<dynamic>(
+      'set_salon_gallery',
+      params: {'p_salon_id': salonId, 'p_expected': expected, 'p_urls': urls},
+    );
+    return galleryUrlsFromRow(row);
   });
 
   /// Galerija salona — `salons.gallery_urls jsonb`, lista URL-ova.
@@ -134,4 +172,16 @@ Salon salonFromRow(Map<String, dynamic> row) {
   } catch (error) {
     throw MappingError('Neispravan `salons` red', cause: error);
   }
+}
+
+/// Slika salona koja se mijenja kroz [SalonRepository.setImage]. Ime je vrijednost
+/// `p_kind` i ujedno folder u bucketu ([MediaKind.logo], [MediaKind.cover]).
+enum SalonImage {
+  logo,
+  cover;
+
+  MediaKind get mediaKind => switch (this) {
+    SalonImage.logo => MediaKind.logo,
+    SalonImage.cover => MediaKind.cover,
+  };
 }

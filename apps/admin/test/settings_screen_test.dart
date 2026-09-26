@@ -1,7 +1,10 @@
 /// Postavke lokacije na dvije širine — `3i`, plus granica prema `app_policies`.
 library;
 
+import 'dart:typed_data';
+
 import 'package:admin/src/core/theme/theme.dart';
+import 'package:admin/src/core/widgets/slika_polje.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/settings/settings_providers.dart';
 import 'package:admin/src/features/settings/settings_screen.dart';
@@ -57,6 +60,7 @@ Widget _screen({
   List<PolicySection> sekcije = const [],
   Object? greska,
   TextScaler? skala,
+  List<Override> dodatno = const [],
 }) => ProviderScope(
   key: UniqueKey(),
   overrides: [
@@ -74,6 +78,8 @@ Widget _screen({
       return postavke ?? _postavke;
     }),
     postavkeSekcijeProvider.overrideWith((ref) async => sekcije),
+    postavkeGalerijaProvider.overrideWith((ref) async => const <String>[]),
+    ...dodatno,
   ],
   child: MaterialApp(
     theme: buildAdminTheme(),
@@ -107,6 +113,7 @@ Future<void> _doVidljivog(WidgetTester tester, Finder cilj) async {
 
 void main() {
   pristupacnostEkrana('Postavke', _screen);
+  _slikeTestovi();
 
   testWidgets('desktop `3i` crta osnovne podatke popunjene iz baze', (
     tester,
@@ -294,5 +301,110 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+}
+
+/// Bilježi šta bi „Sačuvaj" poslao, bez baze.
+class _LazeAkcije extends SettingsActions {
+  _LazeAkcije(super.ref);
+
+  final slike = <(SalonImage, String?)>[];
+
+  @override
+  Future<void> sacuvajKontakt(ContactInput unos) async {}
+
+  @override
+  Future<void> sacuvajPravila(BookingSettingsInput unos) async {}
+
+  @override
+  Future<void> sacuvajSliku(SalonImage vrsta, String? url) async =>
+      slike.add((vrsta, url));
+}
+
+class _LaziMedia implements MediaRepository {
+  @override
+  Future<String> upload({
+    required String salonId,
+    required MediaKind kind,
+    required Uint8List bytes,
+    required String contentType,
+  }) async => 'https://example.invalid/$salonId/${kind.name}/nova.jpg';
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+void _slikeTestovi() {
+  late _LazeAkcije akcije;
+  List<Override> overrides() => [
+    adminSalonIdProvider.overrideWithValue(_salonId),
+    settingsActionsProvider.overrideWith((ref) => akcije = _LazeAkcije(ref)),
+    mediaRepositoryProvider.overrideWithValue(_LaziMedia()),
+    izborSlikeProvider.overrideWithValue(
+      () async => IzabranaSlika(
+        bytes: Uint8List.fromList([0xFF, 0xD8, 0xFF]),
+        contentType: 'image/jpeg',
+      ),
+    ),
+  ];
+
+  testWidgets('nova naslovna ide u bazu na „Sačuvaj", netaknut logo ne ide', (
+    tester,
+  ) async {
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(
+        salon: _salon.copyWith(logoUrl: 'https://example.invalid/logo.png'),
+        dodatno: overrides(),
+      ),
+    );
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('postavke-cover')),
+        matching: find.byKey(const Key('slika-izaberi')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('SAČUVAJ'));
+    await tester.pumpAndSettle();
+
+    expect(akcije.slike, [
+      (SalonImage.cover, 'https://example.invalid/$_salonId/cover/nova.jpg'),
+    ]);
+  });
+
+  testWidgets('uklonjen logo se briše kao null', (tester) async {
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(
+        salon: _salon.copyWith(logoUrl: 'https://example.invalid/logo.png'),
+        dodatno: overrides(),
+      ),
+    );
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('postavke-logo')),
+        matching: find.byKey(const Key('slika-ukloni')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('SAČUVAJ'));
+    await tester.pumpAndSettle();
+
+    expect(akcije.slike, [(SalonImage.logo, null)]);
+  });
+
+  testWidgets('logo kaže da ikonu aplikacije ne mijenja', (tester) async {
+    await _pumpAt(tester, _desktop, _screen(dodatno: overrides()));
+
+    expect(
+      find.textContaining('Ikona aplikacije i početni ekran'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('uskoro'), findsNothing);
   });
 }

@@ -20,15 +20,20 @@
 ///
 /// ## Šta `3i` crta, a iza čega nema podatka
 ///
-/// Lista čekanja, podsjetnici, promjena naslovne fotografije, pregled u aplikaciji i
-/// upravljanje pristupom nemaju ni kolonu ni RPC. Crtaju se kao ugašene kontrole koje na
-/// dodir kažu „uskoro" — kontrola koja se pomjeri, a ne snimi ništa, laže.
+/// Lista čekanja, podsjetnici i pregled u aplikaciji nemaju ni kolonu ni RPC. Crtaju se
+/// kao ugašene kontrole koje na dodir kažu „uskoro" — kontrola koja se pomjeri, a ne
+/// snimi ništa, laže.
 ///
-/// ## Branding ovdje ne postoji
+/// ## Slike salona jesu ovdje, branding nije
 ///
-/// Boje i logo dolaze iz `tenant.yaml` kroz generator (`.claude/docs/tenant-factory.md`).
-/// Polje za boju u adminu bi napravilo drugi izvor istine za isti podatak, a sljedeće
-/// generisanje bi ga tiho vratilo na staro.
+/// Naslovna fotografija, logo i galerija su runtime slike salona (task 50): mijenjaju se
+/// ovdje i klijent ih vidi bez novog builda. Galerija ima svoju karticu i snima svaku
+/// radnju odmah (`galerija_editor.dart`).
+///
+/// Boje, app ikona i splash dolaze iz `tenant.yaml` kroz generator
+/// (`.claude/docs/tenant-factory.md`). Polje za boju u adminu bi napravilo drugi izvor
+/// istine za isti podatak, a sljedeće generisanje bi ga tiho vratilo na staro — zato
+/// tekst uz logo kaže da ikonu ne mijenja.
 ///
 /// ## Pravila vrijede odmah
 ///
@@ -50,6 +55,8 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
+import '../../core/widgets/slika_polje.dart';
+import 'galerija_editor.dart';
 import 'settings_dialogs.dart';
 import 'pristup.dart';
 import 'settings_primjeri.dart';
@@ -331,12 +338,19 @@ class _PostavkeState extends ConsumerState<_Postavke> {
   late final TextEditingController _najkasnije;
   late final TextEditingController _rokOtkazivanja;
 
+  // Logo i cover: javni URL već poslane slike, upisuje se na „Sačuvaj".
+  late String? _cover;
+  late String? _logo;
+  bool _saljeSliku = false;
+
   bool _snimam = false;
 
   @override
   void initState() {
     super.initState();
     final s = widget.salon;
+    _cover = s.coverImageUrl;
+    _logo = s.logoUrl;
     _naziv = TextEditingController(text: s.name);
     _adresa = TextEditingController(text: s.address);
     _grad = TextEditingController(text: s.city);
@@ -417,6 +431,14 @@ class _PostavkeState extends ConsumerState<_Postavke> {
       );
       await akcije.sacuvajPravila(unos);
       _unos = unos;
+      // Samo promijenjena slika ide u bazu: svaki poziv mijenja jednu kolonu, pa netaknuta
+      // ne vraća vrijednost koju je drugi tab u međuvremenu postavio.
+      if (_cover != widget.salon.coverImageUrl) {
+        await akcije.sacuvajSliku(SalonImage.cover, _cover);
+      }
+      if (_logo != widget.salon.logoUrl) {
+        await akcije.sacuvajSliku(SalonImage.logo, _logo);
+      }
       poruka =
           'Sačuvano. Pravila vrijede odmah, bez nove verzije u prodavnici.';
     } on ApiError catch (error) {
@@ -441,7 +463,11 @@ class _PostavkeState extends ConsumerState<_Postavke> {
     final gutter = AdminShell.gutterOf(context);
 
     final osnovno = _OsnovnaKartica(
-      salon: widget.salon,
+      cover: _cover,
+      logo: _logo,
+      onCover: (url) => setState(() => _cover = url),
+      onLogo: (url) => setState(() => _logo = url),
+      onSalje: (v) => setState(() => _saljeSliku = v),
       naziv: _naziv,
       telefon: _telefon,
       adresa: _adresa,
@@ -468,12 +494,18 @@ class _PostavkeState extends ConsumerState<_Postavke> {
       rokOtkazivanja: _rokOtkazivanja,
       raspon: _raspon,
     );
+    const galerija = _Kartica(
+      naslov: 'Galerija',
+      dno: _Mjera.kartica,
+      child: GalerijaEditor(),
+    );
     const pristup = _PristupKartica();
     const salonska = _SalonskaPravila();
     const platformska = _PlatformskaPravila();
 
     return _Okvir(
-      onSacuvaj: _snimam ? null : _sacuvaj,
+      // Dok slika putuje, „Sačuvaj" bi snimio staru, a nova bi ostala siroče.
+      onSacuvaj: _snimam || _saljeSliku ? null : _sacuvaj,
       snimam: _snimam,
       body: Form(
         key: _form,
@@ -490,6 +522,7 @@ class _PostavkeState extends ConsumerState<_Postavke> {
                     children: _razmaknuto([
                       if (jeDesktop) const _Naslov(),
                       osnovno,
+                      galerija,
                       zakazivanje,
                       obavijesti,
                       kontakt,
@@ -511,6 +544,7 @@ class _PostavkeState extends ConsumerState<_Postavke> {
                           children: _razmaknuto([
                             const _Naslov(),
                             osnovno,
+                            galerija,
                             kontakt,
                             rezervacija,
                             salonska,
@@ -810,60 +844,32 @@ class _PrekidacRed extends StatelessWidget {
   }
 }
 
-/// Slika sa prelivom kad je nema — isti placeholder kao u sidebaru.
-class _Slika extends StatelessWidget {
-  const _Slika({required this.url, required this.strana});
-
-  final String? url;
-  final double strana;
-
-  @override
-  Widget build(BuildContext context) {
-    final boje = context.adminColors;
-    final placeholder = DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [boje.sidebarMuted, boje.sidebarSelected],
-        ),
-      ),
-    );
-    final adresa = url;
-    final slika = adresa == null || adresa.isEmpty
-        ? placeholder
-        : Image.network(
-            adresa,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => placeholder,
-          );
-
-    return SizedBox(
-      width: strana,
-      height: strana,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AdminRadius.small),
-        child: slika,
-      ),
-    );
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Lijeva kolona — `salons`
 // ---------------------------------------------------------------------------
 
-/// Prva kartica `3i`: naslovna fotografija, naziv, telefon i adresa, opis.
+/// Prva kartica `3i`: naslovna fotografija, logo, naziv, telefon i adresa, opis.
+///
+/// Slike se šalju u bucket čim su izabrane (`SlikaPolje`), ali kolona se mijenja tek na
+/// „Sačuvaj" — kao i svako drugo polje ove forme.
 class _OsnovnaKartica extends StatelessWidget {
   const _OsnovnaKartica({
-    required this.salon,
+    required this.cover,
+    required this.logo,
+    required this.onCover,
+    required this.onLogo,
+    required this.onSalje,
     required this.naziv,
     required this.telefon,
     required this.adresa,
     required this.opis,
   });
 
-  final Salon salon;
+  final String? cover;
+  final String? logo;
+  final ValueChanged<String?> onCover;
+  final ValueChanged<String?> onLogo;
+  final ValueChanged<bool> onSalje;
   final TextEditingController naziv;
   final TextEditingController telefon;
   final TextEditingController adresa;
@@ -873,60 +879,47 @@ class _OsnovnaKartica extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final polje = theme.textTheme.bodyMedium;
+    final pomoc = theme.textTheme.labelSmall?.copyWith(
+      color: context.adminColors.textSecondary,
+      fontWeight: FontWeight.w400,
+      height: 1.45,
+    );
 
     return _Kartica(
       dno: _Mjera.kartica,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Slika(url: salon.coverImageUrl, strana: 96),
-              const SizedBox(width: AdminSpacing.lg),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Naslovna fotografija',
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      Text(
-                        'Prikazuje se na vrhu profila salona',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: context.adminColors.textSecondary,
-                          fontWeight: FontWeight.w400,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 11),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 190),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: AdminSize.touchTarget,
-                          child: OutlinedButton(
-                            // Upload slike ne postoji ni u repozitoriju ni u bazi.
-                            onPressed: () => _uskoro(
-                              context,
-                              'Promjena fotografije stiže uskoro.',
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, AdminSize.touchTarget),
-                              textStyle: theme.textTheme.labelMedium,
-                            ),
-                            child: const Text('Promijeni'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          Text('Naslovna fotografija', style: theme.textTheme.titleSmall),
+          Text(
+            'Prikazuje se na vrhu Početne u aplikaciji salona.',
+            style: pomoc,
+          ),
+          const SizedBox(height: 11),
+          SlikaPolje(
+            key: const Key('postavke-cover'),
+            url: cover,
+            kind: MediaKind.cover,
+            velicina: 96,
+            onChanged: onCover,
+            onSaljeChanged: onSalje,
+          ),
+          const SizedBox(height: 16),
+          Text('Logo', style: theme.textTheme.titleSmall),
+          // Zamka iz taska 50: vlasnik koji promijeni logo očekuje novu ikonu na telefonu.
+          Text(
+            'Prikazuje se u adminu. Ikona aplikacije i početni ekran dio su '
+            'verzije u prodavnici i ovo ih ne mijenja.',
+            style: pomoc,
+          ),
+          const SizedBox(height: 11),
+          SlikaPolje(
+            key: const Key('postavke-logo'),
+            url: logo,
+            kind: MediaKind.logo,
+            velicina: 64,
+            onChanged: onLogo,
+            onSaljeChanged: onSalje,
           ),
           const SizedBox(height: 16),
           _Polje(
