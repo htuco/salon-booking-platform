@@ -11,15 +11,76 @@
 Bucket ne raste zauvijek, a aplikacija ispunjava zahtjev store reviewa za sadržaj koji objavljuje salon.
 
 ## Definicija gotovog
-- [ ] Zamijenjena ili obrisana slika nestaje iz bucketa (u istoj operaciji ili periodičnim čišćenjem siročadi)
-- [ ] Brisanje usluge, radnika ili slike iz galerije briše i fajl
+- [x] Zamijenjena ili obrisana slika nestaje iz bucketa (u istoj operaciji ili periodičnim čišćenjem siročadi)
+- [x] Brisanje usluge, radnika ili slike iz galerije briše i fajl — deaktivirana usluga/radnik namjerno čuva sliku (ADR-0024); fajl nestaje kad se slika zamijeni ili ukloni
 - [ ] Klijent može prijaviti neprikladnu sliku iz galerije; prijava stiže platformi, ne salonu
-- [ ] Test: fajl bez reference nestaje; fajl sa referencom ostaje
+- [x] Test: fajl bez reference nestaje; fajl sa referencom ostaje
 - [ ] Uživo: zamjena slike ostavlja jedan fajl u bucketu, ne dva
 
 ## Zamke
 - Čišćenje koje briše po putanji mora ostati unutar `salon_id` prefiksa — greška ovdje briše tuđe slike.
 - Prijava sadržaja je zahtjev za store, ne feature za salon. Kome stiže i ko odlučuje treba zapisati.
 
-## Status
-Nije počet.
+## Status (2026-09-27)
+
+🟡 Backend i klijent napisani, backend dokazan lokalno i na CI-ju, klijent dokazan widget
+testovima na CI-ju. **Čeka živu provjeru u browseru i deploy na hostovani projekat.** Grana
+`feat/ciscenje-bucketa-i-prijava`, draft [PR #116](https://github.com/htuco/salon-booking-platform/pull/116).
+
+**Odluke** ([ADR-0024](../../docs/adr/0024-siroce-u-bucketu-cisti-periodicni-sweep-prijava-ide-platformi.md)):
+periodični sweep (`cleanup-media`, pg_cron svaki sat, prag 24h) umjesto brisanja iz admina;
+deaktivirana usluga/radnik čuva sliku; prijavu šalje samo prijavljen klijent, ide u
+`content_reports` koju čita samo `super_admin`, platforma saznaje kroz webhook
+(`notify-content-reports`); prijavljena slika ostaje vidljiva dok platforma ne odluči.
+Kome stiže i ko odlučuje (zamka iz ovog taska) je zapisano u ADR-u i u
+`.claude/docs/workflows.md` → „Prijava slike — šta platforma radi“.
+
+**Dokazano:**
+- `supabase test db` (CLI 2.117.0, poslije `db reset`): `Files=24, Tests=716, PASS`; `024` ima
+  45 asercija. Mutacije obaraju: bez bucket filtera 2, bez filtera malih slova 3, bez filtera `.`
+  segmenta 2, bez triggera postojanja 4, bez provjere `x-salon-id` 1, široka SELECT politika 3,
+  politika samo nad JWT claimom 1, bez dnevnog limita 1, bez reference iz `employees` 1.
+- `rest_ciscenje.ts`: 28 provjera. Stvaran `cleanup-media` handler kroz Storage API: zamijenjen
+  cover i upload bez reference nestaju, cover sa referencom ostaje javno čitljiv, **u folderu
+  ostaje jedan fajl, ne dva**. Prijava kroz PostgREST; vlasnik i klijent je ne vide.
+- Svih 15 REST testova iz CI-ja lokalno zeleno; `deno test` oba nova handlera 9 passed
+  (uključujući escapovanje razloga za Slack/Discord).
+- CI na `82850d2`: `Supabase tests` success (run 36312984037); `Flutter` → `dart analyze` „No
+  issues found!", client 397 passed (sva četiri nova testa `prijava slike`), admin 470, core_api
+  140 (run 36312984031).
+- `rls-auditor` nije našao curenje između salona; njegova četiri srednja nalaza (brisanje žive
+  slike pri formi otvorenoj >1h, zastoj sweepa na UUID-u velikim slovima, neescapovan razlog u
+  webhooku, spam prijava) ispravljena u `7ba773d`.
+
+**Napisano, nije dokazano:**
+- **Ekran nije viđen.** Na mašini koja je pisala task nema Flutter SDK-a: dugme „Prijavi sliku"
+  u lightboxu, dijalog za neprijavljenog, sheet sa razlozima i snackbar postoje samo kroz widget
+  testove. Isto važi za poruku `PT400` („Slika više ne postoji — izaberite je ponovo") u
+  admin formi.
+- **Webhook nije okinut uživo** — traži `REPORT_WEBHOOK_URL` koji ima samo vlasnik projekta.
+- **Hostovani projekat nema ni migraciju ni funkcije.**
+
+**Ostalo za sljedećeg:**
+1. Uživo, lokalno: `supabase start` pa klijent na Vitezu (`tool/run_tenant.sh vitez -d chrome`,
+   `.claude/docs/workflows.md`) → Galerija → slika → zastavica: gost dobija dijalog i vraća se
+   na galeriju nakon prijave; prijavljen klijent bira razlog i dobija „Hvala…". Red provjeriti:
+   `select * from content_reports` (service role / Studio).
+2. Uživo, admin: zamijeni cover ili sliku usluge, pa
+   `select name from public.media_orphans(interval '0 seconds')` vraća staru, ne novu. Posljednji
+   DoD checkbox se čekira tek kad se u bucketu vidi jedan fajl (sweep lokalno okidaš handlerom
+   kao u `rest_ciscenje.ts` ili `supabase functions serve cleanup-media`).
+3. Poslije merge-a: `supabase db push`, `supabase functions deploy cleanup-media` i
+   `notify-content-reports`, tajne i Vault redovi po `.claude/docs/workflows.md` → „Workeri taska
+   51". Provjera: `select private.call_worker('cleanup-media');` pa `net._http_response` → 200.
+4. Probna prijava na hostovanom → poruka stiže u kanal → `status = 'dismissed'`.
+
+**Zamke:**
+- Direktan `delete from storage.objects` blokira `storage.protect_delete`; brisanje samo kroz
+  Storage API. pgTAP koji briše objekte treba `set local storage.allow_delete_query = 'true'`.
+- Nova slikovna kolona mora ući u `media_orphans` **i** u trigger `guard_salon_media_reference`,
+  inače sweep briše njene fajlove dan nakon uploada (zapisano i u `security.md`).
+- Test koji snima `salon-media` URL mora imati i objekat iza njega (v. fixture u `023`).
+- Supabase CLI i Deno nisu morali biti instalirani: `npx -y supabase@2.117.0 …` i
+  `npx -y deno@2 …` rade isto što i CI.
+
+**Otvoreno pitanje:** nijedno — odluke su u ADR-0024.
