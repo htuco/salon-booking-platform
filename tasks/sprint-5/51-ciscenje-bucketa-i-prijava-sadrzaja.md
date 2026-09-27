@@ -47,7 +47,8 @@ Kome stiže i ko odlučuje (zamka iz ovog taska) je zapisano u ADR-u i u
   (uključujući escapovanje razloga za Slack/Discord).
 - CI na `82850d2`: `Supabase tests` success (run 36312984037); `Flutter` → `dart analyze` „No
   issues found!", client 397 passed (sva četiri nova testa `prijava slike`), admin 470, core_api
-  140 (run 36312984031).
+  140 (run 36312984031). Isto zeleno i na zadnjem commitu grane `e04e84b` (runovi 36313234971 i
+  36313234973).
 - `rls-auditor` nije našao curenje između salona; njegova četiri srednja nalaza (brisanje žive
   slike pri formi otvorenoj >1h, zastoj sweepa na UUID-u velikim slovima, neescapovan razlog u
   webhooku, spam prijava) ispravljena u `7ba773d`.
@@ -61,6 +62,11 @@ Kome stiže i ko odlučuje (zamka iz ovog taska) je zapisano u ADR-u i u
 - **Hostovani projekat nema ni migraciju ni funkcije.**
 
 **Ostalo za sljedećeg:**
+
+Koraci 1 i 2 traže **Docker i Flutter na istoj mašini**. Bez Dockera: spoji PR, uradi korak 3
+(`db push` i deploy), pa korake 1–2 pokreni protiv hostovanog projekta (`tool/run_tenant.sh vitez
+-d chrome` sa hostovanim defineovima, `.claude/docs/workflows.md` → „Hostovani Vitez demo").
+
 1. Uživo, lokalno: `supabase start` pa klijent na Vitezu (`tool/run_tenant.sh vitez -d chrome`,
    `.claude/docs/workflows.md`) → Galerija → slika → zastavica: gost dobija dijalog i vraća se
    na galeriju nakon prijave; prijavljen klijent bira razlog i dobija „Hvala…". Red provjeriti:
@@ -75,6 +81,10 @@ Kome stiže i ko odlučuje (zamka iz ovog taska) je zapisano u ADR-u i u
 4. Probna prijava na hostovanom → poruka stiže u kanal → `status = 'dismissed'`.
 
 **Zamke:**
+- Sheet „Šta nije u redu sa slikom?" je napravljen **bez nacrta**. Beauty handoff (draft
+  PR #117, `prototype/beauty/`, ekran `2a`) ga sada crta: četiri razloga, napomena i
+  dugme „Odustani", kojeg klijentski sheet nema (zatvara se prevlačenjem ili dodirom van njega).
+  Uskladiti pri živoj provjeri ili u tasku 52.
 - Direktan `delete from storage.objects` blokira `storage.protect_delete`; brisanje samo kroz
   Storage API. pgTAP koji briše objekte treba `set local storage.allow_delete_query = 'true'`.
 - Nova slikovna kolona mora ući u `media_orphans` **i** u trigger `guard_salon_media_reference`,

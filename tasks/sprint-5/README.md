@@ -90,5 +90,5 @@ van DoD-a: klijent ne osvježava galeriju dok je otvoren (kandidat za 52 ili 60)
 
 Draft [PR #116](https://github.com/htuco/salon-booking-platform/pull/116), ADR-0024. Sweep
 `cleanup-media` (24h prag, Storage API, po salonu) i prijava slike platformi kroz webhook. 716
-pgTAP, `rest_ciscenje` 28, oba CI joba zelena na `82850d2`. **Ekran nije viđen** (mašina bez
+pgTAP, `rest_ciscenje` 28, oba CI joba zelena (zadnji `e04e84b`). **Ekran nije viđen** (mašina bez
 Fluttera) i hostovani projekat nema ni migraciju ni funkcije — koraci u status bloku taska.
