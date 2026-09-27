@@ -360,7 +360,7 @@ void main() {
       expect(prijave.pozivi, isEmpty);
     });
 
-    testWidgets('prijavljen klijent bira razlog i prijava nosi sliku koja se gleda', (
+    testWidgets('prijavljen klijent prijavljuje sliku koja se gleda', (
       tester,
     ) async {
       final auth = FakeAuthRepository(
@@ -408,7 +408,7 @@ void main() {
       expect(find.byType(GalleryLightbox), findsOneWidget);
     });
 
-    testWidgets('greška baze stiže kao poruka, ne kao zahvala', (tester) async {
+    testWidgets('greška baze stiže kao poruka, ne zahvala', (tester) async {
       final auth = FakeAuthRepository(
         pocetnaSesija: FakeAuthRepository.sesijaNakonPrijave,
       );
