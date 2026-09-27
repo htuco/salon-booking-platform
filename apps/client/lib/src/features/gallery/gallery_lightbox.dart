@@ -36,12 +36,20 @@ import '../../l10n/generated/app_localizations.dart';
 /// Handoff u zaglavlju crta i ⤴ (share). DoD taska 20 ga ne nabraja, a dijeljenje traži
 /// `share_plus` i konfiguraciju po platformi — paket se ne dodaje usput. Dugme zato ne
 /// postoji: prazno dugme koje ništa ne radi je gore od dugmeta kojeg nema.
+///
+/// ## Prijava slike
+///
+/// Zastavica desno od brojača (task 51) — store review traži način prijave sadržaja koji
+/// objavljuje salon. Lightbox ne zna ni za sesiju ni za bazu: zove [onPrijavi] sa URL-om
+/// slike koja se gleda, a šta prijava znači odlučuje ekran koji ga otvara. Bez callbacka
+/// zastavice nema, iz istog razloga kao i share.
 class GalleryLightbox extends StatefulWidget {
   const GalleryLightbox({
     required this.urls,
     required this.initialIndex,
     this.onIndeks,
     this.sirinaSlicice,
+    this.onPrijavi,
     super.key,
   });
 
@@ -57,6 +65,10 @@ class GalleryLightbox extends StatefulWidget {
   /// Bez ovoga `Hero` leti **prazan**: let crta stranicu lightboxa, a puna slika se u tih
   /// 260 ms još dekodira. Viđeno na emulatoru, widget test to ne vidi (FE-204).
   final double? sirinaSlicice;
+
+  /// Prijava slike koja se gleda. `context` je lightboxov, da dijalog i sheet stanu iznad
+  /// njega, a ne ispod.
+  final void Function(BuildContext context, String url)? onPrijavi;
 
   /// 260 ms iz DoD-a FE-204. Između `AppDuration.normal` i `slow`: let preko cijelog
   /// ekrana je duži put od prelaza unutar ekrana, a tokena za njega nema.
@@ -90,6 +102,7 @@ class GalleryLightbox extends StatefulWidget {
     required int initialIndex,
     ValueChanged<int>? onIndeks,
     double? sirinaSlicice,
+    void Function(BuildContext context, String url)? onPrijavi,
   }) {
     if (urls.isEmpty) return Future.value();
 
@@ -106,6 +119,7 @@ class GalleryLightbox extends StatefulWidget {
             initialIndex: initialIndex,
             onIndeks: onIndeks,
             sirinaSlicice: sirinaSlicice,
+            onPrijavi: onPrijavi,
           ),
         ),
       ),
@@ -202,6 +216,10 @@ class _GalleryLightboxState extends State<GalleryLightbox> {
               brojac: l10n.galleryCounter(_index + 1, ukupno),
               zatvoriLabela: l10n.galleryClose,
               onZatvori: _zatvori,
+              prijaviLabela: l10n.galleryReport,
+              onPrijavi: widget.onPrijavi == null
+                  ? null
+                  : () => widget.onPrijavi!(context, widget.urls[_index]),
             ),
             Expanded(
               // Swipe dolje zatvara. Vertikalno povlačenje se ne sudara sa `PageView`-om,
@@ -279,11 +297,15 @@ class _Zaglavlje extends StatelessWidget {
     required this.brojac,
     required this.zatvoriLabela,
     required this.onZatvori,
+    required this.prijaviLabela,
+    required this.onPrijavi,
   });
 
   final String brojac;
   final String zatvoriLabela;
   final VoidCallback onZatvori;
+  final String prijaviLabela;
+  final VoidCallback? onPrijavi;
 
   @override
   Widget build(BuildContext context) {
@@ -293,28 +315,57 @@ class _Zaglavlje extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
-          // 48×48 dodirna meta — `SPEC.md` traži ≥44px svugdje, a ✕ je jedini izlaz
-          // sa ovog ekrana na uređaju bez geste nazad.
-          Semantics(
-            button: true,
+          // ✕ je jedini izlaz sa ovog ekrana na uređaju bez geste nazad.
+          _DugmeZaglavlja(
             label: zatvoriLabela,
-            child: InkWell(
-              onTap: onZatvori,
-              child: Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  border: Border.all(color: theme.colorScheme.outline),
-                ),
-                child: const Icon(LucideIcons.x, size: AppSize.iconAction),
-              ),
-            ),
+            ikona: LucideIcons.x,
+            onTap: onZatvori,
           ),
           // Brojač u gornjem desnom uglu — DoD FE-204 (`3/12`); ✕ ostaje lijevo.
           const Spacer(),
           Text(brojac, style: theme.textTheme.titleMedium),
+          if (onPrijavi != null) ...[
+            const SizedBox(width: AppSpacing.md),
+            _DugmeZaglavlja(
+              label: prijaviLabela,
+              ikona: LucideIcons.flag,
+              onTap: onPrijavi!,
+            ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+/// Kvadratno dugme sa hairline okvirom. 48×48 dodirna meta — `SPEC.md` traži ≥44px.
+class _DugmeZaglavlja extends StatelessWidget {
+  const _DugmeZaglavlja({
+    required this.label,
+    required this.ikona,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData ikona;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: 48,
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).colorScheme.outline),
+          ),
+          child: Icon(ikona, size: AppSize.iconAction),
+        ),
       ),
     );
   }

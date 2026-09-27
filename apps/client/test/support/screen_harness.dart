@@ -70,6 +70,7 @@ Future<ProviderContainer> pumpEkran(
   SalonSettings? postavke,
   PackageInfo? packageInfo,
   AuthRepository? authRepository,
+  ContentReportRepository? contentReportRepository,
 
   /// Kad je zadana, galerija, ocjena i pravila bacaju ovu grešku (FE-501): greška mora
   /// izgledati drukčije od praznog stanja.
@@ -150,6 +151,11 @@ Future<ProviderContainer> pumpEkran(
       // test mjeri i to da odjava i brisanje stvarno pomjere stream.
       if (authRepository != null)
         authRepositoryProvider.overrideWithValue(authRepository),
+      // Prijava slike (task 51) ide kroz `Supabase.instance` kojeg u testu nema.
+      if (contentReportRepository != null)
+        contentReportRepositoryProvider.overrideWithValue(
+          contentReportRepository,
+        ),
     ],
   );
   addTearDown(container.dispose);

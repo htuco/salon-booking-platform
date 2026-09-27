@@ -1,9 +1,12 @@
 import 'package:client/src/core/router/app_router.dart';
+import 'package:client/src/features/auth/login_screen.dart';
 import 'package:client/src/features/gallery/gallery_lightbox.dart';
+import 'package:core_api/core_api.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/fake_auth_repository.dart';
 import 'support/screen_harness.dart';
 
 /// `/gallery` i lightbox — `SPEC.md` 5l i 5q, `12-galerija.png`, `17-lightbox-galerije.png`.
@@ -320,6 +323,127 @@ void main() {
       expect(rect.bottom, lessThanOrEqualTo(ekran.height));
     });
   });
+
+  // Task 51, ADR-0024: store review traži prijavu sadržaja koji objavljuje salon.
+  group('prijava slike', () {
+    Future<void> otvoriLightbox(
+      WidgetTester tester, {
+      FakeAuthRepository? auth,
+      _FakeContentReports? prijave,
+    }) async {
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.gallery.path,
+        galerija: dvanaestSlika,
+        authRepository: auth,
+        contentReportRepository: prijave,
+      );
+      await tester.tap(find.byType(PhotoFrame).first);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('neprijavljen korisnik ide na prijavu, ne šalje ništa', (
+      tester,
+    ) async {
+      final prijave = _FakeContentReports();
+      await otvoriLightbox(tester, prijave: prijave);
+
+      await tester.tap(find.bySemanticsLabel('Prijavi sliku'));
+      await tester.pumpAndSettle();
+      expect(find.text('Prijavite se da prijavite sliku'), findsOneWidget);
+
+      await tester.tap(find.text('Prijava'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
+      expect(find.byType(GalleryLightbox), findsNothing);
+      expect(prijave.pozivi, isEmpty);
+    });
+
+    testWidgets('prijavljen klijent bira razlog i prijava nosi sliku koja se gleda', (
+      tester,
+    ) async {
+      final auth = FakeAuthRepository(
+        pocetnaSesija: FakeAuthRepository.sesijaNakonPrijave,
+      );
+      addTearDown(auth.dispose);
+      final prijave = _FakeContentReports();
+      await otvoriLightbox(tester, auth: auth, prijave: prijave);
+      await listaj(tester);
+      await tester.pumpAndSettle();
+      expect(find.text('2 / 12'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Prijavi sliku'));
+      await tester.pumpAndSettle();
+      expect(find.text('Šta nije u redu sa slikom?'), findsOneWidget);
+      // Korisnik zna kome ide prijava i da slika ne nestaje odmah.
+      expect(find.textContaining('ne salonu'), findsOneWidget);
+
+      await tester.tap(find.text('Uvredljivo ili nasilno'));
+      await tester.pumpAndSettle();
+
+      expect(prijave.pozivi, [
+        (salonId, 'https://primjer.test/2.jpg', 'Uvredljivo ili nasilno'),
+      ]);
+      expect(
+        find.text('Hvala. Prijava je poslana i pregledaćemo je.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('zatvoren sheet ne šalje prijavu', (tester) async {
+      final auth = FakeAuthRepository(
+        pocetnaSesija: FakeAuthRepository.sesijaNakonPrijave,
+      );
+      addTearDown(auth.dispose);
+      final prijave = _FakeContentReports();
+      await otvoriLightbox(tester, auth: auth, prijave: prijave);
+
+      await tester.tap(find.bySemanticsLabel('Prijavi sliku'));
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(prijave.pozivi, isEmpty);
+      expect(find.byType(GalleryLightbox), findsOneWidget);
+    });
+
+    testWidgets('greška baze stiže kao poruka, ne kao zahvala', (tester) async {
+      final auth = FakeAuthRepository(
+        pocetnaSesija: FakeAuthRepository.sesijaNakonPrijave,
+      );
+      addTearDown(auth.dispose);
+      final prijave = _FakeContentReports(
+        greska: const RateLimitError('Previše prijava u jednom danu'),
+      );
+      await otvoriLightbox(tester, auth: auth, prijave: prijave);
+
+      await tester.tap(find.bySemanticsLabel('Prijavi sliku'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Nešto drugo'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Previše prijava u jednom danu'), findsOneWidget);
+      expect(find.textContaining('Hvala'), findsNothing);
+    });
+  });
+}
+
+class _FakeContentReports implements ContentReportRepository {
+  _FakeContentReports({this.greska});
+
+  final ApiError? greska;
+  final pozivi = <(String, String, String?)>[];
+
+  @override
+  Future<void> reportImage({
+    required String salonId,
+    required String imageUrl,
+    String? reason,
+  }) async {
+    pozivi.add((salonId, imageUrl, reason));
+    if (greska != null) throw greska!;
+  }
 }
 
 /// Jedan swipe na sljedeću sliku. Pomak je udio širine, ne fiksni broj piksela: površina
