@@ -457,3 +457,11 @@ enabled = true
 [functions.send-push]
 # Kratkotrajni HMAC bearer; anon/korisnicki JWT nije dovoljan za slanje.
 verify_jwt = false
+
+[functions.cleanup-media]
+# Okida ga samo pg_cron sa HMAC potpisom (ADR-0024); korisnicki JWT ne brise fajlove.
+verify_jwt = false
+
+[functions.notify-content-reports]
+# Okida ga samo pg_cron sa HMAC potpisom (ADR-0024).
+verify_jwt = false
