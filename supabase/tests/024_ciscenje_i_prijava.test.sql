@@ -3,9 +3,12 @@
 -- Mjeri:
 --   1. `media_orphans` vraca fajl bez reference, a ne vraca fajl sa referencom — ni kad je
 --      referenca u neaktivnoj usluzi, u drugom salonu, u galeriji ili iza `?upit`;
---   2. svjez upload i putanja van `<salon>/<vrsta>/<fajl>` se nikad ne vracaju;
+--   2. upload mladji od 24h, putanja van `<salon>/<vrsta>/<fajl>`, UUID velikim slovima, `.`
+--      segment i drugi bucket se nikad ne vracaju;
+--   2a. nova referenca na `salon-media` mora pokazivati na postojeci objekat;
 --   3. lista i preuzimanje prijava su samo za `service_role`;
---   4. prijavljuje samo pravi klijent, samo sliku iz galerije salona iz headera, jednom;
+--   4. prijavljuje samo pravi klijent, samo sliku iz galerije salona iz headera, jednom (i
+--      nakon razrjesenja), najvise 10 puta dnevno;
 --   5. salon (vlasnik, radnik) i klijent ne citaju prijave; `super_admin` cita i razrjesava.
 begin;
 set local search_path = public, extensions;
@@ -19,21 +22,30 @@ delete from storage.objects where bucket_id = 'salon-media';
 -- ---------------------------------------------------------------------------
 -- 1–2. Siroce
 -- ---------------------------------------------------------------------------
--- Stari objekti (dva sata) i jedan svjez. `owner` nije bitan za listu.
+-- Stari objekti (25 sati), jedan od dva sata (forma jos otvorena) i jedan svjez. `owner` nije
+-- bitan za listu.
 insert into storage.objects(bucket_id, name, created_at) values
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/usluge/aktivna.jpg', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/usluge/neaktivna.jpg', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/radnici/emir.jpg', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/logo/l.png', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/cover/c.png', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/galerija/g1.jpg', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/galerija/upit.jpg', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/galerija/zamijenjena.jpg', now() - interval '2 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/usluge/aktivna.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/usluge/neaktivna.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/radnici/emir.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/logo/l.png', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/cover/c.png', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/galerija/g1.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/galerija/upit.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/galerija/zamijenjena.jpg', now() - interval '25 hours'),
 ('salon-media', '550e8400-e29b-41d4-a716-446655440000/usluge/svjeza.jpg', now() - interval '5 minutes'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440001/usluge/siroce.jpg', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440001/usluge/koristi-a.jpg', now() - interval '2 hours'),
-('salon-media', 'nije-uuid/usluge/x.jpg', now() - interval '2 hours'),
-('salon-media', '550e8400-e29b-41d4-a716-446655440000/bez-vrste.jpg', now() - interval '2 hours');
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/cover/forma-otvorena.png', now() - interval '2 hours'),
+('salon-media', '550E8400-E29B-41D4-A716-446655440000/usluge/velika-slova.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/usluge/./tacka.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/usluge/kosa-crta/', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440001/usluge/siroce.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440001/usluge/koristi-a.jpg', now() - interval '25 hours'),
+('salon-media', 'nije-uuid/usluge/x.jpg', now() - interval '25 hours'),
+('salon-media', '550e8400-e29b-41d4-a716-446655440000/bez-vrste.jpg', now() - interval '25 hours');
+-- Isti oblik imena u drugom bucketu nije nas posao.
+insert into storage.buckets(id, name, public) values ('t51-drugi', 't51-drugi', false);
+insert into storage.objects(bucket_id, name, created_at) values
+('t51-drugi', '550e8400-e29b-41d4-a716-446655440000/usluge/drugi-bucket.jpg', now() - interval '25 hours');
 
 -- Reference. Host je proizvoljan — lista gleda putanju, ne host.
 update public.services set image_url =
@@ -68,8 +80,15 @@ select set_eq(
 );
 select ok(
   (select count(*) from public.media_orphans(interval '0 seconds')
-   where name = '550e8400-e29b-41d4-a716-446655440000/usluge/svjeza.jpg') = 1,
-  'Svjez upload je siroce tek kad prode prag starosti'
+   where name in ('550e8400-e29b-41d4-a716-446655440000/usluge/svjeza.jpg',
+                  '550e8400-e29b-41d4-a716-446655440000/cover/forma-otvorena.png')) = 2,
+  'Upload mladji od 24h je siroce tek kad prode prag — forma otvorena dva sata ga ne gubi'
+);
+select is(
+  (select count(*)::int from public.media_orphans(interval '0 seconds')
+   where name ilike '%velika-slova%' or name like '%/./%' or name like '%/'
+      or name like '%drugi-bucket%'),
+  0, 'UUID velikim slovima, `.` segment, zavrsna kosa crta i drugi bucket se ne vracaju — handler bi ih odbio i zauzeli bi listu'
 );
 select is(
   (select count(*)::int from public.media_orphans(interval '0 seconds')
@@ -99,6 +118,34 @@ select ok(
 );
 
 -- ---------------------------------------------------------------------------
+-- 2a. Referenca na obrisan objekat
+-- ---------------------------------------------------------------------------
+select throws_ok($$ update public.services set image_url =
+  'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/usluge/obrisana.jpg'
+  where id = '10000000-0000-4000-8000-000000000004' $$,
+  'PT400', 'Slika više ne postoji — izaberite je ponovo',
+  'Usluga ne snima sliku koju je sweep vec obrisao');
+select throws_ok($$ update public.employees set image_url =
+  'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/radnici/obrisana.jpg'
+  where id = '20000000-0000-4000-8000-000000000002' $$,
+  'PT400', null, 'Radnik ne snima obrisanu sliku');
+select throws_ok($$ update public.salons set cover_image_url =
+  'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/cover/obrisana.png'
+  where id = '550e8400-e29b-41d4-a716-446655440000' $$,
+  'PT400', null, 'Cover ne snima obrisanu sliku');
+select throws_ok($$ update public.salons set gallery_urls = jsonb_build_array(
+  'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/galerija/obrisana.jpg')
+  where id = '550e8400-e29b-41d4-a716-446655440000' $$,
+  'PT400', null, 'Galerija ne snima obrisanu sliku');
+select lives_ok($$ update public.services set image_url =
+  'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/cover/forma-otvorena.png'
+  where id = '10000000-0000-4000-8000-000000000004' $$,
+  'Postojeci objekat se snima');
+select lives_ok($$ update public.services set image_url = 'https://images.unsplash.com/photo-x?w=800'
+  where id = '10000000-0000-4000-8000-000000000004' $$,
+  'Vanjski URL nije pitanje za bucket');
+
+-- ---------------------------------------------------------------------------
 -- 3. Grantovi
 -- ---------------------------------------------------------------------------
 select ok(not has_function_privilege('authenticated', 'public.media_orphans(interval, integer)', 'EXECUTE'),
@@ -107,8 +154,10 @@ select ok(not has_function_privilege('anon', 'public.media_orphans(interval, int
   'Anon ne lista siroce');
 select ok(not has_function_privilege('authenticated', 'public.claim_content_reports(integer)', 'EXECUTE'),
   'Prijavljen korisnik ne preuzima prijave');
-select ok(not has_function_privilege('authenticated', 'private.call_worker(text, text, text)', 'EXECUTE'),
+select ok(not has_function_privilege('authenticated', 'private.call_worker(text)', 'EXECUTE'),
   'Prijavljen korisnik ne okida workere');
+select ok(not has_table_privilege('anon', 'public.content_reports', 'SELECT'),
+  'Anon nema grant nad prijavama');
 select ok(not has_function_privilege('anon', 'public.report_content(uuid, text, text)', 'EXECUTE'),
   'Anon ne prijavljuje');
 
@@ -126,7 +175,9 @@ insert into auth.users(id, email, raw_app_meta_data, raw_user_meta_data, is_anon
  '{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}', '{}', false),
 ('fc000000-0000-4000-8000-000000000004', 'platforma@t51.invalid', '{"role":"super_admin"}', '{}', false),
 ('fc000000-0000-4000-8000-000000000005', 'radnik-a@t51.invalid',
- '{"role":"employee","salon_id":"550e8400-e29b-41d4-a716-446655440000"}', '{}', false);
+ '{"role":"employee","salon_id":"550e8400-e29b-41d4-a716-446655440000"}', '{}', false),
+('fc000000-0000-4000-8000-000000000006', 'lazna-platforma@t51.invalid', '{"role":"super_admin"}', '{}', false),
+('fc000000-0000-4000-8000-000000000007', 'spam@t51.invalid', '{"providers":["email"]}', '{}', false);
 insert into public.users(id, salon_id, name, email, role, employee_id) values
 ('fc000000-0000-4000-8000-000000000003', '550e8400-e29b-41d4-a716-446655440000', 'Vlasnik A', 'vlasnik-a@t51.invalid', 'salon_admin', null),
 ('fc000000-0000-4000-8000-000000000004', null, 'Platforma', 'platforma@t51.invalid', 'super_admin', null),
@@ -163,6 +214,13 @@ select throws_ok($$ insert into public.content_reports(salon_id, image_url)
   '42501', null, 'Klijent ne pise u tabelu prijava mimo RPC-a');
 select is((select count(*)::int from public.content_reports), 0, 'Klijent ne cita prijave, ni svoju');
 
+-- Klijent u salonu B ne prijavljuje sliku salona A, ni kad posalje id salona B.
+set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440001"}';
+select throws_ok($$ select public.report_content('550e8400-e29b-41d4-a716-446655440001',
+  'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/galerija/g1.jpg') $$,
+  'PT400', 'Slika nije u galeriji salona', 'Slika salona A se ne prijavljuje kroz salon B');
+set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440000"}';
+
 -- Anonimna Auth sesija nije klijent.
 set local request.jwt.claims = '{"sub":"fc000000-0000-4000-8000-000000000002","role":"authenticated","is_anonymous":true,"app_metadata":{"providers":["anonymous"]}}';
 select throws_ok($$ select public.report_content('550e8400-e29b-41d4-a716-446655440000',
@@ -185,6 +243,15 @@ select is((select status from public.content_reports where id = (select id from 
 set local request.jwt.claims = '{"sub":"fc000000-0000-4000-8000-000000000005","role":"authenticated","app_metadata":{"role":"employee","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
 set local role authenticated;
 select is((select count(*)::int from public.content_reports), 0, 'Radnik ne cita prijave');
+update public.content_reports set status = 'dismissed';
+reset role;
+select is((select status from public.content_reports where id = (select id from prva_prijava)), 'open',
+  'Radnik ne moze odbaciti prijavu');
+set local role authenticated;
+
+-- JWT claim `super_admin` bez reda u `users` nije platforma.
+set local request.jwt.claims = '{"sub":"fc000000-0000-4000-8000-000000000006","role":"authenticated","app_metadata":{"role":"super_admin"}}';
+select is((select count(*)::int from public.content_reports), 0, 'Claim super_admin bez reda u users ne cita prijave');
 
 set local request.jwt.claims = '{"sub":"fc000000-0000-4000-8000-000000000004","role":"authenticated","app_metadata":{"role":"super_admin"}}';
 select is((select count(*)::int from public.content_reports), 1, 'Platforma cita prijavu');
@@ -193,7 +260,29 @@ select lives_ok($$ update public.content_reports set status = 'removed', resolve
   'Platforma razrjesava prijavu');
 select throws_ok($$ update public.content_reports set image_url = 'https://x/drugo.jpg' $$,
   '42501', null, 'Ni platforma kroz API ne mijenja sta je prijavljeno');
+
+-- Razrijesena prijava se ne obnavlja novim tapom istog klijenta.
+set local request.jwt.claims = '{"sub":"fc000000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"providers":["email"]}}';
+select is(
+  public.report_content('550e8400-e29b-41d4-a716-446655440000',
+    'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/galerija/g1.jpg'),
+  (select id from prva_prijava),
+  'Nakon razrjesenja ista prijava vraca isti red, ne novu poruku platformi'
+);
 reset role;
+select is((select count(*)::int from public.content_reports), 1, 'I dalje je jedna prijava');
+
+-- Dnevni limit: deset prijava u zadnja 24h, jedanaesta se odbija.
+insert into public.content_reports(salon_id, image_url, reporter_user_id)
+select '550e8400-e29b-41d4-a716-446655440000', 'https://x/spam-' || i || '.jpg', 'fc000000-0000-4000-8000-000000000007'
+from generate_series(1, 10) i;
+set local request.jwt.claims = '{"sub":"fc000000-0000-4000-8000-000000000007","role":"authenticated","app_metadata":{"providers":["email"]}}';
+set local role authenticated;
+select throws_ok($$ select public.report_content('550e8400-e29b-41d4-a716-446655440000',
+  'https://x.supabase.co/storage/v1/object/public/salon-media/550e8400-e29b-41d4-a716-446655440000/galerija/g1.jpg') $$,
+  'PT429', 'Previše prijava u jednom danu', 'Jedanaesta prijava u danu se odbija');
+reset role;
+delete from public.content_reports where reporter_user_id = 'fc000000-0000-4000-8000-000000000007';
 
 -- ---------------------------------------------------------------------------
 -- Preuzimanje za webhook

@@ -9,6 +9,10 @@
 --     fajla bez reda.
 --   * `content_reports` prima prijavu slike iz galerije. Salon je ne cita; cita je samo
 --     `super_admin`, a `notify-content-reports` je salje na webhook platforme.
+--
+-- Admin uploaduje sliku cim je izabrana, a referencu upisuje tek na „Sacuvaj". Zato je prag
+-- starosti 24 sata, a trigger nad slikovnim kolonama odbija URL ciji objekat vise ne postoji:
+-- forma otvorena preko praga dobije gresku umjesto tihog 404 kod klijenta.
 
 -- ---------------------------------------------------------------------------
 -- Siroce u bucketu
@@ -32,10 +36,15 @@ grant execute on function private.salon_media_path(text) to service_role;
 -- salonu iz putanje: pogresno zadrzan fajl kosta prostor, pogresno obrisan kvari ekran.
 -- Neaktivna usluga i radnik i dalje stite svoju sliku (ADR-0024) — vracena usluga je ima.
 --
--- Objekat mladji od `p_min_age` se ne vraca: upload je gore, a RPC koji upisuje referencu
--- mozda jos nije stigao. Putanja koja nije `<salon_id>/<vrsta>/<fajl>` se nikad ne vraca.
+-- Objekat mladji od `p_min_age` se ne vraca: upload je gore, a forma koja upisuje referencu
+-- je mozda jos otvorena.
+--
+-- Vraca se samo putanja koju `cleanup-media` i prihvata: prvi segment je UUID **malim
+-- slovima** (onako kako ga `uuid::text` ispisuje), bez praznog, `.` ili `..` segmenta. Red
+-- koji bi handler odbio ne smije uci u listu — lista je najstariji-prvi sa limitom, pa bi
+-- hiljadu takvih objekata zauvijek zauzelo listu i zaustavilo ciscenje svih salona.
 create or replace function public.media_orphans(
-  p_min_age interval default interval '1 hour',
+  p_min_age interval default interval '24 hours',
   p_limit integer default 500
 ) returns table (salon_id uuid, name text)
 language sql
@@ -62,7 +71,9 @@ as $$
   from storage.objects o
   where o.bucket_id = 'salon-media'
     and private.storage_salon_id(o.name) is not null
-    and o.created_at < now() - coalesce(p_min_age, interval '1 hour')
+    and split_part(o.name, '/', 1) = private.storage_salon_id(o.name)::text
+    and o.name !~ '(^|/)\.{0,2}(/|$)'
+    and o.created_at < now() - coalesce(p_min_age, interval '24 hours')
     and not exists (select 1 from reference r where r.putanja = o.name)
   order by o.created_at, o.name
   limit least(greatest(coalesce(p_limit, 0), 0), 1000)
@@ -73,6 +84,68 @@ grant execute on function public.media_orphans(interval, integer) to service_rol
 
 comment on function public.media_orphans(interval, integer) is
   'Objekti u salon-media koje ne referencira nijedna slikovna kolona nijednog salona, stariji od p_min_age. Samo service_role; brise ih cleanup-media kroz Storage API (ADR-0024).';
+
+-- Da li objekat iza `salon-media` URL-a postoji. Vanjski URL (seed) nije pitanje za bucket.
+create or replace function private.salon_media_exists(p_url text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select private.salon_media_path(p_url) is null
+    or exists (
+      select 1 from storage.objects o
+      where o.bucket_id = 'salon-media' and o.name = private.salon_media_path(p_url)
+    )
+$$;
+
+revoke all on function private.salon_media_exists(text) from public;
+grant execute on function private.salon_media_exists(text) to service_role;
+
+-- Nova referenca na `salon-media` mora pokazivati na postojeci objekat. Pokriva svaki put
+-- upisa (RPC usluge, radnika, logo/cover, galerija) jednim mjestom, umjesto da svaki RPC
+-- pamti provjeru. Zatecena vrijednost se ne provjerava ponovo — samo ono sto se mijenja.
+create or replace function private.guard_salon_media_reference()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare v_url text;
+begin
+  if tg_table_name in ('services', 'employees') then
+    if (tg_op = 'INSERT' or new.image_url is distinct from old.image_url)
+       and not private.salon_media_exists(new.image_url) then
+      raise exception 'Slika više ne postoji — izaberite je ponovo' using errcode = 'PT400';
+    end if;
+  elsif tg_table_name = 'salons' then
+    if (tg_op = 'INSERT' or new.logo_url is distinct from old.logo_url)
+       and not private.salon_media_exists(new.logo_url) then
+      raise exception 'Slika više ne postoji — izaberite je ponovo' using errcode = 'PT400';
+    end if;
+    if (tg_op = 'INSERT' or new.cover_image_url is distinct from old.cover_image_url)
+       and not private.salon_media_exists(new.cover_image_url) then
+      raise exception 'Slika više ne postoji — izaberite je ponovo' using errcode = 'PT400';
+    end if;
+    if jsonb_typeof(new.gallery_urls) = 'array' then
+      for v_url in select jsonb_array_elements_text(new.gallery_urls) loop
+        if (tg_op = 'INSERT' or not coalesce(old.gallery_urls @> jsonb_build_array(v_url), false))
+           and not private.salon_media_exists(v_url) then
+          raise exception 'Slika više ne postoji — izaberite je ponovo' using errcode = 'PT400';
+        end if;
+      end loop;
+    end if;
+  end if;
+  return new;
+end $$;
+revoke all on function private.guard_salon_media_reference() from public, anon, authenticated;
+
+create trigger guard_salon_media_reference
+  before insert or update of image_url on public.services
+  for each row execute function private.guard_salon_media_reference();
+create trigger guard_salon_media_reference
+  before insert or update of image_url on public.employees
+  for each row execute function private.guard_salon_media_reference();
+create trigger guard_salon_media_reference
+  before insert or update of logo_url, cover_image_url, gallery_urls on public.salons
+  for each row execute function private.guard_salon_media_reference();
 
 -- ---------------------------------------------------------------------------
 -- Prijava sadrzaja
@@ -91,10 +164,10 @@ create table public.content_reports (
   resolved_at timestamptz
 );
 
--- Jedan klijent, jedna slika, jedna otvorena prijava. Ponovljen tap ne pravi novi red.
-create unique index content_reports_otvorena_jednom
-  on public.content_reports (reporter_user_id, image_url)
-  where status = 'open';
+-- Jedan klijent, jedna slika u jednom salonu, jedna prijava — i nakon razrjesenja. Odbacena
+-- prijava se ne moze obnoviti novim tapom i nova poruka ne ide u kanal platforme.
+create unique index content_reports_jednom
+  on public.content_reports (reporter_user_id, salon_id, image_url);
 create index content_reports_neobavijestene
   on public.content_reports (created_at)
   where notified_at is null;
@@ -131,6 +204,12 @@ begin
   if char_length(v_reason) > 500 then
     raise exception 'Razlog je predug' using errcode = 'PT400';
   end if;
+  -- Svaka prijava je poruka u kanalu platforme. Novi nalog je jeftin, pa limit ide po
+  -- nalogu i danu, ne samo kroz jedinstvenost.
+  if (select count(*) from public.content_reports r
+      where r.reporter_user_id = auth.uid() and r.created_at > now() - interval '1 day') >= 10 then
+    raise exception 'Previše prijava u jednom danu' using errcode = 'PT429';
+  end if;
   -- Prijavljuje se slika koju klijent stvarno vidi, ne proizvoljan URL.
   if not exists (
     select 1 from public.salons s
@@ -141,13 +220,13 @@ begin
 
   insert into public.content_reports (salon_id, image_url, reason, reporter_user_id)
   values (p_salon_id, v_url, v_reason, auth.uid())
-  on conflict (reporter_user_id, image_url) where status = 'open' do nothing
+  on conflict (reporter_user_id, salon_id, image_url) do nothing
   returning id into v_id;
 
   if v_id is null then
     select r.id into v_id
     from public.content_reports r
-    where r.reporter_user_id = auth.uid() and r.image_url = v_url and r.status = 'open';
+    where r.reporter_user_id = auth.uid() and r.salon_id = p_salon_id and r.image_url = v_url;
   end if;
   return v_id;
 end;
@@ -157,7 +236,7 @@ revoke all on function public.report_content(uuid, text, text) from public, anon
 grant execute on function public.report_content(uuid, text, text) to authenticated;
 
 comment on function public.report_content(uuid, text, text) is
-  'Klijent prijavljuje sliku iz galerije salona. Prijava ide platformi (content_reports, samo super_admin), ne salonu. Ponovljena prijava iste slike vraca postojeci id.';
+  'Klijent prijavljuje sliku iz galerije salona. Prijava ide platformi (content_reports, samo super_admin), ne salonu. Ponovljena prijava iste slike vraca postojeci id; najvise 10 prijava po nalogu dnevno (PT429).';
 
 -- Worker preuzima neobavijestene prijave. `notified_at` se postavlja pri preuzimanju, pa dva
 -- preklopljena poziva ne salju istu prijavu dvaput; neuspjesan webhook ga vraca na NULL.
@@ -196,14 +275,22 @@ grant execute on function public.claim_content_reports(integer) to service_role;
 -- ---------------------------------------------------------------------------
 
 -- Poziva Edge Function potpisanu sa `<scope>:<timestamp>`. Scope je u potpisu da potpis za
--- jedan worker ne vrijedi na drugom. Bez URL-a ili tajne u Vaultu (lokalni stack) ne salje
+-- jedan worker ne vrijedi na drugom. Imena Vault tajni su fiksna po scopeu — funkcija ne
+-- potpisuje proizvoljnom tajnom. Bez URL-a ili tajne u Vaultu (lokalni stack) ne salje
 -- nista: fajlovi ostaju, prijave cekaju u tabeli.
-create or replace function private.call_worker(p_url_name text, p_secret_name text, p_scope text)
+create or replace function private.call_worker(p_scope text)
 returns void language plpgsql security definer set search_path = '' as $$
-declare v_url text; v_secret text; v_timestamp text; v_signature text;
+declare v_prefix text; v_url text; v_secret text; v_timestamp text; v_signature text;
 begin
-  select decrypted_secret into v_url from vault.decrypted_secrets where name = p_url_name;
-  select decrypted_secret into v_secret from vault.decrypted_secrets where name = p_secret_name;
+  v_prefix := case p_scope
+    when 'cleanup-media' then 'media_cleanup'
+    when 'notify-content-reports' then 'content_report_worker'
+  end;
+  if v_prefix is null then
+    raise exception 'Nepoznat worker' using errcode = 'PT400';
+  end if;
+  select decrypted_secret into v_url from vault.decrypted_secrets where name = v_prefix || '_url';
+  select decrypted_secret into v_secret from vault.decrypted_secrets where name = v_prefix || '_secret';
   if v_url is null or v_secret is null then return; end if;
   -- pg_net posjeduje supabase_admin. Trajna tajna ne smije u njegove transportne tabele.
   v_timestamp := floor(extract(epoch from clock_timestamp()))::bigint::text;
@@ -213,15 +300,14 @@ begin
       'Authorization', 'Bearer ' || v_timestamp || '.' || v_signature),
     body := '{}'::jsonb, timeout_milliseconds := 5000);
 end $$;
-revoke all on function private.call_worker(text, text, text) from public, anon, authenticated;
-grant execute on function private.call_worker(text, text, text) to service_role;
+revoke all on function private.call_worker(text) from public, anon, authenticated;
+grant execute on function private.call_worker(text) to service_role;
 
 create or replace function private.dispatch_content_reports()
 returns void language plpgsql security definer set search_path = '' as $$
 begin
   if not exists (select 1 from public.content_reports where notified_at is null) then return; end if;
-  perform private.call_worker('content_report_worker_url', 'content_report_worker_secret',
-    'notify-content-reports');
+  perform private.call_worker('notify-content-reports');
 end $$;
 revoke all on function private.dispatch_content_reports() from public, anon, authenticated;
 grant execute on function private.dispatch_content_reports() to service_role;
@@ -229,4 +315,4 @@ grant execute on function private.dispatch_content_reports() to service_role;
 select cron.schedule('notify-content-reports', '* * * * *',
   'select private.dispatch_content_reports()');
 select cron.schedule('cleanup-media', '17 * * * *',
-  $$select private.call_worker('media_cleanup_url', 'media_cleanup_secret', 'cleanup-media')$$);
+  $$select private.call_worker('cleanup-media')$$);

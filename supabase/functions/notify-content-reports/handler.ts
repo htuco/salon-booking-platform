@@ -22,6 +22,25 @@ export interface NotifyDependencies {
 }
 
 /**
+ * Tekst koji je upisao neko drugi — razlog piše klijent, ime salona vlasnik — kao jedan red
+ * običnog teksta. Bez ovoga razlog `"<!channel>\nSalon: <tuđi-uuid>\n<https://zlo|Panel>"`
+ * pinga cijeli kanal i dodaje lažne sistemske linije i link.
+ *
+ * - novi redovi i kontrolni znakovi postaju razmak — poruka ima tačno naše linije;
+ * - `&`, `<`, `>` se escapuju (Slack mrkdwn: `<!channel>`, `<url|tekst>`);
+ * - `@` dobija nevidljivi razmak iza sebe (Discord: `@everyone`, `@here`).
+ */
+export function plain(value: string) {
+  return value
+    .replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/@/g, "@\u200b")
+    .trim();
+}
+
+/**
  * Tekst za Slack/Discord. Oba primaju `{"text": ...}` (Discord kroz `/slack` sufiks).
  *
  * Prijavitelj se ne šalje: webhook kanal nije mjesto za podatke o klijentu, a platformi
@@ -29,10 +48,11 @@ export interface NotifyDependencies {
  */
 export function messageFor(r: ContentReport) {
   return [
-    `Prijava slike — ${r.salon_name}`,
+    `Prijava slike — ${plain(r.salon_name)}`,
     `Salon: ${r.salon_id}`,
-    `Slika: ${r.image_url}`,
-    `Razlog: ${r.reason ?? "(nije naveden)"}`,
+    // URL je iz galerije salona (baza provjerava), ali i njega bira vlasnik.
+    `Slika: ${plain(r.image_url)}`,
+    `Razlog: ${r.reason ? plain(r.reason) : "(nije naveden)"}`,
     `Prijava: ${r.id} (${r.created_at})`,
   ].join("\n");
 }

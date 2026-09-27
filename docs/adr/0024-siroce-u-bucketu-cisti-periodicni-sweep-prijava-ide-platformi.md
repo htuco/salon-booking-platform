@@ -38,7 +38,14 @@ sata kroz `pg_net`, potpisano HMAC-om (isti obrazac kao `send-push`).
 - Listu siročadi daje SQL (`public.media_orphans`, samo `service_role`), a briše Storage API.
   Funkcija briše **po salonu**: svaki `remove` poziv nosi samo putanje sa prefiksom tog salona.
   Putanja koja ne počinje sa `<salon_id>/` se odbija prije poziva, ne šalje se.
-- Objekat mlađi od **sat vremena** se ne dira, jer upload još čeka RPC koji upisuje referencu.
+- Objekat mlađi od **24 sata** se ne dira. Admin uploaduje sliku čim je izabrana, a referencu
+  upisuje tek na „Sačuvaj“ — forma može stajati otvorena satima.
+- **Nova referenca mora pokazivati na postojeći objekat.** Trigger nad `services`,
+  `employees` i `salons` odbija `salon-media` URL čiji objekat ne postoji (`PT400`). Forma
+  otvorena duže od praga tako dobije grešku „izaberite ponovo“ umjesto da klijent vidi 404.
+- Lista vraća samo putanje koje handler prihvata (UUID malim slovima, bez praznog, `.` ili
+  `..` segmenta). Red koji handler odbije, a lista ga vraća najstariji-prvi sa limitom, bi
+  zauvijek zauzeo listu i zaustavio čišćenje svih salona.
 - **Deaktivirana usluga i radnik zadržavaju sliku.** Referenca iz neaktivnog reda čuva fajl, pa
   vraćena usluga ima sliku. Fajl nestaje kad se `image_url` zamijeni ili očisti. Tako se čita
   DoD stavka „brisanje usluge/radnika briše i fajl".
@@ -52,12 +59,15 @@ sata kroz `pg_net`, potpisano HMAC-om (isti obrazac kao `send-push`).
   `public.content_reports`, koju **salon ne čita**: čita je samo `super_admin`. Neprijavljen
   korisnik se šalje na prijavu, isto kao kod zakazivanja. Anonimna prijava bi otvorila spam
   bez traga.
-- Prijava se upisuje samo za sliku koja je stvarno u galeriji tog salona, i samo jednom po
-  klijentu i slici dok je otvorena.
+- Prijava se upisuje samo za sliku koja je stvarno u galeriji tog salona, **jednom po klijentu,
+  salonu i slici — i nakon razrješenja**, i najviše deset puta dnevno po nalogu. Svaka
+  prijava je poruka u kanalu platforme; odbačena prijava se ne obnavlja novim tapom.
 - Platforma saznaje kroz **webhook**: Edge Function `notify-content-reports` (pg_cron svake
   minute, HMAC) šalje neobaviještene prijave na `REPORT_WEBHOOK_URL` (Slack/Discord). URL
   webhooka je tajna Edge Functiona, ne ide u `pg_net`: njegove transportne tabele čita
-  `supabase_admin`.
+  `supabase_admin`. Razlog i ime salona idu u poruku kao jedan red običnog teksta: bez novih
+  redova, sa escapovanim `<`, `>`, `&` i neutralisanim `@` — inače klijent kroz razlog pinga
+  cijeli kanal i dodaje lažne sistemske linije i linkove.
 - **Prijavljena slika ostaje vidljiva** dok platforma ne odluči. Jedan klijent lažnom prijavom
   ne smije sakriti tuđu galeriju. Platforma uklanja sliku kroz service role (uputstvo u
   `.claude/docs/workflows.md`), a sweep zatim briše fajl.
@@ -81,11 +91,14 @@ sata kroz `pg_net`, potpisano HMAC-om (isti obrazac kao `send-push`).
 
 ## Posljedice
 
-- Zamijenjena slika nestaje iz bucketa do sat i po kasnije, ne odmah. Dvije slike u folderu
-  odmah nakon zamjene su očekivane, nisu bug.
+- Zamijenjena slika nestaje iz bucketa između 24 i 25 sati kasnije, ne odmah. Dvije slike u
+  folderu nakon zamjene su očekivane, nisu bug.
+- Između liste i brisanja nema zaključavanja: referenca upisana baš tada na objekat stariji
+  od 24h ne spašava ga. To traži formu otvorenu preko dana i pogodak u sekundu sweepa.
 - Hostovani projekat treba tajne `MEDIA_CLEANUP_SECRET`, `CONTENT_REPORT_WORKER_SECRET` i
   `REPORT_WEBHOOK_URL`, plus Vault redove sa URL-om i tajnom za oba workera. Bez njih cron ne
   šalje ništa: fajlovi ostaju, a prijave čekaju u tabeli, ne gube se.
 - Nova slikovna kolona (npr. „prije i poslije") mora ući u `public.media_orphans`. Inače sweep
-  njene fajlove vidi kao siročad i briše ih sat nakon uploada.
+  njene fajlove vidi kao siročad i briše ih dan nakon uploada. Isto važi za trigger
+  `guard_salon_media_reference`.
 - Reakcija na prijavu je ručni posao platforme dok ne postoji super admin konzola.

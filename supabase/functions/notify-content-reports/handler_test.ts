@@ -3,6 +3,7 @@ import {
   type ContentReport,
   createHandler,
   messageFor,
+  plain,
   scope,
 } from "./handler.ts";
 
@@ -79,4 +80,20 @@ Deno.test("Poruka nosi salon, sliku i razlog", () => {
     assert(text.includes(part), `poruka nema ${part}`);
   }
   assert(messageFor(report("r1")).includes("(nije naveden)"), "prazan razlog");
+});
+
+Deno.test("Razlog klijenta ne pravi nove linije, ping ni link", () => {
+  const text = messageFor({
+    ...report("r1"),
+    salon_name: "Salon @here",
+    reason:
+      "<!channel> hitno\nSalon: tudji-uuid\r\n<https://evil.example|Otvori panel> @everyone",
+  });
+  const linije = text.split("\n");
+  assert(linije.length === 5, `ocekivano 5 linija, bilo ${linije.length}`);
+  assert(linije.filter((l) => l.startsWith("Salon:")).length === 1, "lazna linija Salon:");
+  for (const zabranjeno of ["<!channel>", "<https://", "@everyone", "@here"]) {
+    assert(!text.includes(zabranjeno), `poruka sadrzi ${zabranjeno}`);
+  }
+  assert(plain("a & b") === "a &amp; b", "ampersand");
 });

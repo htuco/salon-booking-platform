@@ -109,7 +109,7 @@ try {
   const podrazumijevano = await rpc(service, "media_orphans", {});
   assert(podrazumijevano.status === 200, "service role lista siročad: " + JSON.stringify(podrazumijevano));
   assert(!(podrazumijevano.body as Orphan[]).some((o) => o.name.includes(stamp)),
-    "Upload mladji od sat vremena nije siroce");
+    "Upload mladji od 24h nije siroce");
 
   // --- Stvaran handler, stvaran Storage API -----------------------------------------------
   const pozivi: string[][] = [];
