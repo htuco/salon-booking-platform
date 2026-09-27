@@ -78,6 +78,10 @@ deno run --allow-env --allow-net supabase/tests/rest_storage.ts
 echo "==> Galerija, logo i cover: samo svoje slike, konflikt je 409, anon vidi odmah"
 deno run --allow-env --allow-net supabase/tests/rest_galerija.ts
 
+echo "==> Ciscenje bucketa i prijava slike: siroce nestaje, referencirano ostaje, salon ne vidi prijavu"
+deno run --allow-env --allow-net supabase/tests/rest_ciscenje.ts
+deno test supabase/functions/cleanup-media/handler_test.ts supabase/functions/notify-content-reports/handler_test.ts
+
 echo "==> Push registracija i izolacija"
 deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
 deno test supabase/functions/send-push/handler_test.ts

@@ -65,6 +65,12 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   zamjenjuje cijeli niz samo ako je zatečeni jednak `expected`, inače `PT409`. Nova slika mora
   biti `salon-media/<salon_id>/<vrsta>/…` tog salona (`PT400`); zatečeni URL u galeriji smije
   ostati. Najviše 30 slika, bez duplikata.
+- Čišćenje i prijava (task 51, ADR-0024): objekat u `salon-media` bez reference ni u jednoj
+  slikovnoj koloni ni jednog salona, stariji od 24h, briše `cleanup-media` (pg_cron, svaki sat).
+  Nova referenca na nepostojeći `salon-media` objekat se odbija triggerom (`PT400`). Klijent
+  prijavljuje sliku iz galerije kroz `report_content(salon_id, image_url, reason)` → uuid
+  prijave; ponovljena prijava vraća isti uuid, 11. u danu je `PT429`. `content_reports` čita
+  samo `super_admin`.
 
 ## Assumptions where documentation is incomplete
 
