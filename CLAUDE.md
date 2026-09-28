@@ -29,6 +29,7 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - `tenants/<flavor>/tenant.yaml` — jedini fajl koji se piše po klijentu.
 - `tool/` — generatori (flavori, iOS konfiguracije, placeholder ikone).
 - `prototype/ui/` — dizajnerski handoff: 17 ekrana, tokeni, komponente. **Vizuelni izvor istine.**
+- `prototype/beauty/` — handoff teme `elegant_beauty` (isti shell, svijetla paleta). Izvor istine za beauty temu.
 - `prototype/wireframe/` — React wireframe sa svojim toolchainom. **Zamrznut**, nije production kod.
 - `.claude/settings.json` — `SessionStart` hook i odobreni MCP serveri (`supabase`, `context7`, `playwright`).
 - Root `package.json` drži samo `lefthook` (git hookovi). Web toolchain je u `prototype/wireframe/`.

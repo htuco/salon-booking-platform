@@ -1,10 +1,11 @@
 # `prototype/` — vizuelne reference, nijedna nije production kod
 
-Četiri foldera, četiri uloge. Root pravila važe — v. `../CLAUDE.md`.
+Pet foldera, pet uloga. Root pravila važe — v. `../CLAUDE.md`.
 
 | Folder | Šta je | Status |
 |---|---|---|
 | `ui/` | Dizajnerski handoff: 17 ekrana u punoj vjernosti, finalni copy, tokeni, komponente | **Vizuelni izvor istine** |
+| `beauty/` | Handoff teme `elegant_beauty`: isti shell kao `ui/`, svijetla paleta, brand uloge izvedene iz jedne boje, 21 ekran | **Izvor istine za beauty temu** (task 52) |
 | `adminv2/` | Melura redizajn: isti 21 prikaz (`3a`–`3u`), noviji izgled | **Vizuelni izvor istine za `apps/admin`** |
 | `admin/` | Stariji Salon OS handoff: istih 21 prikaz plus `SPEC.md` | **Vizual zastario, tekst važi** |
 | `wireframe/` | Stariji React/Vite prototip sa svojim toolchainom | **Zamrznut** |
@@ -58,6 +59,32 @@ drugom tenantu ili drugoj vertikali.
 
 `ui/canvas/` se **ne portuje** (handoff to izričito kaže) i `Salon App v2.dc.html` ne radi offline
 jer mu fali `_ds` bundle iz izvoza. Za gledanje služe `ui/screens-flat.html` i `ui/screenshots/`.
+
+## `beauty/` — tema, ne novi dizajn
+
+Handoff od 2026-09-27 za task 52. Ne mijenja raspored: `Beauty App.dc.html` je **isti shell kao
+`ui/`** (ekrani `1a`–`1q` odgovaraju `5a`–`5q`), plus četiri stanja (`2a`–`2d`: sheet prijave
+slike, Početna bez ocjena, prazne recenzije, prazna galerija). Opis i tokeni su u
+`beauty/README.md`; kad se on i canvas ne slažu, jači je canvas za raspored, a
+`Beauty Tema.dc.html` za paletu i stanja komponenti.
+
+- **Uzima se paleta teme**, ne salona: neutrale su iste za svaki beauty salon, a `primary`,
+  `brandLine`, `brandInk` i `brandContainer` se **izvode** iz jedne `brand` boje iz
+  `tenant.yaml` (algoritam i referentna JS implementacija su u `README.md`). Izvođenje ide u
+  `core_ui`, ne u ekran.
+- **Pismo Jost nije usvojeno.** Handoff ga traži za cijelu beauty temu, a
+  [ADR-0019](../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md) drži klijenta na DM
+  Serif Display + Archivo. Promjena je ADR koji veže pismo za temu (isti mehanizam koji uvodi
+  task 53), ne usputna izmjena.
+- **Modal bez blura** je promjena oblika koji dijele sve teme (`AppDialog`). Odlučuje se u
+  tasku 52, ne prepisuje se tiho.
+- Handoff zove barber temu `barber_dark`; u repou je `modern_barber`. Uslovi `hasPhone` /
+  `hasReviews` / `hasGallery` u repou dolaze iz podataka, ne iz konfiguracije.
+- `beauty/` se otvara offline preko lokalnog servera (`python3 -m http.server` u folderu), jer
+  browser blokira `file:`. Ovdje `_ds` bundle postoji, za razliku od `ui/canvas/`. Fotografije su
+  prazni slotovi, pa je 404 na `.image-slots.state.json` očekivan. Jost se učitava sa Google
+  Fontsa.
+- `ios-frame.jsx`, `image-slot.js`, `support.js` i `_ds/` se ne portuju — isto kao `ui/canvas/`.
 
 ## `wireframe/` — zamrznut
 
