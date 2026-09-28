@@ -99,3 +99,9 @@ Viđeno uživo na Vitezu. Klijent: gost ide na prijavu i vraća se na galeriju, 
 šalje razlog i red je u `content_reports`. Admin: dvije zamjene covera, pa sweep, i u bucketu
 ostaje jedan fajl. Lokalno `716` pgTAP i svi REST testovi zeleni. Poslije merge-a slijede
 `supabase db push`, deploy obje funkcije, tajne i Vault.
+
+### 51 — na hostovanom (2026-09-29)
+
+#116 i #117 su mergani. Na hostovanom projektu su migracija `20260927100000`, oba cron joba i
+obje funkcije (`ACTIVE`). Tajne i četiri Vault reda su postavljeni, a ručno okinut sweep vraća
+`200`. Ostaje `REPORT_WEBHOOK_URL` i probna prijava, pa se task zatvara.
