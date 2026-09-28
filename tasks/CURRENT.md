@@ -4,18 +4,19 @@ Puni task: [tasks/sprint-5/51-ciscenje-bucketa-i-prijava-sadrzaja.md](sprint-5/5
 
 ## Status
 
-DoD ispunjen 2026-09-28, grana `feat/ciscenje-bucketa-i-prijava`,
-[PR #116](https://github.com/htuco/salon-booking-platform/pull/116). Backend dokazan (716 pgTAP,
-svi REST testovi, CI zelen), a klijent i admin viđeni uživo. Ostaje deploy na hostovani projekat.
-Puni status blok, dokaz i komande su u task fajlu.
+DoD ispunjen, mergan kao [PR #116](https://github.com/htuco/salon-booking-platform/pull/116).
+Na hostovanom projektu su migracija, oba cron joba i obje funkcije (2026-09-29). Čekaju tajne
+i četiri Vault reda koje postavlja vlasnik projekta. Poslije toga ide provjera workera i probne
+prijave, pa se task zatvara. Puni status blok je u task fajlu.
 
 ## Ciljevi
 
 - [x] Uživo u klijentu: zastavica u lightboxu — gost ide na prijavu i vraća se, prijavljen
       klijent šalje razlog, red se pojavi u `content_reports`
 - [x] Uživo u adminu: zamjena slike → poslije sweepa u bucketu jedan fajl (zadnji DoD checkbox)
-- [ ] Poslije merge-a: `supabase db push`, deploy `cleanup-media` i `notify-content-reports`,
-      tajne i Vault (`.claude/docs/workflows.md` → „Workeri taska 51")
+- [x] Poslije merge-a: `supabase db push`, deploy `cleanup-media` i `notify-content-reports`
+- [ ] Tajne i Vault (`.claude/docs/workflows.md` → „Workeri taska 51"), vlasnik projekta, pa
+      `private.call_worker('cleanup-media')` → 200
 - [ ] Probna prijava na hostovanom stiže u kanal platforme
 
 ## Napomene

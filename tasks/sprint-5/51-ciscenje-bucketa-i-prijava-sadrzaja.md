@@ -21,12 +21,28 @@ Bucket ne raste zauvijek, a aplikacija ispunjava zahtjev store reviewa za sadrž
 - Čišćenje koje briše po putanji mora ostati unutar `salon_id` prefiksa — greška ovdje briše tuđe slike.
 - Prijava sadržaja je zahtjev za store, ne feature za salon. Kome stiže i ko odlučuje treba zapisati.
 
-## Status (2026-09-28)
+## Status (2026-09-29)
+
+✅ DoD ispunjen. Mergan kao [PR #116](https://github.com/htuco/salon-booking-platform/pull/116).
+
+**Na hostovanom projektu:**
+- Migracija `20260927100000` je tu (`supabase migration list`: local = remote).
+- `cron.job` ima `cleanup-media` (`17 * * * *`) i `notify-content-reports` (`* * * * *`), oba aktivna.
+- `cleanup-media` i `notify-content-reports` su deployane, `ACTIVE`, v1, `verify_jwt=false`.
+
+**Čeka vlasnika projekta** (koraci 3–4 niže):
+- Nema tajni `MEDIA_CLEANUP_SECRET`, `CONTENT_REPORT_WORKER_SECRET` ni `REPORT_WEBHOOK_URL`.
+- Vault ima samo `push_worker_*`, bez četiri reda iz `.claude/docs/workflows.md` → „Workeri taska 51".
+- Dok toga nema, `call_worker` ne šalje ništa: fajlovi ostaju u bucketu, a prijave čekaju u
+  `content_reports`.
+
+Provjera poslije: `select private.call_worker('cleanup-media');` pa `net._http_response` → 200,
+zatim probna prijava stiže u kanal.
+
+### Status (2026-09-28)
 
 ✅ DoD ispunjen: backend dokazan lokalno i na CI-ju, oba ekrana viđena uživo. Grana
 `feat/ciscenje-bucketa-i-prijava`, [PR #116](https://github.com/htuco/salon-booking-platform/pull/116).
-**Poslije merge-a ostaje deploy na hostovani projekat** (koraci 3–4 niže) i webhook, koji traži
-tajne vlasnika projekta.
 
 **Dokazano uživo (2026-09-28, mašina sa Dockerom i Flutterom 3.47.0):**
 - `./tool/test_supabase.sh` (sa `db reset`): `Files=24, Tests=716, Result: PASS`, svi REST
