@@ -30,14 +30,16 @@ Bucket ne raste zauvijek, a aplikacija ispunjava zahtjev store reviewa za sadrž
 - `cron.job` ima `cleanup-media` (`17 * * * *`) i `notify-content-reports` (`* * * * *`), oba aktivna.
 - `cleanup-media` i `notify-content-reports` su deployane, `ACTIVE`, v1, `verify_jwt=false`.
 
-**Čeka vlasnika projekta** (koraci 3–4 niže):
-- Nema tajni `MEDIA_CLEANUP_SECRET`, `CONTENT_REPORT_WORKER_SECRET` ni `REPORT_WEBHOOK_URL`.
-- Vault ima samo `push_worker_*`, bez četiri reda iz `.claude/docs/workflows.md` → „Workeri taska 51".
-- Dok toga nema, `call_worker` ne šalje ništa: fajlovi ostaju u bucketu, a prijave čekaju u
-  `content_reports`.
+- Tajne `MEDIA_CLEANUP_SECRET` i `CONTENT_REPORT_WORKER_SECRET` su postavljene, a u Vaultu su
+  sva četiri reda (`media_cleanup_*`, `content_report_worker_*`).
+- **Sweep radi na produkciji:** `select private.call_worker('cleanup-media')`, pa
+  `net._http_response` → `200 {"removed":0,"rejected":0,"failed_salons":0}`. Siročadi starije od
+  24h trenutno nema.
 
-Provjera poslije: `select private.call_worker('cleanup-media');` pa `net._http_response` → 200,
-zatim probna prijava stiže u kanal.
+**Čeka vlasnika projekta:** `REPORT_WEBHOOK_URL` (Slack webhook, ili Discord sa `/slack`).
+Bez njega `notify-content-reports` ne uzima nijednu prijavu, pa prijave čekaju u
+`content_reports` i ništa se ne gubi. Kad se postavi, probna prijava mora stići u kanal, pa
+`status = 'dismissed'` (korak 4 niže). Tek tada se task zatvara.
 
 ### Status (2026-09-28)
 

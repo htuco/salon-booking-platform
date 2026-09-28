@@ -103,5 +103,5 @@ ostaje jedan fajl. Lokalno `716` pgTAP i svi REST testovi zeleni. Poslije merge-
 ### 51 — na hostovanom (2026-09-29)
 
 #116 i #117 su mergani. Na hostovanom projektu su migracija `20260927100000`, oba cron joba i
-obje funkcije (`ACTIVE`). Tajne i četiri Vault reda čekaju vlasnika projekta, a bez njih workeri
-miruju i ništa se ne gubi. Task se zatvara poslije provjere workera i probne prijave.
+obje funkcije (`ACTIVE`). Tajne i četiri Vault reda su postavljeni, a ručno okinut sweep vraća
+`200`. Ostaje `REPORT_WEBHOOK_URL` i probna prijava, pa se task zatvara.
