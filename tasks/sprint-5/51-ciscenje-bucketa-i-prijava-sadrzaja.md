@@ -13,15 +13,41 @@ Bucket ne raste zauvijek, a aplikacija ispunjava zahtjev store reviewa za sadrž
 ## Definicija gotovog
 - [x] Zamijenjena ili obrisana slika nestaje iz bucketa (u istoj operaciji ili periodičnim čišćenjem siročadi)
 - [x] Brisanje usluge, radnika ili slike iz galerije briše i fajl — deaktivirana usluga/radnik namjerno čuva sliku (ADR-0024); fajl nestaje kad se slika zamijeni ili ukloni
-- [ ] Klijent može prijaviti neprikladnu sliku iz galerije; prijava stiže platformi, ne salonu
+- [x] Klijent može prijaviti neprikladnu sliku iz galerije; prijava stiže platformi, ne salonu
 - [x] Test: fajl bez reference nestaje; fajl sa referencom ostaje
-- [ ] Uživo: zamjena slike ostavlja jedan fajl u bucketu, ne dva
+- [x] Uživo: zamjena slike ostavlja jedan fajl u bucketu, ne dva
 
 ## Zamke
 - Čišćenje koje briše po putanji mora ostati unutar `salon_id` prefiksa — greška ovdje briše tuđe slike.
 - Prijava sadržaja je zahtjev za store, ne feature za salon. Kome stiže i ko odlučuje treba zapisati.
 
-## Status (2026-09-27)
+## Status (2026-09-28)
+
+✅ DoD ispunjen: backend dokazan lokalno i na CI-ju, oba ekrana viđena uživo. Grana
+`feat/ciscenje-bucketa-i-prijava`, [PR #116](https://github.com/htuco/salon-booking-platform/pull/116).
+**Poslije merge-a ostaje deploy na hostovani projekat** (koraci 3–4 niže) i webhook, koji traži
+tajne vlasnika projekta.
+
+**Dokazano uživo (2026-09-28, mašina sa Dockerom i Flutterom 3.47.0):**
+- `./tool/test_supabase.sh` (sa `db reset`): `Files=24, Tests=716, Result: PASS`, svi REST
+  testovi zeleni (`rest_ciscenje: 28 provjera prolazi`), `deno test` oba handlera `9 passed`.
+- Klijent, Vitez, web build protiv lokalnog stacka, 402×874: Galerija → slika → zastavica.
+  - Gost dobija dijalog „Prijavite se da prijavite sliku"; nakon prijave emailom vraća se na `/gallery`.
+  - Prijavljen klijent dobija sheet „Šta nije u redu sa slikom?" sa četiri razloga; izbor daje
+    snackbar „Hvala. Prijava je poslana i pregledaćemo je."
+  - Red u bazi: `content_reports` → salon Vitez, URL prve slike, `Uvredljivo ili nasilno`, `open`.
+- Admin, Vitez, 1440×900: Postavke → Naslovna → „Zamijeni sliku" dva puta.
+  - U bucketu su dva `cover/*.png`, a `salons.cover_image_url` pokazuje na drugi.
+  - `media_orphans('0 seconds')` vraća samo prvi.
+  - Stvaran `cleanup-media` handler kroz Storage API: `200 {"removed":1,"rejected":0,"failed_salons":0}`.
+  - U bucketu ostaje **jedan** fajl: novi cover javno vraća 200, stari 400.
+
+**Nije viđeno:** poruka `PT400` („Slika više ne postoji…") u admin formi, jer traži objekat
+obrisan dok je forma otvorena; pokrivena je widget testom i pgTAP-om. U headless Chromeu CanvasKit
+poslije navigacije crta slike crno (`texImage2D: no image`). Isto se dešava i sa slikama usluga i
+tima koje ovaj task ne dira, pa to nije regresija.
+
+### Status (2026-09-27)
 
 🟡 Backend i klijent napisani, backend dokazan lokalno i na CI-ju, klijent dokazan widget
 testovima na CI-ju. **Čeka živu provjeru u browseru i deploy na hostovani projekat.** Grana
