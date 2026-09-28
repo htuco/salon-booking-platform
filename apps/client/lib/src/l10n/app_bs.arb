@@ -121,6 +121,41 @@
     }
   },
 
+  "galleryReport": "Prijavi sliku",
+  "@galleryReport": {
+    "description": "Semantička labela dugmeta sa zastavicom u lightboxu (task 51). Store review traži način prijave sadržaja koji objavljuje salon."
+  },
+  "galleryReportTitle": "Šta nije u redu sa slikom?",
+  "@galleryReportTitle": {
+    "description": "Naslov sheeta za prijavu slike. Ispod njega su razlozi; dodir na razlog šalje prijavu."
+  },
+  "galleryReportBody": "Prijava ide nama, ne salonu. Slika ostaje vidljiva dok je ne pregledamo.",
+  "@galleryReportBody": {
+    "description": "Objašnjenje ispod naslova. 'Nama' je platforma (ADR-0024): salon ne vidi ko je prijavio, a slika se ne skriva automatski."
+  },
+  "galleryReportInappropriate": "Neprikladan ili eksplicitan sadržaj",
+  "@galleryReportInappropriate": { "description": "Razlog prijave. Šalje se platformi kao tekst." },
+  "galleryReportOffensive": "Uvredljivo ili nasilno",
+  "@galleryReportOffensive": { "description": "Razlog prijave." },
+  "galleryReportCopyright": "Tuđa fotografija ili krši autorska prava",
+  "@galleryReportCopyright": { "description": "Razlog prijave." },
+  "galleryReportOther": "Nešto drugo",
+  "@galleryReportOther": { "description": "Razlog prijave kad nijedan drugi ne odgovara." },
+  "galleryReportSent": "Hvala. Prijava je poslana i pregledaćemo je.",
+  "@galleryReportSent": { "description": "Snackbar nakon uspješne prijave slike." },
+  "galleryReportFailed": "Prijava nije poslana. Pokušajte ponovo.",
+  "@galleryReportFailed": { "description": "Snackbar kad prijava padne, a greška nema svoju poruku." },
+  "galleryReportSignInTitle": "Prijavite se da prijavite sliku",
+  "@galleryReportSignInTitle": {
+    "description": "Naslov dijaloga kad neprijavljen korisnik dodirne zastavicu. Prijava traži nalog, kao i zakazivanje (ADR-0024)."
+  },
+  "galleryReportSignInBody": "Prijavu slike primamo samo sa naloga, da bismo znali da dolazi od stvarnog klijenta.",
+  "@galleryReportSignInBody": { "description": "Objašnjenje zašto prijava slike traži nalog." },
+  "galleryReportSignInConfirm": "Prijava",
+  "@galleryReportSignInConfirm": { "description": "Dugme koje vodi na ekran prijave i vraća na galeriju." },
+  "galleryReportSignInCancel": "Odustani",
+  "@galleryReportSignInCancel": { "description": "Zatvara dijalog bez prijave." },
+
   "reviewsTitle": "Recenzije",
   "@reviewsTitle": {
     "description": "Naslov ekrana /reviews (handoff 13-recenzije.png)."

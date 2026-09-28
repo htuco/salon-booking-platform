@@ -8,6 +8,7 @@ import '../../core/load_error.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'gallery_lightbox.dart';
+import 'report_image_action.dart';
 
 /// `/gallery` — mreža fotografija salona (`SPEC.md` 5l, `12-galerija.png`).
 ///
@@ -174,6 +175,8 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
                                   initialIndex: i,
                                   onIndeks: _pokaziCeliju,
                                   sirinaSlicice: _celija,
+                                  onPrijavi: (context, url) =>
+                                      prijaviSliku(context, ref, url),
                                 ),
                                 // `PhotoFrame` bez `size`-a bi crtao fiksni kvadrat; unutar
                                 // grid ćelije veličinu diktira `gridDelegate`, pa slika ide

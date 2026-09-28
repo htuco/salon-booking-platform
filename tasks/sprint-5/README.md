@@ -14,7 +14,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [48](48-storage-bucket-po-salonu.md) | Storage bucket po salonu ✅ | feature | 49, 50, 51 | 1–2 dana |
 | [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika ✅ | feature | 52, 53 | 1–2 dana |
 | [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover ✅ | feature | 52, 53 | 2 dana |
-| [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja | feature | — | 1–2 dana |
+| [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja ✅ | feature | — | 1–2 dana |
 | [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran | refinement | — | 1–2 dana |
 | [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje | feature | — | 4–5 dana |
 | [54](54-uklanjanje-nepotrebnog-iz-admina.md) | Uklanjanje nepotrebnog iz admina | popravka | 55 | 0,5–1 dan |
@@ -85,3 +85,17 @@ konflikt i prazno stanje. Čeka CI na PR-u i `supabase db push` poslije merge-a.
 Mergan kao #114, CI na PR-u zelen, migracija `20260926120000` je na hostovanom projektu. Ostaje
 van DoD-a: klijent ne osvježava galeriju dok je otvoren (kandidat za 52 ili 60), siročad u bucketu
 čisti 51. Sljedeći je 51 — `/task load 51`.
+
+### 51 — Čišćenje bucketa i prijava sadržaja (🟡, 2026-09-27)
+
+Draft [PR #116](https://github.com/htuco/salon-booking-platform/pull/116), ADR-0024. Sweep
+`cleanup-media` (24h prag, Storage API, po salonu) i prijava slike platformi kroz webhook. 716
+pgTAP, `rest_ciscenje` 28, oba CI joba zelena (zadnji `e04e84b`). **Ekran nije viđen** (mašina bez
+Fluttera) i hostovani projekat nema ni migraciju ni funkcije — koraci u status bloku taska.
+
+### 51 — DoD ispunjen (✅, 2026-09-28)
+
+Viđeno uživo na Vitezu. Klijent: gost ide na prijavu i vraća se na galeriju, a prijavljen klijent
+šalje razlog i red je u `content_reports`. Admin: dvije zamjene covera, pa sweep, i u bucketu
+ostaje jedan fajl. Lokalno `716` pgTAP i svi REST testovi zeleni. Poslije merge-a slijede
+`supabase db push`, deploy obje funkcije, tajne i Vault.

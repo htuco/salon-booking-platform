@@ -88,6 +88,12 @@ jobs:
           deno check --config supabase/functions/send-push/deno.json supabase/functions/send-push/index.ts
           deno test supabase/functions/send-push/handler_test.ts
 
+      - name: Workeri za ciscenje bucketa i prijave
+        run: |
+          deno check --config supabase/functions/cleanup-media/deno.json supabase/functions/cleanup-media/index.ts
+          deno check --config supabase/functions/notify-content-reports/deno.json supabase/functions/notify-content-reports/index.ts
+          deno test supabase/functions/cleanup-media/handler_test.ts supabase/functions/notify-content-reports/handler_test.ts
+
       - name: Registracija uredjaja kroz REST
         run: |
           set -euo pipefail
@@ -98,6 +104,7 @@ jobs:
           deno run --allow-env --allow-net supabase/tests/rest_push_devices.ts
           deno run --allow-env --allow-net supabase/tests/rest_storage.ts
           deno run --allow-env --allow-net supabase/tests/rest_galerija.ts
+          deno run --allow-env --allow-net supabase/tests/rest_ciscenje.ts
 
       # REST level: two real Auth users, two real JWTs, PostgREST + RLS end to end.
       - name: Run REST isolation test

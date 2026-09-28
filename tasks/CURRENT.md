@@ -1,14 +1,31 @@
-# Trenutni task
+# Trenutni task: 51 — Čišćenje bucketa i prijava neprikladnog sadržaja
 
-Nijedan task nije učitan. Sljedeći po redu je 51 (čišćenje bucketa i prijava sadržaja) — `/task load 51`.
+Puni task: [tasks/sprint-5/51-ciscenje-bucketa-i-prijava-sadrzaja.md](sprint-5/51-ciscenje-bucketa-i-prijava-sadrzaja.md) · učitan 2026-09-27
 
 ## Status
 
-—
+DoD ispunjen 2026-09-28, grana `feat/ciscenje-bucketa-i-prijava`,
+[PR #116](https://github.com/htuco/salon-booking-platform/pull/116). Backend dokazan (716 pgTAP,
+svi REST testovi, CI zelen), a klijent i admin viđeni uživo. Ostaje deploy na hostovani projekat.
+Puni status blok, dokaz i komande su u task fajlu.
 
 ## Ciljevi
 
+- [x] Uživo u klijentu: zastavica u lightboxu — gost ide na prijavu i vraća se, prijavljen
+      klijent šalje razlog, red se pojavi u `content_reports`
+- [x] Uživo u adminu: zamjena slike → poslije sweepa u bucketu jedan fajl (zadnji DoD checkbox)
+- [ ] Poslije merge-a: `supabase db push`, deploy `cleanup-media` i `notify-content-reports`,
+      tajne i Vault (`.claude/docs/workflows.md` → „Workeri taska 51")
+- [ ] Probna prijava na hostovanom stiže u kanal platforme
+
 ## Napomene
+
+- Odluke su u ADR-0024: sweep umjesto brisanja iz admina, prag 24h plus trigger koji odbija
+  referencu na obrisan objekat, deaktivirana usluga čuva sliku, prijava samo sa naloga, salon je
+  ne vidi, slika ostaje dok platforma ne odluči.
+- Mašina koja je pisala task nema Flutter SDK. Supabase CLI i Deno rade kroz
+  `npx -y supabase@2.117.0` i `npx -y deno@2`.
+- Webhook traži `REPORT_WEBHOOK_URL` koji ima samo vlasnik projekta.
 
 ## Istorija
 

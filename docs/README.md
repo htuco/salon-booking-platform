@@ -129,6 +129,7 @@ Ne otvaraj ih ponovo bez novog podatka:
 | **Predložen:** klijent vidi samo slobodna vremena, zauzeti slotovi se ne prikazuju jer bi anonimnom posjetiocu otkrili raspored salona | [ADR-0021](adr/0021-zauzeti-slotovi-klijentu-se-ne-prikazuju.md) |
 | **Admin Barlow bez reza 700** — nijedan stil ga ne traži, a nosio je 108 KB (mijenja detalj ADR-0020) | [ADR-0022](adr/0022-barlow-bez-bold-reza.md) |
 | Nalog osoblja nastaje iz **koda poziva** koji salon pošalje radniku, ne iz emaila — hostovani projekat nema SMTP | [ADR-0023](adr/0023-nalog-osoblja-nastaje-iz-koda-poziva.md) |
+| Siročad u bucketu čisti **periodični sweep** (24h prag, kroz Storage API); prijava slike ide **platformi** kroz webhook, salon je ne vidi, slika ostaje dok platforma ne odluči | [ADR-0024](adr/0024-siroce-u-bucketu-cisti-periodicni-sweep-prijava-ide-platformi.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |

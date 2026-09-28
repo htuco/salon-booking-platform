@@ -461,6 +461,45 @@ Dokaz: `023_galerija_logo_cover.test.sql` (47 asercija; helper oslabljen na `tru
 uklonjena provjera `p_expected` 4, guard oslabljen na „bilo ko prijavljen" 7) i `rest_galerija.ts`
 (26 provjera kroz stvaran JWT, upload i javni URL).
 
+### Čišćenje bucketa i prijava slike — task 51
+
+[ADR-0024](../../docs/adr/0024-siroce-u-bucketu-cisti-periodicni-sweep-prijava-ide-platformi.md).
+
+**Siročad.** `public.media_orphans(p_min_age = 24h, p_limit = 500)` izvršava samo
+`service_role`. Vraća objekte u `salon-media` čiju putanju ne referencira nijedna slikovna
+kolona **nijednog** salona (`services.image_url` i `employees.image_url` i u neaktivnim redovima,
+`salons.logo_url`, `cover_image_url`, `gallery_urls`). Vraća samo putanje koje `cleanup-media`
+prihvata: UUID malim slovima kao prvi segment, bez praznog, `.` ili `..` segmenta. Lista je
+najstariji-prvi sa limitom, pa bi red koji handler odbija zauvijek zauzeo listu.
+
+- Briše Edge Function `cleanup-media` kroz Storage API — direktan `delete` nad
+  `storage.objects` blokira `storage.protect_delete`. Jedan `remove` poziv nosi putanje samo
+  jednog salona, a putanja van prefiksa svog salona se odbija prije poziva.
+- **Trigger `guard_salon_media_reference`** nad `services`, `employees` i `salons` odbija novu
+  referencu na `salon-media` objekat koji ne postoji (`PT400`). Admin uploaduje sliku pri izboru,
+  a snima na „Sačuvaj“; forma otvorena preko praga tako dobije grešku umjesto 404 kod klijenta.
+- **Nova slikovna kolona mora ući i u `media_orphans` i u trigger**, inače sweep njene fajlove
+  briše dan nakon uploada.
+
+**Prijava.** `public.content_reports` ima RLS; `authenticated` dobija samo `select` i
+`update (status, resolved_at)`, a obje politike traže `private.is_super_admin()`. **Salon —
+vlasnik ni radnik — ne čita prijave svog sadržaja**, klijent ne čita ni svoju. Nema `insert`
+granta: upis ide samo kroz `report_content(salon, url, razlog)`, koji traži `is_client()` i
+`client_salon_id()`, sliku koja je u galeriji tog salona, najviše 500 znakova razloga, jednu
+prijavu po (klijent, salon, slika) i nakon razrješenja, i najviše 10 dnevno po nalogu (`PT429`).
+
+**Workeri.** `pg_cron` zove `private.call_worker(scope)` (samo `service_role`): `cleanup-media`
+u `:17` svakog sata, `notify-content-reports` svake minute kad ima neobaviještenih prijava.
+Potpis je HMAC nad `<scope>:<unix-sekunde>`, pa potpis jednog workera ne otvara drugi; imena
+Vault tajni su fiksna po scopeu. URL webhooka je tajna Edge Functiona, ne ide u `pg_net`.
+`claim_content_reports` (samo `service_role`) postavlja `notified_at` pri preuzimanju; razlog i
+ime salona u poruci su jedan red običnog teksta (escapovano `<>&`, neutralisano `@`).
+
+Dokaz: `024_ciscenje_i_prijava.test.sql` (45 asercija; bez bucket filtera obara 2, bez filtera
+malih slova 3, bez triggera 4, bez provjere `x-salon-id` 1, široka SELECT politika 3, politika
+samo nad JWT claimom 1, bez dnevnog limita 1), `rest_ciscenje.ts` (28 provjera: stvaran
+handler i Storage API) i `deno test` oba handlera.
+
 ## Šta još nije zatvoreno
 
 Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvorene:
@@ -793,6 +832,8 @@ ništa.
 | `rest_storage.ts` | isto kroz Storage API, plus ono što sprovodi samo servis: tip slike, 5 MiB, javni URL bez tokena |
 | `023_galerija_logo_cover.test.sql` | logo, cover i galerija — samo kroz RPC i samo vlasnik svog salona; nova slika mora biti objekat tog salona u folderu svoje vrste; zastarjela galerija daje `PT409` bez upisa |
 | `rest_galerija.ts` | cijeli put ekrana: upload → javni URL → RPC → `anon` čita; konflikt stiže kao HTTP 409, tuđi objekat kao 400 |
+| `024_ciscenje_i_prijava.test.sql` | siroče je samo fajl bez reference u bilo kojem salonu; neaktivna usluga štiti sliku; upload mlađi od 24h, UUID velikim slovima, `.` segment i drugi bucket se ne vraćaju; referenca na obrisan objekat se odbija; prijavu čita samo `super_admin`, upisuje samo pravi klijent za sliku iz galerije salona iz headera, jednom, najviše 10 dnevno |
+| `rest_ciscenje.ts` | stvaran `cleanup-media` handler kroz Storage API: zamijenjen cover i prekinut upload nestaju, referencirani ostaje javan, u folderu ostaje jedan fajl; prijava kroz PostgREST, salon je ne vidi |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

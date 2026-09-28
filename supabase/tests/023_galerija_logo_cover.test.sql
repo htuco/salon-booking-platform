@@ -34,6 +34,16 @@ insert into public.users(id, salon_id, name, email, role, employee_id) values
 ('ca000000-0000-4000-8000-000000000003', '550e8400-e29b-41d4-a716-446655440000',
  'Radnik', 'radnik-gal@invalid.test', 'employee', '20000000-0000-4000-8000-000000000001');
 
+-- Objekti iza URL-ova koje test uspjesno snima. Od taska 51 trigger odbija referencu na
+-- `salon-media` objekat koji ne postoji, pa bez ovoga ne bi prosao nijedan upis.
+insert into storage.objects(bucket_id, name)
+select 'salon-media', '550e8400-e29b-41d4-a716-446655440000/' || n
+from unnest(array['logo/l1.png', 'cover/c1.jpg', 'logo/r.png']) n
+union all
+select 'salon-media', '550e8400-e29b-41d4-a716-446655440000/galerija/g' || i || '.jpg'
+from generate_series(1, 31) i
+on conflict do nothing;
+
 -- Poznato polazno stanje — seed se moze mijenjati, test ne smije zavisiti od njega.
 update public.salons set gallery_urls = '["https://images.test/seed-1.jpg","https://images.test/seed-2.jpg"]'::jsonb,
   logo_url = null, cover_image_url = 'https://images.test/seed-cover.jpg'

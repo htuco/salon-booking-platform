@@ -28,6 +28,7 @@ export 'src/booking/appointment_repository.dart';
 export 'src/booking/booking_repository.dart';
 export 'src/booking/staff_appointment_repository.dart';
 export 'src/catalog/blocked_slot_repository.dart';
+export 'src/catalog/content_report_repository.dart';
 export 'src/catalog/employee_repository.dart';
 export 'src/catalog/media_repository.dart';
 export 'src/catalog/policy_repository.dart';

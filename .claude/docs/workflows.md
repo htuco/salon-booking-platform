@@ -590,4 +590,42 @@ Migracija ne donosi funkciju sa sobom. Nova ili izmijenjena funkcija ide zasebno
 
 ```sh
 supabase functions deploy accept-staff-invite   # task 45 — nalog osoblja iz poziva
+supabase functions deploy cleanup-media         # task 51 — siročad iz salon-media
+supabase functions deploy notify-content-reports  # task 51 — prijave slika na webhook
+```
+
+### Workeri taska 51 — tajne i Vault
+
+Oba workera okida `pg_cron` (migracija `20260927100000`), ali bez tajni ne rade ništa: fajlovi
+ostaju u bucketu, prijave čekaju u `content_reports`. Ništa se ne gubi. Jednom po projektu:
+
+```sh
+supabase secrets set MEDIA_CLEANUP_SECRET=<nasumično> CONTENT_REPORT_WORKER_SECRET=<nasumično> \
+  REPORT_WEBHOOK_URL=<Slack webhook, ili Discord webhook sa sufiksom /slack>
+```
+
+U SQL editoru hostovanog projekta, iste dvije nasumične vrijednosti:
+
+```sql
+select vault.create_secret('https://<ref>.supabase.co/functions/v1/cleanup-media', 'media_cleanup_url');
+select vault.create_secret('<MEDIA_CLEANUP_SECRET>', 'media_cleanup_secret');
+select vault.create_secret('https://<ref>.supabase.co/functions/v1/notify-content-reports', 'content_report_worker_url');
+select vault.create_secret('<CONTENT_REPORT_WORKER_SECRET>', 'content_report_worker_secret');
+```
+
+Provjera bez čekanja crona: `select private.call_worker('cleanup-media');` pa
+`select status_code, content from net._http_response order by created desc limit 1;` — `200` sa
+`{"removed":…}` znači da worker radi.
+
+### Prijava slike — šta platforma radi
+
+Poruka u kanalu nosi salon, URL slike, razlog i id prijave. Odluka je ručna dok nema super admin
+konzole (ADR-0024); rok koji store review očekuje je 24 sata.
+
+```sql
+-- ukloni sliku iz galerije salona; sweep briše fajl nakon 24h
+update public.salons set gallery_urls = gallery_urls - '<url slike>' where id = '<salon>';
+update public.content_reports set status = 'removed', resolved_at = now() where id = '<prijava>';
+-- ili, ako je slika u redu:
+update public.content_reports set status = 'dismissed', resolved_at = now() where id = '<prijava>';
 ```
