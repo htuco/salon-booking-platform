@@ -1,6 +1,6 @@
 # `prototype/` — vizuelne reference, nijedna nije production kod
 
-Pet foldera, pet uloga. Root pravila važe — v. `../CLAUDE.md`.
+Šest foldera, šest uloga. Root pravila važe — v. `../CLAUDE.md`.
 
 | Folder | Šta je | Status |
 |---|---|---|
@@ -9,6 +9,7 @@ Pet foldera, pet uloga. Root pravila važe — v. `../CLAUDE.md`.
 | `adminv2/` | Melura redizajn: isti 21 prikaz (`3a`–`3u`), noviji izgled | **Vizuelni izvor istine za `apps/admin`** |
 | `admin/` | Stariji Salon OS handoff: istih 21 prikaz plus `SPEC.md` | **Vizual zastario, tekst važi** |
 | `wireframe/` | Stariji React/Vite prototip sa svojim toolchainom | **Zamrznut** |
+| `masaza/` | Handoff vertikale `health`: masaža (18 ekrana) i u `fizio/` fizioterapija kao drugi tenant (15 ekrana), isti shell kao `ui/`, light + dark | **Kandidat** za task 53 — nije izvor istine dok ga ADR ne usvoji, v. `masaza/README.md` |
 
 Za klijentsku aplikaciju je `ui/` jači od `wireframe/`; za admin aplikaciju je **`adminv2/` jači
 od `admin/`**, a oba jača od `wireframe/`. `wireframe/` ostaje referenca samo za **flow i rute**
