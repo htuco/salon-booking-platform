@@ -110,7 +110,7 @@ flutter:
   # google/fonts izvoru. Tezine se zato biraju kroz `FontVariation('wght', …)` u
   # `core_ui` tipografiji, ne kroz zasebne fajlove po tezini.
   #
-  # Licence stoje uz fajlove (`OFL-*.txt`) — oba su SIL Open Font License 1.1.
+  # Licence stoje uz fajlove (`OFL-*.txt`) — sva tri su SIL Open Font License 1.1.
   fonts:
     - family: DM Serif Display
       fonts:
@@ -118,6 +118,11 @@ flutter:
     - family: Archivo
       fonts:
         - asset: assets/fonts/Archivo[wdth,wght].ttf
+    # Pismo teme `elegant_beauty` (ADR-0025). Pakuje se u svaki flavor — asset se ne bira
+    # po flavoru — pa ga nosi i barber, iako ga ne koristi.
+    - family: Jost
+      fonts:
+        - asset: assets/fonts/Jost[wght].ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

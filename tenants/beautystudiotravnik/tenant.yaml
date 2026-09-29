@@ -30,6 +30,11 @@ auth:
     apple: true
     google: true
     email: true
+
+  # Google `REVERSED_CLIENT_ID` za iOS — client ID sa obrnutim segmentima, ide u
+  # `CFBundleURLTypes`. Prazno dok konzola ne da ID; v. tasks/sprint-2/12-konzole-checklist.md.
+  googleReversedClientId: ''
+
 store:
   shortDescription: "Zakažite termin u Beauty Studio Travnik u par tapova."
   categoryAndroid: LIFESTYLE

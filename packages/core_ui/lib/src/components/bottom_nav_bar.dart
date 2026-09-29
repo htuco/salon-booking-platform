@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../theme/selection_colors.dart';
 import '../tokens/spacing.dart';
 
 /// Jedna ćelija donje navigacije. Ikona i gotov tekst — `core_ui` ne zna jezik ni
@@ -107,7 +108,8 @@ class _Celija extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final boja = aktivna ? scheme.onSurface : scheme.onSurfaceVariant;
+    final izbor = context.selectionColors;
+    final boja = aktivna ? izbor.accentInk : scheme.onSurfaceVariant;
 
     return Semantics(
       button: true,
@@ -178,7 +180,7 @@ class _Celija extends StatelessWidget {
                       ),
                       child: Container(
                         height: AppSize.navIndicator,
-                        color: scheme.onSurface,
+                        color: izbor.accentLine,
                       ),
                     );
                   },

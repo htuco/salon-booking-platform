@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/selection_colors.dart';
 import '../tokens/spacing.dart';
 
 /// Chip slobodnog termina — `SPEC.md` §Recurring components, "Time slot".
@@ -32,16 +33,17 @@ class TimeSlotChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final izbor = context.selectionColors;
     final zauzet = onTap == null;
 
     final pozadina = selected
-        ? scheme.onSurface
+        ? izbor.selected
         : zauzet
         ? scheme.surfaceContainerHighest
         : Colors.transparent;
 
     final tekst = selected
-        ? scheme.surface
+        ? izbor.onSelected
         : zauzet
         // Zauzeto je prigušeno, ali i dalje iznad AA praga: `onSurfaceVariant` je
         // mjeren u temi, za razliku od `withOpacity(0.4)` koje pada ispod.
@@ -73,7 +75,7 @@ class TimeSlotChip extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.zero,
               border: Border.all(
-                color: selected ? scheme.onSurface : scheme.outline,
+                color: selected ? izbor.selected : scheme.outline,
                 width: selected ? 2 : 1,
               ),
             ),

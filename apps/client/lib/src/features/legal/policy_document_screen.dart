@@ -194,7 +194,7 @@ class _Sekcija extends StatelessWidget {
         // „01", „02" — dvocifreno kako handoff crta, sa razmakom iz kickera.
         Text(
           redniBroj.toString().padLeft(2, '0'),
-          style: kicker(color: scheme.onSurfaceVariant),
+          style: theme.textTheme.kicker(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(sekcija.title, style: theme.textTheme.headlineSmall),

@@ -73,12 +73,13 @@ slike, Početna bez ocjena, prazne recenzije, prazna galerija). Opis i tokeni su
   `brandLine`, `brandInk` i `brandContainer` se **izvode** iz jedne `brand` boje iz
   `tenant.yaml` (algoritam i referentna JS implementacija su u `README.md`). Izvođenje ide u
   `core_ui`, ne u ekran.
-- **Pismo Jost nije usvojeno.** Handoff ga traži za cijelu beauty temu, a
-  [ADR-0019](../docs/adr/0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md) drži klijenta na DM
-  Serif Display + Archivo. Promjena je ADR koji veže pismo za temu (isti mehanizam koji uvodi
-  task 53), ne usputna izmjena.
-- **Modal bez blura** je promjena oblika koji dijele sve teme (`AppDialog`). Odlučuje se u
-  tasku 52, ne prepisuje se tiho.
+- **Jost je usvojen za temu `elegant_beauty`**
+  ([ADR-0025](../docs/adr/0025-pismo-i-uloge-izbora-vezu-se-za-temu.md)): tema nosi par pisama,
+  barber ostaje na DM Serif Display + Archivo. Skala je ista — mijenja se pismo, ne veličina.
+- **Izbor ide brandom samo u beautyju.** Slot, dan, progres, izabrani red i tab traka čitaju
+  `AppSelectionColors`; barber ih puni bojom teksta kao i prije, beauty izvedenim brand ulogama.
+- **Blur modala ostaje** u svim temama, i u beautyju (ADR-0025). Iz handoffa se uzima scrim token,
+  ne uklanjanje blura — beauty se tu namjerno ne poklapa sa canvasom.
 - Handoff zove barber temu `barber_dark`; u repou je `modern_barber`. Uslovi `hasPhone` /
   `hasReviews` / `hasGallery` u repou dolaze iz podataka, ne iz konfiguracije.
 - `beauty/` se otvara offline preko lokalnog servera (`python3 -m http.server` u folderu), jer

@@ -100,7 +100,9 @@ class BookingSuccessScreen extends ConsumerWidget {
                           potvrdjen
                               ? l10n.bookingSuccessKickerConfirmed
                               : l10n.bookingSuccessKicker,
-                          style: kicker(color: scheme.onSurfaceVariant),
+                          style: theme.textTheme.kicker(
+                            color: scheme.onSurfaceVariant,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.md),
                         Text(

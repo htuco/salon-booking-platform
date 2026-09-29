@@ -97,6 +97,12 @@ Dok se generator ne podigne na 4.x, lista ide mimo modela: `salons.gallery_urls`
 funkcija koja pravi `ThemeData` **u klijentskoj app-i**. Boje su joj ulaz, jer ih vlasnik salona
 mijenja iz admin aplikacije i promjena mora stići bez novog builda.
 
+Salon daje samo boje; **tema** (`AppTheme` u `core_ui/src/theme/app_theme.dart`) zna svjetlinu,
+neutralnu paletu, par pisama i da li izbor nosi brand (ADR-0025). Kad nosi — `elegant_beauty` —
+`primary` se izvodi iz brand boje u OKLCH-u (`BrandRoles.derive`, `selection_colors.dart`), a
+komponente izbor crtaju iz `AppSelectionColors`. Barber tu extension puni bojom teksta, pa se ne
+mijenja; admin je nema i komponente padaju na isto.
+
 Admin je obrnut slučaj i ima **svoju** takvu funkciju, `buildAdminTheme()` u
 `apps/admin/lib/src/core/theme/admin_theme.dart` (task 28). Prima samo `Brightness`: admin je jedan
 build za sve salone, ali prati sistemski light/dark mode. Paleta je platformska, ne boja salona.

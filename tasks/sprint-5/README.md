@@ -15,7 +15,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika ✅ | feature | 52, 53 | 1–2 dana |
 | [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover ✅ | feature | 52, 53 | 2 dana |
 | [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja ✅ | feature | — | 1–2 dana |
-| [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran | refinement | — | 1–2 dana |
+| [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran 🟡 | refinement | — | 1–2 dana |
 | [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje | feature | — | 4–5 dana |
 | [54](54-uklanjanje-nepotrebnog-iz-admina.md) | Uklanjanje nepotrebnog iz admina | popravka | 55 | 0,5–1 dan |
 | [55](55-prerada-dashboarda.md) | Prerada admin dashboarda | redizajn | — | 2–3 dana |
@@ -105,3 +105,11 @@ ostaje jedan fajl. Lokalno `716` pgTAP i svi REST testovi zeleni. Poslije merge-
 #116 i #117 su mergani. Na hostovanom projektu su migracija `20260927100000`, oba cron joba i
 obje funkcije (`ACTIVE`). Tajne i četiri Vault reda su postavljeni, a ručno okinut sweep vraća
 `200`. Ostaje `REPORT_WEBHOOK_URL` i probna prijava, pa se task zatvara.
+
+### 52 — Beauty dotjeran (🟡, 2026-09-29)
+
+Draft [PR #120](https://github.com/htuco/salon-booking-platform/pull/120), ADR-0025: pismo i
+uloge izbora po temi, beauty dobija Jost i brand boju za izbor, blur ostaje svima. Paleta iz
+handoffa, `BrandRoles.derive` daje handoffove vrijednosti za ružu. CI zelen (core_ui 119, client
+397, admin 470). **Ekran nije viđen** (mašina bez Fluttera); ostaju snimci prije/poslije, slike u
+seedu, hostovani admin nalog i uređaj — v. status blok taska.

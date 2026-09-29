@@ -58,7 +58,7 @@ class AboutStory extends StatelessWidget {
           Text(
             l10n.aboutKicker,
             textAlign: TextAlign.center,
-            style: kicker(color: scheme.onSurfaceVariant),
+            style: theme.textTheme.kicker(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
