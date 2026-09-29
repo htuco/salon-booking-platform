@@ -358,9 +358,12 @@
     }
   },
 
-  "bookingPickServiceTitle": "Izaberite uslugu",
+  "bookingPickServiceTitle": "Izaberite {service}",
   "@bookingPickServiceTitle": {
-    "description": "Serif naslov prvog koraka, doslovno iz prototype/ui (03-korak1-usluga.png). Barber aplikacija je 1:1 sa handoffom; druge vertikale dobijaju svoj dizajn i svoj copy."
+    "description": "Serif naslov prvog koraka, iz prototype/ui (03-korak1-usluga.png): 'Izaberite uslugu'. Imenica je akuzativ iz vertical.terms.serviceAccusative — 'uslugu' za barber i beauty, 'tretman' za masažu, 'terapiju' za fizio (ADR-0026).",
+    "placeholders": {
+      "service": { "type": "String", "example": "uslugu" }
+    }
   },
 
   "bookingPickOne": "Izaberite jednu stavku",

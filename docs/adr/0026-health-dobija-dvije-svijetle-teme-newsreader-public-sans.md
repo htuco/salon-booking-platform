@@ -65,9 +65,13 @@ Rječnik:
   „Zakaži termin", „Razlog dolaska".
 - Salon za masažu to mijenja kroz `terminology_override`: Klijent, Tretman/Tretmani,
   „Rezerviši tretman", „Napomena za terapeuta".
-- `VerticalTerms` dobija `noteHint`, akuzativ usluge i naziv mjesta u genitivu. Zamjenica po
-  rodu usluge (`service.pronoun`) **ne** postaje ključ: rod zavisi od naziva usluge iz baze, pa
-  se rečenica na `5d` slaže bez zamjenice.
+- `VerticalTerms` dobija `serviceAccusative` („uslugu" · „tretman" · „terapiju") za naslov
+  prvog koraka. Pack bez ključa pada na „uslugu", pa barber ostaje 1:1 sa handoffom.
+- `noteHint` i naziv mjesta u padežu („potvrdu **centra**") se **ne** uvode sada: bazni shell
+  nema polje za napomenu u koraku 4, a „salon" u porukama je zajednički copy svih vertikala.
+  Oba idu uz task koji doda polje napomene, odnosno prođe kroz copy po vertikali.
+- Zamjenica po rodu usluge (`service.pronoun`) **ne** postaje ključ: rod zavisi od naziva usluge
+  iz baze, pa se rečenica na `5d` slaže bez zamjenice.
 
 ## Razmatrane opcije
 

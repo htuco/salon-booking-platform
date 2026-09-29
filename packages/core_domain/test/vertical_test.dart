@@ -11,6 +11,7 @@ const _barberTerminology = {
   'customerPlural': 'Klijenti',
   'serviceSingular': 'Usluga',
   'servicePlural': 'Usluge',
+  'serviceAccusative': 'uslugu',
   'staffSingular': 'Barber',
   'staffPlural': 'Naš tim',
   'appointmentSingular': 'Termin',
@@ -52,6 +53,23 @@ void main() {
       expect(terms.customerSingular, VerticalTerms.fallback.customerSingular);
       expect(terms.bookCta, VerticalTerms.fallback.bookCta);
       expect(terms.noteLabel, VerticalTerms.fallback.noteLabel);
+    });
+
+    // ADR-0026: naslov prvog koraka je „Izaberite <akuzativ>". Barber bez ključa mora
+    // ostati „uslugu" (1:1 sa handoffom), masaža ga prebija na salonu.
+    test('akuzativ usluge: default je „uslugu", salon ga prebija', () {
+      expect(VerticalTerms.fromJson(const {}).serviceAccusative, 'uslugu');
+
+      final health = VerticalTerms.fromJson(const {
+        'serviceSingular': 'Terapija',
+        'serviceAccusative': 'terapiju',
+      });
+      expect(health.serviceAccusative, 'terapiju');
+      expect(
+        health.mergeOverride(const {'serviceAccusative': 'tretman'})
+            .serviceAccusative,
+        'tretman',
+      );
     });
 
     group('mergeOverride', () {
@@ -189,8 +207,8 @@ void main() {
 
       expect(
         terminologies,
-        hasLength(3),
-        reason: 'seed.sql ima barber, beauty i generic terminologiju',
+        hasLength(4),
+        reason: 'seed.sql ima barber, beauty, health i generic terminologiju',
       );
 
       for (final raw in terminologies) {

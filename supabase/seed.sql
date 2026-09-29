@@ -2,13 +2,13 @@
 insert into public.vertical_packs(key,display_name,terminology,default_settings,default_theme,default_services,feature_flags)
 values
 ('barber','Barber',
-'{"businessSingular":"Barbershop","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Usluga","servicePlural":"Usluge","staffSingular":"Barber","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Napomena","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
+'{"businessSingular":"Barbershop","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Usluga","servicePlural":"Usluge","serviceAccusative":"uslugu","staffSingular":"Barber","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Napomena","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
 '{"bookingMode":"manual","bookingGranularity":"exact_slot","slotStepMinutes":15,"bufferMinutes":5,"minAdvanceBookingHours":2,"maxAdvanceBookingDays":30,"minCancelHours":3,"pendingExpiryHours":12,"requireStaffChoice":false,"showPricesInApp":true}',
 'modern_barber',
 '[{"name":"Muško šišanje","durationMinutes":30,"price":15},{"name":"Brada","durationMinutes":20,"price":10},{"name":"Šišanje + brada","durationMinutes":45,"price":25},{"name":"Fade","durationMinutes":40,"price":20}]',
 '{"gallery":true,"prices":true,"anyStaff":true,"team":true,"socialLinks":true,"noShowTracking":true,"recall":false}'),
 ('beauty','Beauty',
-'{"businessSingular":"Salon","customerSingular":"Klijentica","customerPlural":"Klijentice","serviceSingular":"Tretman","servicePlural":"Usluge","staffSingular":"Stilistica","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Rezerviši termin","noteLabel":"Napomena","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
+'{"businessSingular":"Salon","customerSingular":"Klijentica","customerPlural":"Klijentice","serviceSingular":"Tretman","servicePlural":"Usluge","serviceAccusative":"uslugu","staffSingular":"Stilistica","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Rezerviši termin","noteLabel":"Napomena","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
 '{"bookingMode":"manual","bookingGranularity":"exact_slot","slotStepMinutes":15,"bufferMinutes":10,"minAdvanceBookingHours":4,"maxAdvanceBookingDays":45,"minCancelHours":6,"pendingExpiryHours":12,"requireStaffChoice":false,"showPricesInApp":true}',
 'elegant_beauty',
 '[{"name":"Žensko šišanje","durationMinutes":45,"price":25},{"name":"Feniranje","durationMinutes":40,"price":20},{"name":"Farbanje","durationMinutes":120,"price":70},{"name":"Pramenovi","durationMinutes":150,"price":100}]',
@@ -18,13 +18,13 @@ values
 -- `requireStaffChoice` je ovdje **i** u `salon_settings` salona: klijent čita postavke salona
 -- kad postoje, a pack je samo početna vrijednost.
 ('health','Zdravlje',
-'{"businessSingular":"Ordinacija","customerSingular":"Pacijent","customerPlural":"Pacijenti","serviceSingular":"Terapija","servicePlural":"Terapije","staffSingular":"Terapeut","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Razlog dolaska","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
+'{"businessSingular":"Ordinacija","customerSingular":"Pacijent","customerPlural":"Pacijenti","serviceSingular":"Terapija","servicePlural":"Terapije","serviceAccusative":"terapiju","staffSingular":"Terapeut","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Razlog dolaska","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
 '{"bookingMode":"manual","bookingGranularity":"exact_slot","slotStepMinutes":30,"bufferMinutes":10,"minAdvanceBookingHours":12,"maxAdvanceBookingDays":90,"minCancelHours":12,"pendingExpiryHours":24,"requireStaffChoice":true,"showPricesInApp":true}',
 'clinical_calm',
 '[{"name":"Prvi pregled i procjena","durationMinutes":45,"price":50},{"name":"Manuelna terapija","durationMinutes":45,"price":45},{"name":"Kineziterapija","durationMinutes":45,"price":40}]',
 '{"gallery":false,"prices":true,"anyStaff":false,"team":true,"socialLinks":true,"noShowTracking":true,"recall":true}'),
 ('generic','Usluge',
-'{"businessSingular":"Firma","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Usluga","servicePlural":"Usluge","staffSingular":"Radnik","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Napomena","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
+'{"businessSingular":"Firma","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Usluga","servicePlural":"Usluge","serviceAccusative":"uslugu","staffSingular":"Radnik","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Napomena","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
 '{"bookingMode":"manual","bookingGranularity":"exact_slot","slotStepMinutes":30,"bufferMinutes":10,"minAdvanceBookingHours":4,"maxAdvanceBookingDays":60,"minCancelHours":6,"pendingExpiryHours":24,"requireStaffChoice":false,"showPricesInApp":true}',
 'modern_barber','[]',
 '{"gallery":false,"prices":true,"anyStaff":true,"team":true,"socialLinks":true,"noShowTracking":true,"recall":false}')
@@ -73,7 +73,7 @@ on conflict(id) do nothing;
 -- Masaža nije ordinacija i nema pacijente: rječnik iz `prototype/masaza/SPEC.md` §Rječnik.
 -- Fizio koristi rječnik packa, osim mjesta — handoff kaže „centar".
 update public.salons set terminology_override =
- '{"businessSingular":"Studio","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Tretman","servicePlural":"Tretmani","bookCta":"Rezerviši tretman","noteLabel":"Napomena za terapeuta"}'
+ '{"businessSingular":"Studio","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Tretman","servicePlural":"Tretmani","serviceAccusative":"tretman","bookCta":"Rezerviši tretman","noteLabel":"Napomena za terapeuta"}'
 where id='550e8400-e29b-41d4-a716-446655440002' and terminology_override is null;
 update public.salons set terminology_override = '{"businessSingular":"Centar"}'
 where id='550e8400-e29b-41d4-a716-446655440003' and terminology_override is null;

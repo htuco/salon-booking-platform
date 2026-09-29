@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
+import '../../core/vertical_provider.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
@@ -25,9 +26,9 @@ import '../../core/prikaz_cijena.dart';
 /// se tapne kartica usluge (task 10); bez čitanja tog parametra preselekcija tiho ne radi
 /// i korisnik bira istu uslugu dvaput, a ekran pri tome izgleda ispravno.
 ///
-/// Naslov je **doslovno iz handoffa** — "Izaberite uslugu". Barber aplikacija je 1:1 sa
-/// `prototype/ui/`; ostale vertikale dobijaju svoj dizajn i svoj copy, pa se akuzativ
-/// ("tretman", "pregled") ne rješava ovdje nego tamo.
+/// Naslov je iz handoffa — "Izaberite uslugu" — sa imenicom iz rječnika vertikale
+/// (`serviceAccusative`): masaža piše „Izaberite tretman", fizio „Izaberite terapiju"
+/// (ADR-0026). Barber nema ključ u packu i ostaje 1:1 sa `prototype/ui/`.
 class ServiceStepScreen extends ConsumerStatefulWidget {
   const ServiceStepScreen({this.preselectedServiceId, super.key});
 
@@ -62,7 +63,9 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
 
     return BookingStepScaffold(
       step: BookingStep.service,
-      title: l10n.bookingPickServiceTitle,
+      title: l10n.bookingPickServiceTitle(
+        verticalOf(ref).terms.serviceAccusative,
+      ),
       subtitle: l10n.bookingPickOneHint,
       // Labela ostaje "Dalje" i kad je dugme onemoguceno — handoff mijenja tekst samo na
       // koraku sa terminima, gdje izbor nije ocigledan iz sadrzaja ekrana. Ovdje bi
