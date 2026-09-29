@@ -8,11 +8,9 @@ U toku (grana `feat/vertikala-health`, 2026-09-30).
 
 ## Ciljevi
 
-- [ ] Usvojiti `prototype/masaza/` (i `fizio/`) kao izvor istine za `health` — dopuna ADR-0025,
-      ne novi ADR o pismu: pismo po temi je već odlučeno. Otvoreno ostaje: jedna ili dvije
-      `health` teme (handoff kaže dvije — topla za masažu, hladna za fizio), da li izbor ide
-      brandom, galerija za masažu (`docs/05` §5 kaže ❌) i „Klijent" umjesto „Pacijent" za masažu
-- [ ] Nova tema (ili dvije) u `AppTheme`: neutrale light/dark, `AppFonts`
+- [x] ADR-0026: `warm_wellness` (masaža, nova) + `clinical_calm` (fizio, prepisan), Newsreader +
+      Public Sans, izbor brandom; samo light, `health` bez galerije, shell ostaje bazni
+- [ ] `warm_wellness` u `AppTheme` i `clinical_calm` prepisan: light neutrale iz handoffa, `AppFonts`
       (Newsreader + Public Sans), `AppSelectionColors`; `switch` ne kompajlira bez nove grane
 - [ ] Newsreader i Public Sans kao OFL fajlovi u `apps/client/assets/fonts/` + `pubspec.yaml`
 - [ ] `gen_flavors.dart` i komentar u `tenants.g.dart` prihvataju novu temu (danas

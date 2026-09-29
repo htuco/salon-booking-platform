@@ -14,7 +14,7 @@ beauty: **isti shell** (rute, navigacija, zakazivanje, ekrani), a vlastita tipog
 ## Definicija gotovog
 
 **Odluka prije koda**
-- [ ] ADR koji dopunjuje ADR-0019: par pisama se veže za **temu**, ne za salon. `modern_barber` i
+- [x] ADR koji dopunjuje ADR-0019: par pisama se veže za **temu**, ne za salon. `modern_barber` i
       `elegant_beauty` zadržavaju DM Serif Display + Archivo; `health` teme dobijaju svoj par.
       ADR kaže i da li masaža i fizio dijele jednu temu ili dobijaju dvije (npr. topla „wellness"
       za masažu i hladna `clinical_calm` za fizio)
@@ -50,3 +50,4 @@ beauty: **isti shell** (rute, navigacija, zakazivanje, ekrani), a vlastita tipog
 ## Status (2026-09-30)
 U toku, grana `feat/vertikala-health`. Pismo po temi, `AppFonts` i `AppSelectionColors` su već u
 `main`-u kroz task 52 (ADR-0025, PR #120); 53 ih dopunjuje `health` temama.
+ADR-0026 napisan: dvije svijetle teme, bez darka, bez galerije za `health`, oblik ekrana ostaje bazni.

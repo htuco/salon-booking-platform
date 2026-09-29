@@ -31,7 +31,7 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - `prototype/ui/` — dizajnerski handoff: 17 ekrana, tokeni, komponente. **Vizuelni izvor istine.**
 - `prototype/beauty/` — handoff teme `elegant_beauty` (isti shell, svijetla paleta). Izvor istine za beauty temu.
 - `prototype/wireframe/` — React wireframe sa svojim toolchainom. **Zamrznut**, nije production kod.
-- `prototype/masaza/` — handoff vertikale `health`, masaža + `fizio/` (task 53). **Kandidat**, ne ide u kod bez ADR-a.
+- `prototype/masaza/` — handoff vertikale `health`, masaža + `fizio/` (task 53). Usvojen ADR-0026 za paletu, pismo i rječnik; oblik ekrana i dalje iz `prototype/ui/`.
 - `.claude/settings.json` — `SessionStart` hook i odobreni MCP serveri (`supabase`, `context7`, `playwright`).
 - Root `package.json` drži samo `lefthook` (git hookovi). Web toolchain je u `prototype/wireframe/`.
 - `docs/` — proizvodna specifikacija (01–07). `tasks/` — raspisani taskovi, folder po sprintu
