@@ -1,35 +1,54 @@
-# Trenutni task: 51 — Čišćenje bucketa i prijava neprikladnog sadržaja
+# Trenutni task: 52 — Beauty tenant dotjeran
 
-Puni task: [tasks/sprint-5/51-ciscenje-bucketa-i-prijava-sadrzaja.md](sprint-5/51-ciscenje-bucketa-i-prijava-sadrzaja.md) · učitan 2026-09-27
+Puni task: [tasks/sprint-5/52-beauty-dotjeran.md](sprint-5/52-beauty-dotjeran.md) · učitan 2026-09-29
 
 ## Status
 
-DoD ispunjen, mergan kao [PR #116](https://github.com/htuco/salon-booking-platform/pull/116).
-Na hostovanom projektu su migracija, oba cron joba, obje funkcije, tajne i Vault (2026-09-29).
-Sweep je okinut ručno i vraća 200. Ostaje samo `REPORT_WEBHOOK_URL` vlasnika projekta i probna
-prijava, pa se task zatvara. Puni status blok je u task fajlu.
+U toku (grana `feat/beauty-dotjeran`, 2026-09-29).
 
 ## Ciljevi
 
-- [x] Uživo u klijentu: zastavica u lightboxu — gost ide na prijavu i vraća se, prijavljen
-      klijent šalje razlog, red se pojavi u `content_reports`
-- [x] Uživo u adminu: zamjena slike → poslije sweepa u bucketu jedan fajl (zadnji DoD checkbox)
-- [x] Poslije merge-a: `supabase db push`, deploy `cleanup-media` i `notify-content-reports`
-- [x] Tajne i Vault (`.claude/docs/workflows.md` → „Workeri taska 51"), pa
-      `private.call_worker('cleanup-media')` → 200
-- [ ] `REPORT_WEBHOOK_URL` (vlasnik projekta)
-- [ ] Probna prijava na hostovanom stiže u kanal platforme
+- [ ] **Odluka o pismu prije koda**: handoff (`prototype/beauty/README.md`) traži Jost za sav
+      tekst, ADR-0019 kaže jedan par pisama. Ili ADR (pismo vezano za temu — isti ADR treba i 53),
+      ili izričita odluka da beauty ostaje na DM Serif + Archivo
+- [ ] Odluka o blur-u modala: handoff ga skida, a to dira `AppDialog` za sve teme
+- [ ] Svježi snimci beauty flavora *prije* promjene (zadnji su od taskova 10–24, prije FE-5xx)
+- [ ] Paleta `elegant_beauty` u `core_ui` (`AppNeutrals` u `app_theme.dart`) dotjerana po handoffu;
+      brand uloge izvedene iz jedne boje po algoritmu iz handoffa, AA provjeren
+- [ ] Prave slike usluga, radnika i galerije u seedu (sada `images.demo.invalid` za usluge,
+      `null` za radnike, prazna galerija)
+- [ ] `admin@beautystudiotravnik.test` na hostovanom projektu (ostatak taska 30)
+- [ ] `auth.googleReversedClientId: ''` u beauty `tenant.yaml`, `gen_flavors.dart` pa `--check`
+- [ ] Uživo: beauty build na Android uređaju — ime, ikona, boje, zakazivanje, push salonu
+- [ ] Snimci poslije, uz barber za poređenje
 
 ## Napomene
 
-- Odluke su u ADR-0024: sweep umjesto brisanja iz admina, prag 24h plus trigger koji odbija
-  referencu na obrisan objekat, deaktivirana usluga čuva sliku, prijava samo sa naloga, salon je
-  ne vidi, slika ostaje dok platforma ne odluči.
-- Mašina koja je pisala task nema Flutter SDK. Supabase CLI i Deno rade kroz
-  `npx -y supabase@2.117.0` i `npx -y deno@2`.
-- Webhook traži `REPORT_WEBHOOK_URL` koji ima samo vlasnik projekta.
+- **Rod u terminologiji je već isporučen** kroz vertical pack `beauty` u `supabase/seed.sql`
+  („Klijentica", „Stilistica", „Naš tim") — ne treba `terminology_override` na salonu. Mehanizam
+  override-a postoji i testiran je (`packages/core_api/test/vertical_repository_test.dart`,
+  `packages/core_domain/test/vertical_test.dart`). Ostaje samo provjeriti uživo da ekrani to pišu.
+- Seed namjerno drži prazna stanja na beautyju (radnici bez slike, bez recenzija, bez „Kontakt").
+  Kad beauty dobije slike, **prazan okvir mora ostati dokazan negdje** — komentari u
+  `supabase/seed.sql` (oko reda 65 i 84) to traže; prebaci to stanje na jednu uslugu/radnika ili
+  na barber, ne briši ga.
+- Slike u seedu idu u `salon-media` (task 48); siročad čisti sweep taska 51 — seed ne smije
+  referencirati objekat koji ne postoji (trigger iz ADR-0024 ga odbija).
+- Hostovani admin nalog nije provjeren ovom sesijom: Supabase MCP nema access token. Task 30 je
+  zadnji zabilježio da ne postoji (`400` na `/auth/v1/token`).
+- Sirova `#B76E79` kao `primary` pada AA sa bijelim tekstom (~3.8:1). Hex ne ide u ekran.
+- Pismo: task 53 počinje ADR-om koji veže par pisama za temu — ako 52 bira Jost, taj ADR je
+  zajednički i piše se jednom.
+- Zavisnosti 49 i 50 su ✅.
 
 ## Istorija
+
+### 51 — Čišćenje bucketa i prijava neprikladnog sadržaja (DoD ispunjen)
+
+Spojen u `main` ([PR #116](https://github.com/htuco/salon-booking-platform/pull/116), #117, #118).
+Sweep `cleanup-media` i prijava slike platformi (ADR-0024); na hostovanom migracija, oba cron joba,
+obje funkcije, tajne i Vault, ručni sweep vraća `200`. **Ostaje na vlasniku projekta:**
+`REPORT_WEBHOOK_URL` i probna prijava koja stiže u kanal platforme.
 
 ### 47 — Admin ljuska za radnika (gotov)
 
