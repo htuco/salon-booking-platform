@@ -55,6 +55,20 @@ android {
             versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
             versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
         }
+        create("fiziozenica") {
+            dimension = "tenant"
+            applicationId = "ba.nasadomena.fiziozenica"
+            resValue("string", "app_name", "Fizio Centar Zenica")
+            versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
+            versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
+        }
+        create("masazamostar") {
+            dimension = "tenant"
+            applicationId = "ba.nasadomena.masazamostar"
+            resValue("string", "app_name", "Studio Masaže Mostar")
+            versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
+            versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
+        }
     }
     // <<< END GENERATED FLAVORS
 

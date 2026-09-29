@@ -104,6 +104,10 @@ jobs:
             salon_id: 550e8400-e29b-41d4-a716-446655440000
           - flavor: beautystudiotravnik
             salon_id: 550e8400-e29b-41d4-a716-446655440001
+          - flavor: fiziozenica
+            salon_id: 550e8400-e29b-41d4-a716-446655440003
+          - flavor: masazamostar
+            salon_id: 550e8400-e29b-41d4-a716-446655440002
     steps:
       - uses: actions/checkout@v5
 
@@ -173,6 +177,14 @@ jobs:
             salon_id: 550e8400-e29b-41d4-a716-446655440001
             bundle_id: ba.nasadomena.beautystudiotravnik
             display_name: Beauty Studio Travnik
+          - flavor: fiziozenica
+            salon_id: 550e8400-e29b-41d4-a716-446655440003
+            bundle_id: ba.nasadomena.fiziozenica
+            display_name: Fizio Centar Zenica
+          - flavor: masazamostar
+            salon_id: 550e8400-e29b-41d4-a716-446655440002
+            bundle_id: ba.nasadomena.masazamostar
+            display_name: Studio Masaže Mostar
     steps:
       - uses: actions/checkout@v5
 
@@ -253,7 +265,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [barberstudiovitez, beautystudiotravnik]
+        flavor: [barberstudiovitez, beautystudiotravnik, fiziozenica, masazamostar]
     steps:
       - uses: actions/checkout@v5
 

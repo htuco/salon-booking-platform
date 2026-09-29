@@ -524,9 +524,9 @@ String _renderDart(List<Tenant> tenants) {
     ..writeln('  final int secondaryColor;')
     ..writeln()
     ..writeln(
-      '  /// Imenovana tema (`modern_barber` | `elegant_beauty`); bira svjetlinu',
+      '  /// Imenovana tema (`AppTheme` u `core_ui`); bira svjetlinu, neutralnu',
     )
-    ..writeln('  /// i neutralnu paletu dok backend ne odgovori.')
+    ..writeln('  /// paletu i pismo dok backend ne odgovori.')
     ..writeln('  final String themeName;')
     ..writeln()
     ..writeln(

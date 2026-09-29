@@ -50,7 +50,7 @@ VerticalPack
   displayName          # "Stomatologija"
   terminology          # JSONB — v. §3
   defaultSettings      # JSONB — booking pravila, v. §4
-  defaultTheme         # modern_barber | elegant_beauty | clinical_calm
+  defaultTheme         # modern_barber | elegant_beauty | warm_wellness | clinical_calm
   defaultServices      # JSONB — seed usluge za onboarding
   featureFlags         # JSONB — v. §5
   requiredConsents     # JSONB — GDPR/ZZOP, v. §7
@@ -213,6 +213,9 @@ DentalRecall
 | Hitna intervencija | 30 min | — |
 
 ### 6.4 Dentalna tema — `clinical_calm`
+
+> Od ADR-0026 `clinical_calm` nosi fizio paletu i Newsreader + Public Sans (`health`). Dental kad
+> stigne bira temu ponovo; opis ispod je ostao kao polazna tačka, ne kao stanje koda.
 
 Treća tema pored Modern Barber i Elegant Beauty:
 

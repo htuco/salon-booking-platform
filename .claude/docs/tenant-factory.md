@@ -69,8 +69,8 @@ mijenja iz admin aplikacije i promjena stiže bez novog builda.
 Kad se razidju, aplikacija i dalje radi, ali korisnik vidi **treptaj boje na startu**: prvi frame u
 boji iz `tenant.yaml`, pa skok na boju iz baze. Zato pri promjeni boje mijenjaj oba mjesta.
 
-`branding.theme` (`modern_barber` | `elegant_beauty` | `clinical_calm`) bira svjetlinu i neutralnu
-paletu. Nepoznato ime **ne ruši app** nego pada na `modern_barber` — tema dodana migracijom poslije
+`branding.theme` (`modern_barber` | `elegant_beauty` | `warm_wellness` | `clinical_calm`) bira svjetlinu,
+neutralnu paletu i pismo. Nepoznato ime **ne ruši app** nego pada na `modern_barber` — tema dodana migracijom poslije
 zadnjeg store submissiona ne smije biti izuzetak. Detalji: `.claude/docs/architecture.md`.
 
 ### Auth: lista je u `tenant.yaml`, client ID nije
