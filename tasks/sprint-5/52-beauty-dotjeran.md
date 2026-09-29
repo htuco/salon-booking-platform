@@ -32,5 +32,27 @@
 - Handoff skida blur sa modala — to dira `AppDialog` za sve teme, pa se odlučuje izričito.
 - Generisane fajlove ne diraš rukom — `dart run tool/gen_flavors.dart`, pa `--check`.
 
-## Status
-Nije počet.
+## Status (2026-09-29)
+
+U toku, [PR #120](https://github.com/htuco/salon-booking-platform/pull/120), grana
+`feat/beauty-dotjeran`.
+
+**Odlučeno:** [ADR-0025](../../docs/adr/0025-pismo-i-uloge-izbora-vezu-se-za-temu.md) — pismo i
+uloge izbora su po temi; beauty dobija Jost i brand boju za izbor, barber ostaje isti, **blur
+modala ostaje svima** (izbor vlasnika projekta, mimo handoffa).
+
+**Urađeno u kodu:** paleta `elegant_beauty` iz handoffa, `BrandRoles.derive` (OKLCH; ruža daje
+`#A7606B` / `#A25B66` kao handoff), `AppSelectionColors` u pet komponenti, Jost zapakovan uz OFL,
+`kicker` iz teme, `googleReversedClientId: ''` u beauty `tenant.yaml`. Rod u terminologiji je
+već bio isporučen kroz vertical pack `beauty` u seedu.
+
+**Nije dokazano:** mašina nema Flutter (vlasnik ne želi instalaciju), pa analyze/format/testovi
+idu samo na CI, a ekran nije viđen. Snimci *prije* nisu napravljeni prije promjene — prave se iz
+`main`-a na mašini sa Flutterom.
+
+**Ostalo za sljedećeg:**
+- Snimci prije (`git worktree add ../prije main`) i poslije, beauty uz barber, 402 širine
+- Prave slike usluga, radnika i galerije u seedu — treba izvor fotografija (pravac u
+  `prototype/beauty/Beauty Tema.dc.html` §6); prazno stanje okvira mora ostati dokazano negdje
+- `admin@beautystudiotravnik.test` na hostovanom projektu (traži pristup projektu)
+- Uživo na Android uređaju: ime, ikona, boje, zakazivanje, push salonu

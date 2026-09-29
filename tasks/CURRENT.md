@@ -8,19 +8,16 @@ U toku (grana `feat/beauty-dotjeran`, 2026-09-29).
 
 ## Ciljevi
 
-- [ ] **Odluka o pismu prije koda**: handoff (`prototype/beauty/README.md`) traži Jost za sav
-      tekst, ADR-0019 kaže jedan par pisama. Ili ADR (pismo vezano za temu — isti ADR treba i 53),
-      ili izričita odluka da beauty ostaje na DM Serif + Archivo
-- [ ] Odluka o blur-u modala: handoff ga skida, a to dira `AppDialog` za sve teme
-- [ ] Svježi snimci beauty flavora *prije* promjene (zadnji su od taskova 10–24, prije FE-5xx)
-- [ ] Paleta `elegant_beauty` u `core_ui` (`AppNeutrals` u `app_theme.dart`) dotjerana po handoffu;
-      brand uloge izvedene iz jedne boje po algoritmu iz handoffa, AA provjeren
-- [ ] Prave slike usluga, radnika i galerije u seedu (sada `images.demo.invalid` za usluge,
-      `null` za radnike, prazna galerija)
-- [ ] `admin@beautystudiotravnik.test` na hostovanom projektu (ostatak taska 30)
-- [ ] `auth.googleReversedClientId: ''` u beauty `tenant.yaml`, `gen_flavors.dart` pa `--check`
+- [x] Odluka o pismu: Jost za `elegant_beauty`, ADR-0025 (pismo po temi — 53 ga nasljeđuje)
+- [x] Odluka o blur-u: ostaje u svim temama (ADR-0025)
+- [ ] Paleta `elegant_beauty`, `BrandRoles.derive`, `AppSelectionColors`, Jost — **kod napisan**
+      (PR #120), čeka zeleni CI (`Analiza, format i testovi`)
+- [ ] `googleReversedClientId: ''` u beauty `tenant.yaml` — čeka `gen_flavors --check` na CI-ju
+- [ ] Snimci prije (iz `main`-a, `git worktree`) i poslije, beauty uz barber, 402 širine —
+      traži mašinu sa Flutterom
+- [ ] Prave slike usluga, radnika i galerije u seedu — traži izvor fotografija
+- [ ] `admin@beautystudiotravnik.test` na hostovanom projektu — traži pristup projektu
 - [ ] Uživo: beauty build na Android uređaju — ime, ikona, boje, zakazivanje, push salonu
-- [ ] Snimci poslije, uz barber za poređenje
 
 ## Napomene
 
@@ -34,6 +31,9 @@ U toku (grana `feat/beauty-dotjeran`, 2026-09-29).
   na barber, ne briši ga.
 - Slike u seedu idu u `salon-media` (task 48); siročad čisti sweep taska 51 — seed ne smije
   referencirati objekat koji ne postoji (trigger iz ADR-0024 ga odbija).
+- **Ova mašina nema Flutter i vlasnik ne želi instalaciju** — Dart se dokazuje samo na CI-ju,
+  ekran na drugoj mašini. Algoritam brand uloga je provjeren Python portom (pet brandova iz
+  handoffa + žuta + tamna sekundarna).
 - Hostovani admin nalog nije provjeren ovom sesijom: Supabase MCP nema access token. Task 30 je
   zadnji zabilježio da ne postoji (`400` na `/auth/v1/token`).
 - Sirova `#B76E79` kao `primary` pada AA sa bijelim tekstom (~3.8:1). Hex ne ide u ekran.
