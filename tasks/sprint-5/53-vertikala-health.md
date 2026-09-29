@@ -5,7 +5,7 @@
 | **Procjena** | 4–5 dana |
 | **Zavisi od** | [49](49-slike-usluga-i-radnika.md), [50](50-galerija-logo-cover.md) |
 | **Blokira** | — |
-| **Reference** | **`prototype/masaza/`** (handoff teme za masažu, kandidat, 2026-09-29) · `docs/05` §3–5 · ADR-0018 · ADR-0019 · `/new-tenant` skill · `.claude/docs/tenant-factory.md` |
+| **Reference** | **`prototype/masaza/`** (handoff za masažu i `fizio/`, kandidat, 2026-09-29) · `docs/05` §3–5 · ADR-0018 · ADR-0019 · `/new-tenant` skill · `.claude/docs/tenant-factory.md` |
 
 ## Cilj
 Salon za masažu i fizioterapeutska ordinacija dobijaju svoje brandirane aplikacije kao barber i
