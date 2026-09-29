@@ -104,8 +104,9 @@ TextStyle serif({
     height: height,
     color: color,
     fontWeight: weight == null ? null : FontWeight.values[(weight ~/ 100) - 1],
-    fontVariations:
-        weight == null ? null : [FontVariation('wght', weight.toDouble())],
+    fontVariations: weight == null
+        ? null
+        : [FontVariation('wght', weight.toDouble())],
   );
 }
 
@@ -178,4 +179,3 @@ TextTheme buildTextTheme({
     labelSmall: tijelo(size: 12, weight: 500, height: 1.2, color: muted),
   );
 }
-
