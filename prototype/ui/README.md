@@ -92,7 +92,8 @@ Svih 45 slotova su placeholderi. Trebaju prave fotografije: hero (portret 3:4), 
 Ikone su **Lucide**, stroke-width 1.5 — isti jezik ikona kao u `prototype/` (`lucide-react`) i u
 Flutteru. Fontovi su **DM Serif Display** (naslovi) + **Archivo** (tijelo); pakuju se uz aplikaciju,
 ne učitavaju se sa mreže. To je par barber teme — pismo je od ADR-0025 odluka **teme**
-(`AppTheme.fonts`), pa `elegant_beauty` nosi Jost uz istu skalu.
+(`AppTheme.fonts`), pa `elegant_beauty` nosi Jost, a `health` teme Newsreader + Public Sans (ADR-0026),
+uz istu skalu.
 
 ## Odnos prema `../wireframe/`
 

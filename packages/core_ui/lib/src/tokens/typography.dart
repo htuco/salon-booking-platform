@@ -21,9 +21,10 @@
 ///
 /// ## Pismo je po temi (ADR-0025)
 ///
-/// Gornje vrijedi za `modern_barber` i `clinical_calm`. `elegant_beauty` nosi **Jost** i za
-/// naslove i za tijelo. Tema bira par kroz [AppFonts]; skala ispod je ista za sve teme —
-/// mijenja se pismo, ne veličina ni prored.
+/// Gornje vrijedi za `modern_barber`. `elegant_beauty` nosi **Jost** i za naslove i za tijelo,
+/// a `warm_wellness` i `clinical_calm` **Newsreader** za naslove i **Public Sans** za tijelo
+/// (ADR-0026). Tema bira par kroz [AppFonts]; skala ispod je ista za sve teme — mijenja se
+/// pismo, ne veličina ni prored.
 ///
 /// ## Boja nije ovdje
 ///
@@ -42,6 +43,12 @@ const String kBodyFamily = 'Archivo';
 /// Pismo teme `elegant_beauty`. Varijabilno (`wght` 100–900), kao i Archivo.
 const String kJostFamily = 'Jost';
 
+/// Naslovno pismo tema `health` (ADR-0026). Varijabilno: `opsz` 6–72 i `wght` 200–800.
+const String kNewsreaderFamily = 'Newsreader';
+
+/// Pismo tijela tema `health`. Varijabilno (`wght` 100–900).
+const String kPublicSansFamily = 'Public Sans';
+
 /// Par pisama jedne teme: naslovi i brojevi, pa tijelo.
 @immutable
 class AppFonts {
@@ -49,6 +56,7 @@ class AppFonts {
     required this.display,
     required this.body,
     this.displayWeight,
+    this.opticalSize = false,
   });
 
   /// DM Serif Display + Archivo — `prototype/ui/SPEC.md`.
@@ -61,12 +69,26 @@ class AppFonts {
     displayWeight: 500,
   );
 
+  /// Newsreader 400 za naslove, Public Sans za tijelo — `prototype/masaza/SPEC.md`
+  /// §Tokeni, Tipografija.
+  static const newsreader = AppFonts(
+    display: kNewsreaderFamily,
+    body: kPublicSansFamily,
+    displayWeight: 400,
+    opticalSize: true,
+  );
+
   final String display;
   final String body;
 
   /// Težina naslova. `null` znači da pismo ima jedan rez (DM Serif Display) i da se osa
   /// ne gađa.
   final int? displayWeight;
+
+  /// Da li naslovno pismo ima `opsz` osu koju treba pratiti veličinom. Handoff traži
+  /// „optical size auto", a Flutter osu ne pomjera sam — bez ovoga naslov od 52 px bi se
+  /// crtao rezom za tekst od 12.
+  final bool opticalSize;
 }
 
 /// Pismo tijela sa zadanom težinom — Archivo, osim ako tema ne kaže drugo.
@@ -90,7 +112,7 @@ TextStyle archivo({
 );
 
 /// Pismo naslova. DM Serif Display ima samo jednu težinu (400), pa se osa gađa tek kad
-/// tema da [AppFonts.displayWeight].
+/// tema da [AppFonts.displayWeight]; `opsz` tek kad tema kaže [AppFonts.opticalSize].
 TextStyle serif({
   required double size,
   double height = 1.05,
@@ -98,15 +120,17 @@ TextStyle serif({
   AppFonts fonts = AppFonts.classic,
 }) {
   final weight = fonts.displayWeight;
+  final ose = [
+    if (weight != null) FontVariation('wght', weight.toDouble()),
+    if (fonts.opticalSize) FontVariation('opsz', size.clamp(6, 72).toDouble()),
+  ];
   return TextStyle(
     fontFamily: fonts.display,
     fontSize: size,
     height: height,
     color: color,
     fontWeight: weight == null ? null : FontWeight.values[(weight ~/ 100) - 1],
-    fontVariations: weight == null
-        ? null
-        : [FontVariation('wght', weight.toDouble())],
+    fontVariations: ose.isEmpty ? null : ose,
   );
 }
 

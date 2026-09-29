@@ -26,11 +26,20 @@ enum AppTheme {
   /// **Neutrale su prepisane iz `prototype/beauty/README.md` §Design Tokens.**
   elegantBeauty('elegant_beauty', Brightness.light),
 
-  /// Svijetla, hladna neutralna paleta za `dental`/`health`.
+  /// Svijetla, topla, za masažu (`health`). Bjelokost i lan, Newsreader + Public Sans,
+  /// izbor u brand boji.
+  ///
+  /// **Neutrale su prepisane iz `prototype/masaza/SPEC.md` §Tokeni, light** (ADR-0026).
+  warmWellness('warm_wellness', Brightness.light),
+
+  /// Svijetla, hladna, za fizioterapiju (`health`). Isti oblik i pisma kao [warmWellness],
+  /// druge neutrale.
+  ///
+  /// **Neutrale su prepisane iz `prototype/masaza/fizio/SPEC.md` §Tokeni, light** (ADR-0026).
   ///
   /// TODO(dental-tipografija): dentalna vertikala traži i veći body font (17 sp, `docs/02 §14`) —
   /// to je promjena tipografije, ne samo palete. Ide uz task koji uvede `dental` vertikalu;
-  /// ona je odgođena u `tasks/sprint-0/06-vertical-pack.md` i nema svoj task.
+  /// ona je van Sprinta 5 i tada dobija i svoju odluku o temi (ADR-0026).
   clinicalCalm('clinical_calm', Brightness.light);
 
   const AppTheme(this.key, this.brightness);
@@ -52,7 +61,8 @@ enum AppTheme {
   AppFonts get fonts => switch (this) {
     AppTheme.modernBarber => AppFonts.classic,
     AppTheme.elegantBeauty => AppFonts.jost,
-    AppTheme.clinicalCalm => AppFonts.classic,
+    AppTheme.warmWellness => AppFonts.newsreader,
+    AppTheme.clinicalCalm => AppFonts.newsreader,
   };
 
   /// Da li izbor (slot, dan, red, progres, tab traka) nosi brand boju.
@@ -63,7 +73,8 @@ enum AppTheme {
   bool get brandSelection => switch (this) {
     AppTheme.modernBarber => false,
     AppTheme.elegantBeauty => true,
-    AppTheme.clinicalCalm => false,
+    AppTheme.warmWellness => true,
+    AppTheme.clinicalCalm => true,
   };
 
   /// Neutralna paleta ove teme — sve osim brand boja.
@@ -103,20 +114,43 @@ enum AppTheme {
       error: Color(0xFFA3352D),
       onError: Color(0xFFFFFFFF),
     ),
+    // Handoff ima tri plohe (`background`, `surface`, `surfaceRaised`); ovdje su dvije.
+    // `background` je pozadina ekrana, `surface` kartica i tab bar. `surfaceRaised` (bijela)
+    // je modal, koji u ovom sistemu stoji na `surfaceContainer` kao i u ostalim temama.
+    AppTheme.warmWellness => const AppNeutrals(
+      surface: Color(0xFFF4EDE3),
+      surfaceContainer: Color(0xFFFAF5EE),
+      photoGround: Color(0xFFE5DACA),
+      navSurface: Color(0xFFFAF5EE),
+      outline: Color(0xFFD0C4B3),
+      hairline: Color(0xFFE4DACC),
+      strongOutline: Color(0xFF8A8072),
+      textPrimary: Color(0xFF2D2925),
+      textMuted: Color(0xFF6A6259),
+      textDisabled: Color(0xFFA39B90),
+      disabledFill: Color(0xFFE7DED1),
+      // Handoff: `rgba(45,41,37,.52)`.
+      scrim: Color(0x852D2925),
+      error: Color(0xFF9A3B2E),
+      onError: Color(0xFFFFFFFF),
+    ),
+    // Isto mapiranje kao [warmWellness]. Topli sand na `photoGround` je namjeran — handoff
+    // ga zove „jedino mjesto topline".
     AppTheme.clinicalCalm => const AppNeutrals(
-      surface: Color(0xFFFBFCFD),
-      surfaceContainer: Color(0xFFEDF2F5),
-      photoGround: Color(0xFFE4EBEF),
-      navSurface: Color(0xFFF2F6F8),
-      outline: Color(0xFFD2DCE2),
-      hairline: Color(0xFFE3EAEE),
-      strongOutline: Color(0xFFA9B7C0),
-      textPrimary: Color(0xFF16212B),
-      textMuted: Color(0xFF52616E),
-      textDisabled: Color(0xFF7D8A94),
-      disabledFill: Color(0xFFE6EDF1),
-      scrim: Color(0xB816212B),
-      error: Color(0xFFB3261E),
+      surface: Color(0xFFF4F7F5),
+      surfaceContainer: Color(0xFFFFFFFF),
+      photoGround: Color(0xFFE9E1D4),
+      navSurface: Color(0xFFFFFFFF),
+      outline: Color(0xFFBCC9C4),
+      hairline: Color(0xFFDDE5E1),
+      strongOutline: Color(0xFF7E8B87),
+      textPrimary: Color(0xFF1F2929),
+      textMuted: Color(0xFF586264),
+      textDisabled: Color(0xFF9AA5A2),
+      disabledFill: Color(0xFFE4EAE7),
+      // Handoff: `rgba(31,41,41,.52)`.
+      scrim: Color(0x851F2929),
+      error: Color(0xFF9A3B2E),
       onError: Color(0xFFFFFFFF),
     ),
   };
