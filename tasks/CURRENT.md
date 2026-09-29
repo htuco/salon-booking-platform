@@ -10,9 +10,10 @@ U toku (grana `feat/beauty-dotjeran`, 2026-09-29).
 
 - [x] Odluka o pismu: Jost za `elegant_beauty`, ADR-0025 (pismo po temi — 53 ga nasljeđuje)
 - [x] Odluka o blur-u: ostaje u svim temama (ADR-0025)
-- [ ] Paleta `elegant_beauty`, `BrandRoles.derive`, `AppSelectionColors`, Jost — **kod napisan**
-      (PR #120), čeka zeleni CI (`Analiza, format i testovi`)
-- [ ] `googleReversedClientId: ''` u beauty `tenant.yaml` — čeka `gen_flavors --check` na CI-ju
+- [x] Paleta `elegant_beauty`, `BrandRoles.derive`, `AppSelectionColors`, Jost — CI zelen na
+      PR #120 (analyze bez nalaza; core_ui 119, client 397, admin 470 testova). **Ekran nije
+      viđen** — to je dio snimaka ispod
+- [x] `googleReversedClientId: ''` u beauty `tenant.yaml` — `gen_flavors --check` zelen na CI-ju
 - [ ] Snimci prije (iz `main`-a, `git worktree`) i poslije, beauty uz barber, 402 širine —
       traži mašinu sa Flutterom
 - [ ] Prave slike usluga, radnika i galerije u seedu — traži izvor fotografija

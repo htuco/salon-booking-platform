@@ -46,8 +46,12 @@ modala ostaje svima** (izbor vlasnika projekta, mimo handoffa).
 `kicker` iz teme, `googleReversedClientId: ''` u beauty `tenant.yaml`. Rod u terminologiji je
 već bio isporučen kroz vertical pack `beauty` u seedu.
 
-**Nije dokazano:** mašina nema Flutter (vlasnik ne želi instalaciju), pa analyze/format/testovi
-idu samo na CI, a ekran nije viđen. Snimci *prije* nisu napravljeni prije promjene — prave se iz
+**Dokaz:** `Analiza, format i testovi` zelen na PR #120 — `No issues found!`, `gen_flavors
+--check` prolazi, core_ui 119 (novi `theme_per_tema_test.dart`: pismo, skala, barber nepromijenjen,
+sedam brandova drži pragove), client 397, admin 470. Format je provjeren i lokalno kroz
+`dart:3.13` u Dockeru.
+
+**Nije dokazano:** mašina nema Flutter (vlasnik ne želi instalaciju), pa ekran nije viđen. Snimci *prije* nisu napravljeni prije promjene — prave se iz
 `main`-a na mašini sa Flutterom.
 
 **Ostalo za sljedećeg:**

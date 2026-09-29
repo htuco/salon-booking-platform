@@ -105,3 +105,11 @@ ostaje jedan fajl. Lokalno `716` pgTAP i svi REST testovi zeleni. Poslije merge-
 #116 i #117 su mergani. Na hostovanom projektu su migracija `20260927100000`, oba cron joba i
 obje funkcije (`ACTIVE`). Tajne i četiri Vault reda su postavljeni, a ručno okinut sweep vraća
 `200`. Ostaje `REPORT_WEBHOOK_URL` i probna prijava, pa se task zatvara.
+
+### 52 — Beauty dotjeran (🟡, 2026-09-29)
+
+Draft [PR #120](https://github.com/htuco/salon-booking-platform/pull/120), ADR-0025: pismo i
+uloge izbora po temi, beauty dobija Jost i brand boju za izbor, blur ostaje svima. Paleta iz
+handoffa, `BrandRoles.derive` daje handoffove vrijednosti za ružu. CI zelen (core_ui 119, client
+397, admin 470). **Ekran nije viđen** (mašina bez Fluttera); ostaju snimci prije/poslije, slike u
+seedu, hostovani admin nalog i uređaj — v. status blok taska.
