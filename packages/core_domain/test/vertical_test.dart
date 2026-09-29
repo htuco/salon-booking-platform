@@ -66,8 +66,9 @@ void main() {
       });
       expect(health.serviceAccusative, 'terapiju');
       expect(
-        health.mergeOverride(const {'serviceAccusative': 'tretman'})
-            .serviceAccusative,
+        health.mergeOverride(const {
+          'serviceAccusative': 'tretman',
+        }).serviceAccusative,
         'tretman',
       );
     });
