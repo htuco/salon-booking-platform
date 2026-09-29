@@ -47,5 +47,6 @@ beauty: **isti shell** (rute, navigacija, zakazivanje, ekrani), a vlastita tipog
 - Task je velik. Ako ADR i `core_ui` promjena prerastu jedan PR, ADR + pisma po temi se odvajaju u
   zaseban task, a tenanti idu poslije.
 
-## Status
-Nije počet.
+## Status (2026-09-30)
+U toku, grana `feat/vertikala-health`. Pismo po temi, `AppFonts` i `AppSelectionColors` su već u
+`main`-u kroz task 52 (ADR-0025, PR #120); 53 ih dopunjuje `health` temama.
