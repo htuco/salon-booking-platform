@@ -13,6 +13,16 @@ values
 'elegant_beauty',
 '[{"name":"Žensko šišanje","durationMinutes":45,"price":25},{"name":"Feniranje","durationMinutes":40,"price":20},{"name":"Farbanje","durationMinutes":120,"price":70},{"name":"Pramenovi","durationMinutes":150,"price":100}]',
 '{"gallery":true,"prices":true,"anyStaff":true,"team":true,"socialLinks":true,"noShowTracking":true,"recall":false}'),
+-- `health` prati `docs/05` §3–5 i fizio handoff (`prototype/masaza/fizio/`, ADR-0026): Pacijent,
+-- Terapija, „Razlog dolaska". Masaža to mijenja kroz `terminology_override` na svom salonu.
+-- `requireStaffChoice` je ovdje **i** u `salon_settings` salona: klijent čita postavke salona
+-- kad postoje, a pack je samo početna vrijednost.
+('health','Zdravlje',
+'{"businessSingular":"Ordinacija","customerSingular":"Pacijent","customerPlural":"Pacijenti","serviceSingular":"Terapija","servicePlural":"Terapije","staffSingular":"Terapeut","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Razlog dolaska","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
+'{"bookingMode":"manual","bookingGranularity":"exact_slot","slotStepMinutes":30,"bufferMinutes":10,"minAdvanceBookingHours":12,"maxAdvanceBookingDays":90,"minCancelHours":12,"pendingExpiryHours":24,"requireStaffChoice":true,"showPricesInApp":true}',
+'clinical_calm',
+'[{"name":"Prvi pregled i procjena","durationMinutes":45,"price":50},{"name":"Manuelna terapija","durationMinutes":45,"price":45},{"name":"Kineziterapija","durationMinutes":45,"price":40}]',
+'{"gallery":false,"prices":true,"anyStaff":false,"team":true,"socialLinks":true,"noShowTracking":true,"recall":true}'),
 ('generic','Usluge',
 '{"businessSingular":"Firma","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Usluga","servicePlural":"Usluge","staffSingular":"Radnik","staffPlural":"Naš tim","appointmentSingular":"Termin","bookCta":"Zakaži termin","noteLabel":"Napomena","myAppointments":"Moji termini","priceLabel":"Cijena","durationLabel":"Trajanje"}',
 '{"bookingMode":"manual","bookingGranularity":"exact_slot","slotStepMinutes":30,"bufferMinutes":10,"minAdvanceBookingHours":4,"maxAdvanceBookingDays":60,"minCancelHours":6,"pendingExpiryHours":24,"requireStaffChoice":false,"showPricesInApp":true}',
@@ -44,19 +54,44 @@ values
  'Vaš trenutak njege, ljepote i opuštanja.','Travnik',
  '','',null,null,null,
  null,'[]'::jsonb,
- '#B76E79','#FFF5F5','elegant_beauty','beauty','pro')
+ '#B76E79','#FFF5F5','elegant_beauty','beauty','pro'),
+-- Dva `health` tenanta iz `prototype/masaza/` (ADR-0026): ista vertikala, dvije teme. Boje su
+-- `primaryFill` iz handoffa, sekundarna je svijetla podloga izabranog reda. Bez fotografija i
+-- bez galerije (`health` je nema, `docs/05` §5) — prazni okviri su ovdje predviđeno stanje.
+('550e8400-e29b-41d4-a716-446655440002','Studio Masaže Mostar','masazamostar',
+ 'Mirna soba, tople ruke i vrijeme koje je samo vaše.','Mostar',
+ 'Kralja Tvrtka 8','036 555 010','kontakt@masazamostar.test',null,null,
+ null,'[]'::jsonb,
+ '#56664F','#EEF0E9','warm_wellness','health','pro'),
+('550e8400-e29b-41d4-a716-446655440003','Fizio Centar Zenica','fiziozenica',
+ 'Pregled, terapija i vježbe — korak po korak do oporavka.','Zenica',
+ 'Masarykova 21','032 444 020','kontakt@fiziozenica.test',null,null,
+ null,'[]'::jsonb,
+ '#2F6F6D','#E6F0EF','clinical_calm','health','pro')
 on conflict(id) do nothing;
+
+-- Masaža nije ordinacija i nema pacijente: rječnik iz `prototype/masaza/SPEC.md` §Rječnik.
+-- Fizio koristi rječnik packa, osim mjesta — handoff kaže „centar".
+update public.salons set terminology_override =
+ '{"businessSingular":"Studio","customerSingular":"Klijent","customerPlural":"Klijenti","serviceSingular":"Tretman","servicePlural":"Tretmani","bookCta":"Rezerviši tretman","noteLabel":"Napomena za terapeuta"}'
+where id='550e8400-e29b-41d4-a716-446655440002' and terminology_override is null;
+update public.salons set terminology_override = '{"businessSingular":"Centar"}'
+where id='550e8400-e29b-41d4-a716-446655440003' and terminology_override is null;
 
 insert into public.salon_builds(salon_id,flavor,application_id,bundle_id,app_display_name)
 select id,slug,'ba.nasadomena.'||slug,'ba.nasadomena.'||slug,name from public.salons
-where id in ('550e8400-e29b-41d4-a716-446655440000','550e8400-e29b-41d4-a716-446655440001')
+where id in ('550e8400-e29b-41d4-a716-446655440000','550e8400-e29b-41d4-a716-446655440001',
+                '550e8400-e29b-41d4-a716-446655440002','550e8400-e29b-41d4-a716-446655440003')
 on conflict(salon_id) do nothing;
 
 insert into public.salon_settings(salon_id,buffer_minutes,slot_step_minutes,min_advance_booking_hours,
-max_advance_booking_days,pending_expiry_hours,min_cancel_hours)
+max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice)
 values
-('550e8400-e29b-41d4-a716-446655440000',5,15,2,30,12,3),
-('550e8400-e29b-41d4-a716-446655440001',10,15,4,45,12,6)
+('550e8400-e29b-41d4-a716-446655440000',5,15,2,30,12,3,false),
+('550e8400-e29b-41d4-a716-446655440001',10,15,4,45,12,6,false),
+-- `health`, `docs/05` §4: korak 30, buffer 10, izbor terapeuta obavezan.
+('550e8400-e29b-41d4-a716-446655440002',10,30,12,90,24,12,true),
+('550e8400-e29b-41d4-a716-446655440003',10,30,12,90,24,12,true)
 on conflict(salon_id) do nothing;
 
 -- **Barber je od sada pun**, sa stvarnom fotografijom na svakoj usluzi — sluzi da se cijela
@@ -73,7 +108,17 @@ insert into public.services(id,salon_id,name,category,price,duration_minutes,ima
 ('10000000-0000-4000-8000-000000000005','550e8400-e29b-41d4-a716-446655440001','Žensko šišanje','Kosa',25,45,'https://images.demo.invalid/beauty/sisanje.jpg'),
 ('10000000-0000-4000-8000-000000000006','550e8400-e29b-41d4-a716-446655440001','Feniranje','Kosa',20,40,'https://images.demo.invalid/beauty/feniranje.jpg'),
 ('10000000-0000-4000-8000-000000000007','550e8400-e29b-41d4-a716-446655440001','Farbanje','Boja',70,120,'https://images.demo.invalid/beauty/farbanje.jpg'),
-('10000000-0000-4000-8000-000000000008','550e8400-e29b-41d4-a716-446655440001','Pramenovi','Boja',100,150,null)
+('10000000-0000-4000-8000-000000000008','550e8400-e29b-41d4-a716-446655440001','Pramenovi','Boja',100,150,null),
+-- Masaža i fizio: jedna dužina po tretmanu. Više dužina iz handoffa (60/90 min) traži
+-- migraciju i nije dio taska 53 (ADR-0026).
+('10000000-0000-4000-8000-000000000009','550e8400-e29b-41d4-a716-446655440002','Relax masaža','Masaže',60,60,null),
+('10000000-0000-4000-8000-000000000010','550e8400-e29b-41d4-a716-446655440002','Masaža dubokih tkiva','Masaže',70,60,null),
+('10000000-0000-4000-8000-000000000011','550e8400-e29b-41d4-a716-446655440002','Vruće kamenje','Rituali',90,90,null),
+('10000000-0000-4000-8000-000000000012','550e8400-e29b-41d4-a716-446655440002','Leđa i vrat','Masaže',35,30,null),
+('10000000-0000-4000-8000-000000000013','550e8400-e29b-41d4-a716-446655440003','Prvi pregled i procjena','Pregled i vježbe',50,45,null),
+('10000000-0000-4000-8000-000000000014','550e8400-e29b-41d4-a716-446655440003','Manuelna terapija','Fizikalna terapija',45,45,null),
+('10000000-0000-4000-8000-000000000015','550e8400-e29b-41d4-a716-446655440003','Kineziterapija','Pregled i vježbe',40,45,null),
+('10000000-0000-4000-8000-000000000016','550e8400-e29b-41d4-a716-446655440003','Elektroterapija','Fizikalna terapija',25,30,null)
 on conflict(id) do nothing;
 
 -- Lejla namjerno nema `experience_years`: red bez staza mora izgledati uredno, a ne kao
@@ -84,19 +129,25 @@ insert into public.employees(id,salon_id,name,role,bio,experience_years,image_ur
 -- Beauty ostaje bez fotografija radnika: okvir sa inicijalom je predvidjeno stanje i mora se
 -- negdje vidjeti u demou, sad kad ga barber vise ne pokazuje.
 ('20000000-0000-4000-8000-000000000003','550e8400-e29b-41d4-a716-446655440001','Amina','Stilistica','Njega kose i boje prilagođene vama.',12,null),
-('20000000-0000-4000-8000-000000000004','550e8400-e29b-41d4-a716-446655440001','Lejla','Stilistica','Frizure za svaki dan i posebne prilike.',null,null)
+('20000000-0000-4000-8000-000000000004','550e8400-e29b-41d4-a716-446655440001','Lejla','Stilistica','Frizure za svaki dan i posebne prilike.',null,null),
+('20000000-0000-4000-8000-000000000005','550e8400-e29b-41d4-a716-446655440002','Selma','Terapeutkinja','Relaks i duboka tkiva, bez žurbe.',8,null),
+('20000000-0000-4000-8000-000000000006','550e8400-e29b-41d4-a716-446655440002','Haris','Terapeut','Sportska masaža i rad na leđima.',5,null),
+('20000000-0000-4000-8000-000000000007','550e8400-e29b-41d4-a716-446655440003','Adnan','Terapeut','Manuelna terapija i rehabilitacija poslije povrede.',11,null),
+('20000000-0000-4000-8000-000000000008','550e8400-e29b-41d4-a716-446655440003','Maja','Terapeutkinja','Kineziterapija i vježbe za kičmu.',6,null)
 on conflict(id) do nothing;
 
 insert into public.employee_services(salon_id,employee_id,service_id)
 select e.salon_id,e.id,s.id from public.employees e join public.services s using(salon_id)
-where e.salon_id in ('550e8400-e29b-41d4-a716-446655440000','550e8400-e29b-41d4-a716-446655440001')
+where e.salon_id in ('550e8400-e29b-41d4-a716-446655440000','550e8400-e29b-41d4-a716-446655440001',
+                '550e8400-e29b-41d4-a716-446655440002','550e8400-e29b-41d4-a716-446655440003')
 on conflict(salon_id,employee_id,service_id) do nothing;
 
 -- ISO weekday 1=Monday..7=Sunday; demo schedules from section 6.3.
 insert into public.working_hours(salon_id,day_of_week,start_time,end_time,is_closed)
 select s.id,d,'09:00'::time,case when d=6 then '14:00'::time else '17:00'::time end,d=7
 from public.salons s cross join generate_series(1,7) d
-where s.id in ('550e8400-e29b-41d4-a716-446655440000','550e8400-e29b-41d4-a716-446655440001')
+where s.id in ('550e8400-e29b-41d4-a716-446655440000','550e8400-e29b-41d4-a716-446655440001',
+                '550e8400-e29b-41d4-a716-446655440002','550e8400-e29b-41d4-a716-446655440003')
 on conflict(salon_id,employee_id,day_of_week) do nothing;
 
 -- ---------------------------------------------------------------------------
