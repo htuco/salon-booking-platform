@@ -61,6 +61,7 @@ U toku, grana `feat/vertikala-health`, [PR #121](https://github.com/htuco/salon-
 - `serviceAccusative` u rječniku; `core_domain` 88 PASS lokalno.
 - Tenanti `masazamostar` i `fiziozenica` u sve tri CI matrice; `gen_flavors --check` ažuran.
 - Grep: nema grananja po vertikali ni flavoru u ekranu.
+- CI na PR #121 (`5ad6895`): `Analiza, format i testovi` (analyze, format, svi testovi, `gen_flavors --check`) i `Supabase tests` zeleni.
 
 **Ostalo za sljedećeg** (traži Flutter mašinu):
 - „Bilo ko od nas" nestaje u koraku 2, viđeno na ekranu: `tool/run_tenant.sh mostar demo -d chrome`.

@@ -22,8 +22,7 @@ U toku (grana `feat/vertikala-health`, 2026-09-30).
       `google-services.json`, generisano (`gen_flavors`, launcher ikone, `gen_ios_flavors.rb`),
       sve tri CI matrice; `gen_flavors --check` ažuran; demo overrides za oba
 - [x] Grep: nijedan `vertical ==` / `flavor ==` u ekranu (samo doc komentari koji to zabranjuju)
-- [ ] CI `Analiza, format i testovi` zelen poslije demo popravke (prvi run pao samo na
-      `demo_overrides_test` za nova dva tenanta i na brojaču vertikala u seed testu — oba popravljena)
+- [x] CI zelen na PR #121 (`5ad6895`): `Analiza, format i testovi` i `Supabase tests`
 - [ ] APK i iOS build novih flavora — ti jobovi idu tek na push u `main`, ne na PR
 - [ ] „Bilo ko od nas" nestaje u koraku 2 — **viđeno na ekranu** (traži Flutter mašinu)
 - [ ] Snimci početne i zakazivanja, sva četiri tenanta, 402; barber i beauty isti kao prije
