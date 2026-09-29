@@ -116,5 +116,8 @@ seedu, hostovani admin nalog i uređaj — v. status blok taska.
 
 ### 53 — Vertikala `health` (🟡, 2026-09-30)
 
-Počet na grani `feat/vertikala-health`, poslije merge-a #120 (task 52, čije `AppFonts` i
-`AppSelectionColors` 53 nasljeđuje). Prvi korak je dopuna ADR-0025 za `health` teme.
+PR #121. ADR-0026: dvije svijetle `health` teme (`warm_wellness`, prepisan `clinical_calm`),
+Newsreader + Public Sans, izbor brandom; bez darka i galerije, shell bazni. Pack `health`, saloni
+`masazamostar` i `fiziozenica`, sve tri CI matrice. Lokalno pgTAP 716 + svi REST, `core_domain` 88;
+`core_ui` zelen na CI-ju. **Ostaje:** ekran i snimci sva četiri tenanta (Flutter mašina), APK/iOS
+build na `main`-u.

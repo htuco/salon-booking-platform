@@ -10,47 +10,49 @@ U toku (grana `feat/vertikala-health`, 2026-09-30).
 
 - [x] ADR-0026: `warm_wellness` (masaža, nova) + `clinical_calm` (fizio, prepisan), Newsreader +
       Public Sans, izbor brandom; samo light, `health` bez galerije, shell ostaje bazni
-- [ ] `warm_wellness` u `AppTheme` i `clinical_calm` prepisan: light neutrale iz handoffa, `AppFonts`
-      (Newsreader + Public Sans), `AppSelectionColors`; `switch` ne kompajlira bez nove grane
-- [ ] Newsreader i Public Sans kao OFL fajlovi u `apps/client/assets/fonts/` + `pubspec.yaml`
-- [ ] `gen_flavors.dart` i komentar u `tenants.g.dart` prihvataju novu temu (danas
-      `modern_barber` | `elegant_beauty`); `--check` zelen
-- [ ] `vertical_packs` red `health` u `supabase/seed.sql`: terminologija §3, pravila §4
-      (korak 30, buffer 10, `requireStaffChoice: true`, min unaprijed 12h, max 90 dana,
-      otkaz 12h, pending 24h), flagovi §5
-- [ ] `VerticalTerms`: `note.hint`, `service.acc`, `venue` u padežu (v. `prototype/masaza/README.md`);
-      rečenica na `5d` bez zamjenice
-- [ ] Dva tenanta kroz `/new-tenant` (masaža Mostar, fizio Zenica): `tenant.yaml`, seed salona
-      sa uslugama i terapeutima, placeholder `google-services.json`, Android + iOS matrica
-      u `flutter-build.yml`
-- [ ] Grep: nijedan `vertical ==` / `flavor ==` u ekranu
-- [ ] „Bilo koji dostupan" nestaje u koraku 2 — viđeno na ekranu
+- [x] `warm_wellness` i prepisan `clinical_calm` u `AppTheme` (neutrale iz handoffa, `AppFonts.newsreader`
+      sa `opsz`, izbor brandom); pisma uz aplikaciju sa OFL licencom. CI: `core_ui` testovi
+      (kontrast, a11y slotova, pismo po temi, pragovi brand uloga) zeleni na PR #121
+- [x] Pack `health` i dva salona u `supabase/seed.sql` (terminologija §3, pravila §4, flagovi §5,
+      `require_staff_choice` i u `salon_settings`, `terminology_override` masaže). Lokalno
+      `tool/test_supabase.sh` od nule: pgTAP 716 PASS + svi REST/Deno; CI `Supabase tests` zelen
+- [x] `serviceAccusative` u `VerticalTerms` → „Izaberite tretman / terapiju"; `core_domain`
+      lokalno 88 PASS. `noteHint` i mjesto u padežu odgođeni (ADR-0026)
+- [x] Tenanti `masazamostar` i `fiziozenica`: `tenant.yaml`, placeholder ikona i
+      `google-services.json`, generisano (`gen_flavors`, launcher ikone, `gen_ios_flavors.rb`),
+      sve tri CI matrice; `gen_flavors --check` ažuran; demo overrides za oba
+- [x] Grep: nijedan `vertical ==` / `flavor ==` u ekranu (samo doc komentari koji to zabranjuju)
+- [ ] CI `Analiza, format i testovi` zelen poslije demo popravke (prvi run pao samo na
+      `demo_overrides_test` za nova dva tenanta i na brojaču vertikala u seed testu — oba popravljena)
+- [ ] APK i iOS build novih flavora — ti jobovi idu tek na push u `main`, ne na PR
+- [ ] „Bilo ko od nas" nestaje u koraku 2 — **viđeno na ekranu** (traži Flutter mašinu)
 - [ ] Snimci početne i zakazivanja, sva četiri tenanta, 402; barber i beauty isti kao prije
-- [ ] CI zelen za oba nova flavora
+      (traži Flutter mašinu: `tool/run_tenant.sh mostar demo -d chrome`, isto za `zenica`,
+      `vitez`, `travnik`)
 
 ## Napomene
 
-- **Dio platforme je već isporučen kroz 52** (PR #120, mergan u `main` 2026-09-30):
-  `AppFonts` u `packages/core_ui/lib/src/tokens/typography.dart`, `AppSelectionColors`,
-  `BrandRoles.derive` (OKLCH), `AppTheme.fonts`, Jost u `apps/client/pubspec.yaml`, ADR-0025.
-  DoD stavke „`AppTheme` nosi par pisama" i „ADR pismo po temi" su time pokrivene.
-- ADR-0025 danas stavlja `clinical_calm` na DM Serif + Archivo i kaže da se algoritam izvođenja
-  za sve teme „vraća ako `health` handoff traži isto" — **traži** (`prototype/masaza/README.md`:
-  tenant bira samo `primaryFill`, ostalo se izvodi). To ide u dopunu ADR-a.
-- `clinical_calm` postoji u `app_theme.dart` i dijeli ga `dental`. Ako `health` dobija svoje
-  teme, `clinical_calm` ostaje dentalu; dentalni veći font (`TODO(dental-tipografija)`) se ne uvodi.
-- Šema već dozvoljava `health` (`check` u `20260910090000_init_schema.sql`) — **nema migracije**
-  za sam pack. `require_staff_choice` postoji po salonu, a booking flow čita vertikalu kao fallback
-  (`apps/client/lib/src/features/booking/booking_flow_provider.dart:120`).
-- **Van ovog taska** (handoff ih traži, `prototype/masaza/README.md` §Sudari): više dužina po
-  tretmanu, specijalizacija/iskustvo terapeuta (migracije), checkbox pristanka u koraku 4
-  (`required_consents` postoji, ekran ne crta), „Pozovi studio" (task 58). Zapisati kao nove
-  taskove, ne uvlačiti.
-- Zamka: drugo pismo mijenja visinu redova — QA na 402 za obje nove teme.
-- **Ova mašina nema Flutter** — Dart se dokazuje na CI-ju, snimci na drugoj mašini. Lokalno
-  se dokazuje samo SQL dio (seed `health` packa i tenanta) kroz `supabase start && supabase test db`.
-- Procjena: 4–5 dana ostaje; ADR i `AppFonts` su dijelom gotovi, ali handoff dodaje
-  `VerticalTerms` ključeve i drugu temu, što task nije predvidio.
+- Pismo po temi, `AppFonts`, `AppSelectionColors` i `BrandRoles.derive` su došli iz taska 52
+  (PR #120, mergan 2026-09-30); 53 ih samo koristi.
+- **Hostovani projekat nema nove salone.** Seed se ne primjenjuje kroz `supabase db push`, pa
+  `masazamostar` i `fiziozenica` na hostovanom backendu ne nađu svoj salon. Uživo provjera ide
+  lokalno ili kroz `demo`; red na hostovanom traži pristup projektu (isti blok kao task 52).
+- Seed namjerno nema admin naloge za nova dva salona ni fotografije — prazni okviri su
+  predviđeno stanje. `health` nema galeriju (`docs/05` §5, ADR-0026).
+- `features.gallery` flag se u klijentu nigdje ne čita — galerija se krije samo kad salon nema
+  slika. Za `health` je to danas isto ponašanje; kad masaža dobije galeriju (override flagova),
+  flag mora početi da se čita.
+- **Van taska, kandidati za nove taskove** (ADR-0026 §Razmatrane opcije): dark varijanta tema,
+  override feature flagova po salonu (galerija za masažu), više dužina po tretmanu,
+  specijalizacija terapeuta, checkbox pristanka + polje napomene sa `noteHint`, oblik Početne
+  iz handoffa (hero ispod, „Naš tim", sedmično radno vrijeme), onemogućeno dugme otkazivanja.
+- Dart na ovoj mašini: `dart format` i `core_domain` testovi idu kroz Docker `dart:3.13`
+  (isti Dart kao CI); `gen_flavors` sa zasebnim package configom; iOS generator u
+  `ruby:3.3-slim` sa `xcodeproj` gemom (sistemski Ruby 2.6 ga ne može instalirati).
+  `flutter_launcher_icons` dira `project.pbxproj` — vratiti i pustiti `gen_ios_flavors.rb`.
+- Supabase CLI i Deno nisu instalirani — `npx -y supabase@2.117.0` i `npx -y deno` rade kao
+  zamjena za `tool/test_supabase.sh`. Poslije `db reset` edge runtime zna ostati ugašen
+  (503 u `rest_delete_account`); `supabase stop` pa skripta od nule to rješava.
 
 ## Istorija
 

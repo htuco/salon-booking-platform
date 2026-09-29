@@ -20,18 +20,18 @@ beauty: **isti shell** (rute, navigacija, zakazivanje, ekrani), a vlastita tipog
       za masažu i hladna `clinical_calm` za fizio)
 
 **Platforma (`core_ui`)**
-- [ ] `AppTheme` nosi par pisama (naslov + tijelo) uz svjetlinu i neutralnu paletu; `kSerifFamily`
+- [x] `AppTheme` nosi par pisama (naslov + tijelo) uz svjetlinu i neutralnu paletu; `kSerifFamily`
       i `kBodyFamily` prestaju biti jedine konstante
-- [ ] Nova pisma su zapakovana uz aplikaciju sa OFL licencom, ne sa mreže (`prototype/ui/SPEC.md`)
-- [ ] Skala veličina i razmaci ostaju isti za sve teme — mijenja se pismo, ne oblik
+- [x] Nova pisma su zapakovana uz aplikaciju sa OFL licencom, ne sa mreže (`prototype/ui/SPEC.md`)
+- [x] Skala veličina i razmaci ostaju isti za sve teme — mijenja se pismo, ne oblik
 - [ ] Barber i beauty izgledaju **isto kao prije** — snimci prije i poslije
 
 **Vertikala i tenanti**
-- [ ] `vertical_packs` seed za `health`: terminologija, pravila i flagovi po `docs/05` (danas u seedu: barber, beauty, generic)
-- [ ] Pravila po tabeli §4: korak 30 min, buffer 10, `requireStaffChoice: true` (booking flow ga već poštuje)
+- [x] `vertical_packs` seed za `health`: terminologija, pravila i flagovi po `docs/05` (danas u seedu: barber, beauty, generic)
+- [x] Pravila po tabeli §4: korak 30 min, buffer 10, `requireStaffChoice: true` (booking flow ga već poštuje)
 - [ ] Dva demo tenanta kroz `/new-tenant` — salon za masažu i fizioterapeutska ordinacija: `tenant.yaml`
       sa vlastitim bojama, seed red sa uslugama i terapeutima, sve tri CI matrice
-- [ ] Nijedan `if (vertical == 'health')` ni `if (flavor == …)` u ekranu — razlika je tema, `vertical.terms` i flagovi
+- [x] Nijedan `if (vertical == 'health')` ni `if (flavor == …)` u ekranu — razlika je tema, `vertical.terms` i flagovi
 - [ ] CI zelen za oba nova flavora; snimci početne i zakazivanja za sva četiri tenanta jedan do drugog
 
 ## Zamke
@@ -48,6 +48,22 @@ beauty: **isti shell** (rute, navigacija, zakazivanje, ekrani), a vlastita tipog
   zaseban task, a tenanti idu poslije.
 
 ## Status (2026-09-30)
-U toku, grana `feat/vertikala-health`. Pismo po temi, `AppFonts` i `AppSelectionColors` su već u
-`main`-u kroz task 52 (ADR-0025, PR #120); 53 ih dopunjuje `health` temama.
-ADR-0026 napisan: dvije svijetle teme, bez darka, bez galerije za `health`, oblik ekrana ostaje bazni.
+
+U toku, grana `feat/vertikala-health`, [PR #121](https://github.com/htuco/salon-booking-platform/pull/121).
+
+**Dokazano:**
+- ADR-0026 (dopunjuje ADR-0025): `warm_wellness` za masažu, `clinical_calm` prepisan za fizio,
+  Newsreader + Public Sans, izbor brandom; bez darka, bez galerije, shell ostaje bazni.
+- `core_ui`: nove neutrale i pisma, skala ista u svim temama — `core_ui` testovi zeleni na CI-ju
+  (kontrast, a11y, pismo po temi, pragovi brand uloga za 7 brandova × 3 svijetle teme).
+- Seed: pack `health` i dva salona. `tool/test_supabase.sh` od nule lokalno: pgTAP 716 PASS, svi
+  REST i Deno testovi; CI `Supabase tests` zelen. Anon: masaža 60 min → slotovi 09:00–16:00 / 30 min.
+- `serviceAccusative` u rječniku; `core_domain` 88 PASS lokalno.
+- Tenanti `masazamostar` i `fiziozenica` u sve tri CI matrice; `gen_flavors --check` ažuran.
+- Grep: nema grananja po vertikali ni flavoru u ekranu.
+
+**Ostalo za sljedećeg** (traži Flutter mašinu):
+- „Bilo ko od nas" nestaje u koraku 2, viđeno na ekranu: `tool/run_tenant.sh mostar demo -d chrome`.
+- Snimci početne i zakazivanja, sva četiri tenanta na 402; barber i beauty isti kao prije
+  (`git worktree` sa `main`-a prije #120 za „prije").
+- APK i iOS build novih flavora idu na push u `main`.
