@@ -81,7 +81,7 @@ void main() {
       final theme = _temaEkrana(tester);
       expect(
         theme.colorScheme.primary.toARGB32(),
-        tenant.primaryColor,
+        _primarnaIzYaml(tenant),
         reason:
             '${tenant.flavor}: prvi frame nema boju iz tenant.yaml — '
             'tema ceka mrezu, sto je bijeli flash na startu.',
@@ -140,7 +140,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     final theme = _temaEkrana(tester);
-    expect(theme.colorScheme.primary.toARGB32(), tenant.primaryColor);
+    expect(theme.colorScheme.primary.toARGB32(), _primarnaIzYaml(tenant));
   });
 
   testWidgets('build bez tenanta u registru dobije podrazumijevanu temu', (
@@ -227,6 +227,21 @@ Color? _pozadinaIza(Element element) {
 ThemeData _temaEkrana(WidgetTester tester) {
   final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
   return app.theme!;
+}
+
+/// Primarna koju tema treba dati za boju iz `tenant.yaml`.
+///
+/// Tema koja izbor nosi brandom (`elegant_beauty`, ADR-0025) boju **izvodi** — sirova
+/// `#B76E79` pada AA sa bijelim tekstom. Ostale teme je nose netaknutu.
+int _primarnaIzYaml(TenantConfig tenant) {
+  final tema = AppTheme.fromName(tenant.themeName);
+  if (!tema.brandSelection) return tenant.primaryColor;
+  return BrandRoles.derive(
+    brand: Color(tenant.primaryColor),
+    surface: tema.neutrals.surface,
+    text: tema.neutrals.textPrimary,
+    secondary: Color(tenant.secondaryColor),
+  ).primary.toARGB32();
 }
 
 /// `salonProvider` koji nikad ne odgovori — stanje u kojem app provede prvi frame na

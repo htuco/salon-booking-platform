@@ -1,12 +1,14 @@
 /// Imenovane teme iz `tenant.yaml` `branding.theme`.
 ///
 /// Tema ne nosi brand boje — one dolaze iz backenda (`salons.primary_color`) i mijenjaju
-/// se bez builda. Ovdje su samo **svjetlina i neutralna paleta**: pozadina, površina,
-/// obrub. To su odluke koje se ne mijenjaju po salonu unutar iste vertikale, i zato
+/// se bez builda. Ovdje su **svjetlina, neutralna paleta, par pisama i način izbora**
+/// (ADR-0025). To su odluke koje se ne mijenjaju po salonu unutar iste vertikale, i zato
 /// smiju biti u kodu.
 library;
 
 import 'package:flutter/material.dart';
+
+import '../tokens/typography.dart';
 
 /// Imenovana tema salona. Vrijednost dolazi kao string iz `tenant.yaml` i iz
 /// `salons.theme`, pa `fromName` nikad ne baca — baza smije dodati temu koju app iz
@@ -19,7 +21,9 @@ enum AppTheme {
   /// pa njihove palete ostaju izvedene.
   modernBarber('modern_barber', Brightness.dark),
 
-  /// Svijetla, za `beauty`. Topla bijela pozadina, roze brand boja.
+  /// Svijetla, za `beauty`. Topla bijela pozadina, Jost, izbor u brand boji.
+  ///
+  /// **Neutrale su prepisane iz `prototype/beauty/README.md` §Design Tokens.**
   elegantBeauty('elegant_beauty', Brightness.light),
 
   /// Svijetla, hladna neutralna paleta za `dental`/`health`.
@@ -44,6 +48,24 @@ enum AppTheme {
     orElse: () => AppTheme.modernBarber,
   );
 
+  /// Par pisama teme (ADR-0025). Skala je ista za sve — mijenja se samo pismo.
+  AppFonts get fonts => switch (this) {
+    AppTheme.modernBarber => AppFonts.classic,
+    AppTheme.elegantBeauty => AppFonts.jost,
+    AppTheme.clinicalCalm => AppFonts.classic,
+  };
+
+  /// Da li izbor (slot, dan, red, progres, tab traka) nosi brand boju.
+  ///
+  /// `false` je barberov oblik iz `prototype/ui/SPEC.md`: izbor je invertovan u boji teksta.
+  /// `true` znači i da se `primary` **izvodi** iz brand boje (`BrandRoles.derive`) umjesto
+  /// da se koristi sirova — v. ADR-0025.
+  bool get brandSelection => switch (this) {
+    AppTheme.modernBarber => false,
+    AppTheme.elegantBeauty => true,
+    AppTheme.clinicalCalm => false,
+  };
+
   /// Neutralna paleta ove teme — sve osim brand boja.
   AppNeutrals get neutrals => switch (this) {
     // Svih devet vrijednosti dolazi iz `SPEC.md` §Design Tokens.
@@ -63,20 +85,22 @@ enum AppTheme {
       error: Color(0xFFFF8A80),
       onError: Color(0xFF2C0000),
     ),
+    // Topla bijela (lan), ne roza — da ne zaprlja zlatni i šljiva brand drugog salona.
     AppTheme.elegantBeauty => const AppNeutrals(
-      surface: Color(0xFFFFFBFB),
-      surfaceContainer: Color(0xFFF6EDED),
-      photoGround: Color(0xFFF0E4E4),
-      navSurface: Color(0xFFF9F1F1),
-      outline: Color(0xFFE0D3D3),
-      hairline: Color(0xFFEBDEDE),
-      strongOutline: Color(0xFFBFA9A9),
-      textPrimary: Color(0xFF1F1A1A),
-      textMuted: Color(0xFF5F5555),
-      textDisabled: Color(0xFF8A7C7C),
-      disabledFill: Color(0xFFEDE2E2),
-      scrim: Color(0xB81F1A1A),
-      error: Color(0xFFB3261E),
+      surface: Color(0xFFFCF9F6),
+      surfaceContainer: Color(0xFFF5EFEA),
+      photoGround: Color(0xFFECE4DC),
+      navSurface: Color(0xFFF8F3EE),
+      outline: Color(0xFFDDD2C9),
+      hairline: Color(0xFFEAE2DA),
+      strongOutline: Color(0xFF9A8D83),
+      textPrimary: Color(0xFF1F1A17),
+      textMuted: Color(0xFF5E554F),
+      textDisabled: Color(0xFF8F847B),
+      disabledFill: Color(0xFFECE6E0),
+      // Handoff: `rgba(31,26,23,.52)`. Blur ispod ostaje (ADR-0025), iako ga handoff skida.
+      scrim: Color(0x851F1A17),
+      error: Color(0xFFA3352D),
       onError: Color(0xFFFFFFFF),
     ),
     AppTheme.clinicalCalm => const AppNeutrals(

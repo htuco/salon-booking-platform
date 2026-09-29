@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../theme/selection_colors.dart';
 import '../tokens/spacing.dart';
 import 'photo_frame.dart';
 
@@ -50,20 +51,16 @@ class SelectableRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final izbor = context.selectionColors;
 
     return Semantics(
       button: true,
       selected: selected,
       child: Material(
-        // Izabrani red je **blago posvijetljena** ista podloga (`SPEC.md`:
-        // `rgba(242,242,243,.10)`), izvedena iz teme umjesto fiksnog bijelog preliva —
-        // inače bi na svijetloj paleti posvijetlio u nevidljivo.
-        color: selected
-            ? Color.alphaBlend(
-                scheme.onSurface.withValues(alpha: 0.10),
-                scheme.surface,
-              )
-            : Colors.transparent,
+        // Barber: izabrani red je **blago posvijetljena** ista podloga (`SPEC.md`:
+        // `rgba(242,242,243,.10)`), izvedena iz teme umjesto fiksnog bijelog preliva.
+        // Beauty: `brandContainer`. Šta je od toga, zna tema (ADR-0025).
+        color: selected ? izbor.selectedContainer : Colors.transparent,
         child: InkWell(
           onTap: onTap,
           child: AnimatedContainer(
@@ -71,7 +68,7 @@ class SelectableRow extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.rowPadding),
             decoration: BoxDecoration(
               border: Border.all(
-                color: selected ? scheme.onSurface : scheme.outline,
+                color: selected ? izbor.selected : scheme.outline,
                 width: selected ? 2 : 1,
               ),
             ),
@@ -119,13 +116,13 @@ class SelectableRow extends StatelessWidget {
 class _Kvacica extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final izbor = context.selectionColors;
     return Container(
       width: 34,
       height: 34,
       alignment: Alignment.center,
-      color: scheme.onSurface,
-      child: Icon(LucideIcons.check, size: 20, color: scheme.surface),
+      color: izbor.selected,
+      child: Icon(LucideIcons.check, size: 20, color: izbor.onSelected),
     );
   }
 }

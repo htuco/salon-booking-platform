@@ -13,6 +13,7 @@ import '../tokens/typography.dart';
 import 'app_theme.dart';
 import 'contrast.dart';
 import 'page_transition.dart';
+import 'selection_colors.dart';
 
 /// Gradi temu iz dvije brand boje.
 ///
@@ -34,9 +35,22 @@ ThemeData buildAppTheme({
   final neutrals = appTheme.neutrals;
   final jeTamna = svjetlina == Brightness.dark;
 
+  // Tema koja izbor nosi brandom (ADR-0025) izvodi uloge iz sirove boje salona: bijelo na
+  // `#B76E79` je ~3.8:1, pa dugme dobija potamnjenu varijantu, a ne crni tekst. Od ovdje
+  // nadalje [brand] je ta izvedena boja; ostale teme dobijaju sirovu.
+  final brandRoles = appTheme.brandSelection
+      ? BrandRoles.derive(
+          brand: primary,
+          surface: neutrals.surface,
+          text: neutrals.textPrimary,
+          secondary: secondary,
+        )
+      : null;
+  final brand = brandRoles?.primary ?? primary;
+
   // `onPrimary` se racuna, ne pogadja. Ovo je cijeli razlog postojanja ovog fajla:
   // vlasnik moze izabrati zutu, a bijeli tekst na zutoj je neciljiv (`docs/02 §14`).
-  final onPrimary = onColorFor(primary);
+  final onPrimary = brandRoles?.onPrimary ?? onColorFor(brand);
   final onSecondary = onColorFor(secondary);
 
   // Brand boja kao **tekst** na pozadini je drugi problem od brand boje kao pozadine:
@@ -48,7 +62,7 @@ ThemeData buildAppTheme({
   // koja je gledala samo `surface` davala je roze cijenu sa 4.12:1 na beauty kartici —
   // uhvatio `components_test.dart`, ne oko.
   final primaryNaPozadini = _citljivoNaObje(
-    primary,
+    brandRoles?.brandInk ?? brand,
     neutrals.surface,
     neutrals.surfaceContainer,
   );
@@ -60,11 +74,11 @@ ThemeData buildAppTheme({
 
   final colorScheme = ColorScheme(
     brightness: svjetlina,
-    primary: primary,
+    primary: brand,
     onPrimary: onPrimary,
     // Kontejnerske varijante nose brand boju kao *pozadinu bloka* (istaknuta kartica),
     // pa moraju ostati dovoljno odvojene od `surface` da se blok uopste vidi.
-    primaryContainer: primary,
+    primaryContainer: brand,
     onPrimaryContainer: onPrimary,
     secondary: secondary,
     onSecondary: onSecondary,
@@ -96,6 +110,7 @@ ThemeData buildAppTheme({
   final textTheme = buildTextTheme(
     primary: neutrals.textPrimary,
     muted: neutrals.textMuted,
+    fonts: appTheme.fonts,
   );
 
   return ThemeData(
@@ -116,6 +131,8 @@ ThemeData buildAppTheme({
         primaryOnSurface: primaryNaPozadini,
         secondaryOnSurface: secondaryNaPozadini,
       ),
+      brandRoles?.toSelection(navSurface: neutrals.navSurface) ??
+          AppSelectionColors.inverted(colorScheme),
     ],
 
     appBarTheme: AppBarTheme(
@@ -138,7 +155,7 @@ ThemeData buildAppTheme({
 
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: primary,
+        backgroundColor: brand,
         foregroundColor: onPrimary,
         // `SPEC.md` daje tacne vrijednosti za onemoguceno stanje; Material bi inace
         // uzeo `onSurface` sa 12%/38% opacity, sto na ovoj pozadini ispadne mutno.

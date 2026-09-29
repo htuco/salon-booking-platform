@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/selection_colors.dart';
 import '../tokens/spacing.dart';
 
 /// Koliko je koraka prošlo u višekoračnom flowu — `prototype/ui/SPEC.md` 5c–5f,
@@ -33,6 +34,7 @@ class StepProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final izbor = context.selectionColors;
     final trenutni = currentStep.clamp(1, totalSteps);
 
     return Semantics(
@@ -52,7 +54,8 @@ class StepProgressBar extends StatelessWidget {
                   color: korak <= trenutni
                       // Pređeni korak je u boji teksta, ne brenda: traka stoji uz CTA u
                       // brand boji, pa bi dvije brand površine na istom ekranu takmičile.
-                      ? scheme.onSurface
+                      // Beauty handoff to traži drugačije — tema odlučuje (ADR-0025).
+                      ? izbor.selected
                       // Prošli i budući koraci se razlikuju bojom brenda i neutralnom
                       // površinom, ne jačinom iste boje: `withOpacity` na zlatnoj i na
                       // roze daje dva različita kontrasta prema pozadini.

@@ -3,7 +3,8 @@
 ## Status
 
 prihvaćen za `apps/client`; za `apps/admin` zamijenjen
-[ADR-0020](0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md).
+[ADR-0020](0020-admin-je-1na1-sa-adminv2-barlow-i-svijetla-tema.md). Za klijenta dopunjen
+[ADR-0025](0025-pismo-i-uloge-izbora-vezu-se-za-temu.md): par pisama je po temi.
 
 ## Kontekst
 

@@ -257,12 +257,16 @@ void main() {
       tester,
     ) async {
       // Ovo je greska koju prepisan heks iz `SPEC.md` napravi: `#FFFFFF` za aktivnu
-      // celiju je tacno za barber, a nevidljivo na beauty paleti.
+      // celiju je tacno za barber, a nevidljivo na beauty paleti. Beauty aktivnu celiju
+      // crta brandom (`accentInk`, ADR-0025), pa se mjeri ta boja.
       await tester.pumpWidget(_traka(tema: _beauty(), aktivna: 2));
 
       final tema = _beauty();
       final aktivna = tester.widget<Text>(find.text('Pocetna'));
-      expect(aktivna.style?.color, tema.colorScheme.onSurface);
+      expect(
+        aktivna.style?.color,
+        tema.extension<AppSelectionColors>()!.accentInk,
+      );
       expect(
         contrastRatio(aktivna.style!.color!, tema.colorScheme.surfaceDim),
         greaterThanOrEqualTo(4.5),

@@ -165,7 +165,9 @@ class _Grupa extends StatelessWidget {
             // izgledaju kao nastavak prethodne. Salonov tekst se ne izmišlja — „Ostalo"
             // je naše, i zato je u `.arb`-u.
             group.isUncategorized ? l10n.servicesUncategorized : group.category,
-            style: kicker(color: theme.colorScheme.onSurfaceVariant),
+            style: theme.textTheme.kicker(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../theme/selection_colors.dart';
 import '../tokens/spacing.dart';
 
 /// Jedan dan u [CalendarMonth].
@@ -165,14 +166,17 @@ class _Dan extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final izbor = context.selectionColors;
     final nedostupan = onTap == null;
 
     // Izabrani dan je **invertovan** (`SPEC.md`: "selected inverted"): ispuna u boji
-    // teksta, tekst u boji podloge. Brand boja se ovdje namjerno ne koristi — dan je
-    // izbor, ne akcija, a mreža od trideset brand-obojenih polja bi progutala CTA.
-    final pozadina = selected ? scheme.onSurface : Colors.transparent;
+    // teksta, tekst u boji podloge. U barberu brand boja se ovdje namjerno ne koristi —
+    // dan je izbor, ne akcija, a mreža od trideset brand-obojenih polja bi progutala CTA.
+    // Beauty je drugi dizajn i izbor nosi brandom; to odlučuje tema (ADR-0025), ne ovaj
+    // widget.
+    final pozadina = selected ? izbor.selected : Colors.transparent;
     final tekst = selected
-        ? scheme.surface
+        ? izbor.onSelected
         : nedostupan
         ? scheme.onSurfaceVariant
         : scheme.onSurface;
