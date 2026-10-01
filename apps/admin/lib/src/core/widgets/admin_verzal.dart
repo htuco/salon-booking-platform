@@ -8,11 +8,14 @@ import 'package:flutter/material.dart';
 /// Stil dolazi od dugmeta (`AdminText.actionLabel` kroz `styleFrom(textStyle: …)`); ovaj
 /// widget mijenja samo slova.
 class AdminVerzal extends StatelessWidget {
-  const AdminVerzal(this.tekst, {super.key});
+  const AdminVerzal(this.tekst, {this.style, super.key});
 
   final String tekst;
 
+  /// Stil teksta; bez njega važi stil roditelja (dugme, `DefaultTextStyle`).
+  final TextStyle? style;
+
   @override
   Widget build(BuildContext context) =>
-      Text(tekst.toUpperCase(), semanticsLabel: tekst);
+      Text(tekst.toUpperCase(), semanticsLabel: tekst, style: style);
 }
