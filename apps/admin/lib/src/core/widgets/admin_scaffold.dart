@@ -524,8 +524,15 @@ class _SidebarPodnozje extends ConsumerWidget {
           backgroundColor: WidgetStatePropertyAll(boje.surface),
           minimumSize: const WidgetStatePropertyAll(Size(272, 0)),
           maximumSize: const WidgetStatePropertyAll(Size(272, double.infinity)),
-          elevation: const WidgetStatePropertyAll(12),
-          shadowColor: WidgetStatePropertyAll(boje.ink.withValues(alpha: 0.28)),
+          // Meni stoji iznad bijelih kartica: bez ivice i uz Material sjenu se stapao sa
+          // njima. Hairline ivica ga odvaja od bijelog, jača sjena (`4a`: 0 12 32, 28 %)
+          // ga diže iznad stranice.
+          elevation: const WidgetStatePropertyAll(16),
+          shadowColor: WidgetStatePropertyAll(boje.ink.withValues(alpha: 0.6)),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: boje.border, width: AdminSize.hairline),
+          ),
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AdminRadius.small),
