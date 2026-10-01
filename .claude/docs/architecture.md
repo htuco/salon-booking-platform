@@ -98,7 +98,8 @@ funkcija koja pravi `ThemeData` **u klijentskoj app-i**. Boje su joj ulaz, jer i
 mijenja iz admin aplikacije i promjena mora stići bez novog builda.
 
 Salon daje samo boje; **tema** (`AppTheme` u `core_ui/src/theme/app_theme.dart`) zna svjetlinu,
-neutralnu paletu, par pisama i da li izbor nosi brand (ADR-0025). Kad nosi — `elegant_beauty` —
+neutralnu paletu, par pisama i da li izbor nosi brand (ADR-0025, ADR-0026). Kad nosi — `elegant_beauty`,
+`warm_wellness` i `clinical_calm` —
 `primary` se izvodi iz brand boje u OKLCH-u (`BrandRoles.derive`, `selection_colors.dart`), a
 komponente izbor crtaju iz `AppSelectionColors`. Barber tu extension puni bojom teksta, pa se ne
 mijenja; admin je nema i komponente padaju na isto.

@@ -48,20 +48,57 @@ void main() {
       expect(tekst.kicker().fontFamily, kJostFamily);
     });
 
-    test('skala je ista u obje teme — mijenja se pismo, ne oblik', () {
+    // ADR-0026: obje `health` teme, naslov u Newsreaderu na 400 sa `opsz` po veličini.
+    for (final tema in [AppTheme.warmWellness, AppTheme.clinicalCalm]) {
+      test('${tema.key} je Newsreader + Public Sans, opsz prati veličinu', () {
+        final tekst = buildAppTheme(
+          primary: _kadulja,
+          secondary: _kaduljaSvijetla,
+          themeName: tema.key,
+        ).textTheme;
+        for (final stil in [tekst.displayLarge, tekst.headlineSmall]) {
+          expect(stil!.fontFamily, kNewsreaderFamily);
+        }
+        for (final stil in [
+          tekst.titleMedium,
+          tekst.bodyLarge,
+          tekst.labelLarge,
+          tekst.labelSmall,
+        ]) {
+          expect(stil!.fontFamily, kPublicSansFamily);
+        }
+        expect(tekst.displayLarge!.fontVariations, [
+          const FontVariation('wght', 400),
+          const FontVariation('opsz', 52),
+        ]);
+        expect(tekst.headlineSmall!.fontVariations, [
+          const FontVariation('wght', 400),
+          const FontVariation('opsz', 26),
+        ]);
+        expect(tekst.kicker().fontFamily, kPublicSansFamily);
+      });
+    }
+
+    test('skala je ista u svim temama — mijenja se pismo, ne oblik', () {
       final b = barber().textTheme;
-      final l = beauty().textTheme;
-      for (final (x, y) in [
-        (b.displayLarge, l.displayLarge),
-        (b.displaySmall, l.displaySmall),
-        (b.headlineSmall, l.headlineSmall),
-        (b.titleMedium, l.titleMedium),
-        (b.bodyLarge, l.bodyLarge),
-        (b.labelLarge, l.labelLarge),
-        (b.labelSmall, l.labelSmall),
-      ]) {
-        expect(y!.fontSize, x!.fontSize);
-        expect(y.height, x.height);
+      for (final tema in AppTheme.values) {
+        final l = buildAppTheme(
+          primary: _kadulja,
+          secondary: _kaduljaSvijetla,
+          themeName: tema.key,
+        ).textTheme;
+        for (final (x, y) in [
+          (b.displayLarge, l.displayLarge),
+          (b.displaySmall, l.displaySmall),
+          (b.headlineSmall, l.headlineSmall),
+          (b.titleMedium, l.titleMedium),
+          (b.bodyLarge, l.bodyLarge),
+          (b.labelLarge, l.labelLarge),
+          (b.labelSmall, l.labelSmall),
+        ]) {
+          expect(y!.fontSize, x!.fontSize, reason: tema.key);
+          expect(y.height, x.height, reason: tema.key);
+        }
       }
     });
   });
@@ -109,16 +146,28 @@ void main() {
       'ruža sa tamnom sekundarnom': (Color(0xFFB76E79), Color(0xFF171717)),
     };
 
-    for (final MapEntry(key: ime, value: (brand, secondary))
-        in brandovi.entries) {
-      test('beauty/$ime: svaki par drži svoj prag', () {
+    // Beauty brandovi na beautyju, plus demo boje `health` tenanata i iste beauty boje na
+    // obje `health` teme — neutrale su druge, pa prag mora držati i tamo (ADR-0026).
+    final parovi = <(AppTheme, String, Color, Color)>[
+      for (final MapEntry(key: ime, value: (brand, secondary))
+          in brandovi.entries) ...[
+        (AppTheme.elegantBeauty, ime, brand, secondary),
+        (AppTheme.warmWellness, ime, brand, secondary),
+        (AppTheme.clinicalCalm, ime, brand, secondary),
+      ],
+      (AppTheme.warmWellness, 'kadulja', _kadulja, _kaduljaSvijetla),
+      (AppTheme.clinicalCalm, 'petrolej', _petrolej, _petrolejSvijetla),
+    ];
+
+    for (final (appTheme, ime, brand, secondary) in parovi) {
+      test('${appTheme.key}/$ime: svaki par drži svoj prag', () {
         final tema = buildAppTheme(
           primary: brand,
           secondary: secondary,
-          themeName: 'elegant_beauty',
+          themeName: appTheme.key,
         );
         final izbor = tema.extension<AppSelectionColors>()!;
-        final neutrals = AppTheme.elegantBeauty.neutrals;
+        final neutrals = appTheme.neutrals;
 
         expect(
           contrastRatio(izbor.onSelected, izbor.selected),
@@ -149,6 +198,23 @@ void main() {
           contrastRatio(link, neutrals.surfaceContainer),
           greaterThanOrEqualTo(4.5),
         );
+      });
+    }
+
+    // Handoff je kaduljin i petrolejev fill već izabrao iznad AA, pa ih algoritam ne dira —
+    // dugme nosi tačnu boju salona.
+    for (final (ime, themeName, brand) in [
+      ('kadulja', 'warm_wellness', _kadulja),
+      ('petrolej', 'clinical_calm', _petrolej),
+    ]) {
+      test('$ime: primary je tačna boja iz handoffa', () {
+        final scheme = buildAppTheme(
+          primary: brand,
+          secondary: const Color(0xFFFFFFFF),
+          themeName: themeName,
+        ).colorScheme;
+        expect(scheme.primary, _blizu(brand));
+        expect(scheme.onPrimary, const Color(0xFFFFFFFF));
       });
     }
 
@@ -197,6 +263,13 @@ void main() {
     });
   });
 }
+
+/// Demo boje `health` tenanata: `primaryFill` iz `prototype/masaza/SPEC.md` i
+/// `fizio/SPEC.md`, sa svijetlom sekundarnom kao podlogom izabranog reda.
+const _kadulja = Color(0xFF56664F);
+const _kaduljaSvijetla = Color(0xFFEEF0E9);
+const _petrolej = Color(0xFF2F6F6D);
+const _petrolejSvijetla = Color(0xFFE6F0EF);
 
 /// Boja u granici od jedne 8-bitne vrijednosti po kanalu — OKLCH račun je u
 /// pokretnom zarezu, handoff je zaokružio na heks.

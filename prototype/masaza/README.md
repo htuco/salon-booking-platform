@@ -6,8 +6,10 @@ baznog handoffa `prototype/ui/`: isti shell, a druga boja, fotografija, rječnik
 za [task 53](../../tasks/sprint-5/53-vertikala-health.md), dio koji se odnosi na masažu.
 Fizioterapija je u `fizio/` kao drugi tenant iste vertikale (v. niže).
 
-**Status: kandidat.** Handoff nije vizuelni izvor istine, dok ga ADR iz taska 53 ne usvoji.
-Do tada za klijentsku aplikaciju važi `prototype/ui/`, a ovdje se samo gleda.
+**Status: usvojen djelimično** ([ADR-0026](../../docs/adr/0026-health-dobija-dvije-svijetle-teme-newsreader-public-sans.md), 2026-09-30).
+Izvor istine je za **light paletu, pisma i rječnik**: masaža je tema `warm_wellness`, fizio je
+`clinical_calm`. Oblik ekrana i dalje dolazi iz `prototype/ui/`; dark varijanta, galerija za
+`health` i razlike u obliku (tabela ispod) nisu usvojene i čekaju zasebne taskove.
 
 ## Šta je gdje
 

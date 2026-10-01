@@ -27,8 +27,8 @@ class TenantConfig {
   final int primaryColor;
   final int secondaryColor;
 
-  /// Imenovana tema (`modern_barber` | `elegant_beauty`); bira svjetlinu
-  /// i neutralnu paletu dok backend ne odgovori.
+  /// Imenovana tema (`AppTheme` u `core_ui`); bira svjetlinu, neutralnu
+  /// paletu i pismo dok backend ne odgovori.
   final String themeName;
 
   /// Provideri iz `auth.providers` u `tenant.yaml`, kao imena koja
@@ -58,6 +58,28 @@ const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
     primaryColor: 0xFFB76E79,
     secondaryColor: 0xFFFFF5F5,
     themeName: 'elegant_beauty',
+    authProviders: <String>['apple', 'google', 'email'],
+  ),
+  '550e8400-e29b-41d4-a716-446655440003': TenantConfig(
+    flavor: 'fiziozenica',
+    salonId: '550e8400-e29b-41d4-a716-446655440003',
+    slug: 'fiziozenica',
+    vertical: 'health',
+    displayName: 'Fizio Centar Zenica',
+    primaryColor: 0xFF2F6F6D,
+    secondaryColor: 0xFFE6F0EF,
+    themeName: 'clinical_calm',
+    authProviders: <String>['apple', 'google', 'email'],
+  ),
+  '550e8400-e29b-41d4-a716-446655440002': TenantConfig(
+    flavor: 'masazamostar',
+    salonId: '550e8400-e29b-41d4-a716-446655440002',
+    slug: 'masazamostar',
+    vertical: 'health',
+    displayName: 'Studio Masaže Mostar',
+    primaryColor: 0xFF56664F,
+    secondaryColor: 0xFFEEF0E9,
+    themeName: 'warm_wellness',
     authProviders: <String>['apple', 'google', 'email'],
   ),
 };

@@ -1,0 +1,49 @@
+# Demo tenant — salonId mora odgovarati seed.sql redu u supabase/seed.sql.
+# Polja: docs/04-flutter-tenant-factory.md §3
+tenant:
+  flavor: masazamostar
+  salonId: 550e8400-e29b-41d4-a716-446655440002
+  slug: masazamostar
+  vertical: health
+
+app:
+  displayName: "Studio Masaže Mostar"
+  shortName: "Masaža Mostar"
+  applicationId: ba.nasadomena.masazamostar
+  bundleId: ba.nasadomena.masazamostar
+  versionName: "1.0.0"
+  androidVersionCode: 1
+  iosBuildNumber: 1
+
+branding:
+  # Fallback boje dok backend ne odgovori — sprječava bijeli flash.
+  # Iste vrijednosti kao salons.primary_color/secondary_color u seed.sql.
+  primaryColor: "#56664F"
+  secondaryColor: "#EEF0E9"
+  splashBackground: "#56664F"
+  theme: warm_wellness
+
+auth:
+  # Koji se provideri nude na login ekranu. Filtriranje po platformi radi AuthConfig —
+  # `apple: true` na Androidu se ignoriše, ne pada. V. docs/06 §7.6.
+  providers:
+    apple: true
+    google: true
+    email: true
+
+  # Google `REVERSED_CLIENT_ID` za iOS — client ID sa obrnutim segmentima, ide u
+  # `CFBundleURLTypes`. Prazno dok konzola ne da ID; v. tasks/sprint-2/12-konzole-checklist.md.
+  googleReversedClientId: ''
+
+store:
+  shortDescription: "Rezervišite tretman u Studiju Masaže Mostar u par tapova."
+  categoryAndroid: HEALTH_AND_FITNESS
+  categoryIos: HEALTH_AND_FITNESS
+  contentRating: everyone
+  supportEmail: podrska@nasadomena.ba
+  privacyPolicyUrl: https://nasadomena.ba/privatnost/masazamostar
+
+targets:
+  android: true
+  ios: true
+  web: true

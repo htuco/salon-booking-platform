@@ -123,6 +123,14 @@ flutter:
     - family: Jost
       fonts:
         - asset: assets/fonts/Jost[wght].ttf
+    # Pisma tema `warm_wellness` i `clinical_calm` (ADR-0026). Isti razlog kao za Jost: idu
+    # u svaki flavor.
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/Newsreader[opsz,wght].ttf
+    - family: Public Sans
+      fonts:
+        - asset: assets/fonts/PublicSans[wght].ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -43,8 +43,8 @@ platformi, izvan `tenant.yaml` i gita. `tool/firebase_defines.dart` je pretvara 
 - **`branding.primaryColor` i `branding.secondaryColor` moraju biti `#RRGGBB`**, i moraju biti iste
   kao `salons.primary_color`/`secondary_color` u bazi. To su fallback boje dok backend ne odgovori —
   kad se raziđu, baza je u pravu, ali korisnik vidi treptaj boje pri startu.
-- **`branding.theme`** je `modern_barber` (tamna), `elegant_beauty` (svijetla) ili `clinical_calm`;
-  bira svjetlinu i neutralnu paletu. Nepoznato ime pada na `modern_barber` umjesto da sruši app.
+- **`branding.theme`** je `modern_barber` (tamna), `elegant_beauty`, `warm_wellness` (masaža) ili
+  `clinical_calm` (fizio) — tri svijetle; bira svjetlinu, neutralnu paletu i pismo (ADR-0026). Nepoznato ime pada na `modern_barber` umjesto da sruši app.
 - **`auth.providers` prima samo `apple`, `google`, `email`**, i svaka vrijednost mora
   biti `true` ili `false`. `facebook` je bio četvrti i **namjerno ga više nema**
   ([ADR-0011](../docs/adr/0011-facebook-login-se-ne-implementira.md)) — tenant koji ga zadrži

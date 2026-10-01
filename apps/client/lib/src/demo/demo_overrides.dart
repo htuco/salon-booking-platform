@@ -31,7 +31,7 @@ List<Override> demoOverrides(AppEnv env, {bool prijavljen = true}) {
   final demo = _demoPodaci[env.salonId];
   if (demo == null) {
     throw StateError(
-      'Nema demo podataka za SALON_ID=${env.salonId}. Demo pokriva dva salona iz '
+      'Nema demo podataka za SALON_ID=${env.salonId}. Demo pokriva četiri salona iz '
       'supabase/seed.sql — v. _demoPodaci u lib/src/demo/demo_overrides.dart.',
     );
   }
@@ -52,7 +52,14 @@ List<Override> demoOverrides(AppEnv env, {bool prijavljen = true}) {
     workingHoursProvider.overrideWith((ref) async => demo.hours),
     verticalProvider.overrideWith((ref) async => demo.vertical),
     salonSettingsProvider.overrideWith(
-      (ref) async => SalonSettings(id: 'demo-settings', salonId: salonId),
+      (ref) async => SalonSettings(
+        id: 'demo-settings',
+        salonId: salonId,
+        // `health` traži izbor terapeuta; bez ovoga demo pokaže „Bilo ko od nas", jer
+        // postavke salona imaju prednost pred packom (`booking_flow_provider.dart`).
+        // Barber i beauty nemaju `default_settings` u demou, pa padaju na `false` kao i prije.
+        requireStaffChoice: demo.vertical.rules.requireStaffChoice,
+      ),
     ),
 
     // Booking flow (task 11). Bez ova tri override-a se `/book/slot` u demo buildu
@@ -370,9 +377,11 @@ class _Demo {
 
 const _barberId = '550e8400-e29b-41d4-a716-446655440000';
 const _beautyId = '550e8400-e29b-41d4-a716-446655440001';
+const _masazaId = '550e8400-e29b-41d4-a716-446655440002';
+const _fizioId = '550e8400-e29b-41d4-a716-446655440003';
 
 /// `09:00–17:00` radnim danima, `09:00–14:00` subotom, nedjeljom zatvoreno — tačno kako
-/// `seed.sql` puni `working_hours` za oba demo salona.
+/// `seed.sql` puni `working_hours` za sve demo salone.
 List<WorkingHour> _radnoVrijeme(String salonId) => [
   for (var dan = 1; dan <= 7; dan++)
     WorkingHour(
@@ -506,6 +515,123 @@ final _demoPodaci = <String, _Demo>{
     hours: _radnoVrijeme(_beautyId),
     vertical: _beautyVertical,
   ),
+  // Bez fotografija radnika, kao u seedu: okvir sa inicijalom je predviđeno stanje.
+  _masazaId: _Demo(
+    salon: const Salon(
+      id: _masazaId,
+      name: 'Studio Masaže Mostar',
+      slug: 'masazamostar',
+      description: 'Mirna soba, tople ruke i vrijeme koje je samo vaše.',
+      city: 'Mostar',
+      address: 'Kralja Tvrtka 8',
+      phone: '036 555 010',
+      email: 'kontakt@masazamostar.test',
+      primaryColor: '#56664F',
+      secondaryColor: '#EEF0E9',
+      theme: 'warm_wellness',
+      verticalPackKey: 'health',
+    ),
+    services: const [
+      Service(
+        id: '10000000-0000-4000-8000-000000000009',
+        salonId: _masazaId,
+        name: 'Relax masaža',
+        category: 'Masaže',
+        price: 60,
+        durationMinutes: 60,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000010',
+        salonId: _masazaId,
+        name: 'Masaža dubokih tkiva',
+        category: 'Masaže',
+        price: 70,
+        durationMinutes: 60,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000011',
+        salonId: _masazaId,
+        name: 'Vruće kamenje',
+        category: 'Rituali',
+        price: 90,
+        durationMinutes: 90,
+      ),
+    ],
+    employees: const [
+      Employee(
+        id: '20000000-0000-4000-8000-000000000005',
+        salonId: _masazaId,
+        name: 'Selma',
+        role: 'Terapeutkinja',
+      ),
+      Employee(
+        id: '20000000-0000-4000-8000-000000000006',
+        salonId: _masazaId,
+        name: 'Haris',
+        role: 'Terapeut',
+      ),
+    ],
+    hours: _radnoVrijeme(_masazaId),
+    vertical: _masazaVertical,
+  ),
+  _fizioId: _Demo(
+    salon: const Salon(
+      id: _fizioId,
+      name: 'Fizio Centar Zenica',
+      slug: 'fiziozenica',
+      description: 'Pregled, terapija i vježbe — korak po korak do oporavka.',
+      city: 'Zenica',
+      address: 'Masarykova 21',
+      phone: '032 444 020',
+      email: 'kontakt@fiziozenica.test',
+      primaryColor: '#2F6F6D',
+      secondaryColor: '#E6F0EF',
+      theme: 'clinical_calm',
+      verticalPackKey: 'health',
+    ),
+    services: const [
+      Service(
+        id: '10000000-0000-4000-8000-000000000013',
+        salonId: _fizioId,
+        name: 'Prvi pregled i procjena',
+        category: 'Pregled i vježbe',
+        price: 50,
+        durationMinutes: 45,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000014',
+        salonId: _fizioId,
+        name: 'Manuelna terapija',
+        category: 'Fizikalna terapija',
+        price: 45,
+        durationMinutes: 45,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000016',
+        salonId: _fizioId,
+        name: 'Elektroterapija',
+        category: 'Fizikalna terapija',
+        price: 25,
+        durationMinutes: 30,
+      ),
+    ],
+    employees: const [
+      Employee(
+        id: '20000000-0000-4000-8000-000000000007',
+        salonId: _fizioId,
+        name: 'Adnan',
+        role: 'Terapeut',
+      ),
+      Employee(
+        id: '20000000-0000-4000-8000-000000000008',
+        salonId: _fizioId,
+        name: 'Maja',
+        role: 'Terapeutkinja',
+      ),
+    ],
+    hours: _radnoVrijeme(_fizioId),
+    vertical: _fizioVertical,
+  ),
 };
 
 /// Terminologija prepisana iz `vertical_packs` reda u `seed.sql`. Razlika koja se na
@@ -539,3 +665,56 @@ final _beautyVertical = Vertical.fromJson({
   'feature_flags': {'prices': true, 'team': true, 'socialLinks': true},
   'default_theme': 'elegant_beauty',
 });
+
+/// `health` pack iz `seed.sql`, sa `terminology_override` salona preko njega — isto kako ga
+/// `VerticalRepository` sklapa iz baze. Razlika koja se na snimku mora vidjeti je rječnik:
+/// masaža „Tretman" i „Rezerviši tretman", fizio „Terapija" i „Zakaži termin", i nijedan
+/// nema „Bilo ko od nas".
+const _healthPack = <String, dynamic>{
+  'key': 'health',
+  'display_name': 'Zdravlje',
+  'terminology': {
+    'businessSingular': 'Ordinacija',
+    'customerSingular': 'Pacijent',
+    'customerPlural': 'Pacijenti',
+    'serviceSingular': 'Terapija',
+    'servicePlural': 'Terapije',
+    'serviceAccusative': 'terapiju',
+    'staffSingular': 'Terapeut',
+    'staffPlural': 'Naš tim',
+    'bookCta': 'Zakaži termin',
+    'noteLabel': 'Razlog dolaska',
+  },
+  'default_settings': {
+    'slotStepMinutes': 30,
+    'bufferMinutes': 10,
+    'requireStaffChoice': true,
+  },
+  'feature_flags': {
+    'gallery': false,
+    'prices': true,
+    'anyStaff': false,
+    'team': true,
+    'socialLinks': true,
+  },
+  'default_theme': 'clinical_calm',
+};
+
+final _masazaVertical = Vertical.fromJson(
+  _healthPack,
+  terminologyOverride: const {
+    'businessSingular': 'Studio',
+    'customerSingular': 'Klijent',
+    'customerPlural': 'Klijenti',
+    'serviceSingular': 'Tretman',
+    'servicePlural': 'Tretmani',
+    'serviceAccusative': 'tretman',
+    'bookCta': 'Rezerviši tretman',
+    'noteLabel': 'Napomena za terapeuta',
+  },
+);
+
+final _fizioVertical = Vertical.fromJson(
+  _healthPack,
+  terminologyOverride: const {'businessSingular': 'Centar'},
+);

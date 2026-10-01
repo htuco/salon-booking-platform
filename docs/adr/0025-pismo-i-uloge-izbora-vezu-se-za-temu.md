@@ -5,6 +5,9 @@
 prihvaćen. Za klijenta dopunjuje [ADR-0019](0019-barlow-se-ne-uvodi-postojeca-pisma-ostaju.md):
 „jedan par pisama" postaje „jedan par pisama **po temi**".
 
+Za `clinical_calm` dopunjen sa [ADR-0026](0026-health-dobija-dvije-svijetle-teme-newsreader-public-sans.md):
+tema prelazi na Newsreader + Public Sans i izbor brandom.
+
 ## Kontekst
 
 Handoff teme `elegant_beauty` (`prototype/beauty/README.md`, 2026-09-27) traži tri stvari koje

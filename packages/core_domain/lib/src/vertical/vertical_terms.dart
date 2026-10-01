@@ -14,6 +14,7 @@ class VerticalTerms {
     required this.customerPlural,
     required this.serviceSingular,
     required this.servicePlural,
+    this.serviceAccusative = 'uslugu',
     required this.staffSingular,
     required this.staffPlural,
     required this.appointmentSingular,
@@ -54,6 +55,12 @@ class VerticalTerms {
   final String serviceSingular;
   final String servicePlural;
 
+  /// Usluga u akuzativu, malim slovom: "uslugu" · "tretman" · "terapiju". Naslov prvog
+  /// koraka je „Izaberite …"; bez ovog ključa bi masaža pisala „Izaberite uslugu"
+  /// (`prototype/masaza/`, ADR-0026). Nema default-a u packu barbera ni beautyja, pa oni
+  /// ostaju na „uslugu" — barber je 1:1 sa handoffom.
+  final String serviceAccusative;
+
   /// "Barber" · "Stilistica" · "Doktor"
   final String staffSingular;
   final String staffPlural;
@@ -87,6 +94,7 @@ class VerticalTerms {
       customerPlural: read('customerPlural', fallback.customerPlural),
       serviceSingular: read('serviceSingular', fallback.serviceSingular),
       servicePlural: read('servicePlural', fallback.servicePlural),
+      serviceAccusative: read('serviceAccusative', fallback.serviceAccusative),
       staffSingular: read('staffSingular', fallback.staffSingular),
       staffPlural: read('staffPlural', fallback.staffPlural),
       appointmentSingular: read(
@@ -117,6 +125,7 @@ class VerticalTerms {
     'customerPlural': customerPlural,
     'serviceSingular': serviceSingular,
     'servicePlural': servicePlural,
+    'serviceAccusative': serviceAccusative,
     'staffSingular': staffSingular,
     'staffPlural': staffPlural,
     'appointmentSingular': appointmentSingular,
@@ -136,6 +145,7 @@ class VerticalTerms {
           other.customerPlural == customerPlural &&
           other.serviceSingular == serviceSingular &&
           other.servicePlural == servicePlural &&
+          other.serviceAccusative == serviceAccusative &&
           other.staffSingular == staffSingular &&
           other.staffPlural == staffPlural &&
           other.appointmentSingular == appointmentSingular &&
@@ -152,6 +162,7 @@ class VerticalTerms {
     customerPlural,
     serviceSingular,
     servicePlural,
+    serviceAccusative,
     staffSingular,
     staffPlural,
     appointmentSingular,

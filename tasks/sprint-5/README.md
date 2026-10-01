@@ -16,7 +16,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover ✅ | feature | 52, 53 | 2 dana |
 | [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja ✅ | feature | — | 1–2 dana |
 | [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran 🟡 | refinement | — | 1–2 dana |
-| [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje | feature | — | 4–5 dana |
+| [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje 🟡 | feature | — | 4–5 dana |
 | [54](54-uklanjanje-nepotrebnog-iz-admina.md) | Uklanjanje nepotrebnog iz admina | popravka | 55 | 0,5–1 dan |
 | [55](55-prerada-dashboarda.md) | Prerada admin dashboarda | redizajn | — | 2–3 dana |
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | feature | — | 2 dana |
@@ -113,3 +113,11 @@ uloge izbora po temi, beauty dobija Jost i brand boju za izbor, blur ostaje svim
 handoffa, `BrandRoles.derive` daje handoffove vrijednosti za ružu. CI zelen (core_ui 119, client
 397, admin 470). **Ekran nije viđen** (mašina bez Fluttera); ostaju snimci prije/poslije, slike u
 seedu, hostovani admin nalog i uređaj — v. status blok taska.
+
+### 53 — Vertikala `health` (🟡, 2026-09-30)
+
+PR #121. ADR-0026: dvije svijetle `health` teme (`warm_wellness`, prepisan `clinical_calm`),
+Newsreader + Public Sans, izbor brandom; bez darka i galerije, shell bazni. Pack `health`, saloni
+`masazamostar` i `fiziozenica`, sve tri CI matrice. Lokalno pgTAP 716 + svi REST, `core_domain` 88;
+`core_ui` zelen na CI-ju. **Ostaje:** ekran i snimci sva četiri tenanta (Flutter mašina), APK/iOS
+build na `main`-u.
