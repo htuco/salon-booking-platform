@@ -1,36 +1,34 @@
-# Trenutni task: 61 — Moj profil u adminu
+# Trenutni task: 62 — Toast obavijesti u adminu
 
-Puni task: [tasks/sprint-5/61-moj-profil.md](sprint-5/61-moj-profil.md) · učitan 2026-10-01
+Puni task: [tasks/sprint-5/62-toast-obavijesti.md](sprint-5/62-toast-obavijesti.md) · učitan 2026-10-01
 
 ## Status
 
-U toku (grana `feat/admin-moj-profil`, 2026-10-01). Na istoj grani su i tenant `amkobarber` i
-dvije popravke za Flutter 3.47 (slike na webu, `tool/run_tenant.sh`): dogovoreno je jedna grana
-za sve.
+U toku (grana `feat/admin-toastovi`, 2026-10-01).
 
 ## Ciljevi
 
-- [x] Meni korisnika (`4a`), `/profile` (`4b`/`4d`), sheet slike (`4e`), red osobe u „Još" (`4c`)
-- [x] Migracija `moj_profil` + `025_moj_profil.test.sql` (54 asercije, tri sabotaže obaraju 7/6/4)
-- [x] Lokalno: pgTAP 770 + svi REST/Deno; admin 479, client 568, `core_ui` 143; viđeno uživo na
-      1440 i 402 protiv lokalnog Supabasea
-- [x] `supabase db push` na hostovani projekat (2026-10-01, prije merge-a), viđeno na Amku
+- [x] `AdminToast` i svi pozivi `SnackBar`-a u adminu prebačeni, po vrsti
+- [x] Admin `flutter test` zelen, `analyze` čist; viđeno na 1440 i 402 (demo build)
 - [ ] PR protiv `main`-a, CI zelen
-- [ ] Telefon sa kamerom (traži uređaj)
 
 ## Napomene
 
-- **Jedan salon po nalogu.** „Koristi svuda" i lista salona iz handoffa se ne crtaju; više
-  članstava je zaseban posao sa ADR-om (v. task fajl).
-- **Amko Barbershop je na hostovanom upisan ručno** (SQL editor): salon, usluge, radnik i admin
-  `amrudin.topcic@gmail.com`. Admin nalog nije u `seed.sql`, jer pravi email ne ide u repo. Migracija
-  `moj_profil` je na hostovanom i Amko je vezan za radnika „Amko".
-- Flutter 3.47.5 je sada na mašini (Homebrew). Web debug ide sa
-  `--no-web-experimental-hot-reload` (stack overflow na `LucideIcons`), a `flutter run` više ne
-  prima `--build-name`. Oboje je u `workflows.md`.
-- Supabase CLI i Deno i dalje kroz `npx -y supabase@2.117.0` i `npx -y deno`.
+- Handoff je u `prototype/adminv2/toast/`; `Salon OS Admin.dc.html` sa sekcijom 5 nije stigao u zip,
+  pa su izvor `README.md`, `toast.css`, `toast.ts` i `5b-varijante.png`.
+- Klijentska aplikacija ostaje na `SnackBar`-u: handoff je za Melura admin, a klijent boju uzima iz
+  `tenant.yaml`.
+- Flutter 3.47.5 je na mašini (Homebrew). Web debug ide sa `--no-web-experimental-hot-reload`
+  (stack overflow na `LucideIcons`).
+- Amko Barbershop je na hostovanom upisan ručno (v. task 61).
 
 ## Istorija
+
+### 61 — Moj profil u adminu (spojen, ostaje telefon)
+
+[PR #122](https://github.com/htuco/salon-booking-platform/pull/122), mergan 2026-10-01, zajedno sa
+tenantom `amkobarber` i popravkama za Flutter 3.47. Migracija `moj_profil` je na hostovanom,
+viđeno na Amku. **Ostaje:** telefon sa kamerom.
 
 ### 53 — Vertikala `health` (spojen, ostaje ekran)
 

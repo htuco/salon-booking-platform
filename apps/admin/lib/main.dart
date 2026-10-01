@@ -6,9 +6,8 @@ import 'src/core/env/app_env.dart';
 import 'src/core/env/bootstrap.dart';
 import 'src/core/router/admin_router.dart';
 import 'src/core/theme/theme.dart';
+import 'src/core/widgets/admin_toast.dart';
 import 'src/features/appointments/appointments_providers.dart';
-
-final adminMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
   final env = await bootstrapAdmin();
@@ -46,12 +45,13 @@ class SalonAdminApp extends ConsumerWidget {
             return;
           }
           if (next.hasError) {
-            adminMessengerKey.currentState?.showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Osvježavanje termina nije dostupno. Ručno osvježite ekran.',
-                ),
-              ),
+            final overlay = adminToastOverlayKey.currentState;
+            if (overlay == null) return;
+            AdminToast.prikazi(
+              overlay,
+              AdminToastVrsta.upozorenje,
+              'Osvježavanje termina nije dostupno',
+              opis: 'Ručno osvježite ekran.',
             );
           }
         });
@@ -75,7 +75,8 @@ class SalonAdminApp extends ConsumerWidget {
     });
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      scaffoldMessengerKey: adminMessengerKey,
+      // Toastovi stoje iznad navigatora, pa ih dijalog ne prekriva (v. `AdminToast`).
+      builder: (context, child) => AdminToastSloj(child: child!),
       title: 'Salon Admin',
       routerConfig: ref.watch(adminRouterProvider),
       theme: buildAdminTheme(),

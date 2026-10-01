@@ -52,6 +52,10 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
   tekst pisan za čovjeka (mreža, konflikt, `raise … using errcode = 'PT…'`) i za ostalo vraća
   `null`. Ekran tada stavlja svoju opštu rečenicu. U adminu je to `porukaGreske(e, opsta:)`
   (`apps/admin/lib/src/core/poruka_greske.dart`), u klijentu tekst iz `.arb`-a po tipu greške.
+- **Obavijest u adminu ide kroz `AdminToast`** (`apps/admin/lib/src/core/widgets/admin_toast.dart`),
+  ne kroz `SnackBar` — `no_snackbar_test.dart` pada na `showSnackBar`. Vrsta se bira po ishodu:
+  `uspjeh` i `info` se gase sami, `upozorenje` (stanje, npr. slot u međuvremenu zauzet) i `greska`
+  stoje dok se ne zatvore. Naslov kaže šta se desilo, `opis` je jedna rečenica konteksta.
 - **Vrijednosni tip koji postoji da spriječi jednu grešku** → `LocalTime`/`LocalDate` u
   `packages/core_domain/lib/src/catalog/`. Baza drži zidno vrijeme salona bez zone; `DateTime` bi
   ga vezao za zonu uređaja i tiho pomjerio radno vrijeme. Tip nema konverziju u trenutak — namjerno.

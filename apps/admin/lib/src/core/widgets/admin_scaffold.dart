@@ -10,6 +10,7 @@ import '../router/admin_router.dart';
 import '../theme/theme.dart';
 import '../../features/profile/profilna_slika.dart';
 import 'admin_wordmark.dart';
+import 'admin_toast.dart';
 
 /// Širine na kojima admin mijenja oblik.
 ///
@@ -925,8 +926,10 @@ Future<void> odjavi(BuildContext context, WidgetRef ref) async {
     await ref.read(staffRepositoryProvider).signOut();
   } on ApiError {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Odjava nije uspjela. Pokušajte ponovo.')),
+      AdminToast.greska(
+        context,
+        'Odjava nije uspjela',
+        opis: 'Pokušajte ponovo.',
       );
     }
   }

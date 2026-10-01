@@ -23,6 +23,7 @@ import '../appointments/appointments_providers.dart';
 import 'services_providers.dart';
 import 'usluga_editor.dart';
 import 'usluge_dijelovi.dart';
+import '../../core/widgets/admin_toast.dart';
 
 export 'usluga_editor.dart' show showServiceEditor;
 
@@ -90,8 +91,7 @@ class _AdminServicesScreenState extends ConsumerState<AdminServicesScreen> {
     if (!mounted) return;
     setState(() => _uToku.remove(service.id));
     if (greska != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(greska)));
+      AdminToast.greska(context, greska);
     }
   }
 

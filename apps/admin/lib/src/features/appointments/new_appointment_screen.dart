@@ -9,6 +9,7 @@ import '../../core/router/admin_router.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/theme/admin_tokens.dart';
 import 'appointments_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Ručni unos termina — salon upisuje klijenta koji je nazvao ili došao na vrata.
 ///
@@ -190,22 +191,27 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
         ..invalidate(pendingCountProvider);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(const SnackBar(content: Text('Termin je upisan.')));
+      AdminToast.uspjeh(context, 'Termin je upisan.');
       context.go(AdminRoute.appointments.path);
     } on ApiError catch (greska) {
       if (!mounted) return;
       // `ConflictError` je **očekivan ishod**, ne kvar: između učitavanja liste slotova i
       // ovog poziva je neko drugi mogao uzeti isti slot. Ekran zato briše izbor i tjera na
       // ponovni — isto kao klijentski flow.
-      final poruka = greska is ConflictError
-          ? 'Termin je upravo zauzet. Izaberite drugo vrijeme.'
-          : 'Termin nije upisan. Pokušajte ponovo.';
-      if (greska is ConflictError) setState(() => _slot = null);
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(SnackBar(content: Text(poruka)));
+      if (greska is ConflictError) {
+        setState(() => _slot = null);
+        AdminToast.upozorenje(
+          context,
+          'Termin je upravo zauzet',
+          opis: 'Izaberite drugo vrijeme.',
+        );
+      } else {
+        AdminToast.greska(
+          context,
+          'Termin nije upisan',
+          opis: 'Pokušajte ponovo.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _upisujem = false);
     }
@@ -381,13 +387,11 @@ class _IzborKlijentaState extends ConsumerState<_IzborKlijenta> {
       widget.onIzabran(klijent);
     } on ApiError {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('Klijent nije sačuvan. Pokušajte ponovo.'),
-          ),
-        );
+      AdminToast.greska(
+        context,
+        'Klijent nije sačuvan',
+        opis: 'Pokušajte ponovo.',
+      );
     }
   }
 }

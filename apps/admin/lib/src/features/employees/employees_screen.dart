@@ -35,6 +35,7 @@ import '../calendar/calendar_providers.dart';
 import '../working_hours/working_hours_providers.dart';
 import 'employees_providers.dart';
 import 'employees_sedmica.dart';
+import '../../core/widgets/admin_toast.dart';
 
 const _dani = ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned'];
 
@@ -56,20 +57,16 @@ String _akuzativ(String jednina) {
 
 void _uskoro(BuildContext context, String poruka) {
   final router = GoRouter.maybeOf(context);
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(poruka),
-        persist: false,
-        action: router == null
-            ? null
-            : SnackBarAction(
-                label: 'Radno vrijeme',
-                onPressed: () => router.go(AdminRoute.workingHours.path),
-              ),
-      ),
-    );
+  AdminToast.info(
+    context,
+    poruka,
+    akcija: router == null
+        ? null
+        : AdminToastAkcija(
+            'Radno vrijeme',
+            () => router.go(AdminRoute.workingHours.path),
+          ),
+  );
 }
 
 void _uskoroSmjene(BuildContext context) => _uskoro(
