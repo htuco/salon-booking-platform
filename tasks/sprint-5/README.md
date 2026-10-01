@@ -25,6 +25,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [59](59-radnik-u-seedu.md) | Radnik u lokalnom seedu | chore | 60 | 0,5 dan |
 | [60](60-regresija-i-testiranje.md) | Regresija i testiranje | test | — | 2–3 dana |
 | [61](61-moj-profil.md) | Moj profil u adminu — slika, lični podaci, lozinka 🟡 | feature | — | 2–3 dana |
+| [62](62-toast-obavijesti.md) | Toast obavijesti u adminu 🟡 | redizajn | — | 1 dan |
 
 Ukupno 18–26 dana — više od jednog sprinta, kao i Sprint 4. **Obavezni su 48–50, 56 i 57**:
 bez njih ni salon ni klijent nemaju ono što MVP obećava. 52–55 i 58 idu redom kako stignu; 59 i 60
@@ -131,3 +132,14 @@ po nalogu. Migracija `moj_profil`: kolone na `users`, pet RPC-ova, upis radnikov
 u bucket, sweep i trigger znaju za nove kolone. Lokalno pgTAP 770 + svi REST, sabotaže obaraju
 7/6/4; admin 479, client 568, `core_ui` 143. Viđeno uživo na 1440 i 402. Migracija na hostovanom (prije merge-a),
 viđeno na Amku. **Ostaje:** CI na PR-u, telefon sa kamerom.
+
+### 61 — spojen (2026-10-01)
+
+PR #122 mergan. Ostaje telefon sa kamerom.
+
+### 62 — Toast obavijesti u adminu (🟡, 2026-10-01)
+
+Grana `feat/admin-toastovi`. Handoff `prototype/adminv2/toast/`: `AdminToast` sa četiri vrste
+zamjenjuje `SnackBar` u cijelom adminu (~30 poziva), desktop gore desno do tri, telefon jedan
+odozgo, odbrojavanje 5 s za uspjeh i informaciju. Admin testovi zeleni, viđeno na 1440 i 402 (demo build).
+**Ostaje:** hostovani sa pravim nalogom, CI na PR-u.
