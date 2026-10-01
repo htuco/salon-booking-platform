@@ -6,7 +6,7 @@
 |---|---|---|
 | `ui/` | Dizajnerski handoff: 17 ekrana u punoj vjernosti, finalni copy, tokeni, komponente | **Vizuelni izvor istine** |
 | `beauty/` | Handoff teme `elegant_beauty`: isti shell kao `ui/`, svijetla paleta, brand uloge izvedene iz jedne boje, 21 ekran | **Izvor istine za beauty temu** (task 52) |
-| `adminv2/` | Melura redizajn: isti 21 prikaz (`3a`–`3u`), noviji izgled; u `profil/` meni korisnika i Moj profil (`4a`–`4e`, task 61, sa svojim `README.md`); u `toast/` toast obavijesti (`5a`–`5c`, task 62) | **Vizuelni izvor istine za `apps/admin`** |
+| `adminv2/` | Melura redizajn: isti 21 prikaz (`3a`–`3u`), noviji izgled; u `profil/` meni korisnika i Moj profil (`4a`–`4e`, task 61, sa svojim `README.md`); u `toast/` toast obavijesti (`5a`–`5c`, task 62); u `danas/` novi Danas (`6a`–`6m`, task 55, ADR-0027) — za Danas jači od `3b`/`3k` | **Vizuelni izvor istine za `apps/admin`** |
 | `admin/` | Stariji Salon OS handoff: istih 21 prikaz plus `SPEC.md` | **Vizual zastario, tekst važi** |
 | `wireframe/` | Stariji React/Vite prototip sa svojim toolchainom | **Zamrznut** |
 | `masaza/` | Handoff vertikale `health`: masaža (18 ekrana) i u `fizio/` fizioterapija kao drugi tenant (15 ekrana), isti shell kao `ui/`, light + dark | Izvor istine za **paletu, pismo i rječnik** `health` tema (ADR-0026); oblik ekrana i dark ostaju iz `ui/`, v. `masaza/README.md` |

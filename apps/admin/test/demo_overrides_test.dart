@@ -27,7 +27,9 @@ final _rute = [
 ];
 
 /// Rečenice kojima ekrani javljaju da izvor nije stigao, a koje nisu `AdminLoadError`.
-final _nijeUcitano = RegExp(r'ne može učitati|ne mogu učitati|nije učitan');
+final _nijeUcitano = RegExp(
+  r'ne može učitati|ne mogu učitati|nije učitan|nije učitao',
+);
 
 void main() {
   for (final (sirina, velicina) in [

@@ -324,12 +324,20 @@ void main() {
       expect(find.text(_vlasnik.email), findsNothing);
     });
 
-    testWidgets('logo je placeholder, ne prazno mjesto', (tester) async {
-      // Prazan prostor u sidebaru izgleda kao greška u iscrtavanju; isprekidani okvir
-      // kaže „ovdje ide logo, još ga nema". Pravog logo asseta još nema.
+    testWidgets('sidebar nosi znak proizvoda, ne placeholder', (tester) async {
       await _naSirini(tester, _desktop, _ekran());
 
-      expect(find.text('LOGO'), findsOneWidget);
+      expect(find.text('LOGO'), findsNothing);
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is Image &&
+              w.image is AssetImage &&
+              (w.image as AssetImage).assetName ==
+                  'assets/brand/melura-znak-tamno.png',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('pilula brojača je koralna, ne plava', (tester) async {

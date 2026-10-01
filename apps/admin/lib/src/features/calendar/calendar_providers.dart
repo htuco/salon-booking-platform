@@ -13,6 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../appointments/appointments_providers.dart';
 import 'calendar_day.dart';
 
+export '../../core/sat.dart';
+
 /// Dan koji kalendar pokazuje. Počinje na danas, uvijek normalizovan na ponoć.
 class KalendarDatumNotifier extends Notifier<DateTime> {
   @override
@@ -162,22 +164,3 @@ void osvjeziKalendar(WidgetRef ref) {
     ..invalidate(adminEmployeesProvider)
     ..invalidate(adminServicesProvider);
 }
-
-/// Sat ekrana — jedan izvor „sada" za liniju trenutnog vremena i za oznaku „U toku".
-///
-/// **Stream, ne `DateTime.now()` u `build`-u.** Linija koja se ne pomjera je gora od
-/// linije koje nema: kalendar otvoren cijelo prijepodne bi tvrdio da je i dalje devet.
-/// Minuta je dovoljno sitan korak — osa je 80 px po satu, pa je pomak po minuti 1,3 px.
-///
-/// Test ga override-uje sa `Stream.value(...)`. Bez toga bi svaki widget test kalendara
-/// zavisio od doba dana, što je tačno zamka zbog koje task 31 i ima svoju napomenu.
-///
-/// **`autoDispose` zaustavlja kucanje kad kalendar nije otvoren.** Bez njega bi
-/// `Stream.periodic` radio do kraja života aplikacije, iako liniju „sada" crta jedan ekran.
-final sadaProvider = StreamProvider.autoDispose<DateTime>((ref) async* {
-  yield DateTime.now();
-  yield* Stream<DateTime>.periodic(
-    const Duration(minutes: 1),
-    (_) => DateTime.now(),
-  );
-});

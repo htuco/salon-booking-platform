@@ -110,7 +110,7 @@ class _AdminAppointmentsScreenState
       actions: jeDesktop
           ? [
               if (zahtjevi)
-                const _PotvrdiSveDugme()
+                const PotvrdiSveDugme()
               else if (!radnik)
                 const _NoviTerminDugme(),
             ]
@@ -623,14 +623,14 @@ class _NoviTerminDugme extends StatelessWidget {
 /// padne sa greškom; ovo dugme zato pokušava redom i **broji** šta je prošlo. Provjera u
 /// Dartu bi bila druga istina o istom pravilu, i razišla bi se prvi put kad neko rezerviše
 /// u međuvremenu.
-class _PotvrdiSveDugme extends ConsumerStatefulWidget {
-  const _PotvrdiSveDugme();
+class PotvrdiSveDugme extends ConsumerStatefulWidget {
+  const PotvrdiSveDugme({super.key});
 
   @override
-  ConsumerState<_PotvrdiSveDugme> createState() => _PotvrdiSveDugmeState();
+  ConsumerState<PotvrdiSveDugme> createState() => _PotvrdiSveDugmeState();
 }
 
-class _PotvrdiSveDugmeState extends ConsumerState<_PotvrdiSveDugme> {
+class _PotvrdiSveDugmeState extends ConsumerState<PotvrdiSveDugme> {
   bool _uToku = false;
 
   @override

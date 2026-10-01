@@ -16,17 +16,29 @@ import '../core/env/app_env.dart';
 import '../features/appointments/appointments_providers.dart';
 import '../features/calendar/calendar_providers.dart';
 import '../features/clients/clients_providers.dart';
+import '../features/dashboard/danas.dart' show sljedeciRadniDan;
+import '../features/dashboard/danas_providers.dart';
 import '../features/settings/pristup.dart';
 import '../features/settings/settings_providers.dart';
 import '../features/working_hours/working_hours_providers.dart';
 
-/// Vitez iz `supabase/seed.sql`.
-const _salonId = '550e8400-e29b-41d4-a716-446655440000';
+/// Koji salon demo glumi: `--dart-define=DEMO_SALON=amko` daje Amko Barbershop, bez
+/// njega je Vitez iz `supabase/seed.sql`.
+///
+/// Admin nema flavor (ADR-0003), pa se salon ne bira tenantom nego ovim define-om. Raspored,
+/// usluge i brojke su isti u oba; mijenjaju se ime salona, vlasnik i imena radnika — dovoljno
+/// da snimak za predstavljanje pokaže pravog klijenta, a ne seed salon.
+const _demoSalon = String.fromEnvironment('DEMO_SALON');
+const _amko = _demoSalon == 'amko';
+
+const _salonId = _amko
+    ? '63679dd5-6ac8-4061-b4d6-d3ef181c9baa'
+    : '550e8400-e29b-41d4-a716-446655440000';
 
 const _vlasnik = StaffMember(
   id: '11111111-0000-4000-8000-000000000001',
-  name: 'Emir Bešić',
-  email: 'emir@barberstudiovitez.test',
+  name: _amko ? 'Amrudin Topčić' : 'Emir Bešić',
+  email: _amko ? 'amko@amkobarber.test' : 'emir@barberstudiovitez.test',
   role: 'salon_admin',
   salonId: _salonId,
 );
@@ -94,6 +106,17 @@ List<Override> demoOverrides(AdminEnv env) => [
         _termini.where((t) => t.status == AppointmentStatus.pending).toList(),
   ),
   danasnjiTerminiProvider.overrideWith((ref) async => _termini),
+  // Danas (task 55) čita smjene, blokade, sedmicu i sljedeći radni dan. Bez smjena demo
+  // nikad ne bi nacrtao „Najveća rupa", zauzetost u procentima ni „U smjeni 3" — prvi
+  // demo dashboarda je tako i izgledao: „— nema smjena za danas" uz pun raspored.
+  dashboardRasporedProvider.overrideWith((ref) async => _radnoVrijeme),
+  dashboardBlokadeProvider.overrideWith((ref) async => const <BlockedSlot>[]),
+  sedmicaProvider.overrideWith((ref) async => 38),
+  sljedeciRadniDanProvider.overrideWith((ref) async {
+    final sljedeci = sljedeciRadniDan(_radnoVrijeme, DateTime.now());
+    if (sljedeci == null) return null;
+    return (dan: sljedeci.dan, otvara: sljedeci.otvara, termina: 16);
+  }),
   // **Filter se poštuje, ne zaobilazi.** Ravna lista bi na
   // `/appointments?status=pending` prikazala svih pet termina uz izabran čip „Na
   // čekanju" — snimak koji izgleda kao dokaz, a pokazuje da filter ne radi.
@@ -168,56 +191,244 @@ final List<Customer> _klijenti = [
     ),
 ];
 
-/// Raspored dana iz canvasa `3b`/`3k`, da ljuska ima šta da nosi.
+/// Dan iz handoffa `6a`: tri radnika, 17 termina, tri zahtjeva, jedan otkaz i jedan
+/// nedolazak — svako stanje koje raspored crta ima bar jedan red.
 ///
 /// Brojevi su demo sadržaj, ne podatak iz baze — v. `SPEC.md`, „Funkcionalne granice".
+/// Vremena su fiksna, a sat je pravi: u 13:12 demo izgleda kao `6a`, u 9:00 svi termini
+/// tek dolaze, a uveče su svi prošli.
 final List<Appointment> _termini = [
-  // Jedan završen termin, da „9 završeno · 5 predstoji" i „Promet do sada" imaju šta
-  // pokazati — inače je promet uvijek 0 KM i izgleda kao da brojka ne radi.
-  _termin('Adnan Kovač', 10, 0, AppointmentStatus.completed),
-  _termin('Tarik Selimović', 13, 0, AppointmentStatus.confirmed),
-  _termin('Haris Delić', 14, 20, AppointmentStatus.confirmed),
-  _termin('Nedim Hodžić', 15, 0, AppointmentStatus.pending),
-  _termin('Almir Šahić', 17, 30, AppointmentStatus.pending),
-  _termin('Faruk Begić', 16, 10, AppointmentStatus.confirmed),
-  _termin('Kenan Zukić', 19, 20, AppointmentStatus.confirmed),
+  _termin(
+    'Adnan Kovač',
+    9,
+    30,
+    10,
+    10,
+    _emir,
+    _fade,
+    AppointmentStatus.completed,
+  ),
+  _termin(
+    'Damir Šarić',
+    10,
+    0,
+    10,
+    45,
+    _vedad,
+    _fadeBrada,
+    AppointmentStatus.noShow,
+  ),
+  _termin(
+    'Senad Mujić',
+    10,
+    30,
+    11,
+    0,
+    _emir,
+    _brada,
+    AppointmentStatus.cancelled,
+  ),
+  _termin(
+    'Kemal Hadžić',
+    11,
+    0,
+    11,
+    40,
+    _vedad,
+    _fadeBrada,
+    AppointmentStatus.completed,
+  ),
+  _termin(
+    'Edin Ramić',
+    11,
+    20,
+    11,
+    50,
+    _emir,
+    _musko,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Tarik Selimović',
+    12,
+    40,
+    13,
+    20,
+    _vedad,
+    _brada,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Jasmin Kurtović',
+    13,
+    0,
+    13,
+    30,
+    _amar,
+    _musko,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Haris Delić',
+    13,
+    30,
+    14,
+    0,
+    _emir,
+    _musko,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Ibro Halilović',
+    14,
+    10,
+    14,
+    40,
+    _emir,
+    _musko,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Faruk Begić',
+    14,
+    30,
+    15,
+    10,
+    _vedad,
+    _fade,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Nedim Hodžić',
+    15,
+    0,
+    15,
+    40,
+    _amar,
+    _fadeBrada,
+    AppointmentStatus.pending,
+    poslanPrije: 26,
+  ),
+  _termin(
+    'Eldar Hasić',
+    15,
+    20,
+    15,
+    50,
+    _vedad,
+    _musko,
+    AppointmentStatus.pending,
+    poslanPrije: 7,
+  ),
+  _termin(
+    'Dino Mehmedović',
+    15,
+    30,
+    16,
+    10,
+    _emir,
+    _fade,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Armin Pašić',
+    16,
+    10,
+    16,
+    50,
+    _vedad,
+    _fadeBrada,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Almir Šahić',
+    17,
+    0,
+    17,
+    30,
+    _amar,
+    _musko,
+    AppointmentStatus.pending,
+    poslanPrije: 12,
+  ),
+  _termin(
+    'Samir Babić',
+    17,
+    40,
+    18,
+    10,
+    _emir,
+    _musko,
+    AppointmentStatus.confirmed,
+  ),
+  _termin(
+    'Kenan Zukić',
+    19,
+    20,
+    19,
+    50,
+    _vedad,
+    _musko,
+    AppointmentStatus.confirmed,
+  ),
 ];
 
 final _salon = Salon(
   id: _salonId,
-  name: 'Barber Studio Vitez',
-  slug: 'barber-studio-vitez',
+  name: _amko ? 'Amko Barbershop' : 'Barber Studio Vitez',
+  slug: _amko ? 'amkobarber' : 'barber-studio-vitez',
   city: 'Vitez',
 );
 
 /// Cjenovnik i ekipa iz `supabase/seed.sql`, skraćeno.
+const _fade = 'demo-fade';
+const _brada = 'demo-brada';
+const _musko = 'demo-musko';
+const _fadeBrada = 'demo-fade-brada';
+
 const _usluge = [
   Service(
-    id: 'demo-fade',
+    id: _fade,
     salonId: _salonId,
     name: 'Fade šišanje',
     price: 20,
     durationMinutes: 40,
   ),
   Service(
-    id: 'demo-brada',
+    id: _brada,
     salonId: _salonId,
     name: 'Brada + konturisanje',
     price: 15,
     durationMinutes: 30,
   ),
+  Service(
+    id: _musko,
+    salonId: _salonId,
+    name: 'Muško šišanje',
+    price: 15,
+    durationMinutes: 30,
+  ),
+  Service(
+    id: _fadeBrada,
+    salonId: _salonId,
+    name: 'Fade + brada',
+    price: 30,
+    durationMinutes: 40,
+  ),
 ];
+
+const _emir = 'demo-emir';
+const _vedad = 'demo-vedad';
+const _amar = 'demo-amar';
 
 const _radnici = [
-  Employee(id: 'demo-emir', salonId: _salonId, name: 'Emir'),
-  Employee(id: 'demo-vedad', salonId: _salonId, name: 'Vedad'),
-  // Treći radnik **nema nijedan termin** i počinje kasnije od ostalih. Oba su namjerna:
-  // kalendar tako pokazuje i praznu kolonu i pojas „Ne radi do 12:00", koje demo sa dva
-  // puna radnika nikad ne bi nacrtao.
-  Employee(id: 'demo-amar', salonId: _salonId, name: 'Amar'),
+  Employee(id: _emir, salonId: _salonId, name: _amko ? 'Amko' : 'Emir'),
+  Employee(id: _vedad, salonId: _salonId, name: _amko ? 'Eniz' : 'Vedad'),
+  // Amar počinje kasnije od ostalih, pa kalendar pokazuje i pojas „Ne radi do 12:00".
+  Employee(id: _amar, salonId: _salonId, name: 'Amar'),
 ];
 
-/// Radno vrijeme za svih sedam dana: salon 09–17, Amar 12–20 sa pauzom.
+/// Radno vrijeme za svih sedam dana: salon 09–20, svaki radnik svoja smjena sa pauzom.
 ///
 /// Nedjelja je zatvorena, kao u `supabase/seed.sql` — strelica „sljedeći dan" tako prije
 /// ili kasnije dođe do dana koji se **vidi** kao neradan.
@@ -228,20 +439,25 @@ final List<WorkingHour> _radnoVrijeme = [
       salonId: _salonId,
       dayOfWeek: dan,
       startTime: const LocalTime(9, 0),
-      endTime: LocalTime(dan == 6 ? 14 : 17, 0),
+      endTime: const LocalTime(20, 0),
       isClosed: dan == 7,
     ),
     if (dan != 7)
-      WorkingHour(
-        id: 'demo-wh-amar-$dan',
-        salonId: _salonId,
-        employeeId: 'demo-amar',
-        dayOfWeek: dan,
-        startTime: const LocalTime(12, 0),
-        endTime: const LocalTime(20, 0),
-        breakStartTime: const LocalTime(15, 0),
-        breakEndTime: const LocalTime(16, 0),
-      ),
+      for (final (id, od, doSata, pauza) in const [
+        (_emir, 9, 18, 12),
+        (_vedad, 10, 20, 14),
+        (_amar, 12, 20, 16),
+      ])
+        WorkingHour(
+          id: 'demo-wh-$id-$dan',
+          salonId: _salonId,
+          employeeId: id,
+          dayOfWeek: dan,
+          startTime: LocalTime(od, 0),
+          endTime: LocalTime(doSata, 0),
+          breakStartTime: LocalTime(pauza, 0),
+          breakEndTime: LocalTime(pauza, 30),
+        ),
   ],
 ];
 
@@ -255,15 +471,25 @@ BlockedSlot _blokada(DateTime dan) => BlockedSlot(
   reason: 'Isporuka robe',
 );
 
-Appointment _termin(String ime, int sat, int minuta, AppointmentStatus status) {
+Appointment _termin(
+  String ime,
+  int sat,
+  int minuta,
+  int doSata,
+  int doMinute,
+  String radnik,
+  String usluga,
+  AppointmentStatus status, {
+  int? poslanPrije,
+}) {
   final sada = DateTime.now();
   return Appointment(
     id: 'demo-$ime',
     salonId: _salonId,
-    serviceId: sat.isEven ? 'demo-fade' : 'demo-brada',
-    employeeId: sat.isEven ? 'demo-emir' : 'demo-vedad',
+    serviceId: usluga,
+    employeeId: radnik,
     // Klijent po imenu (FE-505): lista Klijenata se gradi iz ovih termina, a zajednički
-    // id bi dao sedam klijenata sa istim ključem i jednu istoriju za sve.
+    // id bi dao sedamnaest klijenata sa istim ključem i jednu istoriju za sve.
     customerId: 'demo-klijent-$ime',
     customerName: ime,
     customerPhone: '061 552 104',
@@ -272,7 +498,11 @@ Appointment _termin(String ime, int sat, int minuta, AppointmentStatus status) {
         : null,
     date: LocalDate(sada.year, sada.month, sada.day),
     startTime: LocalTime(sat, minuta),
-    endTime: LocalTime(minuta >= 20 ? sat + 1 : sat, (minuta + 40) % 60),
+    endTime: LocalTime(doSata, doMinute),
     status: status,
+    // „čeka 26 min" se računa iz `created_at`; zahtjev bez njega nema starost.
+    createdAt: poslanPrije == null
+        ? null
+        : sada.subtract(Duration(minutes: poslanPrije)),
   );
 }

@@ -29,6 +29,7 @@ import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
+import '../../core/widgets/rub_zahtjeva.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
@@ -327,6 +328,19 @@ class _StrelicaDana extends StatelessWidget {
 }
 
 /// Mreža: osa lijevo, kolona po radniku desno.
+/// Mreža dana — kolona po radniku nad osom sati — za ekran koji je ugrađuje (Danas).
+///
+/// Ista mreža kao `3c`, ne kopija: Danas sastavlja svoj [KalendarDan] iz podataka koje već
+/// drži, a crta ga ovaj widget. Traži **konačnu visinu** — osa se skroluje unutra.
+class KalendarMrezaDana extends StatelessWidget {
+  const KalendarMrezaDana({required this.dan, super.key});
+
+  final KalendarDan dan;
+
+  @override
+  Widget build(BuildContext context) => _Mreza(dan: dan);
+}
+
 class _Mreza extends ConsumerWidget {
   const _Mreza({required this.dan});
 
@@ -2101,86 +2115,6 @@ class _Srafura extends CustomPainter {
       old.podloga != podloga || old.crta != crta || old.korak != korak;
 }
 
-/// Isprekidan rub oko termina koji čeka potvrdu — `3c`, DoD FE-403.
-///
-/// **Zašto rub, a ne još jedna boja.** „Čeka potvrdu" već ima svoj par iz
-/// [AdminStatusColors.waiting], ali na mreži sa pet statusa nijansa podloge nije dovoljna
-/// da se zahtjev odvoji od termina koji je već dogovoren — a to je jedina razlika koja
-/// vlasniku mijenja radnju: potvrđen termin se gleda, zahtjev se rješava. Isprekidana
-/// linija to nosi **oblikom**, pa radi i kad boje nema (WCAG 1.4.1), isto kao što
-/// [_Srafura] nosi neradno vrijeme.
-///
-/// Crta se preko sadržaja, ne ispod: blok ima svoju podlogu, pa bi rub ispod nje nestao.
-class _RubZahtjevaPainter extends CustomPainter {
-  const _RubZahtjevaPainter({required this.boja, required this.radius});
-
-  final Color boja;
-  final double radius;
-
-  /// Crta i razmak. Par 4/3 daje oko 14 crta na tipičnoj širini bloka — dovoljno gusto da
-  /// se na 51 px visokom bloku ne pročita kao puna linija.
-  static const double _crta = 4;
-  static const double _razmak = 3;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final olovka = Paint()
-      ..color = boja
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    // Pola debljine unutra, inače `stroke` izađe iz `Size` i gornja crta se odsiječe.
-    final putanja = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1),
-          Radius.circular(radius),
-        ),
-      );
-
-    for (final mjera in putanja.computeMetrics()) {
-      for (var d = 0.0; d < mjera.length; d += _crta + _razmak) {
-        canvas.drawPath(
-          mjera.extractPath(d, (d + _crta).clamp(0.0, mjera.length)),
-          olovka,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_RubZahtjevaPainter old) =>
-      old.boja != boja || old.radius != radius;
-}
-
 /// Čeka li termin potvrdu — jedini status koji nosi isprekidan rub.
 bool _cekaPotvrdu(AppointmentStatus status, {required bool uToku}) =>
     !uToku && status == AppointmentStatus.pending;
-
-/// Omotač koji doda [_RubZahtjevaPainter] samo kad [ceka], inače propusti [child] netaknut.
-///
-/// Postoji da uslov ne uđe u stablo kao `ceka ? CustomPaint(...) : child`: taj oblik
-/// mijenja tip čvora na istom mjestu, pa `InkWell` ispod izgubi stanje kad se status
-/// termina promijeni iz „čeka potvrdu" u „potvrđeno".
-class RubZahtjeva extends StatelessWidget {
-  const RubZahtjeva({
-    required this.ceka,
-    required this.boja,
-    required this.child,
-    super.key,
-  });
-
-  final bool ceka;
-  final Color boja;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      foregroundPainter: ceka
-          ? _RubZahtjevaPainter(boja: boja, radius: AdminRadius.base)
-          : null,
-      child: child,
-    );
-  }
-}

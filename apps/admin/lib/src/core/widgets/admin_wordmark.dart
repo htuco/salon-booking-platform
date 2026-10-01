@@ -8,8 +8,9 @@
 /// sve salone, pa ovdje nikad ne ide ime salona — ono dolazi iz `salons` i stoji u
 /// breadcrumbu top bara.
 ///
-/// Logo je **placeholder**, kao i u `adminv2/export/3b` i `3j`: isprekidani kvadrat sa
-/// natpisom `LOGO`. Pravi logo još ne postoji kao asset; kad stigne, mijenja se samo ovdje.
+/// Znak je „M" od dva bloka termina, koralni i plavi (`assets/brand/`). Na tamnoj podlozi ide
+/// varijanta sa svjetlijom plavom: `#3D5A80` na `#141517` sidebara gotovo nestane. Do
+/// 2026-10-01 je ovdje stajao placeholder iz `adminv2/export/3b` — kvadrat sa natpisom `LOGO`.
 library;
 
 import 'package:flutter/material.dart';
@@ -66,7 +67,7 @@ class AdminWordmark extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _LogoPlaceholder(strana: velicinaZnaka, naTamnom: naTamnom),
+        _Znak(strana: velicinaZnaka, naTamnom: naTamnom),
         const SizedBox(width: 10),
         Flexible(
           child: Column(
@@ -103,71 +104,26 @@ class AdminWordmark extends StatelessWidget {
   }
 }
 
-/// Isprekidani kvadrat sa natpisom `LOGO`, kako ga crta handoff.
+/// Znak proizvoda.
 ///
-/// Namjerno je **placeholder, a ne prazan prostor**: prazno mjesto u sidebaru izgleda kao
-/// greška u iscrtavanju, a isprekidani okvir kaže „ovdje ide logo, još ga nema".
-class _LogoPlaceholder extends StatelessWidget {
-  const _LogoPlaceholder({required this.strana, required this.naTamnom});
+/// Bez semantike: ime „Melura" stoji odmah do njega i čitač ekrana ga već izgovori, pa bi
+/// opis slike bio isto ime dvaput.
+class _Znak extends StatelessWidget {
+  const _Znak({required this.strana, required this.naTamnom});
 
   final double strana;
   final bool naTamnom;
 
   @override
-  Widget build(BuildContext context) {
-    final boje = context.adminColors;
-    final boja = naTamnom ? boje.sidebarMuted : boje.textMuted;
-
-    return SizedBox(
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: Image.asset(
+      naTamnom
+          ? 'assets/brand/melura-znak-tamno.png'
+          : 'assets/brand/melura-znak.png',
       width: strana,
       height: strana,
-      child: CustomPaint(
-        painter: _IsprekidaniOkvir(boja: boja),
-        child: Center(
-          child: Text(
-            'LOGO',
-            textScaler: TextScaler.noScaling,
-            style: TextStyle(
-              color: boja,
-              fontSize: 7,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Isprekidana granica; Flutter je nema u `Border`, pa se crta ručno.
-class _IsprekidaniOkvir extends CustomPainter {
-  const _IsprekidaniOkvir({required this.boja});
-
-  final Color boja;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final olovka = Paint()
-      ..color = boja
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    const crtica = 3.0;
-    const razmak = 2.5;
-    final putanja = Path()
-      ..addRect(Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1));
-
-    for (final mjera in putanja.computeMetrics()) {
-      var pozicija = 0.0;
-      while (pozicija < mjera.length) {
-        final kraj = (pozicija + crtica).clamp(0.0, mjera.length);
-        canvas.drawPath(mjera.extractPath(pozicija, kraj), olovka);
-        pozicija = kraj + razmak;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_IsprekidaniOkvir stari) => stari.boja != boja;
+      // Asset je 512 px; na 30 px bez filtriranja ivice termina zubate.
+      filterQuality: FilterQuality.medium,
+    ),
+  );
 }
