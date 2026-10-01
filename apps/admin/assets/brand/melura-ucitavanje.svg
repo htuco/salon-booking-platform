@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Učitavanje">
+  <!--
+    Referenca za task 63 — animacija učitavanja „Termin i sada".
+    Termin (koralni blok) stoji, linija „sada" sa tačkom klizi gore-dolje kroz njega.
+    Pokret: translateY od -34 do +34 i nazad, 1,6 s, cubic-bezier(.45,0,.25,1), u petlji.
+    Kad sistem traži manje pokreta, linija stoji na sredini.
+    Na tamnoj podlozi linija je #8FB0D6 umjesto #3D5A80.
+  -->
+  <style>
+    .sada { animation: klizi 1.6s cubic-bezier(.45, 0, .25, 1) infinite; }
+    @keyframes klizi { 0%, 100% { transform: translateY(-34px); } 50% { transform: translateY(34px); } }
+    @media (prefers-reduced-motion: reduce) { .sada { animation: none; } }
+  </style>
+  <rect x="24" y="12" width="52" height="76" rx="10" fill="#EE6C4D"/>
+  <g class="sada">
+    <rect x="8" y="46.5" width="84" height="7" rx="3.5" fill="#3D5A80"/>
+    <circle cx="12" cy="50" r="7.5" fill="#3D5A80"/>
+  </g>
+</svg>
