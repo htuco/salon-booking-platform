@@ -1,59 +1,43 @@
-# Trenutni task: 53 — Vertikala `health` — masaža i fizioterapija
+# Trenutni task: 61 — Moj profil u adminu
 
-Puni task: [tasks/sprint-5/53-vertikala-health.md](sprint-5/53-vertikala-health.md) · učitan 2026-09-29
+Puni task: [tasks/sprint-5/61-moj-profil.md](sprint-5/61-moj-profil.md) · učitan 2026-10-01
 
 ## Status
 
-U toku (grana `feat/vertikala-health`, 2026-09-30).
+U toku (grana `feat/admin-moj-profil`, 2026-10-01). Na istoj grani su i tenant `amkobarber` i
+dvije popravke za Flutter 3.47 (slike na webu, `tool/run_tenant.sh`): dogovoreno je jedna grana
+za sve.
 
 ## Ciljevi
 
-- [x] ADR-0026: `warm_wellness` (masaža, nova) + `clinical_calm` (fizio, prepisan), Newsreader +
-      Public Sans, izbor brandom; samo light, `health` bez galerije, shell ostaje bazni
-- [x] `warm_wellness` i prepisan `clinical_calm` u `AppTheme` (neutrale iz handoffa, `AppFonts.newsreader`
-      sa `opsz`, izbor brandom); pisma uz aplikaciju sa OFL licencom. CI: `core_ui` testovi
-      (kontrast, a11y slotova, pismo po temi, pragovi brand uloga) zeleni na PR #121
-- [x] Pack `health` i dva salona u `supabase/seed.sql` (terminologija §3, pravila §4, flagovi §5,
-      `require_staff_choice` i u `salon_settings`, `terminology_override` masaže). Lokalno
-      `tool/test_supabase.sh` od nule: pgTAP 716 PASS + svi REST/Deno; CI `Supabase tests` zelen
-- [x] `serviceAccusative` u `VerticalTerms` → „Izaberite tretman / terapiju"; `core_domain`
-      lokalno 88 PASS. `noteHint` i mjesto u padežu odgođeni (ADR-0026)
-- [x] Tenanti `masazamostar` i `fiziozenica`: `tenant.yaml`, placeholder ikona i
-      `google-services.json`, generisano (`gen_flavors`, launcher ikone, `gen_ios_flavors.rb`),
-      sve tri CI matrice; `gen_flavors --check` ažuran; demo overrides za oba
-- [x] Grep: nijedan `vertical ==` / `flavor ==` u ekranu (samo doc komentari koji to zabranjuju)
-- [x] CI zelen na PR #121 (`5ad6895`): `Analiza, format i testovi` i `Supabase tests`
-- [ ] APK i iOS build novih flavora — ti jobovi idu tek na push u `main`, ne na PR
-- [ ] „Bilo ko od nas" nestaje u koraku 2 — **viđeno na ekranu** (traži Flutter mašinu)
-- [ ] Snimci početne i zakazivanja, sva četiri tenanta, 402; barber i beauty isti kao prije
-      (traži Flutter mašinu: `tool/run_tenant.sh mostar demo -d chrome`, isto za `zenica`,
-      `vitez`, `travnik`)
+- [x] Meni korisnika (`4a`), `/profile` (`4b`/`4d`), sheet slike (`4e`), red osobe u „Još" (`4c`)
+- [x] Migracija `moj_profil` + `025_moj_profil.test.sql` (54 asercije, tri sabotaže obaraju 7/6/4)
+- [x] Lokalno: pgTAP 770 + svi REST/Deno; admin 479, client 568, `core_ui` 143; viđeno uživo na
+      1440 i 402 protiv lokalnog Supabasea
+- [x] `supabase db push` na hostovani projekat (2026-10-01, prije merge-a), viđeno na Amku
+- [ ] PR protiv `main`-a, CI zelen
+- [ ] Telefon sa kamerom (traži uređaj)
 
 ## Napomene
 
-- Pismo po temi, `AppFonts`, `AppSelectionColors` i `BrandRoles.derive` su došli iz taska 52
-  (PR #120, mergan 2026-09-30); 53 ih samo koristi.
-- **Hostovani projekat nema nove salone.** Seed se ne primjenjuje kroz `supabase db push`, pa
-  `masazamostar` i `fiziozenica` na hostovanom backendu ne nađu svoj salon. Uživo provjera ide
-  lokalno ili kroz `demo`; red na hostovanom traži pristup projektu (isti blok kao task 52).
-- Seed namjerno nema admin naloge za nova dva salona ni fotografije — prazni okviri su
-  predviđeno stanje. `health` nema galeriju (`docs/05` §5, ADR-0026).
-- `features.gallery` flag se u klijentu nigdje ne čita — galerija se krije samo kad salon nema
-  slika. Za `health` je to danas isto ponašanje; kad masaža dobije galeriju (override flagova),
-  flag mora početi da se čita.
-- **Van taska, kandidati za nove taskove** (ADR-0026 §Razmatrane opcije): dark varijanta tema,
-  override feature flagova po salonu (galerija za masažu), više dužina po tretmanu,
-  specijalizacija terapeuta, checkbox pristanka + polje napomene sa `noteHint`, oblik Početne
-  iz handoffa (hero ispod, „Naš tim", sedmično radno vrijeme), onemogućeno dugme otkazivanja.
-- Dart na ovoj mašini: `dart format` i `core_domain` testovi idu kroz Docker `dart:3.13`
-  (isti Dart kao CI); `gen_flavors` sa zasebnim package configom; iOS generator u
-  `ruby:3.3-slim` sa `xcodeproj` gemom (sistemski Ruby 2.6 ga ne može instalirati).
-  `flutter_launcher_icons` dira `project.pbxproj` — vratiti i pustiti `gen_ios_flavors.rb`.
-- Supabase CLI i Deno nisu instalirani — `npx -y supabase@2.117.0` i `npx -y deno` rade kao
-  zamjena za `tool/test_supabase.sh`. Poslije `db reset` edge runtime zna ostati ugašen
-  (503 u `rest_delete_account`); `supabase stop` pa skripta od nule to rješava.
+- **Jedan salon po nalogu.** „Koristi svuda" i lista salona iz handoffa se ne crtaju; više
+  članstava je zaseban posao sa ADR-om (v. task fajl).
+- **Amko Barbershop je na hostovanom upisan ručno** (SQL editor): salon, usluge, radnik i admin
+  `amrudin.topcic@gmail.com`. Admin nalog nije u `seed.sql`, jer pravi email ne ide u repo. Migracija
+  `moj_profil` je na hostovanom i Amko je vezan za radnika „Amko".
+- Flutter 3.47.5 je sada na mašini (Homebrew). Web debug ide sa
+  `--no-web-experimental-hot-reload` (stack overflow na `LucideIcons`), a `flutter run` više ne
+  prima `--build-name`. Oboje je u `workflows.md`.
+- Supabase CLI i Deno i dalje kroz `npx -y supabase@2.117.0` i `npx -y deno`.
 
 ## Istorija
+
+### 53 — Vertikala `health` (spojen, ostaje ekran)
+
+[PR #121](https://github.com/htuco/salon-booking-platform/pull/121), mergan 2026-10-01. ADR-0026,
+teme `warm_wellness` i `clinical_calm`, pack `health`, tenanti `masazamostar` i `fiziozenica`.
+**Ostaje:** APK/iOS build na `main`-u, „Bilo ko od nas" u koraku 2 viđeno na ekranu, snimci sva
+četiri tenanta na 402. Hostovani projekat nema nova dva salona.
 
 ### 52 — Beauty tenant dotjeran (parkiran, kod u `main`-u)
 
