@@ -421,8 +421,9 @@ ništa što identifikuje klijenta ne ide u ovaj bucket.
   UUID, a `NULL` kad nije UUID ili putanja nema vrstu i fajl. `is_admin(NULL)` nije istina, pa se
   pogrešna putanja odbija umjesto da baci grešku pri castu.
 - Četiri politike (`salon_media_admin_select|insert|update|delete`), sve za `authenticated` i sve
-  `private.is_admin(private.storage_salon_id(name)) is true`. Radnik, klijent i podmetnut claim
-  bez reda u `users` ne pišu i ne listaju ništa. `update` provjerava i novu putanju, pa se objekat
+  `private.is_admin(private.storage_salon_id(name)) is true`. Klijent i podmetnut claim bez reda
+  u `users` ne pišu i ne listaju ništa. Radnik od taska 61 piše **samo** svoju profilnu sliku
+  (`salon_media_profile_insert`, v. „Moj profil" ispod) i ništa ne lista. `update` provjerava i novu putanju, pa se objekat
   ne može preseliti u tuđi salon.
 - Tip (`image/jpeg|png|webp`, **bez SVG-a** jer nosi skriptu) i veličinu (5 MiB) sprovodi bucket, ne
   aplikacija — to se vidi samo kroz Storage API, ne u pgTAP-u.
@@ -468,7 +469,8 @@ uklonjena provjera `p_expected` 4, guard oslabljen na „bilo ko prijavljen" 7) 
 **Siročad.** `public.media_orphans(p_min_age = 24h, p_limit = 500)` izvršava samo
 `service_role`. Vraća objekte u `salon-media` čiju putanju ne referencira nijedna slikovna
 kolona **nijednog** salona (`services.image_url` i `employees.image_url` i u neaktivnim redovima,
-`salons.logo_url`, `cover_image_url`, `gallery_urls`). Vraća samo putanje koje `cleanup-media`
+`salons.logo_url`, `cover_image_url`, `gallery_urls`, a od taska 61 i `users.photo_url` i
+`users.salon_photo_url`). Vraća samo putanje koje `cleanup-media`
 prihvata: UUID malim slovima kao prvi segment, bez praznog, `.` ili `..` segmenta. Lista je
 najstariji-prvi sa limitom, pa bi red koji handler odbija zauvijek zauzeo listu.
 
@@ -499,6 +501,49 @@ Dokaz: `024_ciscenje_i_prijava.test.sql` (45 asercija; bez bucket filtera obara 
 malih slova 3, bez triggera 4, bez provjere `x-salon-id` 1, široka SELECT politika 3, politika
 samo nad JWT claimom 1, bez dnevnog limita 1), `rest_ciscenje.ts` (28 provjera: stvaran
 handler i Storage API) i `deno test` oba handlera.
+
+### Moj profil — task 61
+
+Podaci i slika **osobe** (ime, telefon, profilna slika, datum promjene lozinke) stoje na
+`public.users`. Nalog osoblja pripada jednom salonu, pa nema tabele članstava.
+
+- **`users` i dalje nema `update` politiku.** Grant postoji od init šeme, ali bez politike
+  direktan update pogađa 0 redova. Tako je i ostalo, jer bi takva politika pustila i `role`,
+  `salon_id` i `employee_id`. Sve ide kroz RPC, svaki uz `for update` nad vlastitim redom
+  (`id = auth.uid()`) i `private.is_staff(salon)` (vlasnik **ili** aktivan radnik, uz claim i red):
+  `update_my_profile(ime, telefon)`, `set_my_photo(url)`, `set_use_profile_photo(bool)`,
+  `mark_password_changed()`, a samo za `salon_admin` još `link_my_employee(radnik)`.
+- **Profilna slika mora biti moja, i sa ovog projekta.** `private.is_profile_media_url(salon,
+  uid, url)` traži `<prefiks>/<moj salon>/profil/<moj uid>-<ime>` do kraja stringa. Prefiks
+  (`private.storage_public_prefix()`) se gradi iz `iss` claima JWT-a, koji potpisuje projekat:
+  slobodan host (kao u `is_salon_media_url` za vlasnika) bi radniku dao da u katalog upiše URL sa
+  svog servera. Bez uid prefiksa bi kao svoju upisao sliku kolege iz istog foldera. Isti regex nad
+  **cijelim** imenom objekta (`private.is_own_profile_media`) drži politiku
+  `salon_media_profile_insert`: velika slova u UUID-u i završna kosa crta ne prolaze, jer ih sweep
+  nikad ne bi vratio. Politika radniku otvara samo upis, bez select/update/delete.
+  Cijena: custom domena i Android emulator (`10.0.2.2`) ne prolaze provjeru.
+- **Klijent i dalje čita samo `employees.image_url`.** `set_use_profile_photo(true)` upisuje
+  profilnu sliku u povezanog radnika, a zatečenu salonsku čuva u `users.salon_photo_url`.
+  Gašenje, uklanjanje profilne slike i promjena veze je vraćaju (`private.restore_salon_photo`,
+  bez grantova), a salonsku sliku koje više nema u bucketu ne vraća, nego postavlja `NULL`, da
+  korisnik uvijek može skloniti svoju ličnu sliku. Brisanje `users` reda (`remove_staff_user`,
+  cascade iz `auth.users`) radi isto kroz `before delete` trigger. Ako vlasnik u Osoblju
+  promijeni sliku tog radnika dok je prekidač upaljen,
+  njegova promjena pobjeđuje dok korisnik ne prebaci prekidač ponovo.
+- `link_my_employee` veže vlasnika (koji i sam radi) za radnika **svog** salona. Radnik koji
+  već ima nalog daje `PT409` (`users_employee_unique`). Radnik vezu ne mijenja, jer na njoj stoji
+  `is_employee`.
+- `password_changed_at` javlja pozivalac poslije GoTrue promjene, pa je to samo prikaz i ne
+  koristi se ni u jednoj odluci. Promjena lozinke u aplikaciji traži **ponovnu prijavu
+  trenutnom lozinkom**: otvorena sesija na zajedničkom računaru salona nije dokaz vlasništva.
+- Trigger iz taska 51 sada stoji i nad `users.photo_url`.
+
+Dokaz: `025_moj_profil.test.sql` (74 asercije). Helper URL-a oslabljen na `true` obara 7,
+politika bucketa samo na `bucket_id` 6, `is_staff` na „bilo ko prijavljen" 4, host bez `iss`
+provjere 2, bez triggera pri brisanju 1, vraćanje bez provjere objekta 2, stari `split_part`
+uslov nad imenom 2, a `restore_salon_photo` bez tijela 6. Viđeno uživo, lokalno i na
+hostovanom: upload kroz Storage API, prekidač mijenja `employees.image_url`, a promjena lozinke
+mijenja GoTrue hash (lokalno).
 
 ## Šta još nije zatvoreno
 

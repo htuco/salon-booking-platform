@@ -70,9 +70,10 @@ if [ "${1:-}" = "demo" ]; then
   shift
 fi
 
-# Verzija se cita iz tenant.yaml, kao u build_tenant.sh. Bez ovoga `flutter run` uzme
-# `version:` iz apps/client/pubspec.yaml (1.0.0+1), pa ekran „O aplikaciji" u razvoju
-# pokazuje drugi broj nego store build — a to je jedini ekran koji verziju i prikazuje.
+# Verzija se cita iz tenant.yaml samo za ispis ispod. `flutter run` od Fluttera 3.47 ne
+# prima `--build-name`/`--build-number` (ostali su samo u `flutter build`), pa ekran
+# „O aplikaciji" u razvoju pokazuje `version:` iz apps/client/pubspec.yaml. Store build ide
+# kroz build_tenant.sh i tamo je verzija tačna.
 version_name="$(citaj versionName)"
 ios_build="$(citaj iosBuildNumber)"
 
@@ -91,6 +92,16 @@ for current_arg in "$@"; do
 done
 
 defines=(--dart-define="SALON_ID=$salon_id")
+
+# Web debug: stari DDC format modula. Novi (podrazumijevan od Fluttera 3.47, zbog web hot
+# reloada) pri prvom pristupu `LucideIcons`-u — klasi sa ~29 000 konstanti — probije stack i
+# `ClientShell` pada sa `StackOverflowError`. Release (dart2js) i mobilni to nemaju. Cijena je
+# hot restart umjesto hot reloada na webu. Flag je označen kao deprecated: kad nestane, ili
+# Lucide mora biti tree-shaken u manju klasu, ili ovo treba prijaviti Dart timu.
+web_flags=()
+case "$flutter_device" in
+  chrome|edge|web-server) web_flags+=(--no-web-experimental-hot-reload) ;;
+esac
 backend="bez backenda (ekrani ostaju na kosturu)"
 
 # Samo za pravi entry point: demo_main.dart puni providere sam i Supabase mu ne treba.
@@ -168,5 +179,4 @@ if [ ! -f "$root/packages/core_domain/lib/src/catalog/salon.freezed.dart" ]; the
 fi
 
 exec flutter run -t "${entry[@]}" --flavor "$flavor" \
-  --build-name "$version_name" --build-number "$ios_build" \
-  "${defines[@]}" "$@"
+  "${web_flags[@]+"${web_flags[@]}"}" "${defines[@]}" "$@"

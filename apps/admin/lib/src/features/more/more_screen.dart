@@ -10,6 +10,7 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../appointments/appointments_providers.dart';
 import '../clients/clients_providers.dart';
+import '../profile/profilna_slika.dart';
 import '../settings/settings_providers.dart';
 import '../working_hours/working_hours_providers.dart';
 
@@ -50,7 +51,9 @@ class AdminMoreScreen extends ConsumerWidget {
                 AdminSpacing.xxxl,
               ),
               children: [
-                // Radniku „Još" nosi samo odjavu (task 47): svaki drugi red vodi u modul ili
+                // `4c`: prva kartica je osoba, ne salon — profil važi za nalog.
+                const _ProfilKartica(),
+                // Radniku „Još" nosi samo odjavu i profil (task 47, 61): svaki drugi red vodi u modul ili
                 // postavku koju ne smije otvoriti, a red koji vodi u zabranu je gori od
                 // reda kojeg nema.
                 if (radnik)
@@ -82,6 +85,7 @@ class AdminMoreScreen extends ConsumerWidget {
     SalonSettings? postavke,
     void Function() uPostavke,
   ) => [
+    const _Oznaka('Salon'),
     const _SalonKartica(),
     const _Grupa(naslov: 'Upravljanje', child: _Upravljanje()),
     _Grupa(
@@ -167,6 +171,89 @@ class AdminMoreScreen extends ConsumerWidget {
       ),
     ),
   ];
+}
+
+/// Verzalna oznaka iznad kartice koja nije grupa redova (`4c`: „Salon").
+class _Oznaka extends StatelessWidget {
+  const _Oznaka(this.tekst);
+
+  final String tekst;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(
+      top: AdminSpacing.xl,
+      bottom: AdminSpacing.sm,
+    ),
+    child: Text(
+      tekst.toUpperCase(),
+      semanticsLabel: tekst,
+      style: AdminText.eyebrow.copyWith(
+        color: context.adminColors.textSecondary,
+      ),
+    ),
+  );
+}
+
+/// `4c` — avatar 56, ime, „Moj profil · email"; dodir vodi na `/profile`.
+class _ProfilKartica extends ConsumerWidget {
+  const _ProfilKartica();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final clan = ref.watch(currentStaffProvider).valueOrNull;
+    if (clan == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const Key('jos-moj-profil'),
+        onTap: () => context.go(AdminRoute.profile.path),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              ProfilAvatar(url: clan.photoUrl, ime: clan.name, velicina: 56),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      clan.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontSize: 17,
+                      ),
+                    ),
+                    Text(
+                      'Moj profil · ${clan.email}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AdminText.dataInline.copyWith(
+                        color: context.adminColors.textSecondary,
+                        fontWeight: FontWeight.w400,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AdminSpacing.sm),
+              Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: context.adminColors.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 void _uskoro(BuildContext context, String poruka) {

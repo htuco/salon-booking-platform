@@ -76,6 +76,7 @@ class _LaziMedia implements MediaRepository {
     required MediaKind kind,
     required Uint8List bytes,
     required String contentType,
+    String? ownerId,
   }) async {
     vrste.add(kind);
     if (greska case final g?) throw g;

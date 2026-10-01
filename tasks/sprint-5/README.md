@@ -24,6 +24,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | feature | — | 0,5–1 dan |
 | [59](59-radnik-u-seedu.md) | Radnik u lokalnom seedu | chore | 60 | 0,5 dan |
 | [60](60-regresija-i-testiranje.md) | Regresija i testiranje | test | — | 2–3 dana |
+| [61](61-moj-profil.md) | Moj profil u adminu — slika, lični podaci, lozinka 🟡 | feature | — | 2–3 dana |
 
 Ukupno 18–26 dana — više od jednog sprinta, kao i Sprint 4. **Obavezni su 48–50, 56 i 57**:
 bez njih ni salon ni klijent nemaju ono što MVP obećava. 52–55 i 58 idu redom kako stignu; 59 i 60
@@ -121,3 +122,12 @@ Newsreader + Public Sans, izbor brandom; bez darka i galerije, shell bazni. Pack
 `masazamostar` i `fiziozenica`, sve tri CI matrice. Lokalno pgTAP 716 + svi REST, `core_domain` 88;
 `core_ui` zelen na CI-ju. **Ostaje:** ekran i snimci sva četiri tenanta (Flutter mašina), APK/iOS
 build na `main`-u.
+
+### 61 — Moj profil u adminu (🟡, 2026-10-01)
+
+Grana `feat/admin-moj-profil`, uz tenant `amkobarber` i dvije popravke za Flutter 3.47 (slike na
+webu, `run_tenant.sh`). Handoff `prototype/adminv2/profil/` (`4a`–`4e`), sveden na jedan salon
+po nalogu. Migracija `moj_profil`: kolone na `users`, pet RPC-ova, upis radnikove profilne slike
+u bucket, sweep i trigger znaju za nove kolone. Lokalno pgTAP 770 + svi REST, sabotaže obaraju
+7/6/4; admin 479, client 568, `core_ui` 143. Viđeno uživo na 1440 i 402. Migracija na hostovanom (prije merge-a),
+viđeno na Amku. **Ostaje:** CI na PR-u, telefon sa kamerom.

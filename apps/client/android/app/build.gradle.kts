@@ -41,6 +41,13 @@ android {
     flavorDimensions += "tenant"
 
     productFlavors {
+        create("amkobarber") {
+            dimension = "tenant"
+            applicationId = "ba.nasadomena.amkobarber"
+            resValue("string", "app_name", "Amko Barbershop")
+            versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
+            versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
+        }
         create("barberstudiovitez") {
             dimension = "tenant"
             applicationId = "ba.nasadomena.barberstudiovitez"

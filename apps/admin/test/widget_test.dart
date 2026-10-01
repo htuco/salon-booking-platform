@@ -95,6 +95,7 @@ void main() {
       '/working-hours',
       '/settings',
       '/more',
+      '/profile',
     };
 
     expect(AdminRoute.values.map((r) => r.path).toSet(), izSpecifikacije);

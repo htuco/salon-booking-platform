@@ -96,6 +96,18 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Raspored ostaje ponavljajući `working_hours`, radnikov red nadjačava salonski. Task 33
   prikazuje raspored; uređivanje radnog vremena i blokada je task 34 (v. ispod).
 
+## Moj profil (task 61)
+
+- `public.users` dobija `phone` (do 30 znakova, prazno = nema), `photo_url`, `use_profile_photo`
+  (default `false`), `salon_photo_url` i `password_changed_at`. Sve se piše kroz RPC; direktan
+  update nema politiku.
+- `update_my_profile(name, phone)`, `set_my_photo(url | null)`, `set_use_profile_photo(bool)`,
+  `mark_password_changed()` za osoblje, `link_my_employee(employee_id | null)` samo za
+  `salon_admin`. Validacija vraća `PT400`, tuđe/nepostojeće `42501`, zauzet radnik `PT409`.
+- Profilna slika je `salon-media/<salon>/profil/<uid>-<ime>.<ext>`
+  (`MediaRepository.upload(kind: profil, ownerId: uid)`).
+- Prikazna slika radnika ostaje `employees.image_url`; klijentski upiti se ne mijenjaju.
+
 ## Radno vrijeme, pauze i blokade (task 34)
 
 - `set_working_hours(salon_id, days, employee_id=null)` prima **tačno sedam** `working_hours_input`

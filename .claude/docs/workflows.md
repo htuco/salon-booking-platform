@@ -131,6 +131,12 @@ kosturu; tada služi `demo`.
 
 Na macOS-u skripta digne Simulator ako nijedan ne radi. Uređaj se bira sa `-d`, kao i inače.
 
+**Web debug ide sa `--no-web-experimental-hot-reload`**, i skripta ga doda sama za `chrome`,
+`edge` i `web-server`. Novi DDC format modula (podrazumijevan od Fluttera 3.47) probije stack
+na `LucideIcons` i `ClientShell` pada sa `StackOverflowError` — samo u debugu, release i
+mobilni to nemaju. Goli `flutter run -d chrome` zato treba isti flag. Od 3.47 `flutter run`
+ne prima ni `--build-name`/`--build-number`; verzija je tačna samo u `flutter build`.
+
 ### Hostovani Vitez demo
 
 Javne runtime vrijednosti i lokalne putanje stoje u ignorisanom `.env.live`; predložak je
