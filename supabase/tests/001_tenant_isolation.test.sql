@@ -36,9 +36,9 @@ update auth.users set last_sign_in_at=now() where id='a0000000-0000-4000-8000-00
 select is((select count(*)::int from public.auth_identities where supabase_user_id='a0000000-0000-4000-8000-000000000003'),1,'Auth update upserts without duplicate identity');
 
 set local role anon;
-select is((select count(*)::int from public.salons),4,'Anonymous sees all four active salons, not the inactive fixture');
-select is((select count(*)::int from public.services),16,'Anonymous sees only active salon services');
-select is((select count(*)::int from public.employees),8,'Anonymous sees only active salon employees');
+select is((select count(*)::int from public.salons),5,'Anonymous sees all five active salons, not the inactive fixture');
+select is((select count(*)::int from public.services),26,'Anonymous sees only active salon services');
+select is((select count(*)::int from public.employees),9,'Anonymous sees only active salon employees');
 select throws_ok($$insert into public.services(salon_id,name,price,duration_minutes) values('550e8400-e29b-41d4-a716-446655440000','Attack',1,30)$$,'42501','permission denied for table services','Anonymous cannot insert');
 select throws_ok($$update public.services set price=0$$,'42501','permission denied for table services','Anonymous cannot update');
 select throws_ok($$delete from public.services$$,'42501','permission denied for table services','Anonymous cannot delete');

@@ -326,6 +326,71 @@ Salon evidentira kasna otkazivanja i nedolaske. Ako se ponavljaju, zakazivanje p
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------------
+-- Amko Barbershop — prvi pravi klijent (flavor `amkobarber`).
+--
+-- Isti blok ide i na hostovani projekat, jer se seed tamo ne primjenjuje. Usluge su
+-- polazni prijedlog koji vlasnik ispravlja iz admina; slike dodaje sam, pa je `image_url`
+-- prazan. Grad, adresa i telefon nisu još poznati — prazan string, popunjava se iz admina.
+-- **Admin nalog vlasnika nije ovdje**: pravi email ne ide u repo, nalog postoji samo na
+-- hostovanom projektu.
+-- ---------------------------------------------------------------------------
+insert into public.salons(id,name,slug,description,city,address,phone,email,
+cover_image_url,gallery_urls,primary_color,secondary_color,theme,vertical_pack_key,plan)
+values
+('63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Amko Barbershop','amkobarber',
+ 'Oštar rez, uredna brada i vrijeme samo za vas.','','','',null,
+ null,'[]'::jsonb,'#E3B23C','#0D0D0D','modern_barber','barber','pro')
+on conflict(id) do nothing;
+
+insert into public.salon_builds(salon_id,flavor,application_id,bundle_id,app_display_name)
+values ('63679dd5-6ac8-4061-b4d6-d3ef181c9baa','amkobarber','ba.nasadomena.amkobarber',
+        'ba.nasadomena.amkobarber','Amko Barbershop')
+on conflict(salon_id) do nothing;
+
+insert into public.salon_settings(salon_id,buffer_minutes,slot_step_minutes,min_advance_booking_hours,
+max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice)
+values ('63679dd5-6ac8-4061-b4d6-d3ef181c9baa',5,15,2,30,12,3,false)
+on conflict(salon_id) do nothing;
+
+insert into public.services(id,salon_id,name,category,price,duration_minutes,image_url) values
+('10000000-0000-4000-8000-000000000101','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Muško šišanje','Šišanje',15,30,null),
+('10000000-0000-4000-8000-000000000102','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Fade','Šišanje',20,40,null),
+('10000000-0000-4000-8000-000000000103','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Šišanje makazama','Šišanje',18,40,null),
+('10000000-0000-4000-8000-000000000104','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Dječije šišanje','Šišanje',10,20,null),
+('10000000-0000-4000-8000-000000000105','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Konture','Šišanje',7,15,null),
+('10000000-0000-4000-8000-000000000106','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Uređivanje brade','Brada',10,20,null),
+('10000000-0000-4000-8000-000000000107','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Brijanje britvom uz topli peškir','Brada',15,30,null),
+('10000000-0000-4000-8000-000000000108','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Pranje i styling','Njega',8,15,null),
+('10000000-0000-4000-8000-000000000109','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Šišanje + brada','Paketi',25,50,null),
+('10000000-0000-4000-8000-000000000110','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Amko VIP (šišanje, brada, pranje, maska)','Paketi',40,75,null)
+on conflict(id) do nothing;
+
+insert into public.employees(id,salon_id,name,role,bio,experience_years,image_url) values
+('20000000-0000-4000-8000-000000000101','63679dd5-6ac8-4061-b4d6-d3ef181c9baa','Amko','Barber',
+ 'Fade, klasika i brada — svaki rez kao da je za sliku.',null,null)
+on conflict(id) do nothing;
+
+insert into public.employee_services(salon_id,employee_id,service_id)
+select e.salon_id,e.id,s.id from public.employees e join public.services s using(salon_id)
+where e.salon_id='63679dd5-6ac8-4061-b4d6-d3ef181c9baa'
+on conflict(salon_id,employee_id,service_id) do nothing;
+
+-- Pon–pet 09–19, subota 09–15, nedjelja zatvoreno.
+insert into public.working_hours(salon_id,day_of_week,start_time,end_time,is_closed)
+select '63679dd5-6ac8-4061-b4d6-d3ef181c9baa',d,'09:00'::time,
+       case when d=6 then '15:00'::time else '19:00'::time end,d=7
+from generate_series(1,7) d
+on conflict(salon_id,employee_id,day_of_week) do nothing;
+
+-- Bez sekcije „Kontakt" i bez {phone}: telefon još nije upisan (v. beauty iznad).
+insert into public.salon_policies(salon_id,sort_order,title,body) values
+('63679dd5-6ac8-4061-b4d6-d3ef181c9baa',20,'Otkazivanje',
+ 'Termin možete otkazati u aplikaciji najkasnije {minCancelHours} h prije početka. Kasno otkazivanje ostavlja prazan termin koji je mogao dobiti neko drugi.'),
+('63679dd5-6ac8-4061-b4d6-d3ef181c9baa',30,'Kašnjenje',
+ 'Ako kasnite, rez se može skratiti ili pomjeriti na prvi sljedeći slobodan termin, jer iza vas najčešće dolazi neko drugi.')
+on conflict do nothing;
+
+-- ---------------------------------------------------------------------------
 -- Osoblje: po jedan `salon_admin` za svaki demo salon.
 --
 -- Do taska 23 seed nije imao **nijednog** admina, pa se u admin aplikaciju nije imalo

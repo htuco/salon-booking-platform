@@ -31,7 +31,7 @@ List<Override> demoOverrides(AppEnv env, {bool prijavljen = true}) {
   final demo = _demoPodaci[env.salonId];
   if (demo == null) {
     throw StateError(
-      'Nema demo podataka za SALON_ID=${env.salonId}. Demo pokriva četiri salona iz '
+      'Nema demo podataka za SALON_ID=${env.salonId}. Demo pokriva salone iz '
       'supabase/seed.sql — v. _demoPodaci u lib/src/demo/demo_overrides.dart.',
     );
   }
@@ -379,6 +379,7 @@ const _barberId = '550e8400-e29b-41d4-a716-446655440000';
 const _beautyId = '550e8400-e29b-41d4-a716-446655440001';
 const _masazaId = '550e8400-e29b-41d4-a716-446655440002';
 const _fizioId = '550e8400-e29b-41d4-a716-446655440003';
+const _amkoId = '63679dd5-6ac8-4061-b4d6-d3ef181c9baa';
 
 /// `09:00–17:00` radnim danima, `09:00–14:00` subotom, nedjeljom zatvoreno — tačno kako
 /// `seed.sql` puni `working_hours` za sve demo salone.
@@ -453,6 +454,57 @@ final _demoPodaci = <String, _Demo>{
       ),
     ],
     hours: _radnoVrijeme(_barberId),
+    vertical: _barberVertical,
+  ),
+  // Pravi klijent: usluge i radnik iz `seed.sql` bloka za `amkobarber`, bez slika — prave
+  // fotografije vlasnik postavlja iz admina, a demo ih ne glumi.
+  _amkoId: _Demo(
+    salon: const Salon(
+      id: _amkoId,
+      name: 'Amko Barbershop',
+      slug: 'amkobarber',
+      description: 'Oštar rez, uredna brada i vrijeme samo za vas.',
+      city: '',
+      primaryColor: '#E3B23C',
+      secondaryColor: '#0D0D0D',
+      theme: 'modern_barber',
+      verticalPackKey: 'barber',
+    ),
+    services: const [
+      Service(
+        id: '10000000-0000-4000-8000-000000000101',
+        salonId: _amkoId,
+        name: 'Muško šišanje',
+        category: 'Šišanje',
+        price: 15,
+        durationMinutes: 30,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000102',
+        salonId: _amkoId,
+        name: 'Fade',
+        category: 'Šišanje',
+        price: 20,
+        durationMinutes: 40,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000109',
+        salonId: _amkoId,
+        name: 'Šišanje + brada',
+        category: 'Paketi',
+        price: 25,
+        durationMinutes: 50,
+      ),
+    ],
+    employees: const [
+      Employee(
+        id: '20000000-0000-4000-8000-000000000101',
+        salonId: _amkoId,
+        name: 'Amko',
+        role: 'Barber',
+      ),
+    ],
+    hours: _radnoVrijeme(_amkoId),
     vertical: _barberVertical,
   ),
   _beautyId: _Demo(

@@ -80,8 +80,8 @@ select is((select count(*)::int from public.app_policies where document='terms')
   'Anon vidi tri platformske sekcije pravila');
 select is((select count(*)::int from public.app_policies where document='privacy'),9,
   'Anon vidi devet sekcija politike privatnosti');
-select is((select count(*)::int from public.salon_policies),5,
-  'Anon vidi salonske sekcije oba aktivna salona (3 + 2), i nijednu vise');
+select is((select count(*)::int from public.salon_policies),7,
+  'Anon vidi salonske sekcije aktivnih salona (Vitez 3, Travnik 2, Amko 2), i nijednu vise');
 select is((select count(*)::int from public.salon_policies
            where salon_id='550e8400-e29b-41d4-a716-446655440097'),0,
   'Anon ne vidi sekciju neaktivnog salona');
@@ -119,7 +119,7 @@ set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000023","r
 set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440000"}';
 set local role authenticated;
 
-select is((select count(*)::int from public.salon_policies),5,'Klijent vidi isto sto i anon');
+select is((select count(*)::int from public.salon_policies),7,'Klijent vidi isto sto i anon');
 select throws_ok(
   $$insert into public.salon_policies(salon_id,sort_order,title,body)
     values('550e8400-e29b-41d4-a716-446655440000',80,'Moja pravila','Tekst klijenta.')$$,

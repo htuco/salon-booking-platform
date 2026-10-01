@@ -1,0 +1,49 @@
+# Amko Barbershop — salonId mora odgovarati redu u supabase/seed.sql i na hostovanom projektu.
+# Polja: docs/04-flutter-tenant-factory.md §3
+tenant:
+  flavor: amkobarber
+  salonId: 63679dd5-6ac8-4061-b4d6-d3ef181c9baa
+  slug: amkobarber
+  vertical: barber
+
+app:
+  displayName: "Amko Barbershop"
+  shortName: "Amko the Barber"
+  applicationId: ba.nasadomena.amkobarber
+  bundleId: ba.nasadomena.amkobarber
+  versionName: "1.0.0"
+  androidVersionCode: 1
+  iosBuildNumber: 1
+
+branding:
+  # Fallback boje dok backend ne odgovori — sprječava bijeli flash.
+  # Iste vrijednosti kao salons.primary_color/secondary_color u bazi. Zlatna i crna iz loga.
+  primaryColor: "#E3B23C"
+  secondaryColor: "#0D0D0D"
+  splashBackground: "#0D0D0D"
+  theme: modern_barber
+
+auth:
+  # Koji se provideri nude na login ekranu. Filtriranje po platformi radi AuthConfig —
+  # `apple: true` na Androidu se ignoriše, ne pada. V. docs/06 §7.6.
+  providers:
+    apple: true
+    google: true
+    email: true
+
+  # Google `REVERSED_CLIENT_ID` za iOS — client ID sa obrnutim segmentima, ide u
+  # `CFBundleURLTypes`. Prazno dok konzola ne da ID; v. tasks/sprint-2/12-konzole-checklist.md.
+  googleReversedClientId: ''
+
+store:
+  shortDescription: "Zakažite termin kod Amka u par tapova."
+  categoryAndroid: LIFESTYLE
+  categoryIos: LIFESTYLE
+  contentRating: everyone
+  supportEmail: podrska@nasadomena.ba
+  privacyPolicyUrl: https://nasadomena.ba/privatnost/amkobarber
+
+targets:
+  android: true
+  ios: true
+  web: true
