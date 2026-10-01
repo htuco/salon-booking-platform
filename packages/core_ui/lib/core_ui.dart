@@ -27,6 +27,7 @@ export 'src/components/bottom_nav_bar.dart';
 export 'src/components/calendar_month.dart';
 export 'src/components/empty_state.dart';
 export 'src/components/link_row.dart';
+export 'src/components/network_image_web.dart';
 export 'src/components/photo_frame.dart';
 export 'src/components/selectable_row.dart';
 export 'src/components/service_card.dart';

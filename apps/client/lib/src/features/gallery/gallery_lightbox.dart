@@ -252,6 +252,7 @@ class _GalleryLightboxState extends State<GalleryLightbox> {
                           flightShuttleBuilder: GalleryLightbox.letjelica,
                           child: CachedNetworkImage(
                             imageUrl: widget.urls[i],
+                            imageRenderMethodForWeb: webImageRenderMethod,
                             // `contain`, ne `cover`: ovo je pregled fotografije, a ne ćelija
                             // mreže — odsjecanje ivica ovdje krije upravo ono što se gleda.
                             fit: BoxFit.contain,
@@ -553,7 +554,10 @@ class _Slicica extends StatelessWidget {
       image: ResizeImage.resizeIfNeeded(
         (sirina * MediaQuery.devicePixelRatioOf(context)).round(),
         null,
-        CachedNetworkImageProvider(url),
+        CachedNetworkImageProvider(
+          url,
+          imageRenderMethodForWeb: webImageRenderMethod,
+        ),
       ),
       fit: BoxFit.contain,
       width: double.infinity,

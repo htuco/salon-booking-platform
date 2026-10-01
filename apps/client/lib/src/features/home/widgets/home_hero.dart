@@ -214,6 +214,7 @@ class _Cover extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: url,
       fit: BoxFit.cover,
+      imageRenderMethodForWeb: webImageRenderMethod,
       // Placeholder je isti gradijent, ne spinner: prelaz slike preko vlastitog brenda
       // se ne primijeti, a spinner preko hero površine izgleda kao da app ne radi.
       placeholder: (context, url) => gradijent,

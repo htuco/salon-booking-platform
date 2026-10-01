@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../tokens/spacing.dart';
+import 'network_image_web.dart';
 
 /// Kvadratni (ili portretni) okvir za fotografiju — `SPEC.md` §Recurring components.
 ///
@@ -75,6 +76,8 @@ class PhotoFrame extends StatelessWidget {
                     memCacheWidth:
                         (size * MediaQuery.devicePixelRatioOf(context)).round(),
                     maxWidthDiskCache: 1200,
+                    // Na webu bajtovi, ne `<img>` — v. `webImageRenderMethod`.
+                    imageRenderMethodForWeb: webImageRenderMethod,
                     // Slika koja ne stigne ne smije srušiti red — okvir se vrati na
                     // zamjenu, isto kao kad URL-a nema.
                     errorWidget: (context, error, stack) =>
