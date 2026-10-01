@@ -1,28 +1,38 @@
-# Trenutni task: 62 — Toast obavijesti u adminu
+# Trenutni task: 55 — Prerada admin dashboarda
 
-Puni task: [tasks/sprint-5/62-toast-obavijesti.md](sprint-5/62-toast-obavijesti.md) · učitan 2026-10-01
+Puni task: [tasks/sprint-5/55-prerada-dashboarda.md](sprint-5/55-prerada-dashboarda.md) · učitan 2026-10-01
 
 ## Status
 
-U toku (grana `feat/admin-toastovi`, 2026-10-01).
+U toku (grana `feat/admin-danas`, 2026-10-01). Grana je otvorena na `feat/admin-toastovi`, jer
+Danas koristi toast iz taska 62 za „Poništi"; PR ide na `main` kad #123 uđe.
 
 ## Ciljevi
 
-- [x] `AdminToast` i svi pozivi `SnackBar`-a u adminu prebačeni, po vrsti
-- [x] Admin `flutter test` zelen, `analyze` čist; viđeno na 1440 i 402 (demo build)
-- [ ] PR protiv `main`-a, CI zelen
+- [x] Dizajn prije koda: `prototype/adminv2/danas/` i ADR-0027
+- [x] Zahtjevi, „je li došao?", Sljedeći, brojke, zauzetost, raspored (lista i kalendar), panel na 2560
+- [x] Stanja `6f`–`6k`, odbijanje sa razlogom `6l`, „Poništi" `6m`
+- [x] Radnik nad istim ekranom; widget testovi za obje uloge; admin `flutter test` zelen
+- [x] Viđeno uživo na demo buildu (1440, 2560, 402) i na hostovanom (Amko, 1440)
+- [ ] Viđeno na hostovanom kao radnik i na telefonu
+- [ ] CI zelen, PR spojen
 
 ## Napomene
 
-- Handoff je u `prototype/adminv2/toast/`; `Salon OS Admin.dc.html` sa sekcijom 5 nije stigao u zip,
-  pa su izvor `README.md`, `toast.css`, `toast.ts` i `5b-varijante.png`.
-- Klijentska aplikacija ostaje na `SnackBar`-u: handoff je za Melura admin, a klijent boju uzima iz
-  `tenant.yaml`.
-- Flutter 3.47.5 je na mašini (Homebrew). Web debug ide sa `--no-web-experimental-hot-reload`
-  (stack overflow na `LucideIcons`).
-- Amko Barbershop je na hostovanom upisan ručno (v. task 61).
+- Task 54 (uklanjanje „uskoro" dugmadi) formalno blokira 55, a nije počet. Ne dira Danas, pa je
+  55 išao prvi na zahtjev vlasnika proizvoda.
+- Melura znak (`apps/admin/assets/brand/`) i ikone su u istom PR-u; animacija učitavanja iz
+  istog jezika je task 63.
+- Admin demo sa `--dart-define=DEMO_SALON=amko` glumi Amko Barbershop.
+- Flutter 3.47.5 je na mašini (Homebrew). Web debug ide sa `--no-web-experimental-hot-reload`.
 
 ## Istorija
+
+### 62 — Toast obavijesti u adminu (PR otvoren)
+
+[PR #123](https://github.com/htuco/salon-booking-platform/pull/123), otvoren 2026-10-01. `AdminToast`
+umjesto `SnackBar`-a u adminu, viđeno na 1440 i 402. **Ostaje:** hostovani projekat sa pravim
+nalogom, CI zelen, merge.
 
 ### 61 — Moj profil u adminu (spojen, ostaje telefon)
 
