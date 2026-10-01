@@ -458,6 +458,7 @@ servira i tu stranicu.
 | Blokiraj vrijeme (modal) | `/calendar/block` | Should |
 | Postavke | `/settings` | Should |
 | Još (ulaz u module izvan četiri ćelije) | `/more` | Should |
+| Moj profil (slika, lični podaci, lozinka osobe) | `/profile` | Should |
 | O aplikaciji | `/about-app` | Should |
 | Pravila korištenja | `/terms` | Must |
 
@@ -474,6 +475,9 @@ donja navigacija telefona ima četiri ćelije, pa ostalih pet stoji iza „Još"
 
 **`/pozivnica` dodana u tasku 45** (ADR-0023). Nalog osoblja nastaje iz koda koji salon pošalje
 radniku; ruta je javna kao i `/login`, jer radnik u tom trenutku još nema nalog.
+
+**`/profile` dodan u tasku 61**, iz handoffa `design_handoff_admin_profil` (prikazi `4a`–`4e`).
+Profil pripada **osobi**, ne salonu, pa je odvojen od `/settings`; otvoren je i radniku.
 
 ### Super admin (Next.js konzola — `web/app/super-admin`)
 

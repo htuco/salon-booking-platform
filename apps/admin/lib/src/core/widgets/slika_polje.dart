@@ -31,12 +31,13 @@ final izborSlikeProvider = Provider<Future<IzabranaSlika?> Function()>(
     if (fajl == null) return null;
     return IzabranaSlika(
       bytes: await fajl.readAsBytes(),
-      contentType: fajl.mimeType ?? _tipIzImena(fajl.name),
+      contentType: fajl.mimeType ?? tipSlikeIzImena(fajl.name),
     );
   },
 );
 
-String _tipIzImena(String ime) {
+/// Tip slike iz ekstenzije, kad ga `image_picker` ne zna. Dijele ga oba izbora slike.
+String tipSlikeIzImena(String ime) {
   final malo = ime.toLowerCase();
   if (malo.endsWith('.png')) return 'image/png';
   if (malo.endsWith('.webp')) return 'image/webp';

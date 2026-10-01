@@ -13,6 +13,7 @@ import '../../features/clients/clients_screen.dart';
 import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/more/more_screen.dart';
+import '../../features/profile/profile_screen.dart';
 import '../../features/services/services_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/employees/employees_screen.dart';
@@ -121,6 +122,11 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AdminMoreScreen(),
       ),
       GoRoute(
+        path: AdminRoute.profile.path,
+        name: AdminRoute.profile.name,
+        builder: (context, state) => const AdminProfileScreen(),
+      ),
+      GoRoute(
         path: AdminRoute.services.path,
         name: AdminRoute.services.name,
         builder: (context, state) => const AdminServicesScreen(),
@@ -186,6 +192,8 @@ const _napisane = {
   AdminRoute.appointmentDetails,
   // Task 29.
   AdminRoute.more,
+  // Task 61.
+  AdminRoute.profile,
   // Task 31.
   AdminRoute.calendar,
   // Task 32.
@@ -209,8 +217,10 @@ const kRuteRadnika = {
   AdminRoute.calendar,
   AdminRoute.appointments,
   AdminRoute.appointmentDetails,
-  // „Još" je na telefonu jedini ulaz u odjavu; radniku nosi samo nju.
+  // „Još" je radniku na telefonu jedini ulaz u odjavu i profil (AppBar meni ima i on).
   AdminRoute.more,
+  // Profil je nalog osobe, ne salona — radnik mijenja svoju sliku i lozinku (task 61).
+  AdminRoute.profile,
 };
 
 /// Da li [putanja] vodi na neku od [kRuteRadnika].
@@ -265,7 +275,10 @@ enum AdminRoute {
   /// **Postoji samo zato što telefon ima četiri ćelije, a navigacija osam stavki.** Na
   /// desktopu tih pet modula stoji u sidebaru, pa se do ovog ekrana ne dolazi iz
   /// navigacije — ruta ostaje ispravna ako je neko otvori direktno.
-  more('/more', 'Još');
+  more('/more', 'Još'),
+
+  /// Moj profil (task 61) — nalog osobe; ulaz iz menija u sidebaru i iz „Još".
+  profile('/profile', 'Moj profil');
 
   const AdminRoute(this.path, this.title);
 

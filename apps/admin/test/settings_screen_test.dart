@@ -328,6 +328,7 @@ class _LaziMedia implements MediaRepository {
     required MediaKind kind,
     required Uint8List bytes,
     required String contentType,
+    String? ownerId,
   }) async => 'https://example.invalid/$salonId/${kind.name}/nova.jpg';
 
   @override

@@ -8,6 +8,7 @@ import '../../features/appointments/appointments_providers.dart';
 import '../navigation/admin_destinations.dart';
 import '../router/admin_router.dart';
 import '../theme/theme.dart';
+import '../../features/profile/profilna_slika.dart';
 import 'admin_wordmark.dart';
 
 /// Širine na kojima admin mijenja oblik.
@@ -272,7 +273,11 @@ class _Sidebar extends ConsumerWidget {
             ),
           ),
           const Spacer(),
-          if (clan != null) _SidebarPodnozje(clan: clan),
+          if (clan != null)
+            _SidebarPodnozje(
+              clan: clan,
+              aktivan: aktivna == AdminRoute.profile,
+            ),
         ],
       ),
     );
@@ -383,14 +388,16 @@ class _SidebarStavka extends ConsumerWidget {
             ? context.adminColors.sidebarSelected
             : Colors.transparent,
         borderRadius: BorderRadius.circular(AdminRadius.base),
+        // Klip, da koralna traka prati zaobljene uglove podloge.
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => context.go(cilj.putanja),
-          borderRadius: BorderRadius.circular(AdminRadius.base),
           child: Container(
             // `3b` crta 37 px; FE-502 traži 44 — stavka je meta i na dodirnom
             // laptopu i u tablet pojasu, a razlika su 63 px na devet stavki.
             height: AdminSize.touchTarget,
             padding: const EdgeInsets.symmetric(horizontal: 12),
+            foregroundDecoration: izabrana ? _aktivnaTraka(context) : null,
             child: Row(
               children: [
                 // **Bez ikone** — `3b` ih u sidebaru ne crta. Ikone ostaju u donjoj
@@ -418,19 +425,86 @@ class _SidebarStavka extends ConsumerWidget {
   }
 }
 
+/// Grupa stavki menija naloga: 6 px iznad i ispod, između linija (`4a`).
+class _GrupaMenija extends StatelessWidget {
+  const _GrupaMenija({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Column(mainAxisSize: MainAxisSize.min, children: children),
+  );
+}
+
+/// Stavka menija naloga: 44 px, hover je zaobljena kutija uvučena 6 px od ivice menija, a ne
+/// traka od ivice do ivice (`4a`).
+class _StavkaMenija extends StatelessWidget {
+  const _StavkaMenija({
+    required this.tekst,
+    required this.onPressed,
+    this.boja,
+    super.key,
+  });
+
+  final String tekst;
+  final VoidCallback onPressed;
+  final Color? boja;
+
+  @override
+  Widget build(BuildContext context) {
+    final boje = context.adminColors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: MenuItemButton(
+        onPressed: onPressed,
+        style: MenuItemButton.styleFrom(
+          minimumSize: const Size.fromHeight(AdminSize.touchTarget),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AdminRadius.small),
+          ),
+          foregroundColor: boja ?? boje.ink,
+          backgroundColor: Colors.transparent,
+        ).copyWith(overlayColor: WidgetStatePropertyAll(boje.neutralTint)),
+        child: Text(
+          tekst,
+          style: Theme.of(context).textTheme.bodyLarge
+              ?.copyWith(color: boja ?? boje.ink, fontWeight: FontWeight.w500),
+        ),
+      ),
+    );
+  }
+}
+
+/// Oznaka aktivne stavke sidebara: koralna traka od 2 px uz lijevu ivicu, unutar
+/// zaobljene podloge (`4a`: „#373a40 plus a 2px inset coral bar"). Ista je za navigaciju i
+/// za red naloga na `/profile`, da aktivno izgleda jednako gdje god stoji.
+///
+/// Ide u `foregroundDecoration`, ne `decoration`: `Container` širinu bordera iz `decoration`
+/// dodaje na padding, pa bi tekst aktivne stavke otišao 2 px udesno od ostalih.
+BoxDecoration _aktivnaTraka(BuildContext context) => BoxDecoration(
+  border: Border(left: BorderSide(color: context.adminColors.action, width: 2)),
+);
+
 /// Avatar, ime i uloga prijavljenog, ispod linije na dnu sidebara (`3b`).
 ///
-/// **Odjava je u meniju ovog reda**, ne ikona pored njega: `3b` ikonu ne crta, a odjava
-/// mora postojati. Red je zato dugme — klik otvara meni sa mailom i „Odjavi se", isti
-/// sadržaj kao `AdminNalogDugme` na telefonu.
+/// Klik otvara meni korisnika (`4a`): zaglavlje sa slikom, imenom i mailom, pa „Moj
+/// profil", „Promijeni sliku" i „Odjavi se" u svojoj grupi. Dok je meni otvoren, red nosi
+/// ▴ i podlogu `#2c2e33`; dok je korisnik na `/profile`, nosi aktivan stil navigacije.
 class _SidebarPodnozje extends ConsumerWidget {
-  const _SidebarPodnozje({required this.clan});
+  const _SidebarPodnozje({required this.clan, required this.aktivan});
 
   final StaffMember clan;
+
+  /// Korisnik je na `/profile`.
+  final bool aktivan;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final boje = context.adminColors;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 14),
@@ -438,63 +512,165 @@ class _SidebarPodnozje extends ConsumerWidget {
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: context.adminColors.sidebarDivider,
+            color: boje.sidebarDivider,
             width: AdminSize.hairline,
           ),
         ),
       ),
-      child: PopupMenuButton<String>(
-        tooltip: 'Nalog',
-        position: PopupMenuPosition.over,
-        onSelected: (izbor) async {
-          if (izbor == 'odjava') await odjavi(context, ref);
-        },
-        itemBuilder: (context) => [
-          PopupMenuItem<String>(
-            enabled: false,
-            child: Text(clan.email, style: theme.textTheme.bodySmall),
+      child: MenuAnchor(
+        // `4a`: 4 px između menija i reda.
+        alignmentOffset: const Offset(0, -4),
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(boje.surface),
+          minimumSize: const WidgetStatePropertyAll(Size(272, 0)),
+          maximumSize: const WidgetStatePropertyAll(Size(272, double.infinity)),
+          elevation: const WidgetStatePropertyAll(12),
+          shadowColor: WidgetStatePropertyAll(boje.ink.withValues(alpha: 0.28)),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AdminRadius.small),
+            ),
           ),
-          const PopupMenuDivider(),
-          const PopupMenuItem<String>(
-            value: 'odjava',
-            child: Text('Odjavi se'),
-          ),
-        ],
-        child: Container(
-          // Ime i uloga u dva reda daju 40 px; meta mora imati 44 (FE-502).
-          constraints: const BoxConstraints(minHeight: AdminSize.touchTarget),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              const _Slika(url: null, strana: 32, krug: true),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      clan.name,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: context.adminColors.sidebarAccentForeground,
-                      ),
-                    ),
-                    // **Uloga, ne mail** (`3b`): ko si ovdje, a ne čime si se prijavio.
-                    // Mail je u meniju. Nepoznata uloga ne ispisuje ništa.
-                    if (labelaUloge(clan.role) case final uloga?)
+          padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+        ),
+        menuChildren: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                ProfilAvatar(url: clan.photoUrl, ime: clan.name, velicina: 44),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        uloga,
+                        clan.name,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: context.adminColors.sidebarMuted,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        clan.email,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: boje.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: boje.separator),
+          _GrupaMenija(
+            children: [
+              _StavkaMenija(
+                key: const Key('meni-moj-profil'),
+                tekst: 'Moj profil',
+                onPressed: () => context.go(AdminRoute.profile.path),
+              ),
+              _StavkaMenija(
+                key: const Key('meni-promijeni-sliku'),
+                tekst: 'Promijeni sliku',
+                // Izbor fajla se otvara odmah, bez skretanja preko profila (`4a`).
+                onPressed: () => promijeniProfilnuSliku(context, ref),
               ),
             ],
           ),
-        ),
+          Divider(height: 1, color: boje.separator),
+          _GrupaMenija(
+            children: [
+              _StavkaMenija(
+                tekst: 'Odjavi se',
+                boja: boje.destructive,
+                onPressed: () => odjavi(context, ref),
+              ),
+            ],
+          ),
+        ],
+        builder: (context, meni, _) {
+          final otvoren = meni.isOpen;
+          return Semantics(
+            button: true,
+            expanded: otvoren,
+            label: 'Meni naloga',
+            child: Material(
+              color: otvoren
+                  ? boje.sidebarRaised
+                  : aktivan
+                  ? boje.sidebarSelected
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AdminRadius.base),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                key: const Key('sidebar-nalog'),
+                onTap: () => otvoren ? meni.close() : meni.open(),
+                child: Container(
+                  // 56 px kao red u `4a`; FE-502 traži najmanje 44.
+                  constraints: const BoxConstraints(
+                    minHeight: AdminSize.touchTarget + 12,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  foregroundDecoration: aktivan && !otvoren
+                      ? _aktivnaTraka(context)
+                      : null,
+                  child: Row(
+                    children: [
+                      ProfilAvatar(
+                        url: clan.photoUrl,
+                        ime: clan.name,
+                        velicina: 32,
+                        naTamnom: true,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              clan.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                color: boje.sidebarAccentForeground,
+                              ),
+                            ),
+                            // **Uloga, ne mail** (`3b`): ko si ovdje, a ne čime si se
+                            // prijavio. Mail je u meniju. Nepoznata uloga ne ispisuje ništa.
+                            if (labelaUloge(clan.role) case final uloga?)
+                              Text(
+                                uloga,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: boje.sidebarMuted,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      // Glif je oznaka stanja, ne tekst: čitač ga ne izgovara, stanje nosi
+                      // `Semantics` iznad.
+                      ExcludeSemantics(
+                        child: Text(
+                          otvoren ? '▴' : '▾',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: boje.sidebarMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -708,6 +884,7 @@ class AdminNalogDugme extends ConsumerWidget {
       tooltip: 'Nalog',
       icon: ikona ? const Icon(Icons.account_circle_outlined) : null,
       onSelected: (izbor) async {
+        if (izbor == 'profil') context.go(AdminRoute.profile.path);
         if (izbor == 'odjava') await odjavi(context, ref);
       },
       itemBuilder: (context) => [
@@ -724,6 +901,7 @@ class AdminNalogDugme extends ConsumerWidget {
             ),
           ),
         const PopupMenuDivider(),
+        const PopupMenuItem<String>(value: 'profil', child: Text('Moj profil')),
         const PopupMenuItem<String>(value: 'odjava', child: Text('Odjavi se')),
       ],
     );

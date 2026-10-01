@@ -12,7 +12,10 @@ import '../errors/errors.dart';
 ///
 /// Task 51 (čišćenje) po vrsti zna koju kolonu da uporedi sa sadržajem foldera, pa se
 /// vrsta ne izmišlja na ekranu nego bira ovdje.
-enum MediaKind { usluge, radnici, galerija, logo, cover }
+///
+/// `profil` je slika **osobe** (task 61): ime fajla počinje njenim `auth.uid()`, jer politika
+/// bucketa radniku dozvoljava upis samo pod vlastitim prefiksom.
+enum MediaKind { usluge, radnici, galerija, logo, cover, profil }
 
 /// Slike salona u Storage bucketu `salon-media` (task 48, ADR-0015).
 ///
@@ -48,32 +51,45 @@ class MediaRepository {
     required MediaKind kind,
     required Uint8List bytes,
     required String contentType,
-  }) => guard(() async {
-    // Sadržaj je jači od deklarisanog tipa: `image_picker` na Androidu često ne zna tip,
-    // pa bi fotografija bez ekstenzije u imenu bila odbijena kao „nije slika".
-    final tip = tipIzSadrzaja(bytes) ?? contentType;
-    final ekstenzija = _ekstenzije[tip];
-    if (ekstenzija == null) {
-      throw const StorageException(
-        'mime type not supported',
-        statusCode: '415',
+    String? ownerId,
+  }) {
+    // Van `guard`-a: ovo je greška pozivaoca, ne servera, i ne smije izaći kao „pokušajte
+    // ponovo".
+    if (kind == MediaKind.profil && ownerId == null) {
+      throw ArgumentError.value(
+        ownerId,
+        'ownerId',
+        'profilna slika traži vlasnika',
       );
     }
-    if (bytes.length > maxBytes) {
-      throw const StorageException(
-        'maximum allowed size exceeded',
-        statusCode: '413',
+    return guard(() async {
+      // Sadržaj je jači od deklarisanog tipa: `image_picker` na Androidu često ne zna tip,
+      // pa bi fotografija bez ekstenzije u imenu bila odbijena kao „nije slika".
+      final tip = tipIzSadrzaja(bytes) ?? contentType;
+      final ekstenzija = _ekstenzije[tip];
+      if (ekstenzija == null) {
+        throw const StorageException(
+          'mime type not supported',
+          statusCode: '415',
+        );
+      }
+      if (bytes.length > maxBytes) {
+        throw const StorageException(
+          'maximum allowed size exceeded',
+          statusCode: '413',
+        );
+      }
+      final ime = ownerId == null ? _ime() : '$ownerId-${_ime()}';
+      final putanja = '$salonId/${kind.name}/$ime.$ekstenzija';
+      final storage = _client.storage.from(bucket);
+      await storage.uploadBinary(
+        putanja,
+        bytes,
+        fileOptions: FileOptions(contentType: tip, upsert: false),
       );
-    }
-    final putanja = '$salonId/${kind.name}/${_ime()}.$ekstenzija';
-    final storage = _client.storage.from(bucket);
-    await storage.uploadBinary(
-      putanja,
-      bytes,
-      fileOptions: FileOptions(contentType: tip, upsert: false),
-    );
-    return storage.getPublicUrl(putanja);
-  });
+      return storage.getPublicUrl(putanja);
+    });
+  }
 
   /// JPEG, PNG ili WebP po prvim bajtovima; `null` za sve ostalo (HEIC, SVG, tekst).
   static String? tipIzSadrzaja(Uint8List b) {

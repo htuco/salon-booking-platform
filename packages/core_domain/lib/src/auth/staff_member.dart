@@ -22,6 +22,10 @@ class StaffMember {
     required this.role,
     this.salonId,
     this.employeeId,
+    this.phone = '',
+    this.photoUrl,
+    this.useProfilePhoto = false,
+    this.passwordChangedAt,
   });
 
   /// Isti `uuid` kao `auth.users.id` i kao `sub` u JWT-u — `public.users.id` je FK na
@@ -62,6 +66,19 @@ class StaffMember {
   bool get isEmployee =>
       role == 'employee' && salonId != null && employeeId != null;
 
+  /// Telefon osobe (`Moj profil`), prazan string kad nije upisan. Nije kontakt salona.
+  final String phone;
+
+  /// Profilna slika **osobe** (task 61) — avatar u adminu. Klijent je ne čita direktno: do
+  /// njega stiže kroz `employees.image_url` kad je [useProfilePhoto] upaljen.
+  final String? photoUrl;
+
+  /// Koristi li salon profilnu sliku kao sliku povezanog radnika.
+  final bool useProfilePhoto;
+
+  /// Kad je lozinka zadnji put promijenjena iz `Moj profil`; `null` kad nikad. Samo prikaz.
+  final DateTime? passwordChangedAt;
+
   /// Smije li uopšte u admin app — vlasnik ili radnik. Šta vidi unutra određuje uloga.
   bool get imaPristup => isSalonAdmin || isEmployee;
 
@@ -74,13 +91,28 @@ class StaffMember {
           other.email == email &&
           other.role == role &&
           other.salonId == salonId &&
-          other.employeeId == employeeId;
+          other.employeeId == employeeId &&
+          other.phone == phone &&
+          other.photoUrl == photoUrl &&
+          other.useProfilePhoto == useProfilePhoto &&
+          other.passwordChangedAt == passwordChangedAt;
 
   @override
-  int get hashCode => Object.hash(id, name, email, role, salonId, employeeId);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    email,
+    role,
+    salonId,
+    employeeId,
+    phone,
+    photoUrl,
+    useProfilePhoto,
+    passwordChangedAt,
+  );
 
   @override
   String toString() =>
       'StaffMember(id: $id, email: $email, role: $role, salonId: $salonId, '
-      'employeeId: $employeeId)';
+      'employeeId: $employeeId, useProfilePhoto: $useProfilePhoto)';
 }
