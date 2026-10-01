@@ -11,6 +11,7 @@ import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../appointments/status_pill.dart';
 import 'clients_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Ime klijenta kako ga ekran smije prikazati.
 ///
@@ -47,9 +48,7 @@ bool _pretragaUTopBaru(BuildContext context) =>
 /// Kontrola iz `3e`/`3o` iza koje još nema radnje. Vidljiva je jer je dio ekrana, ali ne
 /// glumi da je nešto uradila.
 void _uskoro(BuildContext context, String sta) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text('$sta — uskoro.')));
+  AdminToast.info(context, '$sta — uskoro.');
 }
 
 class AdminClientsScreen extends ConsumerWidget {

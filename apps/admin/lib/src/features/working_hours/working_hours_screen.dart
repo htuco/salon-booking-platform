@@ -40,6 +40,7 @@ import '../../core/widgets/admin_verzal.dart';
 import 'working_hours_dialogs.dart';
 import 'working_hours_providers.dart';
 import 'working_hours_sekcije.dart';
+import '../../core/widgets/admin_toast.dart';
 
 export 'working_hours_sekcije.dart' show naslovBlokade;
 
@@ -140,14 +141,19 @@ class _AdminWorkingHoursScreenState
     return null;
   }
 
-  /// Greška ide i u `_greska` i u snackbar — dugme za snimanje je u top baru ili na dnu,
-  /// daleko od poruke iznad sedmice.
-  void _prijaviGresku(String poruka) {
+  /// Greška ide i u `_greska` i u toast — dugme za snimanje je u top baru ili na dnu,
+  /// daleko od poruke iznad sedmice. Pravilo koje nije ispunjeno (pauza van radnog
+  /// vremena) je upozorenje, pad poziva je greška.
+  void _prijaviGresku(String poruka, {bool kvar = true}) {
     setState(() {
       _snimam = false;
       _greska = poruka;
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(poruka)));
+    if (kvar) {
+      AdminToast.greska(context, poruka);
+    } else {
+      AdminToast.upozorenje(context, poruka);
+    }
   }
 
   /// Snima tek kad vlasnik vidi šta ispada van novog vremena.
@@ -157,7 +163,7 @@ class _AdminWorkingHoursScreenState
   Future<void> _sacuvaj() async {
     final problem = _provjeri();
     if (problem != null) {
-      _prijaviGresku(problem);
+      _prijaviGresku(problem, kvar: false);
       return;
     }
     setState(() {
@@ -179,9 +185,7 @@ class _AdminWorkingHoursScreenState
       await actions.sacuvaj(_dani);
       if (!mounted) return;
       setState(() => _snimam = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Radno vrijeme je sačuvano.')),
-      );
+      AdminToast.uspjeh(context, 'Radno vrijeme je sačuvano.');
     } on ApiError catch (error) {
       if (!mounted) return;
       _prijaviGresku(porukaGreske(error));

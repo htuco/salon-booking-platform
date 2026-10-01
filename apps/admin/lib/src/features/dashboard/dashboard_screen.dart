@@ -43,6 +43,7 @@ import '../appointments/appointments_providers.dart';
 import '../appointments/status_pill.dart';
 import '../clients/clients_providers.dart';
 import 'dashboard_summary.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Koliko zahtjeva stane u karticu na desktopu prije „Vidi sve".
 ///
@@ -999,20 +1000,20 @@ class _ZahtjevRedState extends ConsumerState<_ZahtjevRed> {
     try {
       await poziv();
       if (!mounted) return;
-      _poruka(uspjeh);
+      AdminToast.uspjeh(context, uspjeh);
     } on ApiError catch (_) {
       if (!mounted) return;
       // Greška se prikazuje, ne guta: akcija koja tiho ne uradi ništa ostavlja vlasnika u
       // uvjerenju da je odgovorio, a klijent i dalje čeka.
-      _poruka('Akcija nije uspjela. Pokušajte ponovo.');
+      AdminToast.greska(
+        context,
+        'Akcija nije uspjela',
+        opis: 'Pokušajte ponovo.',
+      );
     } finally {
       if (mounted) setState(() => _uToku = false);
     }
   }
-
-  void _poruka(String tekst) =>
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(tekst)));
 }
 
 /// Ko je danas koliko zauzet — traka je **relativna**, v. `zauzetostPoRadniku`.

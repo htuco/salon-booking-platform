@@ -183,13 +183,6 @@ ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
       ),
     ),
 
-    snackBarTheme: SnackBarThemeData(
-      backgroundColor: colors.ink,
-      contentTextStyle: textTheme.bodyMedium?.copyWith(color: colors.ground),
-      behavior: SnackBarBehavior.floating,
-      shape: shape,
-    ),
-
     dialogTheme: DialogThemeData(
       backgroundColor: colors.surface,
       surfaceTintColor: Colors.transparent,

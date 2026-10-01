@@ -10,6 +10,7 @@ import '../../core/poruka_greske.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/slika_polje.dart';
 import '../appointments/appointments_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Najmanja strana profilne slike (`4b`: „JPG ili PNG, najmanje 400×400").
 ///
@@ -70,7 +71,7 @@ Future<bool> promijeniProfilnuSliku(
     slika = await izbor(izvor);
   } catch (_) {
     if (context.mounted) {
-      _poruka(
+      AdminToast.greska(
         context,
         izvor == ImageSource.camera
             ? 'Kamera se ne može otvoriti.'
@@ -84,10 +85,10 @@ Future<bool> promijeniProfilnuSliku(
   final strana = await _manjaStrana(slika.bytes);
   if (strana != null && strana < kProfilnaMinStrana) {
     if (context.mounted) {
-      _poruka(
+      AdminToast.upozorenje(
         context,
-        'Slika je premala ($strana px). Treba najmanje '
-        '$kProfilnaMinStrana×$kProfilnaMinStrana.',
+        'Slika je premala ($strana px)',
+        opis: 'Treba najmanje $kProfilnaMinStrana×$kProfilnaMinStrana.',
       );
     }
     return false;
@@ -104,12 +105,17 @@ Future<bool> promijeniProfilnuSliku(
     await staff.setPhoto(url);
   } catch (e) {
     if (context.mounted) {
-      _poruka(context, porukaGreske(e, opsta: 'Slika se ne može poslati.'));
+      AdminToast.greska(
+        context,
+        porukaGreske(e, opsta: 'Slika se ne može poslati.'),
+      );
     }
     return false;
   }
   osvjeziProfil(container);
-  if (context.mounted) _poruka(context, 'Profilna slika je promijenjena.');
+  if (context.mounted) {
+    AdminToast.uspjeh(context, 'Profilna slika je promijenjena.');
+  }
   return true;
 }
 
@@ -119,11 +125,13 @@ Future<void> ukloniProfilnuSliku(BuildContext context, WidgetRef ref) async {
   try {
     await container.read(staffRepositoryProvider).setPhoto(null);
   } catch (e) {
-    if (context.mounted) _poruka(context, porukaGreske(e));
+    if (context.mounted) AdminToast.greska(context, porukaGreske(e));
     return;
   }
   osvjeziProfil(container);
-  if (context.mounted) _poruka(context, 'Profilna slika je uklonjena.');
+  if (context.mounted) {
+    AdminToast.uspjeh(context, 'Profilna slika je uklonjena.');
+  }
 }
 
 /// Član (avatar, prekidač) i radnici (slika koju klijent vidi) se mijenjaju zajedno.
@@ -147,16 +155,6 @@ Future<int?> _manjaStrana(Uint8List bytes) async {
   } catch (_) {
     return null;
   }
-}
-
-/// Kratka poruka ispod ekrana — jedna za cijeli profil.
-void porukaProfila(BuildContext context, String tekst) =>
-    _poruka(context, tekst);
-
-void _poruka(BuildContext context, String tekst) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(tekst)));
 }
 
 /// Okrugli avatar osobe; bez slike inicijali (`4b`), ne siva kugla.
