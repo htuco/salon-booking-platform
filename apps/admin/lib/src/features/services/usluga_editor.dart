@@ -25,6 +25,7 @@ Future<void> showServiceEditor(
   Service? service,
 }) => showModalBottomSheet<void>(
   context: context,
+  useRootNavigator: true,
   isScrollControlled: true,
   useSafeArea: true,
   backgroundColor: context.adminColors.surface,

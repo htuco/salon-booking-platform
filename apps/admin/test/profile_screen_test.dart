@@ -13,6 +13,7 @@ import 'package:core_domain/core_domain.dart';
 
 import 'dart:async';
 
+import 'package:admin/src/core/widgets/pressable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -153,10 +154,16 @@ void main() {
 
       expect(find.text('emir@primjer.test'), findsWidgets);
       bool ugasen() {
-        final dugme = tester.widget<ButtonStyleButton>(
-          find.byKey(Key(kljucSacuvaj)),
+        final kljuc = find.byKey(Key(kljucSacuvaj));
+        // Desktop: Material dugme u top baru. Telefon: tekst u `AppHeader`-u (`Pressable`).
+        final pressable = find.descendant(
+          of: kljuc,
+          matching: find.byType(Pressable),
         );
-        return dugme.onPressed == null;
+        if (pressable.evaluate().isNotEmpty) {
+          return tester.widget<Pressable>(pressable).onTap == null;
+        }
+        return tester.widget<ButtonStyleButton>(kljuc).onPressed == null;
       }
 
       expect(ugasen(), isTrue, reason: 'bez izmjene nema šta da se snimi');

@@ -13,6 +13,7 @@
 /// prolazi analizu i prolazi test, a vidi se tek kad dva salona otvore istu aplikaciju.
 library;
 
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import 'admin_colors.dart';
@@ -42,14 +43,20 @@ ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
     // sklanja. Potvrda dodira ostaje — `InkWell` i dalje crta `hoverColor` i
     // `highlightColor` iz teme, pa dugme ne djeluje kao da ne reaguje.
     splashFactory: NoSplash.splashFactory,
-    // **Kratko pretapanje umjesto „dizanja" ekrana.** Material default na webu i Androidu
-    // diže novi ekran odozdo; u adminu je prelaz sa „Danas" na „Kalendar" promjena taba,
-    // ne otvaranje novog sloja. Pretapanje je jedini prelaz koji ovdje ne pomjera sidebar:
-    // ljuska se crta u svakom ekranu, a isti pikseli pretopljeni u iste ostaju mirni.
+    // **Push unutar grane klizi s desna na telefonu, pretapa se na webu i desktopu.**
+    // Promjena taba nije push (`indexedStack` je bez animacije), pa prelaz vrijedi samo za
+    // detalj u grani. Na Androidu ga daje ova tema uz `MaterialPage`, na iOS-u
+    // `CupertinoPage` iz routera (sa swipe-back sa lijeve ivice). Web i desktop ostaju na
+    // kratkom pretapanju: sidebar stoji mirno, a klizanje ploče pored njega djeluje kao
+    // da se pomjera cijela aplikacija.
     pageTransitionsTheme: PageTransitionsTheme(
       builders: {
         for (final platforma in TargetPlatform.values)
-          platforma: const _Pretapanje(),
+          platforma:
+              platforma == TargetPlatform.android ||
+                  platforma == TargetPlatform.iOS
+              ? const CupertinoPageTransitionsBuilder()
+              : const _Pretapanje(),
       },
     ),
     textTheme: textTheme,
@@ -72,17 +79,6 @@ ThemeData buildAdminTheme([Brightness brightness = Brightness.light]) {
         borderRadius: BorderRadius.circular(AdminRadius.base),
         side: BorderSide(color: colors.cardEdge, width: AdminSize.hairline),
       ),
-    ),
-
-    appBarTheme: AppBarTheme(
-      backgroundColor: colors.surface,
-      foregroundColor: colors.ink,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      centerTitle: false,
-      titleTextStyle: textTheme.titleLarge?.copyWith(color: colors.ink),
-      shape: Border(bottom: borderSide),
     ),
 
     dividerTheme: DividerThemeData(

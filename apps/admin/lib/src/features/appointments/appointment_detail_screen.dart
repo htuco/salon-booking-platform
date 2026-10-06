@@ -33,6 +33,7 @@ import '../../core/format/tekst.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import 'appointment_actions_bar.dart';
 import 'appointments_providers.dart';
@@ -59,10 +60,15 @@ class AppointmentDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final termin = ref.watch(terminProvider(appointmentId));
 
+    final ucitan = termin.valueOrNull;
     return AdminScaffold(
       title: 'Termin',
-      aktivna: AdminRoute.appointments,
-      sopstvenoZaglavlje: true,
+      header: AppHeader(
+        title: ucitan == null
+            ? 'Termin'
+            : '${vrijemeHhMm(ucitan.startTime)} · ${ucitan.customerName}',
+        tabRoot: false,
+      ),
       body: termin.when(
         loading: () => const Padding(
           padding: EdgeInsets.all(AdminSpacing.xxl),
@@ -93,7 +99,7 @@ class AppointmentDetailScreen extends ConsumerWidget {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go(AdminRoute.appointments.path);
+      context.go(AdminRoute.requests.path);
     }
   }
 }
@@ -189,7 +195,7 @@ class _Detalj extends ConsumerWidget {
   }
 }
 
-/// „‹ Termini", statusna pilula i naslov `14:20 · Haris Delić`.
+/// Desktop: „‹ Termini", statusna pilula i naslov `14:20 · Haris Delić`. Telefon: pilula.
 class _Zaglavlje extends StatelessWidget {
   const _Zaglavlje({required this.termin});
 
@@ -198,6 +204,22 @@ class _Zaglavlje extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Telefon: „nazad" i naslov su u `AppHeader`-u; ovdje ostaje samo status.
+    if (!AdminShell.jeDesktop(context)) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          AdminShell.gutterOf(context),
+          AdminSpacing.sm,
+          AdminShell.gutterOf(context),
+          0,
+        ),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: AppointmentStatusPill(status: termin.status),
+        ),
+      );
+    }
 
     return Container(
       width: double.infinity,

@@ -14,9 +14,9 @@ import '../../core/poruka_greske.dart';
 import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/tekst.dart';
 import '../../core/format/terminologija.dart';
-import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointments_providers.dart';
@@ -101,9 +101,7 @@ class _AdminServicesScreenState extends ConsumerState<AdminServicesScreen> {
 
     return AdminScaffold(
       title: 'Usluge',
-      aktivna: AdminRoute.services,
-      // `3p` crta veliki naslov u tijelu; `AppBar` sa istom riječi bi stajao iznad njega.
-      sopstvenoZaglavlje: true,
+      header: AppHeader(title: 'Usluge', tabRoot: false),
       actions: desktop ? [_NovaUslugaDugme(onPressed: _novaUsluga)] : null,
       body: AdminRefresh(
         onRefresh: () {
@@ -245,13 +243,7 @@ class _AdminServicesScreenState extends ConsumerState<AdminServicesScreen> {
       ),
     };
 
-    return Column(
-      children: [
-        const _TelefonZaglavlje(),
-        Expanded(child: lista),
-        _DonjaAkcija(onPressed: _novaUsluga),
-      ],
-    );
+    return Column(children: [Expanded(child: lista)]);
   }
 }
 
@@ -305,100 +297,6 @@ class _DesktopNaslov extends StatelessWidget {
   }
 }
 
-/// `3p`: „Usluge" 30 px i uputa, bijela traka sa linijom ispod.
-class _TelefonZaglavlje extends StatelessWidget {
-  const _TelefonZaglavlje();
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context).textTheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AdminSpacing.gutterMobile,
-        AdminSpacing.sm,
-        AdminSpacing.sm,
-        AdminSpacing.lg,
-      ),
-      decoration: BoxDecoration(
-        color: context.adminColors.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: context.adminColors.separator,
-            width: AdminSize.hairline,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Usluge', style: tema.displaySmall),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Dodirni uslugu za izmjenu',
-                    style: tema.bodyMedium?.copyWith(
-                      color: context.adminColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // `3p` ga ne crta, ali bez `AppBar`-a je ovo jedini put do naloga i odjave
-            // sa ovog ekrana — isto kao na „Danas".
-            const AdminNalogDugme(ikona: true),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// `3p`: `+ NOVA USLUGA` preko cijele širine, iznad donje navigacije.
-class _DonjaAkcija extends StatelessWidget {
-  const _DonjaAkcija({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.symmetric(
-      horizontal: AdminSpacing.gutterMobile,
-      vertical: AdminSpacing.md,
-    ),
-    decoration: BoxDecoration(
-      color: context.adminColors.surface,
-      border: Border(
-        top: BorderSide(
-          color: context.adminColors.separator,
-          width: AdminSize.hairline,
-        ),
-      ),
-    ),
-    child: SizedBox(
-      height: 52,
-      child: FilledButton(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          textStyle: AdminText.actionLabel.copyWith(fontSize: 16),
-        ),
-        child: const AdminVerzal('+ Nova usluga'),
-      ),
-    ),
-  );
-}
-
-// ---------------------------------------------------------------------------
-// `3f` — tabela
-// ---------------------------------------------------------------------------
-
-/// Udjeli kolona izmjereni iz `3f`: 264 / 110 / 110 / 150 / 90 px na 724.
 const _flexUsluga = 26, _flexTrajanje = 11, _flexCijena = 11;
 const _flexRadnici = 15, _flexOnline = 9;
 

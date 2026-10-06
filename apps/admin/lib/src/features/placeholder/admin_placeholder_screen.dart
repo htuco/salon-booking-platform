@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 
 /// Privremeno tijelo rute koja još nema ekran — pišu ih taskovi 31–36.
 ///
@@ -35,7 +36,7 @@ class AdminPlaceholderScreen extends StatelessWidget {
 
     return AdminScaffold(
       title: title,
-      aktivna: route,
+      header: AppHeader(title: title, tabRoot: false),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

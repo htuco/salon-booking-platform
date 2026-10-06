@@ -23,6 +23,7 @@ Future<void> prikaziUredjivacSekcije(
   int sortOrder = 10,
 }) => showModalBottomSheet<void>(
   context: context,
+  useRootNavigator: true,
   isScrollControlled: true,
   builder: (_) => _UredjivacSekcije(sekcija: sekcija, sortOrder: sortOrder),
 );

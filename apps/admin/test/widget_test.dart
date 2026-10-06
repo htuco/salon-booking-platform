@@ -68,7 +68,8 @@ void main() {
     signal.add(_vlasnik);
     await tester.pumpAndSettle();
     expect(identical(container.read(adminRouterProvider), router), isTrue);
-    expect(router.state.uri.path, '/employees');
+    // Stara adresa iz bookmarka preživi prijavu i završi na novoj.
+    expect(router.state.uri.path, '/more/staff');
     await tester.pumpWidget(const SizedBox.shrink());
     container.dispose();
     unawaited(signal.close());
@@ -83,21 +84,24 @@ void main() {
     const izSpecifikacije = {
       '/login',
       '/pozivnica',
-      '/dashboard',
-      '/appointments',
-      '/appointments/:id',
-      '/appointments/new',
+      '/today',
+      '/today/appointment/:id',
       '/calendar',
+      '/calendar/appointment/:id',
       '/calendar/block',
-      '/clients',
-      '/services',
-      '/employees',
-      '/working-hours',
-      '/settings',
+      '/requests',
+      '/requests/:id',
       '/more',
-      '/profile',
+      '/more/appointments',
+      '/more/appointments/:id',
+      '/more/clients',
+      '/more/services',
+      '/more/staff',
+      '/more/hours',
+      '/more/settings',
+      '/more/profile',
+      '/appointments/new',
     };
-
     expect(AdminRoute.values.map((r) => r.path).toSet(), izSpecifikacije);
   });
 
@@ -126,12 +130,12 @@ void main() {
     expect(container.read(adminRouterProvider).state.uri.path, '/login');
   });
 
-  testWidgets('prijavljen vlasnik ide na /dashboard', (tester) async {
+  testWidgets('prijavljen vlasnik ide na /today', (tester) async {
     final container = _container(clan: _vlasnik);
     await tester.pumpWidget(_app(container));
     await tester.pumpAndSettle();
 
-    expect(container.read(adminRouterProvider).state.uri.path, '/dashboard');
+    expect(container.read(adminRouterProvider).state.uri.path, '/today');
     // Ekran, ne ime prijavljenog: od taska 30 „Danas" crta datum i raspored, a ime stoji
     // u sidebaru (desktop) odnosno iza dugmeta naloga (telefon). Ovaj test pazi na guard i
     // rutu, pa provjerava da je stigao **taj** ekran.
@@ -150,7 +154,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Task 33 zamjenjuje placeholder pravim ekranom; deep link ostaje sacuvan.
-    expect(container.read(adminRouterProvider).state.uri.path, '/employees');
+    expect(container.read(adminRouterProvider).state.uri.path, '/more/staff');
     expect(find.text('Osoblje'), findsWidgets);
   });
 
@@ -170,7 +174,7 @@ void main() {
     await tester.pumpWidget(_app(container));
     await tester.pump();
 
-    expect(container.read(adminRouterProvider).state.uri.path, '/dashboard');
+    expect(container.read(adminRouterProvider).state.uri.path, '/today');
   });
 
   testWidgets('korisnik koji nije osoblje ostaje na loginu', (tester) async {
@@ -193,6 +197,39 @@ void main() {
 
   // Task 47 — guard pušta radnika, ali samo na njegove rute. Sakriven modul koji se
   // otvara kucanjem adrese nije sakriven.
+  group('stare adrese', () {
+    for (final (stara, nova) in [
+      ('/dashboard', '/today'),
+      ('/appointments?status=pending', '/requests'),
+      ('/appointments', '/more/appointments'),
+      ('/appointments?status=confirmed', '/more/appointments?status=confirmed'),
+      ('/appointments/abc-123', '/requests/abc-123'),
+      ('/clients', '/more/clients'),
+      ('/services', '/more/services'),
+      ('/employees', '/more/staff'),
+      ('/working-hours', '/more/hours'),
+      ('/settings', '/more/settings'),
+      ('/profile', '/more/profile'),
+    ]) {
+      test('$stara → $nova', () {
+        expect(staraAdresa(Uri.parse(stara)), nova);
+      });
+    }
+
+    test('nove adrese i forma se ne diraju', () {
+      for (final adresa in ['/today', '/requests/1', '/appointments/new']) {
+        expect(staraAdresa(Uri.parse(adresa)), isNull, reason: adresa);
+      }
+    });
+  });
+
+  test('detalj termina se otvara u grani iz koje je pozvan', () {
+    expect(putanjaTermina('/today', 'x'), '/today/appointment/x');
+    expect(putanjaTermina('/calendar', 'x'), '/calendar/appointment/x');
+    expect(putanjaTermina('/requests', 'x'), '/requests/x');
+    expect(putanjaTermina('/more/appointments', 'x'), '/more/appointments/x');
+  });
+
   group('radnik', () {
     const radnik = StaffMember(
       id: '22222222-0000-4000-8000-000000000002',
@@ -204,17 +241,24 @@ void main() {
     );
 
     for (final (adresa, ocekivano) in [
-      ('/login', '/dashboard'),
-      ('/dashboard', '/dashboard'),
+      ('/login', '/today'),
+      ('/today', '/today'),
       ('/calendar', '/calendar'),
-      ('/appointments', '/appointments'),
-      ('/employees', '/dashboard'),
-      ('/clients', '/dashboard'),
-      ('/settings', '/dashboard'),
-      ('/working-hours', '/dashboard'),
-      ('/services', '/dashboard'),
-      ('/appointments/new', '/dashboard'),
-      ('/calendar/block', '/dashboard'),
+      ('/requests', '/requests'),
+      ('/more', '/more'),
+      ('/more/appointments', '/more/appointments'),
+      ('/more/profile', '/more/profile'),
+      ('/more/staff', '/today'),
+      ('/more/clients', '/today'),
+      ('/more/settings', '/today'),
+      ('/more/hours', '/today'),
+      ('/more/services', '/today'),
+      ('/appointments/new', '/today'),
+      ('/calendar/block', '/today'),
+      // Stare adrese prvo postanu nove, pa ih guard tek onda sudi.
+      ('/dashboard', '/today'),
+      ('/appointments', '/more/appointments'),
+      ('/employees', '/today'),
     ]) {
       testWidgets('$adresa → $ocekivano', (tester) async {
         tester.view.physicalSize = const Size(1440, 900);
@@ -237,7 +281,10 @@ void main() {
     }
 
     test('detalj termina je njegov, `new` nije termin', () {
-      expect(dozvoljenaRadniku('/appointments/abc-123'), isTrue);
+      expect(dozvoljenaRadniku('/requests/abc-123'), isTrue);
+      expect(dozvoljenaRadniku('/today/appointment/abc-123'), isTrue);
+      expect(dozvoljenaRadniku('/calendar/appointment/abc-123'), isTrue);
+      expect(dozvoljenaRadniku('/more/appointments/abc-123'), isTrue);
       expect(dozvoljenaRadniku('/appointments/new'), isFalse);
     });
 

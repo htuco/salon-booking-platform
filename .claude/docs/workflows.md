@@ -265,7 +265,7 @@ Nema tenant parametra jer admin nema flavor — jedna aplikacija za sve salone (
 Ljuska se mijenja na 840 px, pa se obje provjeravaju **jednim** buildom, mijenjanjem širine
 prozora: 1440×900 daje sidebar, 402×874 donju navigaciju.
 
-Za dokaz da filter iz adrese preživi refresh (`/appointments?status=pending`) treba SPA fallback —
+Za dokaz da filter iz adrese preživi refresh (`/more/appointments?status=confirmed`) treba SPA fallback —
 v. sljedeći odjeljak; `python -m http.server` sam po sebi na toj putanji vraća 404.
 
 ### Web: provjera da deep link stvarno radi
@@ -282,7 +282,7 @@ python tool/serve_web_demo.py apps/client/build/web 4320
 ```
 
 `tool/serve_web_demo.py` postoji zbog dvije stvari koje `python -m http.server` ne radi:
-**SPA fallback** (bez njega `/appointments?status=pending` vraća 404, a upravo se tu provjerava
+**SPA fallback** (bez njega `/more/appointments?status=confirmed` vraća 404, a upravo se tu provjerava
 da filter preživi refresh) i **vezivanje na `0.0.0.0`**, pa se isti build otvori i sa telefona na
 istoj mreži. Skripta ispiše obje adrese. Na Windowsu prvi pokušaj sa telefona zna pasti na
 Firewall — port se mora dozvoliti.

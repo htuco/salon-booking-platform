@@ -1,3 +1,5 @@
+import 'package:admin/src/core/theme/theme.dart';
+import 'package:admin/src/core/widgets/admin_scaffold.dart';
 import 'package:admin/src/features/appointments/appointment_card.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/appointments/appointments_screen.dart';
@@ -48,9 +50,24 @@ Widget _ekran(List<Appointment> termini, {AppointmentStatus? trazeniStatus}) =>
         filtriraniTerminiProvider.overrideWith((ref) async => termini),
       ],
       child: MaterialApp(
-        home: AdminAppointmentsScreen(trazeniStatus: trazeniStatus),
+        home: _uLjusci(AdminAppointmentsScreen(trazeniStatus: trazeniStatus)),
       ),
     );
+
+/// Ekran onako kako ga `AppShell` drži: na desktopu desno od sidebara.
+///
+/// Sidebar više nije dio ekrana, pa bi ekran sam u testu dobio cijeli prozor i
+/// izmjerio kolonu više nego u aplikaciji.
+Widget _uLjusci(Widget ekran) => Builder(
+  builder: (context) => AdminShell.jeDesktop(context)
+      ? Row(
+          children: [
+            const SizedBox(width: AdminSize.sidebarWidth),
+            Expanded(child: ekran),
+          ],
+        )
+      : ekran,
+);
 
 void main() {
   pristupacnostEkrana(
@@ -258,7 +275,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Zahtjevi'), findsWidgets);
+      // Telefon: alati liste na čekanju (radnik, redoslijed), ne filteri pune liste.
+      expect(find.text('Najduže čekaju'), findsOneWidget);
     });
   });
 

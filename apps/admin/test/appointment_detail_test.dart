@@ -105,9 +105,10 @@ void main() {
   testWidgets('naslov je vrijeme i ime, uz statusnu oznaku', (tester) async {
     await _naSirini(tester, _telefon, _ekran(_termin()));
 
+    // Telefon: naslov je u `AppHeader`-u, status ostaje u tijelu. „Nazad" se pojavi tek
+    // kad ima kuda — ovdje je ekran sam, bez grane ispod.
     expect(find.text('14:20 · Haris Delić'), findsOneWidget);
     expect(find.text('Potvrđeno'), findsOneWidget);
-    expect(find.text('Termini'), findsWidgets);
   });
 
   testWidgets('tabela nosi zapis iz `3n`', (tester) async {
@@ -298,9 +299,13 @@ void main() {
   });
 
   group('ruta', () {
-    test('`/appointments/:id` ima tijelo, nije placeholder', () {
-      // Rutu je do taska 30 pokrivala petlja placeholdera — enum ju je imao, ekran ne.
-      expect(AdminRoute.appointmentDetails.path, '/appointments/:id');
+    test('detalj termina postoji u svakoj grani koja ga otvara', () {
+      // Detalj ostaje u grani iz koje je otvoren, pa ga svaka grana nosi pod svojim
+      // korijenom; stari `/appointments/:id` se preusmjerava na Zahtjeve.
+      expect(AdminRoute.dashboardAppointment.path, '/today/appointment/:id');
+      expect(AdminRoute.calendarAppointment.path, '/calendar/appointment/:id');
+      expect(AdminRoute.requestDetails.path, '/requests/:id');
+      expect(AdminRoute.appointmentDetails.path, '/more/appointments/:id');
     });
 
     testWidgets('`/appointments/new` se ne čita kao `:id`', (tester) async {

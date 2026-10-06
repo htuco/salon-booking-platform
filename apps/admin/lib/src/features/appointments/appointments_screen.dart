@@ -33,6 +33,7 @@ import '../../core/format/datum.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../dashboard/dashboard_summary.dart'
@@ -55,7 +56,17 @@ import '../../core/widgets/admin_toast.dart';
 const double _minSirinaKartice = 360;
 
 class AdminAppointmentsScreen extends ConsumerStatefulWidget {
-  const AdminAppointmentsScreen({this.trazeniStatus, super.key});
+  const AdminAppointmentsScreen({
+    this.trazeniStatus,
+    this.samoZahtjevi = false,
+    super.key,
+  });
+
+  /// Tab Zahtjevi: uvijek lista na čekanju, nezavisno od filtera.
+  ///
+  /// Filter liste je app-scoped, a grane `indexedStack`-a žive istovremeno — „Svi
+  /// termini" u Još i tab Zahtjevi bi inače dijelili isti status i jedan bi mijenjao drugi.
+  final bool samoZahtjevi;
 
   /// Status iz `?status=` u adresi, ili `null` za „svi".
   ///
@@ -70,6 +81,38 @@ class AdminAppointmentsScreen extends ConsumerStatefulWidget {
 
 class _AdminAppointmentsScreenState
     extends ConsumerState<AdminAppointmentsScreen> {
+  String? _requestEmployee;
+
+  /// Segment „Svi" u tabu Zahtjevi: puna lista umjesto onih na čekanju.
+  bool _svi = false;
+
+  /// Zadano najduže čekanje (mobile-refresh); „Najbliži termin" je drugi izbor.
+  bool _oldestFirst = true;
+
+  List<Appointment> _mobileRequests(List<Appointment> items) {
+    final filtered = items
+        .where(
+          (a) => _requestEmployee == null || a.employeeId == _requestEmployee,
+        )
+        .toList();
+    filtered.sort((a, b) {
+      if (_oldestFirst) {
+        final left = a.createdAt;
+        final right = b.createdAt;
+        if (left != null && right != null) return left.compareTo(right);
+        if (left != null) return -1;
+        if (right != null) return 1;
+      }
+      final day = a.date.compareTo(b.date);
+      return day != 0
+          ? day
+          : a.startTime.minutesFromMidnight.compareTo(
+              b.startTime.minutesFromMidnight,
+            );
+    });
+    return filtered;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -91,7 +134,9 @@ class _AdminAppointmentsScreenState
   Widget build(BuildContext context) {
     final filter = ref.watch(appointmentsFilterProvider);
     final jeDesktop = AdminShell.jeDesktop(context);
-    final zahtjevi = filter.status == AppointmentStatus.pending;
+    final zahtjevi = widget.samoZahtjevi
+        ? !_svi
+        : filter.status == AppointmentStatus.pending;
     // Ručni unos traži `is_admin` u bazi; radniku ulaz u `/appointments/new` ne vodi nikud.
     final radnik = ref.watch(adminRadnikIdProvider) != null;
 
@@ -105,8 +150,23 @@ class _AdminAppointmentsScreenState
       // ovdje sa `?status=pending`. Ekran naslovljen „Termini" poslije tapa na „Zahtjeve"
       // izgleda kao da je ćelija promašila.
       title: zahtjevi ? 'Zahtjevi' : 'Termini',
-      aktivna: AdminRoute.appointments,
-      sopstvenoZaglavlje: true,
+      header: widget.samoZahtjevi
+          ? AppHeader(
+              title: 'Zahtjevi',
+              bottom: AppSegmented<bool>(
+                segments: [
+                  AppSegment(
+                    value: false,
+                    label: 'Novi',
+                    count: ref.watch(pendingCountProvider).valueOrNull,
+                  ),
+                  const AppSegment(value: true, label: 'Svi'),
+                ],
+                selected: _svi,
+                onChanged: (svi) => setState(() => _svi = svi),
+              ),
+            )
+          : AppHeader(title: 'Termini', tabRoot: false),
       actions: jeDesktop
           ? [
               if (zahtjevi)
@@ -118,16 +178,71 @@ class _AdminAppointmentsScreenState
       // Ručni unos je jedini ulaz u `/appointments/new` — bez njega ekran postoji ali se do
       // njega ne može doći iz aplikacije, što je rupa koju je task 17 već jednom našao sa
       // `/account`. Na desktopu isto dugme stoji u top baru, pa se FAB ne crta dvaput.
-      floatingActionButton: jeDesktop || zahtjevi || radnik
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => context.go(AdminRoute.appointmentNew.path),
-              icon: const Icon(Icons.add),
-              label: const Text('Novi termin'),
-            ),
       body: Column(
         children: [
-          _Zaglavlje(filter: filter, zahtjevi: zahtjevi, lista: lista),
+          if (zahtjevi && !jeDesktop)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AdminSpacing.gutterMobile,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      if (!radnik)
+                        Expanded(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            value: _requestEmployee ?? '',
+                            underline: const SizedBox.shrink(),
+                            items: [
+                              const DropdownMenuItem(
+                                value: '',
+                                child: Text('Cijeli tim'),
+                              ),
+                              for (final employee
+                                  in ref.watch(radniciPoIdProvider).values)
+                                DropdownMenuItem(
+                                  value: employee.id,
+                                  child: Text(
+                                    employee.name,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                            ],
+                            onChanged: (value) => setState(
+                              () =>
+                                  _requestEmployee = value == '' ? null : value,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: AdminSpacing.sm),
+                      Expanded(
+                        child: DropdownButton<bool>(
+                          isExpanded: true,
+                          value: _oldestFirst,
+                          underline: const SizedBox.shrink(),
+                          items: const [
+                            DropdownMenuItem(
+                              value: true,
+                              child: Text('Najduže čekaju'),
+                            ),
+                            DropdownMenuItem(
+                              value: false,
+                              child: Text('Najbliži termin'),
+                            ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _oldestFirst = value ?? true),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          else
+            _Zaglavlje(filter: filter, zahtjevi: zahtjevi, lista: lista),
           Expanded(
             child: lista.when(
               loading: () => const Padding(
@@ -150,7 +265,31 @@ class _AdminAppointmentsScreenState
                       onRefresh: () async => ref.invalidate(
                         zahtjevi ? zahtjeviProvider : filtriraniTerminiProvider,
                       ),
-                      child: _Lista(termini: termini, zahtjevi: zahtjevi),
+                      child:
+                          zahtjevi &&
+                              !jeDesktop &&
+                              _mobileRequests(termini).isEmpty
+                          ? ListView(
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.all(24),
+                                  child: Text(
+                                    'Nema zahtjeva za odabranog zaposlenika.',
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      setState(() => _requestEmployee = null),
+                                  child: const Text('Prikaži cijeli tim'),
+                                ),
+                              ],
+                            )
+                          : _Lista(
+                              termini: zahtjevi && !jeDesktop
+                                  ? _mobileRequests(termini)
+                                  : termini,
+                              zahtjevi: zahtjevi,
+                            ),
                     ),
             ),
           ),
@@ -528,7 +667,7 @@ class _Lista extends ConsumerWidget {
           final termin = termini[i];
           final opis = opisTermina(termin, usluge: usluge, radnici: radnici);
 
-          void otvori() => context.go('/appointments/${termin.id}');
+          void otvori() => otvoriDetaljTermina(context, termin.id);
 
           if (zahtjevi) {
             return jeDesktop
@@ -609,7 +748,7 @@ class _NoviTerminDugme extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FilledButton(
-      onPressed: () => context.go(AdminRoute.appointmentNew.path),
+      onPressed: () => context.push(AdminRoute.appointmentNew.path),
       style: FilledButton.styleFrom(textStyle: AdminText.actionLabel),
       child: const AdminVerzal('+ Novi termin'),
     );
