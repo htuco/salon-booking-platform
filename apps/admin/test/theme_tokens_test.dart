@@ -41,8 +41,7 @@ void main() {
     test('tema ne nosi nijednu sjenku — dubina je hairline obrub', () {
       final tema = buildAdminTheme();
       expect(tema.cardTheme.elevation, 0);
-      expect(tema.appBarTheme.elevation, 0);
-      expect(tema.appBarTheme.scrolledUnderElevation, 0);
+      // Zaglavlje ekrana je `AppHeader`, bez Material trake naslova i njene sjenke.
     });
   });
 

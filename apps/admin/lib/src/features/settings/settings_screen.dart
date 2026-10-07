@@ -50,9 +50,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/widgets/admin_load_error.dart';
 import '../../core/poruka_greske.dart';
-import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../../core/widgets/slika_polje.dart';
@@ -146,9 +146,14 @@ class _Okvir extends StatelessWidget {
 
     return AdminScaffold(
       title: 'Postavke',
-      aktivna: AdminRoute.settings,
-      // Telefon crta veliki naslov u tijelu (kao `3k`/`3t`), a „Sačuvaj" stoji uz njega.
-      sopstvenoZaglavlje: !jeDesktop,
+      header: AppHeader(
+        title: 'Postavke',
+        tabRoot: false,
+        textAction: HeaderTextAction(
+          label: snimam ? 'Čuvanje…' : 'Sačuvaj',
+          onTap: onSacuvaj,
+        ),
+      ),
       actions: jeDesktop
           ? [_TopBarAkcije(onSacuvaj: onSacuvaj, snimam: snimam)]
           : null,
@@ -156,7 +161,7 @@ class _Okvir extends StatelessWidget {
           ? body
           : Column(
               children: [
-                _MobilnoZaglavlje(onSacuvaj: onSacuvaj, snimam: snimam),
+                const _MobilnoZaglavlje(),
                 Expanded(child: body),
               ],
             ),
@@ -205,12 +210,9 @@ class _TopBarAkcije extends StatelessWidget {
   }
 }
 
-/// Bijela traka sa naslovom na telefonu — isti oblik kao zaglavlje `3k`.
+/// Uputa ispod zaglavlja na telefonu; naslov, „nazad" i „Sačuvaj" su u `AppHeader`-u.
 class _MobilnoZaglavlje extends StatelessWidget {
-  const _MobilnoZaglavlje({required this.onSacuvaj, required this.snimam});
-
-  final VoidCallback? onSacuvaj;
-  final bool snimam;
+  const _MobilnoZaglavlje();
 
   @override
   Widget build(BuildContext context) {
@@ -220,12 +222,12 @@ class _MobilnoZaglavlje extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(
         AdminSpacing.gutterMobile,
-        AdminSpacing.md,
+        0,
         AdminSpacing.gutterMobile,
-        AdminSpacing.lg,
+        AdminSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: context.adminColors.surface,
+        color: context.adminColors.ground,
         border: Border(
           bottom: BorderSide(
             color: context.adminColors.separator,
@@ -234,35 +236,17 @@ class _MobilnoZaglavlje extends StatelessWidget {
         ),
       ),
       child: SafeArea(
+        top: false,
         bottom: false,
         child: Row(
           children: [
+            // Naslov i „nazad" su u `AppHeader`-u; ovdje ostaje šta ekran radi i „Sačuvaj".
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Postavke', style: theme.textTheme.displaySmall),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Ovo klijenti vide u aplikaciji.',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: context.adminColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AdminSpacing.md),
-            SizedBox(
-              height: AdminSize.buttonHeight,
-              child: FilledButton(
-                onPressed: onSacuvaj,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(0, AdminSize.buttonHeight),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  textStyle: AdminText.actionLabel,
+              child: Text(
+                'Ovo klijenti vide u aplikaciji.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: context.adminColors.textSecondary,
                 ),
-                child: AdminVerzal(snimam ? 'Čuvanje…' : 'Sačuvaj'),
               ),
             ),
           ],

@@ -27,3 +27,12 @@ Vertical vertikalaAdmina(WidgetRef ref) =>
 /// admin rečenicu tipa „3 aktivna radnika". Kad zatreba, dodaje se uz svoj `terms` ključ,
 /// ne prenamjenom postojećeg.
 String radnikJednina(WidgetRef ref) => vertikalaAdmina(ref).terms.staffSingular;
+
+/// Akuzativ jednine za „Dodaj …": „majstora", „kozmetičarku", „doktora".
+///
+/// Pravilo je grubo (`-a` → `-u`, inače `+a`), ali pokriva svaki `staffSingular` koji
+/// vertikale danas nose.
+String akuzativRadnika(String jednina) {
+  final r = jednina.toLowerCase();
+  return r.endsWith('a') ? '${r.substring(0, r.length - 1)}u' : '${r}a';
+}

@@ -57,8 +57,6 @@ class AdminDashboardScreen extends ConsumerWidget {
 
     return AdminScaffold(
       title: 'Danas',
-      aktivna: AdminRoute.dashboard,
-      sopstvenoZaglavlje: true,
       actions: jeDesktop && !radnik ? const [_BrzeAkcije()] : null,
       body: AdminRefresh(
         onRefresh: () async {
@@ -105,7 +103,7 @@ class _BrzeAkcije extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         FilledButton(
-          onPressed: () => context.go(AdminRoute.appointmentNew.path),
+          onPressed: () => context.push(AdminRoute.appointmentNew.path),
           style: kompaktnoDugme(
             visina: 40,
             padding: 18,
@@ -334,15 +332,17 @@ class _Telefon extends ConsumerWidget {
                 NeradniDanKartica(sada: sada),
                 const SizedBox(height: AdminSpacing.xl),
               ],
+              if (radi) ...[
+                const SljedeciKartica(telefon: true),
+                const SizedBox(height: AdminSpacing.lg),
+              ],
               const ZahtjeviBlok(telefon: true),
               if (radi) ...[
                 const BezOznakeBlok(telefon: true),
                 const SizedBox(height: AdminSpacing.lg),
-                const SljedeciKartica(telefon: true),
-                const SizedBox(height: AdminSpacing.md),
-                const BrojkeTraka(),
-                const SizedBox(height: AdminSpacing.xl),
                 const RasporedBlok(telefon: true),
+                const SizedBox(height: AdminSpacing.xl),
+                const BrojkeTraka(),
               ] else ...[
                 const SizedBox(height: AdminSpacing.lg),
                 const SljedeciRadniDanKartica(),
@@ -355,96 +355,65 @@ class _Telefon extends ConsumerWidget {
   }
 }
 
-/// Zaglavlje iz `6c`: „PON, 18. MAJ · OTVORENO DO 20:00", „Danas", „⋯" i „+ Novi".
+/// Datum i radni status u jednom redu (`mobile-refresh`): „Uto, 6. okt · ● Zatvoreno".
+///
+/// Bez naslova ekrana — aktivni tab „Danas" u donjoj traci već kaže gdje smo.
 class _MobilnoZaglavlje extends ConsumerWidget {
   const _MobilnoZaglavlje();
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final boje = context.adminColors;
     final sada = sadaEkrana(ref);
-    final radnik = ref.watch(adminRadnikIdProvider) != null;
     final raspored = ref.watch(dashboardRasporedProvider).valueOrNull;
-    final otvoreno = raspored == null
+    final stanje = raspored == null
         ? null
         : otvorenoDo(raspored, sada.weekday, minutaDana(sada));
-    final dan = kDaniSedmice[sada.weekday - 1].substring(0, 3);
-
+    final boje = context.adminColors;
+    final tekst = Theme.of(context).textTheme;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AdminSpacing.gutterMobile,
-        AdminSpacing.md,
-        AdminSpacing.lg,
-        AdminSpacing.md,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AdminSpacing.gutterMobile,
+        vertical: AdminSpacing.md,
       ),
       decoration: BoxDecoration(
-        color: boje.surface,
         border: Border(
           bottom: BorderSide(color: boje.separator, width: AdminSize.hairline),
         ),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
+      child: Row(
+        children: [
+          Text(
+            '${kDaniSedmice[sada.weekday - 1].substring(0, 3)}, '
+            '${sada.day}. ${kMjeseci[sada.month - 1].substring(0, 3)}',
+            style: tekst.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(width: AdminSpacing.md),
+          // Status uz desnu ivicu; dug status („Otvoreno do 20:00 · …") se skrati, ne preliva.
+          if (stanje != null)
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  AdminVerzal(
-                    [
-                      '$dan, ${sada.day}. ${kMjeseci[sada.month - 1]}',
-                      if (otvoreno != null) otvoreno.tekst,
-                    ].join(' · '),
-                    style: AdminText.eyebrow.copyWith(
-                      color: boje.textSecondary,
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: boje.positiveInk,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text('Danas', style: theme.textTheme.displaySmall),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      stanje.tekst,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: tekst.bodySmall?.copyWith(color: boje.positiveInk),
+                    ),
+                  ),
                 ],
               ),
             ),
-            if (radnik)
-              const AdminNalogDugme(ikona: true)
-            else ...[
-              SizedBox(
-                width: AdminSize.touchTarget,
-                height: AdminSize.touchTarget,
-                child: PopupMenuButton<AdminRoute>(
-                  tooltip: 'Još radnji',
-                  onSelected: (ruta) => context.go(ruta.path),
-                  icon: const Icon(Icons.more_horiz),
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: AdminRoute.calendarBlock,
-                      child: Text('Blokiraj vrijeme'),
-                    ),
-                    PopupMenuItem(
-                      value: AdminRoute.services,
-                      child: Text('Dodaj uslugu'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AdminSpacing.sm),
-              SizedBox(
-                height: AdminSize.touchTarget,
-                child: FilledButton(
-                  onPressed: () => context.go(AdminRoute.appointmentNew.path),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    textStyle: AdminText.actionLabel,
-                  ),
-                  child: const AdminVerzal('+ Novi'),
-                ),
-              ),
-            ],
-          ],
-        ),
+        ],
       ),
     );
   }

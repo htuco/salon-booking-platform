@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_env.dart';
@@ -10,6 +11,9 @@ Future<AdminEnv> bootstrapAdmin({AdminEnv? env}) async {
 
   // V. klijentski bootstrap: bez ovoga web deep link tiho ne radi.
   usePathUrlStrategy();
+  // `push` detalja u grani upisuje i adresu (`/requests/<id>`), pa refresh i kopiran
+  // link otvore isti detalj, a ne samo listu ispod njega.
+  GoRouter.optionURLReflectsImperativeAPIs = true;
 
   final resolved = env ?? AdminEnv.fromDefines();
 

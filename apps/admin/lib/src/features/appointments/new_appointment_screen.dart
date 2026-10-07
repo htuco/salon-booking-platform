@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/widgets/admin_load_error.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/widgets/admin_skeleton.dart';
-import '../../core/theme/admin_tokens.dart';
+import '../../core/theme/theme.dart';
+import '../../core/widgets/app_header.dart';
+import '../calendar/calendar_providers.dart';
 import 'appointments_providers.dart';
 import '../../core/widgets/admin_toast.dart';
 
@@ -31,7 +33,8 @@ import '../../core/widgets/admin_toast.dart';
 /// booking flow, jer svaki korak sužava sljedeći: slobodni slotovi ovise o usluzi (trajanje)
 /// i radniku (radno vrijeme).
 class NewAppointmentScreen extends ConsumerStatefulWidget {
-  const NewAppointmentScreen({super.key});
+  const NewAppointmentScreen({this.initialDate, super.key});
+  final DateTime? initialDate;
 
   @override
   ConsumerState<NewAppointmentScreen> createState() =>
@@ -42,7 +45,7 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
   Customer? _klijent;
   Service? _usluga;
   Employee? _radnik;
-  DateTime _datum = DateTime.now();
+  late DateTime _datum = widget.initialDate ?? DateTime.now();
 
   /// **Vrijeme, ne `AvailableSlot`.** Kad radnik nije izabran, `get_available_slots` vrati po
   /// jedan red za **svakog** slobodnog radnika, pa isto vrijeme dođe više puta — prva verzija
@@ -67,97 +70,96 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Novi termin'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.go(AdminRoute.appointments.path),
-          tooltip: 'Zatvori',
+      body: AppHeaderLayout(
+        header: AppHeader.forma(
+          title: 'Novi termin',
+          // Forma je na root navigatoru iznad grane: `pop` vraća tačno odakle je otvorena.
+          // Bez ičega ispod (otvorena iz adrese) vodi na Danas.
+          onCancel: () => context.canPop()
+              ? context.pop()
+              : context.go(AdminRoute.dashboard.path),
+          // `null` dok forma nije potpuna — „Sačuvaj" stoji na 45 %.
+          onSave: _spremno && !_upisujem ? _upisi : null,
+          saveLabel: _upisujem ? 'Čuvanje…' : 'Sačuvaj',
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _Korak(
-            broj: 1,
-            naslov: 'Klijent',
-            child: _IzborKlijenta(
-              izabran: _klijent,
-              onIzabran: (klijent) => setState(() => _klijent = klijent),
-            ),
-          ),
-          _Korak(
-            broj: 2,
-            naslov: 'Usluga',
-            child: _IzborUsluge(
-              izabrana: _usluga,
-              onIzabrana: (usluga) => setState(() {
-                _usluga = usluga;
-                // Promjena usluge mijenja i trajanje i skup radnika, pa slot koji je bio
-                // slobodan više ne mora biti. Brisanje je jedini tačan potez — ostavljen
-                // slot bi se poslao u `book_appointment` i vratio `PT409` bez objašnjenja.
-                _slot = null;
-                _radnik = null;
-              }),
-            ),
-          ),
-          if (_usluga case final usluga?)
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
             _Korak(
-              broj: 3,
-              naslov: 'Radnik',
-              child: _IzborRadnika(
-                usluga: usluga,
-                izabran: _radnik,
-                onIzabran: (radnik) => setState(() {
-                  _radnik = radnik;
+              broj: 1,
+              naslov: 'Klijent',
+              child: _IzborKlijenta(
+                izabran: _klijent,
+                onIzabran: (klijent) => setState(() => _klijent = klijent),
+              ),
+            ),
+            _Korak(
+              broj: 2,
+              naslov: 'Usluga',
+              child: _IzborUsluge(
+                izabrana: _usluga,
+                onIzabrana: (usluga) => setState(() {
+                  _usluga = usluga;
+                  // Promjena usluge mijenja i trajanje i skup radnika, pa slot koji je bio
+                  // slobodan više ne mora biti. Brisanje je jedini tačan potez — ostavljen
+                  // slot bi se poslao u `book_appointment` i vratio `PT409` bez objašnjenja.
                   _slot = null;
+                  _radnik = null;
                 }),
               ),
             ),
-          if (_usluga != null)
-            _Korak(
-              broj: 4,
-              naslov: 'Datum i vrijeme',
-              child: _IzborTermina(
-                usluga: _usluga!,
-                radnik: _radnik,
-                datum: _datum,
-                izabran: _slot,
-                onDatum: (datum) => setState(() {
-                  _datum = datum;
-                  _slot = null;
-                }),
-                onSlot: (slot) => setState(() => _slot = slot),
+            if (_usluga case final usluga?)
+              _Korak(
+                broj: 3,
+                naslov: 'Radnik',
+                child: _IzborRadnika(
+                  usluga: usluga,
+                  izabran: _radnik,
+                  onIzabran: (radnik) => setState(() {
+                    _radnik = radnik;
+                    _slot = null;
+                  }),
+                ),
+              ),
+            if (_usluga != null)
+              _Korak(
+                broj: 4,
+                naslov: 'Datum i vrijeme',
+                child: _IzborTermina(
+                  usluga: _usluga!,
+                  radnik: _radnik,
+                  datum: _datum,
+                  izabran: _slot,
+                  onDatum: (datum) => setState(() {
+                    _datum = datum;
+                    _slot = null;
+                  }),
+                  onSlot: (slot) => setState(() => _slot = slot),
+                ),
+              ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _napomena,
+              maxLength: 200,
+              decoration: const InputDecoration(
+                labelText: 'Napomena (nije obavezno)',
+                hintText: 'npr. dolazi sa djetetom',
+                border: OutlineInputBorder(),
               ),
             ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _napomena,
-            maxLength: 200,
-            decoration: const InputDecoration(
-              labelText: 'Napomena (nije obavezno)',
-              hintText: 'npr. dolazi sa djetetom',
-              border: OutlineInputBorder(),
+            const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            // Rečenica koja objašnjava zašto lista vremena izgleda kako izgleda. Bez nje
+            // vlasnik koji ne vidi 15:00 misli da je app pokvarena, a slot je zauzet.
+            Text(
+              'Ponuđena su samo vremena koja su stvarno slobodna — zauzeti termini, '
+              'pauze i neradni dani se ne nude.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _spremno && !_upisujem ? _upisi : null,
-            child: _upisujem
-                ? const AdminButtonBusy()
-                : const Text('Upiši termin'),
-          ),
-          const SizedBox(height: 8),
-          // Rečenica koja objašnjava zašto lista vremena izgleda kako izgleda. Bez nje
-          // vlasnik koji ne vidi 15:00 misli da je app pokvarena, a slot je zauzet.
-          Text(
-            'Ponuđena su samo vremena koja su stvarno slobodna — zauzeti termini, '
-            'pauze i neradni dani se ne nude.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -189,10 +191,16 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
         ..invalidate(filtriraniTerminiProvider)
         ..invalidate(danasnjiTerminiProvider)
         ..invalidate(pendingCountProvider);
+      // `pop` vraća na Danas, Kalendar ili listu — svi moraju vidjeti novi termin.
+      osvjeziKalendar(ref);
 
       if (!mounted) return;
       AdminToast.uspjeh(context, 'Termin je upisan.');
-      context.go(AdminRoute.appointments.path);
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(AdminRoute.dashboard.path);
+      }
     } on ApiError catch (greska) {
       if (!mounted) return;
       // `ConflictError` je **očekivan ishod**, ne kvar: između učitavanja liste slotova i
@@ -366,33 +374,8 @@ class _IzborKlijentaState extends ConsumerState<_IzborKlijenta> {
   }
 
   Future<void> _noviKlijent() async {
-    final salonId = ref.read(adminSalonIdProvider);
-    if (salonId == null) return;
-
-    final podaci = await showDialog<({String ime, String telefon})>(
-      context: context,
-      builder: (context) => const _NoviKlijentDijalog(),
-    );
-    if (podaci == null) return;
-
-    try {
-      final klijent = await ref
-          .read(staffAppointmentRepositoryProvider)
-          .upsertWalkinCustomer(
-            salonId: salonId,
-            name: podaci.ime,
-            phone: podaci.telefon.isEmpty ? null : podaci.telefon,
-          );
-      if (!mounted) return;
-      widget.onIzabran(klijent);
-    } on ApiError {
-      if (!mounted) return;
-      AdminToast.greska(
-        context,
-        'Klijent nije sačuvan',
-        opis: 'Pokušajte ponovo.',
-      );
-    }
+    final customer = await showNewAdminCustomer(context, ref);
+    if (mounted && customer != null) widget.onIzabran(customer);
   }
 }
 
@@ -699,4 +682,37 @@ class _IzborTerminaState extends ConsumerState<_IzborTermina> {
 
   static String _datumTekst(DateTime dan) =>
       '${dan.day}.${dan.month}.${dan.year}.';
+}
+
+/// Zajednički unos za ručni termin i centralne brze akcije.
+Future<Customer?> showNewAdminCustomer(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final salonId = ref.read(adminSalonIdProvider);
+  final staff = ref.read(currentStaffProvider).valueOrNull;
+  if (salonId == null || staff == null || staff.isEmployee) return null;
+  final data = await showDialog<({String ime, String telefon})>(
+    context: context,
+    builder: (_) => const _NoviKlijentDijalog(),
+  );
+  if (data == null || !context.mounted) return null;
+  try {
+    return await ref
+        .read(staffAppointmentRepositoryProvider)
+        .upsertWalkinCustomer(
+          salonId: salonId,
+          name: data.ime,
+          phone: data.telefon.isEmpty ? null : data.telefon,
+        );
+  } on ApiError {
+    if (context.mounted) {
+      AdminToast.greska(
+        context,
+        'Klijent nije sačuvan',
+        opis: 'Pokušajte ponovo.',
+      );
+    }
+    return null;
+  }
 }

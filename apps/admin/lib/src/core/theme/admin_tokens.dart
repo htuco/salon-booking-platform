@@ -51,6 +51,10 @@ abstract final class AdminSpacing {
 /// `prototype/ui/`; to je drugi proizvod i prepisivanje navike iz `core_ui` je ovdje
 /// greška koja se vidi na svakom uglu.
 abstract final class AdminRadius {
+  /// Mobilne kartice odluka i paneli (mobile-refresh).
+  static const double mobileCard = 10;
+  static const double mobileSheet = 20;
+
   /// 6 — kartica, polje, dugme. Osnovna vrijednost sistema.
   static const double base = 6;
 

@@ -594,6 +594,7 @@ class _ZahtjevKartica extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: SizedBox(
                     height: AdminSize.touchTarget,
                     child: OutlinedButton(
@@ -603,15 +604,14 @@ class _ZahtjevKartica extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: AdminSpacing.sm),
+                // Isti glagol i odnos kao kartica u Zahtjevima (mobile-refresh).
                 Expanded(
+                  flex: 3,
                   child: SizedBox(
                     height: AdminSize.touchTarget,
                     child: FilledButton(
                       onPressed: () => potvrdiZahtjev(context, ref, termin),
-                      style: FilledButton.styleFrom(
-                        textStyle: AdminText.actionLabel,
-                      ),
-                      child: const AdminVerzal('Potvrdi'),
+                      child: const Text('Prihvati'),
                     ),
                   ),
                 ),
@@ -798,31 +798,78 @@ class SljedeciKartica extends ConsumerWidget {
     final eyebrow = AdminText.eyebrow.copyWith(color: boje.textSecondary);
     final za = sljedeci == null ? null : zaKoliko(sljedeci, sada);
 
-    if (telefon) {
+    if (telefon && sljedeci == null) {
       return DanasKartica(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: sljedeci == null
-            ? Text(
-                'Danas više nema potvrđenih termina.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: boje.textSecondary,
+        child: Text(
+          'Danas više nema potvrđenih termina.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: boje.textSecondary,
+          ),
+        ),
+      );
+    }
+    if (telefon) {
+      // Zelena traka sa lijevim rubom (mobile-refresh): sljedeći termin je stanje dana,
+      // ne još jedna bijela kartica među zahtjevima.
+      final termin = sljedeci!;
+      final zeleno = boje.positiveInk;
+      final radius = BorderRadius.circular(AdminRadius.mobileCard);
+      return Material(
+        color: boje.positiveTint,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: () => otvoriTermin(context, ref, termin),
+          borderRadius: radius,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(15, 14, 15, 14),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border(left: BorderSide(color: zeleno, width: 3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: zeleno,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: AdminVerzal(
+                        'Sljedeći · ${vrijemeHhMm(termin.startTime)}',
+                        style: eyebrow.copyWith(color: zeleno),
+                      ),
+                    ),
+                    Text(
+                      za!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: zeleno,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              )
-            : InkWell(
-                onTap: () => otvoriTermin(context, ref, sljedeci),
-                child: Row(
+                const SizedBox(height: AdminSpacing.sm),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AdminVerzal(
-                            'Sljedeći · ${vrijemeHhMm(sljedeci.startTime)}',
-                            style: eyebrow,
-                          ),
                           Text(
-                            sljedeci.customerName,
-                            style: theme.textTheme.titleSmall,
+                            termin.customerName,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           Text(
                             _opisReda(opis!, saRadnikom: !radnik),
@@ -834,15 +881,15 @@ class SljedeciKartica extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      za!,
-                      style: AdminText.metricNumber.copyWith(
-                        fontSize: 22,
-                        color: boje.accent,
-                      ),
+                      '${termin.durationMinutes} min',
+                      style: theme.textTheme.bodySmall?.copyWith(color: zeleno),
                     ),
                   ],
                 ),
-              ),
+              ],
+            ),
+          ),
+        ),
       );
     }
 

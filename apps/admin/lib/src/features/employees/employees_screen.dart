@@ -27,6 +27,7 @@ import '../../core/format/terminologija.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/slika_polje.dart';
 import '../../core/widgets/admin_verzal.dart';
@@ -50,11 +51,6 @@ String employeeShift(List<WorkingHour> hours, String employeeId, int day) {
 ///
 /// Vertikala nosi samo nominativ; ovo pokriva imenice kakve `terms.staffSingular` daje
 /// (muški rod na suglasnik, ženski na `-a`).
-String _akuzativ(String jednina) {
-  final r = jednina.toLowerCase();
-  return r.endsWith('a') ? '${r.substring(0, r.length - 1)}u' : '${r}a';
-}
-
 void _uskoro(BuildContext context, String poruka) {
   final router = GoRouter.maybeOf(context);
   AdminToast.info(
@@ -94,9 +90,7 @@ class AdminEmployeesScreen extends ConsumerWidget {
 
     return AdminScaffold(
       title: 'Osoblje',
-      aktivna: AdminRoute.employees,
-      // `3r` crta veliki naslov i sedmicu u bijelom zaglavlju, bez `AppBar`-a.
-      sopstvenoZaglavlje: true,
+      header: AppHeader(title: 'Osoblje', tabRoot: false),
       actions: desktop ? const [_TopBarAkcije()] : null,
       body: desktop
           ? AdminRefresh(
@@ -129,7 +123,6 @@ class AdminEmployeesScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const _AkcijeTelefon(),
               ],
             ),
     );
@@ -156,44 +149,25 @@ class _NaslovDesktop extends StatelessWidget {
   );
 }
 
+/// Sedmica ispod zaglavlja; naslov je u `AppHeader`-u, novi radnik u brzim akcijama.
 class _ZaglavljeTelefon extends StatelessWidget {
   const _ZaglavljeTelefon();
-
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    decoration: BoxDecoration(
-      color: context.adminColors.surface,
-      border: Border(
-        bottom: BorderSide(
-          color: context.adminColors.separator,
-          width: AdminSize.hairline,
-        ),
-      ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      AdminSpacing.gutterMobile,
+      0,
+      AdminSpacing.gutterMobile,
+      AdminSpacing.sm,
     ),
-    child: SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AdminSpacing.gutterMobile,
-          AdminSpacing.md,
-          AdminSpacing.gutterMobile,
-          AdminSpacing.lg,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Osoblje', style: Theme.of(context).textTheme.displaySmall),
-            const SizedBox(height: 6),
-            Text(_sedmicaDanas(), style: Theme.of(context).textTheme.bodyLarge),
-          ],
-        ),
-      ),
+    child: Text(
+      _sedmicaDanas(),
+      style: Theme.of(context).textTheme.bodySmall
+          ?.copyWith(color: context.adminColors.textSecondary),
     ),
   );
 }
 
-/// „Kopiraj prošlu sedmicu" i „+ DODAJ MAJSTORA" iz `3g`.
 class _TopBarAkcije extends ConsumerWidget {
   const _TopBarAkcije();
 
@@ -225,12 +199,14 @@ class _TopBarAkcije extends ConsumerWidget {
         SizedBox(
           height: AdminSize.touchTarget,
           child: FilledButton(
-            onPressed: () => _uredi(context),
+            onPressed: () => showEmployeeEditor(context),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 17),
               textStyle: AdminText.actionLabel,
             ),
-            child: AdminVerzal('+ Dodaj ${_akuzativ(radnikJednina(ref))}'),
+            child: AdminVerzal(
+              '+ Dodaj ${akuzativRadnika(radnikJednina(ref))}',
+            ),
           ),
         ),
       ],
@@ -239,70 +215,6 @@ class _TopBarAkcije extends ConsumerWidget {
 }
 
 /// „UREDI SMJENE" i „+ Majstor" iznad donje navigacije (`3r`).
-class _AkcijeTelefon extends ConsumerWidget {
-  const _AkcijeTelefon();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // `3r`: natpisi su 18 px — veći od desktop dugmeta, jer je dugme 52 px visoko.
-    final natpis = AdminText.actionLabel.copyWith(fontSize: 18);
-    return Container(
-      decoration: BoxDecoration(
-        color: context.adminColors.surface,
-        border: Border(
-          top: BorderSide(
-            color: context.adminColors.separator,
-            width: AdminSize.hairline,
-          ),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        AdminSpacing.gutterMobile,
-        AdminSpacing.md,
-        AdminSpacing.gutterMobile,
-        AdminSpacing.md,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: FilledButton(
-              onPressed: () => _uskoroSmjene(context),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(0, 52),
-                textStyle: natpis,
-              ),
-              child: const FittedBox(
-                fit: BoxFit.scaleDown,
-                child: AdminVerzal('Uredi smjene'),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => _uredi(context),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(0, 52),
-                textStyle: natpis.copyWith(
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                ),
-              ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text('+ ${radnikJednina(ref)}'),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Sadržaj
-// ---------------------------------------------------------------------------
 
 class _Sadrzaj extends ConsumerWidget {
   const _Sadrzaj();
@@ -399,8 +311,8 @@ class _Prazno extends ConsumerWidget {
         children: [
           const Text('Osoblje je još prazno.'),
           TextButton(
-            onPressed: () => _uredi(context),
-            child: Text('Dodaj ${_akuzativ(radnikJednina(ref))}'),
+            onPressed: () => showEmployeeEditor(context),
+            child: Text('Dodaj ${akuzativRadnika(radnikJednina(ref))}'),
           ),
         ],
       ),
@@ -510,7 +422,10 @@ class _KarticaRadnika extends ConsumerWidget {
           Semantics(
             button: true,
             label: 'Uredi ${radnik.name}',
-            child: InkWell(onTap: () => _uredi(context, radnik), child: vrh),
+            child: InkWell(
+              onTap: () => showEmployeeEditor(context, radnik),
+              child: vrh,
+            ),
           ),
           if (saTrakom && radnik.isActive)
             _TrakaSedmice(radnik: radnik, sati: sati, blokade: blokade),
@@ -926,9 +841,10 @@ class _CelijaSmjene extends StatelessWidget {
 // Uređivanje radnika — kreiranje, izmjena, usluge, (de)aktivacija
 // ---------------------------------------------------------------------------
 
-Future<void> _uredi(BuildContext context, [Employee? employee]) =>
+Future<void> showEmployeeEditor(BuildContext context, [Employee? employee]) =>
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (_) => _EmployeeEditor(employee: employee),
@@ -1006,8 +922,8 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
       builder: (ctx) => AlertDialog(
         title: Text(
           employee.isActive
-              ? 'Deaktivirati ${_akuzativ(jednina)}?'
-              : 'Aktivirati ${_akuzativ(jednina)}?',
+              ? 'Deaktivirati ${akuzativRadnika(jednina)}?'
+              : 'Aktivirati ${akuzativRadnika(jednina)}?',
         ),
         content: Text(
           employee.isActive
@@ -1084,8 +1000,8 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                 children: [
                   Text(
                     widget.employee == null
-                        ? 'Dodaj ${_akuzativ(radnikJednina(ref))}'
-                        : 'Uredi ${_akuzativ(radnikJednina(ref))}',
+                        ? 'Dodaj ${akuzativRadnika(radnikJednina(ref))}'
+                        : 'Uredi ${akuzativRadnika(radnikJednina(ref))}',
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   const SizedBox(height: AdminSpacing.xl),
@@ -1204,8 +1120,8 @@ class _EmployeeEditorState extends ConsumerState<_EmployeeEditor> {
                         onPressed: _saving ? null : _toggle,
                         child: Text(
                           widget.employee!.isActive
-                              ? 'Deaktiviraj ${_akuzativ(radnikJednina(ref))}'
-                              : 'Ponovo aktiviraj ${_akuzativ(radnikJednina(ref))}',
+                              ? 'Deaktiviraj ${akuzativRadnika(radnikJednina(ref))}'
+                              : 'Ponovo aktiviraj ${akuzativRadnika(radnikJednina(ref))}',
                         ),
                       ),
                     ),

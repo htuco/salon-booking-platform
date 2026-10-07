@@ -10,7 +10,6 @@ library;
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
@@ -25,6 +24,7 @@ import '../clients/clients_providers.dart' show klijentProvider;
 import 'danas.dart';
 import 'danas_akcije.dart';
 import 'danas_providers.dart';
+import '../../core/router/admin_router.dart';
 
 /// Širina panela iz `6b`.
 const double kSirinaPanela = 560;
@@ -302,7 +302,7 @@ class _Sadrzaj extends ConsumerWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         onZatvori?.call();
-                        context.go('/appointments/${termin.id}');
+                        otvoriDetaljTermina(context, termin.id);
                       },
                       child: const Text('Otvori termin'),
                     ),

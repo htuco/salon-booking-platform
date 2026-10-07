@@ -616,17 +616,25 @@ void main() {
       await _naSirini(tester, _telefon, _ekran());
 
       expect(find.text('Zahtjevi · 2'), findsOneWidget);
-      expect(find.text('POTVRDI'), findsOneWidget);
+      expect(find.text('Prihvati'), findsOneWidget);
       expect(find.text('Još 1 zahtjev'), findsOneWidget);
     });
 
-    testWidgets('traka od tri brojke i „+ Novi" u zaglavlju', (tester) async {
+    testWidgets('brojke dana su na dnu, a dodavanje u „Dodaj"', (tester) async {
       await _naSirini(tester, _telefon, _ekran());
 
+      // Zaglavlje više ne nosi „+ Novi" ni „⋯": brze akcije su u donjoj navigaciji
+      // `AppShell`-a (mobile-refresh), a brojke su sažetak na kraju dana, ne prvi red.
+      expect(find.text('+ NOVI'), findsNothing);
+      expect(find.byTooltip('Još radnji'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.text('naplaćeno'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('naplaćeno'), findsOneWidget);
       expect(find.text('prognoza'), findsOneWidget);
-      expect(find.text('+ NOVI'), findsOneWidget);
-      expect(find.byTooltip('Još radnji'), findsOneWidget);
     });
   });
 
@@ -657,6 +665,11 @@ void main() {
     testWidgets('telefon: zauzetost umjesto prometa', (tester) async {
       await _naSirini(tester, _telefon, _ekran(clan: _radnik));
 
+      await tester.scrollUntilVisible(
+        find.text('zauzetost'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
       expect(find.text('zauzetost'), findsOneWidget);
       expect(find.text('naplaćeno'), findsNothing);
       expect(find.text('+ NOVI'), findsNothing);

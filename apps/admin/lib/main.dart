@@ -71,7 +71,15 @@ class SalonAdminApp extends ConsumerWidget {
         return;
       }
       refreshAdminAppointments(ref);
-      ref.read(adminRouterProvider).go(AdminRoute.appointments.path);
+      // „Novi zahtjev" otvara granu Zahtjevi i detalj u njoj, sa „nazad" na listu.
+      final termin = ref.read(pushServiceProvider)?.takeOpenedAppointment();
+      ref
+          .read(adminRouterProvider)
+          .go(
+            termin == null
+                ? AdminRoute.requests.path
+                : '${AdminRoute.requests.path}/$termin',
+          );
     });
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,

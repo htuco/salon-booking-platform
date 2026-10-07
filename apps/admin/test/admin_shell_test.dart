@@ -10,15 +10,18 @@ library;
 import 'package:admin/src/core/navigation/admin_destinations.dart';
 import 'package:admin/src/core/router/admin_router.dart';
 import 'package:admin/src/core/theme/theme.dart';
+import 'package:admin/src/core/widgets/admin_mobile_shell.dart';
 import 'package:admin/src/core/widgets/admin_scaffold.dart';
 import 'package:admin/src/core/widgets/admin_wordmark.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/placeholder/admin_placeholder_screen.dart';
+import 'package:admin/src/shell/app_shell.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 
@@ -42,44 +45,87 @@ const _radnik = StaffMember(
 const Size _desktop = Size(1440, 900);
 const Size _telefon = Size(402, 874);
 
-/// Isti ekran u oba slučaja — samo se mijenja širina prozora.
-Widget _ekran({
-  int naCekanju = 4,
-  AdminRoute aktivna = AdminRoute.dashboard,
-  StaffMember clan = _vlasnik,
-}) => ProviderScope(
-  overrides: [
-    currentStaffProvider.overrideWith(
-      (ref) => Stream<StaffMember?>.value(clan),
-    ),
-    pendingCountProvider.overrideWith((ref) async => naCekanju),
-  ],
-  child: MaterialApp(
-    theme: buildAdminTheme(),
-    home: AdminScaffold(
-      title: 'Pregled',
-      aktivna: aktivna,
-      body: const Center(child: Text('tijelo ekrana')),
+/// Router zadnjeg [_ekran]-a, za `push` i čitanje adrese u testu.
+late GoRouter _ruter;
+
+/// Ekran grane: na `/today` „tijelo ekrana", drugdje njegova putanja.
+GoRoute _ruta(String path, {List<RouteBase> routes = const []}) => GoRoute(
+  path: path,
+  builder: (context, state) => AdminScaffold(
+    title: 'Pregled',
+    body: Center(
+      child: Text(
+        state.uri.path == '/today'
+            ? 'tijelo ekrana'
+            : 'ekran ${state.uri.path}',
+      ),
     ),
   ),
+  routes: routes,
 );
 
-/// Isti obrazac, ali sa placeholder ekranom jedne od nenapisanih ruta.
-Widget _placeholder(AdminRoute route) => ProviderScope(
-  overrides: [
-    currentStaffProvider.overrideWith(
-      (ref) => Stream<StaffMember?>.value(_vlasnik),
-    ),
-    pendingCountProvider.overrideWith((ref) async => 4),
-  ],
-  child: MaterialApp(
-    theme: buildAdminTheme(),
-    home: AdminPlaceholderScreen(
-      title: route.title,
-      path: route.path,
-      route: route,
-    ),
-  ),
+/// Ista ljuska kao u aplikaciji — [AppShell] oko četiri grane — sa praznim ekranima.
+///
+/// Isti ekran u oba rasporeda: mijenja se samo širina prozora.
+Widget _ekran({
+  int naCekanju = 4,
+  String lokacija = '/today',
+  StaffMember clan = _vlasnik,
+}) {
+  _ruter = GoRouter(
+    initialLocation: lokacija,
+    routes: [
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) =>
+            AppShell(navigationShell: shell, lokacija: state.uri.path),
+        branches: [
+          StatefulShellBranch(routes: [_ruta('/today')]),
+          StatefulShellBranch(
+            routes: [
+              _ruta(
+                '/calendar',
+                routes: [
+                  GoRoute(
+                    path: 'block',
+                    builder: (context, state) => AdminPlaceholderScreen(
+                      title: AdminRoute.calendarBlock.title,
+                      path: state.uri.path,
+                      route: AdminRoute.calendarBlock,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              _ruta('/requests', routes: [_ruta(':id')]),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              _ruta('/more', routes: [_ruta('services'), _ruta('clients')]),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+  return ProviderScope(
+    overrides: [
+      currentStaffProvider.overrideWith(
+        (ref) => Stream<StaffMember?>.value(clan),
+      ),
+      pendingCountProvider.overrideWith((ref) async => naCekanju),
+    ],
+    child: MaterialApp.router(theme: buildAdminTheme(), routerConfig: _ruter),
+  );
+}
+
+/// Oznaka aktivnog taba stoji u ćeliji [ruta].
+Finder _aktivan(AdminRoute ruta) => find.descendant(
+  of: find.byKey(ValueKey('nav-${ruta.name}')),
+  matching: find.byKey(const ValueKey('nav-indikator')),
 );
 
 /// Postavlja širinu prozora prije gradnje i vraća je poslije testa.
@@ -128,7 +174,7 @@ void main() {
           reason: 'sidebar nema stavku „${cilj.label}"',
         );
         expect(
-          find.text(cilj.label),
+          find.byKey(ValueKey('nav-${cilj.route.name}')),
           findsNothing,
           reason: 'sidebar crta „${cilj.label}" malim slovima',
         );
@@ -154,19 +200,51 @@ void main() {
   });
 
   group('telefon 402×874', () {
-    testWidgets('crta četiri ćelije, bez sidebara', (tester) async {
+    testWidgets('crta četiri taba i znak salona u sredini, bez sidebara', (
+      tester,
+    ) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      expect(find.text(kImeProizvoda.toUpperCase()), findsNothing);
+      // Tamna traka na vrhu nosi ime proizvoda; sidebara sa istim imenom nema.
+      expect(find.text(kImeProizvoda.toUpperCase()), findsOneWidget);
+      expect(find.byType(AdminMobileHeader), findsOneWidget);
+      expect(find.byType(AdminDonjaNavigacija), findsOneWidget);
 
-      final navigacija = tester.widget<NavigationBar>(
-        find.byType(NavigationBar),
-      );
-      expect(navigacija.destinations.length, 4);
-
-      for (final labela in ['Danas', 'Kalendar', 'Zahtjevi', 'Još']) {
+      // verzal-ok: labele taba su u verzalu, `Semantics` nosi original.
+      for (final labela in ['DANAS', 'KALENDAR', 'ZAHTJEVI', 'JOŠ']) {
         expect(find.text(labela), findsOneWidget);
       }
+      // Znak salona je akcija bez labele, sa imenom samo za čitač ekrana.
+      expect(find.byKey(const ValueKey('nav-dodaj')), findsOneWidget);
+      expect(find.bySemanticsLabel('Novo – dodaj termin'), findsOneWidget);
+      expect(find.text('DODAJ'), findsNothing);
+    });
+
+    testWidgets('znak salona otvara brze akcije i ne mijenja aktivni tab', (
+      tester,
+    ) async {
+      await _naSirini(tester, _telefon, _ekran());
+
+      await tester.tap(find.byKey(const ValueKey('nav-dodaj')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Šta dodajemo?'), findsOneWidget);
+      expect(find.text('Brze akcije'), findsOneWidget);
+      for (final akcija in [
+        'Napravi termin',
+        'Blokiraj vrijeme',
+        'Dodaj klijenta',
+        'Dodaj uslugu',
+      ]) {
+        expect(find.text(akcija), findsOneWidget);
+      }
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('nav-dashboard')),
+          matching: find.byKey(const ValueKey('nav-indikator')),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('moduli iza „Još" nisu ćelije', (tester) async {
@@ -184,12 +262,111 @@ void main() {
     testWidgets('ekran iza „Još" označava četvrtu ćeliju', (tester) async {
       // Bez ovoga pet od osam ekrana stoji bez ijedne označene ćelije, pa vlasnik na
       // `/services` ne vidi gdje se nalazi.
-      await _naSirini(tester, _telefon, _ekran(aktivna: AdminRoute.services));
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/more/services'));
 
-      final navigacija = tester.widget<NavigationBar>(
-        find.byType(NavigationBar),
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('nav-more')),
+          matching: find.byKey(const ValueKey('nav-indikator')),
+        ),
+        findsOneWidget,
       );
-      expect(navigacija.selectedIndex, 3);
+      // Jedna crtica, nikad dvije.
+      expect(find.byKey(const ValueKey('nav-indikator')), findsOneWidget);
+    });
+
+    testWidgets('na 375 px svih pet stavki stane u jedan red', (tester) async {
+      await _naSirini(tester, const Size(375, 667), _ekran());
+
+      expect(tester.takeException(), isNull);
+      for (final labela in ['DANAS', 'KALENDAR', 'ZAHTJEVI', 'JOŠ']) {
+        expect(tester.getSize(find.text(labela)).height, lessThan(16));
+      }
+    });
+
+    testWidgets('brojač preko 99 piše 99+', (tester) async {
+      await _naSirini(tester, _telefon, _ekran(naCekanju: 120));
+      expect(find.text('99+'), findsOneWidget);
+    });
+  });
+
+  group('grane (StatefulShellRoute)', () {
+    testWidgets('promjena taba čuva otvoren detalj u grani', (tester) async {
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/requests'));
+      _ruter.push('/requests/42');
+      await tester.pumpAndSettle();
+      expect(find.text('ekran /requests/42'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('nav-dashboard')));
+      await tester.pumpAndSettle();
+      expect(find.text('tijelo ekrana'), findsOneWidget);
+      expect(_aktivan(AdminRoute.dashboard), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('nav-requests')));
+      await tester.pumpAndSettle();
+      expect(find.text('ekran /requests/42'), findsOneWidget);
+    });
+
+    testWidgets('ponovni dodir aktivnog taba vraća granu na korijen', (
+      tester,
+    ) async {
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/requests'));
+      _ruter.push('/requests/42');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('nav-requests')));
+      await tester.pumpAndSettle();
+      expect(find.text('ekran /requests'), findsOneWidget);
+      expect(find.text('ekran /requests/42'), findsNothing);
+    });
+
+    testWidgets('detalj u grani ostavlja traku vidljivu', (tester) async {
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/requests/42'));
+      expect(find.byType(AdminDonjaNavigacija), findsOneWidget);
+      expect(_aktivan(AdminRoute.requests), findsOneWidget);
+    });
+
+    testWidgets('Android nazad: detalj se zatvara u svojoj grani', (
+      tester,
+    ) async {
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/requests'));
+      _ruter.push('/requests/42');
+      await tester.pumpAndSettle();
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('ekran /requests'), findsOneWidget);
+      expect(_aktivan(AdminRoute.requests), findsOneWidget);
+    });
+
+    testWidgets('Android nazad: korijen druge grane vodi na Danas', (
+      tester,
+    ) async {
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/calendar'));
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('tijelo ekrana'), findsOneWidget);
+      expect(_aktivan(AdminRoute.dashboard), findsOneWidget);
+    });
+
+    testWidgets('samo Danas na korijenu pušta „nazad" van aplikacije', (
+      tester,
+    ) async {
+      PopScope<dynamic> scopeLjuske() => tester.widget<PopScope<dynamic>>(
+        find
+            .descendant(
+              of: find.byType(AppShell),
+              matching: find.byWidgetPredicate((w) => w is PopScope),
+            )
+            .first,
+      );
+
+      await _naSirini(tester, _telefon, _ekran());
+      expect(scopeLjuske().canPop, isTrue);
+
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/calendar'));
+      expect(scopeLjuske().canPop, isFalse);
     });
   });
 
@@ -213,7 +390,7 @@ void main() {
       // Salon bez ijednog zahtjeva je tako vidio crvenu tačku i otvarao prazan ekran.
       // Provjera na `find.text('0')` to ne vidi, jer teksta i nema.
       await _naSirini(tester, _telefon, _ekran(naCekanju: 0));
-      expect(find.byType(Badge), findsNothing);
+      expect(find.text('0'), findsNothing);
     });
 
     testWidgets('sa zahtjevima tačka postoji', (tester) async {
@@ -221,22 +398,21 @@ void main() {
       // primjenjuje pri montiranju, pa bi drugi pump u istom testu zadržao staru nulu i
       // test bi prolazio iz pogrešnog razloga.
       await _naSirini(tester, _telefon, _ekran(naCekanju: 3));
-      expect(find.byType(Badge), findsOneWidget);
       expect(find.text('3'), findsOneWidget);
     });
 
-    testWidgets('„Zahtjevi" vode na filtriranu listu, ne na svoju rutu', (
+    testWidgets('„Zahtjevi" su grana, a stara filtrirana adresa vodi u nju', (
       tester,
     ) async {
-      // Handoff nema ćeliju „Termini". Da zahtjevi imaju vlastitu rutu, puna lista bi
-      // ostala bez ijednog ulaza iz navigacije.
-      expect(kZahtjeviPutanja, '/appointments?status=pending');
-
+      expect(kZahtjeviPutanja, '/requests');
       final zahtjevi = kAdminDestinations.firstWhere(
         (c) => c.label == 'Zahtjevi',
       );
-      expect(zahtjevi.route, AdminRoute.appointments);
-      expect(zahtjevi.putanja, kZahtjeviPutanja);
+      expect(zahtjevi.route, AdminRoute.requests);
+      expect(
+        staraAdresa(Uri.parse('/appointments?status=pending')),
+        '/requests',
+      );
     });
 
     testWidgets('placeholder modul nije slijepa ulica', (tester) async {
@@ -247,10 +423,11 @@ void main() {
       //
       // Test stoji na obje širine jer se greška na svakoj vidi drugačije: na telefonu
       // nedostaje donja navigacija, na desktopu sidebar.
-      await _naSirini(tester, _telefon, _placeholder(AdminRoute.clients));
-      expect(find.byType(NavigationBar), findsOneWidget);
+      await _naSirini(tester, _telefon, _ekran(lokacija: '/calendar/block'));
+      expect(find.byType(AdminPlaceholderScreen), findsOneWidget);
+      expect(find.byType(AdminDonjaNavigacija), findsOneWidget);
 
-      await _naSirini(tester, _desktop, _placeholder(AdminRoute.clients));
+      await _naSirini(tester, _desktop, _ekran(lokacija: '/calendar/block'));
       expect(find.text(kImeProizvoda.toUpperCase()), findsOneWidget);
     });
 
@@ -407,7 +584,6 @@ void main() {
         theme: buildAdminTheme(),
         home: AdminScaffold(
           title: 'Pregled',
-          aktivna: AdminRoute.dashboard,
           actions: [
             Row(
               children: [
@@ -506,10 +682,9 @@ void main() {
     ) async {
       await _naSirini(tester, _telefon, _ekran(clan: _radnik));
 
-      final navigacija = tester.widget<NavigationBar>(
-        find.byType(NavigationBar),
-      );
-      expect(navigacija.destinations, hasLength(4));
+      // Četiri taba, bez znaka salona: brze akcije traže `is_admin` (task 47).
+      expect(find.byKey(const ValueKey('nav-dodaj')), findsNothing);
+      expect(find.byKey(const ValueKey('nav-indikator')), findsOneWidget);
       expect(
         adminSporedne(adminDestinationsZa(_radnik)),
         isEmpty,

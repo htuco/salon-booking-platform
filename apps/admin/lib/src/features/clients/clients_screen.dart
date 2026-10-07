@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
-import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../appointments/status_pill.dart';
@@ -59,9 +59,7 @@ class AdminClientsScreen extends ConsumerWidget {
     final desktop = AdminShell.jeDesktop(context);
     return AdminScaffold(
       title: 'Klijenti',
-      aktivna: AdminRoute.clients,
-      // `3o` crta veliki naslov u tijelu, ne `AppBar`.
-      sopstvenoZaglavlje: true,
+      header: AppHeader(title: 'Klijenti', tabRoot: false),
       actions: desktop ? const [_TopBarAkcije()] : null,
       body: desktop ? const _Desktop() : const _Telefon(),
     );
@@ -1000,7 +998,7 @@ class _ProfilSadrzaj extends ConsumerWidget {
                   ),
                   child: Text(
                     biljeska,
-                    style: tekst.bodyLarge?.copyWith(color: boje.textSecondary),
+                    style: tekst.bodySmall?.copyWith(color: boje.textSecondary),
                   ),
                 ),
               ],
@@ -1288,17 +1286,14 @@ class _Telefon extends ConsumerWidget {
       children: [
         ColoredBox(
           color: boje.surface,
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                gutter,
-                AdminSpacing.lg,
-                gutter,
-                AdminSpacing.lg,
-              ),
-              child: const _TelefonNaslov(),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              gutter,
+              AdminSpacing.sm,
+              gutter,
+              AdminSpacing.sm,
             ),
+            child: const _TelefonNaslov(),
           ),
         ),
         razdjelnik,
@@ -1323,32 +1318,6 @@ class _Telefon extends ConsumerWidget {
         ),
         razdjelnik,
         const Expanded(child: _MobilnaLista()),
-        // „+ NOVI KLIJENT" stoji iznad donje navigacije, preko cijele širine (`3o`).
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: boje.surface,
-            border: Border(
-              top: BorderSide(color: boje.separator, width: AdminSize.hairline),
-            ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: gutter,
-              vertical: AdminSpacing.md,
-            ),
-            child: SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: () => _uskoro(context, 'Novi klijent'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                  textStyle: AdminText.actionLabel.copyWith(fontSize: 16),
-                ),
-                child: const AdminVerzal('+ Novi klijent'),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -1363,11 +1332,10 @@ class _TelefonNaslov extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Klijenti', style: tekst.displaySmall),
-        const SizedBox(height: AdminSpacing.xs),
+        // Naslov „Klijenti" je u `AppHeader`-u; ovdje ostaje broj klijenata.
         Text(
           _podnaslov(ref) ?? 'Učitavanje…',
-          style: tekst.bodyLarge?.copyWith(
+          style: tekst.bodySmall?.copyWith(
             color: context.adminColors.textSecondary,
           ),
         ),

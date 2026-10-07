@@ -1,7 +1,10 @@
 /// Usluge na dvije širine — `3f`, `3p` i editor `3q`.
 library;
 
+import 'dart:async';
+
 import 'package:admin/src/core/theme/theme.dart';
+import 'package:admin/src/core/widgets/admin_mobile_shell.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/services/services_screen.dart';
 import 'package:admin/src/features/services/usluge_dijelovi.dart';
@@ -168,7 +171,7 @@ void main() {
     expect(find.text('Uredi uslugu'), findsNothing);
   });
 
-  testWidgets('telefon crta kartice i donju akciju, ne tabelu ni FAB', (
+  testWidgets('telefon crta kartice, bez tabele, FAB-a i donje akcije', (
     tester,
   ) async {
     await _pumpAt(tester, _telefon, _screen());
@@ -179,7 +182,8 @@ void main() {
     expect(find.text('20 min · nije online'), findsOneWidget);
     expect(find.text('15 KM'), findsOneWidget);
     expect(find.text('12.50 KM'), findsOneWidget);
-    expect(find.text('+ NOVA USLUGA'), findsOneWidget);
+    // Nova usluga je u brzim akcijama donje navigacije (mobile-refresh).
+    expect(find.text('+ NOVA USLUGA'), findsNothing);
     expect(find.byType(FloatingActionButton), findsNothing);
   });
 
@@ -213,7 +217,23 @@ void main() {
   ) async {
     await _pumpAt(tester, _telefon, _screen());
 
-    await tester.tap(find.text('+ NOVA USLUGA'));
+    // Traka sa znakom salona je u `AppShell`-u, ne u ekranu: panel se otvara direktno,
+    // istim pozivom kao znak. Element `Consumer` ekrana je i njegov `WidgetRef`.
+    final ekran = tester.element(find.byType(AdminServicesScreen));
+    final ref = ekran as WidgetRef;
+    // Panel je samo vlasniku; bez trake niko drugi još nije pročitao člana.
+    await tester.runAsync(() => ref.read(currentStaffProvider.future));
+    unawaited(showAdminQuickActions(ekran, ref));
+    await tester.pumpAndSettle();
+    // Panel ne ponavlja ime salona čiji znak ga je otvorio; zaglavlje ga i dalje nosi.
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.textContaining(_salon.name),
+      ),
+      findsNothing,
+    );
+    await tester.tap(find.text('Dodaj uslugu'));
     await tester.pumpAndSettle();
     final sheet = find.byType(BottomSheet);
     final polja = find.descendant(of: sheet, matching: find.byType(TextField));

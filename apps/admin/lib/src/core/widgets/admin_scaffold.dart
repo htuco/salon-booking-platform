@@ -10,6 +10,7 @@ import '../router/admin_router.dart';
 import '../theme/theme.dart';
 import '../../features/profile/profilna_slika.dart';
 import 'admin_wordmark.dart';
+import 'app_header.dart';
 import 'admin_toast.dart';
 
 /// Širine na kojima admin mijenja oblik.
@@ -115,97 +116,72 @@ abstract final class AdminShell {
   }
 }
 
-/// Ljuska admin ekrana: sidebar na desktopu, donja navigacija na telefonu.
+/// Okvir jednog admin ekrana **unutar** [AppShell]-a.
 ///
-/// **Jedan route model, dvije ljuske.** Obje čitaju `kAdminDestinations`; nema dva stabla
-/// ekrana i nema ekrana koji postoji samo na jednoj širini. Prelaz ide na
-/// [AdminBreakpoint.desktop] — horizontalno skaliran desktop nije mobilni layout
-/// (`SPEC.md`, „Raspored i komponente").
+/// Ljusku (sidebar, mobilno zaglavlje, donju traku) crta `AppShell` jednom za sve grane;
+/// ovaj widget crta samo ono što pripada ekranu: na desktopu top bar sa naslovom i
+/// akcijama, na telefonu [AppHeader] vezan za scroll tijela. `Scaffold` ostaje zbog FAB-a.
+///
+/// Prelaz ide na [AdminBreakpoint.desktop] — horizontalno skaliran desktop nije mobilni
+/// layout (`SPEC.md`, „Raspored i komponente").
 class AdminScaffold extends ConsumerWidget {
   const AdminScaffold({
     required this.title,
     required this.body,
-    this.aktivna,
+    this.header,
     this.actions,
     this.floatingActionButton,
-    this.sopstvenoZaglavlje = false,
-    this.podstranica = false,
     super.key,
   });
 
+  /// Naslov top bara na desktopu.
   final String title;
   final Widget body;
 
-  /// Ruta koju ovaj ekran predstavlja, za oznaku u navigaciji.
-  ///
-  /// Prosljeđuje je ekran, a **ne čita se iz `GoRouterState`**: čitanje iz routera veže
-  /// svaki admin ekran za router stablo, pa se ne može podići u widget testu bez pravog
-  /// `GoRouter`-a. Test koji mora graditi router da bi provjerio listu termina testira
-  /// navigaciju, ne listu.
-  final AdminRoute? aktivna;
+  /// Zaglavlje na telefonu (akcije, `bottom`; naslov samo u grani). Desktop ga ne crta: tamo
+  /// naslov i akcije nosi top bar ([title], [actions]).
+  final AppHeader? header;
 
+  /// Akcije top bara na desktopu.
   final List<Widget>? actions;
   final Widget? floatingActionButton;
 
-  /// Ekran sam crta zaglavlje na telefonu, pa ljuska ne stavlja `AppBar`.
-  ///
-  /// `3k` iznad sadržaja crta **veliki naslov u tijelu** („Danas", 30 px, ispod njega
-  /// datum i broj termina), a ne 56-pikselnu traku sa sitnim naslovom. Ljuska to ne može
-  /// nacrtati sama jer podnaslov zna samo ekran. Desktop ovim nije dotaknut: tamo top bar
-  /// pripada ljusci, jer nosi breadcrumb i akcije koje su iste za sve ekrane.
-  final bool sopstvenoZaglavlje;
-
-  /// Ekran je podstranica ispod „Još" na telefonu, pa nema donju navigaciju.
-  ///
-  /// `3s` crta „‹ Još" i vlastitu traku sa „Sačuvaj" na dnu; donja navigacija ispod nje
-  /// bi dala dvije trake na dnu ekrana. Desktop ovim nije dotaknut.
-  final bool podstranica;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return AdminShell.jeDesktop(context)
-        ? _desktop(context, ref)
-        : _telefon(context, ref);
+    return AdminShell.jeDesktop(context) ? _desktop() : _telefon(context);
   }
 
-  /// 1440: tamni sidebar lijevo, top bar iznad radne površine.
-  Widget _desktop(BuildContext context, WidgetRef ref) {
+  /// 1440: top bar iznad radne površine; sidebar je lijevo u [AppShell]-u.
+  Widget _desktop() {
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          _Sidebar(aktivna: aktivna),
-          Expanded(
-            child: Column(
-              children: [
-                _TopBar(title: title, actions: actions),
-                Expanded(child: body),
-              ],
-            ),
-          ),
+          _TopBar(title: title, actions: actions),
+          Expanded(child: body),
         ],
       ),
       floatingActionButton: floatingActionButton,
     );
   }
 
-  /// 402: `AppBar` iznad, četiri ćelije ispod.
-  ///
-  /// `AppBar` ostaje iz taska 23 — handoff (`3k`) umjesto njega crta veliki naslov u
-  /// tijelu ekrana, ali to je oblik **ekrana**, ne ljuske, i pripada tasku 30. Ovaj task
-  /// mijenja navigaciju, ne zaglavlja.
-  Widget _telefon(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: sopstvenoZaglavlje
-          ? null
-          : AppBar(
-              title: Text(title),
-              actions: [...?actions, const AdminNalogDugme(ikona: true)],
-            ),
-      body: body,
-      floatingActionButton: floatingActionButton,
-      bottomNavigationBar: podstranica
-          ? null
-          : _DonjaNavigacija(aktivna: aktivna),
+  /// Telefon: [AppHeader] iznad tijela; donju traku drži [AppShell].
+  Widget _telefon(BuildContext context) {
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        textTheme: theme.textTheme.copyWith(
+          displaySmall: theme.textTheme.titleLarge?.copyWith(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      child: Scaffold(
+        body: header == null
+            ? SafeArea(bottom: false, child: body)
+            : AppHeaderLayout(header: header!, body: body),
+        floatingActionButton: floatingActionButton,
+      ),
     );
   }
 }
@@ -220,8 +196,8 @@ class AdminScaffold extends ConsumerWidget {
 /// vode na `3a` (pregled mreže lokacija), koji nema ni rutu ni podatak — admin dobija
 /// tačno jedan salon iz membershipa (ADR-0016, `prototype/CLAUDE.md`). Strelica koja ne
 /// otvara ništa i link koji vodi nigdje su gori od praznog mjesta.
-class _Sidebar extends ConsumerWidget {
-  const _Sidebar({this.aktivna});
+class AdminSidebar extends ConsumerWidget {
+  const AdminSidebar({this.aktivna, super.key});
 
   final AdminRoute? aktivna;
 
@@ -779,50 +755,6 @@ class _TopBar extends ConsumerWidget {
 // Telefon
 // ---------------------------------------------------------------------------
 
-/// Četiri ćelije iz `3k`: tri stavke sa vrha navigacije, pa „Još".
-class _DonjaNavigacija extends ConsumerWidget {
-  const _DonjaNavigacija({this.aktivna});
-
-  final AdminRoute? aktivna;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final navigacija = ref.watch(adminNavigacijaProvider);
-    final celije = [...adminPrimarne(navigacija), kAdminJos];
-
-    // Modul iza „Još" označava četvrtu ćeliju: ko je na `/services`, mora vidjeti gdje se
-    // nalazi. Bez ovoga pet od osam ekrana stoji bez ijedne označene ćelije.
-    final izabrani = celije.indexWhere((c) => c.route == aktivna);
-    final krozJos = adminSporedne(navigacija).any((c) => c.route == aktivna);
-    final indeks = izabrani >= 0
-        ? izabrani
-        : krozJos
-        ? celije.length - 1
-        : 0;
-
-    return NavigationBar(
-      selectedIndex: indeks,
-      destinations: [
-        for (final cilj in celije)
-          NavigationDestination(
-            icon: cilj.brojac == null
-                ? Icon(cilj.icon)
-                : _IkonaSaBrojacem(cilj: cilj),
-            label: cilj.label,
-          ),
-      ],
-      onDestinationSelected: (i) {
-        final cilj = celije[i];
-        if (cilj.route != aktivna) context.go(cilj.putanja);
-      },
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Dijelovi koje dijele obje ljuske
-// ---------------------------------------------------------------------------
-
 /// Brojač uz „Zahtjeve" u sidebaru. Canvas: akcent, radius 20, mono 11.
 class _Pilula extends ConsumerWidget {
   const _Pilula({required this.brojac});
@@ -857,28 +789,7 @@ class _Pilula extends ConsumerWidget {
   }
 }
 
-/// Isti brojač, kao Material `Badge` u donjoj navigaciji.
-///
-/// **Nula se ne crta uopšte**, kao ni u sidebaru. Ranije je `Badge` uvijek bio vidljiv sa
-/// praznim tekstom, a Material prazan `label` iscrta kao **tačku** — pa je salon bez ijednog
-/// zahtjeva vidio crvenu tačku nad „Zahtjevima" i otvarao prazan ekran. Widget test to nije
-/// uhvatio jer `Badge` i dalje postoji i `Text` je prazan; vidjelo se tek na uređaju.
-class _IkonaSaBrojacem extends ConsumerWidget {
-  const _IkonaSaBrojacem({required this.cilj});
-
-  final AdminDestination cilj;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final broj = ref.watch(cilj.brojac!).valueOrNull ?? 0;
-    final ikona = Icon(cilj.icon);
-    if (broj == 0) return ikona;
-
-    return Badge(label: Text('$broj'), child: ikona);
-  }
-}
-
-/// Meni naloga u `AppBar`-u telefona.
+/// Meni naloga (ikona ili tekst) — ostaje za ekrane koji ga nude u zaglavlju.
 class AdminNalogDugme extends ConsumerWidget {
   const AdminNalogDugme({this.ikona = false, super.key});
 
@@ -918,7 +829,7 @@ class AdminNalogDugme extends ConsumerWidget {
 
 /// Odjava, sa porukom kad ne prođe.
 ///
-/// Stoji kao funkcija jer je zovu tri mjesta: meni u `AppBar`-u, meni podnožja sidebara i
+/// Stoji kao funkcija jer je zovu tri mjesta: meni naloga, meni podnožja sidebara i
 /// „Još".
 /// Preusmjeravanje na `/login` radi router kroz `currentStaffProvider`.
 Future<void> odjavi(BuildContext context, WidgetRef ref) async {

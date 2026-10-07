@@ -24,6 +24,8 @@ import '../../core/format/tekst.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../dashboard/dashboard_summary.dart' show prijeKoliko;
+import '../dashboard/danas.dart' show cekaKoliko;
+import '../../core/widgets/admin_skeleton.dart';
 import 'appointment_actions_bar.dart';
 import 'appointment_card.dart';
 import 'appointments_providers.dart';
@@ -39,8 +41,6 @@ const double _sirinaRadnji = 280;
 const double _paddingReda = 22;
 
 /// `3m`: dugmad u kartici su 50 px, unutrašnji padding 18.
-const double _visinaDugmetaTelefon = 50;
-const double _paddingKartice = 18;
 
 /// `danas` / `utorak` — kako `3d` i `3m` imenuju dan zahtjeva.
 ///
@@ -391,108 +391,140 @@ class _ZahtjevKarticaTelefonState extends ConsumerState<ZahtjevKarticaTelefon>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final boje = context.adminColors;
-    final sada = DateTime.now();
-    final istice = _minutaDoIsteka(termin, sada);
-    final upozorenje = istice == null ? null : 'Zahtjev ističe za $istice min.';
-    final opis = widget.opis;
-    final dan = _imeDana(termin.date, sada);
-
-    // `3m` uz majstora koji nije izabran piše „bilo ko", ne izostavlja ga.
-    final red = [
-      if (opis.usluga case final u? when u.isNotEmpty) u,
-      opis.majstor ?? 'bilo ko',
-      if (opis.cijena case final c?) iznosKm(c),
-    ].join(' · ');
-
-    final potvrdiDugme = SizedBox(
-      height: _visinaDugmetaTelefon,
-      child: FilledButton(
-        onPressed: uToku ? null : potvrdi,
-        style: FilledButton.styleFrom(
-          textStyle: AdminText.actionLabel.copyWith(fontSize: 16),
-        ),
-        child: const AdminVerzal('Potvrdi'),
-      ),
-    );
-    final odbijDugme = SizedBox(
-      height: _visinaDugmetaTelefon,
-      child: OutlinedButton(
-        onPressed: uToku ? null : odbij,
-        style: OutlinedButton.styleFrom(
-          textStyle: theme.textTheme.labelLarge?.copyWith(fontSize: 16),
-        ),
-        child: const Text('Odbij'),
-      ),
-    );
-
+    final colors = context.adminColors;
+    final now = DateTime.now();
+    final expires = _minutaDoIsteka(termin, now);
+    final waiting = cekaKoliko(termin.createdAt, now);
+    final description = widget.opis;
+    // `Danas, 18. maj` / `Srijeda, 20. maj` — kako mobile-refresh piše dan zahtjeva.
+    final date =
+        '${naslovDanaZaDatum(termin.date, danas: now)}, '
+        '${termin.date.day}. ${kMjeseci[termin.date.month - 1]}';
     return Card(
-      shape: _oblik(context, upozorenje: upozorenje != null),
+      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AdminRadius.mobileCard),
+        side: BorderSide(
+          color: expires == null ? colors.border : colors.action,
+        ),
+      ),
+      // Dodir na karticu i dalje otvara detalj termina; dugmad hvataju svoj dodir sama.
       child: InkWell(
         onTap: widget.onTap,
         child: Padding(
-          padding: const EdgeInsets.all(_paddingKartice),
+          padding: const EdgeInsets.all(AdminSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
-                  Text(
-                    vrijemeHhMm(termin.startTime),
-                    // `3m`: 26 px, 600, tabularne cifre.
-                    style: AdminText.metricNumber.copyWith(fontSize: 26),
-                  ),
-                  const SizedBox(width: AdminSpacing.sm),
-                  // `Expanded`, ne `Spacer` + goli `Text`: „ponedjeljak, 18.05." uz veći
-                  // tekst sistema prelijevao je red na 402 px.
+                  Text(termin.customerName, style: theme.textTheme.titleMedium),
+                  if (waiting != null)
+                    Text(
+                      waiting,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AdminSpacing.sm),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Expanded(
                     child: Text(
-                      dan == 'danas'
-                          ? dan
-                          : '$dan, ${_datumKratko(termin.date)}',
-                      textAlign: TextAlign.right,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      description.usluga ?? 'Usluga',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  if (description.cijena case final price?) ...[
+                    const SizedBox(width: AdminSpacing.sm),
+                    Text(iznosKm(price), style: theme.textTheme.titleSmall),
+                  ],
+                ],
+              ),
+              const SizedBox(height: AdminSpacing.sm),
+              Divider(color: colors.separator),
+              const SizedBox(height: AdminSpacing.xs),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 16,
+                    color: colors.textSecondary,
+                  ),
+                  const SizedBox(width: AdminSpacing.sm),
+                  Expanded(
+                    child: Text(date, style: theme.textTheme.bodyMedium),
+                  ),
+                  const SizedBox(width: AdminSpacing.sm),
+                  Text(
+                    vrijemeHhMm(termin.startTime),
+                    style: theme.textTheme.titleSmall,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AdminSpacing.sm),
+              Row(
+                children: [
+                  Icon(
+                    Icons.person_outline,
+                    size: 16,
+                    color: colors.textSecondary,
+                  ),
+                  const SizedBox(width: AdminSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      '${description.majstor ?? 'bilo ko'} · ${termin.durationMinutes} min',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 13,
-                        color: boje.textSecondary,
+                        color: colors.textSecondary,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AdminSpacing.sm),
-              Text(
-                termin.customerName,
-                style: theme.textTheme.titleMedium?.copyWith(fontSize: 17),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                red,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: boje.textSecondary,
+              if (termin.customerNote case final note?
+                  when note.isNotEmpty) ...[
+                const SizedBox(height: AdminSpacing.sm),
+                Text(note, style: theme.textTheme.bodySmall),
+              ],
+              if (expires != null) ...[
+                const SizedBox(height: AdminSpacing.sm),
+                _Traka(
+                  tekst: 'Zahtjev ističe za $expires min.',
+                  stil: theme.textTheme.bodySmall,
                 ),
-              ),
-              if (upozorenje != null) ...[
-                const SizedBox(height: AdminSpacing.md),
-                _Traka(tekst: upozorenje, stil: theme.textTheme.bodySmall),
               ],
               const SizedBox(height: AdminSpacing.md),
-              if (upozorenje != null) ...[
-                potvrdiDugme,
-                const SizedBox(height: 9),
-                odbijDugme,
-              ] else
-                Row(
-                  children: [
-                    Expanded(child: potvrdiDugme),
-                    const SizedBox(width: 9),
-                    Expanded(child: odbijDugme),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: uToku ? null : odbij,
+                      child: const Text('Odbij'),
+                    ),
+                  ),
+                  const SizedBox(width: AdminSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      onPressed: uToku ? null : potvrdi,
+                      icon: uToku ? null : const Icon(Icons.check, size: 17),
+                      label: uToku
+                          ? const AdminButtonBusy()
+                          : const Text('Prihvati'),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

@@ -27,11 +27,21 @@ class PushService with WidgetsBindingObserver {
   String? _registeredSalon;
   String? _deviceId;
   String? _pendingSalon;
+  String? _openedAppointment;
   bool _disposed = false;
   bool _signingOut = false;
 
   Stream<String> get opened => _opened.stream;
   Stream<PushMessage> get received => _received.stream;
+
+  /// `appointment_id` zadnje otvorene notifikacije, jednom — admin otvara taj zahtjev.
+  ///
+  /// Uz [opened], a ne u njemu: [opened] nosi salon i čita ga i klijentska aplikacija.
+  String? takeOpenedAppointment() {
+    final value = _openedAppointment;
+    _openedAppointment = null;
+    return value;
+  }
 
   String? takeInitialSalon() {
     final value = _pendingSalon;
@@ -78,7 +88,10 @@ class PushService with WidgetsBindingObserver {
     _subscriptions.add(
       FirebaseMessaging.onMessageOpenedApp.listen((message) {
         final salon = _messageSalon(message);
-        if (salon != null) _opened.add(salon);
+        if (salon != null) {
+          _openedAppointment = _messageAppointment(message);
+          _opened.add(salon);
+        }
       }),
     );
     _subscriptions.add(
@@ -89,7 +102,17 @@ class PushService with WidgetsBindingObserver {
     );
     await _serialize(_sync).catchError((Object _) => null);
     final initial = await messaging.getInitialMessage();
-    if (initial != null) _pendingSalon = _messageSalon(initial);
+    if (initial != null) {
+      _pendingSalon = _messageSalon(initial);
+      if (_pendingSalon != null) {
+        _openedAppointment = _messageAppointment(initial);
+      }
+    }
+  }
+
+  String? _messageAppointment(RemoteMessage message) {
+    final id = message.data['appointment_id'];
+    return id is String && id.isNotEmpty ? id : null;
   }
 
   String? _messageSalon(RemoteMessage message) {

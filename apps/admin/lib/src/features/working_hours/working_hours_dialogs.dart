@@ -134,6 +134,7 @@ Future<bool?> prikaziKonflikte(
 Future<void> prikaziUredjivacBlokade(BuildContext context, WidgetRef ref) =>
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       useSafeArea: true,
       builder: (_) => const _UredjivacBlokade(),

@@ -9,7 +9,6 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/format/datum.dart';
 import '../../core/theme/theme.dart';
@@ -23,6 +22,7 @@ import 'danas.dart';
 import 'danas_providers.dart';
 import 'kontekst_panel.dart';
 import 'odbij_dijalog.dart';
+import '../../core/router/admin_router.dart';
 
 /// „Nedim Hodžić · danas 15:00".
 String _koKada(Appointment termin, DateTime sada) =>
@@ -134,7 +134,7 @@ Future<void> odbijZahtjev(
 /// Klik na red: panel na ≥ 1920, drawer na desktopu ispod toga, detalj na telefonu.
 void otvoriTermin(BuildContext context, WidgetRef ref, Appointment termin) {
   if (!AdminShell.jeDesktop(context)) {
-    context.go('/appointments/${termin.id}');
+    otvoriDetaljTermina(context, termin.id);
     return;
   }
   ref.read(izabraniTerminProvider.notifier).izaberi(termin.id);

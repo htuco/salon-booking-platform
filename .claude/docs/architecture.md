@@ -55,26 +55,52 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
   vremena (zna jezik), izračun koji bi se inače sakrio u `build`. `features/home/` je prvi takav
   i uzor za ostale.
 
-### Admin ljuska: jedna lista odredišta, dvije ljuske
+### Admin ljuska: četiri grane, jedan `AppShell`
 
-Od taska 29 `apps/admin/lib/src/core/navigation/admin_destinations.dart` drži **jedinu** listu
-navigacije. Iz nje se crta i tamni sidebar na desktopu i donja navigacija na telefonu; prelaz je u
-`AdminScaffold` na `AdminBreakpoint.desktop` (840). Prve tri stavke su ćelije telefona, ostalih pet
-su rep koji stoji iza „Još" (`/more`) — **rep iste liste, ne druga lista**, pa modul dodan u
-navigaciju ne može ostati dostupan samo na jednoj širini.
+Router (`apps/admin/lib/src/core/router/admin_router.dart`) je `StatefulShellRoute.indexedStack`
+sa četiri grane, svaka sa svojim `navigatorKey`: Danas `/today`, Kalendar `/calendar`, Zahtjevi
+`/requests`, Još `/more` (moduli ispod: `/more/clients`, `/more/staff`, `/more/hours`…). Grane
+žive istovremeno, pa promjena taba čuva scroll, otvoren detalj i filter i ne učitava ponovo.
+Ljusku crta **jednom** `apps/admin/lib/src/shell/app_shell.dart`: na telefonu mobilno zaglavlje,
+granu i donju traku; na desktopu sidebar i granu. Prelaz je na `AdminBreakpoint.desktop` (840).
 
-Dvije posljedice koje se lako prekrše:
+`admin_destinations.dart` i dalje drži **jedinu** listu navigacije: prve tri stavke su tabovi,
+ostalih pet su rep iza „Još" — **rep iste liste, ne druga lista**. Red tabova je red grana, pa je
+aktivni tab samo `navigationShell.currentIndex`; sidebar (osam stavki na četiri grane) oznaku
+traži po putanji kroz `rutaSidebara`.
 
-- **Svaki admin ekran stoji u `AdminScaffold`**, uključujući placeholder rute. Vlastiti `Scaffold`
-  znači ekran bez navigacije, a otkad navigacija nudi i nenapisane module, to je slijepa ulica.
-- **Ekran i dalje prosljeđuje `aktivna`**, ne čita rutu iz `GoRouterState`. Kad ekranu treba nešto
-  iz adrese — kao filter statusa na `/appointments?status=pending` — čita ga **route builder** i
-  predaje kao argument konstruktora. Tako ekran ostaje podiziv u widget testu bez pravog routera.
+Pravila koja se lako prekrše:
+
+- **Ekran u grani ne crta ljusku ni `AppBar`.** `AdminScaffold` je sada okvir ekrana: desktop top
+  bar sa naslovom i akcijama, na telefonu samo tijelo (`Scaffold` ostaje zbog FAB-a).
+- **Detalj ide u granu, forma na root.** Detalj termina se otvara `otvoriDetaljTermina`, koji
+  bira putanju grane u kojoj je korisnik (`/calendar/appointment/:id`, `/requests/:id`…); traka
+  ostaje. Forma preko cijelog ekrana (`/appointments/new`) je na root navigatoru, ulazi odozdo i
+  `pop` vraća tamo odakle je otvorena. Sheetovi idu sa `useRootNavigator: true`, da prekriju traku
+  i da ih Android „nazad" zatvori prije ekrana ispod.
+- **Android „nazad"** drži `PopScope` u `AppShell`-u: push u grani se zatvara u grani, korijen
+  druge grane vodi na Danas, Danas na korijenu izlazi iz aplikacije.
+- **Stare adrese se preusmjeravaju** (`staraAdresa`): `/dashboard`, `/appointments?status=pending`,
+  `/employees`… ostaju živi linkovi u bookmarkima i notifikacijama.
+- **Ekran ne čita rutu iz `GoRouterState`.** Kad mu treba nešto iz adrese — filter na
+  `/more/appointments?status=` — čita ga **route builder** i predaje kao argument konstruktora,
+  pa ekran ostaje podiziv u widget testu bez routera. Zahtjevi su `samoZahtjevi: true`, jer je
+  filter liste app-scoped, a obje liste žive istovremeno.
+
+**Zaglavlje ekrana na telefonu je `AppHeader`** (`apps/admin/lib/src/core/widgets/app_header.dart`),
+iOS navigation bar bez Material `AppBar`-a (u `apps/admin/lib` ga nema nijednog). Ekran predaje
+samo konfiguraciju `AdminScaffold(header: AppHeader(...))`; `AppHeaderLayout` ga stavi iznad
+tijela i pali hairline kad tijelo krene scrollati, pa tijelo ostaje obična lista. **Korijen taba
+nema naslov** — ime ekrana već piše na aktivnoj ćeliji donje trake; traka ostaje samo ako nosi
+akcije, a `bottom` (prekidač) uvijek. Detalj u grani ima inline naslov i automatski
+„‹ <ekran ispod>", a forma preko cijelog ekrana `AppHeader.forma` sa „Otkaži" / „Sačuvaj".
+Desktop ga ne crta — tamo naslov i akcije nosi top bar. Ikone zaglavlja i trake su Lucide
+(`*300`, stroke 1.5).
 
 **Uloga sužava listu, ne pravi drugu (task 47).** Ljuske čitaju `adminNavigacijaProvider`, koji
 radniku (`StaffMember.isEmployee`) filtrira istu listu po `kRuteRadnika` iz `admin_router.dart` —
 listi *dozvoljenih* ruta, pa novi modul radniku ostaje zatvoren dok ga neko ne upiše. Isti skup
-čita i guard: adresa van njega vraća radnika na `/dashboard`. Upiti termina dobijaju
+čita i guard: adresa van njega vraća radnika na `/today`. Upiti termina dobijaju
 `adminRadnikIdProvider` kao `employeeId`; to je preciznost, izolaciju drži politika
 `employee_own` (`security.md`). Ekran koji ima vlasničku radnju (promet, novi termin, blokada)
 pita isti provider i radnju izostavlja, ne zaključava.
@@ -610,7 +636,8 @@ token refresh, promjene sesije i odjavu. `bookingDeviceIdProvider` čeka registr
 pravi `devices.id`. Podrazumijevano isključen `PUSH_ENABLED` čuva razvoj bez Firebase konfiguracije.
 
 Firebase Core/Messaging su jedini Firebase pluginovi; Supabase i dalje radi autentikaciju.
-App sluša typed tokove i navigira vlastitim routerom na `/appointments`. `opened` nosi samo salon
+App sluša typed tokove i navigira vlastitim routerom: admin na `/requests/:id` kad notifikacija
+nosi `appointment_id` (`takeOpenedAppointment`), inače na `/requests`. `opened` nosi samo salon
 ID, `received` nosi `PushMessage` — salon, `notification_id` i tekst koji je backend poslao, bez
 ličnih podataka.
 

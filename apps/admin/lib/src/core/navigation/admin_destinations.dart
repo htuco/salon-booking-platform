@@ -27,6 +27,7 @@ library;
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/appointments/appointments_providers.dart';
@@ -78,56 +79,71 @@ final List<AdminDestination> kAdminDestinations = [
   AdminDestination(
     route: AdminRoute.dashboard,
     label: 'Danas',
-    icon: Icons.home_outlined,
+    icon: LucideIcons.house300,
   ),
   AdminDestination(
     route: AdminRoute.calendar,
     label: 'Kalendar',
-    icon: Icons.calendar_today_outlined,
+    icon: LucideIcons.calendar300,
   ),
   AdminDestination(
-    route: AdminRoute.appointments,
+    route: AdminRoute.requests,
     label: 'Zahtjevi',
-    icon: Icons.chat_bubble_outline,
-    lokacija: kZahtjeviPutanja,
+    icon: LucideIcons.messageSquare300,
     brojac: pendingCountProvider,
   ),
   AdminDestination(
     route: AdminRoute.clients,
     label: 'Klijenti',
-    icon: Icons.people_outline,
+    icon: LucideIcons.users300,
   ),
   AdminDestination(
     route: AdminRoute.services,
     label: 'Usluge',
-    icon: Icons.content_cut_outlined,
+    icon: LucideIcons.scissors300,
   ),
   AdminDestination(
     route: AdminRoute.employees,
     label: 'Osoblje',
-    icon: Icons.badge_outlined,
+    icon: LucideIcons.idCard300,
   ),
   AdminDestination(
     route: AdminRoute.workingHours,
     label: 'Radno vrijeme',
-    icon: Icons.schedule_outlined,
+    icon: LucideIcons.clock300,
   ),
   AdminDestination(
     route: AdminRoute.settings,
     label: 'Postavke',
-    icon: Icons.settings_outlined,
+    icon: LucideIcons.settings300,
   ),
 ];
 
-/// Adresa „Zahtjeva" — filtrirana lista termina, ne zasebna ruta.
+/// Adresa „Zahtjeva" — korijen istoimene grane.
 ///
-/// Stoji kao imenovana konstanta jer je troše tri mjesta: navigacija, kartica zahtjeva na
-/// dashboardu i test. Sastavljena iz `AdminRoute.appointments.path` i
-/// [AppointmentStatus.wireName], da promjena rute ili imena statusa ne ostavi ovdje
-/// otkucan string koji i dalje kompajlira.
-final String kZahtjeviPutanja =
-    '${AdminRoute.appointments.path}'
-    '?$kStatusUpit=${AppointmentStatus.pending.wireName}';
+/// Stoji kao imenovana konstanta jer je troše navigacija, kartica zahtjeva na Danas i
+/// test. Stara adresa (`/appointments?status=pending`) se preusmjerava ovamo.
+final String kZahtjeviPutanja = AdminRoute.requests.path;
+
+/// Stavka sidebara za trenutnu putanju — sidebar ima osam stavki na četiri grane.
+///
+/// Najduži prefiks pobjeđuje, pa `/more/clients/...` označi Klijente, a ne Još. „Svi
+/// termini" (`/more/appointments`) nemaju svoju stavku i označe Zahtjeve, kao i prije
+/// grana. Profil je u podnožju sidebara, ne u listi.
+AdminRoute? rutaSidebara(String putanja) {
+  bool ispod(AdminRoute r) =>
+      putanja == r.path || putanja.startsWith('${r.path}/');
+  if (ispod(AdminRoute.profile)) return AdminRoute.profile;
+  if (ispod(AdminRoute.appointments)) return AdminRoute.requests;
+  AdminRoute? najbolja;
+  for (final cilj in kAdminDestinations) {
+    if (!ispod(cilj.route)) continue;
+    if (najbolja == null || cilj.route.path.length > najbolja.path.length) {
+      najbolja = cilj.route;
+    }
+  }
+  return najbolja;
+}
 
 /// Koliko stavki sa vrha liste ide u donju navigaciju telefona.
 ///
@@ -163,5 +179,5 @@ List<AdminDestination> adminSporedne(List<AdminDestination> navigacija) =>
 const AdminDestination kAdminJos = AdminDestination(
   route: AdminRoute.more,
   label: 'Još',
-  icon: Icons.more_horiz,
+  icon: LucideIcons.ellipsis300,
 );

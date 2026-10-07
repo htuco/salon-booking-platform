@@ -446,19 +446,20 @@ servira i tu stranicu.
 |---|---|---|
 | Login | `/login` | Must |
 | Imam poziv (nalog iz koda salona) | `/pozivnica` | Must |
-| Dashboard | `/dashboard` | Must |
-| Termini + filteri | `/appointments` | Must |
-| Detalji termina | `/appointments/:id` | Must |
-| Dodaj termin | `/appointments/new` | Must |
+| Danas (dashboard) | `/today` | Must |
+| Zahtjevi (termini na čekanju) | `/requests` | Must |
+| Termini + filteri („Svi termini") | `/more/appointments` | Must |
+| Detalji termina — u grani iz koje je otvoren | `/today/appointment/:id`, `/calendar/appointment/:id`, `/requests/:id`, `/more/appointments/:id` | Must |
+| Dodaj termin (forma preko cijelog ekrana) | `/appointments/new` | Must |
 | Kalendar (dnevni) | `/calendar` | Should |
-| Klijenti | `/clients` | Should |
-| Usluge | `/services` | Must |
-| Radnici | `/employees` | Must |
-| Radno vrijeme | `/working-hours` | Should |
+| Klijenti | `/more/clients` | Should |
+| Usluge | `/more/services` | Must |
+| Radnici | `/more/staff` | Must |
+| Radno vrijeme | `/more/hours` | Should |
 | Blokiraj vrijeme (modal) | `/calendar/block` | Should |
-| Postavke | `/settings` | Should |
-| Još (ulaz u module izvan četiri ćelije) | `/more` | Should |
-| Moj profil (slika, lični podaci, lozinka osobe) | `/profile` | Should |
+| Postavke | `/more/settings` | Should |
+| Još (ulaz u module izvan četiri taba) | `/more` | Should |
+| Moj profil (slika, lični podaci, lozinka osobe) | `/more/profile` | Should |
 | O aplikaciji | `/about-app` | Should |
 | Pravila korištenja | `/terms` | Must |
 
@@ -475,6 +476,12 @@ donja navigacija telefona ima četiri ćelije, pa ostalih pet stoji iza „Još"
 
 **`/pozivnica` dodana u tasku 45** (ADR-0023). Nalog osoblja nastaje iz koda koji salon pošalje
 radniku; ruta je javna kao i `/login`, jer radnik u tom trenutku još nema nalog.
+
+**Rute nose granu od mobilnog shella** (`StatefulShellRoute`, četiri taba). Moduli iza „Još"
+su pod `/more/...`, detalj termina postoji u svakoj grani iz koje se otvara, a Zahtjevi su vlastita
+grana `/requests` umjesto filtera na listi. Stare adrese (`/dashboard`, `/employees`,
+`/appointments?status=pending`, `/appointments/:id`…) router preusmjerava na nove, pa linkovi iz
+bookmarka i notifikacija ne pucaju.
 
 **`/profile` dodan u tasku 61**, iz handoffa `design_handoff_admin_profil` (prikazi `4a`–`4e`).
 Profil pripada **osobi**, ne salonu, pa je odvojen od `/settings`; otvoren je i radniku.

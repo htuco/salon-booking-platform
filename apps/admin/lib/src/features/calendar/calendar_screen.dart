@@ -23,6 +23,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/widgets/admin_refresh.dart';
 import '../../core/format/datum.dart';
@@ -31,6 +32,7 @@ import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/rub_zahtjeva.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointment_card.dart';
@@ -66,15 +68,69 @@ class AdminCalendarScreen extends ConsumerWidget {
 
     return AdminScaffold(
       title: 'Kalendar',
-      aktivna: AdminRoute.calendar,
-      // `3l` iznad sadržaja crta veliki naslov „Kalendar" sa strelicama za dan; `AppBar` sa
-      // sitnim naslovom bi istu riječ napisao dvaput.
-      sopstvenoZaglavlje: true,
+      header: AppHeader(
+        title: 'Kalendar',
+        actions: [
+          HeaderAction(
+            icon: LucideIcons.calendarSearch300,
+            semanticLabel: 'Izaberi datum',
+            onTap: () => _izaberiDatum(context, ref),
+          ),
+          if (!radnik)
+            HeaderAction(
+              icon: LucideIcons.plus300,
+              semanticLabel: 'Novi termin',
+              onTap: () => context.push(
+                Uri(
+                  path: AdminRoute.appointmentNew.path,
+                  queryParameters: {
+                    'date': _iso(ref.read(kalendarDatumProvider)),
+                  },
+                ).toString(),
+              ),
+            ),
+        ],
+        // „Sedmica" čeka sedmični prikaz kojeg još nema — kao na desktopu (`3c`),
+        // segment postoji, ali je onemogućen i čitač ga zove „uskoro".
+        bottom: AppSegmented<String>(
+          segments: const [
+            AppSegment(value: 'dan', label: 'Dan'),
+            AppSegment(
+              value: 'sedmica',
+              label: 'Sedmica',
+              enabled: false,
+              disabledHint: 'uskoro',
+            ),
+          ],
+          selected: 'dan',
+          onChanged: (_) {},
+        ),
+      ),
       actions: jeDesktop ? [_TopBarAkcije(radnik: radnik)] : null,
       body: jeDesktop ? const _Desktop() : const _Telefon(),
     );
   }
 }
+
+/// Skok na datum iz zaglavlja telefona.
+Future<void> _izaberiDatum(BuildContext context, WidgetRef ref) async {
+  final trenutni = ref.read(kalendarDatumProvider);
+  final izabran = await showDatePicker(
+    context: context,
+    useRootNavigator: true,
+    initialDate: trenutni,
+    firstDate: DateTime(trenutni.year - 1),
+    lastDate: DateTime(trenutni.year + 2),
+  );
+  if (izabran != null && context.mounted) {
+    ref.read(kalendarDatumProvider.notifier).postavi(izabran);
+  }
+}
+
+/// `2026-10-06` — datum u adresi forme.
+String _iso(DateTime dan) =>
+    '${dan.year}-${dan.month.toString().padLeft(2, '0')}-'
+    '${dan.day.toString().padLeft(2, '0')}';
 
 /// Akcije desktop top bara — prekidač prikaza i `+ NOVI TERMIN`, kako ih `3c` crta.
 class _TopBarAkcije extends StatelessWidget {
@@ -95,7 +151,7 @@ class _TopBarAkcije extends StatelessWidget {
           SizedBox(
             height: AdminSize.touchTarget,
             child: FilledButton(
-              onPressed: () => context.go(AdminRoute.appointmentNew.path),
+              onPressed: () => context.push(AdminRoute.appointmentNew.path),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 17),
                 textStyle: AdminText.actionLabel,
@@ -708,7 +764,7 @@ class _BlokTermina extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AdminRadius.base),
                 child: InkWell(
                   // `push`, ne `go` — v. isti komentar uz mobilni red.
-                  onTap: () => context.push('/appointments/${termin.id}'),
+                  onTap: () => otvoriDetaljTermina(context, termin.id),
                   borderRadius: BorderRadius.circular(AdminRadius.base),
                   child: Container(
                     decoration: BoxDecoration(
@@ -1305,73 +1361,68 @@ class _Telefon extends ConsumerWidget {
             ),
           ),
         ),
+
         // Radniku traka nema šta ponuditi: oba dugmeta traže `is_admin` (task 47).
-        if (ref.watch(adminRadnikIdProvider) == null) const _MobilnaTraka(),
       ],
     );
   }
 }
 
-/// Veliki naslov i strelice — `3l`.
+/// Mjesec i sedmica u jednom redu, ispod traka od sedam dana (mobile-refresh).
+///
+/// Bez naslova „Kalendar": tab ga već nosi. Strelice pomjeraju **sedmicu**, jer dan se
+/// bira dodirom u traci; bez njih se iz sedmice ne bi moglo izaći.
 class _MobilnoZaglavlje extends ConsumerWidget {
   const _MobilnoZaglavlje();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final boje = context.adminColors;
+    final tekst = Theme.of(context).textTheme;
+    final izabran = ref.watch(kalendarDatumProvider);
+    final ponedjeljak = izabran.subtract(Duration(days: izabran.weekday - 1));
+    final nedjelja = ponedjeljak.add(const Duration(days: 6));
+    final mjesec = kMjeseci[izabran.month - 1];
+    final sedmica = ponedjeljak.month == nedjelja.month
+        ? '${ponedjeljak.day}–${nedjelja.day}. ${kMjeseci[nedjelja.month - 1].substring(0, 3)}'
+        : '${ponedjeljak.day}. ${kMjeseci[ponedjeljak.month - 1].substring(0, 3)} – '
+              '${nedjelja.day}. ${kMjeseci[nedjelja.month - 1].substring(0, 3)}';
+
     return Container(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AdminSpacing.gutterMobile,
-        MediaQuery.paddingOf(context).top + AdminSpacing.sm,
-        AdminSpacing.gutterMobile,
-        AdminSpacing.lg,
+        AdminSpacing.xs,
+        AdminSpacing.xs,
+        0,
       ),
-      // `3l`: hairline ispod naslova odvaja ga od trake dana, koja počinje odmah ispod.
-      decoration: BoxDecoration(
-        color: context.adminColors.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: context.adminColors.separator,
-            width: AdminSize.hairline,
-          ),
-        ),
-      ),
+      color: boje.surface,
       child: Row(
         children: [
-          // `display`, ne `metricNumber`: to je naslov ekrana, isti koji nose „Danas" i
-          // „Termini". `metricNumber` je brojka u kartici metrike i promjena njene
-          // veličine ne smije pomjeriti naslov.
-          //
-          // **Datum ispod, iako ga `3l` ne crta:** bez njega pri prelasku u drugu sedmicu
-          // nigdje ne piše mjesec — traka dana nosi samo dan i broj.
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Kalendar',
-                  style: AdminText.display,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  datumDugo(ref.watch(kalendarDatumProvider)),
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium
-                      ?.copyWith(color: context.adminColors.textSecondary),
-                ),
-              ],
+            child: Text(
+              '${mjesec[0].toUpperCase()}${mjesec.substring(1)} ${izabran.year}',
+              overflow: TextOverflow.ellipsis,
+              style: tekst.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
-          _StrelicaDana(
-            ikona: Icons.chevron_left,
-            opis: 'Prethodni dan',
-            onTap: () => ref.read(kalendarDatumProvider.notifier).pomjeri(-1),
+          Flexible(
+            child: Text(
+              '$sedmica · Sedmica ${_sedmicaGodine(izabran)}',
+              overflow: TextOverflow.ellipsis,
+              style: tekst.bodySmall?.copyWith(color: boje.textSecondary),
+            ),
           ),
-          const SizedBox(width: AdminSpacing.sm),
-          _StrelicaDana(
-            ikona: Icons.chevron_right,
-            opis: 'Sljedeći dan',
-            onTap: () => ref.read(kalendarDatumProvider.notifier).pomjeri(1),
+          IconButton(
+            tooltip: 'Prethodna sedmica',
+            onPressed: () =>
+                ref.read(kalendarDatumProvider.notifier).pomjeri(-7),
+            icon: const Icon(Icons.chevron_left, size: 20),
+          ),
+          IconButton(
+            tooltip: 'Sljedeća sedmica',
+            onPressed: () =>
+                ref.read(kalendarDatumProvider.notifier).pomjeri(7),
+            icon: const Icon(Icons.chevron_right, size: 20),
           ),
         ],
       ),
@@ -1379,7 +1430,17 @@ class _MobilnoZaglavlje extends ConsumerWidget {
   }
 }
 
-/// Sedmica izabranog dana, ćelija po danu.
+/// ISO sedmica: ona u kojoj je četvrtak tog ponedjeljka.
+///
+/// UTC, ne lokalno: lokalna razlika preko pomjeranja sata je dan kraća za sat, pa
+/// `inDays` u oktobru odsiječe dan i sedmica ispadne za jednu manja.
+int _sedmicaGodine(DateTime dan) {
+  final cetvrtak = DateTime.utc(dan.year, dan.month, dan.day + 4 - dan.weekday);
+  final prviJanuar = DateTime.utc(cetvrtak.year);
+  return (cetvrtak.difference(prviJanuar).inDays ~/ 7) + 1;
+}
+
+/// Sedmica izabranog dana, sedam jednakih ćelija preko cijele širine.
 class _TrakaDana extends ConsumerWidget {
   const _TrakaDana();
 
@@ -1391,26 +1452,34 @@ class _TrakaDana extends ConsumerWidget {
     final ponedjeljak = izabran.subtract(Duration(days: izabran.weekday - 1));
 
     return Container(
-      color: context.adminColors.surface,
-      // 10, a ne 15 iz `3l`: ostatak razmaka do chipova daje rub njihove dodirne mete.
-      padding: const EdgeInsets.only(bottom: 10),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AdminSpacing.gutterMobile,
+      padding: const EdgeInsets.fromLTRB(
+        AdminSpacing.lg,
+        AdminSpacing.xs,
+        AdminSpacing.lg,
+        10,
+      ),
+      decoration: BoxDecoration(
+        color: context.adminColors.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: context.adminColors.separator,
+            width: AdminSize.hairline,
+          ),
         ),
-        child: Row(
-          children: [
-            for (var i = 0; i < 7; i++)
-              Padding(
-                padding: const EdgeInsets.only(right: AdminSpacing.sm),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < 7; i++)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2.5),
                 child: _CelijaDana(
                   dan: ponedjeljak.add(Duration(days: i)),
                   izabran: i == izabran.weekday - 1,
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -1424,7 +1493,8 @@ class _CelijaDana extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
+    final boje = context.adminColors;
+    final radius = BorderRadius.circular(AdminRadius.mobileCard);
 
     return Semantics(
       button: true,
@@ -1435,44 +1505,37 @@ class _CelijaDana extends ConsumerWidget {
       child: ExcludeSemantics(
         child: InkWell(
           onTap: () => ref.read(kalendarDatumProvider.notifier).postavi(dan),
-          borderRadius: BorderRadius.circular(AdminRadius.base),
+          borderRadius: radius,
           child: Container(
-            width: 56,
             // Najmanja visina, ne fiksna (FE-502): na 130 % sistemskog fonta skraćenica i
-            // broj dana ne staju u 68 px i red se presijeca.
-            constraints: const BoxConstraints(minHeight: 68),
+            // broj dana ne staju u 57 px i red se presijeca.
+            constraints: const BoxConstraints(minHeight: 57),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: izabran ? context.adminColors.accent : null,
-              borderRadius: BorderRadius.circular(AdminRadius.base),
-              border: izabran
-                  ? null
-                  : Border.all(
-                      color: context.adminColors.border,
-                      width: AdminSize.hairline,
-                    ),
+              color: izabran ? boje.ink : null,
+              borderRadius: radius,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   _kratkiDan(dan),
-                  style: theme.textTheme.labelSmall?.copyWith(
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
                     color: izabran
-                        ? context.adminColors.onAccent
-                        : context.adminColors.textSecondary,
+                        ? boje.surface.withValues(alpha: 0.75)
+                        : boje.textSecondary,
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                // `3l`: broj dana je 24 px i stoji odmah ispod skraćenice — ćelija je
-                // datum, ne dugme sa labelom.
+                const SizedBox(height: 6),
                 Text(
                   '${dan.day}',
                   style: AdminText.timeLarge.copyWith(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
                     height: 1.15,
-                    color: izabran ? context.adminColors.onAccent : null,
+                    color: izabran ? boje.surface : boje.ink,
                   ),
                 ),
               ],
@@ -1501,19 +1564,9 @@ class _TrakaRadnika extends ConsumerWidget {
     // Salon sa jednim radnikom ne treba filter — „Svi" i „Emir" bi bila ista lista.
     if (dan.kolone.length < 2) return const SizedBox.shrink();
 
-    return Container(
-      // `3l`: chipovi stoje 15 px od trake dana i 15 px od hairlinea ispod; ostatak tog
-      // razmaka daje nevidljivi rub dodirne mete chipa (48 px oko ~38 px vidljivog).
-      padding: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: context.adminColors.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: context.adminColors.separator,
-            width: AdminSize.hairline,
-          ),
-        ),
-      ),
+    return Padding(
+      // Chipovi stoje na podlozi ekrana, ispod bijelog izbora dana (mobile-refresh).
+      padding: const EdgeInsets.only(top: AdminSpacing.md),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(
@@ -1563,8 +1616,8 @@ class _ChipRadnika extends StatelessWidget {
   Widget build(BuildContext context) {
     final boje = context.adminColors;
 
-    // `3l` crta chip radnika kao pilulu, ne kao zaobljen pravougaonik iz teme: izabran je
-    // pun ton akcenta bez ruba, ostali su bijeli sa rubom kontrole. Bez kvačice — pilula
+    // Chip radnika je pilula, ne zaobljen pravougaonik iz teme: izabran je pun ton
+    // teksta (mobile-refresh), ostali su bijeli sa rubom kontrole. Bez kvačice — pilula
     // već mijenja podlogu i boju slova, a kvačica bi pomjerala širinu chipa pri izboru.
     return Padding(
       padding: const EdgeInsets.only(right: 9),
@@ -1577,14 +1630,14 @@ class _ChipRadnika extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         labelPadding: EdgeInsets.zero,
         backgroundColor: boje.surface,
-        selectedColor: boje.accentTint,
+        selectedColor: boje.ink,
         labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: izabran ? boje.accent : boje.textSecondary,
-          fontWeight: izabran ? FontWeight.w600 : FontWeight.w500,
+          color: izabran ? boje.surface : boje.ink,
+          fontWeight: FontWeight.w500,
         ),
         shape: StadiumBorder(
           side: BorderSide(
-            color: izabran ? Colors.transparent : boje.border,
+            color: izabran ? boje.ink : boje.border,
             width: AdminSize.hairline,
           ),
         ),
@@ -1620,16 +1673,62 @@ class _MobilnaLista extends ConsumerWidget {
 
     if (redovi.isEmpty) return _PrazanDan(dan: dan, kolona: kolona);
 
+    final termina = redovi.where((r) => r.stavka.termin != null).length;
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(
         AdminSpacing.gutterMobile,
-        AdminSpacing.lg,
+        AdminSpacing.md,
         AdminSpacing.gutterMobile,
         AdminSpacing.xl,
       ),
-      itemCount: redovi.length,
+      itemCount: redovi.length + 1,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, i) => _MobilniRed(red: redovi[i]),
+      itemBuilder: (context, i) => i == 0
+          ? _NaslovListe(dan: dan.dan, radnik: kolona?.ime, termina: termina)
+          : _MobilniRed(red: redovi[i - 1]),
+    );
+  }
+}
+
+/// „Danas · Cijeli tim" lijevo, broj termina u prikazu desno.
+class _NaslovListe extends StatelessWidget {
+  const _NaslovListe({
+    required this.dan,
+    required this.radnik,
+    required this.termina,
+  });
+
+  final DateTime dan;
+  final String? radnik;
+  final int termina;
+
+  @override
+  Widget build(BuildContext context) {
+    final tekst = Theme.of(context).textTheme;
+    final tih = context.adminColors.textSecondary;
+    final naslov = naslovDana(dan);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          naslov == 'Danas' || naslov == 'Sutra' || naslov == 'Jučer'
+              ? naslov
+              : '${dan.day}. ${kMjeseci[dan.month - 1]}',
+          style: tekst.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        Expanded(
+          child: Text(
+            ' · ${radnik ?? 'Cijeli tim'}',
+            overflow: TextOverflow.ellipsis,
+            style: tekst.bodySmall?.copyWith(color: tih),
+          ),
+        ),
+        Text(
+          '$termina u prikazu',
+          style: tekst.bodySmall?.copyWith(color: tih),
+        ),
+      ],
     );
   }
 }
@@ -1710,7 +1809,7 @@ class _SadrzajReda extends ConsumerWidget {
             child: InkWell(
               // `push`, ne `go`: `go` zamijeni cijeli stek, pa „Nazad" iz detalja vodi na
               // `/appointments` umjesto natrag u kalendar (`canPop()` u detalju bude `false`).
-              onTap: () => context.push('/appointments/${termin.id}'),
+              onTap: () => otvoriDetaljTermina(context, termin.id),
               borderRadius: BorderRadius.circular(AdminRadius.base),
               child: Container(
                 constraints: const BoxConstraints(minHeight: 64),
@@ -1816,69 +1915,6 @@ class _PojasRed extends StatelessWidget {
   }
 }
 
-/// Traka u dnu `3l`: novi termin i blokada.
-class _MobilnaTraka extends StatelessWidget {
-  const _MobilnaTraka();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AdminSpacing.gutterMobile,
-        vertical: AdminSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: context.adminColors.surface,
-        border: Border(
-          top: BorderSide(
-            color: context.adminColors.separator,
-            width: AdminSize.hairline,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 52,
-              child: FilledButton(
-                onPressed: () => context.go(AdminRoute.appointmentNew.path),
-                style: FilledButton.styleFrom(textStyle: AdminText.actionLabel),
-                child: const AdminVerzal('+ Novi termin'),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 52,
-            height: 52,
-            child: OutlinedButton(
-              onPressed: () => context.go(AdminRoute.calendarBlock.path),
-              style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
-              // Dugme je samo ikona, pa labelu nosi ikona (FE-502) — bez nje je čitač
-              // javljao „dugme" bez imena.
-              child: const Icon(
-                Icons.block_outlined,
-                size: 20,
-                semanticLabel: 'Blokiraj vrijeme',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Prazna stanja i greška
-// ---------------------------------------------------------------------------
-
-/// Prazan dan — **skrolabilan, iako stane na ekran.**
-///
-/// `RefreshIndicator` hvata gest samo nad `Scrollable`-om. Sa golim `Center`-om bi
-/// pull-to-refresh nestao tačno na danu na kojem vlasnik najviše želi povući da provjeri je
-/// li raspored stvarno prazan.
 class _PrazanDan extends StatelessWidget {
   const _PrazanDan({required this.dan, this.kolona});
 

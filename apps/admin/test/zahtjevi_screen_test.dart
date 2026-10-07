@@ -223,7 +223,7 @@ void main() {
       // `3m`: zahtjev ima svoju karticu, ne opštu `AppointmentCard`.
       expect(tester.takeException(), isNull);
       expect(find.byType(ZahtjevKarticaTelefon), findsNWidgets(2));
-      expect(find.text('POTVRDI'), findsNWidgets(2));
+      expect(find.text('Prihvati'), findsNWidgets(2));
       expect(find.text('Odbij'), findsNWidgets(2));
     });
 

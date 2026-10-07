@@ -335,13 +335,25 @@ void main() {
       expect(find.text('11:00'), findsWidgets);
     });
 
-    testWidgets('velik naslov u tijelu, bez AppBar naslova iznad njega', (
+    testWidgets('mjesec i sedmica u jednom redu, bez naslova ekrana', (
       tester,
     ) async {
       await _naSirini(tester, _telefon, _ekran());
 
-      expect(find.text('Kalendar'), findsWidgets);
-      expect(find.text('Ponedjeljak, 18. maj'), findsOneWidget);
+      // Tab nosi „Kalendar"; zaglavlje ekrana nosi samo kontekst (mobile-refresh).
+      expect(find.text('Maj 2026'), findsOneWidget);
+      expect(find.text('18–24. maj · Sedmica 21'), findsOneWidget);
+      expect(find.text('18. maj'), findsOneWidget);
+      expect(find.text(' · Cijeli tim'), findsOneWidget);
+    });
+
+    testWidgets('strelice pomjeraju sedmicu, ne dan', (tester) async {
+      await _naSirini(tester, _telefon, _ekran());
+
+      await tester.tap(find.byTooltip('Sljedeća sedmica'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('25–31. maj · Sedmica 22'), findsOneWidget);
     });
 
     testWidgets('traka dana nosi sedmicu izabranog dana', (tester) async {
@@ -359,7 +371,7 @@ void main() {
       await tester.tap(find.text('19'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Utorak, 19. maj'), findsOneWidget);
+      expect(find.text('19. maj'), findsOneWidget);
     });
 
     testWidgets('chip traka bira radnika i tada se vidi njegova pauza', (
@@ -410,30 +422,15 @@ void main() {
       expect(find.text('Inventura'), findsOneWidget);
     });
 
-    testWidgets('traka u dnu nosi novi termin i blokadu', (tester) async {
-      await _naSirini(tester, _telefon, _ekran());
-
-      // Primarno dugme piše verzal kroz `AdminVerzal`.
-      expect(find.text('+ NOVI TERMIN'), findsOneWidget);
-      expect(find.byIcon(Icons.block_outlined), findsOneWidget);
-    });
-
-    testWidgets('dugme „+ Novi termin" ide preko cijele širine', (
+    testWidgets('bez trake u dnu: novi termin i blokada su u „Dodaj"', (
       tester,
     ) async {
-      // Task 30 je istu grešku našao na prijavi: dugme široko koliko i njegov tekst,
-      // nasred ekrana, izgleda kao da je layout pukao.
       await _naSirini(tester, _telefon, _ekran());
 
-      final sirina = tester
-          .getSize(
-            find.ancestor(
-              of: find.text('+ NOVI TERMIN'),
-              matching: find.byType(FilledButton),
-            ),
-          )
-          .width;
-      expect(sirina, greaterThan(_telefon.width - 120));
+      // Brze akcije žive u logu lokala u donjoj navigaciji (mobile-refresh); dupla traka
+      // nad njom bi nudila istu radnju dvaput.
+      expect(find.text('+ NOVI TERMIN'), findsNothing);
+      expect(find.byIcon(Icons.block_outlined), findsNothing);
     });
   });
 

@@ -2,13 +2,12 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/poruka_greske.dart';
-import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_toast.dart';
 import '../../core/widgets/admin_verzal.dart';
@@ -36,8 +35,7 @@ class AdminProfileScreen extends ConsumerWidget {
     if (clan == null) {
       return AdminScaffold(
         title: 'Moj profil',
-        aktivna: AdminRoute.profile,
-        podstranica: true,
+        header: AppHeader(title: 'Moj profil', tabRoot: false),
         body: stanje.isLoading
             ? const Padding(
                 padding: EdgeInsets.all(AdminSpacing.gutterDesktop),
@@ -208,9 +206,15 @@ class _ProfilState extends ConsumerState<_Profil> {
 
     return AdminScaffold(
       title: 'Moj profil',
-      aktivna: AdminRoute.profile,
-      sopstvenoZaglavlje: true,
-      podstranica: true,
+      header: AppHeader(
+        title: 'Moj profil',
+        tabRoot: false,
+        textAction: HeaderTextAction(
+          key: const Key('profil-sacuvaj-telefon'),
+          label: _snimam ? 'Čuvanje…' : 'Sačuvaj',
+          onTap: onSacuvaj,
+        ),
+      ),
       actions: desktop
           ? [
               SizedBox(
@@ -234,14 +238,7 @@ class _ProfilState extends ConsumerState<_Profil> {
               ),
             ]
           : null,
-      body: desktop
-          ? sadrzaj
-          : Column(
-              children: [
-                _ZaglavljeTelefona(onSacuvaj: onSacuvaj, snimam: _snimam),
-                Expanded(child: sadrzaj),
-              ],
-            ),
+      body: sadrzaj,
     );
   }
 }
@@ -334,6 +331,7 @@ Future<void> _listSlike(
   final salon = ref.read(adminSalonProvider).valueOrNull;
   final izbor = await showModalBottomSheet<String>(
     context: context,
+    useRootNavigator: true,
     builder: (context) {
       final boje = context.adminColors;
       Widget akcija(String vrijednost, String tekst, {bool opasno = false}) =>
@@ -1013,78 +1011,6 @@ class _Grupa extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// `4d`: „‹ Još" lijevo, naslov u sredini, „Sačuvaj" desno.
-class _ZaglavljeTelefona extends StatelessWidget {
-  const _ZaglavljeTelefona({required this.onSacuvaj, required this.snimam});
-
-  final VoidCallback? onSacuvaj;
-  final bool snimam;
-
-  @override
-  Widget build(BuildContext context) {
-    final boje = context.adminColors;
-    final tema = Theme.of(context).textTheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: boje.surface,
-        border: Border(
-          bottom: BorderSide(color: boje.separator, width: AdminSize.hairline),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: SizedBox(
-          height: 52,
-          width: double.infinity,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Text('Moj profil', style: tema.titleMedium),
-              Positioned(
-                left: AdminSpacing.gutterMobile - 10,
-                child: Semantics(
-                  button: true,
-                  label: 'Nazad na Još',
-                  excludeSemantics: true,
-                  child: InkWell(
-                    onTap: () => context.go(AdminRoute.more.path),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minHeight: AdminSize.touchTarget,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.chevron_left,
-                            size: 22,
-                            color: boje.accent,
-                          ),
-                          Text(
-                            'Još',
-                            style: tema.bodyLarge?.copyWith(color: boje.accent),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: AdminSpacing.gutterMobile - 10,
-                child: TextButton(
-                  key: const Key('profil-sacuvaj-telefon'),
-                  onPressed: onSacuvaj,
-                  child: Text(snimam ? 'Čuvanje…' : 'Sačuvaj'),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -28,13 +28,12 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/poruka_greske.dart';
 import '../../core/format/datum.dart';
-import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import 'working_hours_dialogs.dart';
@@ -215,10 +214,7 @@ class _AdminWorkingHoursScreenState
 
     return AdminScaffold(
       title: 'Radno vrijeme',
-      aktivna: AdminRoute.workingHours,
-      // `3s` crta svoje zaglavlje („‹ Još", veliki naslov); desktop top bar ostaje ljusci.
-      sopstvenoZaglavlje: true,
-      podstranica: true,
+      header: AppHeader(title: 'Radno vrijeme', tabRoot: false),
       actions: desktop
           ? [
               SizedBox(
@@ -231,7 +227,6 @@ class _AdminWorkingHoursScreenState
           ? sadrzaj
           : Column(
               children: [
-                const _ZaglavljeTelefona(),
                 Expanded(child: sadrzaj),
                 if (sve != null)
                   _TrakaSacuvaj(onPressed: onSacuvaj, snimam: _snimam),
@@ -362,75 +357,6 @@ class _Greska extends StatelessWidget {
       ),
     ],
   );
-}
-
-/// Zaglavlje `3s`: „‹ Još" i veliki naslov na bijeloj traci.
-///
-/// Radno vrijeme na telefonu nije u donjoj navigaciji nego ispod „Još", pa povratak ide
-/// tamo, a ne na prethodni ekran iz historije.
-class _ZaglavljeTelefona extends StatelessWidget {
-  const _ZaglavljeTelefona();
-
-  @override
-  Widget build(BuildContext context) {
-    final boje = context.adminColors;
-    final tema = Theme.of(context).textTheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: boje.surface,
-        border: Border(
-          bottom: BorderSide(color: boje.separator, width: AdminSize.hairline),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            // Chevron ima svoj unutrašnji razmak; bez -6 „‹" ne stoji na gutteru.
-            AdminSpacing.gutterMobile - 6,
-            AdminSpacing.xs,
-            AdminSpacing.gutterMobile,
-            AdminSpacing.xl,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Semantics(
-                button: true,
-                label: 'Nazad na Još',
-                excludeSemantics: true,
-                child: InkWell(
-                  onTap: () => context.go(AdminRoute.more.path),
-                  borderRadius: BorderRadius.circular(AdminRadius.base),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minHeight: AdminSize.touchTarget,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.chevron_left, size: 22, color: boje.accent),
-                        Text(
-                          'Još',
-                          style: tema.bodyLarge?.copyWith(color: boje.accent),
-                        ),
-                        const SizedBox(width: AdminSpacing.sm),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AdminSpacing.sm),
-              Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: Text('Radno vrijeme', style: tema.displaySmall),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// Donja traka `3s` sa „Sačuvaj izmjene" — stoji van liste, da se snima bez skrolanja
