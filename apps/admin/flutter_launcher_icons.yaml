@@ -1,0 +1,20 @@
+# Ikona admin aplikacije — Melura znak. Admin nema flavor (ADR-0003), pa je ikona jedna.
+#
+# Izvori su u `assets/brand/`, renderovani iz `melura-znak.svg` / `melura-znak-tamno.svg`:
+#   melura-ikona.png                 1024, puna podloga `ground` (#FCFCF9) — iOS i stari Android
+#   melura-ikona-tamna.png           1024, providna, svjetlija plava — iOS 18 tamna ikona
+#   melura-ikona-tinted.png          1024, providna, bijela + siva — iOS 18 tinted ikona
+#   melura-ikona-android-prednja.png 1024, providna, znak u sigurnoj zoni adaptivne ikone
+#   melura-ikona-android-mono.png    1024, providna, bijeli znak — Android 13 tematska ikona
+#
+# Poslije zamjene izvora: `dart run flutter_launcher_icons` u `apps/admin`.
+flutter_launcher_icons:
+  image_path: "assets/brand/melura-ikona.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path_ios_dark_transparent: "assets/brand/melura-ikona-tamna.png"
+  image_path_ios_tinted_grayscale: "assets/brand/melura-ikona-tinted.png"
+  adaptive_icon_background: "#FCFCF9"
+  adaptive_icon_foreground: "assets/brand/melura-ikona-android-prednja.png"
+  adaptive_icon_monochrome: "assets/brand/melura-ikona-android-mono.png"
