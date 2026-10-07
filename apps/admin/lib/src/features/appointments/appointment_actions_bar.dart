@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_verzal.dart';
 import 'appointments_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Pita za obrazloženje odbijanja ili otkazivanja; `null` znači da je korisnik odustao.
 ///
@@ -37,11 +38,8 @@ String tekstGreskeAkcije(ApiError greska) => switch (greska) {
 ///
 /// Dugme stoji da raspored bude onaj iz `adminv2`, ali tap kaže istinu umjesto da glumi
 /// radnju.
-void pokaziUskoro(BuildContext context, String sta) {
-  ScaffoldMessenger.of(context)
-    ..clearSnackBars()
-    ..showSnackBar(SnackBar(content: Text('$sta — uskoro.')));
-}
+void pokaziUskoro(BuildContext context, String sta) =>
+    AdminToast.info(context, '$sta — uskoro.');
 
 /// Akcije nad jednim terminom, ispod njegovog reda u listi.
 ///
@@ -273,30 +271,15 @@ class _AppointmentActionsBarState extends ConsumerState<AppointmentActionsBar> {
     try {
       await poziv();
       if (!mounted) return;
-      _poruka(uspjeh);
+      AdminToast.uspjeh(context, uspjeh);
     } on ApiError catch (greska) {
       if (!mounted) return;
-      _poruka(tekstGreskeAkcije(greska), greska: true);
+      AdminToast.greska(context, tekstGreskeAkcije(greska));
     } finally {
       // `mounted` prije `setState`: lista se u međuvremenu osvježila i ovaj widget je
       // možda već zamijenjen novim.
       if (mounted) setState(() => _uToku = false);
     }
-  }
-
-  void _poruka(String tekst, {bool greska = false}) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(tekst),
-          // `error`, ne `errorContainer`: snackbar tekst dolazi iz teme i pisan je za
-          // tamnu podlogu (`context.adminColors.ground` na `ink`). Na svijetlom `errorContainer`
-          // tintu bi bio nevidljiv — 1,06:1.
-          backgroundColor: greska ? Theme.of(context).colorScheme.error : null,
-        ),
-      );
   }
 }
 

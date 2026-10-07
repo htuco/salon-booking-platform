@@ -16,6 +16,7 @@ import '../../core/widgets/slika_polje.dart';
 import '../../core/widgets/admin_verzal.dart';
 import 'services_providers.dart';
 import 'usluge_dijelovi.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Otvara `3q` — bottom sheet sa editorom. Telefon i uski desktop.
 Future<void> showServiceEditor(
@@ -351,13 +352,10 @@ class _UslugaEditorState extends ConsumerState<UslugaEditor> {
               // Placeholder: brisanja usluge nema u `ServiceActions` ni u RPC-u.
               // Isključivanje radi prekidač iznad.
               TextButton(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Brisanje usluge stiže uskoro. Do tada je isključite '
-                      'prekidačem „Vidljivo u aplikaciji".',
-                    ),
-                  ),
+                onPressed: () => AdminToast.info(
+                  context,
+                  'Brisanje usluge stiže uskoro',
+                  opis: 'Do tada je isključite prekidačem „Vidljivo u aplikaciji".',
                 ),
                 style: TextButton.styleFrom(foregroundColor: boje.destructive),
                 child: const Text('Obriši'),

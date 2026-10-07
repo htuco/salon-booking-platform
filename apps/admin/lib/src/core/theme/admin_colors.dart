@@ -54,6 +54,10 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     required this.waitingInk,
     required this.neutralTint,
     required this.cardEdge,
+    required this.toastOk,
+    required this.toastInfo,
+    required this.toastWarn,
+    required this.toastErr,
   });
 
   static const light = AdminPalette(
@@ -101,6 +105,12 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     // Kartica u `3b` **nema obrub kontrole** — rub je `#F4F4F1`, jedva tamniji od
     // `ground`. Sa `border` bi svaka kartica izgledala kao polje za unos.
     cardEdge: Color(0xFFF4F4F1),
+    // Krug ikone u toastu (`adminv2/toast/`). Toast je taman u obje teme, kao sidebar,
+    // pa su krugovi isti; glif na njima je [sidebarBackground].
+    toastOk: Color(0xFF5CC08A),
+    toastInfo: Color(0xFF8FB0D6),
+    toastWarn: Color(0xFFE3B45A),
+    toastErr: Color(0xFFE8746F),
   );
 
   static const dark = AdminPalette(
@@ -137,6 +147,10 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     waitingInk: Color(0xFFFF9776),
     neutralTint: Color(0xFF2C2E33),
     cardEdge: Color(0xFF373A40),
+    toastOk: Color(0xFF5CC08A),
+    toastInfo: Color(0xFF8FB0D6),
+    toastWarn: Color(0xFFE3B45A),
+    toastErr: Color(0xFFE8746F),
   );
 
   final Color ink, ground, surface, accent, onAccent;
@@ -150,6 +164,9 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
 
   /// Rub kartice — mekši od [border], koji nose kontrole.
   final Color cardEdge;
+
+  /// Krug ikone u toastu, po vrsti: uspjeh, informacija, upozorenje, greška.
+  final Color toastOk, toastInfo, toastWarn, toastErr;
 
   @override
   AdminPalette copyWith() => this;
@@ -191,6 +208,10 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
       waitingInk: mix(waitingInk, other.waitingInk),
       neutralTint: mix(neutralTint, other.neutralTint),
       cardEdge: mix(cardEdge, other.cardEdge),
+      toastOk: mix(toastOk, other.toastOk),
+      toastInfo: mix(toastInfo, other.toastInfo),
+      toastWarn: mix(toastWarn, other.toastWarn),
+      toastErr: mix(toastErr, other.toastErr),
     );
   }
 }

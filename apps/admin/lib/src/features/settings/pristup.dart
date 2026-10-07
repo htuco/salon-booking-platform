@@ -16,6 +16,7 @@ import '../appointments/appointments_providers.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_wordmark.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Članovi osoblja salona.
 final osobljePristupProvider = FutureProvider.autoDispose<List<StaffMember>>((
@@ -215,9 +216,7 @@ class PristupSadrzaj extends ConsumerWidget {
 }
 
 void _poruka(BuildContext context, String tekst) =>
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(tekst)));
+    AdminToast.greska(context, tekst);
 
 Future<void> prikaziNoviPoziv(BuildContext context) =>
     showDialog<void>(context: context, builder: (_) => const _NoviPoziv());

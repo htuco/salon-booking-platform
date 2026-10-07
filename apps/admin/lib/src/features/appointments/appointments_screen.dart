@@ -41,6 +41,7 @@ import 'appointment_actions_bar.dart';
 import 'appointment_card.dart';
 import 'appointments_providers.dart';
 import 'zahtjev_kartica.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Najmanja širina na kojoj se kartica termina još da složiti.
 ///
@@ -692,12 +693,17 @@ class _PotvrdiSveDugmeState extends ConsumerState<_PotvrdiSveDugme> {
 
     if (!mounted) return;
     setState(() => _uToku = false);
-    _poruka(
-      context,
-      pali == 0
-          ? 'Potvrđeno $prosli ${_zahtjevaTekst(prosli)}.'
-          : 'Potvrđeno $prosli, preskočeno $pali zbog preklapanja.',
-    );
+    if (pali == 0) {
+      AdminToast.uspjeh(
+        context,
+        'Potvrđeno $prosli ${_zahtjevaTekst(prosli)}.',
+      );
+    } else {
+      AdminToast.upozorenje(
+        context,
+        'Potvrđeno $prosli, preskočeno $pali zbog preklapanja.',
+      );
+    }
   }
 }
 
@@ -784,9 +790,6 @@ class _Greska extends StatelessWidget {
     );
   }
 }
-
-void _poruka(BuildContext context, String tekst) =>
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tekst)));
 
 String _cekajuTekst(int broj) {
   final zadnjeDvije = broj % 100;

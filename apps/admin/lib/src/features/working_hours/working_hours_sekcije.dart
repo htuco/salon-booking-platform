@@ -18,6 +18,7 @@ import '../../core/widgets/admin_verzal.dart';
 import '../settings/settings_providers.dart';
 import 'working_hours_dialogs.dart';
 import 'working_hours_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Naslov blokade — razlog, ili „Blokirano" kad ga nema (`reason` je nullable).
 String naslovBlokade(BlockedSlot blokada) =>
@@ -293,12 +294,9 @@ class RadnoVrijemePauze extends ConsumerWidget {
             // Raspored radnika ovaj ekran ne piše; dugme ostaje da oblik prati `3h`,
             // ali kaže istinu umjesto da otvori formu koja ništa ne snima.
             kraj: TextButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Uskoro — pauza radnika se uređuje uz njegov raspored.',
-                  ),
-                ),
+              onPressed: () => AdminToast.info(
+                context,
+                'Uskoro — pauza radnika se uređuje uz njegov raspored.',
               ),
               child: const Text('Uredi'),
             ),
@@ -404,7 +402,6 @@ class _RedBlokadeState extends ConsumerState<_RedBlokade> {
   /// „Kurban-bajram" bez pitanja.
   Future<void> _obrisi() async {
     final blokada = widget.blokada;
-    final messenger = ScaffoldMessenger.of(context);
     final potvrda = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -431,7 +428,7 @@ class _RedBlokadeState extends ConsumerState<_RedBlokade> {
     try {
       await ref.read(workingHoursActionsProvider).obrisiBlokadu(blokada.id);
     } on ApiError catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text(porukaGreske(error))));
+      if (mounted) AdminToast.greska(context, porukaGreske(error));
       if (mounted) setState(() => _brisem = false);
     }
   }
@@ -520,16 +517,13 @@ class _RedPravila extends StatelessWidget {
 
   /// Ne vodi odmah u Postavke: odlazak sa ekrana bi bacio nesnimljene sate.
   void _objasni(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Pravila zakazivanja se mijenjaju u Postavkama.'),
-        // Sa akcijom Flutter po defaultu drži poruku dok se ne klikne; ova je samo
-        // napomena i mora se sama skloniti.
-        persist: false,
-        action: SnackBarAction(
-          label: 'Postavke',
-          onPressed: () => context.go(AdminRoute.settings.path),
-        ),
+    // Informacija, ne upozorenje: napomena se sama skloni i kad nosi akciju.
+    AdminToast.info(
+      context,
+      'Pravila zakazivanja se mijenjaju u Postavkama.',
+      akcija: AdminToastAkcija(
+        'Postavke',
+        () => context.go(AdminRoute.settings.path),
       ),
     );
   }

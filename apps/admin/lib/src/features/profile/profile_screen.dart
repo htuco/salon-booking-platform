@@ -10,6 +10,7 @@ import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_skeleton.dart';
+import '../../core/widgets/admin_toast.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../../core/widgets/admin_wordmark.dart';
 import '../appointments/appointments_providers.dart';
@@ -109,9 +110,9 @@ class _ProfilState extends ConsumerState<_Profil> {
           .updateProfile(name: _ime.text, phone: _telefon.text);
       if (!mounted) return;
       ref.invalidate(currentStaffProvider);
-      porukaProfila(context, 'Profil je sačuvan.');
+      AdminToast.uspjeh(context, 'Profil je sačuvan.');
     } catch (e) {
-      if (mounted) porukaProfila(context, porukaGreske(e));
+      if (mounted) AdminToast.greska(context, porukaGreske(e));
     } finally {
       if (mounted) setState(() => _snimam = false);
     }
@@ -621,7 +622,7 @@ class _SlikaUSalonu extends ConsumerWidget {
     try {
       await container.read(staffRepositoryProvider).setUseProfilePhoto(v);
     } catch (e) {
-      if (context.mounted) porukaProfila(context, porukaGreske(e));
+      if (context.mounted) AdminToast.greska(context, porukaGreske(e));
       return;
     }
     osvjeziProfil(container);
@@ -651,7 +652,7 @@ class _IzborRadnika extends ConsumerWidget {
         try {
           await container.read(staffRepositoryProvider).linkEmployee(id);
         } catch (e) {
-          if (context.mounted) porukaProfila(context, porukaGreske(e));
+          if (context.mounted) AdminToast.greska(context, porukaGreske(e));
           return;
         }
         osvjeziProfil(container);
@@ -782,10 +783,10 @@ class _Sigurnost extends ConsumerWidget {
     try {
       await staff.signOutOtherDevices();
       if (context.mounted) {
-        porukaProfila(context, 'Drugi uređaji su odjavljeni.');
+        AdminToast.uspjeh(context, 'Drugi uređaji su odjavljeni.');
       }
     } catch (e) {
-      if (context.mounted) porukaProfila(context, porukaGreske(e));
+      if (context.mounted) AdminToast.greska(context, porukaGreske(e));
     }
   }
 }
@@ -864,7 +865,7 @@ class _PromjenaLozinkeState extends ConsumerState<_PromjenaLozinke> {
     container.invalidate(currentStaffProvider);
     if (!mounted) return;
     Navigator.of(context).pop();
-    porukaProfila(context, 'Lozinka je promijenjena.');
+    AdminToast.uspjeh(context, 'Lozinka je promijenjena.');
   }
 
   void _neuspjeh(String poruka) {

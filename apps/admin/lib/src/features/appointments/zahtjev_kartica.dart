@@ -27,6 +27,7 @@ import '../dashboard/dashboard_summary.dart' show prijeKoliko;
 import 'appointment_actions_bar.dart';
 import 'appointment_card.dart';
 import 'appointments_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Koliko prije isteka zahtjev dobija koralnu traku. Da je svaki zahtjev „hitan", traka
 /// ne bi značila ništa.
@@ -101,18 +102,14 @@ mixin _ZahtjevAkcije<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     try {
       await poziv();
       if (!mounted) return;
-      _poruka(uspjeh);
+      AdminToast.uspjeh(context, uspjeh);
     } on ApiError catch (greska) {
       if (!mounted) return;
-      _poruka(tekstGreskeAkcije(greska));
+      AdminToast.greska(context, tekstGreskeAkcije(greska));
     } finally {
       if (mounted) setState(() => uToku = false);
     }
   }
-
-  void _poruka(String tekst) => ScaffoldMessenger.of(context)
-    ..clearSnackBars()
-    ..showSnackBar(SnackBar(content: Text(tekst)));
 }
 
 /// Obrub kartice: koralni kad nosi upozorenje (`3d`, `3m`), inače tihi rub.

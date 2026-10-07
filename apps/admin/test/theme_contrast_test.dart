@@ -127,5 +127,30 @@ void main() {
         });
       }
     });
+
+    group('$naziv toast', () {
+      // Toast je taman u obje teme (`adminv2/toast/`): tekst na `#141517`, glif na krugu.
+      final p = palette;
+      final parovi = <String, (Color, Color)>{
+        'naslov': (p.sidebarAccentForeground, p.sidebarBackground),
+        'opis': (p.sidebarText, p.sidebarBackground),
+        '×': (p.sidebarMuted, p.sidebarBackground),
+        'akcija': (p.action, p.sidebarBackground),
+        'glif na uspjehu': (p.sidebarBackground, p.toastOk),
+        'glif na informaciji': (p.sidebarBackground, p.toastInfo),
+        'glif na upozorenju': (p.sidebarBackground, p.toastWarn),
+        'glif na grešci': (p.sidebarBackground, p.toastErr),
+      };
+      for (final unos in parovi.entries) {
+        test('${unos.key} prolazi AA', () {
+          final (fg, bg) = unos.value;
+          expect(
+            odnos(fg, bg),
+            greaterThanOrEqualTo(kAa),
+            reason: '${unos.key}: ${odnos(fg, bg).toStringAsFixed(2)}:1',
+          );
+        });
+      }
+    });
   }
 }

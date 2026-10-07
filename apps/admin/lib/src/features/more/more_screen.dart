@@ -13,6 +13,7 @@ import '../clients/clients_providers.dart';
 import '../profile/profilna_slika.dart';
 import '../settings/settings_providers.dart';
 import '../working_hours/working_hours_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// `3t` — „Još": kartica salona, pa grupe redova sa vrijednošću i strelicom.
 ///
@@ -256,11 +257,8 @@ class _ProfilKartica extends ConsumerWidget {
   }
 }
 
-void _uskoro(BuildContext context, String poruka) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(poruka)));
-}
+void _uskoro(BuildContext context, String poruka) =>
+    AdminToast.info(context, poruka);
 
 /// Bijela traka sa „Još" — isti oblik kao zaglavlje `3k`, bez podnaslova.
 class _Zaglavlje extends StatelessWidget {

@@ -61,6 +61,7 @@ import 'settings_dialogs.dart';
 import 'pristup.dart';
 import 'settings_primjeri.dart';
 import 'settings_providers.dart';
+import '../../core/widgets/admin_toast.dart';
 
 /// Mjere izmjerene iz `3i` (2× izvoz). Stoje zajedno jer opisuju isti oblik kartice.
 abstract final class _Mjera {
@@ -78,12 +79,9 @@ abstract final class _Mjera {
   static const double dugme = AdminSize.touchTarget;
 }
 
-/// SnackBar za kontrolu koja je nacrtana, a funkcija iza nje još ne postoji.
-void _uskoro(BuildContext context, String poruka) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(poruka)));
-}
+/// Toast za kontrolu koja je nacrtana, a funkcija iza nje još ne postoji.
+void _uskoro(BuildContext context, String poruka) =>
+    AdminToast.info(context, poruka);
 
 class AdminSettingsScreen extends ConsumerWidget {
   const AdminSettingsScreen({super.key});
