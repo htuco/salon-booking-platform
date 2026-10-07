@@ -72,6 +72,12 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Znak proizvoda — sidebar i prijava, v. `admin_wordmark.dart`. SVG izvori su u istom
+  # folderu (boja, tamna podloga, jednobojni); aplikacija čita samo PNG-ove.
+  assets:
+    - assets/brand/melura-znak.png
+    - assets/brand/melura-znak-tamno.png
+
   # Jedna porodica, **Barlow**, u cetiri staticna reza (ADR-0020). Barlow nema varijabilni
   # fajl na Google Fonts, pa je po tezini jedan fajl i Flutter bira rez iz `fontWeight`.
   #

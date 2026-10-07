@@ -258,6 +258,9 @@ cd apps/admin
 flutter run -d chrome -t lib/demo_main.dart        # nema --dart-define, admin nema SALON_ID
 ```
 
+Demo glumi Vitez iz seeda. `--dart-define=DEMO_SALON=amko` daje Amko Barbershop (ime salona,
+vlasnik, radnici) nad istim rasporedom — za snimke na kojima treba pravi klijent, ne seed salon.
+
 Nema tenant parametra jer admin nema flavor — jedna aplikacija za sve salone (ADR-0003).
 Ljuska se mijenja na 840 px, pa se obje provjeravaju **jednim** buildom, mijenjanjem širine
 prozora: 1440×900 daje sidebar, 402×874 donju navigaciju.

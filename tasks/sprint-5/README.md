@@ -18,7 +18,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran 🟡 | refinement | — | 1–2 dana |
 | [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje 🟡 | feature | — | 4–5 dana |
 | [54](54-uklanjanje-nepotrebnog-iz-admina.md) | Uklanjanje nepotrebnog iz admina | popravka | 55 | 0,5–1 dan |
-| [55](55-prerada-dashboarda.md) | Prerada admin dashboarda | redizajn | — | 2–3 dana |
+| [55](55-prerada-dashboarda.md) | Prerada admin dashboarda 🟡 | redizajn | — | 2–3 dana |
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | feature | — | 2 dana |
 | [57](57-reset-lozinke.md) | Povratak zaboravljene lozinke | feature | — | 1–2 dana |
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | feature | — | 0,5–1 dan |
@@ -26,6 +26,7 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [60](60-regresija-i-testiranje.md) | Regresija i testiranje | test | — | 2–3 dana |
 | [61](61-moj-profil.md) | Moj profil u adminu — slika, lični podaci, lozinka 🟡 | feature | — | 2–3 dana |
 | [62](62-toast-obavijesti.md) | Toast obavijesti u adminu 🟡 | redizajn | — | 1 dan |
+| [63](63-animacija-ucitavanja.md) | Animacija učitavanja „Termin i sada" | dizajn | — | 0,5–1 dan |
 
 Ukupno 18–26 dana — više od jednog sprinta, kao i Sprint 4. **Obavezni su 48–50, 56 i 57**:
 bez njih ni salon ni klijent nemaju ono što MVP obećava. 52–55 i 58 idu redom kako stignu; 59 i 60
@@ -143,3 +144,12 @@ Grana `feat/admin-toastovi`. Handoff `prototype/adminv2/toast/`: `AdminToast` sa
 zamjenjuje `SnackBar` u cijelom adminu (~30 poziva), desktop gore desno do tri, telefon jedan
 odozgo, odbrojavanje 5 s za uspjeh i informaciju. Admin testovi zeleni, viđeno na 1440 i 402 (demo build).
 **Ostaje:** hostovani sa pravim nalogom, CI na PR-u.
+
+### 55 — Prerada admin dashboarda (🟡, 2026-10-01)
+
+Grana `feat/admin-danas`, na `feat/admin-toastovi` (treba toast iz 62). Handoff
+`prototype/adminv2/danas/` (`6a`–`6m`) sa prijedlogom izmjena, odluke u ADR-0027: „Poništi"
+odgađa upis 5 s, zahtjevi po vremenu termina, tekst bez padeža imena, kalendar u „Ostatak dana".
+U istom PR-u Melura znak i ikone, i brisanje mrtve sesije pri pokretanju (login se vrtio). Admin
+533 zelenih, viđeno na demo buildu (1440, 2560, 402) i na hostovanom kao vlasnik. **Ostaje:** radnik
+na hostovanom, telefon, CI. Animacija učitavanja „Termin i sada" je novi task 63.
