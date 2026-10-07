@@ -110,6 +110,11 @@ dart run tool/gen_placeholder_icons.dart  # privremene ikone; --force prepisuje 
 
 Redoslijed pri novom tenantu i sve zamke: `.claude/docs/tenant-factory.md`.
 
+Admin nema flavor, pa ima **jednu** ikonu — Melura znak, sa tamnom i tinted varijantom za iOS
+i tematskom za Android. Konfiguracija i opis izvora su u `apps/admin/flutter_launcher_icons.yaml`,
+izvori u `apps/admin/assets/brand/`; poslije zamjene izvora: `cd apps/admin && dart run
+flutter_launcher_icons`.
+
 ## Pokretanje jednog tenanta
 
 ```sh

@@ -85,7 +85,7 @@ class SalonAdminApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       // Toastovi stoje iznad navigatora, pa ih dijalog ne prekriva (v. `AdminToast`).
       builder: (context, child) => AdminToastSloj(child: child!),
-      title: 'Salon Admin',
+      title: 'Melura',
       routerConfig: ref.watch(adminRouterProvider),
       theme: buildAdminTheme(),
       darkTheme: buildAdminTheme(Brightness.dark),
