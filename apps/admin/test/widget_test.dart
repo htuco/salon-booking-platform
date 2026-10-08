@@ -50,6 +50,17 @@ Widget _app(ProviderContainer container) => UncontrolledProviderScope(
 );
 
 void main() {
+  setUp(() {
+    // Routing/form tests must settle independently of the perpetual lava ticker.
+    // Animation behavior is exercised in admin_lava_panel_test.dart.
+    final dispatcher =
+        TestWidgetsFlutterBinding.ensureInitialized().platformDispatcher;
+    dispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
+      disableAnimations: true,
+    );
+    addTearDown(dispatcher.clearAccessibilityFeaturesTestValue);
+  });
+
   testWidgets('Asinhrona prijava cuva isti router i deep link', (tester) async {
     tester.binding.platformDispatcher.defaultRouteNameTestValue = '/employees';
     addTearDown(

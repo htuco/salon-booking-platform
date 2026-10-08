@@ -13,6 +13,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/poruka_greske.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
+import '../../core/widgets/admin_wordmark.dart';
+import 'admin_lava_panel.dart';
 
 class AdminPozivnicaScreen extends ConsumerStatefulWidget {
   const AdminPozivnicaScreen({this.kod, super.key});
@@ -94,96 +96,121 @@ class _AdminPozivnicaScreenState extends ConsumerState<AdminPozivnicaScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final boje = context.adminColors;
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AdminSpacing.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _form,
-                child: AutofillGroup(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Imam poziv', style: theme.textTheme.headlineLarge),
-                      const SizedBox(height: AdminSpacing.sm),
-                      Text(
-                        'Unesite kod koji vam je poslao salon, pa email i lozinku '
-                        'kojom ćete se prijavljivati.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: boje.textSecondary,
-                        ),
+    final desktop = MediaQuery.sizeOf(context).width >= 1000;
+    final form = SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AdminSpacing.xl),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Form(
+              key: _form,
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (desktop) ...[
+                      const AdminWordmark(
+                        naTamnom: false,
+                        potpis: true,
+                        velicinaZnaka: 36,
                       ),
-                      const SizedBox(height: AdminSpacing.xl),
-                      TextFormField(
-                        controller: _kod,
-                        textCapitalization: TextCapitalization.characters,
-                        decoration: const InputDecoration(
-                          labelText: 'Kod poziva',
-                        ),
-                        validator: (v) => (v ?? '').trim().length < 6
-                            ? 'Upišite kod iz poruke.'
-                            : null,
-                      ),
-                      const SizedBox(height: AdminSpacing.lg),
-                      TextFormField(
-                        controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        autofillHints: const [AutofillHints.newUsername],
-                        decoration: const InputDecoration(labelText: 'Email'),
-                        validator: (v) =>
-                            RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                                .hasMatch((v ?? '').trim())
-                            ? null
-                            : 'Email nije ispravan.',
-                      ),
-                      const SizedBox(height: AdminSpacing.lg),
-                      TextFormField(
-                        controller: _lozinka,
-                        obscureText: true,
-                        autofillHints: const [AutofillHints.newPassword],
-                        decoration: const InputDecoration(
-                          labelText: 'Lozinka',
-                          helperText: 'Najmanje 8 znakova.',
-                        ),
-                        validator: (v) => (v ?? '').length < 8
-                            ? 'Lozinka mora imati najmanje 8 znakova.'
-                            : null,
-                        onFieldSubmitted: (_) => _napravi(),
-                      ),
-                      if (_greska case final g?) ...[
-                        const SizedBox(height: AdminSpacing.lg),
-                        Text(g, style: TextStyle(color: boje.destructive)),
-                      ],
-                      if (_info case final i?) ...[
-                        const SizedBox(height: AdminSpacing.lg),
-                        Text(i, style: theme.textTheme.bodyMedium),
-                      ],
-                      const SizedBox(height: AdminSpacing.xl),
-                      SizedBox(
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: _uToku ? null : _napravi,
-                          child: Text(
-                            _uToku ? 'Pravim nalog…' : 'Napravi nalog',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AdminSpacing.md),
-                      TextButton(
-                        onPressed: () => context.go(AdminRoute.login.path),
-                        child: const Text('Već imam nalog — prijava'),
-                      ),
+                      const SizedBox(height: AdminSpacing.xxxl),
                     ],
-                  ),
+                    Text('Imam poziv', style: theme.textTheme.headlineLarge),
+                    const SizedBox(height: AdminSpacing.sm),
+                    Text(
+                      'Unesite kod koji vam je poslao salon, pa email i lozinku '
+                      'kojom ćete se prijavljivati.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: boje.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AdminSpacing.xl),
+                    TextFormField(
+                      controller: _kod,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'Kod poziva',
+                      ),
+                      validator: (v) => (v ?? '').trim().length < 6
+                          ? 'Upišite kod iz poruke.'
+                          : null,
+                    ),
+                    const SizedBox(height: AdminSpacing.lg),
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      autofillHints: const [AutofillHints.newUsername],
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      validator: (v) =>
+                          RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                              .hasMatch((v ?? '').trim())
+                          ? null
+                          : 'Email nije ispravan.',
+                    ),
+                    const SizedBox(height: AdminSpacing.lg),
+                    TextFormField(
+                      controller: _lozinka,
+                      obscureText: true,
+                      autofillHints: const [AutofillHints.newPassword],
+                      decoration: const InputDecoration(
+                        labelText: 'Lozinka',
+                        helperText: 'Najmanje 8 znakova.',
+                      ),
+                      validator: (v) => (v ?? '').length < 8
+                          ? 'Lozinka mora imati najmanje 8 znakova.'
+                          : null,
+                      onFieldSubmitted: (_) => _napravi(),
+                    ),
+                    if (_greska case final g?) ...[
+                      const SizedBox(height: AdminSpacing.lg),
+                      Text(g, style: TextStyle(color: boje.destructive)),
+                    ],
+                    if (_info case final i?) ...[
+                      const SizedBox(height: AdminSpacing.lg),
+                      Text(i, style: theme.textTheme.bodyMedium),
+                    ],
+                    const SizedBox(height: AdminSpacing.xl),
+                    SizedBox(
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: _uToku ? null : _napravi,
+                        child: Text(_uToku ? 'Pravim nalog…' : 'Napravi nalog'),
+                      ),
+                    ),
+                    const SizedBox(height: AdminSpacing.md),
+                    TextButton(
+                      onPressed: () => context.go(AdminRoute.login.path),
+                      child: const Text('Već imam nalog — prijava'),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+    return Scaffold(
+      backgroundColor: boje.surface,
+      body: desktop
+          ? Row(
+              children: [
+                SizedBox(width: 560, child: form),
+                const Expanded(child: AdminLavaPanel()),
+              ],
+            )
+          : Column(
+              children: [
+                const SizedBox(
+                  height: 280,
+                  width: double.infinity,
+                  child: AdminLavaPanel(hero: true),
+                ),
+                Expanded(child: form),
+              ],
+            ),
     );
   }
 }
