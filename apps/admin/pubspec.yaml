@@ -76,6 +76,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  shaders:
+    - shaders/admin_lava.frag
+
   # Znak proizvoda — sidebar i prijava, v. `admin_wordmark.dart`. SVG izvori su u istom
   # folderu (boja, tamna podloga, jednobojni); aplikacija čita samo PNG-ove.
   assets:

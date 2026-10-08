@@ -24,8 +24,7 @@
 ///   brojevi nego **tuđi podaci**: zbir preko svih salona, koji jedan `salon_admin` po
 ///   RLS-u ne smije vidjeti (`ADR-0003`). Ekran koji ih traži tražio bi ih neprijavljen.
 /// - **Fotografija salona** — `SPEC.md`: „Fotografije u `canvas/assets/` su placeholderi.
-///   Ne ulaze automatski u produkcijski bundle." Ostaje tamna ploha i gradijent, tj. oblik
-///   kompozicije bez tuđe slike.
+///   Ne ulaze automatski u produkcijski bundle." Tamna ploha nosi proceduralnu lava animaciju.
 ///
 /// ## Jedna rečenica copy-ja je promijenjena
 ///
@@ -45,6 +44,9 @@ import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_wordmark.dart';
+import 'admin_lava_panel.dart';
+
+export 'admin_lava_panel.dart' show kPristupNapomena;
 
 /// Širina bijele kolone sa formom na desktopu (`3j`: `width:560px;flex:0 0 560px`).
 ///
@@ -65,19 +67,10 @@ const double _formaPadding = 72;
 /// stiskala zbog nje. Na 1000 ploha dobije ~440 px i ima smisla.
 const double kPragFotografije = 1000;
 
-/// Ko uopšte može ući — jedina rečenica iz canvasa koja o tome govori (`3u`).
-const String kPristupNapomena =
-    'Pristup imaju samo vlasnik i majstori lokacije.';
-
 /// Visina tamnog zaglavlja na telefonu (`3u`: `height:280px;flex:0 0 280px`).
 const double _heroVisina = 280;
 
-/// Ključ tamne plohe.
-///
-/// Postoji zbog testa, i to svjesno: ploha je obična `DecoratedBox`, a ekran ih ima više
-/// (kvadrat logotipa je isto jedna). Test bez ključa bi mjerio prvu na koju naiđe i
-/// prolazio nad pogrešnim widgetom — tačno ona vrsta zelenog testa koju je task 29 našao
-/// kod guttera.
+/// Identifies the lava panel for responsive layout checks.
 const Key kAdminLoginPlohaKey = ValueKey('admin-login-tamna-ploha');
 
 /// Prijava osoblja.
@@ -513,53 +506,12 @@ class _Polje extends StatelessWidget {
   }
 }
 
-/// Tamna ploha: desna kolona na desktopu, zaglavlje na telefonu.
-///
-/// Umjesto fotografije iz canvasa nosi gradijent — v. „Šta iz canvasa namjerno nije
-/// nacrtano" na vrhu fajla. Na telefonu (`3u`) na njoj stoji logotip, jer ga forma ispod
-/// nema; na desktopu logotip stoji u formi, pa ploha nosi rečenicu o tome ko uopšte ima
-/// pristup. **Isti blok na oba mjesta bi značio dva logotipa na jednom ekranu** — prvi
-/// snimak je izgledao tačno tako.
+/// Lava backdrop shared by the desktop panel and mobile header.
 class _TamnaPloha extends StatelessWidget {
   const _TamnaPloha({this.hero = false});
-
-  /// `true` je telefonski oblik (`3u`): logotip stoji u dnu, uz donju ivicu.
   final bool hero;
 
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      key: kAdminLoginPlohaKey,
-      decoration: BoxDecoration(
-        color: context.adminColors.sidebarBackground,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            context.adminColors.sidebarRaised,
-            context.adminColors.sidebarBackground,
-          ],
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(hero ? AdminSpacing.xl : 48),
-        child: Align(
-          alignment: Alignment.bottomLeft,
-          child: hero
-              ? const AdminWordmark(
-                  naTamnom: true,
-                  potpis: true,
-                  velicinaZnaka: 36,
-                )
-              : Text(
-                  kPristupNapomena,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: context.adminColors.sidebarText,
-                    height: 1.6,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      AdminLavaPanel(key: kAdminLoginPlohaKey, hero: hero);
 }
