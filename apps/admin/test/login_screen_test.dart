@@ -105,6 +105,17 @@ Future<void> _prijavi(WidgetTester tester) async {
 }
 
 void main() {
+  setUp(() {
+    // Routing/form tests must settle independently of the perpetual lava ticker.
+    // Animation behavior is exercised in admin_lava_panel_test.dart.
+    final dispatcher =
+        TestWidgetsFlutterBinding.ensureInitialized().platformDispatcher;
+    dispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(
+      disableAnimations: true,
+    );
+    addTearDown(dispatcher.clearAccessibilityFeaturesTestValue);
+  });
+
   pristupacnostEkrana('Prijava', _ekran);
 
   group('desktop `3j`', () {
