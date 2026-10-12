@@ -48,6 +48,13 @@ android {
             versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
             versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
         }
+        create("authenticbarber") {
+            dimension = "tenant"
+            applicationId = "ba.nasadomena.authenticbarber"
+            resValue("string", "app_name", "Authentic Barbershop")
+            versionCode = (project.findProperty("tenantVersionCode") as String?)?.toInt() ?: 1
+            versionName = (project.findProperty("tenantVersionName") as String?) ?: "1.0.0"
+        }
         create("barberstudiovitez") {
             dimension = "tenant"
             applicationId = "ba.nasadomena.barberstudiovitez"

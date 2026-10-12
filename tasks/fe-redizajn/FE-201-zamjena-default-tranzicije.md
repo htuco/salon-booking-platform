@@ -1,5 +1,9 @@
 # FE-201 — Jedna tranzicija na obje platforme
 
+> **Za iOS i macOS zamijenjeno sa [ADR-0028](../../docs/adr/0028-ios-dobija-nativni-prelaz-ekrana.md)** (2026-10-12): prva provjera na uređaju
+> je pokazala da swipe nazad samo blijedi ekran; iOS je ponovo na nativnom Cupertino prelazu.
+> Android, web i desktop ostaju na ovom prelazu, a iOS na njemu samo uz Reduce Motion.
+
 | | |
 |---|---|
 | **Epik** | FE-2 · Navigacija i tranzicije |

@@ -18,6 +18,7 @@ class AppEnv {
     required this.apiUrl,
     this.googleWebClientId = '',
     this.googleIosClientId = '',
+    this.appleSignIn = true,
   });
 
   /// Čita okruženje iz `--dart-define` vrijednosti i **odmah** validira.
@@ -43,6 +44,7 @@ class AppEnv {
       apiUrl: _apiUrl,
       googleWebClientId: _googleWebClientId,
       googleIosClientId: _googleIosClientId,
+      appleSignIn: _appleSignIn,
     );
   }
 
@@ -55,6 +57,10 @@ class AppEnv {
   );
   static const _googleIosClientId = String.fromEnvironment(
     'GOOGLE_IOS_CLIENT_ID',
+  );
+  static const _appleSignIn = bool.fromEnvironment(
+    'APPLE_SIGN_IN',
+    defaultValue: true,
   );
 
   /// UUID salona — jedini `--dart-define` koji svaki build **mora** imati.
@@ -88,6 +94,11 @@ class AppEnv {
   /// bolji od app-e koja ne startuje. Login ekran (task 13) po ovome odlučuje da li Google
   /// uopšte prikazati.
   bool get hasGoogleSignIn => googleWebClientId.isNotEmpty;
+
+  /// `false` kad build nema Sign in with Apple capability — iOS build potpisan ličnim
+  /// (besplatnim) Apple timom, koji tu capability ne podržava. Dugme bi se prikazalo i
+  /// palo na prvom tapu, pa se tada ne prikazuje. Pravi store build ostavlja `true`.
+  final bool appleSignIn;
 }
 
 /// `--dart-define` koji nedostaje. Nosi ime varijable, jer je to jedino što popravlja build.

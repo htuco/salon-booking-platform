@@ -73,10 +73,15 @@ ApiError _mapAuth(AuthException error) {
       'Previše zahtjeva — sačekajte prije novog pokušaja',
       cause: error,
     ),
+    // Prijava na račun koji čeka potvrdu: lozinka je bila tačna, pa „pogrešan email ili
+    // lozinka" ne bi bilo istina.
+    'email_not_confirmed' => EmailNotConfirmedError(
+      error.message,
+      cause: error,
+    ),
     'otp_expired' ||
     'otp_disabled' ||
     'invalid_credentials' ||
-    'email_not_confirmed' ||
     'user_not_found' ||
     'validation_failed' => AuthRejectedError(error.message, cause: error),
     // Kod ne stize uvijek (starije verzije Auth servera, greske prije odgovora).
@@ -221,6 +226,7 @@ extension ApiErrorDisplay on ApiError {
     MappingError() ||
     AuthRejectedError() ||
     AuthCancelledError() ||
+    EmailNotConfirmedError() ||
     RateLimitError() => null,
   };
 }

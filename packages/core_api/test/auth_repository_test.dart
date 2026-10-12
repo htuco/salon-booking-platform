@@ -107,7 +107,9 @@ void main() {
       ).called(1);
     });
 
-    test('registracija bez sesije prijavljuje pogrešan demo config', () async {
+    // Hostovani projekat sa uključenim *Confirm email*. Ranije je ovo bio `ServerError`,
+    // koji je login ekran pokazivao kao „ovaj način prijave nije dostupan".
+    test('registracija bez sesije je EmailNotConfirmedError', () async {
       when(
         () => auth.signUp(
           email: any(named: 'email'),
@@ -121,7 +123,7 @@ void main() {
           password: 'Sigurna123',
         ),
         throwsA(
-          isA<ServerError>().having(
+          isA<EmailNotConfirmedError>().having(
             (error) => error.message,
             'poruka',
             contains('Confirm email'),

@@ -10,9 +10,21 @@ import 'package:flutter_test/flutter_test.dart';
 /// spaja krajeve. Jedinični testovi u `core_domain` provjeravaju samo `AuthConfig`; ovdje
 /// se provjerava da generisani registar nosi ono što `tenant.yaml` kaže.
 void main() {
-  ProviderContainer container({required TenantConfig tenant}) {
+  ProviderContainer container({
+    required TenantConfig tenant,
+    String googleWebClientId = 'web-client-id',
+    bool appleSignIn = true,
+  }) {
     final c = ProviderContainer(
-      overrides: [appEnvProvider.overrideWithValue(_env(tenant.salonId))],
+      overrides: [
+        appEnvProvider.overrideWithValue(
+          _env(
+            tenant.salonId,
+            googleWebClientId: googleWebClientId,
+            appleSignIn: appleSignIn,
+          ),
+        ),
+      ],
     );
     addTearDown(c.dispose);
     return c;
@@ -84,8 +96,42 @@ void main() {
       expect(vidljivi, isNot(contains(AuthProvider.apple)));
       expect(vidljivi, [AuthProvider.google, AuthProvider.email]);
     });
+
+    // Bez Google client ID-a dugme bi palo na prvom tapu („nije dostupan"), a stajalo bi
+    // iznad emaila koji radi. Build bez ID-a ga zato ne nudi (`docs/08` §2.1).
+    test('build bez Google client ID-a ne nudi Google', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      final c = container(tenant: kTenants.values.first, googleWebClientId: '');
+
+      expect(c.read(visibleAuthProvidersProvider), [
+        AuthProvider.apple,
+        AuthProvider.email,
+      ]);
+    });
+
+    // iOS build potpisan ličnim Apple timom nema Sign in with Apple capability.
+    test('APPLE_SIGN_IN=false skida Apple i na iOS-u', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      final c = container(
+        tenant: kTenants.values.first,
+        googleWebClientId: '',
+        appleSignIn: false,
+      );
+
+      expect(c.read(visibleAuthProvidersProvider), [AuthProvider.email]);
+    });
   });
 }
 
-AppEnv _env(String salonId) =>
-    AppEnv(salonId: salonId, supabaseUrl: '', supabaseAnonKey: '', apiUrl: '');
+AppEnv _env(
+  String salonId, {
+  String googleWebClientId = '',
+  bool appleSignIn = true,
+}) => AppEnv(
+  salonId: salonId,
+  supabaseUrl: '',
+  supabaseAnonKey: '',
+  apiUrl: '',
+  googleWebClientId: googleWebClientId,
+  appleSignIn: appleSignIn,
+);

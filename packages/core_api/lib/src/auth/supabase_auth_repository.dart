@@ -81,7 +81,7 @@ class SupabaseAuthRepository implements AuthRepository {
       // `signUp` bez sesije znači da je confirmation uključen. To je valjan produkcijski
       // odgovor, ali nije valjan za demo bez SMTP-a: korisnik bi ostao zaključan na
       // računu kojem potvrda nikad neće stići.
-      throw const ServerError(
+      throw const EmailNotConfirmedError(
         'Supabase traži potvrdu emaila. Za demo isključi Confirm email prije registracije.',
       );
     }

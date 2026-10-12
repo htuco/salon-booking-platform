@@ -74,7 +74,7 @@ class _ServiceStepScreenState extends ConsumerState<ServiceStepScreen> {
         label: l10n.bookingNext,
         onPressed: izabrana == null
             ? null
-            : () => context.go(BookingStep.employee.path),
+            : () => context.push(BookingStep.employee.path),
       ),
       child: switch (services) {
         AsyncData(:final value) when value.isEmpty => EmptyState(

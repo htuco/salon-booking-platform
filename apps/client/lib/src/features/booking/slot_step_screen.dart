@@ -86,7 +86,9 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
             : dateOnly
             ? l10n.bookingPickDate
             : l10n.bookingPickTime,
-        onPressed: spreman ? () => context.go(BookingStep.details.path) : null,
+        onPressed: spreman
+            ? () => context.push(BookingStep.details.path)
+            : null,
       ),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
