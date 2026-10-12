@@ -380,6 +380,7 @@ const _beautyId = '550e8400-e29b-41d4-a716-446655440001';
 const _masazaId = '550e8400-e29b-41d4-a716-446655440002';
 const _fizioId = '550e8400-e29b-41d4-a716-446655440003';
 const _amkoId = '63679dd5-6ac8-4061-b4d6-d3ef181c9baa';
+const _authenticId = 'd11aa07e-4611-4fae-bf99-6439ef10bd16';
 
 /// `09:00–17:00` radnim danima, `09:00–14:00` subotom, nedjeljom zatvoreno — tačno kako
 /// `seed.sql` puni `working_hours` za sve demo salone.
@@ -505,6 +506,58 @@ final _demoPodaci = <String, _Demo>{
       ),
     ],
     hours: _radnoVrijeme(_amkoId),
+    vertical: _barberVertical,
+  ),
+  // Pravi klijent: usluge i radnik iz `seed.sql` bloka za `authenticbarber`. Fotografije
+  // postoje samo na hostovanom projektu, pa ih demo ne glumi.
+  _authenticId: _Demo(
+    salon: const Salon(
+      id: _authenticId,
+      name: 'Authentic Barbershop',
+      slug: 'authenticbarber',
+      description:
+          'Klasičan barber u srcu Viteza — rez, brada i kafa, od 2020.',
+      city: 'Vitez',
+      primaryColor: '#C6A667',
+      secondaryColor: '#171717',
+      theme: 'modern_barber',
+      verticalPackKey: 'barber',
+    ),
+    services: const [
+      Service(
+        id: '10000000-0000-4000-8000-000000000201',
+        salonId: _authenticId,
+        name: 'Muško šišanje',
+        category: 'Šišanje',
+        price: 15,
+        durationMinutes: 30,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000207',
+        salonId: _authenticId,
+        name: 'Brijanje britvom uz topli peškir',
+        category: 'Brada',
+        price: 15,
+        durationMinutes: 30,
+      ),
+      Service(
+        id: '10000000-0000-4000-8000-000000000209',
+        salonId: _authenticId,
+        name: 'Šišanje + brada',
+        category: 'Paketi',
+        price: 25,
+        durationMinutes: 50,
+      ),
+    ],
+    employees: const [
+      Employee(
+        id: '20000000-0000-4000-8000-000000000201',
+        salonId: _authenticId,
+        name: 'Jasko',
+        role: 'Glavni barber',
+      ),
+    ],
+    hours: _radnoVrijeme(_authenticId),
     vertical: _barberVertical,
   ),
   _beautyId: _Demo(
