@@ -328,8 +328,13 @@ BUILD_NUMBER=57 tool/build_tenant.sh barberstudiovitez aab release
 `flutter build` komande — inače lokalni i CI build tiho odlutaju.
 
 Okolina (sve opciono): `BUILD_NUMBER` nadjačava `versionCode`/`buildNumber` iz `tenant.yaml`
-(koristi ga CI); `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_WEB_CLIENT_ID` i
-`GOOGLE_IOS_CLIENT_ID` idu kao `--dart-define` ako su postavljeni.
+(koristi ga CI); `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_WEB_CLIENT_ID`,
+`GOOGLE_IOS_CLIENT_ID` i `APPLE_SIGN_IN` idu kao `--dart-define` ako su postavljeni.
+
+**Login nudi samo providere koje build stvarno može.** Google se ne prikazuje bez
+`GOOGLE_WEB_CLIENT_ID`, a Apple ne kad je `APPLE_SIGN_IN=false` — to se postavlja za iOS build
+potpisan ličnim (besplatnim) Apple timom, koji nema Sign in with Apple capability. Ranije su oba
+dugmeta stajala iznad emaila i padala na prvom tapu („ovaj način prijave nije dostupan").
 
 **Google client ID se traži prvo po flavoru.** Skripta gleda `GOOGLE_WEB_CLIENT_ID_<FLAVOR>` (flavor
 velikim slovima), pa tek onda zajednički `GOOGLE_WEB_CLIENT_ID`:

@@ -174,11 +174,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // `?from=` nosi rutu povratka nakon prijave. Ekran je provjerava naspram
       // `ClientRoute` liste — na webu je to vrijednost iz adresne trake, pa
       // neprovjerena bi pretvorila prijavu u preusmjerenje na tuđi sajt.
+      // `?metod=` je provider koji je korisnik već izabrao na ekranu ispod (korak 4,
+      // Termini) — login ga ne nudi ponovo nego ga odmah otvara.
       GoRoute(
         path: ClientRoute.login.path,
         name: ClientRoute.login.name,
-        builder: (context, state) =>
-            LoginScreen(from: state.uri.queryParameters['from']),
+        builder: (context, state) => LoginScreen(
+          from: state.uri.queryParameters['from'],
+          metod: state.uri.queryParameters['metod'],
+        ),
       ),
       GoRoute(
         path: ClientRoute.account.path,

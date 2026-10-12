@@ -36,12 +36,12 @@ void main() {
       expect(find.byType(DetailsStepScreen), findsOneWidget);
       expect(find.text('09:00'), findsOneWidget);
 
+      // Jedan tap: korak 4 vodi pravo na email formu. Ranije se otvarao isti izbor
+      // providera („Čuvamo vam" + ista dugmad) i trebalo je tapnuti dvaput.
       await tester.tap(find.text('Nastavi sa emailom'));
       await tester.pumpAndSettle();
-      expect(find.text('Čuvamo vam'), findsOneWidget);
-
-      await tester.tap(find.text('Nastavi sa emailom'));
-      await tester.pumpAndSettle();
+      expect(find.text('Čuvamo vam'), findsNothing);
+      expect(find.text('Nastavi sa emailom'), findsNothing);
       await tester.enterText(
         find.byKey(const ValueKey('login-email')),
         'gost@primjer.ba',
@@ -60,6 +60,10 @@ void main() {
       expect(find.textContaining('Šišanje'), findsWidgets);
       expect(find.textContaining('Amar'), findsWidgets);
       expect(find.text('Pošalji zahtjev'), findsOneWidget);
+      // Tačno jedan izlazak: login je skinut, korak 4 nije (dvostruki `pop` bi skinuo i
+      // njega, a dvostruki `go` je ranije gradio korak ponovo).
+      expect(find.byType(LoginScreen), findsNothing);
+      expect(find.byType(DetailsStepScreen), findsOneWidget);
 
       container.dispose();
     });
@@ -99,6 +103,44 @@ void main() {
       expect(auth.brojRegistracija, 1);
       expect(auth.zadnjiEmail, 'novi@primjer.ba');
       expect(find.byType(DetailsStepScreen), findsOneWidget);
+
+      container.dispose();
+    });
+
+    // Bug sa hostovanog projekta: *Confirm email* je uključen, `signUp` vraća korisnika bez
+    // sesije. Ekran je tada govorio „ovaj način prijave nije dostupan" — i to na samoj
+    // email formi, pa korisnik nije imao kud.
+    testWidgets('registracija bez sesije kaže da račun čeka potvrdu emaila', (
+      tester,
+    ) async {
+      final auth = FakeAuthRepository(
+        registracijaGreska: const EmailNotConfirmedError('Confirm email'),
+      );
+      addTearDown(auth.dispose);
+      final container = await _pump(tester, auth: auth, ruta: _loginIzFlowa);
+
+      await tester.tap(find.text('Nastavi sa emailom'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Nemate račun? Kreirajte ga'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('login-email')),
+        'novi@primjer.ba',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('login-password')),
+        'Sigurna123',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('login-password-repeat')),
+        'Sigurna123',
+      );
+      await tester.tap(find.text('Kreiraj račun'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('čeka potvrdu emaila'), findsOneWidget);
+      expect(find.textContaining('nije dostupan'), findsNothing);
+      expect(find.byType(LoginScreen), findsOneWidget);
 
       container.dispose();
     });

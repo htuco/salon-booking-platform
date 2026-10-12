@@ -170,6 +170,7 @@ void main() {
       AuthCancelledError() => 'odustao',
       AuthRejectedError() => 'odbijeno',
       RateLimitError() => 'prečesto',
+      EmailNotConfirmedError() => 'nepotvrđen',
     };
 
     expect(describe(const NetworkError('x')), 'mreža');
@@ -177,6 +178,22 @@ void main() {
     expect(describe(const AuthCancelledError('x')), 'odustao');
     expect(describe(const AuthRejectedError('x')), 'odbijeno');
     expect(describe(const RateLimitError('x')), 'prečesto');
+    expect(describe(const EmailNotConfirmedError('x')), 'nepotvrđen');
+  });
+
+  // Hostovani projekat sa uključenim *Confirm email*: lozinka je tačna, ali račun čeka
+  // potvrdu. Ranije je ovo bilo „pogrešan email ili lozinka", što je bilo netačno.
+  test('email_not_confirmed je EmailNotConfirmedError, ne odbijanje', () {
+    expect(
+      mapError(
+        const AuthException(
+          'Email not confirmed',
+          code: 'email_not_confirmed',
+          statusCode: '400',
+        ),
+      ),
+      isA<EmailNotConfirmedError>(),
+    );
   });
 
   group('mapError — AuthException', () {
