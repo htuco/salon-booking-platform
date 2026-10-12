@@ -48,8 +48,10 @@ opis uloga u `docs/01 §5`.
 3. Dokument koji task spominje — obavezno `.claude/docs/security.md` ako diraš `supabase/`
 
 **Grane**
-- **Svaki rad ima svoju granu i otvoren PR protiv `main`. Na `main` se ne commituje direktno** —
-  hook u `.claude/settings.json` traži potvrdu za svaki `commit`/`push`/`merge` koji cilja `main`
+- **`main` je produkcija, `develop` je integracija.** Grana se pravi sa svježeg `develop`-a, a PR
+  ide **u `develop`** i traži jedno odobrenje (kolega ili Hamza). U `main` ulaze samo release
+  (`develop → main`) i hitna popravka, i mergea ih **samo Hamza** — GitHub to provodi
+  (rulesetovi `main-zastita` i `develop-zastita`), direktnog pusha nema ni na jednu
 - PR se otvara **čim postoji prvi commit** (draft), ne tek kad je sve gotovo
 - Imena: `feat/<kratko>`, `fix/<kratko>`, `chore/<kratko>`
 - Ne otvaraj task čije zavisnosti nisu gotove — redoslijed u `tasks/sprint-<N>/README.md` nije formalnost
@@ -128,3 +130,37 @@ jeste da provjeri šta **njegova** mašina može, a prethodna nije mogla.
 `docs/README.md` ima tabelu odluka koje su donesene i obrazložene. Ne otvaraju se bez **novog
 podatka**, a kad se otvore — to je ADR u `docs/adr/`, ne usputna promjena koda. Isto važi za
 prihvaćene ADR-ove: ne prepravljaju se, nego se zamjenjuju novim.
+
+---
+
+## 6. Ko šta smije — tim i Hamza
+
+**Tim radi sve što je proizvod. Hamza radi deploy i sve što priprema produkciju.** Granica nije
+povjerenje nego broj ljudi sa ključem: što manje ljudi dira produkciju, manje je načina da se
+pokvari ili procuri. Raspodjela po tasku: [`tasks/RASPODJELA.md`](../tasks/RASPODJELA.md).
+
+**Tim**
+- Funkcije, polishing, nove stvari, istraživanja, prijedlozi ADR-ova — od grane do PR-a
+- Dokaz lokalno: `./tool/test_supabase.sh` (Docker) za migracije i RLS, `melos run test`, uređaj
+- Lokalni iOS buildovi sa **vlastitim** ličnim Apple timom (7 dana, `APPLE_SIGN_IN=false`)
+- Kad funkcija treba produkcijsku stvar (pravi SMTP, Firebase, Apple ključ), kod se piše i dokazuje
+  lokalno; produkcijski dio pripada Hamzi i tim ga ne dira
+
+**Hamza — tim ovdje ne radi ništa, ni pripremu**
+- Release u `main` (PR `develop → main`) i **deploy**: migracije, cron, Edge Functions i tajne na hostovanom projektu, a
+  kasnije na stagingu i produkciji
+- SQL nad hostovanim projektom i produkcijom; pravi nalozi salona
+- Nalozi i plaćanja: Apple Developer, Google Play, Google Cloud, Firebase, Supabase, Resend, domena
+- Ključevi i tajne: service role ključ, lozinka baze, `.env.live`, potpisni ključevi i keystore,
+  APNs i Apple ključevi, Resend ključ — **ne dijele se kolegama, ni u chatu**
+- Priprema aplikacija za store: ID-evi, potpis, release buildovi, submission, store tekstovi
+- Prelazak salona na produkciju; pravni dokumenti; kontakt sa salonima
+
+**Šta PR mora reći Hamzi**
+U „Šta NIJE provjereno" kolega navede šta treba deployati poslije merge-a — koja migracija, cron,
+Edge Function, tajna po **imenu** — i kako se provjerava da je prošlo. Hamza deploya i dopiše dokaz
+u status blok taska.
+
+**Provjera na hostovanom**
+Kad task traži provjeru kao vlasnik ili radnik (npr. 55, 61, 62), Hamza pravi **test nalog kroz kod
+poziva** na demo salonu — nikad pravi nalog salona.

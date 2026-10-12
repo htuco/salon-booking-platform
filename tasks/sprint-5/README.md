@@ -15,18 +15,18 @@ bugove usput, umjesto da se oni nagađaju unaprijed.
 | [49](49-slike-usluga-i-radnika.md) | Vlasnik postavlja sliku usluge i radnika ✅ | feature | 52, 53 | 1–2 dana |
 | [50](50-galerija-logo-cover.md) | Galerija salona, logo i cover ✅ | feature | 52, 53 | 2 dana |
 | [51](51-ciscenje-bucketa-i-prijava-sadrzaja.md) | Čišćenje bucketa i prijava neprikladnog sadržaja ✅ | feature | — | 1–2 dana |
-| [52](52-beauty-dotjeran.md) | Beauty tenant dotjeran 🟡 | refinement | — | 1–2 dana |
-| [53](53-vertikala-health.md) | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje 🟡 | feature | — | 4–5 dana |
-| [54](54-uklanjanje-nepotrebnog-iz-admina.md) | Uklanjanje nepotrebnog iz admina | popravka | 55 | 0,5–1 dan |
-| [55](55-prerada-dashboarda.md) | Prerada admin dashboarda 🟡 | redizajn | — | 2–3 dana |
-| [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | feature | — | 2 dana |
-| [57](57-reset-lozinke.md) | Povratak zaboravljene lozinke | feature | — | 1–2 dana |
-| [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | feature | — | 0,5–1 dan |
-| [59](59-radnik-u-seedu.md) | Radnik u lokalnom seedu | chore | 60 | 0,5 dan |
-| [60](60-regresija-i-testiranje.md) | Regresija i testiranje | test | — | 2–3 dana |
-| [61](61-moj-profil.md) | Moj profil u adminu — slika, lični podaci, lozinka 🟡 | feature | — | 2–3 dana |
-| [62](62-toast-obavijesti.md) | Toast obavijesti u adminu 🟡 | redizajn | — | 1 dan |
-| [63](63-animacija-ucitavanja.md) | Animacija učitavanja „Termin i sada" | dizajn | — | 0,5–1 dan |
+| [52](../polishing/52-beauty-dotjeran.md) → polishing | Beauty tenant dotjeran 🟡 | refinement | — | 1–2 dana |
+| [53](../polishing/53-vertikala-health.md) → polishing | Vertikala `health` — masaža i fizioterapija, vlastita tipografija i boje 🟡 | feature | — | 4–5 dana |
+| [54](../polishing/54-uklanjanje-nepotrebnog-iz-admina.md) → polishing | Uklanjanje nepotrebnog iz admina | popravka | 55 | 0,5–1 dan |
+| [55](../polishing/55-prerada-dashboarda.md) → polishing | Prerada admin dashboarda 🟡 | redizajn | — | 2–3 dana |
+| [56](../zero-crisis/56-podsjetnici-d1-h3.md) → zero-crisis | Push podsjetnici D-1 i H-3 | feature | — | 2 dana |
+| [57](../zero-crisis/57-reset-lozinke.md) → zero-crisis | Povratak zaboravljene lozinke | feature | — | 1–2 dana |
+| [58](../zero-crisis/58-kontakt-jednim-tapom.md) → zero-crisis | Kontakt klijenta jednim tapom | feature | — | 0,5–1 dan |
+| [59](../polishing/59-radnik-u-seedu.md) → polishing | Radnik u lokalnom seedu | chore | 60 | 0,5 dan |
+| [60](../polishing/60-regresija-i-testiranje.md) → polishing | Regresija i testiranje | test | — | 2–3 dana |
+| [61](../polishing/61-moj-profil.md) → polishing | Moj profil u adminu — slika, lični podaci, lozinka 🟡 | feature | — | 2–3 dana |
+| [62](../polishing/62-toast-obavijesti.md) → polishing | Toast obavijesti u adminu 🟡 | redizajn | — | 1 dan |
+| [63](../polishing/63-animacija-ucitavanja.md) → polishing | Animacija učitavanja „Termin i sada" | dizajn | — | 0,5–1 dan |
 
 Ukupno 18–26 dana — više od jednog sprinta, kao i Sprint 4. **Obavezni su 48–50, 56 i 57**:
 bez njih ni salon ni klijent nemaju ono što MVP obećava. 52–55 i 58 idu redom kako stignu; 59 i 60
@@ -58,6 +58,16 @@ Da li je još MVP ili se odgađa je odluka za ADR, ne za ovaj sprint.
 ## Status
 
 Sprint raspisan 2026-09-25.
+
+### Sprint zatvoren (2026-10-12)
+
+Završeni su 48–51. Nedovršeno je prebačeno u dva nova foldera, po vrsti posla, ne po broju:
+
+- [`polishing/`](../polishing/) — 52, 53, 55, 61, 62 (kod u `main`-u, fali provjera na uređaju ili
+  hostovanom) i 54, 59, 60, 63 (nisu počeli, ali dotjeruju postojeće).
+- [`zero-crisis/`](../zero-crisis/) — 56, 57, 58: rupe iz MVP-a koje ulaze u kraj featurea.
+
+Status blokovi ispod ostaju ovdje kao istorija; novi status se piše u README tog foldera.
 
 ### 48 — Storage bucket po salonu (🟡, 2026-09-26)
 

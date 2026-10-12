@@ -64,10 +64,10 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 - **Ne commituj tajne.** Izlaz `supabase status -o env`, service role ključ, pravi
   `google-services.json`, `.env`, iOS potpisni materijal. Generisani `google-services.json` u repou
   je placeholder i takav ostaje dok se ne uvede sigurno ubacivanje pravog u CI-ju.
-- **RLS se dokazuje pokretanjem, lokalno pa na `main`-u.** `supabase start && supabase test db`
+- **RLS se dokazuje pokretanjem, lokalno pa u CI-ju.** `supabase start && supabase test db`
   plus dva Deno REST testa rade na razvojnoj mašini (Docker je tu). Ne tvrdi da RLS radi dok ta
   suite nije prošla — napisana politika nije dokazana politika. CI workflow `Supabase tests` ide
-  **na PR i na push u `main`** — tuđi PR ne smije ući nedokazan — i dodaje ono što lokalno ne
+  **na PR i na push u `develop` i `main`** — tuđi PR ne smije ući nedokazan — i dodaje ono što lokalno ne
   može: dokaz iz čistog checkouta.
 - **`prototype/ui/` je vizuelni izvor istine, `prototype/wireframe/` je zamrznut.** Ekran se piše po
   `prototype/ui/SPEC.md`. Prototip u `prototype/wireframe/` ostaje referenca za flow i rute; tamo se
@@ -84,11 +84,12 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
   podržava globove, a paket koji nije u listi tiho ispada iz `melos` skripti i CI-ja.
 - **Odluke iz tabele u `docs/README.md` se ne otvaraju ponovo bez novog podatka.** Ako imaš novi
   podatak, to je ADR (`docs/adr/`), ne usputna promjena koda.
-- **Svaki rad ima svoju granu i otvoren PR protiv `main`. Nema commita direktno na `main`.**
-  Grana se otvara sa svježeg `main`-a prije prve izmjene (`/task start`), PR se otvara **čim
-  postoji prvi commit** — kao draft dok nije gotovo, da se rad vidi dok traje, a ne tek na kraju.
-  Jedan task = jedna grana = jedan PR. Direktan push na `main` je izuzetak koji tražiš ti, i
-  `PreToolUse` hook će pitati prije nego se desi.
+- **`main` je produkcija, `develop` je integracija.** Svaki rad ima svoju granu sa svježeg
+  `develop`-a i otvoren PR **protiv `develop`-a** (`/task start`); PR se otvara **čim postoji prvi
+  commit** — kao draft dok nije gotovo. Jedan task = jedna grana = jedan PR. U `main` ulaze samo
+  release PR `develop → main` i hitna popravka, i **mergea ih samo Hamza** — GitHub ruleset
+  `main-zastita` to provodi, a `develop-zastita` traži PR sa jednim odobrenjem. Direktnog pusha
+  nema ni na jednu od dvije grane. Detalji: `docs/TEAM_HANDBOOK.md` §2 i §6.
 - **Conventional Commits, poruka na bosanskom**, tijelo objašnjava *zašto* i šta je dokazano.
   Bez ikakvog potpisa AI-ja.
 

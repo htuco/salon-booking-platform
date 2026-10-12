@@ -14,8 +14,14 @@ njemu urađeno. `CURRENT.md` je **derivat**: kad se raziđe sa task fajlom ili r
 | [Sprint 2](sprint-2/) | 12–25, 27 | Auth, identitet, ostatak handoffa, admin i push | 11 ✅, 3 🟡 |
 | [Sprint 3](sprint-3/) | 28–36 | Admin aplikacija po handoffu iz `prototype/admin/` | 6 ✅, 3 🟡 |
 | [Sprint 4](sprint-4/) | 37–47 | Popravke onoga što laže vlasniku, pa Faza 2 — radnik sa vlastitom prijavom | 11 ✅ |
-| [Sprint 5](sprint-5/) | 48–60 | Slike, beauty, masaža i fizio (`health`), čist admin, rupe iz MVP-a, regresija | otvoren |
+| [Sprint 5](sprint-5/) | 48–63 | Slike, beauty, masaža i fizio (`health`) — nedovršeno prebačeno u `polishing/` i `zero-crisis/` | zatvoren, 4 ✅ |
+| [Zero crisis](zero-crisis/) | 56–58, 64–90 | Kraj featurea do lansiranja ([ADR-0029](../docs/adr/0029-opseg-do-lansiranja-zero-crisis.md)) | otvoren |
+| [Polishing](polishing/) | 52–55, 59–63 | Dotjerivanje postojećeg: provjere na uređaju, regresija | otvoren |
 | [FE redizajn](fe-redizajn/) | FE-101–FE-504 | Izgled obje aplikacije po Melura handoffu | otvoren |
+
+**Zero crisis i polishing nisu sprintovi.** `zero-crisis/` je sve što mora postojati do lansiranja —
+kad je prazan, novih featurea nema. `polishing/` dotjeruje ono što već postoji i većinom čeka uređaj,
+hostovani projekat ili odluku. Status se piše u `README.md` tog foldera, isto kao u sprintu.
 
 **FE redizajn nije sprint nego epik.** Sprintovi nose funkcionalnost i idu redom; `fe-redizajn/`
 nosi izgled i presijeca ih. Zato je numerisan zasebno (`FE-<epik><broj>`) i zato njegov `README.md`
@@ -36,6 +42,12 @@ sprint `README.md`-a.
 
 Sprint 0 je namjerno prvi i cijeli je infrastruktura: dok se ne dokaže da dvije brandirane app-e
 stoje na istom kodu i da salon ne vidi tuđe podatke, svaki napisan ekran je pretpostavka.
+
+## Ko radi šta
+
+Tim radi sve što je proizvod (funkcije, polishing, nove stvari); deploy i pripremu produkcije —
+naloge, ključeve, potpis, store — radi samo Hamza. Raspodjela po tasku:
+[`RASPODJELA.md`](RASPODJELA.md); pravila: [`docs/TEAM_HANDBOOK.md` §6](../docs/TEAM_HANDBOOK.md).
 
 ## Kako se task vodi
 
