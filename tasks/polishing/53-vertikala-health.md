@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 4–5 dana |
-| **Zavisi od** | [49](49-slike-usluga-i-radnika.md), [50](50-galerija-logo-cover.md) |
+| **Zavisi od** | [49](../sprint-5/49-slike-usluga-i-radnika.md), [50](../sprint-5/50-galerija-logo-cover.md) |
 | **Blokira** | — |
 | **Reference** | **`prototype/masaza/`** (handoff za masažu i `fizio/`, kandidat, 2026-09-29) · `docs/05` §3–5 · ADR-0018 · ADR-0019 · `/new-tenant` skill · `.claude/docs/tenant-factory.md` |
 

@@ -3,11 +3,11 @@ import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/auth_config_provider.dart';
 import '../../core/router/app_router.dart';
+import '../../core/router/nazad.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../booking/booking_flow_provider.dart';
 import '../booking/widgets/appointment_hold_card.dart';
@@ -32,8 +32,8 @@ import 'login_controller.dart';
 ///
 /// Email ima eksplicitnu prijavu i registraciju. Demo ne šalje confirmation/recovery
 /// poruke, ali uspjeh vraća stvarnu Supabase sesiju kojom booking prolazi RLS.
-class LoginScreen extends ConsumerWidget {
-  const LoginScreen({this.from, super.key});
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({this.from, this.metod, super.key});
 
   /// Ruta na koju se korisnik vraća nakon prijave. Dolazi kao `?from=` i, kad je prazna,
   /// pada na početnu.
@@ -57,8 +57,59 @@ class LoginScreen extends ConsumerWidget {
 
   bool get _izFlowa => _povratak == ClientRoute.bookDetails.path;
 
+  /// Način prijave koji je korisnik **već izabrao** na ekranu ispod (korak 4, Termini),
+  /// kao `?metod=email|apple|google`. Tada se izbor providera preskače: `email` otvara
+  /// formu, a `apple`/`google` odmah pokreću nativnu prijavu. Bez ovoga je login ponavljao
+  /// dugmad koju je korisnik upravo pritisnuo. Nepoznata ili skrivena vrijednost se
+  /// ignoriše i ekran počinje od izbora.
+  final String? metod;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  /// Jedan izlazak sa ekrana. Uspješna prijava se javlja kroz `isSignedInProvider`, a
+  /// izlazak je `pop` — drugi poziv bi skinuo i ekran ispod (korak 4).
+  bool _izasao = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final izabran = AuthProvider.values
+        .where((p) => p.name == widget.metod)
+        .firstOrNull;
+    if (izabran == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _pocni(izabran));
+  }
+
+  Future<void> _pocni(AuthProvider provider) async {
+    if (!mounted ||
+        !ref.read(visibleAuthProvidersProvider).contains(provider)) {
+      return;
+    }
+    final kontroler = ref.read(loginControllerProvider.notifier);
+    if (provider == AuthProvider.email) {
+      kontroler.pocniEmail();
+      return;
+    }
+    await kontroler.prijaviSe(provider);
+    // Otkazan Apple/Google dijalog vraća tamo gdje je korisnik izabrao provider, umjesto
+    // da ga ostavi na istom izboru još jednom.
+    if (mounted &&
+        ref.read(loginControllerProvider).error is AuthCancelledError) {
+      _izadji();
+    }
+  }
+
+  void _izadji() {
+    if (_izasao || !mounted) return;
+    _izasao = true;
+    context.nazadIli(widget._povratak);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final stanje = ref.watch(loginControllerProvider);
@@ -72,12 +123,13 @@ class LoginScreen extends ConsumerWidget {
     //
     // Vezivanje za vidljivi widget je zato pogrešan mehanizam: sljedeći ko sakrije
     // karticu u jednoj fazi ponovo obara flow, a ekran i dalje izgleda ispravno.
-    if (_izFlowa) ref.watch(bookingFlowProvider);
+    if (widget._izFlowa) ref.watch(bookingFlowProvider);
 
-    // Prijavljen korisnik nema šta raditi na login ekranu. Desi se pri povratku nazad
-    // nakon uspješne prijave i pri deep linku sa živom sesijom.
+    // Prijavljen korisnik nema šta raditi na login ekranu. **Ovo je jedini izlazak nakon
+    // prijave** — email forma i nativni provideri ne navigiraju sami. Ranije je i forma
+    // radila `go`, pa se nakon prijave navigiralo dvaput.
     ref.listen(isSignedInProvider, (_, prijavljen) {
-      if (prijavljen) context.go(_povratak);
+      if (prijavljen) _izadji();
     });
 
     return Scaffold(
@@ -87,7 +139,7 @@ class LoginScreen extends ConsumerWidget {
           children: [
             _Zaglavlje(
               label: l10n.bookingBack,
-              onBack: () => _nazad(context, ref, stanje.phase),
+              onBack: () => _nazad(stanje.phase),
             ),
             Expanded(
               child: ListView(
@@ -99,7 +151,7 @@ class LoginScreen extends ConsumerWidget {
                 ),
                 children: [
                   Text(
-                    _izFlowa && stanje.phase == LoginPhase.providers
+                    widget._izFlowa && stanje.phase == LoginPhase.providers
                         ? l10n.bookingLastStepTitle
                         : _naslov(l10n, stanje.phase),
                     style: theme.textTheme.displaySmall,
@@ -109,7 +161,8 @@ class LoginScreen extends ConsumerWidget {
                     _podnaslov(l10n, stanje),
                     style: theme.textTheme.bodyLarge,
                   ),
-                  if (_izFlowa && stanje.phase == LoginPhase.providers) ...[
+                  if (widget._izFlowa &&
+                      stanje.phase == LoginPhase.providers) ...[
                     const SizedBox(height: AppSpacing.xxl),
                     const AppointmentHoldCard(),
                   ],
@@ -120,12 +173,10 @@ class LoginScreen extends ConsumerWidget {
                   ],
                   switch (stanje.phase) {
                     LoginPhase.providers => const _IzborProvidera(),
-                    LoginPhase.signIn => _EmailPasswordForma(
-                      povratak: _povratak,
+                    LoginPhase.signIn => const _EmailPasswordForma(
                       registracija: false,
                     ),
-                    LoginPhase.signUp => _EmailPasswordForma(
-                      povratak: _povratak,
+                    LoginPhase.signUp => const _EmailPasswordForma(
                       registracija: true,
                     ),
                   },
@@ -145,16 +196,22 @@ class LoginScreen extends ConsumerWidget {
     );
   }
 
-  /// Nazad sa email forme vodi na izbor providera, pa tek onda van ekrana.
-  void _nazad(BuildContext context, WidgetRef ref, LoginPhase phase) {
+  /// Nazad sa email forme vodi na izbor providera, pa tek onda van ekrana — osim kad je
+  /// forma otvorena direktno (`?metod=email`): izbor tada nije ni prikazan, pa nazad vodi
+  /// odmah na ekran ispod.
+  void _nazad(LoginPhase phase) {
     final kontroler = ref.read(loginControllerProvider.notifier);
 
     switch (phase) {
       case LoginPhase.signIn:
       case LoginPhase.signUp:
-        kontroler.nazadNaProvidere();
+        if (widget.metod == AuthProvider.email.name) {
+          _izadji();
+        } else {
+          kontroler.nazadNaProvidere();
+        }
       case LoginPhase.providers:
-        context.go(_povratak);
+        _izadji();
     }
   }
 
@@ -167,7 +224,7 @@ class LoginScreen extends ConsumerWidget {
   String _podnaslov(AppLocalizations l10n, LoginState stanje) =>
       switch (stanje.phase) {
         LoginPhase.providers =>
-          _izFlowa ? l10n.bookingLastStepHint : l10n.loginHint,
+          widget._izFlowa ? l10n.bookingLastStepHint : l10n.loginHint,
         LoginPhase.signIn => l10n.loginEmailHint,
         LoginPhase.signUp => l10n.loginSignUpHint,
       };
@@ -182,6 +239,7 @@ String _poruka(AppLocalizations l10n, ApiError greska) => switch (greska) {
   AuthRejectedError() => l10n.loginRejected,
   RateLimitError() => l10n.loginRateLimited,
   AuthCancelledError() => l10n.loginCancelled,
+  EmailNotConfirmedError() => l10n.loginEmailNotConfirmed,
   NetworkError() => l10n.noConnection,
   // Apple i Google dok nativni paketi ne postoje stižu ovuda — poruka mora
   // ponuditi izlaz koji radi, a to je email.
@@ -323,12 +381,8 @@ class _IzborProvidera extends ConsumerWidget {
 /// Email + lozinka. **Nema polja za telefon** (`docs/06 §3.1`) niti recovery linka u
 /// demo fazi, jer bez SMTP-a ne postoji poruka koju bi korisnik mogao dobiti.
 class _EmailPasswordForma extends ConsumerStatefulWidget {
-  const _EmailPasswordForma({
-    required this.povratak,
-    required this.registracija,
-  });
+  const _EmailPasswordForma({required this.registracija});
 
-  final String povratak;
   final bool registracija;
 
   @override
@@ -482,12 +536,10 @@ class _EmailPasswordFormaState extends ConsumerState<_EmailPasswordForma> {
     if (!emailIspravan || !lozinkaIspravna || !ponovljenaIspravna) return;
 
     FocusScope.of(context).unfocus();
-    final router = GoRouter.of(context);
     final kontroler = ref.read(loginControllerProvider.notifier);
-    final sesija = widget.registracija
+    // Uspjeh ne navigira odavde: izlazak radi slušalac `isSignedInProvider` na ekranu.
+    widget.registracija
         ? await kontroler.registrujEmail(adresa, lozinka)
         : await kontroler.prijaviEmail(adresa, lozinka);
-
-    if (sesija != null) router.go(widget.povratak);
   }
 }

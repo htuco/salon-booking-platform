@@ -107,8 +107,10 @@ class DetailsStepScreen extends ConsumerWidget {
 
     // Konflikt vraća na izbor termina, gdje je lista već invalidirana. Ostale greške
     // ostavljaju korisnika ovdje — tamo je dugme koje može pritisnuti ponovo.
+    // Korak 3 je u normalnom toku odmah ispod (`push`), pa `pop` vraća na njega sa svim
+    // izborima; `go` ostaje za korak otvoren direktnim linkom.
     if (greska is ConflictError) {
-      router.go(BookingStep.slot.path);
+      router.canPop() ? router.pop() : router.go(BookingStep.slot.path);
     }
   }
 }
@@ -120,8 +122,14 @@ class DetailsStepScreen extends ConsumerWidget {
 /// jer je obavezan kad postoji ijedan drugi social provider (`docs/06 §7.2`), a na
 /// Androidu ga nema uopšte.
 ///
-/// Dugmad vode na `/auth/login?from=/book/details`; sam tok prijave je tamo, da ekran
-/// koraka ne nosi i korake OTP-a.
+/// Dugmad vode na `/auth/login?from=/book/details&metod=<provider>`; sam tok prijave je
+/// tamo, da ekran koraka ne nosi i korake prijave.
+///
+/// **`metod` je obavezan.** Bez njega se login otvarao na istom izboru providera koji je
+/// korisnik upravo vidio ovdje — isti naslov, ista kartica „Čuvamo vam", ista dugmad — pa
+/// je „Nastavi sa emailom" trebalo pritisnuti dvaput i izgledalo je kao da se korak
+/// prikazuje dva puta. Login se sada otvara pravo na email formi, odnosno odmah pokreće
+/// Apple/Google prijavu.
 class _Prijava extends ConsumerWidget {
   const _Prijava();
 
@@ -129,11 +137,6 @@ class _Prijava extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final provideri = ref.watch(visibleAuthProvidersProvider);
-
-    final ruta = Uri(
-      path: ClientRoute.login.path,
-      queryParameters: {'from': ClientRoute.bookDetails.path},
-    ).toString();
 
     return Column(
       children: [
@@ -153,7 +156,15 @@ class _Prijava extends ConsumerWidget {
             variant: provider == AuthProvider.apple
                 ? AppButtonVariant.primary
                 : AppButtonVariant.outline,
-            onPressed: () => context.go(ruta),
+            onPressed: () => context.push(
+              Uri(
+                path: ClientRoute.login.path,
+                queryParameters: {
+                  'from': ClientRoute.bookDetails.path,
+                  'metod': provider.name,
+                },
+              ).toString(),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
         ],

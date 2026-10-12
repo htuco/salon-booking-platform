@@ -1,0 +1,50 @@
+# Authentic Barbershop (Vitez) — salonId mora odgovarati redu u supabase/seed.sql i na hostovanom projektu.
+# Polja: docs/04-flutter-tenant-factory.md §3
+tenant:
+  flavor: authenticbarber
+  salonId: d11aa07e-4611-4fae-bf99-6439ef10bd16
+  slug: authenticbarber
+  vertical: barber
+
+app:
+  displayName: "Authentic Barbershop"
+  shortName: "Authentic"
+  applicationId: ba.nasadomena.authenticbarber
+  bundleId: ba.nasadomena.authenticbarber
+  versionName: "1.0.0"
+  androidVersionCode: 1
+  iosBuildNumber: 1
+
+branding:
+  # Fallback boje dok backend ne odgovori — sprječava bijeli flash.
+  # Iste vrijednosti kao salons.primary_color/secondary_color u bazi. Paleta je ista kao
+  # Barber Studio Vitez (zlatna i skoro crna) — logo salona je bijeli na tamnom staklu.
+  primaryColor: "#C6A667"
+  secondaryColor: "#171717"
+  splashBackground: "#171717"
+  theme: modern_barber
+
+auth:
+  # Koji se provideri nude na login ekranu. Filtriranje po platformi radi AuthConfig —
+  # `apple: true` na Androidu se ignoriše, ne pada. V. docs/06 §7.6.
+  providers:
+    apple: true
+    google: true
+    email: true
+
+  # Google `REVERSED_CLIENT_ID` za iOS — client ID sa obrnutim segmentima, ide u
+  # `CFBundleURLTypes`. Prazno dok konzola ne da ID; v. tasks/sprint-2/12-konzole-checklist.md.
+  googleReversedClientId: ''
+
+store:
+  shortDescription: "Zakažite termin u Authentic Barbershopu u par tapova."
+  categoryAndroid: LIFESTYLE
+  categoryIos: LIFESTYLE
+  contentRating: everyone
+  supportEmail: podrska@nasadomena.ba
+  privacyPolicyUrl: https://nasadomena.ba/privatnost/authenticbarber
+
+targets:
+  android: true
+  ios: true
+  web: true

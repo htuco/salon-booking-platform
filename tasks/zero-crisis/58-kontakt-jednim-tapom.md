@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 0,5–1 dan |
-| **Zavisi od** | — |
+| **Zavisi od** | [66](66-registracija-ime-telefon-tos.md) |
 | **Blokira** | — |
 | **Reference** | `docs/01` §6.3 („Kontakt klijenta jednim tapom") · `prototype/admin/SPEC.md` (`3n`, `3e`) |
 
@@ -13,7 +13,7 @@ Iz detalja termina i profila klijenta vlasnik jednim tapom pozove klijenta ili m
 ## Definicija gotovog
 - [ ] `url_launcher` kao zavisnost admina
 - [ ] `tel:`, `viber://chat?number=` i `https://wa.me/` iz detalja termina i profila klijenta
-- [ ] Prikazuje se samo klijentu koji ima upisan telefon; klijenti iz aplikacije se dobijaju pushom
+- [ ] Prikazuje se samo klijentu koji ima upisan telefon — od taska 66 to su i klijenti iz aplikacije
 - [ ] Na webu gdje šema nije podržana — nema dugmeta, ne mrtvo dugme
 - [ ] Widget test: bez telefona nema akcije; uživo na Android uređaju sve tri akcije
 

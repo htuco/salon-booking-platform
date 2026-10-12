@@ -19,6 +19,9 @@
 #                  GOOGLE_WEB_CLIENT_ID_BARBERSTUDIOVITEZ nadjacava GOOGLE_WEB_CLIENT_ID.
 #                  Ne commituju se; u CI-ju idu kroz GitHub `vars` (client ID nije tajna,
 #                  ali se mijenja po tenantu i okruzenju).
+#   APPLE_SIGN_IN  `false` za iOS build potpisan licnim (besplatnim) Apple timom, koji
+#                  nema Sign in with Apple capability — login tada ne nudi Apple dugme.
+#                  Prazno = `true` (store build).
 set -euo pipefail
 
 usage() { echo "Upotreba: tool/build_tenant.sh <flavor> <apk|aab|ios> [debug|release]" >&2; exit 2; }
@@ -61,6 +64,7 @@ fi
 [ -n "${API_URL:-}" ]           && defines+=(--dart-define="API_URL=$API_URL")
 [ -n "${SUPABASE_URL:-}" ]      && defines+=(--dart-define="SUPABASE_URL=$SUPABASE_URL")
 [ -n "${SUPABASE_ANON_KEY:-}" ] && defines+=(--dart-define="SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY")
+[ -n "${APPLE_SIGN_IN:-}" ]     && defines+=(--dart-define="APPLE_SIGN_IN=$APPLE_SIGN_IN")
 
 # Vrijednost po flavoru, sa padom na zajednicku: <IME>_<FLAVOR> pa <IME>.
 flavor_upper="$(echo "$flavor" | tr '[:lower:]' '[:upper:]')"

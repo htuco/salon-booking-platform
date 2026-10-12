@@ -328,8 +328,13 @@ BUILD_NUMBER=57 tool/build_tenant.sh barberstudiovitez aab release
 `flutter build` komande — inače lokalni i CI build tiho odlutaju.
 
 Okolina (sve opciono): `BUILD_NUMBER` nadjačava `versionCode`/`buildNumber` iz `tenant.yaml`
-(koristi ga CI); `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_WEB_CLIENT_ID` i
-`GOOGLE_IOS_CLIENT_ID` idu kao `--dart-define` ako su postavljeni.
+(koristi ga CI); `API_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_WEB_CLIENT_ID`,
+`GOOGLE_IOS_CLIENT_ID` i `APPLE_SIGN_IN` idu kao `--dart-define` ako su postavljeni.
+
+**Login nudi samo providere koje build stvarno može.** Google se ne prikazuje bez
+`GOOGLE_WEB_CLIENT_ID`, a Apple ne kad je `APPLE_SIGN_IN=false` — to se postavlja za iOS build
+potpisan ličnim (besplatnim) Apple timom, koji nema Sign in with Apple capability. Ranije su oba
+dugmeta stajala iznad emaila i padala na prvom tapu („ovaj način prijave nije dostupan").
 
 **Google client ID se traži prvo po flavoru.** Skripta gleda `GOOGLE_WEB_CLIENT_ID_<FLAVOR>` (flavor
 velikim slovima), pa tek onda zajednički `GOOGLE_WEB_CLIENT_ID`:
@@ -456,13 +461,15 @@ CI radi u **dvije brzine**, jer jobovi nisu jednako skupi:
 
 | Događaj | Šta se pokrene | Naplativo |
 |---|---|---|
-| **PR** | `Supabase tests` + Flutter job `analyze` | **~7 min** |
-| **push u `main`** | sve, uključujući APK po tenantu i oba iOS builda | ~86 min |
+| **PR** (u `develop` ili `main`) | `Supabase tests` + Flutter job `analyze` | **~7 min** |
+| **push u `develop`** (merge PR-a) | `Supabase tests` | ~5 min |
+| **push u `main`** (release) | sve, uključujući APK po tenantu i oba iOS builda | ~86 min |
 | ručni `workflow_dispatch` | + `release-artifacts` (AAB) | — |
 
 Na PR-u prolazi ono što štiti tuđi rad: **tenant izolacija** (jedino mjesto gdje greška curi tuđe
 podatke) i analiza sa testovima. Skupo je bilo macOS — dvije iOS jobe nose 66 od 86 minuta punog
-runa zbog množioca 10× — pa to ide tek na `main`.
+runa zbog množioca 10× — pa to ide tek na `main`. Od 2026-10-13 repo je **javan**, pa su standardni
+GitHub runneri besplatni; podjela ostaje zbog trajanja, ne cijene.
 
 Na `main`-u se dodaje ono što se lokalno **ne može** dobiti: dokaz iz čistog checkouta. Lokalni
 build koristi postojeći `build/` i generisane `*.g.dart` koji su u `.gitignore`, pa ne dokazuje da
@@ -496,7 +503,7 @@ generisanog registra. Zadnji pun prolaz: **165 testova, 5 paketa, nula grešaka.
 |---|---|---|
 | `Flutter` (`.github/workflows/flutter-build.yml`) | **PR** (samo `analyze`) i **push u `main`** (sve) nad `apps/`, `packages/`, `tenants/`, `tool/`, `pubspec.yaml`, `analysis_options.yaml` | generisano je ažurno · **codegen** · format · analiza · testovi · tema po tenantu · APK po flavoru sa provjerom `applicationId` u artefaktu · iOS build sa provjerom `CFBundleIdentifier`, `CFBundleDisplayName` i ikone u gotovom bundleu |
 | `Flutter` → job `release-artifacts` | **ručni trigger** (`workflow_dispatch`) | AAB za oba tenanta kroz `build_tenant.sh`, `versionCode` iz `github.run_number`, provjera `applicationId` i `versionCode` kroz `bundletool dump manifest`, artefakt se čuva 30 dana |
-| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | **PR i push u `main`** nad `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) · **prijava seed admina kroz GoTrue** (`rest_admin_login.ts`) |
+| `Supabase tests` (`.github/workflows/supabase-tests.yml`) | **PR i push u `develop` i `main`** nad `supabase/migrations`, `seed.sql`, `tests/`, `config.toml`, **`packages/core_api/`** | migracije se primjenjuju iz nule · pgTAP · REST izolacija sa dva JWT-a · **javni katalog čitljiv bez prijave** (`rest_public_catalog.ts`) · **prijava seed admina kroz GoTrue** (`rest_admin_login.ts`) |
 
 Oba imaju `concurrency` sa `cancel-in-progress`, pa novi push otkazuje stari run iste grane.
 

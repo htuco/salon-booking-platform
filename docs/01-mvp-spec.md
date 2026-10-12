@@ -132,6 +132,9 @@ eksplicitnu registraciju, potvrdu adrese i oporavak lozinke.
 
 ### 6.1 Super Admin (web konzola)
 
+> **[ADR-0029](adr/0029-opseg-do-lansiranja-zero-crisis.md) (2026-10-12):** konzola je **lokalni
+> alat na mašini developera**, nikad deployana, minimalna (task 74). Opis ispod je polazna ideja.
+
 **Kreiranje salona** — naziv, slug, adresa, grad, telefon, Instagram, Facebook, logo, **app ikona**, cover slika, primarna boja, sekundarna boja, tema, status (`active`/`inactive`), paket (`starter`/`pro`/`premium`).
 
 **Build artefakti po salonu** (v. [04-flutter-tenant-factory.md](04-flutter-tenant-factory.md)):
@@ -226,6 +229,10 @@ Polja: `name`, `role`, `imageUrl`, `bio`, `isActive`
 ---
 
 ## 7. Out of scope za Fazu 1
+
+> **[ADR-0029](adr/0029-opseg-do-lansiranja-zero-crisis.md) (2026-10-12)** vraća u opseg:
+> **recenzije** (pisanje), **sedmični kalendar**, **prikupljanje broja telefona** (bez SMS-a) i
+> dodaje **listu čekanja**. Javni web link i QR izlaze iz opsega.
 
 Online plaćanje · depoziti/avansi · **SMS gateway i SMS podsjetnici** (push ih zamjenjuje) · **prikupljanje broja telefona od klijenta** · manuelno spajanje računa (account linking) · WhatsApp Business API · loyalty program · marketplace · recenzije · kuponi · gift cards · napredna analitika · više lokacija po salonu · payroll · inventar · offline mode sa sinkronizacijom · kompleksni permission sistemi · radnički login · sedmični kalendar · drag-and-drop.
 

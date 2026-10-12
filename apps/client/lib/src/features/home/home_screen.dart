@@ -183,7 +183,7 @@ class _Cta extends ConsumerWidget {
 
     return AppButton(
       label: vertical.terms.bookCta,
-      onPressed: () => context.go(ClientRoute.bookService.path),
+      onPressed: () => context.push(ClientRoute.bookService.path),
     );
   }
 }
@@ -248,7 +248,7 @@ class _CjenovnikSekcija extends StatelessWidget {
                         : null,
                     // Tap vodi direktno u booking sa preselektovanom uslugom
                     // (`docs/02 §3`) — korak 1 prima `serviceId` iz query parametra.
-                    onTap: () => context.go(
+                    onTap: () => context.push(
                       '${ClientRoute.bookService.path}?serviceId=${service.id}',
                     ),
                   ),

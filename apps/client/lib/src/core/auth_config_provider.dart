@@ -2,6 +2,7 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'env/app_env.dart';
 import 'vertical_provider.dart';
 
 /// Koji se provideri prijave nude u ovom buildu — **nikad `null`, nikad `AsyncLoading`**.
@@ -25,6 +26,21 @@ final authConfigProvider = Provider<AuthConfig>((ref) {
 /// Ekran čita **ovo**, ne [authConfigProvider]: `forPlatform` je jedino mjesto koje zna da
 /// Apple na Androidu ne postoji, i to znanje ne smije završiti kao `if` u widgetu
 /// (`docs/06 §6.2`).
-final visibleAuthProvidersProvider = Provider<List<AuthProvider>>(
-  (ref) => ref.watch(authConfigProvider).forPlatform(currentAuthPlatform),
-);
+///
+/// **Build mora moći ono što dugme nudi.** `tenant.yaml` kaže koje providere tenant želi,
+/// ali Google bez client ID-a i Apple bez capabilityja padaju na prvom tapu porukom
+/// „ovaj način prijave nije dostupan" — korisnik je tada vidio dva mrtva dugmeta iznad
+/// jedinog koje radi. Takav provider se zato ne prikazuje (`docs/08` §2.1).
+final visibleAuthProvidersProvider = Provider<List<AuthProvider>>((ref) {
+  final env = ref.watch(appEnvProvider);
+  return [
+    for (final provider
+        in ref.watch(authConfigProvider).forPlatform(currentAuthPlatform))
+      if (switch (provider) {
+        AuthProvider.google => env.hasGoogleSignIn,
+        AuthProvider.apple => env.appleSignIn,
+        AuthProvider.email => true,
+      })
+        provider,
+  ];
+});

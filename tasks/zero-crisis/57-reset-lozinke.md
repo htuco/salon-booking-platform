@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 1–2 dana |
-| **Zavisi od** | — |
+| **Zavisi od** | [81](81-potvrda-emaila-kodom.md) |
 | **Blokira** | — |
 | **Reference** | `docs/06` §2.1 · ADR-0010 · `docs/08` (demo sakriva „Zaboravili ste lozinku?") |
 

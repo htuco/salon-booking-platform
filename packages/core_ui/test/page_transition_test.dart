@@ -43,18 +43,26 @@ double _pomakDrugog(WidgetTester tester) => tester
     .x;
 
 void main() {
-  test('isti builder je registrovan za svaku platformu', () {
-    final builders = _tema(TargetPlatform.android)
-        .pageTransitionsTheme
-        .builders;
-    for (final platforma in TargetPlatform.values) {
-      expect(
-        builders[platforma],
-        isA<AppPageTransitionsBuilder>(),
-        reason: '$platforma',
-      );
-    }
-  });
+  test(
+    'iOS i macOS imaju nativni prelaz, ostale platforme fade (ADR-0028)',
+    () {
+      final builders = _tema(TargetPlatform.android)
+          .pageTransitionsTheme
+          .builders;
+      for (final platforma in TargetPlatform.values) {
+        final apple =
+            platforma == TargetPlatform.iOS ||
+            platforma == TargetPlatform.macOS;
+        expect(
+          builders[platforma],
+          apple
+              ? isA<AppCupertinoPageTransitionsBuilder>()
+              : isA<AppPageTransitionsBuilder>(),
+          reason: '$platforma',
+        );
+      }
+    },
+  );
 
   test('push 220 ms, pop 180 ms — ispod 300 ms iz docs/02 §14', () {
     const b = AppPageTransitionsBuilder();
@@ -62,7 +70,7 @@ void main() {
     expect(b.reverseTransitionDuration, const Duration(milliseconds: 180));
   });
 
-  for (final platforma in [TargetPlatform.android, TargetPlatform.iOS]) {
+  for (final platforma in [TargetPlatform.android, TargetPlatform.windows]) {
     testWidgets('push traje 220 ms i pomjera novi ekran po X ($platforma)', (
       tester,
     ) async {
@@ -103,6 +111,46 @@ void main() {
       ),
       findsWidgets,
     );
+  });
+
+  // Bug sa uređaja: swipe nazad je samo blijedio ekran na mjestu. Na iOS-u ekran mora
+  // pratiti prst — pomjeren za onoliko koliko je prst prešao.
+  testWidgets('iOS: ekran tokom povlačenja prati prst', (tester) async {
+    final nav = await _app(tester);
+    _otvoriDrugi(nav);
+    await tester.pumpAndSettle();
+
+    final sirina = tester.getSize(find.byType(MaterialApp)).width;
+    final gest = await tester.startGesture(const Offset(5, 300));
+    await gest.moveBy(const Offset(20, 0));
+    await tester.pump();
+    await gest.moveBy(Offset(sirina / 2, 0));
+    await tester.pump();
+
+    final x = tester.getTopLeft(find.text('drugi')).dx;
+    final pocetno = (sirina - tester.getSize(find.text('drugi')).width) / 2;
+    expect(
+      x - pocetno,
+      closeTo(sirina / 2, sirina * 0.1),
+      reason: 'ekran je pomjeren za put prsta, ne samo pretopljen',
+    );
+
+    await gest.up();
+    await tester.pumpAndSettle();
+    expect(find.text('drugi'), findsNothing);
+    expect(find.text('prvi'), findsOneWidget);
+  });
+
+  testWidgets('iOS + Reduce Motion: fade, povlačenje i dalje vraća nazad', (
+    tester,
+  ) async {
+    final nav = await _app(tester, bezAnimacija: true);
+    _otvoriDrugi(nav);
+    await tester.pumpAndSettle();
+    await tester.dragFrom(const Offset(5, 300), const Offset(500, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('drugi'), findsNothing);
+    expect(find.text('prvi'), findsOneWidget);
   });
 
   testWidgets('iOS: povlačenje sa lijeve ivice vraća nazad', (tester) async {

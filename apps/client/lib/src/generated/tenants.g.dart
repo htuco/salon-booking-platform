@@ -49,6 +49,17 @@ const Map<String, TenantConfig> kTenants = <String, TenantConfig>{
     themeName: 'modern_barber',
     authProviders: <String>['apple', 'google', 'email'],
   ),
+  'd11aa07e-4611-4fae-bf99-6439ef10bd16': TenantConfig(
+    flavor: 'authenticbarber',
+    salonId: 'd11aa07e-4611-4fae-bf99-6439ef10bd16',
+    slug: 'authenticbarber',
+    vertical: 'barber',
+    displayName: 'Authentic Barbershop',
+    primaryColor: 0xFFC6A667,
+    secondaryColor: 0xFF171717,
+    themeName: 'modern_barber',
+    authProviders: <String>['apple', 'google', 'email'],
+  ),
   '550e8400-e29b-41d4-a716-446655440000': TenantConfig(
     flavor: 'barberstudiovitez',
     salonId: '550e8400-e29b-41d4-a716-446655440000',

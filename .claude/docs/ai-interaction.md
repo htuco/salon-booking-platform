@@ -54,20 +54,26 @@ kome da se postavi (§2) ostavlja zapis u status bloku i ide dalje.
 
 ## 4. Grane i PR-ovi — bez izuzetka
 
-**Svaki feature, fix i chore ima svoju granu i svoj otvoren PR protiv `main`. Na `main` se ne
-commituje direktno.** Ovo je pravilo koje se najlakše prekrši "samo ovaj put", pa ga čuva i
-`PreToolUse` hook u `.claude/settings.json`: svaki `git commit`/`push`/`merge` koji cilja `main`
-traži tvoju izričitu potvrdu.
+**Dvije zaštićene grane.** `main` je produkcija, `develop` je integracija tima (i ide na staging
+kad on postoji). Svaki feature, fix i chore ima svoju granu sa `develop`-a i PR **protiv
+`develop`-a**. GitHub rulesetovi to provode: `develop-zastita` traži PR sa jednim odobrenjem i
+zabranjuje force push i brisanje; `main-zastita` dozvoljava promjenu `main`-a **samo Hamzi, kroz
+PR** (`Restrict updates` + bypass za admina). Lokalno ga dodatno čuva `PreToolUse` hook u
+`.claude/settings.json`: svaki `git commit`/`push`/`merge` koji cilja `main` traži izričitu potvrdu.
 
 Redoslijed, svaki put:
 
-1. `git checkout main && git pull` — grana kreće sa svježeg `main`-a
+1. `git checkout develop && git pull` — grana kreće sa svježeg `develop`-a
 2. `git checkout -b feat/<kratko>` — prije **prve** izmjene, ne poslije
 3. prvi commit → `git push -u origin feat/<kratko>`
-4. **`gh pr create --draft --base main`** odmah, ne na kraju — rad se vidi dok traje
+4. **`gh pr create --draft --base develop`** odmah, ne na kraju — rad se vidi dok traje
 5. rad, commitovi, CI zeleni
-6. `gh pr ready` kad je gotovo, pa ti mergeaš
+6. `gh pr ready` kad je gotovo; odobrenje (kolega ili Hamza), pa merge u `develop`
 7. grana se briše nakon merge-a, lokalno i na remoteu
+
+**Release i hitna popravka** (samo Hamza): release je PR `develop → main`, merge commitom, poslije
+regresije; poslije njega deploy. Hitna popravka ide granom `fix/*` sa `main`-a i PR-om u `main`,
+pa se ista promjena odmah vraća u `develop` (PR `main → develop`).
 
 - Imena: `feat/<kratko>`, `fix/<kratko>`, `chore/<kratko>`, `docs/<kratko>` — kebab-case, bez
   brojeva taskova u imenu (broj je u PR opisu, gdje se može pročitati).
@@ -110,7 +116,8 @@ generisanih fajlova.
   PR koji se pojavi tek kad je sve gotovo krije rad dok traje.
 - **Naslov PR-a = naslov commita** (isti Conventional Commits oblik). Kad PR ima više commitova,
   naslov opisuje cjelinu.
-- **Baza je `main`.** Nema PR-a protiv druge feature grane osim ako se izričito dogovorimo.
+- **Baza je `develop`.** `main` dobija samo release i hitnu popravku (§4). PR protiv druge feature
+  grane (stacked) samo uz izričit dogovor, zapisan u opisu PR-a.
 - **Opis prati `.github/pull_request_template.md`** — cilj, promjene, **dokaz sa stvarnim izlazima**,
   šta nije provjereno, i koji su dokumenti ažurirani.
 - **Draft dok ne prođe lokalna provjera.** PR koji ne prolazi `analyze`/`test` nije spreman za tuđe
@@ -125,6 +132,10 @@ generisanih fajlova.
   Generisani fajlovi se ne broje — oni se ne čitaju kao kod (recenzentu reci iz kojeg ulaza su nastali).
 - **Merge radiš ti**, osim ako izričito ne kažeš drugačije. Squash ili merge commit — kako želiš;
   bitno je da naslov ostane u konvenciji.
+- **Deploy se imenuje u PR-u.** Deploy i pripremu produkcije radi samo Hamza
+  (`docs/TEAM_HANDBOOK.md` §6). PR navodi u „Šta NIJE provjereno" **tačno** šta treba deployati
+  poslije merge-a — migracija, cron, Edge Function, tajna po imenu — i kako se provjerava da je
+  prošlo. Raspodjela po tasku: `tasks/RASPODJELA.md`.
 
 ## 7. Pregled AI-generisanog koda
 
