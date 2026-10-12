@@ -35,6 +35,9 @@ Provjerava se artefakt, ne konfiguracija iz koje je nastao (v. /verify).
 Obavezno popuniti — prazno znači "sve je provjereno" i tako će biti pročitano.
 Tipično: nema Dockera lokalno (supabase/ ide na CI), nema macOS-a (iOS), nema uređaja,
 traži tuđi nalog ili tajnu.
+
+Ako poslije merge-a treba deploy (migracija, cron, Edge Function, tajna po imenu) — napiši ga ovdje
+tačno i kako se provjerava. Deploy radi Hamza (docs/TEAM_HANDBOOK.md §6).
 -->
 
 -

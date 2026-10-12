@@ -59,11 +59,11 @@ Za svaki task, redom, bez preskakanja:
 
 1. **`/task load <NN>`** — DoD naspram stvarnog stanja repoa. Korak 4 te akcije redovno nađe da je
    dio taska već isporučen; to skraćuje posao, ne opravdava preskakanje.
-2. **`/task start`** — grana sa svježeg `main`-a, status `U toku`, 🟡 u tabeli.
+2. **`/task start`** — grana sa svježeg `develop`-a, status `U toku`, 🟡 u tabeli.
    **Stacked grana:** ako task zavisi od prethodnog čiji PR još nije mergan, grana kreće sa te
-   grane, a PR ide `--base <roditeljska-grana>`. To je izuzetak od „baza je `main`"
+   grane, a PR ide `--base <roditeljska-grana>`. To je izuzetak od „baza je `develop`"
    (`.claude/docs/ai-interaction.md` §6) koji je ovdje izričito dogovoren — mora pisati u opisu PR-a,
-   sa napomenom da se rebase-uje na `main` kad roditelj bude mergan.
+   sa napomenom da se rebase-uje na `develop` kad roditelj bude mergan.
 3. **Implementacija korak po korak.** Prije koda za korak pročitaj dokument koji taj korak spominje
    (`security.md` za `supabase/`, `tenant-factory.md` za flavore, `prototype/ui/SPEC.md` za ekrane).
 4. **Commit i push nakon svakog zaokruženog koraka**, ne na kraju taska. Sesija puca bez najave —
@@ -73,8 +73,8 @@ Za svaki task, redom, bez preskakanja:
 6. **`/task verify`** — recept iz `/verify` za taj tip promjene, sa **stvarnim izlazom** u status blok.
 7. **`/task complete`** — status blok, tabela, dokumenti po tabeli sinhronizacije iz `CLAUDE.md`,
    commit, `gh pr ready`.
-8. **Vrati se na `main`** (`git checkout main && git pull`) i kreni na sljedeći task. PR ostaje
-   otvoren — merga korisnik.
+8. **Vrati se na `develop`** (`git checkout develop && git pull`) i kreni na sljedeći task. PR
+   ostaje otvoren — merga korisnik.
 
 Između iteracija ne rezimiraj opširno: jedan red o tome šta je zatvoreno i koji task ide sljedeći.
 
@@ -153,7 +153,8 @@ Pri stajanju napiši kratak izvještaj: zatvoreni taskovi sa brojevima PR-ova, t
 ## Šta se nikad ne radi
 
 - **Ne merga se PR i ne briše se grana.** Ni kad su svi testovi zeleni. To je korisnikov potez.
-- **Ne commituje se na `main`.** `PreToolUse` hook pita — u bypass modu ne pita, pa pravilo čuvaš ti.
+- **Ne commituje se na `main` ni na `develop`.** Na GitHubu to provode rulesetovi; lokalni
+  `PreToolUse` hook pita samo za `main` — u bypass modu ne pita, pa pravilo čuvaš ti.
 - **Ne mijenjaju se permisije u `.claude/settings.json` ni u `settings.local.json`.**
 - **Ne diraju se generisani fajlovi rukom** — mijenja se `tenant.yaml`, pa se pokrene generator.
 - **Ne commituju se tajne**, ni „privremeno da testiram".

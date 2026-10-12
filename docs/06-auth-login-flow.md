@@ -164,6 +164,10 @@ Nakon logina klijent se vraća **točno gdje je bio** — izabrani slot je saču
 
 ### 3.1 Zašto NE tražimo broj telefona
 
+> **Zamijenjeno [ADR-0029](adr/0029-opseg-do-lansiranja-zero-crisis.md) (2026-10-12):** ime i
+> telefon se traže pri registraciji, bez SMS verifikacije — salon u Meluri nije razlikovao email
+> klijente („Klijent", „Bez broja"). Obrazloženje ispod ostaje kao istorija odluke.
+
 Cutlio ne traži telefon, i to je ispravno. **Push notifikacija zamjenjuje i poziv i SMS.**
 
 | Situacija | Prije (telefon) | Sad (push) |

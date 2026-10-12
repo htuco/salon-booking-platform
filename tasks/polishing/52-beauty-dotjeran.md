@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 1–2 dana |
-| **Zavisi od** | [49](49-slike-usluga-i-radnika.md), [50](50-galerija-logo-cover.md) |
+| **Zavisi od** | [49](../sprint-5/49-slike-usluga-i-radnika.md), [50](../sprint-5/50-galerija-logo-cover.md) |
 | **Blokira** | — |
 | **Reference** | **`prototype/beauty/`** (handoff teme, 2026-09-27) · `docs/05` §3 · ADR-0018 · `tenants/beautystudiotravnik/tenant.yaml` · sprint-3 task 30 (🟡 drugi tenant) |
 

@@ -18,7 +18,7 @@ on:
       - '.github/workflows/supabase-tests.yml'
       - 'packages/core_api/**'
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - 'supabase/migrations/**'
       - 'supabase/seed.sql'

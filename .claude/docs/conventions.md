@@ -238,5 +238,5 @@ konfiguracije i neće je dobiti; hook se dodaje kad stigne pravi `web/` (Next.js
 
 Grananje, commit poruke, PR konvencija i pravila o tome kad pitam a kad odlučim sam žive u
 `.claude/docs/ai-interaction.md` — jedan izvor, da se ne raziđu. Ukratko: Conventional Commits sa
-scopeom, naslov na bosanskom u imperativu, tijelo nosi *zašto* i *dokaz*, grana sa `main`, PR
-protiv `main`, opis po `.github/pull_request_template.md`.
+scopeom, naslov na bosanskom u imperativu, tijelo nosi *zašto* i *dokaz*, grana sa `develop`, PR
+protiv `develop`, opis po `.github/pull_request_template.md`.

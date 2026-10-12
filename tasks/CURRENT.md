@@ -1,6 +1,6 @@
 # Trenutni task: 55 — Prerada admin dashboarda
 
-Puni task: [tasks/sprint-5/55-prerada-dashboarda.md](sprint-5/55-prerada-dashboarda.md) · učitan 2026-10-01
+Puni task: [tasks/polishing/55-prerada-dashboarda.md](polishing/55-prerada-dashboarda.md) · učitan 2026-10-01
 
 ## Status
 
@@ -27,6 +27,25 @@ Danas koristi toast iz taska 62 za „Poništi"; PR ide na `main` kad #123 uđe.
 - Flutter 3.47.5 je na mašini (Homebrew). Web debug ide sa `--no-web-experimental-hot-reload`.
 
 ## Istorija
+
+### Sprint 5 zatvoren, otvoreni `zero-crisis/` i `polishing/` (2026-10-12)
+
+Nedovršeno iz Sprinta 5 je premješteno: 52–55, 59–63 u `polishing/`, 56–58 u `zero-crisis/`.
+Opseg do lansiranja je [ADR-0029](../docs/adr/0029-opseg-do-lansiranja-zero-crisis.md); novi
+taskovi 64–90, brojevi po redoslijedu (73–80: produkcija od nule). Sljedeći predloženi task: **64 — istek neodgovorenih zahtjeva**.
+
+### Tenant `authenticbarber` i popravke sa uređaja (spojeno u `develop`, 2026-10-13)
+
+[PR #129](https://github.com/htuco/salon-booking-platform/pull/129) — Authentic Barbershop, Vitez;
+salon, admin nalog i slike na hostovanom. [PR #130](https://github.com/htuco/salon-booking-platform/pull/130)
+(na #129) — swipe nazad u booking flowu, nativni iOS prelaz (ADR-0028), prijava bez duplog koraka,
+poruka za nepotvrđen email, test preklapanja termina. Oba spojena u `develop`. **Ostaje:** Confirm
+email isključen na hostovanom.
+
+### Grane: `main` je produkcija, `develop` integracija (2026-10-13)
+
+Repo je javan; rulesetovi `main-zastita` (mijenja samo Hamza, kroz PR) i `develop-zastita` (PR sa
+jednim odobrenjem). Pravila u `CLAUDE.md`, `ai-interaction.md` §4 i `TEAM_HANDBOOK.md` §2 i §6.
 
 ### 62 — Toast obavijesti u adminu (PR otvoren)
 

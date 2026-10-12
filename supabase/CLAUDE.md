@@ -34,7 +34,7 @@ deno run --allow-env --allow-net tests/rest_public_catalog.ts   # bez tokena
 
 Dok ta suite nije prošla, u sažetku piše "napisano, nije pokrenuto", ne "radi".
 
-CI workflow `Supabase tests` pokriva isto, ali **samo na push u `main`**, i dodaje jedino što
+CI workflow `Supabase tests` pokriva isto — na svaki PR i na push u `develop` i `main` — i dodaje jedino što
 lokalno ne možeš: čist checkout. Izlaz `supabase status -o env` sadrži service role ključ —
 nikad u commit ni u sažetak.
 
