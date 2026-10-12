@@ -212,12 +212,17 @@ ThemeData buildAppTheme({
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     ),
 
-    // `docs/02 §14`: max 300 ms. Isti prelaz za **sve** platforme (FE-201) — i web i desktop,
-    // koji bi inače pali na Materialov zoom.
+    // iOS i macOS: nativni Cupertino prelaz i swipe nazad koji vuče ekran (ADR-0028).
+    // Ostalo: fade iz FE-201 (`docs/02 §14`, max 300 ms) — i web i desktop, koji bi inače
+    // pali na Materialov zoom.
     pageTransitionsTheme: PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{
         for (final platforma in TargetPlatform.values)
-          platforma: const AppPageTransitionsBuilder(),
+          platforma:
+              platforma == TargetPlatform.iOS ||
+                  platforma == TargetPlatform.macOS
+              ? const AppCupertinoPageTransitionsBuilder()
+              : const AppPageTransitionsBuilder(),
       },
     ),
   );
