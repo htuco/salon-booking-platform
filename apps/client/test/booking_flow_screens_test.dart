@@ -102,6 +102,85 @@ void main() {
     });
   });
 
+  // Bug sa uređaja: swipe sa lijeve ivice „radi djelimično". Flow je išao kroz `go`, pa je
+  // svaki korak bio sam na stacku — swipe nije imao šta vratiti, a dugme „Nazad" je
+  // ponovo gradilo prethodni korak. Sada se ide sa `push`.
+  group('povratak nazad', () {
+    testWidgets(
+      'iOS swipe sa lijeve ivice vraća na prethodni korak, izbor ostaje',
+      (tester) async {
+        final repo = _MockBooking()..stubUspjesan();
+        await _pumpFlow(tester, repo: repo, ruta: ClientRoute.bookService.path);
+
+        await tester.tap(find.text('Šišanje'));
+        await tester.pump();
+        await tester.tap(find.text('Dalje'));
+        await tester.pumpAndSettle();
+        expect(find.byType(EmployeeStepScreen), findsOneWidget);
+
+        await tester.dragFrom(const Offset(5, 600), const Offset(800, 0));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EmployeeStepScreen), findsNothing);
+        expect(find.byType(ServiceStepScreen), findsOneWidget);
+        // Izbor je preživio povratak: CTA je odmah aktivan i vodi dalje.
+        await tester.tap(find.text('Dalje'));
+        await tester.pumpAndSettle();
+        expect(find.byType(EmployeeStepScreen), findsOneWidget);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+    );
+
+    testWidgets('dugme „Nazad" skida korak, ne gradi prethodni ponovo', (
+      tester,
+    ) async {
+      final repo = _MockBooking()..stubUspjesan();
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        ruta: ClientRoute.bookService.path,
+      );
+
+      await tester.tap(find.text('Šišanje'));
+      await tester.pump();
+      await tester.tap(find.text('Dalje'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Amar'));
+      await tester.pump();
+      await tester.tap(find.text('Dalje'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SlotStepScreen), findsOneWidget);
+
+      await tester.tap(find.text('Nazad'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EmployeeStepScreen), findsOneWidget);
+      // Korak 1 je i dalje ispod — stack je stvaran, ne izgrađen iz URL-a.
+      expect(container.read(appRouterProvider).canPop(), isTrue);
+
+      await tester.tap(find.text('Nazad'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ServiceStepScreen), findsOneWidget);
+    });
+
+    testWidgets('korak otvoren direktnim linkom i dalje ima „Nazad"', (
+      tester,
+    ) async {
+      final repo = _MockBooking()..stubUspjesan();
+      await _pumpFlow(
+        tester,
+        repo: repo,
+        ruta: ClientRoute.bookEmployee.path,
+        pocetniFlow: (n) => n.chooseService(_usluga.id),
+      );
+      expect(find.byType(EmployeeStepScreen), findsOneWidget);
+
+      // Ispod nema ničega, pa dugme ide na korak 1 kroz `go`.
+      await tester.tap(find.text('Nazad'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ServiceStepScreen), findsOneWidget);
+    });
+  });
+
   group('guard', () {
     testWidgets(
       '/book/details bez prethodnih koraka nudi izlaz, ne prazan ekran',

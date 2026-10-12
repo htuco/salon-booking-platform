@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/router/nazad.dart';
 import '../../../core/router/app_router.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../booking_flow_provider.dart';
@@ -131,7 +132,8 @@ class BookingStepScaffold extends ConsumerWidget {
     return null;
   }
 
-  /// Nazad jedan korak, a sa prvog van flowa.
+  /// Nazad jedan korak, a sa prvog van flowa — `pop` kad je korak otvoren kroz flow, `go`
+  /// kad je otvoren direktnim linkom (v. `NazadIli`).
   ///
   /// Izbor se **ne briše** pri povratku: `SPEC.md` traži da korak zapamti izbor, a
   /// brisanje pri svakom povratku bi značilo da korisnik koji provjerava cijenu usluge
@@ -140,7 +142,7 @@ class BookingStepScaffold extends ConsumerWidget {
     final prethodni = step.index == 0
         ? null
         : BookingStep.values[step.index - 1];
-    context.go(prethodni?.path ?? ClientRoute.home.path);
+    context.nazadIli(prethodni?.path ?? ClientRoute.home.path);
   }
 }
 

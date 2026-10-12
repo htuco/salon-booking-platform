@@ -179,7 +179,7 @@ class _Grupa extends StatelessWidget {
             // Prazan okvir kad fotografije nema je predviđeno stanje (task 22).
             imageUrl: service.imageUrl,
             trailingText: prikaziCijene ? formatPrice(service.price) : null,
-            onTap: () => context.go(
+            onTap: () => context.push(
               '${ClientRoute.bookService.path}?serviceId=${service.id}',
             ),
           ),

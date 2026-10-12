@@ -50,7 +50,7 @@ class EmployeeStepScreen extends ConsumerWidget {
       cta: AppButton(
         label: l10n.bookingNext,
         onPressed: flow.employeeChosen
-            ? () => context.go(BookingStep.slot.path)
+            ? () => context.push(BookingStep.slot.path)
             : null,
       ),
       child: Builder(

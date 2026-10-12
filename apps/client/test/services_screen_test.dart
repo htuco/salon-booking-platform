@@ -5,6 +5,7 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:client/src/features/booking/service_step_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -228,15 +229,16 @@ void main() {
       await tester.tap(find.text('Fade'));
       await tester.pumpAndSettle();
 
-      final ruter = container.read(appRouterProvider);
-      final uri = ruter.routeInformationProvider.value.uri;
-
-      expect(uri.path, ClientRoute.bookService.path);
+      final korak = tester.widget<ServiceStepScreen>(
+        find.byType(ServiceStepScreen),
+      );
       expect(
-        uri.queryParameters['serviceId'],
+        korak.preselectedServiceId,
         's-fade',
         reason: 'bez `?serviceId=` korisnik bira istu uslugu dvaput',
       );
+      // `push`, ne `go`: Usluge ostaju ispod, pa „Nazad" i iOS swipe vraćaju na njih.
+      expect(container.read(appRouterProvider).canPop(), isTrue);
     });
   });
 }
