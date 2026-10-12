@@ -391,6 +391,69 @@ insert into public.salon_policies(salon_id,sort_order,title,body) values
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------------
+-- Authentic Barbershop, Vitez — drugi pravi klijent (flavor `authenticbarber`).
+--
+-- Isti obrazac kao Amko: blok ide i na hostovani projekat, admin nalog vlasnika i fotografije
+-- (logo, cover, galerija, slika radnika) postoje samo tamo — u lokalnom seedu su prazni.
+-- Boje su iste kao Barber Studio Vitez. Radno vrijeme je pročitano sa naljepnice na vratima
+-- salona; adresa i telefon se popunjavaju iz admina.
+-- ---------------------------------------------------------------------------
+insert into public.salons(id,name,slug,description,city,address,phone,email,
+cover_image_url,gallery_urls,primary_color,secondary_color,theme,vertical_pack_key,plan)
+values
+('d11aa07e-4611-4fae-bf99-6439ef10bd16','Authentic Barbershop','authenticbarber',
+ 'Klasičan barber u srcu Viteza — rez, brada i kafa, od 2020.','Vitez','','',null,
+ null,'[]'::jsonb,'#C6A667','#171717','modern_barber','barber','pro')
+on conflict(id) do nothing;
+
+insert into public.salon_builds(salon_id,flavor,application_id,bundle_id,app_display_name)
+values ('d11aa07e-4611-4fae-bf99-6439ef10bd16','authenticbarber','ba.nasadomena.authenticbarber',
+        'ba.nasadomena.authenticbarber','Authentic Barbershop')
+on conflict(salon_id) do nothing;
+
+insert into public.salon_settings(salon_id,buffer_minutes,slot_step_minutes,min_advance_booking_hours,
+max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice)
+values ('d11aa07e-4611-4fae-bf99-6439ef10bd16',5,15,2,30,12,3,false)
+on conflict(salon_id) do nothing;
+
+insert into public.services(id,salon_id,name,category,price,duration_minutes,image_url) values
+('10000000-0000-4000-8000-000000000201','d11aa07e-4611-4fae-bf99-6439ef10bd16','Muško šišanje','Šišanje',15,30,null),
+('10000000-0000-4000-8000-000000000202','d11aa07e-4611-4fae-bf99-6439ef10bd16','Fade','Šišanje',20,40,null),
+('10000000-0000-4000-8000-000000000203','d11aa07e-4611-4fae-bf99-6439ef10bd16','Šišanje makazama','Šišanje',18,40,null),
+('10000000-0000-4000-8000-000000000204','d11aa07e-4611-4fae-bf99-6439ef10bd16','Mašinica na jednu dužinu','Šišanje',10,15,null),
+('10000000-0000-4000-8000-000000000205','d11aa07e-4611-4fae-bf99-6439ef10bd16','Dječije šišanje','Šišanje',10,20,null),
+('10000000-0000-4000-8000-000000000206','d11aa07e-4611-4fae-bf99-6439ef10bd16','Uređivanje brade','Brada',10,20,null),
+('10000000-0000-4000-8000-000000000207','d11aa07e-4611-4fae-bf99-6439ef10bd16','Brijanje britvom uz topli peškir','Brada',15,30,null),
+('10000000-0000-4000-8000-000000000208','d11aa07e-4611-4fae-bf99-6439ef10bd16','Pranje i styling','Njega',8,15,null),
+('10000000-0000-4000-8000-000000000209','d11aa07e-4611-4fae-bf99-6439ef10bd16','Šišanje + brada','Paketi',25,50,null),
+('10000000-0000-4000-8000-000000000210','d11aa07e-4611-4fae-bf99-6439ef10bd16','Authentic paket (šišanje, brada, pranje, topli peškir)','Paketi',35,70,null)
+on conflict(id) do nothing;
+
+insert into public.employees(id,salon_id,name,role,bio,experience_years,image_url) values
+('20000000-0000-4000-8000-000000000201','d11aa07e-4611-4fae-bf99-6439ef10bd16','Jasko','Glavni barber',
+ 'Osnivač Authentica. Klasični rezovi, fade i brada britvom.',null,null)
+on conflict(id) do nothing;
+
+insert into public.employee_services(salon_id,employee_id,service_id)
+select e.salon_id,e.id,s.id from public.employees e join public.services s using(salon_id)
+where e.salon_id='d11aa07e-4611-4fae-bf99-6439ef10bd16'
+on conflict(salon_id,employee_id,service_id) do nothing;
+
+-- Pon–pet 09–16, subota 09–14, nedjelja i praznici zatvoreno (naljepnica na vratima).
+insert into public.working_hours(salon_id,day_of_week,start_time,end_time,is_closed)
+select 'd11aa07e-4611-4fae-bf99-6439ef10bd16',d,'09:00'::time,
+       case when d=6 then '14:00'::time else '16:00'::time end,d=7
+from generate_series(1,7) d
+on conflict(salon_id,employee_id,day_of_week) do nothing;
+
+insert into public.salon_policies(salon_id,sort_order,title,body) values
+('d11aa07e-4611-4fae-bf99-6439ef10bd16',20,'Otkazivanje',
+ 'Termin možete otkazati u aplikaciji najkasnije {minCancelHours} h prije početka. Kasno otkazivanje ostavlja prazan termin koji je mogao dobiti neko drugi.'),
+('d11aa07e-4611-4fae-bf99-6439ef10bd16',30,'Kašnjenje',
+ 'Ako kasnite, rez se može skratiti ili pomjeriti na prvi sljedeći slobodan termin, jer iza vas najčešće dolazi neko drugi.')
+on conflict do nothing;
+
+-- ---------------------------------------------------------------------------
 -- Osoblje: po jedan `salon_admin` za svaki demo salon.
 --
 -- Do taska 23 seed nije imao **nijednog** admina, pa se u admin aplikaciju nije imalo

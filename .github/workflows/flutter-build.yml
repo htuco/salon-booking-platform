@@ -102,6 +102,8 @@ jobs:
         include:
           - flavor: amkobarber
             salon_id: 63679dd5-6ac8-4061-b4d6-d3ef181c9baa
+          - flavor: authenticbarber
+            salon_id: d11aa07e-4611-4fae-bf99-6439ef10bd16
           - flavor: barberstudiovitez
             salon_id: 550e8400-e29b-41d4-a716-446655440000
           - flavor: beautystudiotravnik
@@ -175,6 +177,10 @@ jobs:
             salon_id: 63679dd5-6ac8-4061-b4d6-d3ef181c9baa
             bundle_id: ba.nasadomena.amkobarber
             display_name: Amko Barbershop
+          - flavor: authenticbarber
+            salon_id: d11aa07e-4611-4fae-bf99-6439ef10bd16
+            bundle_id: ba.nasadomena.authenticbarber
+            display_name: Authentic Barbershop
           - flavor: barberstudiovitez
             salon_id: 550e8400-e29b-41d4-a716-446655440000
             bundle_id: ba.nasadomena.barberstudiovitez
@@ -271,7 +277,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [amkobarber, barberstudiovitez, beautystudiotravnik, fiziozenica, masazamostar]
+        flavor: [amkobarber, authenticbarber, barberstudiovitez, beautystudiotravnik, fiziozenica, masazamostar]
     steps:
       - uses: actions/checkout@v5
 
