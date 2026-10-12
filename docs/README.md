@@ -133,6 +133,7 @@ Ne otvaraj ih ponovo bez novog podatka:
 | **Pismo i uloge izbora vežu se za temu**: `elegant_beauty` dobija Jost i brand boju za izbor, barber ostaje kakav jeste, blur modala ostaje svima (dopunjuje ADR-0019) | [ADR-0025](adr/0025-pismo-i-uloge-izbora-vezu-se-za-temu.md) |
 | **`health` dobija dvije svijetle teme** istog oblika — `warm_wellness` (masaža, nova) i `clinical_calm` (fizio, prepisana) — sa Newsreader + Public Sans i izborom brandom; bez darka, bez galerije, shell ostaje bazni (dopunjuje ADR-0025) | [ADR-0026](adr/0026-health-dobija-dvije-svijetle-teme-newsreader-public-sans.md) |
 | **Danas je radna površina iz `adminv2/danas`** (`6a`–`6m`): „Poništi" odgađa upis za 5 s, zahtjevi po vremenu termina, tekst bez padeža imena, kalendar u „Ostatak dana"; Melura dobija znak od dva bloka termina (dopunjuje ADR-0020) | [ADR-0027](adr/0027-danas-redizajn-odgodjeni-upis-i-znak-proizvoda.md) |
+| **iOS dobija nativni prelaz ekrana**: Cupertino klizanje i swipe nazad koji vuče ekran, kao Melura; Reduce Motion i ostale platforme ostaju na fadeu iz FE-201 | [ADR-0028](adr/0028-ios-dobija-nativni-prelaz-ekrana.md) |
 | Availability logika je na backendu, nikad u app-u | [01 §8.1](01-mvp-spec.md) |
 | Termin ide kao `pending`, salon ručno potvrđuje | [01 §18](01-mvp-spec.md) |
 | Branding je runtime gdje god može biti — promjena boje ne traži store review | [04 §1](04-flutter-tenant-factory.md) |

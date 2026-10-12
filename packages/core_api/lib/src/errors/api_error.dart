@@ -114,3 +114,13 @@ final class AuthRejectedError extends ApiError {
 final class RateLimitError extends ApiError {
   const RateLimitError(super.message, {super.cause});
 }
+
+/// Račun postoji, ali Auth server traži potvrdu emaila prije prve sesije — `signUp` je
+/// vratio korisnika bez sesije, ili prijava na takav račun vraća `email_not_confirmed`.
+///
+/// Vlastiti tip jer je akcija treća: ni „pogrešna lozinka" ([AuthRejectedError]) ni
+/// „ovaj način prijave ne postoji" ([ServerError]) — oba su ranije stizala korisniku na
+/// hostovanom projektu sa uključenim *Confirm email*, i oba su ga slala u pogrešnom smjeru.
+final class EmailNotConfirmedError extends ApiError {
+  const EmailNotConfirmedError(super.message, {super.cause});
+}

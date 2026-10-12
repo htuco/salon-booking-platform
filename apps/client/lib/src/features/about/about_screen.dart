@@ -105,7 +105,7 @@ class _Ucitan extends ConsumerWidget {
             child: AppButton(
               label: vertical.terms.bookCta,
               variant: AppButtonVariant.outline,
-              onPressed: () => context.go(ClientRoute.bookService.path),
+              onPressed: () => context.push(ClientRoute.bookService.path),
             ),
           ),
         ),

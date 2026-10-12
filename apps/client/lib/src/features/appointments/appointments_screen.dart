@@ -94,7 +94,17 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
                   : _Prazno(
                       poruka: l10n.appointmentsSignedOut,
                       akcija: l10n.bookingContinueEmail,
-                      onAkcija: () => context.go(ClientRoute.login.path),
+                      // Dugme kaže „Nastavi sa emailom", pa vodi pravo na email formu,
+                      // a ne na izbor providera sa istim dugmetom.
+                      onAkcija: () => context.push(
+                        Uri(
+                          path: ClientRoute.login.path,
+                          queryParameters: {
+                            'from': ClientRoute.appointments.path,
+                            'metod': AuthProvider.email.name,
+                          },
+                        ).toString(),
+                      ),
                     ),
             ),
           ],
@@ -202,7 +212,7 @@ class _Lista extends ConsumerWidget {
                 akcija: zatvoreni ? null : l10n.appointmentsBookCta,
                 onAkcija: zatvoreni
                     ? null
-                    : () => context.go(ClientRoute.bookService.path),
+                    : () => context.push(ClientRoute.bookService.path),
               ),
             ),
           ],
