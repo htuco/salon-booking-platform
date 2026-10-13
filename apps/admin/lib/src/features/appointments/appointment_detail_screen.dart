@@ -162,8 +162,10 @@ class _Detalj extends ConsumerWidget {
                   ],
                   // Obrazloženje otkazivanja piše onaj ko je otkazao i klijent ga vidi —
                   // vlasnik mora vidjeti isti tekst, inače ne zna šta je klijentu rečeno.
+                  // Istekli zahtjev nosi `cancel_reason = 'isteklo'`, oznaku za bazu, a ne
+                  // obrazloženje — pilula i red „Otkazao" već kažu šta se desilo.
                   if (termin.cancelReason case final razlog?
-                      when razlog.isNotEmpty) ...[
+                      when razlog.isNotEmpty && !jeIstekao(termin)) ...[
                     const SizedBox(height: 18),
                     _Naslov(
                       termin.status == AppointmentStatus.cancelled
@@ -216,7 +218,10 @@ class _Zaglavlje extends StatelessWidget {
         ),
         child: Align(
           alignment: AlignmentDirectional.centerStart,
-          child: AppointmentStatusPill(status: termin.status),
+          child: AppointmentStatusPill(
+            status: termin.status,
+            isteklo: jeIstekao(termin),
+          ),
         ),
       );
     }
@@ -261,7 +266,10 @@ class _Zaglavlje extends StatelessWidget {
                       textStyle: theme.textTheme.bodyLarge,
                     ),
                   ),
-                  AppointmentStatusPill(status: termin.status),
+                  AppointmentStatusPill(
+                    status: termin.status,
+                    isteklo: jeIstekao(termin),
+                  ),
                 ],
               ),
               const SizedBox(height: AdminSpacing.sm),
@@ -405,7 +413,15 @@ class _Podaci extends StatelessWidget {
         ].join(' · '),
       ),
       if (termin.cancelledBy case final ko? when ko.isNotEmpty)
-        ('Otkazao', ko == 'customer' ? 'klijent' : 'salon'),
+        (
+          'Otkazao',
+          switch (ko) {
+            'customer' => 'klijent',
+            // Task 64: niko nije otkazao — salon nije odgovorio do roka.
+            'system' => 'niko, salon nije odgovorio na vrijeme',
+            _ => 'salon',
+          },
+        ),
     ];
 
     return Card(

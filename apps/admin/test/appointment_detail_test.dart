@@ -184,6 +184,35 @@ void main() {
     expect(find.text('salon'), findsOneWidget);
   });
 
+  // Task 64: istek je `cancelled` + `system` u bazi, ali niko nije otkazao.
+  testWidgets('istekli zahtjev piše „Isteklo", ne „Otkazano"', (tester) async {
+    await _naSirini(
+      tester,
+      _telefon,
+      _ekran(
+        _termin(
+          status: AppointmentStatus.cancelled,
+          razlog: 'isteklo',
+          otkazao: 'system',
+        ),
+      ),
+    );
+
+    expect(find.text('Isteklo'), findsOneWidget);
+    expect(find.text('Otkazano'), findsNothing);
+
+    await tester.dragUntilVisible(
+      find.text('niko, salon nije odgovorio na vrijeme'),
+      find.byType(ListView),
+      const Offset(0, -80),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('niko, salon nije odgovorio na vrijeme'), findsOneWidget);
+    // `isteklo` je oznaka za bazu, ne obrazloženje koje je neko napisao.
+    expect(find.text('Razlog otkazivanja'), findsNothing);
+  });
+
   group('radnje', () {
     testWidgets('potvrđen termin nudi radnje iz `3n`', (tester) async {
       await _naSirini(tester, _telefon, _ekran(_termin()));

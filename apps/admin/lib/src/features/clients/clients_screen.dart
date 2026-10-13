@@ -9,6 +9,7 @@ import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/app_header.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
+import '../appointments/appointments_providers.dart';
 import '../appointments/status_pill.dart';
 import 'clients_providers.dart';
 import '../../core/widgets/admin_toast.dart';
@@ -1242,7 +1243,10 @@ class _RedIstorije extends StatelessWidget {
               // objasnila broj nedolazaka iznad.
               if (termin.status != AppointmentStatus.completed) ...[
                 const SizedBox(height: AdminSpacing.xs),
-                AppointmentStatusPill(status: termin.status),
+                AppointmentStatusPill(
+                  status: termin.status,
+                  isteklo: jeIstekao(termin),
+                ),
               ],
             ],
           ),
