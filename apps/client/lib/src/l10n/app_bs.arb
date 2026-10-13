@@ -537,6 +537,10 @@
   "@bookingConflict": {
     "description": "409 iz book_appointment — slot je otisao izmedu prikaza i potvrde. Ekran uz ovu poruku vraca korisnika na osvjezenu listu."
   },
+  "bookingTooManyPending": "Već imate zahtjeve koji čekaju potvrdu. Sačekajte odgovor salona ili otkažite jedan od njih.",
+  "@bookingTooManyPending": {
+    "description": "PT429 iz book_appointment (task 65) — klijent je dostigao granicu otvorenih zahtjeva u ovom salonu. Korisnik ostaje na koraku, izbor se ne gubi."
+  },
 
   "bookingLoginRequired": "Prijavite se da pošaljete zahtjev.",
   "@bookingLoginRequired": {

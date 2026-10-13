@@ -23,7 +23,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | # | Task | Zavisi od | Procjena |
 |---|---|---|---|
 | [64](64-istek-neodgovorenih-zahtjeva.md) | Istek neodgovorenih zahtjeva | — | 1 dan |
-| [65](65-limit-otvorenih-zahtjeva.md) | Limit otvorenih zahtjeva po klijentu (spam) | — | 0,5 dana |
+| [65](65-limit-otvorenih-zahtjeva.md) | Limit otvorenih zahtjeva po klijentu (spam) 🟡 | — | 0,5 dana |
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | — | 2 dana |
 | [66](66-registracija-ime-telefon-tos.md) | Registracija: ime, telefon i uslovi (checkbox) | — | 2 dana |
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | 66 | 0,5–1 dan |

@@ -118,6 +118,13 @@ ApiError _mapPostgrest(PostgrestException error) {
     return ConflictError('Termin je u međuvremenu zauzet', cause: error);
   }
 
+  // PT429: baza je odbila jer je pozivalac prešao svoju kvotu — previše otvorenih
+  // zahtjeva (`book_appointment`, task 65) ili prijava u danu (`report_content`). Akcija je
+  // ista kao kod Auth rate limita: čekati, ne „pokušaj ponovo" odmah.
+  if (code == 'PT429') {
+    return RateLimitError(error.message, cause: error);
+  }
+
   // PGRST116: "Results contain 0 rows" — `.single()` nad praznim rezultatom.
   // PT404: `book_appointment` kad usluga ne postoji ili nije aktivna.
   if (code == 'PGRST116' || code == 'PT404' || code == '404') {
@@ -218,6 +225,8 @@ extension ApiErrorDisplay on ApiError {
         when cause is PostgrestException &&
             (cause.code?.startsWith('PT') ?? false) =>
       message,
+    // Kvota iz baze (`PT429`) nosi rečenicu na bosanskom, kao i ostali `PT…` kodovi.
+    RateLimitError(:final cause) when cause is PostgrestException => message,
     // Storage poruke sastavlja `_mapStorage` na bosanskom (task 49).
     ServerError(:final cause) when cause is StorageException => message,
     // Auth poruke dolaze od Supabase Autha na engleskom; ekran prijave ih prevodi po
