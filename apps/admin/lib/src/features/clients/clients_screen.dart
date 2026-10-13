@@ -36,8 +36,10 @@ String inicijal(Customer klijent) {
 
 /// Telefon, ili ono što stoji umjesto njega.
 ///
-/// **Klijent bez broja nije greška.** Prijavljen korisnik ga nikad nije morao ostaviti, a
-/// anonimizacija ga briše. Prazno mjesto bi izgledalo kao da se podatak nije učitao.
+/// **Klijent bez broja nije greška.** Od taska 66 ga registracija traži, ali ostaju tri
+/// slučaja bez njega: nalog iz vremena prije taska, broj koji salon već ima na drugom
+/// klijentu (baza ga tada ne kopira, ADR-0030), i anonimizacija. Prazno mjesto bi
+/// izgledalo kao da se podatak nije učitao.
 String telefonKlijenta(Customer klijent) =>
     klijent.hasPhone ? klijent.phone!.trim() : 'Bez broja';
 

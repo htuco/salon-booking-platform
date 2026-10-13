@@ -79,6 +79,11 @@ ApiError _mapAuth(AuthException error) {
       error.message,
       cause: error,
     ),
+    // Task 66: do sada su oba padala u `_` i izlazila kao „ovaj način prijave nije
+    // dostupan", što je korisnika slalo na pogrešnu stranu.
+    'user_already_exists' ||
+    'email_exists' => AccountExistsError(error.message, cause: error),
+    'weak_password' => WeakPasswordError(error.message, cause: error),
     'otp_expired' ||
     'otp_disabled' ||
     'invalid_credentials' ||
@@ -236,6 +241,8 @@ extension ApiErrorDisplay on ApiError {
     AuthRejectedError() ||
     AuthCancelledError() ||
     EmailNotConfirmedError() ||
+    AccountExistsError() ||
+    WeakPasswordError() ||
     RateLimitError() => null,
   };
 }

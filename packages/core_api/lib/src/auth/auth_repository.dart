@@ -62,13 +62,21 @@ abstract interface class AuthRepository {
     required String password,
   });
 
-  /// Registracija email adresom i lozinkom.
+  /// Registracija email adresom i lozinkom, sa imenom, telefonom i prihvatanjem uslova
+  /// (task 66).
   ///
-  /// Demo Supabase projekat privremeno ima isključenu potvrdu emaila, pa uspješan poziv
-  /// mora odmah vratiti sesiju. Produkcijski confirmation tok je zasebna faza taska 27.
+  /// Ime, telefon i pristanak putuju kao metapodaci registracije: kad je potvrda emaila
+  /// uključena, sesije poslije `signUp`-a nema, pa RPC ne bi imao čime da ih upiše. Baza ih
+  /// prepisuje na identitet pri nastanku naloga (`sync_auth_identity`).
+  ///
+  /// Hostovani projekat danas ima isključenu potvrdu emaila, pa uspješan poziv mora odmah
+  /// vratiti sesiju. Potvrda kodom je task 81.
   Future<AuthSession> signUpWithPassword({
     required String email,
     required String password,
+    required String fullName,
+    required String phone,
+    required bool acceptedTerms,
   });
 
   Future<void> signOut();

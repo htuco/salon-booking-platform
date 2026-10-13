@@ -15,10 +15,10 @@ import 'auth_repository.dart';
 /// Task 12 je ostavio ugovor i konfiguraciju; ovo je prva implementacija
 /// ([task 13](../../../../../tasks/sprint-2/13-client-login-ekran.md)).
 ///
-/// Email koristi klasični `signUp`/`signInWithPassword`. Demo okruženje ne šalje email:
-/// confirmation je isključen, pa registracija mora odmah vratiti sesiju. Ako hostovani
-/// projekat još traži potvrdu, repozitorij to prijavi kao konfiguracijsku grešku umjesto
-/// da ekran obeća poruku koju demo ne šalje.
+/// Email koristi klasični `signUp`/`signInWithPassword`. Hostovani projekat danas ne šalje
+/// email: potvrda je isključena, pa registracija mora odmah vratiti sesiju. Ako projekat
+/// ipak traži potvrdu, repozitorij to prijavi kao [EmailNotConfirmedError] umjesto da ekran
+/// obeća poruku koja ne stiže. Potvrda kodom je task 81.
 ///
 /// ## Zašto se ne koristi `supabase.auth.currentUser` iznad ovog sloja
 ///
@@ -73,16 +73,30 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<AuthSession> signUpWithPassword({
     required String email,
     required String password,
+    required String fullName,
+    required String phone,
+    required bool acceptedTerms,
   }) => guard(() async {
-    final odgovor = await _auth.signUp(email: email.trim(), password: password);
+    final odgovor = await _auth.signUp(
+      email: email.trim(),
+      password: password,
+      // Ključevi su ugovor sa `sync_auth_identity` (migracija task 66). `terms_accepted`
+      // baza čita **samo pri nastanku naloga**, pa ga kasnija prijava ne može podmetnuti
+      // kao prihvatanje nove verzije.
+      data: {
+        'full_name': fullName.trim(),
+        'phone': phone.trim(),
+        'terms_accepted': acceptedTerms,
+      },
+    );
 
     final sesija = _sesija(odgovor.session);
     if (sesija == null) {
-      // `signUp` bez sesije znači da je confirmation uključen. To je valjan produkcijski
-      // odgovor, ali nije valjan za demo bez SMTP-a: korisnik bi ostao zaključan na
-      // računu kojem potvrda nikad neće stići.
+      // `signUp` bez sesije znači da je potvrda uključena. To je valjan produkcijski
+      // odgovor, ali ekran za kod još ne postoji (task 81): korisnik dobija poruku koja
+      // kaže da račun čeka potvrdu, umjesto praznog uspjeha.
       throw const EmailNotConfirmedError(
-        'Supabase traži potvrdu emaila. Za demo isključi Confirm email prije registracije.',
+        'Supabase traži potvrdu emaila; ekran za kod je task 81.',
       );
     }
     return sesija;

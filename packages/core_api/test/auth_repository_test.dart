@@ -93,17 +93,31 @@ void main() {
         () => auth.signUp(
           email: any(named: 'email'),
           password: any(named: 'password'),
+          data: any(named: 'data'),
         ),
       ).thenAnswer((_) async => AuthResponse(session: _session));
 
       final session = await repo.signUpWithPassword(
         email: 'novi@primjer.ba',
         password: 'Sigurna123',
+        fullName: ' Ana Anić ',
+        phone: ' 061 123 456 ',
+        acceptedTerms: true,
       );
 
       expect(session.email, 'gost@primjer.ba');
+      // Task 66: ključevi su ugovor sa `sync_auth_identity` — drugi ključ baza ne čita, i
+      // ime ili pristanak bi tiho nestali.
       verify(
-        () => auth.signUp(email: 'novi@primjer.ba', password: 'Sigurna123'),
+        () => auth.signUp(
+          email: 'novi@primjer.ba',
+          password: 'Sigurna123',
+          data: {
+            'full_name': 'Ana Anić',
+            'phone': '061 123 456',
+            'terms_accepted': true,
+          },
+        ),
       ).called(1);
     });
 
@@ -114,6 +128,7 @@ void main() {
         () => auth.signUp(
           email: any(named: 'email'),
           password: any(named: 'password'),
+          data: any(named: 'data'),
         ),
       ).thenAnswer((_) async => AuthResponse(user: _user));
 
@@ -121,12 +136,15 @@ void main() {
         repo.signUpWithPassword(
           email: 'novi@primjer.ba',
           password: 'Sigurna123',
+          fullName: 'Ana Anić',
+          phone: '061 123 456',
+          acceptedTerms: true,
         ),
         throwsA(
           isA<EmailNotConfirmedError>().having(
             (error) => error.message,
             'poruka',
-            contains('Confirm email'),
+            contains('potvrdu emaila'),
           ),
         ),
       );

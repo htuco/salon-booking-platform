@@ -19,8 +19,9 @@ import 'widgets/booking_step_scaffold.dart';
 /// ## Ovo je ekran prijave, ne ekran sažetka
 ///
 /// Handoff ga zove „Još jedan korak": kartica **„Čuvamo vam 14:30"** koja drži izbor na
-/// oku, pa tri načina prijave i pravna napomena. Nema polja za napomenu i **nema polja za
-/// telefon** (`docs/06 §3.1` — push zamjenjuje i poziv i SMS).
+/// oku, pa tri načina prijave i pravna napomena. Nema polja za napomenu ni za telefon:
+/// telefon se od taska 66 daje **jednom, na registraciji** (ili na „Dopuni profil" poslije
+/// Apple/Google prijave), a ne uz svaki termin (ADR-0029).
 ///
 /// `docs/06 §1.1`: cijeli flow je javan do ovog trenutka. Guard na `/book/*` bi značio da
 /// korisnik mora imati nalog da bi vidio cijene — odluka koja se ne otvara.
@@ -118,7 +119,7 @@ class DetailsStepScreen extends ConsumerWidget {
 
 /// Načini prijave iz `docs/06 §1.2`, redoslijedom koji propisuje `AuthProvider`.
 ///
-/// **Telefona nema i neće ga biti** (`docs/06 §3.1`). Lista dolazi iz
+/// Telefon nije način prijave nego polje profila (task 66, ADR-0029). Lista dolazi iz
 /// `visibleAuthProvidersProvider`, već filtrirana po platformi — Apple je na iOS-u prvi
 /// jer je obavezan kad postoji ijedan drugi social provider (`docs/06 §7.2`), a na
 /// Androidu ga nema uopšte.

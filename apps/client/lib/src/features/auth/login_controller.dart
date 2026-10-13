@@ -43,8 +43,10 @@ class LoginController extends AutoDisposeNotifier<LoginState> {
 
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
+  /// Email počinje **registracijom** (task 66). Novi korisnik je češći od postojećeg na
+  /// ovom ekranu, a do sada je do forme imao pet tapova: prijava, pa „Nemate račun?".
   void pocniEmail() {
-    state = state.kopija(phase: LoginPhase.signIn, ocistiGresku: true);
+    state = state.kopija(phase: LoginPhase.signUp, ocistiGresku: true);
   }
 
   void otvoriRegistraciju() {
@@ -75,13 +77,23 @@ class LoginController extends AutoDisposeNotifier<LoginState> {
     }
   }
 
-  /// Demo registracija bez confirmation emaila. Uspjeh mora odmah vratiti sesiju.
-  Future<AuthSession?> registrujEmail(String email, String password) async {
+  /// Registracija sa imenom, telefonom i prihvatanjem uslova (task 66). Hostovani projekat
+  /// nema potvrdu emaila, pa uspjeh odmah vraća sesiju.
+  Future<AuthSession?> registrujEmail({
+    required String email,
+    required String password,
+    required String fullName,
+    required String phone,
+    required bool acceptedTerms,
+  }) async {
     state = state.kopija(busy: true, ocistiGresku: true);
     try {
       final sesija = await _repository.signUpWithPassword(
         email: email.trim(),
         password: password,
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        acceptedTerms: acceptedTerms,
       );
       state = state.kopija(busy: false, ocistiGresku: true);
       return sesija;

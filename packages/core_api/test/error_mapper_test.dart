@@ -185,6 +185,8 @@ void main() {
       AuthRejectedError() => 'odbijeno',
       RateLimitError() => 'prečesto',
       EmailNotConfirmedError() => 'nepotvrđen',
+      AccountExistsError() => 'postoji',
+      WeakPasswordError() => 'slaba',
     };
 
     expect(describe(const NetworkError('x')), 'mreža');
@@ -193,6 +195,28 @@ void main() {
     expect(describe(const AuthRejectedError('x')), 'odbijeno');
     expect(describe(const RateLimitError('x')), 'prečesto');
     expect(describe(const EmailNotConfirmedError('x')), 'nepotvrđen');
+  });
+
+  // Task 66: oba su ranije izlazila kao ServerError → „ovaj način prijave nije dostupan".
+  test('user_already_exists i email_exists su AccountExistsError', () {
+    for (final kod in ['user_already_exists', 'email_exists']) {
+      final error = mapError(
+        AuthException('User already registered', statusCode: '422', code: kod),
+      );
+      expect(error, isA<AccountExistsError>(), reason: kod);
+      expect(error.displayMessage, isNull, reason: 'ekran prevodi po tipu');
+    }
+  });
+
+  test('weak_password je WeakPasswordError', () {
+    final error = mapError(
+      AuthException(
+        'Password is too weak',
+        statusCode: '422',
+        code: 'weak_password',
+      ),
+    );
+    expect(error, isA<WeakPasswordError>());
   });
 
   // Hostovani projekat sa uključenim *Confirm email*: lozinka je tačna, ali račun čeka

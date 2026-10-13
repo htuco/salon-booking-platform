@@ -32,6 +32,7 @@ export 'src/auth/auth_config.dart';
 export 'src/auth/auth_platform.dart';
 export 'src/auth/auth_provider.dart';
 export 'src/auth/auth_session.dart';
+export 'src/auth/client_profile.dart';
 export 'src/auth/staff_member.dart';
 export 'src/auth/staff_invite.dart';
 export 'src/catalog/appointment.dart';
