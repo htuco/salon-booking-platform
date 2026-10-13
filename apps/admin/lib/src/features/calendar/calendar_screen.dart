@@ -732,7 +732,7 @@ class _BlokTermina extends ConsumerWidget {
     final termin = stavka.termin!;
     final uToku = sada != null && terminUToku(termin, sada!);
     final ton = _tonTermina(context, termin.status, uToku: uToku);
-    final oznaka = uToku ? kOznakaUToku : statusOznaka(termin.status);
+    final oznaka = uToku ? kOznakaUToku : statusOznakaTermina(termin);
     final theme = Theme.of(context);
 
     return Padding(
@@ -1793,7 +1793,7 @@ class _SadrzajReda extends ConsumerWidget {
       button: true,
       label: oznakaTermina(
         termin,
-        status: uToku ? kOznakaUToku : statusOznaka(termin.status),
+        status: uToku ? kOznakaUToku : statusOznakaTermina(termin),
         usluga: opis.usluga,
         radnik: opis.majstor ?? red.radnik,
       ),

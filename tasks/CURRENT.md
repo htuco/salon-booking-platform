@@ -1,32 +1,36 @@
-# Trenutni task: 55 — Prerada admin dashboarda
+# Trenutni task: 64 — Istek neodgovorenih zahtjeva
 
-Puni task: [tasks/polishing/55-prerada-dashboarda.md](polishing/55-prerada-dashboarda.md) · učitan 2026-10-01
+Puni task: [tasks/zero-crisis/64-istek-neodgovorenih-zahtjeva.md](zero-crisis/64-istek-neodgovorenih-zahtjeva.md) · učitan 2026-10-13
 
 ## Status
 
-U toku (grana `feat/admin-danas`, 2026-10-01). Grana je otvorena na `feat/admin-toastovi`, jer
-Danas koristi toast iz taska 62 za „Poništi"; PR ide na `main` kad #123 uđe.
+U toku (grana `feat/istek-zahtjeva`, PR protiv `develop`-a, 2026-10-13). Kod je dokazan lokalno, a čeka
+deploy i pogled uživo.
 
 ## Ciljevi
 
-- [x] Dizajn prije koda: `prototype/adminv2/danas/` i ADR-0027
-- [x] Zahtjevi, „je li došao?", Sljedeći, brojke, zauzetost, raspored (lista i kalendar), panel na 2560
-- [x] Stanja `6f`–`6k`, odbijanje sa razlogom `6l`, „Poništi" `6m`
-- [x] Radnik nad istim ekranom; widget testovi za obje uloge; admin `flutter test` zelen
-- [x] Viđeno uživo na demo buildu (1440, 2560, 402) i na hostovanom (Amko, 1440)
-- [ ] Viđeno na hostovanom kao radnik i na telefonu
-- [ ] CI zelen, PR spojen
+- [x] `private.expire_pending()` + cron `expire-pending` svakih 5 min; `cancelled` / `system` / `isteklo`
+- [x] Push `expired` klijentu, jednom; salonu ništa
+- [x] Melura: „Isteklo" umjesto „Otkazano", „Otkazao: niko, salon nije odgovorio na vrijeme"
+- [x] pgTAP `027` (18) + mutacije; cijela Supabase suite i admin `flutter test` zeleni lokalno
+- [ ] CI zelen, PR spojen u `develop`
+- [ ] Hamza: `supabase db push` i `supabase functions deploy send-push` na hostovanom
+- [ ] Istekli zahtjev viđen uživo u Meluri i push na uređaju
 
 ## Napomene
 
-- Task 54 (uklanjanje „uskoro" dugmadi) formalno blokira 55, a nije počet. Ne dira Danas, pa je
-  55 išao prvi na zahtjev vlasnika proizvoda.
-- Melura znak (`apps/admin/assets/brand/`) i ikone su u istom PR-u; animacija učitavanja iz
-  istog jezika je task 63.
-- Admin demo sa `--dart-define=DEMO_SALON=amko` glumi Amko Barbershop.
-- Flutter 3.47.5 je na mašini (Homebrew). Web debug ide sa `--no-web-experimental-hot-reload`.
+- Istek je u SQL-u, ne u Edge Functionu — `supabase/functions/expire-pending/` je samo README.
+- `deno` je u `~/.deno/bin`, a nije u PATH-u: `export PATH="$HOME/.deno/bin:$PATH"` prije
+  `./tool/test_supabase.sh`. Edge runtime se na ovoj mašini ugasi poslije `supabase start`, pa
+  `rest_delete_account`, `rest_pozivi_osoblja` i `rest_ciscenje` traže `supabase functions serve`
+  u drugom terminalu.
 
 ## Istorija
+
+### 55 — Prerada admin dashboarda (premješten u `polishing/`, 2026-10-13)
+
+Danas, zahtjevi, raspored i panel viđeni uživo na demo buildu i na hostovanom (Amko, 1440).
+**Ostaje:** Danas kao radnik na hostovanom i na telefonu. V. `tasks/polishing/55-prerada-dashboarda.md`.
 
 ### Sprint 5 zatvoren, otvoreni `zero-crisis/` i `polishing/` (2026-10-12)
 

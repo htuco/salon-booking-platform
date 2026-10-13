@@ -304,6 +304,21 @@ String statusOznaka(AppointmentStatus status) => switch (status) {
   AppointmentStatus.unknown => 'Nepoznato',
 };
 
+/// Zahtjev na koji salon nije odgovorio do roka (task 64).
+///
+/// U bazi nije poseban status nego `cancelled` sa `cancelled_by = 'system'` — novi status bi
+/// morao znati svaki filter i constraint. Ekran ga ipak imenuje zasebno: „Otkazano" bi
+/// vlasniku reklo da je neko otkazao, a niko nije.
+bool jeIstekao(Appointment termin) =>
+    termin.status == AppointmentStatus.cancelled &&
+    termin.cancelledBy == 'system';
+
+const String kOznakaIsteklo = 'Isteklo';
+
+/// [statusOznaka] za konkretan termin — istekli zahtjev je „Isteklo", ne „Otkazano".
+String statusOznakaTermina(Appointment termin) =>
+    jeIstekao(termin) ? kOznakaIsteklo : statusOznaka(termin.status);
+
 /// Par boja koji status nosi — podloga i tekst na njoj.
 ///
 /// Stoji uz [statusOznaka], jer su to dvije polovine iste odluke: kako se status **zove** i

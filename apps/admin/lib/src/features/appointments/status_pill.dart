@@ -18,10 +18,15 @@ class AppointmentStatusPill extends StatelessWidget {
   const AppointmentStatusPill({
     required this.status,
     this.uToku = false,
+    this.isteklo = false,
     super.key,
   });
 
   final AppointmentStatus status;
+
+  /// Zahtjev koji je istekao bez odgovora salona — ton otkazanog, tekst „Isteklo"
+  /// (v. [jeIstekao]).
+  final bool isteklo;
 
   /// Termin koji **upravo traje** — puna akcentna pilula sa „U toku" (`3b`, `3k`).
   ///
@@ -67,7 +72,7 @@ class AppointmentStatusPill extends StatelessWidget {
       child: Text(
         // Jednina uz jedan termin („Potvrđeno"), za razliku od `statusLabela`, koja
         // imenuje grupu redova u filteru („Potvrđeni").
-        statusOznaka(status),
+        isteklo ? kOznakaIsteklo : statusOznaka(status),
         style: AdminText.statusLabel.copyWith(color: ton.foreground),
       ),
     );

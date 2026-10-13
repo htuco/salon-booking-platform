@@ -22,7 +22,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 
 | # | Task | Zavisi od | Procjena |
 |---|---|---|---|
-| [64](64-istek-neodgovorenih-zahtjeva.md) | Istek neodgovorenih zahtjeva | — | 1 dan |
+| [64](64-istek-neodgovorenih-zahtjeva.md) | Istek neodgovorenih zahtjeva 🟡 | — | 1 dan |
 | [65](65-limit-otvorenih-zahtjeva.md) | Limit otvorenih zahtjeva po klijentu (spam) | — | 0,5 dana |
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | — | 2 dana |
 | [66](66-registracija-ime-telefon-tos.md) | Registracija: ime, telefon i uslovi (checkbox) | — | 2 dana |
@@ -79,4 +79,11 @@ dok se čeka. C počinje čim postoje 74 i 76. D je zadnja i ide redom.
 
 ## Status
 
-Folder otvoren 2026-10-12. Nijedan task nije počet.
+Folder otvoren 2026-10-12.
+
+### 64 — Istek neodgovorenih zahtjeva 🟡 (2026-10-13)
+
+Grana `feat/istek-zahtjeva`. `private.expire_pending()` + cron `expire-pending` (5 min), push
+`expired` klijentu, Melura piše „Isteklo". pgTAP 818 i REST suite zeleni lokalno, admin 577 testova.
+**Ostaje:** deploy na hostovanom (Hamza: `supabase db push`, `functions deploy send-push`) i
+istekli zahtjev viđen uživo u Meluri i na uređaju.

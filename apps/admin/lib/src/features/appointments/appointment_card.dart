@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
 import '../../core/theme/theme.dart';
+import 'appointments_providers.dart';
 import 'status_pill.dart';
 
 /// Podaci koje kartica ne može izvesti iz samog termina.
@@ -122,7 +123,11 @@ class AppointmentCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AdminSpacing.sm),
-                    AppointmentStatusPill(status: termin.status, uToku: uToku),
+                    AppointmentStatusPill(
+                      status: termin.status,
+                      uToku: uToku,
+                      isteklo: jeIstekao(termin),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AdminSpacing.sm),

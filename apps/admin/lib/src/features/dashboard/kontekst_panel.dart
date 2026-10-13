@@ -110,7 +110,7 @@ class _Sadrzaj extends ConsumerWidget {
 
     final eyebrow = zahtjev
         ? ['Zahtjev', ?cekanje].join(' · ')
-        : 'Termin · ${statusOznaka(termin.status)}';
+        : 'Termin · ${statusOznakaTermina(termin)}';
 
     final hairline = BorderSide(
       color: boje.separator,
@@ -521,7 +521,10 @@ class StatusOznaka extends StatelessWidget {
       );
     }
 
-    return AppointmentStatusPill(status: termin.status);
+    return AppointmentStatusPill(
+      status: termin.status,
+      isteklo: jeIstekao(termin),
+    );
   }
 }
 

@@ -278,7 +278,7 @@ podsjetnici i ostali planirani poslovi još su stubovi:
 | Funkcija | Okidač | Šta radi |
 |---|---|---|
 | `send-push` | `pg_cron`, svake minute, kroz `private.dispatch_push` | FCM HTTP v1, preuzima i ažurira `notification_logs` |
-| `expire-pending` | `pg_cron`, ~15 min | `pending` stariji od `pendingExpiryHours` → `cancelled` |
+| `expire-pending` (nije Edge Function) | `pg_cron`, svakih 5 min, `private.expire_pending()` u SQL-u | `pending` kojem je prošao rok ili početak → `cancelled` / `system`, klijentu push `expired` (task 64) |
 | `send-reminders` | `pg_cron`, dnevno + po satu | D-1 i H-3 podsjetnici, provjerava log prije slanja |
 | `dental-recall` | `pg_cron`, sedmično | recall za dentalnu vertikalu |
 

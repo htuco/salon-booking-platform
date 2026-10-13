@@ -637,6 +637,24 @@ Nepostojeći i tuđi termin vraćaju **istu** grešku (`42501`).
 > pogrešna, ne kod. Asercija ide na **učinak** (red je netaknut). `insert` je druga priča: njega
 > hvata `with check` politike i on stvarno baca.
 
+### Istek zahtjeva — `private.expire_pending` (task 64)
+
+Jedini pisac `cancelled_by = 'system'`. `pg_cron` posao `expire-pending` (svakih 5 min) zove
+`private.expire_pending()`: `security definer`, `search_path = ''`, `execute` samo `service_role`
+— **ni klijent ni osoblje je ne mogu pozvati**, jer bi zatvarala zahtjeve svih salona odjednom.
+Nema argumenata ni tenant konteksta namjerno: prolazi kroz sve salone kao sistem.
+
+- Zatvara samo `pending` kojem je prošao `pending_expires_at` **ili** početak termina (u zoni iz
+  `salon_settings.timezone`). Rezultat je `cancelled` / `system` / `cancel_reason = 'isteklo'` —
+  bez novog statusa, pa exclusion constraint i `get_available_slots` slot oslobađaju sami.
+- Rok se ne preračunava iz trenutne postavke; vrijedi ono što je zapisano pri zahtjevu.
+- `for update skip locked` + ponovljen `status = 'pending'` u `update`-u: termin koji vlasnik
+  upravo potvrđuje se ne prepisuje.
+- Push klijentu je tip `expired` („Salon nije odgovorio na vrijeme"), ne `rejected`.
+
+Dokaz: `027_istek_zahtjeva.test.sql` (18 asercija). Mutacija bez uslova početka obara 2, a
+mutacija koja zatvara i `confirmed` obara 4.
+
 ## Admin akcije nad terminima — `set_appointment_status` i ručni unos
 
 Task 24. Ovaj odjeljak zatvara rupu koju je gornja lista godinu dana vodila kao otvorenu.
@@ -920,7 +938,8 @@ onda status: `source = 'app'` javlja salonu, i to `new_request` kad je termin `p
 `status = 'pending'`, pa je salon u `auto` modu ostajao bez ijedne obavijesti — otud i tip više,
 umjesto naslova „Novi zahtjev" nad zahtjevom koji ne postoji. Klijent u `auto` modu namjerno ne
 dobija push: tip `confirmed` visi o *promjeni* statusa, koje tamo nema. Ručni unos (`source =
-'manual'`) ne javlja salonu o njemu samom.
+'manual'`) ne javlja salonu o njemu samom. Istek zahtjeva (`pending` → `cancelled` sa
+`cancelled_by = 'system'`, task 64) javlja klijentu tip `expired`, a salonu ništa.
 
 Samo `service_role` smije pozvati
 `claim_push_notifications`; korisnik ne bira ni primaoca ni sadržaj slanja. Unique ključ i

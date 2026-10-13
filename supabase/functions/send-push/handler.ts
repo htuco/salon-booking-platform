@@ -76,6 +76,8 @@ export function messageFor(job: PushJob) {
     confirmed: "Zahtjev je potvrđen",
     rejected: "Zahtjev je odbijen",
     cancelled: "Otkazivanje",
+    // Ne „odbijen": salon nije rekao ne, nego nije odgovorio do roka (task 64).
+    expired: "Salon nije odgovorio na vrijeme",
   };
   if (!(job.type in titles)) throw new Error("unsupported_type");
   return {
