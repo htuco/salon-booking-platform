@@ -1,31 +1,71 @@
-# Trenutni task: 64 — Istek neodgovorenih zahtjeva
+# Trenutni task: 66 — Registracija: ime, telefon i uslovi u jednoj formi
 
-Puni task: [tasks/zero-crisis/64-istek-neodgovorenih-zahtjeva.md](zero-crisis/64-istek-neodgovorenih-zahtjeva.md) · učitan 2026-10-13
+Puni task: [tasks/zero-crisis/66-registracija-ime-telefon-tos.md](zero-crisis/66-registracija-ime-telefon-tos.md) · učitan 2026-10-13
 
 ## Status
 
-U toku (grana `feat/istek-zahtjeva`, PR protiv `develop`-a, 2026-10-13). Kod je dokazan lokalno, a čeka
-deploy i pogled uživo.
+U toku (grana `feat/registracija-profil`, PR protiv `develop`-a, 2026-10-13). Zavisnosti nema; 66
+blokira 58, 67, 81, 82, 84 i 87.
 
 ## Ciljevi
 
-- [x] `private.expire_pending()` + cron `expire-pending` svakih 5 min; `cancelled` / `system` / `isteklo`
-- [x] Push `expired` klijentu, jednom; salonu ništa
-- [x] Melura: „Isteklo" umjesto „Otkazano", „Otkazao: niko, salon nije odgovorio na vrijeme"
-- [x] pgTAP `027` (18) + mutacije; cijela Supabase suite i admin `flutter test` zeleni lokalno
-- [ ] CI zelen, PR spojen u `develop`
-- [ ] Hamza: `supabase db push` i `supabase functions deploy send-push` na hostovanom
-- [ ] Istekli zahtjev viđen uživo u Meluri i push na uređaju
+- [x] Odluke (Hamza, 2026-10-13): **eksplicitna verzija** uslova koju platforma podiže ručno (ispravka
+      zareza ne traži ponovno prihvatanje); identitet popunjava `customers` **samo kad je ime
+      „Klijent" ili prazno, a telefon prazan**. Salonova ispravka uvijek pobjeđuje.
+- [ ] Migracija: na `auth_identities` dodati telefon i prihvatanje uslova (verzija oba dokumenta +
+      vrijeme). `sync_auth_identity` čita `phone` iz `raw_user_meta_data` kao što danas čita
+      `full_name`.
+- [ ] Osvježavanje `customers` u **svakom** salonu tog identiteta, po pravilu iz odluke: ime samo
+      preko „Klijent"/praznog, telefon samo preko praznog. Uključuje postojeće „Klijent" redove.
+- [ ] Forma registracije u `login_screen.dart`: ime i prezime, telefon (bez SMS-a, sa razlogom ispod),
+      email, lozinka jednom + „prikaži lozinku". Otvara se na registraciji, a prijava je sekundarna.
+- [ ] Checkbox uslova sa linkovima na `/terms` i `/privacy` (ekran postoji:
+      `policy_document_screen.dart`), prazan po defaultu, bez njega dugme nije aktivno
+- [ ] „Dopuni profil" poslije prve Apple/Google prijave (telefon + checkbox; ime se ne traži ponovo,
+      Apple HIG). Taj ekran danas ne postoji.
+- [ ] `core_api`: `signUp(..., data: {full_name, phone})`; mapirani `user_already_exists` i
+      `weak_password` (danas „ovaj način prijave nije dostupan", `error_mapper.dart`); forma prijave
+      ne provjerava pravila registracije; uklonjen `loginSignUpHint` „ne šaljemo email potvrdu"
+- [ ] Melura: ime i telefon u listi klijenata i detalju termina (`clients_screen.dart` već ima
+      `imeKlijenta`/`telefonKlijenta`, pa je možda dovoljan pravi podatak)
+- [ ] pgTAP: osvježavanje imena i telefona po salonima, bez curenja u tuđi salon; widget testovi forme
+- [ ] Dokumenti: `docs/06` §3.1 prepisan (danas ima samo napomenu „Zamijenjeno"), `security.md`
+      (nove kolone), Data safety bilješka
+- [ ] Deploy migracije na hostovani (Hamza)
 
 ## Napomene
 
-- Istek je u SQL-u, ne u Edge Functionu — `supabase/functions/expire-pending/` je samo README.
-- `deno` je u `~/.deno/bin`, a nije u PATH-u: `export PATH="$HOME/.deno/bin:$PATH"` prije
-  `./tool/test_supabase.sh`. Edge runtime se na ovoj mašini ugasi poslije `supabase start`, pa
-  `rest_delete_account`, `rest_pozivi_osoblja` i `rest_ciscenje` traže `supabase functions serve`
-  u drugom terminalu.
+- **Odluke su već donesene** u [ADR-0029](../docs/adr/0029-opseg-do-lansiranja-zero-crisis.md):
+  telefon obavezan bez SMS-a, ime i prezime, **checkbox** (ne pasivna obavijest), prihvatanje se
+  bilježi sa verzijom. Istraživanje `docs/research/auth-krajnji-korisnik.md` §3 preporučuje obavijest
+  bez checkboxa, ali ADR je jači.
+- **Zamka iz taska:** ime i telefon su po identitetu, `customers` je po salonu. Salon A ne smije
+  vidjeti da isti čovjek ide u salon B (`docs/06` §4.3). Osvježavanje ide samo kroz identitet, a
+  nikad kroz čitanje tuđeg `customers` reda.
+- Apple ime stiže samo pri prvoj autorizaciji; `supabase_auth_repository.dart` ~237 ga već upisuje u
+  `full_name`. Potvrda emaila kodom je task 81, ne ovaj.
+- Edge runtime se na ovoj mašini ugasi poslije `supabase start`. Ako REST testovi sa Edge Function
+  padnu na `503`, `supabase stop` pa ponovo `./tool/test_supabase.sh`.
+- Projekat je linkovan na hostovani (`olggovhqwirxamggkwuf`).
 
 ## Istorija
+
+### 56 — Push podsjetnici D-1 i H-3 (odložen, 2026-10-13)
+
+Učitan pa vraćen: nema Android uređaja ni emulatora (treba API 36, arm64-v8a, Google Play image),
+a fale dvije odluke (kad ide D-1, jedan ili dva prekidača). Nalazi su u status bloku task fajla.
+
+### 64, 65 i 70 — istek, limit zahtjeva i istorija obavijesti (spojeno i deployano, 2026-10-13)
+
+[PR #133](https://github.com/htuco/salon-booking-platform/pull/133),
+[#134](https://github.com/htuco/salon-booking-platform/pull/134) i
+[#135](https://github.com/htuco/salon-booking-platform/pull/135) su spojeni u `develop`. Sve tri
+zajedno prolaze lokalno: 848 pgTAP, svi REST i Deno testovi, klijent 640, `core_api` 142.
+Na hostovanom su tri migracije i `send-push`, a stari logovi su označeni pročitanim. Prvi prolaz
+`expire-pending` (21:00) je `succeeded` i zatvorio je jedan stari `pending`.
+**Ostaje:**
+- uživo viđeni „Isteklo" u Meluri, poruka o punom limitu i Obavijesti na uređaju;
+- redovi 65 i 70 u `tasks/zero-crisis/README.md` i status blokovi u task fajlovima.
 
 ### 55 — Prerada admin dashboarda (premješten u `polishing/`, 2026-10-13)
 
