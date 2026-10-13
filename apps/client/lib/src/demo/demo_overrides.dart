@@ -19,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/env/app_env.dart';
 import '../features/booking/booking_flow_provider.dart';
 import '../features/booking/booking_submit_provider.dart';
+import '../features/notifications/notifications_provider.dart';
 
 /// Da li demo pokriva salon [salonId].
 bool imaDemoPodataka(String salonId) => _demoPodaci.containsKey(salonId);
@@ -96,6 +97,13 @@ List<Override> demoOverrides(AppEnv env, {bool prijavljen = true}) {
     currentCustomerIdProvider.overrideWith((ref) async => _demoKlijentId),
     myAppointmentsProvider.overrideWith(
       (ref) async => _mojiTermini(salonId, demo),
+    ),
+    // Task 70: Obavijesti sa dvije stavke; `markAllRead` u demou ne dira mrežu.
+    notificationRepositoryProvider.overrideWithValue(
+      const _DemoNotifications(),
+    ),
+    myNotificationsProvider.overrideWith(
+      (ref) async => prijavljen ? _mojeObavijesti(demo) : const [],
     ),
   ];
 }
@@ -823,3 +831,43 @@ final _fizioVertical = Vertical.fromJson(
   _healthPack,
   terminologyOverride: const {'businessSingular': 'Centar'},
 );
+
+/// Dvije obavijesti o demo terminu `demo-a1`: nova potvrda i jučerašnji podsjetnik.
+List<ClientNotification> _mojeObavijesti(_Demo demo) {
+  final sada = DateTime.now();
+  final datum = _demoDatum();
+  final usluga = demo.services.first.name;
+  final radnik = demo.employees.first.name;
+  return [
+    ClientNotification(
+      appointmentId: 'demo-a1',
+      type: 'confirmed',
+      createdAt: sada.subtract(const Duration(hours: 2)),
+      read: false,
+      date: datum,
+      startTime: const LocalTime(14, 0),
+      serviceName: usluga,
+      employeeName: radnik,
+    ),
+    ClientNotification(
+      appointmentId: 'demo-a1',
+      type: 'reminder_d1',
+      createdAt: sada.subtract(const Duration(days: 1, hours: 3)),
+      read: true,
+      date: datum,
+      startTime: const LocalTime(14, 0),
+      serviceName: usluga,
+      employeeName: radnik,
+    ),
+  ];
+}
+
+class _DemoNotifications implements NotificationRepository {
+  const _DemoNotifications();
+
+  @override
+  Future<List<ClientNotification>> mine({int limit = 50}) async => const [];
+
+  @override
+  Future<void> markAllRead() async {}
+}
