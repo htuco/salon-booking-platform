@@ -13,6 +13,7 @@ library;
 import 'package:client/main.dart';
 import 'package:client/src/core/env/app_env.dart';
 import 'package:client/src/features/legal/about_app_screen.dart';
+import 'package:client/src/features/notifications/notifications_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
@@ -72,6 +73,9 @@ Future<ProviderContainer> pumpEkran(
   AuthRepository? authRepository,
   ContentReportRepository? contentReportRepository,
 
+  /// Lista na `/notifications` (task 70). Prazna je prazno stanje.
+  List<ClientNotification> obavijesti = const [],
+
   /// Kad je zadana, galerija, ocjena i pravila bacaju ovu grešku (FE-501): greška mora
   /// izgledati drukčije od praznog stanja.
   Object? greskaIzvora,
@@ -125,6 +129,7 @@ Future<ProviderContainer> pumpEkran(
         (ref) async => greskaIzvora != null ? throw greskaIzvora : pravila,
       ),
       privacyPolicyProvider.overrideWith((ref) async => privatnost),
+      myNotificationsProvider.overrideWith((ref) async => obavijesti),
       salonSettingsProvider.overrideWith(
         (ref) async =>
             postavke ?? const SalonSettings(id: 's1', salonId: salonId),

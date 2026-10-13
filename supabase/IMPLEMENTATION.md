@@ -170,5 +170,7 @@ provjerava primaoca. Cron obrađuje red svake minute kroz Vault HMAC potpis; tra
 stoji u transportnim tabelama. `sent` znači FCM prihvat, ne dokaz prikaza na telefonu.
 `sending` i `failed` se ne ponavljaju automatski zbog mogućeg duplikata nakon timeouta.
 
-Runbook: `tasks/sprint-2/25-push-konfiguracija.md`. Lista klijentskih obavijesti ostaje prazna;
-ova promjena ne otvara `notification_logs` klijentima.
+Runbook: `tasks/sprint-2/25-push-konfiguracija.md`. Klijent ni danas nema direktan pristup
+`notification_logs`. Od taska 70 listu čita kroz `my_notifications(p_limit)`: jedna stavka po
+(termin, tip), samo termini njegovog identiteta i samo redovi poslani klijentskim uređajima. Uz
+to `mark_notifications_read()` puni `notification_logs.read_at`.

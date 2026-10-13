@@ -38,6 +38,7 @@ export 'src/catalog/appointment.dart';
 export 'src/catalog/appointment_status.dart';
 export 'src/catalog/available_slot.dart';
 export 'src/catalog/blocked_slot.dart';
+export 'src/catalog/client_notification.dart';
 export 'src/catalog/customer.dart';
 export 'src/catalog/employee.dart';
 export 'src/catalog/employee_service.dart';

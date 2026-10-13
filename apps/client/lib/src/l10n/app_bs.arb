@@ -967,8 +967,29 @@
   "@notificationsTitle": { "description": "Naslov ekrana /notifications (handoff 10-obavijesti.png)." },
 
   "notificationsEmpty": "Ovdje će stizati obavijesti o vašim terminima — prvo kad salon potvrdi ili odbije vaš zahtjev.",
-  "@notificationsEmpty": { "description": "Prazno stanje. Lista nema server-side izvor dok ne postoji task 25, pa ekran kaže šta se očekuje umjesto da glumi server koji ne postoji." },
+  "@notificationsEmpty": { "description": "Prazno stanje za korisnika bez ijedne obavijesti (ili neprijavljenog)." },
 
   "notificationsEmptyAction": "Moji termini",
-  "@notificationsEmptyAction": { "description": "Izlaz iz praznog stanja: status termina se do tada vidi na /appointments." }
+  "@notificationsEmptyAction": { "description": "Izlaz iz praznog stanja: status termina se vidi na /appointments." },
+
+  "notificationsToday": "Danas",
+  "@notificationsToday": { "description": "Prvi dio reda vremena na kartici obavijesti: „Danas · 09:12“." },
+  "notificationsYesterday": "Jučer",
+  "@notificationsYesterday": { "description": "Prvi dio reda vremena: „Jučer · 18:40“." },
+  "notificationTypeConfirmed": "Zahtjev je potvrđen",
+  "@notificationTypeConfirmed": { "description": "Naslov stavke tipa confirmed — ista rečenica kao push iz send-push. Bez riječi „termin“, koja zavisi od vertikale." },
+  "notificationTypeRejected": "Zahtjev je odbijen",
+  "@notificationTypeRejected": { "description": "Naslov stavke tipa rejected — salon je odbio zahtjev." },
+  "notificationTypeCancelled": "Salon je otkazao",
+  "@notificationTypeCancelled": { "description": "Naslov stavke tipa cancelled. Klijent vidi samo otkazivanje od salona; svoje otkazivanje ne dobija kao obavijest." },
+  "notificationTypeExpired": "Salon nije odgovorio na vrijeme",
+  "@notificationTypeExpired": { "description": "Naslov stavke tipa expired (task 64) — zahtjev je istekao bez odgovora." },
+  "notificationTypeReminder": "Podsjetnik",
+  "@notificationTypeReminder": { "description": "Naslov stavke tipa reminder_d1 i reminder_h3 (task 56)." },
+  "notificationTypeOther": "Obavijest",
+  "@notificationTypeOther": { "description": "Naslov za tip koji ova verzija app-e ne poznaje — baza dodaje tipove brže od store-a." },
+  "notificationBodyWhen": "{datum} u {vrijeme}",
+  "@notificationBodyWhen": { "description": "Kraj opisa obavijesti: „srijeda 20.05. u 14:30“.", "placeholders": { "datum": { "type": "String" }, "vrijeme": { "type": "String" } } },
+  "notificationUnread": "Novo",
+  "@notificationUnread": { "description": "Oznaka za čitač ekrana uz nepročitanu obavijest; vizuelno je razlika jača ivica kartice." }
 }

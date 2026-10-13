@@ -924,8 +924,18 @@ dobija push: tip `confirmed` visi o *promjeni* statusa, koje tamo nema. Ručni u
 
 Samo `service_role` smije pozvati
 `claim_push_notifications`; korisnik ne bira ni primaoca ni sadržaj slanja. Unique ključ i
-`FOR UPDATE SKIP LOCKED` sprečavaju ponovno preuzimanje istog događaja. Klijentski SELECT nad
-logovima nije uveden; `/notifications` je i dalje prazno stanje.
+`FOR UPDATE SKIP LOCKED` sprečavaju ponovno preuzimanje istog događaja.
+
+**Istorija obavijesti (task 70).** Klijent i dalje nema politiku ni direktan `select` nad
+`notification_logs`. Čita kroz `public.my_notifications(p_limit)` (`security definer`, samo
+`authenticated`): traži `is_client()` i salon iz `x-salon-id`, a vraća samo redove o terminima
+čiji je `auth_identity_id` pozivaočev (`owns_identity`) i koji su poslani uređaju **bez**
+`staff_user_id`. Red poslan salonu o klijentovom otkazivanju nije klijentova obavijest.
+Vlasništvo ide preko termina, ne uređaja, jer odjava briše identitet sa uređaja. Izlaz je jedna
+stavka po (termin, tip), sa snimkom usluge, radnika i vremena termina. `mark_notifications_read()`
+postavlja `read_at` nad istim skupom. Osoblje i anon dobijaju `42501`. Dokaz:
+`029_istorija_obavijesti.test.sql` (17). Mutacija bez `owns_identity`, bez filtera osoblja ili bez
+filtera salona obara po jednu aserciju.
 
 Cron čita Vault i šalje HMAC nad `send-push:<unix-sekunde>`, valjan 60 sekundi. **Trajna tajna
 ne ide kroz `pg_net`**: njegove objekte posjeduje `supabase_admin`, a lokalni `postgres` ne može
