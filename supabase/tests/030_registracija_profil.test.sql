@@ -69,8 +69,11 @@ set local request.jwt.claims = '{"sub":"f6000000-0000-4000-8000-000000000001","r
 set local role authenticated;
 select is((select (has_name, has_phone, terms_current) from public.client_profile_status()),
   (true, true, false), 'Status kaze da fali samo nova verzija uslova');
-select lives_ok($$ select public.complete_my_profile('+387 62 123 456', true) $$,
-  'Ponovno prihvatanje kroz Dopuni profil');
+select lives_ok($$ select public.complete_my_profile(null, true) $$,
+  'Ponovno prihvatanje kroz Dopuni profil, bez ponovnog unosa telefona');
+select is((select phone from public.auth_identities
+    where supabase_user_id = 'f6000000-0000-4000-8000-000000000001'),
+  '+387 62 123 456', 'Prazan telefon zadrzava postojeci');
 select is((select terms_current from public.client_profile_status()), true,
   'Poslije prihvatanja je verzija vazeca');
 reset role;
@@ -166,6 +169,8 @@ set local request.jwt.claims = '{"sub":"f6000000-0000-4000-8000-000000000003","r
 set local role authenticated;
 select throws_ok($$ select public.complete_my_profile('abc', true, 'Kolega') $$, 'PT400',
   'Unesite ispravan broj telefona', 'Neispravan telefon je PT400');
+select throws_ok($$ select public.complete_my_profile(null, true, 'Kolega') $$, 'PT400',
+  'Unesite ispravan broj telefona', 'Bez telefona i bez postojeceg je PT400');
 select throws_ok($$ select public.complete_my_profile('061 444 555', false, 'Kolega') $$, 'PT400',
   'Prihvatite Uslove korištenja i Politiku privatnosti', 'Bez checkboxa je PT400');
 select throws_ok($$ select public.complete_my_profile('061 444 555', true) $$, 'PT400',

@@ -306,7 +306,9 @@ comment on function public.client_profile_status() is
 
 -- **Popunjava, ne mijenja.** Ime se upisuje samo kad ga identitet nema (Apple ga daje samo pri
 -- prvoj autorizaciji, pa se moze izgubiti); izmjena profila je task 82. Telefon se upisuje
--- uvijek kad je ispravan — ovo je ekran na kojem ga korisnik i daje.
+-- kad je poslan — ovo je ekran na kojem ga korisnik i daje. **Prazan telefon zadrzava
+-- postojeci**: korisnik koji samo prihvata novu verziju uslova broj vec ima, a klijentska app
+-- ga ne zna (identitet joj ga ne vraca).
 create function public.complete_my_profile(
   p_phone text,
   p_accept_terms boolean,
@@ -329,6 +331,11 @@ begin
     raise exception 'Nije dozvoljeno' using errcode = '42501';
   end if;
 
+  -- Poslan a neispravan je greska; neposlan pada na postojeci, a bez postojeceg je greska.
+  if v_phone is null and nullif(btrim(coalesce(p_phone, '')), '') is not null then
+    raise exception 'Unesite ispravan broj telefona' using errcode = 'PT400';
+  end if;
+  v_phone := coalesce(v_phone, v_identity.phone);
   if v_phone is null then
     raise exception 'Unesite ispravan broj telefona' using errcode = 'PT400';
   end if;
