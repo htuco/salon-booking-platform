@@ -46,7 +46,7 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   services, employees, mappings, schedules, appointments, blocked slots or booking settings; the
   client then re-runs `get_available_slots`. Appointment rows remain private.
 - Admins read per-salon customers/appointments. Global auth_identities rows cannot be read by staff JWTs. No API lists salons for an identity.
-- Supabase Auth insert/update automatically upserts auth_identities. Account deletion/anonymization and booking/customer RPCs belong to subsequent migrations.
+- Supabase Auth insert/update automatically upserts auth_identities (od taska 66 i telefon te prihvatanje uslova pri registraciji, v. „Profil klijenta i uslovi").
 - Composite tenant foreign keys prevent mixing an employee/service/customer/device from another salon, even when a tenant ID is present in a forged payload.
 - Client appointment writes go through `public.book_appointment`: it re-validates the slot, assigns an employee, and raises `PT409` on conflict. Task 24 revoked direct admin insert/update. `ensure_customer` validates customer upsert; task 25 adds validated device registration/unregistration.
 - `book_appointment` decides the new row's `status` from `salon_settings.booking_mode` (task 37). `manual` -> `pending` plus `pending_expires_at = now() + pending_expiry_hours`; `auto` -> `confirmed` with `pending_expires_at` null. A missing `salon_settings` row falls back to `manual`. An admin caller is always `confirmed` regardless of the setting, because a salon does not wait for its own answer. **`source` is independent of that**: a client booking stays `source = 'app'` in both modes, and only a salon-entered appointment is `'manual'` — the two columns answer different questions. Switching the mode never touches appointments that already exist.
@@ -97,6 +97,27 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   `employee_id=null` daje NULL ime. Postojeće termine migracija popunjava trenutnim imenom.
 - Raspored ostaje ponavljajući `working_hours`, radnikov red nadjačava salonski. Task 33
   prikazuje raspored; uređivanje radnog vremena i blokada je task 34 (v. ispod).
+
+## Profil klijenta i uslovi (task 66, ADR-0030)
+
+- `auth_identities` dobija `phone`, `terms_version`, `privacy_version` i `terms_accepted_at`.
+  Važeća verzija je `public.legal_versions()` → `(terms, privacy)`, konstanta koja se podiže
+  **novom migracijom**; poziva je i `anon`.
+- Registracija šalje `signUp(data: {full_name, phone, terms_accepted: true})`.
+  `sync_auth_identity` upisuje telefon (`private.clean_phone`: 6–15 cifara, inače `NULL`, nikad
+  greška), a prihvatanje **samo pri `INSERT`-u**: kolone uslova nisu u `do update set` listi, pa
+  prijava sa starim metapodatkom ne prihvata novu verziju.
+- `client_profile_status()` → `(has_name, has_phone, terms_current)` i
+  `complete_my_profile(phone, accept_terms, name)` su po identitetu, bez `x-salon-id`; samo
+  klijent (`42501` za osoblje i anon). `complete_my_profile`: `null` telefon zadržava postojeći,
+  ime se upisuje samo kad ga identitet nema, bez pristanka ili sa neispravnim unosom `PT400`.
+- Trigger nad `auth_identities` (insert, i update kad se ime ili telefon promijene) popunjava
+  `customers` i denormalizovane `appointments.customer_name/phone` u **svakom** salonu tog
+  identiteta: ime samo preko `'Klijent'`/praznog, telefon samo preko `NULL`, i telefon se preskače
+  kad ga u tom salonu po ciframa već nosi drugi klijent (`unique(salon_id, phone)`).
+  `ensure_customer` novom redu daje telefon identiteta po istom pravilu.
+- `delete_my_account` briše i `auth_identities.phone`; verzija i vrijeme prihvatanja ostaju kao
+  zapis o pristanku.
 
 ## Moj profil (task 61)
 

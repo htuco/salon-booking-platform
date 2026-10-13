@@ -434,6 +434,7 @@ servira i tu stranicu.
 | Booking — podaci | `/book/details` | Must |
 | Booking — potvrda | `/book/success` | Must |
 | **Login (Apple/Google/Email)** | `/auth/login` | Must |
+| Dopuni profil (telefon, uslovi — task 66) | `/auth/complete-profile` | Must |
 | **Moj račun + brisanje računa** | `/account` | Must |
 | Moji termini | `/appointments` | Must |
 | Detalji termina + otkazivanje | `/appointments/:id` | Should |

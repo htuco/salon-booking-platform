@@ -4,34 +4,23 @@ Puni task: [tasks/zero-crisis/66-registracija-ime-telefon-tos.md](zero-crisis/66
 
 ## Status
 
-U toku (grana `feat/registracija-profil`, PR protiv `develop`-a, 2026-10-13). Zavisnosti nema; 66
-blokira 58, 67, 81, 82, 84 i 87.
+U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
+2026-10-13). Kod i dokaz su gotovi; čeka CI, merge i deploy. 66 blokira 58, 67, 81, 82, 84 i 87.
 
 ## Ciljevi
 
-- [x] Odluke (Hamza, 2026-10-13): **eksplicitna verzija** uslova koju platforma podiže ručno (ispravka
-      zareza ne traži ponovno prihvatanje); identitet popunjava `customers` **samo kad je ime
-      „Klijent" ili prazno, a telefon prazan**. Salonova ispravka uvijek pobjeđuje.
-- [ ] Migracija: na `auth_identities` dodati telefon i prihvatanje uslova (verzija oba dokumenta +
-      vrijeme). `sync_auth_identity` čita `phone` iz `raw_user_meta_data` kao što danas čita
-      `full_name`.
-- [ ] Osvježavanje `customers` u **svakom** salonu tog identiteta, po pravilu iz odluke: ime samo
-      preko „Klijent"/praznog, telefon samo preko praznog. Uključuje postojeće „Klijent" redove.
-- [ ] Forma registracije u `login_screen.dart`: ime i prezime, telefon (bez SMS-a, sa razlogom ispod),
-      email, lozinka jednom + „prikaži lozinku". Otvara se na registraciji, a prijava je sekundarna.
-- [ ] Checkbox uslova sa linkovima na `/terms` i `/privacy` (ekran postoji:
-      `policy_document_screen.dart`), prazan po defaultu, bez njega dugme nije aktivno
-- [ ] „Dopuni profil" poslije prve Apple/Google prijave (telefon + checkbox; ime se ne traži ponovo,
-      Apple HIG). Taj ekran danas ne postoji.
-- [ ] `core_api`: `signUp(..., data: {full_name, phone})`; mapirani `user_already_exists` i
-      `weak_password` (danas „ovaj način prijave nije dostupan", `error_mapper.dart`); forma prijave
-      ne provjerava pravila registracije; uklonjen `loginSignUpHint` „ne šaljemo email potvrdu"
-- [ ] Melura: ime i telefon u listi klijenata i detalju termina (`clients_screen.dart` već ima
-      `imeKlijenta`/`telefonKlijenta`, pa je možda dovoljan pravi podatak)
-- [ ] pgTAP: osvježavanje imena i telefona po salonima, bez curenja u tuđi salon; widget testovi forme
-- [ ] Dokumenti: `docs/06` §3.1 prepisan (danas ima samo napomenu „Zamijenjeno"), `security.md`
-      (nove kolone), Data safety bilješka
-- [ ] Deploy migracije na hostovani (Hamza)
+- [x] Odluke (Hamza, 2026-10-13): eksplicitna verzija uslova, a profil adresar samo popunjava —
+      [ADR-0030](../docs/adr/0030-verzija-uslova-i-profil-popunjava-adresar.md)
+- [x] Migracija `20261013160000_registracija_profil` + pgTAP `030` (pet mutacija ga obara)
+- [x] Registracija (ime, telefon, email, lozinka jednom, checkbox), prijava bez pravila registracije,
+      `AccountExistsError` i `WeakPasswordError`, bez demo teksta
+- [x] „Dopuni profil" (`/auth/complete-profile`) poslije prijave kad profilu nešto fali
+- [x] Dokumenti: ADR-0030, `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `docs/06` §3.1 i
+      §8.3 (Data safety), `docs/01` §12, `docs/README.md`
+- [x] Uživo: registracija → Melura prikazuje ime i telefon; nalog bez profila → „Dopuni profil"
+- [ ] CI zelen, PR #136 spojen u `develop`
+- [ ] Deploy (Hamza): `supabase db push`; provjera `select * from public.legal_versions()` → `1, 1`
+- [ ] „Dopuni profil" poslije prave Apple i Google prijave na uređaju
 
 ## Napomene
 

@@ -89,6 +89,14 @@ Spojen ([PR #133](https://github.com/htuco/salon-booking-platform/pull/133)) i d
 2026-10-13: migracija i `send-push` na hostovanom, a prvi prolaz `expire-pending` je `succeeded`.
 **Ostaje:** istekli zahtjev viđen uživo u Meluri i na uređaju.
 
+### 66 — Registracija: ime, telefon i uslovi 🟡 (2026-10-13)
+
+Grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
+ADR-0030. Registracija sa imenom, telefonom i checkboxom; „Dopuni profil" poslije Apple/Google i za
+novu verziju uslova; profil popunjava adresar svakog salona. pgTAP 880, klijent 661, admin 577;
+uživo: Melura prikazuje ime i telefon novog klijenta. **Ostaje:** CI, merge, `supabase db push`,
+„Dopuni profil" poslije prave Apple/Google prijave na uređaju.
+
 ### 56 — Push podsjetnici D-1 i H-3, odložen (2026-10-13)
 
 Nema Android uređaja ni emulatora za stavku „uživo". Na ovom Macu treba emulator API 36, arm64-v8a,
