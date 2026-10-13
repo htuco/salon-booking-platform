@@ -230,6 +230,15 @@ prevodi, kod u tijelu odgovora ne. `mapError` zato mapira oba (v. `error_mapper.
 samo `409`, konflikt bi ispao `ServerError` i korisnik bi na zauzet termin dobio generičku grešku
 umjesto osvježene liste. Isto vrijedi za `PT404` iz iste funkcije.
 
+**Limit otvorenih zahtjeva (task 65).** Klijent u `manual` modu može imati najviše
+`salon_settings.max_pending_per_customer` (default 2, `check` 1–20) `pending` zahtjeva **koji još
+vrijede** u tom salonu; sljedeći pada sa `PT429` („Već imate zahtjeve koji čekaju potvrdu"), a
+`mapError` ga daje kao `RateLimitError`. Brojač je po `customer_id`, dakle po salonu. Admin unos i
+`auto` mod se ne broje. Red klijenta se zaključava (`for update`) prije brojanja, pa dva
+istovremena poziva ne prođu oba. `p_note` je najviše 500 znakova (`PT400`). Dokaz:
+`028_limit_otvorenih_zahtjeva.test.sql` (13 asercija); bez limita pada 4, sa brojanjem potvrđenih 2,
+sa limitom i za admina 1.
+
 `get_available_slots` i `get_available_dates` su takođe `security definer` jer čitaju
 `appointments` i `blocked_slots`, koje `anon` ne smije vidjeti. Izlaz su samo izvedena slobodna
 vremena — nijedan podatak o klijentu. Pregled slobodnih termina zato ne traži prijavu, a

@@ -100,6 +100,7 @@ class DetailsStepScreen extends ConsumerWidget {
     final poruka = switch (greska) {
       ConflictError() => l10n.bookingConflict,
       NetworkError() => l10n.noConnection,
+      RateLimitError() => l10n.bookingTooManyPending,
       _ => l10n.genericError,
     };
 

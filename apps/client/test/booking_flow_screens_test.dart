@@ -397,6 +397,51 @@ void main() {
       container.dispose();
     });
 
+    testWidgets('pun brojač zahtjeva: poruka, a korisnik ostaje na koraku', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubPunBrojac();
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        ruta: ClientRoute.bookDetails.path,
+        customerId: _customerId,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
+      );
+
+      await tester.pump();
+      await tester.tap(find.text('Pošalji zahtjev'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text(
+          'Već imate zahtjeve koji čekaju potvrdu. Sačekajte odgovor salona '
+          'ili otkažite jedan od njih.',
+        ),
+        findsOneWidget,
+      );
+      await tester.pumpAndSettle();
+
+      // Termin je slobodan — problem nije izbor, pa se ni ne briše.
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        ClientRoute.bookDetails.path,
+      );
+      expect(
+        container.read(bookingFlowProvider).startTime,
+        const LocalTime(9, 0),
+      );
+
+      container.dispose();
+    });
+
     testWidgets(
       'uspjeh salje registrovani devices.id i vodi na success ekran',
       (tester) async {
@@ -662,6 +707,23 @@ class _MockBooking extends Mock implements BookingRepository {
         deviceId: any(named: 'deviceId'),
       ),
     ).thenThrow(const ConflictError('slot je zauzet'));
+  }
+
+  /// Task 65: `book_appointment` diže `PT429` kad klijent već ima pun brojač otvorenih
+  /// zahtjeva; `core_api` to mapira u `RateLimitError`.
+  void stubPunBrojac() {
+    when(
+      () => book(
+        salonId: any(named: 'salonId'),
+        customerId: any(named: 'customerId'),
+        serviceId: any(named: 'serviceId'),
+        date: any(named: 'date'),
+        startTime: any(named: 'startTime'),
+        employeeId: any(named: 'employeeId'),
+        note: any(named: 'note'),
+        deviceId: any(named: 'deviceId'),
+      ),
+    ).thenThrow(const RateLimitError('Već imate zahtjeve koji čekaju potvrdu'));
   }
 }
 

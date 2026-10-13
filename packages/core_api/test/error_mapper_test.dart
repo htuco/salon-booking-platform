@@ -57,6 +57,20 @@ void main() {
       expect(error, isA<ConflictError>());
     });
 
+    test('PT429 (pun brojac zahtjeva) je RateLimit sa porukom iz baze', () {
+      // Task 65: `book_appointment` odbija treći otvoreni zahtjev. Kao ServerError bi ga
+      // korak 4 prikazao kao „nešto nije u redu", a korisnik bi pokušavao ponovo.
+      final error = mapError(
+        const PostgrestException(
+          message: 'Već imate zahtjeve koji čekaju potvrdu',
+          code: 'PT429',
+        ),
+      );
+
+      expect(error, isA<RateLimitError>());
+      expect(error.displayMessage, 'Već imate zahtjeve koji čekaju potvrdu');
+    });
+
     test('PT404 (usluga ne postoji ili nije aktivna) je NotFound', () {
       final error = mapError(
         const PostgrestException(
