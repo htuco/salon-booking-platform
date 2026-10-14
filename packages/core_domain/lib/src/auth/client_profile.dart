@@ -67,3 +67,53 @@ bool isValidFullName(String unos) {
   final v = unos.trim();
   return v.isNotEmpty && v.length <= 120;
 }
+
+/// Email kakav forma pušta do servera: lokalni dio, `@`, domena sa bar jednom tačkom i
+/// vršnim dijelom od 2+ slova. Bez razmaka, bez dvije tačke zaredom, bez tačke na rubu.
+///
+/// Auth server ostaje izvor istine; ovo hvata tipfelere („ana@gmail", „ana@@x.ba",
+/// „ana@gmail..com") prije mreže, jer server na njih vraća grešku koja ne kaže šta je krivo.
+bool isValidEmail(String unos) {
+  final v = unos.trim();
+  if (v.length > 254 || v.contains('..')) return false;
+  return RegExp(
+    r'^[A-Za-z0-9!#$%&*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&*+/=?^_`{|}~-]+)*'
+    r'@[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*'
+    r'\.[A-Za-z]{2,}$',
+  ).hasMatch(v);
+}
+
+/// Pozivni broj države za polje telefona. Prvi u [phoneCountryCodes] je podrazumijevani.
+typedef PhoneCountryCode = ({String code, String country});
+
+/// Države iz kojih klijenti realno dolaze: region, pa dijaspora. Lista je kratka namjerno
+/// — padajući meni od 200 država na telefonu je gori od kucanja `+`.
+const List<PhoneCountryCode> phoneCountryCodes = [
+  (code: '+387', country: 'BiH'),
+  (code: '+385', country: 'Hrvatska'),
+  (code: '+381', country: 'Srbija'),
+  (code: '+382', country: 'Crna Gora'),
+  (code: '+386', country: 'Slovenija'),
+  (code: '+389', country: 'Sjeverna Makedonija'),
+  (code: '+49', country: 'Njemačka'),
+  (code: '+43', country: 'Austrija'),
+  (code: '+41', country: 'Švicarska'),
+  (code: '+46', country: 'Švedska'),
+];
+
+/// Broj **bez** pozivnog: „061 123 456", „61/123-456". Vodeća nula je dozvoljena jer je
+/// tako ljudi pišu lokalno; poslije nje broj ne počinje nulom i ima 6–12 cifara.
+bool isValidNationalNumber(String unos) {
+  final cifre = unos.trim().replaceAll(RegExp(r'[\s/().-]'), '');
+  return RegExp(r'^0?[1-9][0-9]{5,11}$').hasMatch(cifre);
+}
+
+/// Pozivni + broj u zapis koji ide u bazu: „+387 61 123 456". Vodeća nula lokalnog zapisa
+/// otpada, a razmaci koje je korisnik napisao ostaju — salon broj čita onako kako ga je
+/// klijent grupisao. Rezultat zadovoljava [isValidPhone] (i `private.clean_phone`).
+String composePhone(String pozivni, String broj) {
+  var b = broj.trim().replaceAll(RegExp(r'[/().-]'), ' ');
+  b = b.replaceAll(RegExp(r'\s+'), ' ');
+  if (b.startsWith('0')) b = b.substring(1).trimLeft();
+  return '$pozivni $b';
+}

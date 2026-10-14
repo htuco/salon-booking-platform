@@ -76,4 +76,67 @@ void main() {
       expect(isValidFullName(' Ana Anić '), isTrue);
     });
   });
+
+  group('isValidEmail', () {
+    test('prihvata uobičajene adrese', () {
+      for (final email in [
+        'ana@gmail.com',
+        'ana.anic+salon@primjer.co.ba',
+        'A_B-c@sub.domena.ba',
+      ]) {
+        expect(isValidEmail(email), isTrue, reason: email);
+      }
+    });
+
+    test('odbija tipfelere koje server ne objašnjava', () {
+      for (final email in [
+        'ana@gmail',
+        'ana@@gmail.com',
+        'ana@gmail..com',
+        '.ana@gmail.com',
+        'ana @gmail.com',
+        'ana@-gmail.com',
+        'ana@gmail.c',
+        '@gmail.com',
+        'ana',
+      ]) {
+        expect(isValidEmail(email), isFalse, reason: email);
+      }
+    });
+  });
+
+  group('broj uz pozivni', () {
+    test('lokalni zapis sa i bez nule je ispravan', () {
+      for (final broj in [
+        '061 123 456',
+        '61 123 456',
+        '61/123-456',
+        '033 123 456',
+      ]) {
+        expect(isValidNationalNumber(broj), isTrue, reason: broj);
+      }
+    });
+
+    test('slova, prekratak, predug i dvije nule nisu broj', () {
+      for (final broj in [
+        '',
+        '061 abc',
+        '12345',
+        '0061 123 456',
+        '1234567890123',
+      ]) {
+        expect(isValidNationalNumber(broj), isFalse, reason: broj);
+      }
+    });
+
+    test(
+      'composePhone skida vodeću nulu, čuva grupisanje i prolazi isValidPhone',
+      () {
+        expect(composePhone('+387', '061 123 456'), '+387 61 123 456');
+        expect(composePhone('+387', '61/123-456'), '+387 61 123 456');
+        expect(composePhone('+49', '0151 2345678'), '+49 151 2345678');
+        expect(isValidPhone(composePhone('+387', '061 123 456')), isTrue);
+      },
+    );
+  });
 }

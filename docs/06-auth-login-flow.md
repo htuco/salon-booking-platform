@@ -182,8 +182,10 @@ mijenja. Zato se traži jednom, na računu, a ne uz svaki termin.
 
 Pravila:
 
-- **Telefon bez SMS verifikacije.** Ispod polja piše zašto ga salon treba. Format se ne mijenja —
-  salon zove broj onako kako ga je klijent napisao; baza prihvata 6–15 cifara.
+- **Telefon bez SMS verifikacije.** Ispod polja piše zašto ga salon treba. Pozivni broj se bira
+  (podrazumijevano **+387**, uz region i dijasporu), a broj se kuca lokalno („061 123 456"). Polje
+  ne pušta slova; vodeća nula otpada, a grupisanje koje je klijent napisao ostaje — u bazu ide
+  „+387 61 123 456". Baza nezavisno prihvata 6–15 cifara.
 - **Checkbox je prazan po defaultu**, sa linkovima na Uslove korištenja i Politiku privatnosti, i
   bez njega dugme nije aktivno.
 - **Prihvatanje se bilježi na identitetu**: verzija oba dokumenta i vrijeme. Verzija je

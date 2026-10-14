@@ -652,13 +652,19 @@
   "loginPhoneLabel": "Broj telefona",
   "@loginPhoneLabel": { "description": "Labela telefona na registraciji i na „Dopuni profil\" (task 66)." },
 
+  "loginPhoneCountryLabel": "Pozivni",
+  "@loginPhoneCountryLabel": { "description": "Labela izbora pozivnog broja države uz telefon (task 66). Podrazumijevano +387." },
+
+  "loginPhoneHint": "61 123 456",
+  "@loginPhoneHint": { "description": "Primjer broja bez pozivnog; vodeća nula je dozvoljena." },
+
   "loginPhoneHelper": "Salon vas zove samo ako se termin mijenja. Ne šaljemo SMS.",
   "@loginPhoneHelper": { "description": "Zašto salon treba telefon, ispod polja. Telefon se ne verifikuje SMS-om (ADR-0029)." },
 
   "loginInvalidName": "Unesite ime i prezime.",
   "@loginInvalidName": { "description": "Validacija imena (1–120 znakova, isto kao private.clean_name)." },
 
-  "loginInvalidPhone": "Unesite ispravan broj telefona.",
+  "loginInvalidPhone": "Unesite broj bez pozivnog, npr. 61 123 456.",
   "@loginInvalidPhone": { "description": "Validacija telefona (6–15 cifara, isto kao private.clean_phone)." },
 
   "loginEmptyPassword": "Unesite lozinku.",

@@ -112,9 +112,10 @@ void main() {
 
         expect(auth.brojRegistracija, 1);
         expect(auth.zadnjiEmail, 'novi@primjer.ba');
+        // Pozivni +387 je podrazumijevani, a vodeća nula lokalnog zapisa otpada.
         expect(auth.zadnjaRegistracija, (
           fullName: 'Ana Anić',
-          phone: '061 123 456',
+          phone: '+387 61 123 456',
           acceptedTerms: true,
         ));
         expect(find.byType(DetailsStepScreen), findsOneWidget);
@@ -143,6 +144,36 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(auth.brojRegistracija, 0);
+      container.dispose();
+    });
+
+    testWidgets('izabrani pozivni ide uz broj, a slova ne ulaze u polje', (
+      tester,
+    ) async {
+      final auth = FakeAuthRepository();
+      addTearDown(auth.dispose);
+      final container = await _pump(tester, auth: auth, ruta: _loginIzFlowa);
+
+      await tester.tap(find.text('Nastavi sa emailom'));
+      await tester.pumpAndSettle();
+      await _popuniRegistraciju(tester);
+      await tester.enterText(
+        find.byKey(const ValueKey('signup-phone')),
+        '0151 abc 2345678',
+      );
+      // Formatter pušta samo cifre i znakove grupisanja.
+      expect(find.text('0151  2345678'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('phone-country')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('+49  Njemačka').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('terms-checkbox')));
+      await tester.pump();
+      await tester.tap(find.text('Kreiraj račun'));
+      await tester.pumpAndSettle();
+
+      expect(auth.zadnjaRegistracija?.phone, '+49 151 2345678');
       container.dispose();
     });
 
@@ -261,7 +292,10 @@ void main() {
 
       expect(auth.brojRegistracija, 0);
       expect(find.text('Unesite ime i prezime.'), findsOneWidget);
-      expect(find.text('Unesite ispravan broj telefona.'), findsOneWidget);
+      expect(
+        find.text('Unesite broj bez pozivnog, npr. 61 123 456.'),
+        findsOneWidget,
+      );
       expect(find.text('Unesite ispravnu email adresu.'), findsOneWidget);
       expect(find.textContaining('najmanje 8 znakova'), findsOneWidget);
 
@@ -408,7 +442,7 @@ void main() {
 
         await tester.enterText(
           find.byKey(const ValueKey('profile-phone')),
-          '+387 61 222 333',
+          '061 222 333',
         );
         await tester.tap(find.text('Nastavi'));
         await tester.pumpAndSettle();

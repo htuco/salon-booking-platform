@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/router/app_router.dart';
 import '../../core/router/nazad.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'phone_field.dart';
 import 'terms_checkbox.dart';
 
 /// Status profila prijavljenog korisnika. `autoDispose`: čita se na ulazu u ekran, a
@@ -48,7 +49,7 @@ class CompleteProfileScreen extends ConsumerStatefulWidget {
 
 class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   final _ime = TextEditingController();
-  final _telefon = TextEditingController();
+  final _telefon = PhoneFieldController();
   String? _imeGreska;
   String? _telefonGreska;
   String? _greska;
@@ -115,17 +116,11 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                 const SizedBox(height: AppSpacing.lg),
               ],
               if (!value.hasPhone) ...[
-                TextField(
-                  key: const ValueKey('profile-phone'),
+                PhoneField(
                   controller: _telefon,
-                  keyboardType: TextInputType.phone,
-                  autofillHints: const [AutofillHints.telephoneNumber],
-                  decoration: InputDecoration(
-                    labelText: l10n.loginPhoneLabel,
-                    helperText: l10n.loginPhoneHelper,
-                    helperMaxLines: 3,
-                    errorText: _telefonGreska,
-                  ),
+                  greska: _telefonGreska,
+                  enabled: !_radi,
+                  fieldKey: const ValueKey('profile-phone'),
                 ),
                 const SizedBox(height: AppSpacing.lg),
               ],
@@ -174,9 +169,9 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   Future<void> _spremi(ClientProfileStatus status) async {
     final l10n = AppLocalizations.of(context);
     final ime = _ime.text.trim();
-    final telefon = _telefon.text.trim();
+    final telefon = _telefon.vrijednost;
     final imeIspravno = status.hasName || isValidFullName(ime);
-    final telefonIspravan = status.hasPhone || isValidPhone(telefon);
+    final telefonIspravan = status.hasPhone || telefon != null;
 
     setState(() {
       _imeGreska = imeIspravno ? null : l10n.loginInvalidName;

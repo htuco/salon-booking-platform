@@ -13,6 +13,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../booking/booking_flow_provider.dart';
 import '../booking/widgets/appointment_hold_card.dart';
 import 'login_controller.dart';
+import 'phone_field.dart';
 import 'terms_checkbox.dart';
 
 /// `/auth/login` — prijava, po `prototype/ui/screenshots/06-korak4-prijava.png`.
@@ -431,7 +432,7 @@ class _RegistracijaForma extends ConsumerStatefulWidget {
 
 class _RegistracijaFormaState extends ConsumerState<_RegistracijaForma> {
   final _ime = TextEditingController();
-  final _telefon = TextEditingController();
+  final _telefon = PhoneFieldController();
   final _email = TextEditingController();
   final _lozinka = TextEditingController();
   String? _imeGreska;
@@ -471,18 +472,11 @@ class _RegistracijaFormaState extends ConsumerState<_RegistracijaForma> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          TextField(
-            key: const ValueKey('signup-phone'),
+          PhoneField(
             controller: _telefon,
-            keyboardType: TextInputType.phone,
-            textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.telephoneNumber],
-            decoration: InputDecoration(
-              labelText: l10n.loginPhoneLabel,
-              helperText: l10n.loginPhoneHelper,
-              helperMaxLines: 3,
-              errorText: _telefonGreska,
-            ),
+            greska: _telefonGreska,
+            enabled: !stanje.busy,
+            fieldKey: const ValueKey('signup-phone'),
           ),
           const SizedBox(height: AppSpacing.lg),
           _EmailPolje(controller: _email, greska: _emailGreska),
@@ -525,11 +519,11 @@ class _RegistracijaFormaState extends ConsumerState<_RegistracijaForma> {
     if (!_uslovi) return;
     final l10n = AppLocalizations.of(context);
     final ime = _ime.text.trim();
-    final telefon = _telefon.text.trim();
+    final telefon = _telefon.vrijednost;
     final adresa = _email.text.trim();
     final lozinka = _lozinka.text;
     final imeIspravno = isValidFullName(ime);
-    final telefonIspravan = isValidPhone(telefon);
+    final telefonIspravan = telefon != null;
     final emailIspravan = _emailIspravan(adresa);
     final lozinkaIspravna =
         lozinka.length >= 8 &&
@@ -647,8 +641,7 @@ class _PrijavaFormaState extends ConsumerState<_PrijavaForma> {
   }
 }
 
-bool _emailIspravan(String adresa) =>
-    RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(adresa);
+bool _emailIspravan(String adresa) => isValidEmail(adresa);
 
 class _EmailPolje extends StatelessWidget {
   const _EmailPolje({required this.controller, required this.greska});
