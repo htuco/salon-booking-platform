@@ -24,9 +24,14 @@ U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
 - **Prekidač već postoji** u `apps/admin/lib/src/features/calendar/calendar_screen.dart`: „Sedmica" i
   „Mjesec" su ugašeni sa „Uskoro". Dnevni model je `calendar_day.dart` (`KalendarDan`), provideri u
   `calendar_providers.dart` (`kalendarDatumProvider`, `adminRadnikIdProvider` za radnika).
-- **Upiti za raspon postoje:** `StaffAppointmentRepository.forRange` (oba kraja uključena,
-  `employeeId` filter). Blokade imaju samo `forDay`/`fromDay`, pa sedmica treba `forRange` ili
-  `fromDay` + rez u Dartu. Bez nove migracije: RLS za čitanje je isti kao za dan.
+- **Sloj podataka je gotov (2026-10-14), UI nije.** `BlockedSlotRepository.forRange`, model
+  `calendar_week.dart` (`part` od `calendar_day.dart`, ista osa, trake i neradni pojasevi) i
+  provideri `kalendarPrikazProvider`, `kalendarSedmicaProvider`. Radnik iz uloge pobjeđuje izbor
+  čipa. Dokaz: `calendar_week_test` (20) + `blocked_slot_repository_test` (2); dvije mutacije
+  (radnikova blokada u „Svi", pogrešan ponedjeljak) obaraju 2 i 14 testova; admin 597, core_api
+  144, analyze i format čisti. Bez nove migracije: RLS za čitanje je isti kao za dan.
+- Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client`, inače `melos run
+  analyze` pada na stringu iz taska 65 (generisani l10n nije u gitu).
 - Vizuelni izvor je `prototype/adminv2/` (ADR-0016); sedmice tamo nema, zato skica ide prva.
 - Paralelno je otvoren Hamzin PR #136 (task 66), koji dira i `tasks/CURRENT.md` i
   `tasks/zero-crisis/README.md`: očekuj konflikt samo u trackeru, ne u kodu.
