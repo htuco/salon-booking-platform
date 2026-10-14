@@ -79,7 +79,7 @@ U Dartu: login bez provjere profila obara sva tri testa „Dopuni profil".
   (`Flexible` vrijednost stajala je na početku desne polovine); novi `spec_card_test` pada na starom
   kodu (257 px umjesto 339).
 
-Dokaz: core_domain +105, core_ui +146, client +662, admin +577; analyze i format čisti. Viđeno
+Dokaz: core_domain +102, core_ui +146, client +662, admin +577; analyze i format čisti. Viđeno
 uživo u Chromeu (Vitez, lokalni Supabase): slika Fade/Brada na potvrdi, poravnata kartica.
 
 **Ostalo za sljedećeg:**
