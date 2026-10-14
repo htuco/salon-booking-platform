@@ -581,6 +581,8 @@ pa autorizaciju radi sama:
 - osoblje je namjerno **isključeno**: admin unos telefonskih klijenata je drugi tok sa drugom
   validacijom (Sprint 3);
 - `on conflict do nothing`, ne `do update`: drugi poziv ne prepisuje ime koje je salon ispravio.
+- novi red dobija ime i telefon **identiteta** (task 66), a telefon samo kad ga u tom salonu po
+  ciframa ne nosi drugi klijent — v. „Profil klijenta" ispod.
 
 Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** grešku (`42501`).
 
@@ -598,6 +600,39 @@ Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** g
 >    `book_appointment` od taska 05 — tok je bio branjen logikom (`auth.uid()` je `NULL` za `anon`),
 >    ali granica koju je ovaj dokument opisivao nije postojala. Zatvoreno u istoj migraciji.
 
+
+### Profil klijenta — ime, telefon i uslovi (task 66, ADR-0030)
+
+`auth_identities` nosi `phone` i prihvatanje uslova (`terms_version`, `privacy_version`,
+`terms_accepted_at`). Granice:
+
+- **Ime i telefon su prikazni podaci.** Dolaze iz `user_metadata` (registracija) ili iz
+  `complete_my_profile`, korisnik ih bira sam, i **nikad** ne odlučuju o pristupu — isto pravilo
+  kao za `user_metadata` u „Tri identiteta". Telefon nije verifikovan.
+- **Trigger nad `auth.users` ne smije baciti.** `private.clean_phone` i `private.clean_name` vraćaju
+  `NULL` za neispravan unos umjesto greške: izuzetak u `sync_auth_identity` bi oborio **prijavu**
+  korisnika sa pokvarenim metapodatkom, a on to ne bi mogao popraviti.
+- **Prihvatanje uslova iz metapodataka važi samo pri nastanku naloga.** Kolone uslova nisu u
+  `do update set` listi triggera; da jesu, svaka prijava sa starim `terms_accepted: true` bi
+  prihvatila novu verziju umjesto korisnika. Ponovno prihvatanje ide samo kroz
+  `complete_my_profile`, pod tokenom.
+- **Popunjavanje adresara je drugi upis koji namjerno prelazi granicu salona**, uz
+  `delete_my_account`, i iz istog razloga: profil je osoba. Trigger
+  `fill_customers_from_identity_*` dira isključivo `customers` i `appointments` redove **tog
+  identiteta**, u svakom salonu. Nijedan salon pri tome ne čita tuđi red, i nijedan RPC ne vraća
+  listu salona za identitet. Pravilo je „samo popuni": ime preko `'Klijent'`/praznog, telefon
+  preko `NULL`.
+- **`unique(salon_id, phone)` je zamka.** Kopiranje broja koji salon već ima na telefonskom
+  klijentu bi palo na constraintu — u triggeru, dakle opet na prijavi. Broj se zato preskače kad ga
+  u tom salonu, poređen po ciframa, nosi drugi red. Spajanje je odluka salona.
+- `client_profile_status` i `complete_my_profile` traže `private.is_client()` i identitet iz
+  tokena; `x-salon-id` se ne traži jer profil nije salonski podatak. Grant samo `authenticated`
+  (`revoke ... from public, anon`).
+
+Dokaz: `030_registracija_profil.test.sql`. Pet mutacija ga obara: prepisivanje uvijek (salonova
+ispravka nestaje), prihvatanje na prijavi, bez provjere sudara telefona, bez filtera identiteta
+(drugi klijent istog salona dobija tuđe ime, a sudar broja obori upis) i brisanje koje ostavlja
+telefon.
 
 ## Tajne
 
@@ -845,7 +880,7 @@ politika nije trebala. Trigger je najvažniji: bez tog `where` bi sljedeća prij
 |---|---|
 | `customers` red, `visit_count`, `no_show_count`, `first_seen_at` | `name` → „Obrisan klijent", `phone` → `NULL`, `note` → `NULL` |
 | `appointments` red: datum, vrijeme, usluga, radnik, status | `customer_name`, `customer_phone`, `customer_note` |
-| `auth_identities` red (kao nadgrobni kamen) | `email`, `display_name`, `providers` |
+| `auth_identities` red (kao nadgrobni kamen), sa verzijom i vremenom prihvatanja uslova (task 66) | `email`, `display_name`, `phone`, `providers` |
 
 Dvije zamke iz šeme: `customers.name` je `not null` pa mora dobiti tekst, a `unique(salon_id,
 phone)` znači da `phone` mora ići na **`NULL`** — konstanta bi oborila drugu anonimizaciju u istom
@@ -887,6 +922,7 @@ ništa.
 | `rest_customer_upsert.ts` | cijeli put app-e: prijava → identitet → klijent → termin → HTTP 409 |
 | `004_cancel_appointment.test.sql` | `cancel_appointment` — vlasništvo, rok, `cancelled_by`, oslobađanje slota |
 | `rest_cross_salon_isolation.ts` | isti čovjek u dva salona; admin A ne vidi salon B kroz `id`, `auth_identity_id`, embed ni header — od taska 35 i kroz **pretragu po uzorku** i **obrnuti embed** `customers → appointments`, i pretragu po telefonu koji stvarno stoji u tuđem redu (42 asercije) |
+| `030_registracija_profil.test.sql` | profil klijenta (task 66) — registracija upisuje ime, telefon i važeću verziju; prijava ne prihvata novu verziju umjesto korisnika; popunjava se adresar i termini u **oba** salona istog identiteta, ali samo „Klijent" i prazan telefon; drugi klijent istog salona netaknut; broj koji salon već ima se preskače; osoblje i anon `42501`; brisanje briše telefon |
 | `005_delete_my_account.test.sql` | brisanje naloga — anonimizacija u **oba** salona, otkazivanje budućih termina, gašenje pristupa, trigger ne uskrsava nalog |
 | `007_policies.test.sql` | pravila i politika privatnosti — `anon` čita bez prijave, **`salon_admin` ne može pisati po `app_policies`**, sekcije neaktivnog salona su nevidljive |
 | `rest_delete_account.ts` | brisanje kroz Edge Function sa pravim JWT-om; obrisan identitet dobija **`200` sa praznom listom**, ne `401` — pristup gasi `deleted_at`, ne istek tokena |

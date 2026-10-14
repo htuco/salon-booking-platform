@@ -124,3 +124,21 @@ final class RateLimitError extends ApiError {
 final class EmailNotConfirmedError extends ApiError {
   const EmailNotConfirmedError(super.message, {super.cause});
 }
+
+/// Registracija na email koji već ima račun (`user_already_exists`, `email_exists`).
+///
+/// Vlastiti tip jer je akcija četvrta: „prijavite se tim emailom", ne „pogrešna lozinka"
+/// ni „ovaj način prijave nije dostupan" — do taska 66 je stizala ova druga, i slala
+/// korisnika da traži drugi način prijave za račun koji već ima.
+///
+/// Supabase sa uključenom potvrdom emaila za postojeći potvrđen email **ne baca** ovo nego
+/// vraća lažnog korisnika (anti-enumeracija); tada ovaj tip ne stiže, i to je ispravno.
+final class AccountExistsError extends ApiError {
+  const AccountExistsError(super.message, {super.cause});
+}
+
+/// Auth server je odbio lozinku kao preslabu (`weak_password`). Server je izvor istine za
+/// pravilo lozinke; forma ga samo ponavlja da korisnik ne čeka mrežu.
+final class WeakPasswordError extends ApiError {
+  const WeakPasswordError(super.message, {super.cause});
+}

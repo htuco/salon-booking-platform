@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'auth/auth_repository.dart';
+import 'auth/client_profile_repository.dart';
 import 'auth/customer_repository.dart';
 import 'auth/staff_access_repository.dart';
 import 'auth/staff_repository.dart';
@@ -157,6 +158,11 @@ final currentAuthSessionProvider = Provider<AuthSession?>((ref) {
 /// repozitorij mapira na `null`, pa ona ne otvara zaštićene rute.
 final isSignedInProvider = Provider<bool>(
   (ref) => ref.watch(currentAuthSessionProvider) != null,
+);
+
+/// Klijentski profil na identitetu (task 66). Ne zavisi od salona.
+final clientProfileRepositoryProvider = Provider<ClientProfileRepository>(
+  (ref) => ClientProfileRepository(ref.watch(supabaseClientProvider)),
 );
 
 /// Klijent prijavljenog korisnika u ovom salonu.

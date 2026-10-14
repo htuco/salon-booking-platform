@@ -455,7 +455,7 @@
   "bookingContinueEmail": "Nastavi sa emailom",
   "@bookingContinueEmail": { "description": "Prijava ili registracija emailom i lozinkom." },
 
-  "bookingLegalNotice": "Prijavom prihvatate Uslove i Politiku privatnosti.",
+  "bookingLegalNotice": "Uslove korištenja i Politiku privatnosti prihvatate pri registraciji.",
   "@bookingLegalNotice": {
     "description": "Pravna napomena ispod dugmadi za prijavu (prototype/ui 5f)."
   },
@@ -643,17 +643,38 @@
   "loginSignUpTitle": "Kreirajte račun",
   "@loginSignUpTitle": { "description": "Naslov email registracije." },
 
-  "loginSignUpHint": "Račun je odmah spreman za demo — ne šaljemo email potvrdu.",
-  "@loginSignUpHint": { "description": "Demo registracija bez SMTP/confirmation toka." },
+  "loginSignUpHint": "Salon će znati ko dolazi i kako da vas nazove ako se termin mijenja.",
+  "@loginSignUpHint": { "description": "Podnaslov registracije (task 66) — zašto se traže ime i telefon." },
+
+  "loginNameLabel": "Ime i prezime",
+  "@loginNameLabel": { "description": "Labela imena na registraciji i na „Dopuni profil\" (task 66)." },
+
+  "loginPhoneLabel": "Broj telefona",
+  "@loginPhoneLabel": { "description": "Labela telefona na registraciji i na „Dopuni profil\" (task 66)." },
+
+  "loginPhoneCountryLabel": "Pozivni",
+  "@loginPhoneCountryLabel": { "description": "Labela izbora pozivnog broja države uz telefon (task 66). Podrazumijevano +387." },
+
+  "loginPhoneHint": "61 123 456",
+  "@loginPhoneHint": { "description": "Primjer broja bez pozivnog; vodeća nula je dozvoljena." },
+
+  "loginPhoneHelper": "Salon vas zove samo ako se termin mijenja. Ne šaljemo SMS.",
+  "@loginPhoneHelper": { "description": "Zašto salon treba telefon, ispod polja. Telefon se ne verifikuje SMS-om (ADR-0029)." },
+
+  "loginInvalidName": "Unesite ime i prezime.",
+  "@loginInvalidName": { "description": "Validacija imena (1–120 znakova, isto kao private.clean_name)." },
+
+  "loginInvalidPhone": "Unesite broj bez pozivnog, npr. 61 123 456.",
+  "@loginInvalidPhone": { "description": "Validacija telefona (6–15 cifara, isto kao private.clean_phone)." },
+
+  "loginEmptyPassword": "Unesite lozinku.",
+  "@loginEmptyPassword": { "description": "Prijava ne provjerava pravila registracije, samo da lozinka nije prazna (task 66)." },
 
   "loginEmailLabel": "Email adresa",
   "@loginEmailLabel": { "description": "Labela polja za email." },
 
   "loginPasswordLabel": "Lozinka",
   "@loginPasswordLabel": { "description": "Labela polja za lozinku." },
-
-  "loginPasswordRepeatLabel": "Ponovite lozinku",
-  "@loginPasswordRepeatLabel": { "description": "Labela potvrde lozinke pri registraciji." },
 
   "loginShowPassword": "Prikaži lozinku",
   "@loginShowPassword": { "description": "Tooltip za prikaz lozinke." },
@@ -673,17 +694,11 @@
   "loginHaveAccount": "Već imate račun? Prijavite se",
   "@loginHaveAccount": { "description": "Prelazak sa registracije na prijavu." },
 
-  "loginDemoEmailNotice": "Demo ne šalje potvrdu emaila niti podržava zaboravljenu lozinku.",
-  "@loginDemoEmailNotice": { "description": "Iskrena napomena o demo email ograničenjima." },
-
   "loginInvalidEmail": "Unesite ispravnu email adresu.",
   "@loginInvalidEmail": { "description": "Validacija emaila prije nego sto se posalje zahtjev." },
 
   "loginInvalidPassword": "Lozinka mora imati najmanje 8 znakova, jedno slovo i jednu cifru.",
-  "@loginInvalidPassword": { "description": "Javno password pravilo demo registracije i prijave." },
-
-  "loginPasswordsDoNotMatch": "Lozinke se ne podudaraju.",
-  "@loginPasswordsDoNotMatch": { "description": "Validacija potvrde lozinke." },
+  "@loginInvalidPassword": { "description": "Pravilo lozinke na registraciji. Prijava ga ne provjerava (task 66)." },
 
   "loginRejected": "Pogrešan email ili lozinka.",
   "@loginRejected": {
@@ -705,6 +720,42 @@
 
   "loginCancelled": "Prijava je prekinuta.",
   "@loginCancelled": { "description": "AuthCancelledError — korisnik je zatvorio dijalog, nije kvar." },
+
+  "loginAccountExists": "Račun sa ovim emailom već postoji. Prijavite se.",
+  "@loginAccountExists": { "description": "AccountExistsError — registracija na email koji već ima račun (task 66)." },
+
+  "loginWeakPassword": "Lozinka je preslaba. Koristite najmanje 8 znakova, slovo i cifru.",
+  "@loginWeakPassword": { "description": "WeakPasswordError — Auth server je odbio lozinku (task 66)." },
+
+  "termsAcceptPrefix": "Prihvatam",
+  "@termsAcceptPrefix": { "description": "Početak rečenice uz checkbox uslova: „Prihvatam [Uslove korištenja] i [Politiku privatnosti]\"." },
+
+  "termsAcceptTerms": "Uslove korištenja",
+  "@termsAcceptTerms": { "description": "Link na /terms u rečenici uz checkbox (akuzativ)." },
+
+  "termsAcceptAnd": "i",
+  "@termsAcceptAnd": { "description": "Veznik između dva linka uz checkbox." },
+
+  "termsAcceptPrivacy": "Politiku privatnosti",
+  "@termsAcceptPrivacy": { "description": "Link na /privacy u rečenici uz checkbox (akuzativ)." },
+
+  "termsAcceptSemantics": "Prihvatam Uslove korištenja i Politiku privatnosti",
+  "@termsAcceptSemantics": { "description": "Cijela rečenica za čitač ekrana na checkboxu." },
+
+  "completeProfileTitle": "Dopunite profil",
+  "@completeProfileTitle": { "description": "Naslov /auth/complete-profile (task 66)." },
+
+  "completeProfileHint": "Salonu treba vaš broj telefona, a nama vaš pristanak na uslove.",
+  "@completeProfileHint": { "description": "Podnaslov kad fali telefon ili ime (prva Apple/Google prijava)." },
+
+  "completeProfileTermsOnlyHint": "Uslovi korištenja su se promijenili. Pregledajte ih i prihvatite da nastavite.",
+  "@completeProfileTermsOnlyHint": { "description": "Podnaslov kad fali samo prihvatanje nove verzije uslova." },
+
+  "completeProfileSave": "Nastavi",
+  "@completeProfileSave": { "description": "Sprema profil i vraća korisnika tamo odakle je krenuo." },
+
+  "completeProfileSignOut": "Odjavi se",
+  "@completeProfileSignOut": { "description": "Izlaz bez spremanja: profil je uslov računa, pa izlaz znači odjavu." },
 
   "appointmentsTitle": "Moji termini",
   "@appointmentsTitle": { "description": "Naslov ekrana /appointments (prototype/ui 5h)." },

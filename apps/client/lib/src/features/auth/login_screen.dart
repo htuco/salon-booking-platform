@@ -3,6 +3,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/auth_config_provider.dart';
@@ -12,6 +13,8 @@ import '../../l10n/generated/app_localizations.dart';
 import '../booking/booking_flow_provider.dart';
 import '../booking/widgets/appointment_hold_card.dart';
 import 'login_controller.dart';
+import 'phone_field.dart';
+import 'terms_checkbox.dart';
 
 /// `/auth/login` — prijava, po `prototype/ui/screenshots/06-korak4-prijava.png`.
 ///
@@ -30,8 +33,9 @@ import 'login_controller.dart';
 /// zaobilaženje `autoDispose`-a nego posljedica toga što je prijava **dio flowa**.
 /// Dokazuje se mjerenjem, ne pretpostavkom: `login_screen_test.dart`.
 ///
-/// Email ima eksplicitnu prijavu i registraciju. Demo ne šalje confirmation/recovery
-/// poruke, ali uspjeh vraća stvarnu Supabase sesiju kojom booking prolazi RLS.
+/// Email ima eksplicitnu registraciju (prva) i prijavu (druga). Uspjeh vraća stvarnu
+/// Supabase sesiju kojom booking prolazi RLS; potvrda emaila kodom je task 81, a
+/// zaboravljena lozinka task 57.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({this.from, this.metod, super.key});
 
@@ -108,6 +112,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     context.nazadIli(widget._povratak);
   }
 
+  /// Poslije prijave: profil kojem fali telefon, ime ili važeća verzija uslova ide na
+  /// „Dopuni profil" (task 66), a kompletan izlazi kao i do sada.
+  ///
+  /// Email registracija šalje sve odjednom, pa ovdje prolazi bez zastoja. Apple i Google
+  /// prvi put nemaju telefon ni pristanak, a svako ko je prihvatio staru verziju uslova
+  /// dobija novu ovdje — „pri sljedećoj prijavi".
+  ///
+  /// **Greška pri čitanju statusa ne zaustavlja prijavu.** Korisnik je upravo uspješno
+  /// prijavljen; zadržati ga na ekranu zbog pada drugog poziva bi izgledalo kao da prijava
+  /// nije uspjela. Provjera se ponavlja pri sljedećoj prijavi.
+  Future<void> _poslijePrijave() async {
+    if (_izasao || !mounted) return;
+    ClientProfileStatus? status;
+    try {
+      status = await ref.read(clientProfileRepositoryProvider).status();
+    } on ApiError {
+      status = null;
+    }
+    if (!mounted || _izasao) return;
+    if (status == null || status.isComplete) {
+      _izadji();
+      return;
+    }
+
+    _izasao = true;
+    // `pushReplacement`: login nestaje sa stacka, a ispod ostaje ekran sa kojeg je
+    // korisnik došao (korak 4), pa „Nastavi" na profilu vraća tačno tamo.
+    context.pushReplacement(
+      Uri(
+        path: ClientRoute.completeProfile.path,
+        queryParameters: {'from': widget._povratak},
+      ).toString(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -129,7 +168,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // prijave** — email forma i nativni provideri ne navigiraju sami. Ranije je i forma
     // radila `go`, pa se nakon prijave navigiralo dvaput.
     ref.listen(isSignedInProvider, (_, prijavljen) {
-      if (prijavljen) _izadji();
+      if (prijavljen) _poslijePrijave();
     });
 
     return Scaffold(
@@ -173,12 +212,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                   switch (stanje.phase) {
                     LoginPhase.providers => const _IzborProvidera(),
-                    LoginPhase.signIn => const _EmailPasswordForma(
-                      registracija: false,
-                    ),
-                    LoginPhase.signUp => const _EmailPasswordForma(
-                      registracija: true,
-                    ),
+                    LoginPhase.signIn => const _PrijavaForma(),
+                    LoginPhase.signUp => const _RegistracijaForma(),
                   },
                   if (stanje.phase == LoginPhase.providers) ...[
                     const SizedBox(height: AppSpacing.lg),
@@ -237,6 +272,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 /// kod", „sačekajte minut" i „nema veze" su tri različite akcije korisnika.
 String _poruka(AppLocalizations l10n, ApiError greska) => switch (greska) {
   AuthRejectedError() => l10n.loginRejected,
+  AccountExistsError() => l10n.loginAccountExists,
+  WeakPasswordError() => l10n.loginWeakPassword,
   RateLimitError() => l10n.loginRateLimited,
   AuthCancelledError() => l10n.loginCancelled,
   EmailNotConfirmedError() => l10n.loginEmailNotConfirmed,
@@ -378,32 +415,39 @@ class _IzborProvidera extends ConsumerWidget {
   };
 }
 
-/// Email + lozinka. **Nema polja za telefon** (`docs/06 §3.1`) niti recovery linka u
-/// demo fazi, jer bez SMTP-a ne postoji poruka koju bi korisnik mogao dobiti.
-class _EmailPasswordForma extends ConsumerStatefulWidget {
-  const _EmailPasswordForma({required this.registracija});
-
-  final bool registracija;
+/// Registracija: ime i prezime, telefon, email i lozinka jednom, plus uslovi (task 66).
+///
+/// Telefon se traži bez SMS verifikacije (ADR-0029): služi salonu za poziv kad se termin
+/// mijenja, ne kao dokaz identiteta. Lozinka se kuca **jednom**, sa „prikaži lozinku" —
+/// ponovljeno polje je samo drugi način da se pogriješi na telefonu.
+///
+/// Pravila polja su ista kao u bazi (`isValidPhone`, `isValidFullName`), a lozinke kao na
+/// Auth serveru. Server ostaje izvor istine; forma samo štedi put do greške.
+class _RegistracijaForma extends ConsumerStatefulWidget {
+  const _RegistracijaForma();
 
   @override
-  ConsumerState<_EmailPasswordForma> createState() =>
-      _EmailPasswordFormaState();
+  ConsumerState<_RegistracijaForma> createState() => _RegistracijaFormaState();
 }
 
-class _EmailPasswordFormaState extends ConsumerState<_EmailPasswordForma> {
+class _RegistracijaFormaState extends ConsumerState<_RegistracijaForma> {
+  final _ime = TextEditingController();
+  final _telefon = PhoneFieldController();
   final _email = TextEditingController();
   final _lozinka = TextEditingController();
-  final _ponovljena = TextEditingController();
+  String? _imeGreska;
+  String? _telefonGreska;
   String? _emailGreska;
   String? _lozinkaGreska;
-  String? _ponovljenaGreska;
   bool _sakrijLozinku = true;
+  bool _uslovi = false;
 
   @override
   void dispose() {
+    _ime.dispose();
+    _telefon.dispose();
     _email.dispose();
     _lozinka.dispose();
-    _ponovljena.dispose();
     super.dispose();
   }
 
@@ -417,96 +461,160 @@ class _EmailPasswordFormaState extends ConsumerState<_EmailPasswordForma> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextField(
-            key: const ValueKey('login-email'),
-            controller: _email,
-            keyboardType: TextInputType.emailAddress,
+            key: const ValueKey('signup-name'),
+            controller: _ime,
+            textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.next,
-            autocorrect: false,
-            autofillHints: const [AutofillHints.email],
+            autofillHints: const [AutofillHints.name],
             decoration: InputDecoration(
-              labelText: l10n.loginEmailLabel,
-              errorText: _emailGreska,
+              labelText: l10n.loginNameLabel,
+              errorText: _imeGreska,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          TextField(
-            key: const ValueKey('login-password'),
-            controller: _lozinka,
-            obscureText: _sakrijLozinku,
-            textInputAction: widget.registracija
-                ? TextInputAction.next
-                : TextInputAction.done,
-            autocorrect: false,
-            enableSuggestions: false,
-            autofillHints: [
-              widget.registracija
-                  ? AutofillHints.newPassword
-                  : AutofillHints.password,
-            ],
-            decoration: InputDecoration(
-              labelText: l10n.loginPasswordLabel,
-              errorText: _lozinkaGreska,
-              suffixIcon: IconButton(
-                tooltip: _sakrijLozinku
-                    ? l10n.loginShowPassword
-                    : l10n.loginHidePassword,
-                onPressed: () =>
-                    setState(() => _sakrijLozinku = !_sakrijLozinku),
-                icon: Icon(
-                  _sakrijLozinku ? LucideIcons.eye : LucideIcons.eyeOff,
-                ),
-              ),
-            ),
-            onSubmitted: (_) {
-              if (!widget.registracija) _posalji();
-            },
+          PhoneField(
+            controller: _telefon,
+            greska: _telefonGreska,
+            enabled: !stanje.busy,
+            fieldKey: const ValueKey('signup-phone'),
           ),
-          if (widget.registracija) ...[
-            const SizedBox(height: AppSpacing.lg),
-            TextField(
-              key: const ValueKey('login-password-repeat'),
-              controller: _ponovljena,
-              obscureText: _sakrijLozinku,
-              textInputAction: TextInputAction.done,
-              autocorrect: false,
-              enableSuggestions: false,
-              autofillHints: const [AutofillHints.newPassword],
-              decoration: InputDecoration(
-                labelText: l10n.loginPasswordRepeatLabel,
-                errorText: _ponovljenaGreska,
-              ),
-              onSubmitted: (_) => _posalji(),
-            ),
-          ],
+          const SizedBox(height: AppSpacing.lg),
+          _EmailPolje(controller: _email, greska: _emailGreska),
+          const SizedBox(height: AppSpacing.lg),
+          _LozinkaPolje(
+            controller: _lozinka,
+            greska: _lozinkaGreska,
+            sakrij: _sakrijLozinku,
+            nova: true,
+            onPrebaci: () => setState(() => _sakrijLozinku = !_sakrijLozinku),
+            onSubmitted: _posalji,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          TermsCheckbox(
+            value: _uslovi,
+            enabled: !stanje.busy,
+            onChanged: (v) => setState(() => _uslovi = v),
+          ),
           const SizedBox(height: AppSpacing.lg),
           AppButton(
-            label: widget.registracija
-                ? l10n.loginCreateAccount
-                : l10n.loginSignIn,
+            label: l10n.loginCreateAccount,
+            loading: stanje.busy,
+            // Bez pristanka dugme nije aktivno — ne greška poslije tapa (ADR-0029).
+            onPressed: _uslovi ? _posalji : null,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            label: l10n.loginHaveAccount,
+            variant: AppButtonVariant.outline,
+            onPressed: stanje.busy
+                ? null
+                : ref.read(loginControllerProvider.notifier).otvoriPrijavu,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _posalji() async {
+    if (!_uslovi) return;
+    final l10n = AppLocalizations.of(context);
+    final ime = _ime.text.trim();
+    final telefon = _telefon.vrijednost;
+    final adresa = _email.text.trim();
+    final lozinka = _lozinka.text;
+    final imeIspravno = isValidFullName(ime);
+    final telefonIspravan = telefon != null;
+    final emailIspravan = _emailIspravan(adresa);
+    final lozinkaIspravna =
+        lozinka.length >= 8 &&
+        RegExp('[A-Za-z]').hasMatch(lozinka) &&
+        RegExp('[0-9]').hasMatch(lozinka);
+
+    setState(() {
+      _imeGreska = imeIspravno ? null : l10n.loginInvalidName;
+      _telefonGreska = telefonIspravan ? null : l10n.loginInvalidPhone;
+      _emailGreska = emailIspravan ? null : l10n.loginInvalidEmail;
+      _lozinkaGreska = lozinkaIspravna ? null : l10n.loginInvalidPassword;
+    });
+    if (!imeIspravno ||
+        !telefonIspravan ||
+        !emailIspravan ||
+        !lozinkaIspravna) {
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    // Uspjeh ne navigira odavde: izlazak radi slušalac `isSignedInProvider` na ekranu.
+    await ref
+        .read(loginControllerProvider.notifier)
+        .registrujEmail(
+          email: adresa,
+          password: lozinka,
+          fullName: ime,
+          phone: telefon,
+          acceptedTerms: _uslovi,
+        );
+  }
+}
+
+/// Prijava postojećim računom: email i lozinka.
+///
+/// **Pravila registracije se ovdje ne provjeravaju** (task 66). Lozinka napravljena prije
+/// nego što je pravilo postojalo, ili po pravilu koje se kasnije promijeni, mora i dalje
+/// moći ući — forma koja je odbija prije servera zaključava korisnika iz vlastitog računa.
+class _PrijavaForma extends ConsumerStatefulWidget {
+  const _PrijavaForma();
+
+  @override
+  ConsumerState<_PrijavaForma> createState() => _PrijavaFormaState();
+}
+
+class _PrijavaFormaState extends ConsumerState<_PrijavaForma> {
+  final _email = TextEditingController();
+  final _lozinka = TextEditingController();
+  String? _emailGreska;
+  String? _lozinkaGreska;
+  bool _sakrijLozinku = true;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _lozinka.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final stanje = ref.watch(loginControllerProvider);
+
+    return AutofillGroup(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _EmailPolje(controller: _email, greska: _emailGreska),
+          const SizedBox(height: AppSpacing.lg),
+          _LozinkaPolje(
+            controller: _lozinka,
+            greska: _lozinkaGreska,
+            sakrij: _sakrijLozinku,
+            nova: false,
+            onPrebaci: () => setState(() => _sakrijLozinku = !_sakrijLozinku),
+            onSubmitted: _posalji,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            label: l10n.loginSignIn,
             loading: stanje.busy,
             onPressed: _posalji,
           ),
           const SizedBox(height: AppSpacing.md),
           AppButton(
-            label: widget.registracija
-                ? l10n.loginHaveAccount
-                : l10n.loginNeedAccount,
+            label: l10n.loginNeedAccount,
             variant: AppButtonVariant.outline,
             onPressed: stanje.busy
                 ? null
-                : () {
-                    final kontroler = ref.read(
-                      loginControllerProvider.notifier,
-                    );
-                    widget.registracija
-                        ? kontroler.otvoriPrijavu()
-                        : kontroler.otvoriRegistraciju();
-                  },
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            l10n.loginDemoEmailNotice,
-            style: Theme.of(context).textTheme.bodySmall,
+                : ref.read(loginControllerProvider.notifier).otvoriRegistraciju,
           ),
         ],
       ),
@@ -517,29 +625,87 @@ class _EmailPasswordFormaState extends ConsumerState<_EmailPasswordForma> {
     final l10n = AppLocalizations.of(context);
     final adresa = _email.text.trim();
     final lozinka = _lozinka.text;
-    final emailIspravan = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-        .hasMatch(adresa);
-    final lozinkaIspravna =
-        lozinka.length >= 8 &&
-        RegExp('[A-Za-z]').hasMatch(lozinka) &&
-        RegExp('[0-9]').hasMatch(lozinka);
-    final ponovljenaIspravna =
-        !widget.registracija || _ponovljena.text == lozinka;
+    final emailIspravan = _emailIspravan(adresa);
+    final lozinkaUnesena = lozinka.isNotEmpty;
 
     setState(() {
       _emailGreska = emailIspravan ? null : l10n.loginInvalidEmail;
-      _lozinkaGreska = lozinkaIspravna ? null : l10n.loginInvalidPassword;
-      _ponovljenaGreska = ponovljenaIspravna
-          ? null
-          : l10n.loginPasswordsDoNotMatch;
+      _lozinkaGreska = lozinkaUnesena ? null : l10n.loginEmptyPassword;
     });
-    if (!emailIspravan || !lozinkaIspravna || !ponovljenaIspravna) return;
+    if (!emailIspravan || !lozinkaUnesena) return;
 
     FocusScope.of(context).unfocus();
-    final kontroler = ref.read(loginControllerProvider.notifier);
-    // Uspjeh ne navigira odavde: izlazak radi slušalac `isSignedInProvider` na ekranu.
-    widget.registracija
-        ? await kontroler.registrujEmail(adresa, lozinka)
-        : await kontroler.prijaviEmail(adresa, lozinka);
+    await ref
+        .read(loginControllerProvider.notifier)
+        .prijaviEmail(adresa, lozinka);
+  }
+}
+
+bool _emailIspravan(String adresa) => isValidEmail(adresa);
+
+class _EmailPolje extends StatelessWidget {
+  const _EmailPolje({required this.controller, required this.greska});
+
+  final TextEditingController controller;
+  final String? greska;
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    key: const ValueKey('login-email'),
+    controller: controller,
+    keyboardType: TextInputType.emailAddress,
+    textInputAction: TextInputAction.next,
+    autocorrect: false,
+    autofillHints: const [AutofillHints.email],
+    decoration: InputDecoration(
+      labelText: AppLocalizations.of(context).loginEmailLabel,
+      errorText: greska,
+    ),
+  );
+}
+
+class _LozinkaPolje extends StatelessWidget {
+  const _LozinkaPolje({
+    required this.controller,
+    required this.greska,
+    required this.sakrij,
+    required this.nova,
+    required this.onPrebaci,
+    required this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final String? greska;
+  final bool sakrij;
+
+  /// Nova lozinka (registracija) ili postojeća (prijava) — razlika je samo za autofill.
+  final bool nova;
+  final VoidCallback onPrebaci;
+  final VoidCallback onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return TextField(
+      key: const ValueKey('login-password'),
+      controller: controller,
+      obscureText: sakrij,
+      textInputAction: TextInputAction.done,
+      autocorrect: false,
+      enableSuggestions: false,
+      autofillHints: [
+        nova ? AutofillHints.newPassword : AutofillHints.password,
+      ],
+      decoration: InputDecoration(
+        labelText: l10n.loginPasswordLabel,
+        errorText: greska,
+        suffixIcon: IconButton(
+          tooltip: sakrij ? l10n.loginShowPassword : l10n.loginHidePassword,
+          onPressed: onPrebaci,
+          icon: Icon(sakrij ? LucideIcons.eye : LucideIcons.eyeOff),
+        ),
+      ),
+      onSubmitted: (_) => onSubmitted(),
+    );
   }
 }
