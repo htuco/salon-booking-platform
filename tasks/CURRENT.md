@@ -8,7 +8,7 @@ U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
 
 ## Ciljevi
 
-- [ ] Dizajn prije koda: skica sedmice u `prototype/adminv2/sedmica/` (1440 i 402)
+- [x] Dizajn prije koda: skica sedmice u `prototype/adminv2/sedmica/` (1440 i 402) — čeka odobrenje u PR-u
 - [ ] „Sedmica" u postojećem prekidaču `Dan · Sedmica · Mjesec` radi; „Mjesec" ostaje „Uskoro"
 - [ ] Sedmica = 7 kolona (dani) sa terminima, blokadama i neradnim danima iz `working_hours`
 - [ ] Tap na termin otvara isti detalj kao dnevni prikaz; tap na prazno nudi ručno zakazivanje

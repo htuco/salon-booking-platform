@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="bs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Melura — Sedmica</title>
+<!--
+  Skica taska 69 (sedmični kalendar). Nije production kod i ne portuje se: Flutter uzima
+  raspored i pravila iz README.md, a boje iz admin teme (`apps/admin/lib/src/core/theme/`).
+  Podaci su izmišljeni, isti saloni i imena kao u `3c`/`3l`.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #141517; --ink-2: #4a4d52; --ink-3: #909296; --line: #e4e5e7; --bg: #fff;
+    --bg-2: #f6f7f8; --coral: #ee6c4d; --blue: #3d5a80; --green: #0b5d4b;
+    --confirmed: #e1f1f0; --done: #f1f2f3; --sidebar: #141517;
+    --hour: 56px; --axis: 64px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Barlow, system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  /* ---------- Desktop shell (isti kao 3c) ---------- */
+  .app { display: grid; grid-template-columns: 228px 1fr; min-height: 100vh; }
+  .side { background: var(--sidebar); color: #fff; padding: 22px 14px; }
+  .brand { font-weight: 700; font-size: 26px; letter-spacing: .08em; padding: 0 6px 22px; }
+  .nav a { display: flex; justify-content: space-between; padding: 11px 12px; font-size: 14px;
+    font-weight: 600; letter-spacing: .1em; color: #c1c2c5; text-decoration: none; }
+  .nav a.on { background: #2c2e33; color: #fff; }
+  .badge { background: var(--coral); color: #fff; border-radius: 9px; padding: 0 7px; font-size: 12px; }
+
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .top { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .sq { width: 40px; height: 40px; border: 1px solid var(--line); font-size: 18px; }
+  .title { font-size: 20px; font-weight: 600; margin-left: 6px; }
+  .link { color: var(--blue); font-weight: 500; margin-left: 10px; }
+  .spacer { flex: 1; }
+  .seg { display: flex; background: var(--bg-2); padding: 3px; }
+  .seg button { padding: 8px 16px; font-weight: 500; color: var(--ink-2); }
+  .seg button.on { background: #fff; color: var(--ink); font-weight: 600; }
+  .seg button[disabled] { color: var(--ink-3); cursor: default; }
+  .seg small { font-size: 11px; margin-left: 4px; }
+  .cta { background: var(--coral); color: #fff; font-weight: 700; letter-spacing: .06em; padding: 11px 18px; }
+
+  .filters { display: flex; gap: 8px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--line); }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 500; display: inline-flex; gap: 8px; align-items: center; }
+  .chip.on { background: #e8ecf1; border-color: #e8ecf1; color: var(--blue); }
+  .ini { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center;
+    font-size: 11px; font-weight: 700; color: #fff; }
+  .legend { margin-left: auto; display: flex; gap: 14px; color: var(--ink-2); font-size: 13px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; }
+
+  /* ---------- Sedmična mreža ---------- */
+  .week { display: grid; grid-template-columns: var(--axis) repeat(7, minmax(120px, 1fr)); overflow: auto; flex: 1; }
+  .dh { position: sticky; top: 0; z-index: 3; background: #fff; border-bottom: 1px solid var(--line);
+    border-left: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+  .dh:hover { background: var(--bg-2); }
+  .dh .d { font-size: 12px; letter-spacing: .1em; color: var(--ink-3); font-weight: 600; }
+  .dh .n { font-size: 22px; font-weight: 600; }
+  .dh .c { font-size: 12px; color: var(--ink-2); }
+  .dh.today .n { color: #fff; background: var(--blue); padding: 0 8px; display: inline-block; }
+  .corner { position: sticky; top: 0; z-index: 3; background: #fff; border-bottom: 1px solid var(--line); }
+  .axis { position: relative; }
+  .axis span { position: absolute; right: 8px; font-size: 12px; color: var(--ink-3); transform: translateY(-50%); }
+  .col { position: relative; border-left: 1px solid var(--line);
+    background-image: repeating-linear-gradient(to bottom, transparent 0 calc(var(--hour) - 1px), var(--line) calc(var(--hour) - 1px) var(--hour)); }
+  .col.today { background-color: #fbfcfd; }
+  .slot-hint { position: absolute; left: 4px; right: 4px; height: calc(var(--hour) / 2); border: 1px dashed var(--ink-3);
+    font-size: 12px; color: var(--ink-2); display: none; align-items: center; padding: 0 6px; pointer-events: none; }
+  .col:hover .slot-hint { display: flex; }
+
+  .blk { position: absolute; padding: 3px 6px; font-size: 12px; line-height: 1.25; overflow: hidden;
+    border-left: 3px solid var(--green); background: var(--confirmed); cursor: pointer; }
+  .blk b { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .blk .t { color: var(--ink-2); display: flex; gap: 4px; align-items: center; white-space: nowrap; }
+  .blk .ini { width: 16px; height: 16px; font-size: 9px; flex: none; }
+  .blk.uzak { padding: 3px 4px; }
+  .blk.uzak b { display: none; }
+  .blk.uzak .t { flex-direction: column; align-items: flex-start; gap: 2px; font-size: 11px; }
+  .blk.red { display: flex; gap: 6px; align-items: center; }
+  .blk.red b { display: inline; }
+  .blk.uzak.red b { display: none; }
+  .blk.pending { background: #fff; border: 1px dashed var(--ink); border-left: 3px solid var(--ink); }
+  .blk.done { background: var(--done); border-left-color: #c9cbce; color: var(--ink-2); }
+  .blk.now { background: var(--blue); border-left-color: var(--blue); color: #fff; }
+  .blk.now .t { color: #dfe6ef; }
+  .off { position: absolute; left: 0; right: 0; display: grid; place-items: center; font-size: 12px; color: var(--ink-2);
+    background: repeating-linear-gradient(135deg, #f3f4f5 0 8px, #fff 8px 16px); z-index: 1; text-align: center; padding: 4px; }
+  .nowline { position: absolute; left: 0; right: 0; height: 2px; background: #d9443a; z-index: 2; }
+
+  /* ---------- Telefon (3l + agenda sedmice) ---------- */
+  .phone { display: none; }
+  @media (max-width: 640px) {
+    .app { display: none; }
+    .phone { display: block; }
+  }
+  .ph-top { display: flex; align-items: center; padding: 16px 16px 10px; gap: 8px; }
+  .ph-top h1 { font-size: 30px; margin: 0; flex: 1; }
+  .ph-seg { margin: 0 16px 10px; display: flex; background: var(--bg-2); padding: 3px; }
+  .ph-seg button { flex: 1; padding: 9px; font-weight: 500; color: var(--ink-2); }
+  .ph-seg button.on { background: #fff; color: var(--ink); font-weight: 600; }
+  .ph-chips { display: flex; gap: 8px; padding: 0 16px 12px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+  .ph-day { border-bottom: 1px solid var(--line); }
+  .ph-day h2 { margin: 0; padding: 12px 16px 6px; font-size: 13px; letter-spacing: .1em; color: var(--ink-3); display: flex; justify-content: space-between; }
+  .ph-day h2 b { color: var(--ink); }
+  .ph-day.today h2 b { color: var(--blue); }
+  .row { display: flex; gap: 12px; padding: 8px 16px; align-items: center; min-height: 48px; }
+  .row .tm { width: 48px; color: var(--ink-2); font-size: 14px; }
+  .row .card { flex: 1; padding: 8px 10px; border-left: 3px solid var(--green); background: var(--confirmed); display: flex; gap: 8px; align-items: center; }
+  .row .card.pending { background: #fff; border: 1px dashed var(--ink); border-left: 3px solid var(--ink); }
+  .row .card.done { background: var(--done); border-left-color: #c9cbce; color: var(--ink-2); }
+  .row .card div { flex: 1; min-width: 0; }
+  .row .card b { display: block; font-weight: 600; }
+  .row .card span { font-size: 13px; color: var(--ink-2); }
+  .row .card span.ini { color: #fff; font-size: 11px; }
+  .ph-off { padding: 10px 16px 14px; color: var(--ink-2); font-size: 14px; }
+  .ph-cta { position: sticky; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: 12px 16px; display: flex; gap: 10px; }
+  .ph-cta .cta { flex: 1; padding: 14px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand">MELURA</div>
+    <nav class="nav">
+      <a href="#">DANAS</a><a href="#" class="on">KALENDAR</a><a href="#">ZAHTJEVI <span class="badge">4</span></a>
+      <a href="#">KLIJENTI</a><a href="#">USLUGE</a><a href="#">OSOBLJE</a><a href="#">RADNO VRIJEME</a><a href="#">POSTAVKE</a>
+    </nav>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <button class="sq" aria-label="Prethodna sedmica">‹</button>
+      <button class="sq" aria-label="Sljedeća sedmica">›</button>
+      <div class="title">18. – 24. maj 2026</div>
+      <button class="link">Ova sedmica</button>
+      <div class="spacer"></div>
+      <div class="seg" role="tablist">
+        <button>Dan</button>
+        <button class="on">Sedmica</button>
+        <button disabled>Mjesec<small>Uskoro</small></button>
+      </div>
+      <button class="cta">+ NOVI TERMIN</button>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="week" id="week"></div>
+  </main>
+</div>
+
+<div class="phone">
+  <div class="ph-top"><h1>Kalendar</h1><button class="sq">‹</button><button class="sq">›</button></div>
+  <div class="ph-seg"><button>Dan</button><button class="on">Sedmica</button></div>
+  <div class="ph-chips" id="ph-chips"></div>
+  <div id="agenda"></div>
+  <div class="ph-cta"><button class="cta">+ NOVI TERMIN</button><button class="sq" style="width:52px;height:52px">⊘</button></div>
+</div>
+
+<script>
+  // Izmišljeni podaci, oblik kao `KalendarDan`: radnici, termini, blokade, radno vrijeme.
+  const radnici = [
+    { id: 'e', ime: 'Emir', boja: '#3d5a80' },
+    { id: 'v', ime: 'Vedad', boja: '#0b5d4b' },
+    { id: 'a', ime: 'Amar', boja: '#8a5a2b' },
+  ];
+  const dani = ['PON', 'UTO', 'SRI', 'ČET', 'PET', 'SUB', 'NED'];
+  const datumi = [18, 19, 20, 21, 22, 23, 24];
+  const danas = 0, sada = 13.0;
+  const OD = 9, DO = 20; // vidljivi raspon: najraniji početak i najkasniji kraj radnog vremena u sedmici
+
+  // [dan, radnik, od, do, klijent, status]
+  const termini = [
+    [0,'e',9,9.5,'Adnan Kovač','done'],[0,'v',10,10.75,'Senad Mujić','done'],[0,'e',11,12.33,'Mirza Aliagić','confirmed'],
+    [0,'v',13,14.33,'Tarik Selimović','now'],[0,'e',14.33,15,'Haris Delić','confirmed'],[0,'a',15,16.33,'Nedim Hodžić','pending'],
+    [0,'e',16,17.17,'Dino Bajrić','confirmed'],[0,'v',16.17,17.33,'Faruk Begić','confirmed'],
+    [1,'e',9,10,'Kenan Zukić','confirmed'],[1,'a',12,13,'Elvis Hadžić','confirmed'],[1,'v',12.5,13.5,'Amel Ćatić','pending'],
+    [1,'e',17,18,'Jasmin Alić','confirmed'],
+    [2,'v',10,11,'Sanel Pašić','confirmed'],[2,'e',10,10.5,'Damir Kurt','confirmed'],[2,'a',10.25,11.25,'Edin Mehić','confirmed'],
+    [2,'e',15,16.5,'Ajdin Softić','pending'],
+    [3,'e',9.5,10.5,'Armin Babić','confirmed'],[3,'a',14,15,'Emin Halilović','confirmed'],[3,'v',18,19,'Benjamin Kos','confirmed'],
+    [4,'e',9,10,'Harun Delić','confirmed'],[4,'v',9,10,'Mahir Zec','confirmed'],[4,'a',12,13.33,'Alen Omerović','confirmed'],
+    [4,'e',13,14,'Adis Jusić','pending'],[4,'v',16,17,'Kerim Avdić','confirmed'],[4,'e',18,19,'Eldar Hasić','confirmed'],
+    [5,'e',9,10,'Nermin Šehić','confirmed'],[5,'v',9.5,10.5,'Vedran Lukić','confirmed'],[5,'e',10,11,'Irfan Muratović','confirmed'],
+    [5,'a',11,12,'Tarik Kadić','pending'],
+  ];
+  // Blokade: [dan, radnik|null, od, do, tekst]; null = cijeli salon.
+  const blokade = [[2, null, 12, 13, 'Salon zatvoren · sastanak']];
+  // Radno vrijeme salona po danu; null = neradni dan.
+  const rv = [[9,20],[9,20],[9,20],[9,20],[9,20],[9,15],null];
+
+  let filter = null; // null = Svi
+  const h = v => (v - OD) * 56;
+  const fmt = v => `${String(Math.floor(v)).padStart(2,'0')}:${String(Math.round((v%1)*60)).padStart(2,'0')}`;
+  const ini = r => `<span class="ini" style="background:${r.boja}">${r.ime[0]}</span>`;
+  const rad = id => radnici.find(r => r.id === id);
+  const vidljivi = () => termini.filter(t => !filter || t[1] === filter);
+
+  // Preklapanje u jednoj koloni dana: termini idu jedan pored drugog (isto pravilo kao dan, FE-403).
+  function rasporedi(lista) {
+    lista.sort((x, y) => x[2] - y[2]);
+    const grupe = []; let g = [], kraj = -1;
+    for (const t of lista) { if (t[2] >= kraj && g.length) { grupe.push(g); g = []; } g.push(t); kraj = Math.max(kraj, t[3]); }
+    if (g.length) grupe.push(g);
+    const out = [];
+    for (const gr of grupe) {
+      const trake = [];
+      for (const t of gr) { let i = trake.findIndex(k => k <= t[2]); if (i < 0) { i = trake.length; trake.push(0); } trake[i] = t[3]; out.push([t, i]); }
+      out.forEach(o => { if (gr.includes(o[0])) o[2] = trake.length; });
+    }
+    return out;
+  }
+
+  function chips(el) {
+    el.innerHTML = [`<button class="chip ${!filter?'on':''}" data-f="">Svi</button>`,
+      ...radnici.map(r => `<button class="chip ${filter===r.id?'on':''}" data-f="${r.id}">${ini(r)}${r.ime}</button>`)].join('');
+    el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; render(); });
+  }
+
+  function desktop() {
+    const f = document.getElementById('filters'); chips(f);
+    f.insertAdjacentHTML('beforeend', `<div class="legend"><span><i style="background:var(--green)"></i>Potvrđeno</span>
+      <span><i style="border:1px dashed var(--ink)"></i>Čeka potvrdu</span><span><i style="background:#d6d8db"></i>Završeno</span>
+      <span><i style="background:var(--blue)"></i>U toku</span></div>`);
+    const w = document.getElementById('week'); const visina = h(DO);
+    let html = `<div class="corner"></div>`;
+    dani.forEach((d, i) => {
+      const n = vidljivi().filter(t => t[0] === i).length;
+      html += `<button class="dh ${i===danas?'today':''}" title="Otvori dan"><div class="d">${d}</div><div class="n">${datumi[i]}</div>
+        <div class="c">${rv[i] ? `${fmt(rv[i][0])}–${fmt(rv[i][1])} · ${n} termina` : 'Ne radi'}</div></button>`;
+    });
+    html += `<div class="axis" style="height:${visina}px">${Array.from({length: DO-OD}, (_, k) => k ? `<span style="top:${k*56}px">${fmt(OD+k)}</span>` : '').join('')}</div>`;
+    dani.forEach((_, i) => {
+      let c = `<div class="col ${i===danas?'today':''}" style="height:${visina}px">`;
+      if (!rv[i]) c += `<div class="off" style="top:0;height:${visina}px">Neradni dan</div>`;
+      else {
+        if (rv[i][0] > OD) c += `<div class="off" style="top:0;height:${h(rv[i][0])}px"></div>`;
+        if (rv[i][1] < DO) c += `<div class="off" style="top:${h(rv[i][1])}px;height:${h(DO)-h(rv[i][1])}px">Zatvoreno od ${fmt(rv[i][1])}</div>`;
+      }
+      blokade.filter(b => b[0] === i).forEach(b => c += `<div class="off" style="top:${h(b[2])}px;height:${h(b[3])-h(b[2])}px">${b[4]}</div>`);
+      if (i === danas) c += `<div class="nowline" style="top:${h(sada)}px"></div>`;
+      c += `<div class="slot-hint" style="top:${h(17.5)}px">+ Novi termin 17:30</div>`;
+      for (const [t, traka, od] of rasporedi(vidljivi().filter(t => t[0] === i))) {
+        const sir = 100 / od, r = rad(t[1]);
+        // Tri+ trake: samo inicijal i vrijeme (ime u tooltipu i detalju). Ispod 40 px: jedan red.
+        const klase = [t[5], od >= 3 ? "uzak" : "", h(t[3]) - h(t[2]) < 40 ? "red" : ""].join(" ");
+        c += `<div class="blk ${klase}" style="top:${h(t[2])+1}px;height:${h(t[3])-h(t[2])-2}px;left:calc(${traka*sir}% + 3px);width:calc(${sir}% - 6px)"
+          title="${t[4]} · ${fmt(t[2])}–${fmt(t[3])} · ${r.ime}"><span class="t">${ini(r)}${fmt(t[2])}</span><b>${t[4]}</b></div>`;
+      }
+      html += c + '</div>';
+    });
+    w.innerHTML = html;
+  }
+
+  function phone() {
+    chips(document.getElementById('ph-chips'));
+    let html = '';
+    dani.forEach((d, i) => {
+      const lista = vidljivi().filter(t => t[0] === i).sort((x, y) => x[2] - y[2]);
+      html += `<section class="ph-day ${i===danas?'today':''}"><h2><b>${d} ${datumi[i]}.</b><span>${rv[i] ? `${lista.length} termina` : 'Ne radi'}</span></h2>`;
+      if (!rv[i]) html += `<div class="ph-off">Neradni dan</div>`;
+      blokade.filter(b => b[0] === i).forEach(b => html += `<div class="ph-off">${fmt(b[2])}–${fmt(b[3])} · ${b[4]}</div>`);
+      for (const t of lista) {
+        html += `<div class="row"><div class="tm">${fmt(t[2])}</div><div class="card ${t[5]==='now'?'confirmed':t[5]}"><div><b>${t[4]}</b><span>${fmt(t[2])}–${fmt(t[3])}</span></div>${ini(rad(t[1]))}</div></div>`;
+      }
+      html += '</section>';
+    });
+    document.getElementById('agenda').innerHTML = html;
+  }
+
+  function render() { desktop(); phone(); }
+  render();
+</script>
+</body>
+</html>
