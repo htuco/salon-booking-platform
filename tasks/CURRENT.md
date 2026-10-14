@@ -1,31 +1,44 @@
-# Trenutni task: 64 — Istek neodgovorenih zahtjeva
+# Trenutni task: 69 — Sedmični kalendar u Meluri
 
-Puni task: [tasks/zero-crisis/64-istek-neodgovorenih-zahtjeva.md](zero-crisis/64-istek-neodgovorenih-zahtjeva.md) · učitan 2026-10-13
+Puni task: [tasks/zero-crisis/69-sedmicni-kalendar.md](zero-crisis/69-sedmicni-kalendar.md) · učitan 2026-10-14
 
 ## Status
 
-U toku (grana `feat/istek-zahtjeva`, PR protiv `develop`-a, 2026-10-13). Kod je dokazan lokalno, a čeka
-deploy i pogled uživo.
+U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
 
 ## Ciljevi
 
-- [x] `private.expire_pending()` + cron `expire-pending` svakih 5 min; `cancelled` / `system` / `isteklo`
-- [x] Push `expired` klijentu, jednom; salonu ništa
-- [x] Melura: „Isteklo" umjesto „Otkazano", „Otkazao: niko, salon nije odgovorio na vrijeme"
-- [x] pgTAP `027` (18) + mutacije; cijela Supabase suite i admin `flutter test` zeleni lokalno
-- [ ] CI zelen, PR spojen u `develop`
-- [ ] Hamza: `supabase db push` i `supabase functions deploy send-push` na hostovanom
-- [ ] Istekli zahtjev viđen uživo u Meluri i push na uređaju
+- [ ] Dizajn prije koda: skica sedmice u `prototype/adminv2/sedmica/` (1440 i 402)
+- [ ] „Sedmica" u postojećem prekidaču `Dan · Sedmica · Mjesec` radi; „Mjesec" ostaje „Uskoro"
+- [ ] Sedmica = 7 kolona (dani) sa terminima, blokadama i neradnim danima iz `working_hours`
+- [ ] Tap na termin otvara isti detalj kao dnevni prikaz; tap na prazno nudi ručno zakazivanje
+- [ ] Radnik vidi samo svoje termine i u sedmici
+- [ ] Na telefonu dnevni prikaz ostaje default
+- [ ] Widget testovi za obje uloge; viđeno uživo na 1440 i 402
+- [ ] `prototype/admin/SPEC.md` (tabela izostavljanja) i doc komentar `calendar_screen.dart` ažurni
 
 ## Napomene
 
-- Istek je u SQL-u, ne u Edge Functionu — `supabase/functions/expire-pending/` je samo README.
-- `deno` je u `~/.deno/bin`, a nije u PATH-u: `export PATH="$HOME/.deno/bin:$PATH"` prije
-  `./tool/test_supabase.sh`. Edge runtime se na ovoj mašini ugasi poslije `supabase start`, pa
-  `rest_delete_account`, `rest_pozivi_osoblja` i `rest_ciscenje` traže `supabase functions serve`
-  u drugom terminalu.
+- **Opseg je već odlučen**: ADR-0029 uvodi sedmicu („Ulazi", FE-403 dug). FE-403 je tražio ADR jer
+  `SPEC.md` tvrdi suprotno; to je sada ADR-0029, pa se `SPEC.md` samo ispravlja.
+- **Prekidač već postoji** u `apps/admin/lib/src/features/calendar/calendar_screen.dart`: „Sedmica" i
+  „Mjesec" su ugašeni sa „Uskoro". Dnevni model je `calendar_day.dart` (`KalendarDan`), provideri u
+  `calendar_providers.dart` (`kalendarDatumProvider`, `adminRadnikIdProvider` za radnika).
+- **Upiti za raspon postoje:** `StaffAppointmentRepository.forRange` (oba kraja uključena,
+  `employeeId` filter). Blokade imaju samo `forDay`/`fromDay`, pa sedmica treba `forRange` ili
+  `fromDay` + rez u Dartu. Bez nove migracije: RLS za čitanje je isti kao za dan.
+- Vizuelni izvor je `prototype/adminv2/` (ADR-0016); sedmice tamo nema, zato skica ide prva.
+- Paralelno je otvoren Hamzin PR #136 (task 66), koji dira i `tasks/CURRENT.md` i
+  `tasks/zero-crisis/README.md`: očekuj konflikt samo u trackeru, ne u kodu.
 
 ## Istorija
+
+### 64 — Istek neodgovorenih zahtjeva (spojen u `develop`, 2026-10-13)
+
+[PR #133](https://github.com/htuco/salon-booking-platform/pull/133). `private.expire_pending()` + cron
+`expire-pending` (5 min), push `expired` klijentu, Melura piše „Isteklo"; pgTAP `027` + mutacije.
+**Ostaje:** Hamza `supabase db push` i `functions deploy send-push` na hostovanom; istekli zahtjev
+viđen uživo u Meluri i push na uređaju. Napomena za lokalno: `deno` je u `~/.deno/bin`, van PATH-a.
 
 ### 55 — Prerada admin dashboarda (premješten u `polishing/`, 2026-10-13)
 

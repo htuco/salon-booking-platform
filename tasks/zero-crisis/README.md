@@ -29,7 +29,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | 66 | 0,5–1 dan |
 | [67](67-pisanje-recenzija.md) | Pisanje recenzija | 66 | 2–3 dana |
 | [68](68-lista-cekanja.md) | Lista čekanja | 64 | 3–4 dana |
-| [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri | — | 2–3 dana |
+| [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri 🟡 | — | 2–3 dana |
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
 | [71](71-melura-za-svakoga.md) | Melura za svakoga: sve radi i jasno je | 54 | 3–4 dana |
 | [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna | — | 4–5 dana |
@@ -87,3 +87,8 @@ Grana `feat/istek-zahtjeva`. `private.expire_pending()` + cron `expire-pending` 
 `expired` klijentu, Melura piše „Isteklo". pgTAP 818 i REST suite zeleni lokalno, admin 577 testova.
 **Ostaje:** deploy na hostovanom (Hamza: `supabase db push`, `functions deploy send-push`) i
 istekli zahtjev viđen uživo u Meluri i na uređaju.
+
+### 69 — Sedmični kalendar u Meluri 🟡 (2026-10-14)
+
+Grana `feat/sedmicni-kalendar`. Počinje skicom u `prototype/adminv2/sedmica/`, pa kod iza postojećeg
+prekidača `Dan · Sedmica · Mjesec` u kalendaru.

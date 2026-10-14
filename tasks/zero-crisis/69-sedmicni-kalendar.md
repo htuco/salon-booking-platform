@@ -19,4 +19,4 @@ prikaz ostaje default.
 - [ ] Widget testovi za obje uloge; viđeno na 1440 i 402
 
 ## Status
-Nije počet.
+U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
