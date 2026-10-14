@@ -69,6 +69,19 @@ U Dartu: login bez provjere profila obara sva tri testa „Dopuni profil".
 - linkovi uz checkbox otvaraju Pravila korištenja; „Prihvatam" i „i" su isključeni iz semantike
   (prvi prolaz ih je pokazao kao dva lažna dugmeta).
 
+**Dorada poslije pregleda uživo (Hamza, 2026-10-14):**
+- telefon dobija izbor pozivnog broja (podrazumijevano +387, region i dijaspora); broj se kuca
+  lokalno, polje ne pušta slova, vodeća nula otpada → „+387 61 123 456";
+- stroži regex za email (`isValidEmail`: „ana@gmail", „ana@@x.ba", „ana@gmail..com" padaju prije
+  mreže);
+- ekran potvrde rezervacije: fotografija usluge (pa cover salona) umjesto gradijenta, a vrijednosti,
+  badge i datum poravnati uz desni rub. Uzrok „stepenastog" teksta je bio `SpecCard` u `core_ui`
+  (`Flexible` vrijednost stajala je na početku desne polovine); novi `spec_card_test` pada na starom
+  kodu (257 px umjesto 339).
+
+Dokaz: core_domain +105, core_ui +146, client +662, admin +577; analyze i format čisti. Viđeno
+uživo u Chromeu (Vitez, lokalni Supabase): slika Fade/Brada na potvrdi, poravnata kartica.
+
 **Ostalo za sljedećeg:**
 - **Deploy (Hamza):** `supabase db push` (migracija `20261013160000_registracija_profil`).
   Provjera: `select * from public.legal_versions()` → `1, 1`. Migracija na kraju popuni postojeće
