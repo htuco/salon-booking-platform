@@ -4,19 +4,19 @@ Puni task: [tasks/zero-crisis/69-sedmicni-kalendar.md](zero-crisis/69-sedmicni-k
 
 ## Status
 
-U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
+Na pregledu (PR #137, 2026-10-16).
 
 ## Ciljevi
 
 - [x] Dizajn prije koda: skica sedmice u `prototype/adminv2/sedmica/` (1440, 1024 i 402) — odobrena
       uz četiri odluke (Hamza, 2026-10-16, v. `README.md` skice)
-- [ ] „Sedmica" u postojećem prekidaču `Dan · Sedmica · Mjesec` radi; „Mjesec" ostaje „Uskoro"
-- [ ] Sedmica = 7 kolona (dani) sa terminima, blokadama i neradnim danima iz `working_hours`
-- [ ] Tap na termin otvara isti detalj kao dnevni prikaz; tap na prazno nudi ručno zakazivanje
-- [ ] Radnik vidi samo svoje termine i u sedmici
-- [ ] Na telefonu dnevni prikaz ostaje default
-- [ ] Widget testovi za obje uloge; viđeno uživo na 1440 i 402
-- [ ] `prototype/admin/SPEC.md` (tabela izostavljanja) i doc komentar `calendar_screen.dart` ažurni
+- [x] „Sedmica" u postojećem prekidaču `Dan · Sedmica · Mjesec` radi; „Mjesec" ostaje „Uskoro"
+- [x] Sedmica = 7 kolona (dani) sa terminima, blokadama i neradnim danima iz `working_hours`
+- [x] Tap na termin otvara isti detalj kao dnevni prikaz; tap na prazno nudi ručno zakazivanje
+- [x] Radnik vidi samo svoje termine i u sedmici
+- [x] Na telefonu dnevni prikaz ostaje default
+- [x] Widget testovi za obje uloge; viđeno uživo na 1440, 1024 i 402 (demo build)
+- [x] `prototype/admin/SPEC.md` (tabela izostavljanja) i doc komentar `calendar_screen.dart` ažurni
 
 ## Napomene
 
@@ -37,6 +37,11 @@ U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
   Pravila providera (ključ na ponedjeljku, uloga pobjeđuje čip, strelica preko promjene vremena)
   dokazuje `calendar_week_providers_test`; šest mutacija obara po barem jedan test. Admin 628.
   DST test se u UTC-u (CI) preskače sa razlogom umjesto da prolazi prazan.
+- **Ekran je gotov (2026-10-16).** `calendar_week_view.dart` je `part` od `calendar_screen.dart`
+  (izuzetak zapisan u `conventions.md`). `ProfilAvatar` ima `boja`/`bojaInicijala`; forma ručnog
+  termina čita `?time=` kao prijedlog (`vrijemeIzAdrese`). Demo puni i sedmicu. Uz put: natpis
+  „Ne radi" na šrafuri stoji na podlozi, jer je na neradnoj nedjelji pao kontrast (4,41:1).
+  Dokaz: `calendar_week_screen_test` (23), pet mutacija, admin 651.
 - **Za ekran:** avatar je `ProfilAvatar` (slika radnika, `employees.image_url`), a bez slike krug
   na `bojaRadnika(boje[id])` sa `onRadnik` inicijalima — `ProfilAvatar` za to treba parametar boje.
   Sadržaj bloka bira širina (≥ 70 / 40–70 / < 40 px), ne broj traka.

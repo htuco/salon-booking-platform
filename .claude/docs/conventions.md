@@ -156,10 +156,12 @@ Kad naiđeš na takvu zamku, zapiši je tu gdje se dešava — ne u commit poruk
   `Vertical.features`. Jezik aplikacije (dugmad, greške) ide kroz `.arb`. To su dvije različite
   stvari i ne miješaju se — `.arb` prevodi "Otkaži" na engleski, `terms` bira između "Klijent" i
   "Pacijent" na istom jeziku.
-- **Ručno pisan `part` je izuzetak, ne alat za dijeljenje.** Jedini je
-  `calendar_week.dart` kao `part of 'calendar_day.dart'`: sedmica crta kolonu dana istim privatnim
-  helperima (`_osa`, `_kolona`, `_uTrake`), a prepisan raspored traka je mjesto gdje se dva prikaza
-  istog dana tiho raziđu. Kad drugom fajlu treba tuđi privatni kod, prvi izbor je da ga učiniš
+- **Ručno pisan `part` je izuzetak, ne alat za dijeljenje.** Postoje dva, oba u kalendaru i iz
+  istog razloga. `calendar_week.dart` je `part of 'calendar_day.dart'`: sedmica crta kolonu dana
+  istim privatnim helperima (`_osa`, `_kolona`, `_uTrake`), a prepisan raspored traka je mjesto
+  gdje se dva prikaza istog dana tiho raziđu. `calendar_week_view.dart` je `part of
+  'calendar_screen.dart'`: sedmica na ekranu crta isti ton bloka, rub zahtjeva, šrafuru i legendu
+  kao dan, a dva prepisana tona „potvrđeno" su dvije legende. Kad drugom fajlu treba tuđi privatni kod, prvi izbor je da ga učiniš
   javnim u zasebnom libraryju; `part` samo kad dva fajla crtaju **isti** model i otvaranje bi
   napravilo API koji niko drugi ne smije zvati.
 

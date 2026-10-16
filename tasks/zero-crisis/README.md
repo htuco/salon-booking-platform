@@ -90,5 +90,8 @@ istekli zahtjev viđen uživo u Meluri i na uređaju.
 
 ### 69 — Sedmični kalendar u Meluri 🟡 (2026-10-14)
 
-Grana `feat/sedmicni-kalendar`. Počinje skicom u `prototype/adminv2/sedmica/`, pa kod iza postojećeg
-prekidača `Dan · Sedmica · Mjesec` u kalendaru.
+Grana `feat/sedmicni-kalendar`. Skica u `prototype/adminv2/sedmica/` odobrena (2026-10-16), sloj
+podataka i ekran gotovi: „Sedmica" u prekidaču radi, na ≥ 840 px mreža od 7 kolona (`7a`/`7c`),
+na telefonu lista po danima (`7b`), tap na termin otvara detalj, tap na prazno nudi ručni termin
+(zaokruženo na 30 min), tap na zaglavlje otvara dan. Admin 651 testova; viđeno uživo na demo buildu
+na 1440, 1024 i 402. **Ostaje:** pregled PR-a #137.
