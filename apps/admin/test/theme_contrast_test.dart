@@ -54,6 +54,19 @@ void main() {
     });
 
     group('$naziv prilagodjeni tokeni', () {
+      // Inicijali radnika bez slike stoje na boji radnika (sedmični kalendar, task 69).
+      for (var i = 0; i < palette.radnici.length; i++) {
+        test('inicijali na boji radnika $i prolaze AA', () {
+          final boja = palette.radnici[i];
+          expect(
+            odnos(palette.onRadnik, boja),
+            greaterThanOrEqualTo(kAa),
+            reason:
+                'radnik $i: ${odnos(palette.onRadnik, boja).toStringAsFixed(2)}:1',
+          );
+        });
+      }
+
       // Coral je najtjesnji par u paleti: bijeli tekst na njemu mjeri 3,05:1 i pada AA,
       // pa `onAction` nosi `--foreground`. Mjeri se ono sto se stvarno iscrtava —
       // `filledButtonTheme`, ne samo tokeni — jer se boja dugmeta odlucuje tamo.

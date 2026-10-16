@@ -156,6 +156,12 @@ Kad naiđeš na takvu zamku, zapiši je tu gdje se dešava — ne u commit poruk
   `Vertical.features`. Jezik aplikacije (dugmad, greške) ide kroz `.arb`. To su dvije različite
   stvari i ne miješaju se — `.arb` prevodi "Otkaži" na engleski, `terms` bira između "Klijent" i
   "Pacijent" na istom jeziku.
+- **Ručno pisan `part` je izuzetak, ne alat za dijeljenje.** Jedini je
+  `calendar_week.dart` kao `part of 'calendar_day.dart'`: sedmica crta kolonu dana istim privatnim
+  helperima (`_osa`, `_kolona`, `_uTrake`), a prepisan raspored traka je mjesto gdje se dva prikaza
+  istog dana tiho raziđu. Kad drugom fajlu treba tuđi privatni kod, prvi izbor je da ga učiniš
+  javnim u zasebnom libraryju; `part` samo kad dva fajla crtaju **isti** model i otvaranje bi
+  napravilo API koji niko drugi ne smije zvati.
 
 ## Supabase / SQL
 
@@ -199,6 +205,10 @@ Na svježem klonu `melos run codegen` mora proći prije `analyze` i `test` — i
   upitu. Nikad ne tvrdi da je ekran verifikovan testovima — dokaz je pokretanje (`/verify`).
 - Test koji traži `--dart-define` mora se tako i pokretati u CI-ju; test bez definea koji "prolazi"
   je test koji ne gleda pravu konfiguraciju.
+- **Test ljetnog računanja vremena se preskače u zoni bez njega.** CI ide u UTC, gdje bi prošao i
+  pogrešan kod; `skip:` sa razlogom je pošten, zelen test koji ništa ne gleda nije. Obrazac:
+  `calendar_week_providers_test.dart` (poredi `timeZoneOffset` prije i poslije zadnje nedjelje
+  oktobra). Na razvojnoj mašini (Europe/Sarajevo) se izvršava.
 
 ## Dizajn (`prototype/ui/`)
 

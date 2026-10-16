@@ -210,30 +210,40 @@ final kalendarBlokadeSedmiceProvider =
 
 /// Sastavljena sedmica — ono što sedmični prikaz crta.
 ///
-/// Čeka sva tri čitanja zajedno, iz istog razloga kao [kalendarDanProvider]: sedmica
-/// sastavljena prije radnog vremena nacrtala bi svaki dan kao neradni.
+/// Čeka **sva četiri** čitanja zajedno, iz istog razloga kao [kalendarDanProvider]:
+/// sedmica sastavljena prije radnog vremena nacrtala bi svaki dan kao neradni, a prije
+/// radnika bi termini stajali bez inicijala i boje, pa ih dobili trenutak kasnije.
 ///
 /// **Radnik iz uloge pobjeđuje izbor iz čipova.** Radnik ne vidi čipove, ali
 /// [izabraniRadnikProvider] preživi odjavu vlasnika na istom uređaju; bez ovog pravila bi
-/// radnik dobio kolonu filtriranu po kolegi — praznu, jer tuđe termine ne vidi.
+/// radnik dobio kolonu filtriranu po kolegi — praznu, jer tuđe termine ne vidi. Iz istog
+/// razloga kao u danu radnik dobija samo sebe u listi radnika.
 final kalendarSedmicaProvider = FutureProvider.autoDispose<KalendarSedmica>((
   ref,
 ) async {
   final dan = ref.watch(kalendarDatumProvider);
 
-  final (termini, radnoVrijeme, blokade) = await (
+  final (termini, radnici, radnoVrijeme, blokade) = await (
     ref.watch(kalendarTerminiSedmiceProvider.future),
+    ref.watch(adminEmployeesProvider.future),
     ref.watch(kalendarRadnoVrijemeProvider.future),
     ref.watch(kalendarBlokadeSedmiceProvider.future),
   ).wait;
 
+  final radnikIzUloge = ref.watch(adminRadnikIdProvider);
+
   return izgradiSedmicu(
     dan: dan,
+    radnici: radnikIzUloge == null
+        ? radnici
+        : [
+            for (final r in radnici)
+              if (r.id == radnikIzUloge) r,
+          ],
     termini: termini,
     radnoVrijeme: radnoVrijeme,
     blokade: blokade,
-    radnikId:
-        ref.watch(adminRadnikIdProvider) ?? ref.watch(izabraniRadnikProvider),
+    radnikId: radnikIzUloge ?? ref.watch(izabraniRadnikProvider),
   );
 });
 

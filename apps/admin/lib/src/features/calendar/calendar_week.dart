@@ -15,15 +15,51 @@ part of 'calendar_day.dart';
 DateTime pocetakSedmice(DateTime dan) =>
     DateTime(dan.year, dan.month, dan.day - (dan.weekday - DateTime.monday));
 
+/// Radnik koji je uz „Svi" van posla, cijeli dan ili dio dana — red u zaglavlju dana.
+///
+/// Postoji zato što kolona svih radnika crta **salonski** raspored: bez ovoga vlasnik iz
+/// sedmice ne bi mogao pročitati da Emir u četvrtak ne radi, ni da je Vedad od 12 do 13
+/// blokiran. Radnikova blokada se ne crta u koloni (tvrdila bi da je salon zatvoren), pa
+/// se kaže ovdje.
+class OdsutnostRadnika {
+  const OdsutnostRadnika({required this.radnik, this.blokada});
+
+  final Employee radnik;
+
+  /// `null` = radnik taj dan ne radi uopšte (nema smjene ili je dan zatvoren).
+  final BlockedSlot? blokada;
+
+  bool get cijeliDan => blokada == null;
+
+  /// `Emir ne radi`, ili `Vedad 12:00–13:00 · Doktor`.
+  String get tekst {
+    final blokada = this.blokada;
+    if (blokada == null) return '${radnik.name} ne radi';
+    return '${radnik.name} '
+        '${vrijemeOse(blokada.startTime.minutesFromMidnight)}–'
+        '${vrijemeOse(blokada.endTime.minutesFromMidnight)} · '
+        '${blokadaNaslov(blokada)}';
+  }
+}
+
 /// Jedan dan sedmice — jedna kolona sedmičnog prikaza.
 ///
 /// [kolona] je ista [KolonaRadnika] kao u dnevnom prikazu, samo što ne pripada jednom
 /// radniku nego **danu**: u njoj su termini svih radnika (ili samo filtriranog), u trakama.
 class DanSedmice {
-  const DanSedmice({required this.dan, required this.kolona});
+  const DanSedmice({
+    required this.dan,
+    required this.kolona,
+    this.odsutni = const [],
+  });
 
   final DateTime dan;
   final KolonaRadnika kolona;
+
+  /// Ko je uz „Svi" van posla taj dan: prvo oni koji ne rade cijeli dan, pa blokade po
+  /// vremenu. Prazno za filtriranog radnika (njegova smjena i blokade su već u koloni) i
+  /// za dan kad salon ne radi (tada ne radi niko, i to kaže kolona).
+  final List<OdsutnostRadnika> odsutni;
 
   /// Da li salon (ili filtrirani radnik) taj dan radi.
   bool get radi => kolona.radi;
@@ -40,6 +76,8 @@ class KalendarSedmica {
     required this.pocetak,
     required this.osa,
     required this.dani,
+    this.radnici = const [],
+    this.boje = const {},
   });
 
   /// Ponedjeljak, u ponoć.
@@ -52,6 +90,13 @@ class KalendarSedmica {
 
   /// Tačno sedam, ponedjeljak prvi.
   final List<DanSedmice> dani;
+
+  /// Aktivni radnici, redom za čipove `Svi · Emir · …`. Neaktivni ne dobijaju čip, ali
+  /// njihovi stari termini i dalje stoje u koloni.
+  final List<Employee> radnici;
+
+  /// `employees.id` → indeks u `AdminPalette.radnici`, i za neaktivne — v. [bojeRadnika].
+  final Map<String, int> boje;
 
   /// Nedjelja, u ponoć.
   DateTime get kraj => dani.last.dan;
@@ -90,11 +135,16 @@ class KalendarSedmica {
 ///
 /// **Radnikova blokada ulazi samo kad je taj radnik filtriran.** U koloni svih radnika ona
 /// bi se nacrtala preko cijele širine i tvrdila da je salon zatvoren, a zatvoren je samo
-/// jedan radnik. Salonska blokada ulazi uvijek.
+/// jedan radnik. Salonska blokada ulazi uvijek. Uz „Svi" se radnikova blokada i njegov
+/// slobodan dan kažu u zaglavlju — [DanSedmice.odsutni].
+///
+/// [radnici] daju čipove, boje i [DanSedmice.odsutni]; kolone ne zavise od njih, pa termin
+/// obrisanog radnika ne nestaje.
 ///
 /// [termini] i [blokade] smiju nositi i dane izvan sedmice; svaki dan uzima samo svoje.
 KalendarSedmica izgradiSedmicu({
   required DateTime dan,
+  required List<Employee> radnici,
   required List<Appointment> termini,
   required List<WorkingHour> radnoVrijeme,
   required List<BlockedSlot> blokade,
@@ -140,9 +190,49 @@ KalendarSedmica izgradiSedmicu({
     blokade: [for (final b in blokadeDana) ...b],
   );
 
+  final aktivni = [
+    for (final r in radnici)
+      if (r.isActive) r,
+  ];
+
+  List<OdsutnostRadnika> odsutniDana(int i) {
+    final raspored = rasporedi[i];
+    if (radnikId != null || raspored == null || raspored.isClosed) {
+      return const [];
+    }
+
+    final d = dani[i];
+    final cijeliDan = <OdsutnostRadnika>[];
+    final djelimicno = <OdsutnostRadnika>[];
+    for (final r in aktivni) {
+      final smjena = workingHoursFor(
+        radnoVrijeme,
+        dayOfWeek: d.weekday,
+        employeeId: r.id,
+      );
+      if (smjena == null || smjena.isClosed) {
+        cijeliDan.add(OdsutnostRadnika(radnik: r));
+        continue;
+      }
+      for (final b in blokade) {
+        if (b.date == datum(d) && b.employeeId == r.id) {
+          djelimicno.add(OdsutnostRadnika(radnik: r, blokada: b));
+        }
+      }
+    }
+    djelimicno.sort(
+      (a, b) => a.blokada!.startTime.minutesFromMidnight.compareTo(
+        b.blokada!.startTime.minutesFromMidnight,
+      ),
+    );
+    return [...cijeliDan, ...djelimicno];
+  }
+
   return KalendarSedmica(
     pocetak: pocetak,
     osa: osa,
+    radnici: aktivni,
+    boje: bojeRadnika([for (final r in radnici) r.id]),
     dani: [
       for (var i = 0; i < 7; i++)
         DanSedmice(
@@ -155,9 +245,55 @@ KalendarSedmica izgradiSedmicu({
             termini: terminiDana[i],
             blokade: blokadeDana[i],
           ),
+          odsutni: odsutniDana(i),
         ),
     ],
   );
+}
+
+/// Koliko boja ima `AdminPalette.radnici`. Model ne zna za temu, pa se jednakost drži
+/// testom (`calendar_week_test.dart`), ne importom.
+const int kBrojBojaRadnika = 8;
+
+/// Dodjeljuje radnicima boje: `employees.id` → indeks u `AdminPalette.radnici`.
+///
+/// **Nasumično, ali stabilno.** Boju niko ne bira (odluka 2026-10-16), pa je izvor id
+/// radnika: isti radnik ima istu boju na svakom uređaju, poslije odjave i poslije novog
+/// builda. Prava slučajnost bi mu boju mijenjala pri svakom pokretanju, a vlasnik boju
+/// pamti umjesto imena.
+///
+/// Dok ima slobodnih boja, dva radnika ne dijele boju: id koji padne na zauzetu ide na
+/// sljedeću slobodnu. Ids se obrađuju sortirani, da redoslijed liste iz baze ne mijenja
+/// ishod. Kad radnika ima više od [brojBoja], boje se ponavljaju po hešu.
+///
+/// Heš je ručni, a ne `String.hashCode`: taj Dart ne garantuje između VM-a i weba, a
+/// admin se builda za oba.
+Map<String, int> bojeRadnika(
+  Iterable<String> ids, {
+  int brojBoja = kBrojBojaRadnika,
+}) {
+  int hes(String s) {
+    var h = 0;
+    for (final c in s.codeUnits) {
+      // Mod prost broj ispod 2^31: međurezultat ostaje ispod 2^53, pa web računa tačno.
+      h = (h * 31 + c) % 2147483647;
+    }
+    return h;
+  }
+
+  final rezultat = <String, int>{};
+  final zauzete = <int>{};
+  for (final id in ids.toSet().toList()..sort()) {
+    var boja = hes(id) % brojBoja;
+    if (zauzete.length < brojBoja) {
+      while (zauzete.contains(boja)) {
+        boja = (boja + 1) % brojBoja;
+      }
+    }
+    zauzete.add(boja);
+    rezultat[id] = boja;
+  }
+  return rezultat;
 }
 
 /// Sedmica kao lista po danima — telefon (`7b`).

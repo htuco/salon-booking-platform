@@ -4,6 +4,7 @@
 /// fiksirana na 18.–24. maj 2026., a „sada" se prosljeđuje.
 library;
 
+import 'package:admin/src/core/theme/theme.dart';
 import 'package:admin/src/features/calendar/calendar_day.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,6 +13,11 @@ const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 
 /// Ponedjeljak, 18. maj 2026.
 final _ponedjeljak = DateTime(2026, 5, 18);
+
+const _radnici = [
+  Employee(id: 'e1', salonId: _salonId, name: 'Emir'),
+  Employee(id: 'e2', salonId: _salonId, name: 'Vedad'),
+];
 
 Appointment _termin({
   required DateTime dan,
@@ -86,11 +92,9 @@ void main() {
       expect(pocetakSedmice(DateTime(2026, 5, 25)), DateTime(2026, 5, 25));
     });
 
-    test('promjena ljetnog vremena ne pomjera ponedjeljak', () {
-      // Zadnja nedjelja oktobra 2026. je 25.; sedmica počinje 19. oktobra u ponoć.
-      final p = pocetakSedmice(DateTime(2026, 10, 25));
-      expect((p.year, p.month, p.day, p.hour), (2026, 10, 19, 0));
-    });
+    // Ljetno računanje vremena se ovdje ne testira: mijenja se u nedjelju poslije ponoći,
+    // pa nijedna ponoć od ponedjeljka do nedjelje ne prelazi preko njega. Zamka je u
+    // strelici za sedmicu — v. `calendar_week_providers_test.dart`.
 
     test('sedmica preko kraja mjeseca', () {
       // Nedjelja 31. maj → ponedjeljak 25. maj; utorak 2. jun → ponedjeljak 1. jun.
@@ -103,6 +107,7 @@ void main() {
     test('sedam dana, ponedjeljak prvi, iz bilo kojeg dana sedmice', () {
       final sedmica = izgradiSedmicu(
         dan: _dan(3),
+        radnici: _radnici,
         termini: const [],
         radnoVrijeme: _salon,
         blokade: const [],
@@ -116,6 +121,7 @@ void main() {
     test('termin ide u kolonu svog datuma, svi radnici u istoj koloni', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: [
           _termin(dan: _dan(0), od: 10 * 60, doMinuta: 11 * 60, id: 'pon-e1'),
           _termin(
@@ -142,6 +148,7 @@ void main() {
       () {
         final sedmica = izgradiSedmicu(
           dan: _ponedjeljak,
+          radnici: _radnici,
           termini: [
             _termin(dan: _dan(0), od: 10 * 60, doMinuta: 11 * 60, id: 'a'),
             _termin(
@@ -165,6 +172,7 @@ void main() {
     test('termin izvan sedmice se ne crta nigdje', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: [
           _termin(dan: DateTime(2026, 5, 25), od: 600, doMinuta: 660),
           _termin(dan: DateTime(2026, 5, 17), od: 600, doMinuta: 660, id: 'a2'),
@@ -181,6 +189,7 @@ void main() {
       () {
         final sedmica = izgradiSedmicu(
           dan: _ponedjeljak,
+          radnici: _radnici,
           termini: [
             // Subota u 18:00 je van radnog vremena — osa ga mora obuhvatiti.
             _termin(dan: _dan(5), od: 18 * 60, doMinuta: 18 * 60 + 30),
@@ -201,6 +210,7 @@ void main() {
     test('neradni dan je cijela kolona „Ne radi"', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: const [],
         radnoVrijeme: _salon,
         blokade: const [],
@@ -220,6 +230,7 @@ void main() {
     test('dan bez reda u working_hours je neradan, ne prazan radni', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: const [],
         radnoVrijeme: [_raspored(dan: 1)],
         blokade: const [],
@@ -239,6 +250,7 @@ void main() {
     test('salonska blokada ulazi u kolonu svog dana', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: const [],
         radnoVrijeme: _salon,
         blokade: [_blokada(dan: _dan(2), od: 12 * 60, doMinuta: 13 * 60)],
@@ -254,6 +266,7 @@ void main() {
     test('radnikova blokada sa „Svi" se ne crta — salon nije zatvoren', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: const [],
         radnoVrijeme: _salon,
         blokade: [
@@ -280,6 +293,7 @@ void main() {
     test('filtriran radnik vidi samo svoje termine, u svim danima', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: termini,
         radnoVrijeme: _salon,
         blokade: const [],
@@ -296,6 +310,7 @@ void main() {
     test('„Svi" ne gubi termin bez radnika', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: termini,
         radnoVrijeme: _salon,
         blokade: const [],
@@ -307,6 +322,7 @@ void main() {
     test('filtriran radnik dobija svoju smjenu i svoju blokadu', () {
       final sedmica = izgradiSedmicu(
         dan: _ponedjeljak,
+        radnici: _radnici,
         termini: const [],
         radnoVrijeme: [
           ..._salon,
@@ -338,6 +354,7 @@ void main() {
   group('linija „sada"', () {
     final sedmica = izgradiSedmicu(
       dan: _ponedjeljak,
+      radnici: _radnici,
       termini: const [],
       radnoVrijeme: _salon,
       blokade: const [],
@@ -363,6 +380,7 @@ void main() {
   test('telefon: lista po danima bez neradnih pojaseva', () {
     final sedmica = izgradiSedmicu(
       dan: _ponedjeljak,
+      radnici: _radnici,
       termini: [
         _termin(dan: _dan(0), od: 11 * 60, doMinuta: 12 * 60, id: 'kasniji'),
         _termin(dan: _dan(0), od: 9 * 60, doMinuta: 10 * 60, id: 'raniji'),
@@ -379,5 +397,148 @@ void main() {
       isEmpty,
       reason: 'nedjelja: „Ne radi" nije red liste',
     );
+  });
+
+  group('odsutni uz „Svi"', () {
+    test('radnik bez smjene u danu kad salon radi je „ne radi"', () {
+      final sedmica = izgradiSedmicu(
+        dan: _ponedjeljak,
+        radnici: _radnici,
+        termini: const [],
+        radnoVrijeme: [
+          ..._salon,
+          _raspored(dan: 4, radnik: 'e1', zatvoreno: true),
+        ],
+        blokade: const [],
+      );
+
+      final cetvrtak = sedmica.dani[3].odsutni;
+      expect(cetvrtak.map((o) => o.tekst), ['Emir ne radi']);
+      expect(cetvrtak.single.cijeliDan, isTrue);
+      expect(sedmica.dani[2].odsutni, isEmpty);
+    });
+
+    test(
+      'radnikova blokada je red sa vremenom i razlogom, poslije cijelih dana',
+      () {
+        final sedmica = izgradiSedmicu(
+          dan: _ponedjeljak,
+          radnici: _radnici,
+          termini: const [],
+          radnoVrijeme: [
+            ..._salon,
+            _raspored(dan: 2, radnik: 'e2', zatvoreno: true),
+          ],
+          blokade: [
+            _blokada(
+              dan: _dan(1),
+              od: 12 * 60,
+              doMinuta: 13 * 60,
+              radnik: 'e1',
+            ),
+          ],
+        );
+
+        expect(sedmica.dani[1].odsutni.map((o) => o.tekst), [
+          'Vedad ne radi',
+          'Emir 12:00–13:00 · Blokirano',
+        ]);
+      },
+    );
+
+    test('dan kad salon ne radi nema odsutnih — ne radi niko', () {
+      final sedmica = izgradiSedmicu(
+        dan: _ponedjeljak,
+        radnici: _radnici,
+        termini: const [],
+        radnoVrijeme: _salon,
+        blokade: [
+          _blokada(dan: _dan(6), od: 12 * 60, doMinuta: 13 * 60, radnik: 'e1'),
+        ],
+      );
+
+      expect(sedmica.dani[6].radi, isFalse);
+      expect(sedmica.dani[6].odsutni, isEmpty);
+    });
+
+    test('filtriran radnik nema red odsutnih — njegovo je već u koloni', () {
+      final sedmica = izgradiSedmicu(
+        dan: _ponedjeljak,
+        radnici: _radnici,
+        termini: const [],
+        radnoVrijeme: [
+          ..._salon,
+          _raspored(dan: 2, radnik: 'e2', zatvoreno: true),
+        ],
+        blokade: [
+          _blokada(dan: _dan(1), od: 12 * 60, doMinuta: 13 * 60, radnik: 'e1'),
+        ],
+        radnikId: 'e1',
+      );
+
+      expect(sedmica.dani.expand((d) => d.odsutni), isEmpty);
+    });
+
+    test('neaktivan radnik nije odsutan i nema čip, ali ima boju', () {
+      final sedmica = izgradiSedmicu(
+        dan: _ponedjeljak,
+        radnici: [
+          ..._radnici,
+          const Employee(
+            id: 'e3',
+            salonId: _salonId,
+            name: 'Amar',
+            isActive: false,
+          ),
+        ],
+        termini: const [],
+        radnoVrijeme: [
+          ..._salon,
+          _raspored(dan: 1, radnik: 'e3', zatvoreno: true),
+        ],
+        blokade: const [],
+      );
+
+      expect(sedmica.dani[0].odsutni, isEmpty);
+      expect(sedmica.radnici.map((r) => r.id), ['e1', 'e2']);
+      expect(sedmica.boje.keys, containsAll(['e1', 'e2', 'e3']));
+    });
+  });
+
+  group('bojeRadnika', () {
+    // Zadnji znakovi se razlikuju za umnožak od 8, pa bi svih osam bez traženja slobodne
+    // boje palo na **istu** boju — test koji prolazi samo zato što su heševi slučajno
+    // različiti ne bi ništa dokazao.
+    final ids = [for (final z in 'AIQYaiqy'.split('')) 'radnik-$z'];
+
+    test('dok ima boja, dva radnika ne dijele boju', () {
+      final boje = bojeRadnika(ids);
+      expect(boje.values.toSet(), hasLength(8));
+    });
+
+    test('ista boja bez obzira na redoslijed liste iz baze', () {
+      expect(bojeRadnika(ids.reversed), bojeRadnika(ids));
+    });
+
+    test(
+      'novi radnik ne mijenja boju radniku koji je sortiran prije njega',
+      () {
+        final prije = bojeRadnika(ids.take(3));
+        final poslije = bojeRadnika([...ids.take(3), 'ffffffff-novi']);
+        for (final id in ids.take(3)) {
+          expect(poslije[id], prije[id], reason: id);
+        }
+      },
+    );
+
+    test('deveti radnik dobija boju iz palete, ne grešku', () {
+      final boje = bojeRadnika([...ids, 'ffffffff-deveti']);
+      expect(boje['ffffffff-deveti'], inInclusiveRange(0, 7));
+    });
+
+    test('broj boja u modelu je broj boja u obje palete', () {
+      expect(AdminPalette.light.radnici, hasLength(kBrojBojaRadnika));
+      expect(AdminPalette.dark.radnici, hasLength(kBrojBojaRadnika));
+    });
   });
 }
