@@ -58,6 +58,8 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     required this.toastInfo,
     required this.toastWarn,
     required this.toastErr,
+    required this.radnici,
+    required this.onRadnik,
   });
 
   static const light = AdminPalette(
@@ -111,6 +113,20 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     toastInfo: Color(0xFF8FB0D6),
     toastWarn: Color(0xFFE3B45A),
     toastErr: Color(0xFFE8746F),
+    // Krug radnika bez slike (sedmični kalendar, task 69). Tamni tonovi pod bijelim
+    // inicijalima, svaki ≥5,8:1; koralni i crveni ton su izostavljeni jer koralna nosi
+    // radnju, a crvena grešku. Mjeri `theme_contrast_test.dart`.
+    radnici: [
+      Color(0xFF3D5A80),
+      Color(0xFF0B5D4B),
+      Color(0xFF8A5A2B),
+      Color(0xFF7A3E7A),
+      Color(0xFF2B6A8A),
+      Color(0xFF55559A),
+      Color(0xFF5C6B23),
+      Color(0xFF9A4A3A),
+    ],
+    onRadnik: Color(0xFFFFFFFF),
   );
 
   static const dark = AdminPalette(
@@ -151,6 +167,18 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     toastInfo: Color(0xFF8FB0D6),
     toastWarn: Color(0xFFE3B45A),
     toastErr: Color(0xFFE8746F),
+    // Isti redoslijed tonova kao u svijetloj, svjetliji, pod tamnim inicijalima (≥7,5:1).
+    radnici: [
+      Color(0xFF91A7FF),
+      Color(0xFF63E6BE),
+      Color(0xFFE8B07A),
+      Color(0xFFE0A6E0),
+      Color(0xFF7FC8E8),
+      Color(0xFFB4B4F5),
+      Color(0xFFC2D27F),
+      Color(0xFFF2A08E),
+    ],
+    onRadnik: Color(0xFF1A1B1E),
   );
 
   final Color ink, ground, surface, accent, onAccent;
@@ -167,6 +195,18 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
 
   /// Krug ikone u toastu, po vrsti: uspjeh, informacija, upozorenje, greška.
   final Color toastOk, toastInfo, toastWarn, toastErr;
+
+  /// Boje radnika: krug sa inicijalima kad radnik nema profilnu sliku, i čip filtera.
+  ///
+  /// Boja se ne bira, nego se dodjeljuje po `employees.id` — v. `bojeRadnika` u
+  /// `calendar_week.dart`. Uvijek ista dužina u obje teme, da indeks znači isti ton.
+  final List<Color> radnici;
+
+  /// Inicijali na [radnici].
+  final Color onRadnik;
+
+  /// Boja radnika za indeks iz `bojeRadnika`.
+  Color bojaRadnika(int indeks) => radnici[indeks % radnici.length];
 
   @override
   AdminPalette copyWith() => this;
@@ -212,6 +252,11 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
       toastInfo: mix(toastInfo, other.toastInfo),
       toastWarn: mix(toastWarn, other.toastWarn),
       toastErr: mix(toastErr, other.toastErr),
+      radnici: [
+        for (var i = 0; i < radnici.length; i++)
+          mix(radnici[i], other.radnici[i % other.radnici.length]),
+      ],
+      onRadnik: mix(onRadnik, other.onRadnik),
     );
   }
 }

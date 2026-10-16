@@ -167,6 +167,8 @@ class ProfilAvatar extends StatelessWidget {
     required this.ime,
     required this.velicina,
     this.naTamnom = false,
+    this.boja,
+    this.bojaInicijala,
     super.key,
   });
 
@@ -177,6 +179,14 @@ class ProfilAvatar extends StatelessWidget {
   /// Sidebar je taman, pa inicijali idu svijetlim na tamnijoj podlozi.
   final bool naTamnom;
 
+  /// Podloga kruga bez slike, kad osoba ima svoju boju — radnik u kalendaru nosi
+  /// `bojaRadnika` (task 69), pa se razlikuje od kolege i bez slike.
+  /// `null` = neutralna podloga, kao i do sada.
+  final Color? boja;
+
+  /// Inicijali na [boja] — uz boju radnika to je `onRadnik`.
+  final Color? bojaInicijala;
+
   @override
   Widget build(BuildContext context) {
     final boje = context.adminColors;
@@ -185,12 +195,14 @@ class ProfilAvatar extends StatelessWidget {
       style: TextStyle(
         fontSize: velicina * 0.36,
         fontWeight: FontWeight.w600,
-        color: naTamnom ? boje.sidebarAccentForeground : boje.textSecondary,
+        color:
+            bojaInicijala ??
+            (naTamnom ? boje.sidebarAccentForeground : boje.textSecondary),
         height: 1,
       ),
     );
     final prazno = ColoredBox(
-      color: naTamnom ? boje.sidebarSelected : boje.neutralTint,
+      color: boja ?? (naTamnom ? boje.sidebarSelected : boje.neutralTint),
       child: Center(child: inicijali),
     );
     final adresa = url;

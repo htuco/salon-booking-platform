@@ -33,8 +33,15 @@ import '../../core/widgets/admin_toast.dart';
 /// booking flow, jer svaki korak sužava sljedeći: slobodni slotovi ovise o usluzi (trajanje)
 /// i radniku (radno vrijeme).
 class NewAppointmentScreen extends ConsumerStatefulWidget {
-  const NewAppointmentScreen({this.initialDate, super.key});
+  const NewAppointmentScreen({this.initialDate, this.initialTime, super.key});
   final DateTime? initialDate;
+
+  /// Vrijeme koje je vlasnik dodirnuo u sedmičnom kalendaru (task 69).
+  ///
+  /// **Prijedlog, ne izbor.** Izabere se tek kad ga baza vrati među slobodnima za izabranu
+  /// uslugu; inače forma ostaje bez vremena. Prazno mjesto u kalendaru nije slobodan
+  /// termin — buffer, korak slota i blokada radnika ga mogu zatvoriti.
+  final LocalTime? initialTime;
 
   @override
   ConsumerState<NewAppointmentScreen> createState() =>
@@ -130,6 +137,11 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
                   radnik: _radnik,
                   datum: _datum,
                   izabran: _slot,
+                  // Prijedlog vrijedi samo za dan na koji je dodirnut — 10:30 utorkom
+                  // ne znači ništa kad se datum prebaci na petak.
+                  predlozeno: _datum == widget.initialDate
+                      ? widget.initialTime
+                      : null,
                   onDatum: (datum) => setState(() {
                     _datum = datum;
                     _slot = null;
@@ -555,12 +567,17 @@ class _IzborTermina extends ConsumerStatefulWidget {
     required this.izabran,
     required this.onDatum,
     required this.onSlot,
+    this.predlozeno,
   });
 
   final Service usluga;
   final Employee? radnik;
   final DateTime datum;
   final LocalTime? izabran;
+
+  /// Vrijeme koje se izabere samo, ako je među slobodnima i ništa nije izabrano —
+  /// v. [NewAppointmentScreen.initialTime].
+  final LocalTime? predlozeno;
   final ValueChanged<DateTime> onDatum;
   final ValueChanged<LocalTime> onSlot;
 
@@ -612,6 +629,12 @@ class _IzborTerminaState extends ConsumerState<_IzborTermina> {
           );
       if (!mounted) return;
       setState(() => _slotovi = slotovi);
+      final predlozeno = widget.predlozeno;
+      if (predlozeno != null &&
+          widget.izabran == null &&
+          slotovi.distinctTimes.contains(predlozeno)) {
+        widget.onSlot(predlozeno);
+      }
     } on ApiError {
       if (!mounted) return;
       setState(() => _slotovi = const []);

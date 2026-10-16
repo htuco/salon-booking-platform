@@ -12,11 +12,15 @@ Salon vidi cijelu sedmicu odjednom za planiranje. Primarno tablet i računar; na
 prikaz ostaje default.
 
 ## Definicija gotovog
-- [ ] Dizajn prije koda (handoff ili skica u `prototype/adminv2/`)
-- [ ] Prekidač dan/sedmica; sedmica = 7 kolona sa terminima, blokadama i neradnim danima
-- [ ] Tap na termin otvara isti detalj kao u dnevnom prikazu; tap na prazno nudi ručno zakazivanje
-- [ ] Radnik vidi samo svoje termine i u sedmici
-- [ ] Widget testovi za obje uloge; viđeno na 1440 i 402
+- [x] Dizajn prije koda (handoff ili skica u `prototype/adminv2/`)
+- [x] Prekidač dan/sedmica; sedmica = 7 kolona sa terminima, blokadama i neradnim danima
+- [x] Tap na termin otvara isti detalj kao u dnevnom prikazu; tap na prazno nudi ručno zakazivanje
+- [x] Radnik vidi samo svoje termine i u sedmici
+- [x] Widget testovi za obje uloge; viđeno na 1440 i 402
 
 ## Status
-Nije počet.
+Na pregledu (PR #137, 2026-10-16). Ekran je `calendar_week_view.dart` (`part` ekrana kalendara).
+Dokaz: `calendar_week_screen_test` (23, uz pristupačnost na obje širine), pet mutacija obara po jedan
+test; admin 651, `analyze` i `format` čisti. Viđeno uživo na demo buildu (`demo_main.dart`) na 1440,
+1024 i 402. Tap na prazno šalje `?date=&time=` u formu ručnog termina, a forma vrijeme izabere samo
+ako ga baza vrati među slobodnima.
