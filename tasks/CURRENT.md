@@ -8,7 +8,8 @@ U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
 
 ## Ciljevi
 
-- [x] Dizajn prije koda: skica sedmice u `prototype/adminv2/sedmica/` (1440 i 402) — čeka odobrenje u PR-u
+- [x] Dizajn prije koda: skica sedmice u `prototype/adminv2/sedmica/` (1440, 1024 i 402) — odobrena
+      uz četiri odluke (Hamza, 2026-10-16, v. `README.md` skice)
 - [ ] „Sedmica" u postojećem prekidaču `Dan · Sedmica · Mjesec` radi; „Mjesec" ostaje „Uskoro"
 - [ ] Sedmica = 7 kolona (dani) sa terminima, blokadama i neradnim danima iz `working_hours`
 - [ ] Tap na termin otvara isti detalj kao dnevni prikaz; tap na prazno nudi ručno zakazivanje
@@ -30,6 +31,15 @@ U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
   čipa. Dokaz: `calendar_week_test` (20) + `blocked_slot_repository_test` (2); dvije mutacije
   (radnikova blokada u „Svi", pogrešan ponedjeljak) obaraju 2 i 14 testova; admin 597, core_api
   144, analyze i format čisti. Bez nove migracije: RLS za čitanje je isti kao za dan.
+- **Pregled (Hamza, 2026-10-16) je zatvoren u istoj grani.** Boje radnika su tokeni
+  `AdminPalette.radnici` (8 tonova, AA u obje teme), dodjeljuje ih `bojeRadnika` iz id-a; uz „Svi"
+  `DanSedmice.odsutni` kaže ko ne radi i čija je blokada; `kalendarSedmicaProvider` čeka i radnike.
+  Pravila providera (ključ na ponedjeljku, uloga pobjeđuje čip, strelica preko promjene vremena)
+  dokazuje `calendar_week_providers_test`; šest mutacija obara po barem jedan test. Admin 628.
+  DST test se u UTC-u (CI) preskače sa razlogom umjesto da prolazi prazan.
+- **Za ekran:** avatar je `ProfilAvatar` (slika radnika, `employees.image_url`), a bez slike krug
+  na `bojaRadnika(boje[id])` sa `onRadnik` inicijalima — `ProfilAvatar` za to treba parametar boje.
+  Sadržaj bloka bira širina (≥ 70 / 40–70 / < 40 px), ne broj traka.
 - Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client`, inače `melos run
   analyze` pada na stringu iz taska 65 (generisani l10n nije u gitu).
 - Vizuelni izvor je `prototype/adminv2/` (ADR-0016); sedmice tamo nema, zato skica ide prva.

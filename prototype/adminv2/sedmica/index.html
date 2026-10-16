@@ -7,6 +7,8 @@
 <!--
   Skica taska 69 (sedmični kalendar). Nije production kod i ne portuje se: Flutter uzima
   raspored i pravila iz README.md, a boje iz admin teme (`apps/admin/lib/src/core/theme/`).
+  Boje radnika su prva četiri tona `AdminPalette.light.radnici`; u aplikaciji ih dodjeljuje
+  `bojeRadnika` po id-u, ovdje su upisane rukom.
   Podaci su izmišljeni, isti saloni i imena kao u `3c`/`3l`.
 -->
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -43,22 +45,34 @@
   .seg small { font-size: 11px; margin-left: 4px; }
   .cta { background: var(--coral); color: #fff; font-weight: 700; letter-spacing: .06em; padding: 11px 18px; }
 
-  .filters { display: flex; gap: 8px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--line); }
+  .filters { display: flex; gap: 8px; align-items: center; padding: 10px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
   .chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 500; display: inline-flex; gap: 8px; align-items: center; }
   .chip.on { background: #e8ecf1; border-color: #e8ecf1; color: var(--blue); }
   .ini { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center;
-    font-size: 11px; font-weight: 700; color: #fff; }
-  .legend { margin-left: auto; display: flex; gap: 14px; color: var(--ink-2); font-size: 13px; }
+    font-size: 9px; font-weight: 700; color: #fff; flex: none; overflow: hidden; }
+  /* Profilna slika radnika; skica nema fotografija, pa je „slika" gradijent sa siluetom. */
+  .ini.foto { background: radial-gradient(circle at 50% 38%, #d9c7b5 0 22%, transparent 23%),
+    radial-gradient(circle at 50% 105%, #d9c7b5 0 45%, transparent 46%), #6f7a86 !important; color: transparent !important; }
+  .legend { margin-left: auto; display: flex; gap: 14px; color: var(--ink-2); font-size: 13px; flex-wrap: wrap; }
   .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; }
 
   /* ---------- Sedmična mreža ---------- */
-  .week { display: grid; grid-template-columns: var(--axis) repeat(7, minmax(120px, 1fr)); overflow: auto; flex: 1; }
+  /* Sedam kolona uvijek stane: na 1024 je kolona ~100 px, i tada blok skraćuje sadržaj
+     (v. .uzak / .tijesan), umjesto da sedmica skrola vodoravno. */
+  .week { display: grid; grid-template-columns: var(--axis) repeat(7, minmax(0, 1fr)); overflow: auto; flex: 1; }
   .dh { position: sticky; top: 0; z-index: 3; background: #fff; border-bottom: 1px solid var(--line);
-    border-left: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+    border-left: 1px solid var(--line); padding: 10px 12px; text-align: left;
+    display: flex; flex-direction: column; justify-content: flex-start; min-width: 0; }
   .dh:hover { background: var(--bg-2); }
   .dh .d { font-size: 12px; letter-spacing: .1em; color: var(--ink-3); font-weight: 600; }
-  .dh .n { font-size: 22px; font-weight: 600; }
+  .dh .n { font-size: 22px; font-weight: 600; align-self: flex-start; }
   .dh .c { font-size: 12px; color: var(--ink-2); }
+  .dh .c span + span::before { content: ' · '; }
+  .dh .ods { margin-top: 6px; display: grid; gap: 3px; }
+  .dh .ods div { display: flex; gap: 5px; align-items: center; font-size: 11px; color: var(--ink-2);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .dh .ods div span:last-child { overflow: hidden; text-overflow: ellipsis; }
+  .dh .ods .ini { width: 16px; height: 16px; font-size: 7px; opacity: .55; }
   .dh.today .n { color: #fff; background: var(--blue); padding: 0 8px; display: inline-block; }
   .corner { position: sticky; top: 0; z-index: 3; background: #fff; border-bottom: 1px solid var(--line); }
   .axis { position: relative; }
@@ -75,9 +89,14 @@
   .blk b { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .blk .t { color: var(--ink-2); display: flex; gap: 4px; align-items: center; white-space: nowrap; }
   .blk .ini { width: 16px; height: 16px; font-size: 9px; flex: none; }
+  /* Sadržaj bloka bira **širina**, ne broj traka: ista pravila na 1440 i na tabletu.
+     ≥ 70 px: inicijali + vrijeme + ime · 40–70: inicijali + vrijeme · < 40: samo inicijali. */
   .blk.uzak { padding: 3px 4px; }
   .blk.uzak b { display: none; }
   .blk.uzak .t { flex-direction: column; align-items: flex-start; gap: 2px; font-size: 11px; }
+  .blk.tijesan { padding: 3px 2px; }
+  .blk.tijesan b, .blk.tijesan .t em { display: none; }
+  .blk .t em { font-style: normal; }
   .blk.red { display: flex; gap: 6px; align-items: center; }
   .blk.red b { display: inline; }
   .blk.uzak.red b { display: none; }
@@ -91,7 +110,22 @@
 
   /* ---------- Telefon (3l + agenda sedmice) ---------- */
   .phone { display: none; }
-  @media (max-width: 640px) {
+  /* Tablet u landscapeu (1024): ista mreža, uža traka i zaglavlje u dva reda. */
+  @media (max-width: 1279px) {
+    .app { grid-template-columns: 200px 1fr; }
+    .brand { font-size: 22px; }
+    .nav a { font-size: 13px; letter-spacing: .06em; }
+    .top { padding: 10px 14px; gap: 8px; }
+    .title { font-size: 17px; }
+    .cta { padding: 10px 12px; font-size: 13px; }
+    .filters { padding: 8px 14px; }
+    .legend { margin-left: 0; width: 100%; font-size: 12px; }
+    .dh { padding: 8px 8px; }
+    .dh .c span { display: block; }
+    .dh .c span + span::before { content: none; }
+  }
+  /* Ispod 840 je mobilna ljuska (AdminBreakpoint.desktop) — i iPad u portretu. */
+  @media (max-width: 839px) {
     .app { display: none; }
     .phone { display: block; }
   }
@@ -115,6 +149,9 @@
   .row .card span { font-size: 13px; color: var(--ink-2); }
   .row .card span.ini { color: #fff; font-size: 11px; }
   .ph-off { padding: 10px 16px 14px; color: var(--ink-2); font-size: 14px; }
+  .ph-ods { padding: 0 16px 6px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--ink-2); }
+  .ph-ods span { display: inline-flex; gap: 5px; align-items: center; }
+  .ph-ods .ini { width: 16px; height: 16px; font-size: 7px; opacity: .55; }
   .ph-cta { position: sticky; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: 12px 16px; display: flex; gap: 10px; }
   .ph-cta .cta { flex: 1; padding: 14px; }
 </style>
@@ -158,10 +195,13 @@
 
 <script>
   // Izmišljeni podaci, oblik kao `KalendarDan`: radnici, termini, blokade, radno vrijeme.
+  // Dva radnika na „E" su namjerno: inicijali su dva slova (`inicijaliOd`), a boja ih
+  // dodatno razdvaja. Vedad ima profilnu sliku, pa krug nosi nju umjesto inicijala.
   const radnici = [
-    { id: 'e', ime: 'Emir', boja: '#3d5a80' },
-    { id: 'v', ime: 'Vedad', boja: '#0b5d4b' },
-    { id: 'a', ime: 'Amar', boja: '#8a5a2b' },
+    { id: 'e', ime: 'Emir Bešić', boja: '#3d5a80' },
+    { id: 'v', ime: 'Vedad Hodžić', boja: '#0b5d4b', slika: true },
+    { id: 'a', ime: 'Amar Kovač', boja: '#8a5a2b' },
+    { id: 'd', ime: 'Edin Mujić', boja: '#7a3e7a' },
   ];
   const dani = ['PON', 'UTO', 'SRI', 'ČET', 'PET', 'SUB', 'NED'];
   const datumi = [18, 19, 20, 21, 22, 23, 24];
@@ -182,16 +222,22 @@
     [4,'e',13,14,'Adis Jusić','pending'],[4,'v',16,17,'Kerim Avdić','confirmed'],[4,'e',18,19,'Eldar Hasić','confirmed'],
     [5,'e',9,10,'Nermin Šehić','confirmed'],[5,'v',9.5,10.5,'Vedran Lukić','confirmed'],[5,'e',10,11,'Irfan Muratović','confirmed'],
     [5,'a',11,12,'Tarik Kadić','pending'],
+    [0,'d',12,13,'Kemal Tirić','confirmed'],[1,'d',15,16,'Omer Pašić','confirmed'],[4,'d',10.5,11.5,'Samir Dedić','confirmed'],
   ];
   // Blokade: [dan, radnik|null, od, do, tekst]; null = cijeli salon.
   const blokade = [[2, null, 12, 13, 'Salon zatvoren · sastanak']];
   // Radno vrijeme salona po danu; null = neradni dan.
   const rv = [[9,20],[9,20],[9,20],[9,20],[9,20],[9,15],null];
+  // Uz „Svi": ko je van posla taj dan — [dan, radnik, tekst]. Model: `DanSedmice.odsutni`.
+  const odsutni = [[1,'v','12:00–13:00 · Doktor'],[3,'d','ne radi'],[5,'a','ne radi']];
 
   let filter = null; // null = Svi
   const h = v => (v - OD) * 56;
   const fmt = v => `${String(Math.floor(v)).padStart(2,'0')}:${String(Math.round((v%1)*60)).padStart(2,'0')}`;
-  const ini = r => `<span class="ini" style="background:${r.boja}">${r.ime[0]}</span>`;
+  const inicijali = ime => { const d = ime.trim().split(/\s+/); return (d[0][0] + (d.length > 1 ? d[d.length-1][0] : '')).toUpperCase(); };
+  const ini = r => `<span class="ini ${r.slika ? 'foto' : ''}" style="background:${r.boja}" title="${r.ime}">${inicijali(r.ime)}</span>`;
+  const ime = r => r.ime.split(' ')[0];
+  const odsutniDana = i => filter ? [] : odsutni.filter(o => o[0] === i).map(o => [rad(o[1]), o[2]]);
   const rad = id => radnici.find(r => r.id === id);
   const vidljivi = () => termini.filter(t => !filter || t[1] === filter);
 
@@ -212,7 +258,7 @@
 
   function chips(el) {
     el.innerHTML = [`<button class="chip ${!filter?'on':''}" data-f="">Svi</button>`,
-      ...radnici.map(r => `<button class="chip ${filter===r.id?'on':''}" data-f="${r.id}">${ini(r)}${r.ime}</button>`)].join('');
+      ...radnici.map(r => `<button class="chip ${filter===r.id?'on':''}" data-f="${r.id}">${ini(r)}${ime(r)}</button>`)].join('');
     el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { filter = b.dataset.f || null; render(); });
   }
 
@@ -222,29 +268,34 @@
       <span><i style="border:1px dashed var(--ink)"></i>Čeka potvrdu</span><span><i style="background:#d6d8db"></i>Završeno</span>
       <span><i style="background:var(--blue)"></i>U toku</span></div>`);
     const w = document.getElementById('week'); const visina = h(DO);
+    const sirinaKolone = (w.clientWidth - 64) / 7;
     let html = `<div class="corner"></div>`;
     dani.forEach((d, i) => {
       const n = vidljivi().filter(t => t[0] === i).length;
       html += `<button class="dh ${i===danas?'today':''}" title="Otvori dan"><div class="d">${d}</div><div class="n">${datumi[i]}</div>
-        <div class="c">${rv[i] ? `${fmt(rv[i][0])}–${fmt(rv[i][1])} · ${n} termina` : 'Ne radi'}</div></button>`;
+        <div class="c">${rv[i] ? `<span>${fmt(rv[i][0])}–${fmt(rv[i][1])}</span><span>${n} termina</span>` : 'Ne radi'}</div>
+        ${rv[i] && odsutniDana(i).length ? `<div class="ods">${odsutniDana(i).map(([r, t]) =>
+          `<div title="${r.ime} ${t}">${ini(r)}<span>${ime(r)} ${t}</span></div>`).join('')}</div>` : ''}</button>`;
     });
     html += `<div class="axis" style="height:${visina}px">${Array.from({length: DO-OD}, (_, k) => k ? `<span style="top:${k*56}px">${fmt(OD+k)}</span>` : '').join('')}</div>`;
     dani.forEach((_, i) => {
       let c = `<div class="col ${i===danas?'today':''}" style="height:${visina}px">`;
-      if (!rv[i]) c += `<div class="off" style="top:0;height:${visina}px">Neradni dan</div>`;
+      // Tekst je isti kao u dnevnom prikazu (`_neradniPojasevi`): „Ne radi", „Ne radi od 15:00".
+      if (!rv[i]) c += `<div class="off" style="top:0;height:${visina}px">Ne radi</div>`;
       else {
-        if (rv[i][0] > OD) c += `<div class="off" style="top:0;height:${h(rv[i][0])}px"></div>`;
-        if (rv[i][1] < DO) c += `<div class="off" style="top:${h(rv[i][1])}px;height:${h(DO)-h(rv[i][1])}px">Zatvoreno od ${fmt(rv[i][1])}</div>`;
+        if (rv[i][0] > OD) c += `<div class="off" style="top:0;height:${h(rv[i][0])}px">Ne radi do ${fmt(rv[i][0])}</div>`;
+        if (rv[i][1] < DO) c += `<div class="off" style="top:${h(rv[i][1])}px;height:${h(DO)-h(rv[i][1])}px">Ne radi od ${fmt(rv[i][1])}</div>`;
       }
       blokade.filter(b => b[0] === i).forEach(b => c += `<div class="off" style="top:${h(b[2])}px;height:${h(b[3])-h(b[2])}px">${b[4]}</div>`);
       if (i === danas) c += `<div class="nowline" style="top:${h(sada)}px"></div>`;
       c += `<div class="slot-hint" style="top:${h(17.5)}px">+ Novi termin 17:30</div>`;
       for (const [t, traka, od] of rasporedi(vidljivi().filter(t => t[0] === i))) {
         const sir = 100 / od, r = rad(t[1]);
-        // Tri+ trake: samo inicijal i vrijeme (ime u tooltipu i detalju). Ispod 40 px: jedan red.
-        const klase = [t[5], od >= 3 ? "uzak" : "", h(t[3]) - h(t[2]) < 40 ? "red" : ""].join(" ");
+        // Sadržaj bira širina bloka (v. CSS .uzak / .tijesan). Ispod 40 px visine: jedan red.
+        const px = sirinaKolone / od - 6;
+        const klase = [t[5], px < 40 ? "uzak tijesan" : px < 70 ? "uzak" : "", h(t[3]) - h(t[2]) < 40 ? "red" : ""].join(" ");
         c += `<div class="blk ${klase}" style="top:${h(t[2])+1}px;height:${h(t[3])-h(t[2])-2}px;left:calc(${traka*sir}% + 3px);width:calc(${sir}% - 6px)"
-          title="${t[4]} · ${fmt(t[2])}–${fmt(t[3])} · ${r.ime}"><span class="t">${ini(r)}${fmt(t[2])}</span><b>${t[4]}</b></div>`;
+          title="${t[4]} · ${fmt(t[2])}–${fmt(t[3])} · ${r.ime}"><span class="t">${ini(r)}<em>${fmt(t[2])}</em></span><b>${t[4]}</b></div>`;
       }
       html += c + '</div>';
     });
@@ -257,10 +308,15 @@
     dani.forEach((d, i) => {
       const lista = vidljivi().filter(t => t[0] === i).sort((x, y) => x[2] - y[2]);
       html += `<section class="ph-day ${i===danas?'today':''}"><h2><b>${d} ${datumi[i]}.</b><span>${rv[i] ? `${lista.length} termina` : 'Ne radi'}</span></h2>`;
-      if (!rv[i]) html += `<div class="ph-off">Neradni dan</div>`;
-      blokade.filter(b => b[0] === i).forEach(b => html += `<div class="ph-off">${fmt(b[2])}–${fmt(b[3])} · ${b[4]}</div>`);
-      for (const t of lista) {
-        html += `<div class="row"><div class="tm">${fmt(t[2])}</div><div class="card ${t[5]==='now'?'confirmed':t[5]}"><div><b>${t[4]}</b><span>${fmt(t[2])}–${fmt(t[3])}</span></div>${ini(rad(t[1]))}</div></div>`;
+      if (!rv[i]) html += `<div class="ph-off">Ne radi</div>`;
+      else if (odsutniDana(i).length) html += `<div class="ph-ods">${odsutniDana(i).map(([r, t]) => `<span>${ini(r)}${ime(r)} ${t}</span>`).join('')}</div>`;
+      // Blokada je red liste po vremenu, kao u `redoviKolone` — ne zaglavlje dana.
+      const redovi = [...lista.map(t => [t[2], 't', t]), ...blokade.filter(b => b[0] === i).map(b => [b[2], 'b', b])]
+        .sort((x, y) => x[0] - y[0]);
+      for (const [, vrsta, t] of redovi) {
+        html += vrsta === 'b'
+          ? `<div class="ph-off">${fmt(t[2])}–${fmt(t[3])} · ${t[4]}</div>`
+          : `<div class="row"><div class="tm">${fmt(t[2])}</div><div class="card ${t[5]==='now'?'confirmed':t[5]}"><div><b>${t[4]}</b><span>${fmt(t[2])}–${fmt(t[3])}</span></div>${ini(rad(t[1]))}</div></div>`;
       }
       html += '</section>';
     });
@@ -269,6 +325,7 @@
 
   function render() { desktop(); phone(); }
   render();
+  addEventListener('resize', render);
 </script>
 </body>
 </html>

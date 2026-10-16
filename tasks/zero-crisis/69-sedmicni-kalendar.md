@@ -19,4 +19,5 @@ prikaz ostaje default.
 - [ ] Widget testovi za obje uloge; viđeno na 1440 i 402
 
 ## Status
-U toku (grana `feat/sedmicni-kalendar`, 2026-10-14).
+U toku (grana `feat/sedmicni-kalendar`, 2026-10-14). Skica odobrena 2026-10-16 (1440, 1024, 402); sloj
+podataka gotov i pregledan; ekran sljedeći.
