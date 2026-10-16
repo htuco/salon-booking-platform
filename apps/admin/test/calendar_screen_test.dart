@@ -279,21 +279,28 @@ void main() {
     });
 
     testWidgets(
-      'prekidač Dan/Sedmica/Mjesec: radi samo „Dan", ostalo je „Uskoro"',
+      'prekidač Dan/Sedmica/Mjesec: „Dan" i „Sedmica" rade, „Mjesec" je „Uskoro"',
       (tester) async {
         await _naSirini(tester, _desktop, _ekran());
 
-        // Segmenti su nacrtani jer ih `3c` crta, ali prikaza iza njih nema.
+        // Segmenti su nacrtani jer ih `3c` crta; mjesečnog prikaza još nema (task 69).
         expect(find.text('Dan'), findsOneWidget);
         expect(find.text('Sedmica'), findsOneWidget);
         expect(find.text('Mjesec'), findsOneWidget);
-        expect(find.byTooltip('Uskoro'), findsNWidgets(2));
+        expect(find.byTooltip('Uskoro'), findsOneWidget);
+        expect(
+          find.ancestor(
+            of: find.text('Mjesec'),
+            matching: find.byTooltip('Uskoro'),
+          ),
+          findsOneWidget,
+        );
         expect(
           find.ancestor(
             of: find.text('Sedmica'),
             matching: find.byTooltip('Uskoro'),
           ),
-          findsOneWidget,
+          findsNothing,
         );
       },
     );

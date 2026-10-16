@@ -1,14 +1,18 @@
-/// `/calendar` — dan po radnicima (`3c`) i isti dan kao lista (`3l`).
+/// `/calendar` — dan po radnicima (`3c`) i isti dan kao lista (`3l`), plus sedmica (task 69).
 ///
 /// **Dva rasporeda, jedan model.** Desktop crta mrežu sa kolonom po radniku, telefon listu
 /// po vremenu; oboje čita `calendar_day.dart`. Stisnuta mreža na 402 px nije mobilni
 /// raspored (`SPEC.md`: „Horizontalno skalirani desktop nije prihvatljiv mobilni layout").
 ///
+/// **Sedmica** (`prototype/adminv2/sedmica/`, `7a`/`7b`/`7c`) je u `calendar_week_view.dart`:
+/// na ≥ 840 px sedam kolona dana nad istom osom, na telefonu lista po danima. Podrazumijevan
+/// prikaz je i dalje „Dan".
+///
 /// ## Šta canvas crta, a ovdje namjerno nema
 ///
-/// - **Sedmica i mjesec** iz prekidača `Dan · Sedmica · Mjesec`. Prekidač je nacrtan jer
-///   ga `3c` crta, ali „Sedmica" i „Mjesec" su onemogućeni sa oznakom „Uskoro": prikaza
-///   iza njih nema, a dugme koje izgleda aktivno i ne radi ništa laže više od sivog.
+/// - **Mjesec** iz prekidača `Dan · Sedmica · Mjesec`. Segment je nacrtan jer ga `3c`
+///   crta, ali je onemogućen sa oznakom „Uskoro": prikaza iza njega nema, a dugme koje
+///   izgleda aktivno i ne radi ništa laže više od sivog.
 /// - **Pisanje iz bočne trake.** „Dodaj pauzu" i „Zatvori dan" vode na radno vrijeme, gdje
 ///   pauze i blokade već postoje — kalendar ih ne piše sam. „Blokiraj vrijeme" je po
 ///   odluci vlasnika proizvoda uklonjen iz bočne trake; na telefonu ga nosi ikona `⊘` iz
@@ -37,8 +41,11 @@ import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointment_card.dart';
 import '../appointments/appointments_providers.dart';
+import '../profile/profilna_slika.dart';
 import 'calendar_day.dart';
 import 'calendar_providers.dart';
+
+part 'calendar_week_view.dart';
 
 /// Širina vremenske ose lijevo od kolona. Canvas: `grid-template-columns:76px …`.
 const double _sirinaOse = 76;
@@ -65,6 +72,7 @@ class AdminCalendarScreen extends ConsumerWidget {
     final jeDesktop = AdminShell.jeDesktop(context);
     // Ručno zakazivanje i blokade traže `is_admin` u bazi — radniku dugmad ne vode nikud.
     final radnik = ref.watch(adminRadnikIdProvider) != null;
+    final sedmica = ref.watch(kalendarPrikazProvider) == KalendarPrikaz.sedmica;
 
     return AdminScaffold(
       title: 'Kalendar',
@@ -90,24 +98,24 @@ class AdminCalendarScreen extends ConsumerWidget {
               ),
             ),
         ],
-        // „Sedmica" čeka sedmični prikaz kojeg još nema — kao na desktopu (`3c`),
-        // segment postoji, ali je onemogućen i čitač ga zove „uskoro".
-        bottom: AppSegmented<String>(
+        // Isti izbor kao prekidač na desktopu — jedan provider, pa izbor preživi prelaz
+        // preko breakpointa.
+        bottom: AppSegmented<KalendarPrikaz>(
           segments: const [
-            AppSegment(value: 'dan', label: 'Dan'),
-            AppSegment(
-              value: 'sedmica',
-              label: 'Sedmica',
-              enabled: false,
-              disabledHint: 'uskoro',
-            ),
+            AppSegment(value: KalendarPrikaz.dan, label: 'Dan'),
+            AppSegment(value: KalendarPrikaz.sedmica, label: 'Sedmica'),
           ],
-          selected: 'dan',
-          onChanged: (_) {},
+          selected: ref.watch(kalendarPrikazProvider),
+          onChanged: ref.read(kalendarPrikazProvider.notifier).postavi,
         ),
       ),
       actions: jeDesktop ? [_TopBarAkcije(radnik: radnik)] : null,
-      body: jeDesktop ? const _Desktop() : const _Telefon(),
+      body: switch ((jeDesktop, sedmica)) {
+        (true, false) => const _Desktop(),
+        (true, true) => const _DesktopSedmica(),
+        (false, false) => const _Telefon(),
+        (false, true) => const _TelefonSedmica(),
+      },
     );
   }
 }
@@ -167,14 +175,18 @@ class _TopBarAkcije extends StatelessWidget {
 
 /// `Dan · Sedmica · Mjesec` — segmentirani prekidač iz top bara `3c` (214 × 36 px).
 ///
-/// **Radi samo „Dan".** Sedmični i mjesečni prikaz ne postoje, pa su njihovi segmenti
-/// onemogućeni i na hover kažu „Uskoro". SnackBar na klik bi značio da je segment dugme
-/// koje nešto pokušava; onemogućen segment odmah kaže da ga još nema.
-class _PrekidacPrikaza extends StatelessWidget {
+/// **„Mjesec" ne radi.** Mjesečnog prikaza nema, pa je segment onemogućen i na hover kaže
+/// „Uskoro". SnackBar na klik bi značio da je segment dugme koje nešto pokušava;
+/// onemogućen segment odmah kaže da ga još nema.
+class _PrekidacPrikaza extends ConsumerWidget {
   const _PrekidacPrikaza();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prikaz = ref.watch(kalendarPrikazProvider);
+    void postavi(KalendarPrikaz p) =>
+        ref.read(kalendarPrikazProvider.notifier).postavi(p);
+
     return Container(
       height: 36,
       padding: const EdgeInsets.all(3),
@@ -182,12 +194,20 @@ class _PrekidacPrikaza extends StatelessWidget {
         color: context.adminColors.neutralTint,
         borderRadius: BorderRadius.circular(AdminRadius.base),
       ),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _SegmentPrikaza(tekst: 'Dan', aktivan: true),
-          _SegmentPrikaza(tekst: 'Sedmica'),
-          _SegmentPrikaza(tekst: 'Mjesec'),
+          _SegmentPrikaza(
+            tekst: 'Dan',
+            aktivan: prikaz == KalendarPrikaz.dan,
+            onTap: () => postavi(KalendarPrikaz.dan),
+          ),
+          _SegmentPrikaza(
+            tekst: 'Sedmica',
+            aktivan: prikaz == KalendarPrikaz.sedmica,
+            onTap: () => postavi(KalendarPrikaz.sedmica),
+          ),
+          const _SegmentPrikaza(tekst: 'Mjesec'),
         ],
       ),
     );
@@ -195,10 +215,17 @@ class _PrekidacPrikaza extends StatelessWidget {
 }
 
 class _SegmentPrikaza extends StatelessWidget {
-  const _SegmentPrikaza({required this.tekst, this.aktivan = false});
+  const _SegmentPrikaza({
+    required this.tekst,
+    this.aktivan = false,
+    this.onTap,
+  });
 
   final String tekst;
   final bool aktivan;
+
+  /// `null` = segment još nema prikaz iza sebe („Uskoro").
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -213,14 +240,25 @@ class _SegmentPrikaza extends StatelessWidget {
       child: Text(
         tekst,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: aktivan ? boje.ink : boje.textMuted,
+          color: aktivan || onTap != null ? boje.ink : boje.textMuted,
           fontWeight: aktivan ? FontWeight.w600 : FontWeight.w500,
         ),
       ),
     );
 
-    if (aktivan) {
-      return Semantics(selected: true, button: true, child: segment);
+    if (onTap case final onTap?) {
+      return Semantics(
+        selected: aktivan,
+        button: true,
+        label: tekst,
+        child: ExcludeSemantics(
+          child: InkWell(
+            onTap: aktivan ? null : onTap,
+            borderRadius: BorderRadius.circular(AdminRadius.small),
+            child: segment,
+          ),
+        ),
+      );
     }
     return Tooltip(
       message: 'Uskoro',
@@ -929,13 +967,23 @@ class _TekstPojasa extends StatelessWidget {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            stavka.tekst ?? '',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: context.adminColors.textSecondary,
+          // **Natpis stoji na podlozi, ne na šrafuri** (FE-502): sekundarna boja preko
+          // crta `border` daje 4,41:1. Pao je tek u sedmici, gdje neradna nedjelja nosi
+          // natpis usred šrafure; u danu je pojas obično niži pa je natpis padao između
+          // crta. Podloga čuva tihi ton koji `3c` traži.
+          child: ColoredBox(
+            color: context.adminColors.ground,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                stavka.tekst ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: context.adminColors.textSecondary,
+                ),
+              ),
             ),
           ),
         ),
@@ -1248,12 +1296,7 @@ class _Legenda extends StatelessWidget {
             // pokazivala boju koje na rasporedu nema, a za „Otkazano" (`onDestructive`,
             // skoro bijela) kvadratić se nije ni vidio. Našao snimak, ne test: widget test
             // vidi da red postoji, ne i da mu je uzorak nevidljiv.
-            for (final status in const [
-              AppointmentStatus.confirmed,
-              AppointmentStatus.pending,
-              AppointmentStatus.completed,
-              AppointmentStatus.cancelled,
-            ])
+            for (final status in _statusiLegende)
               _RedLegende(
                 // Isti izvor boje koji koristi i blok, i statusna pilula uz termin.
                 ton: statusTon(statusi, status),
@@ -1297,6 +1340,8 @@ class _RedLegende extends StatelessWidget {
       // `3c`: redovi legende na 27 px — red teksta od ~22 plus 5.
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
+        // `min`: legenda sedmice ga slaže u `Wrap`, gdje bi pun red zauzeo cijelu širinu.
+        mainAxisSize: MainAxisSize.min,
         children: [
           RubZahtjeva(
             ceka: isprekidan,
@@ -1606,11 +1651,15 @@ class _ChipRadnika extends StatelessWidget {
     required this.tekst,
     required this.izabran,
     required this.onTap,
+    this.avatar,
   });
 
   final String tekst;
   final bool izabran;
   final VoidCallback onTap;
+
+  /// Avatar radnika — u sedmici čip nosi isti krug kao termini (`7a`).
+  final Widget? avatar;
 
   @override
   Widget build(BuildContext context) {
@@ -1623,12 +1672,16 @@ class _ChipRadnika extends StatelessWidget {
       padding: const EdgeInsets.only(right: 9),
       child: ChoiceChip(
         label: Text(tekst),
+        avatar: avatar,
         selected: izabran,
         onSelected: (_) => onTap(),
         showCheckmark: false,
         materialTapTargetSize: MaterialTapTargetSize.padded,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        labelPadding: EdgeInsets.zero,
+        // Uz avatar razmak, inače se krug lijepi uz ime („EEmir").
+        labelPadding: avatar == null
+            ? EdgeInsets.zero
+            : const EdgeInsets.only(left: 6),
         backgroundColor: boje.surface,
         selectedColor: boje.ink,
         labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
