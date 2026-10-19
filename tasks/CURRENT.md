@@ -4,7 +4,8 @@ Puni task: [tasks/zero-crisis/69-sedmicni-kalendar.md](zero-crisis/69-sedmicni-k
 
 ## Status
 
-Na pregledu (PR #137, 2026-10-16).
+Spremno za merge (PR #137). Drugi pregled (Hamza, 2026-10-19) zatvoren u istoj grani; čeka
+odobrenje i merge u `develop`. Deploy ne treba: nema migracije, cron-a ni Edge Functiona.
 
 ## Ciljevi
 
@@ -42,9 +43,20 @@ Na pregledu (PR #137, 2026-10-16).
   termina čita `?time=` kao prijedlog (`vrijemeIzAdrese`). Demo puni i sedmicu. Uz put: natpis
   „Ne radi" na šrafuri stoji na podlozi, jer je na neradnoj nedjelji pao kontrast (4,41:1).
   Dokaz: `calendar_week_screen_test` (23), pet mutacija, admin 651.
-- **Za ekran:** avatar je `ProfilAvatar` (slika radnika, `employees.image_url`), a bez slike krug
-  na `bojaRadnika(boje[id])` sa `onRadnik` inicijalima — `ProfilAvatar` za to treba parametar boje.
-  Sadržaj bloka bira širina (≥ 70 / 40–70 / < 40 px), ne broj traka.
+- **Drugi pregled (2026-10-19) je zatvoren u istoj grani.** Prazno mjesto u prošlom danu više ne
+  nudi termin, a forma ne otvara prošli datum. Sadržaj bloka bira izmjereni prostor, pa se vrijeme
+  nikad ne reže. Natpisi pojaseva se lome umjesto da se režu. `Semantics > InkWell >
+  ExcludeSemantics` umjesto obrnuto u sedmici i danu, jer čitač ekrana dugmad nije mogao pritisnuti.
+  Prekidač ima metu od 44 px i vidljivo „Uskoro", a „Mjesec" se sklanja kad top bar nema mjesta.
+  Prijedlog vremena čuva brojač upita. Demo ima datume preko granice mjeseca. Prazno stanje na
+  telefonu ide po terminima. Testovi mjere u Barlowu i sa sidebarom (v. `conventions.md`), FE-502
+  pokriva i tablet. Dokaz: `calendar_week_screen_test`, `new_appointment_prijedlog_test` (4), demo
+  sedmica preko granice mjeseca; dvanaest mutacija obara po barem jedan test. Admin 677. Uživo na demo buildu
+  na 1440, 1024 i 402.
+- **Ostaje svjesno:** mali mjesečni kalendar u bočnoj traci dana (`_DanMjeseca`) ima stari obrazac
+  semantike, jer su mu ćelije ~33 × 28 px i tap za čitač ekrana traži redizajn panela (zapisano u
+  `conventions.md`). Natpis salonske blokade u koloni sedmice mogu prekriti termini koji padaju u
+  nju; razlog je tada u tooltipu i za čitač ekrana.
 - Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client`, inače `melos run
   analyze` pada na stringu iz taska 65 (generisani l10n nije u gitu).
 - Vizuelni izvor je `prototype/adminv2/` (ADR-0016); sedmice tamo nema, zato skica ide prva.

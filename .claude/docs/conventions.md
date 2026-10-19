@@ -161,7 +161,8 @@ Kad naiđeš na takvu zamku, zapiši je tu gdje se dešava — ne u commit poruk
   istim privatnim helperima (`_osa`, `_kolona`, `_uTrake`), a prepisan raspored traka je mjesto
   gdje se dva prikaza istog dana tiho raziđu. `calendar_week_view.dart` je `part of
   'calendar_screen.dart'`: sedmica na ekranu crta isti ton bloka, rub zahtjeva, šrafuru i legendu
-  kao dan, a dva prepisana tona „potvrđeno" su dvije legende. Kad drugom fajlu treba tuđi privatni kod, prvi izbor je da ga učiniš
+  kao dan, a dva prepisana tona „potvrđeno" su dvije legende. Kad drugom fajlu treba tuđi privatni
+  kod, prvi izbor je da ga učiniš
   javnim u zasebnom libraryju; `part` samo kad dva fajla crtaju **isti** model i otvaranje bi
   napravilo API koji niko drugi ne smije zvati.
 
@@ -227,6 +228,15 @@ padne tek na drugom tenantu ili drugoj vertikali.
 - **Dodirna meta je ≥ 44 px, i u adminu.** Izmjeren piksel iz handoffa (36, 38, 42) je slabiji od
   donje granice: visina ide kroz `AppSize.touchTarget` / `AdminSize.touchTarget`, a vidljivi
   element koji je manji (prekidač, strelica) dobija veću nevidljivu metu oko sebe.
+- **`InkWell` ide unutar `Semantics`, a `ExcludeSemantics` unutar `InkWell`-a — ne obrnuto.**
+  `Semantics(button, label) > ExcludeSemantics(InkWell)` briše i tap i fokus: čvor je „dugme" koje
+  čitač ekrana ne može pritisnuti, a FE-502 provjera ga preskače jer gleda samo čvorove sa tap
+  akcijom — pa test prolazi baš zato što dugme ne radi. Ispravno je
+  `Semantics(container: true, button: true, label:, child: InkWell(child: ExcludeSemantics(...)))`.
+  Kalendar je popravljen (pregled #137, test sa `isSemantics(hasTapAction: true)`). Ostaje jedno
+  mjesto, svjesno: ćelija malog mjesečnog kalendara u bočnoj traci dana (`_DanMjeseca`) je
+  ~33 × 28 px u panelu od 266, pa bi joj tap za čitač ekrana odmah oborio mjeru od 44 px — to
+  traži redizajn panela, ne zamjenu dva widgeta.
 - **Tap bez fokusa je greška.** Goli `GestureDetector` tastatura ne dohvata. Za kontrolu se uzima
   `InkWell` ili Material dugme; za tap preko slike `AppTappable` iz `core_ui`, jer bi preklop
   `InkWell`-a završio ispod slike.
@@ -237,8 +247,15 @@ padne tek na drugom tenantu ili drugoj vertikali.
 - **Ikona bez teksta nosi labelu** (`Icon(..., semanticLabel:)`); `Tooltip` čitaču ne daje ime.
 - **Novi ekran ulazi u mjerenje.** U adminu jedan poziv `pristupacnostEkrana` iz
   `test/support/pristupacnost.dart` u test fajlu ekrana (mete, labele, fokus, kontrast na obje
-  širine, 130 % fonta); u klijentu ruta u `test/accessibility_test.dart`, gdje se kontrast mjeri
+  širine, 130 % fonta); ekran sa svojim tablet rasporedom dodaje `tablet: true` (1024, i 130 %
+  fonta na njemu). U klijentu ruta u `test/accessibility_test.dart`, gdje se kontrast mjeri
   na **svakom tenantu** iz registra.
+- **Mjera teksta se dokazuje u Barlowu, ne u test fontu.** Flutter test font crta svaki znak kao
+  kvadrat, pa „Ne radi od 15:00" traži 244 px umjesto ~108: test ili pada na rasporedu koji
+  korisnik nikad ne vidi, ili — gore — prolazi jer ništa nije ni nacrtano. Test koji tvrdi „ne
+  reže se" učita `assets/fonts/Barlow-*.ttf` kroz `FontLoader` u `setUpAll` zadnje grupe fajla
+  (uzor: grupa „mjere u Barlowu" u `calendar_week_screen_test.dart`). I širina mora biti stvarna:
+  ekran podignut bez `AppShell`-a nema sidebar, pa na 1024 ima kolone od 135 umjesto ~102 px.
 
 ## Web prototip (`prototype/wireframe/`)
 
