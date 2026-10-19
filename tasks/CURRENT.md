@@ -1,76 +1,75 @@
-# Trenutni task: 69 — Sedmični kalendar u Meluri
+# Trenutni task: 66 — Registracija: ime, telefon i uslovi u jednoj formi
 
-Puni task: [tasks/zero-crisis/69-sedmicni-kalendar.md](zero-crisis/69-sedmicni-kalendar.md) · učitan 2026-10-14
+Puni task: [tasks/zero-crisis/66-registracija-ime-telefon-tos.md](zero-crisis/66-registracija-ime-telefon-tos.md) · učitan 2026-10-13
 
 ## Status
 
-Spremno za merge (PR #137). Drugi pregled (Hamza, 2026-10-19) zatvoren u istoj grani; čeka
-odobrenje i merge u `develop`. Deploy ne treba: nema migracije, cron-a ni Edge Functiona.
+U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
+2026-10-13). Pregled (Eniz) zatvoren u grani 2026-10-19; čeka njegovo odobrenje, merge i
+`supabase db push` za `20261019120000`. 66 blokira 58, 67, 81, 82, 84 i 87.
 
 ## Ciljevi
 
-- [x] Dizajn prije koda: skica sedmice u `prototype/adminv2/sedmica/` (1440, 1024 i 402) — odobrena
-      uz četiri odluke (Hamza, 2026-10-16, v. `README.md` skice)
-- [x] „Sedmica" u postojećem prekidaču `Dan · Sedmica · Mjesec` radi; „Mjesec" ostaje „Uskoro"
-- [x] Sedmica = 7 kolona (dani) sa terminima, blokadama i neradnim danima iz `working_hours`
-- [x] Tap na termin otvara isti detalj kao dnevni prikaz; tap na prazno nudi ručno zakazivanje
-- [x] Radnik vidi samo svoje termine i u sedmici
-- [x] Na telefonu dnevni prikaz ostaje default
-- [x] Widget testovi za obje uloge; viđeno uživo na 1440, 1024 i 402 (demo build)
-- [x] `prototype/admin/SPEC.md` (tabela izostavljanja) i doc komentar `calendar_screen.dart` ažurni
+- [x] Odluke (Hamza, 2026-10-13): eksplicitna verzija uslova, a profil adresar samo popunjava —
+      [ADR-0030](../docs/adr/0030-verzija-uslova-i-profil-popunjava-adresar.md)
+- [x] Migracija `20261013160000_registracija_profil` + pgTAP `030` (pet mutacija ga obara)
+- [x] Registracija (ime, telefon, email, lozinka jednom, checkbox), prijava bez pravila registracije,
+      `AccountExistsError` i `WeakPasswordError`, bez demo teksta
+- [x] „Dopuni profil" (`/auth/complete-profile`) poslije prijave kad profilu nešto fali
+- [x] Dokumenti: ADR-0030, `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `docs/06` §3.1 i
+      §8.3 (Data safety), `docs/01` §12, `docs/README.md`
+- [x] Uživo: registracija → Melura prikazuje ime i telefon; nalog bez profila → „Dopuni profil"
+- [x] Pregled #136 (Eniz): profil prije slanja termina i `PopScope`; kasni sudar na
+      `unique(salon_id, phone)`; iskren komentar o ciframa; `legal_versions` `stable`
+- [ ] CI zelen, PR #136 spojen u `develop`
+- [ ] Deploy (Hamza): `supabase db push` za `20261019120000` (`20261013160000` je već na
+      hostovanom); provjera `select provolatile from pg_proc where proname = 'legal_versions'` → `s`
+- [ ] „Dopuni profil" poslije prave Apple i Google prijave na uređaju
 
 ## Napomene
 
-- **Opseg je već odlučen**: ADR-0029 uvodi sedmicu („Ulazi", FE-403 dug). FE-403 je tražio ADR jer
-  `SPEC.md` tvrdi suprotno; to je sada ADR-0029, pa se `SPEC.md` samo ispravlja.
-- **Prekidač već postoji** u `apps/admin/lib/src/features/calendar/calendar_screen.dart`: „Sedmica" i
-  „Mjesec" su ugašeni sa „Uskoro". Dnevni model je `calendar_day.dart` (`KalendarDan`), provideri u
-  `calendar_providers.dart` (`kalendarDatumProvider`, `adminRadnikIdProvider` za radnika).
-- **Sloj podataka je gotov (2026-10-14), UI nije.** `BlockedSlotRepository.forRange`, model
-  `calendar_week.dart` (`part` od `calendar_day.dart`, ista osa, trake i neradni pojasevi) i
-  provideri `kalendarPrikazProvider`, `kalendarSedmicaProvider`. Radnik iz uloge pobjeđuje izbor
-  čipa. Dokaz: `calendar_week_test` (20) + `blocked_slot_repository_test` (2); dvije mutacije
-  (radnikova blokada u „Svi", pogrešan ponedjeljak) obaraju 2 i 14 testova; admin 597, core_api
-  144, analyze i format čisti. Bez nove migracije: RLS za čitanje je isti kao za dan.
-- **Pregled (Hamza, 2026-10-16) je zatvoren u istoj grani.** Boje radnika su tokeni
-  `AdminPalette.radnici` (8 tonova, AA u obje teme), dodjeljuje ih `bojeRadnika` iz id-a; uz „Svi"
-  `DanSedmice.odsutni` kaže ko ne radi i čija je blokada; `kalendarSedmicaProvider` čeka i radnike.
-  Pravila providera (ključ na ponedjeljku, uloga pobjeđuje čip, strelica preko promjene vremena)
-  dokazuje `calendar_week_providers_test`; šest mutacija obara po barem jedan test. Admin 628.
-  DST test se u UTC-u (CI) preskače sa razlogom umjesto da prolazi prazan.
-- **Ekran je gotov (2026-10-16).** `calendar_week_view.dart` je `part` od `calendar_screen.dart`
-  (izuzetak zapisan u `conventions.md`). `ProfilAvatar` ima `boja`/`bojaInicijala`; forma ručnog
-  termina čita `?time=` kao prijedlog (`vrijemeIzAdrese`). Demo puni i sedmicu. Uz put: natpis
-  „Ne radi" na šrafuri stoji na podlozi, jer je na neradnoj nedjelji pao kontrast (4,41:1).
-  Dokaz: `calendar_week_screen_test` (23), pet mutacija, admin 651.
-- **Drugi pregled (2026-10-19) je zatvoren u istoj grani.** Prazno mjesto u prošlom danu više ne
-  nudi termin, a forma ne otvara prošli datum. Sadržaj bloka bira izmjereni prostor, pa se vrijeme
-  nikad ne reže. Natpisi pojaseva se lome umjesto da se režu. `Semantics > InkWell >
-  ExcludeSemantics` umjesto obrnuto u sedmici i danu, jer čitač ekrana dugmad nije mogao pritisnuti.
-  Prekidač ima metu od 44 px i vidljivo „Uskoro", a „Mjesec" se sklanja kad top bar nema mjesta.
-  Prijedlog vremena čuva brojač upita. Demo ima datume preko granice mjeseca. Prazno stanje na
-  telefonu ide po terminima. Testovi mjere u Barlowu i sa sidebarom (v. `conventions.md`), FE-502
-  pokriva i tablet. Dokaz: `calendar_week_screen_test`, `new_appointment_prijedlog_test` (4), demo
-  sedmica preko granice mjeseca; dvanaest mutacija obara po barem jedan test. Admin 677. Uživo na demo buildu
-  na 1440, 1024 i 402.
-- **Ostaje svjesno:** mali mjesečni kalendar u bočnoj traci dana (`_DanMjeseca`) ima stari obrazac
-  semantike, jer su mu ćelije ~33 × 28 px i tap za čitač ekrana traži redizajn panela (zapisano u
-  `conventions.md`). Natpis salonske blokade u koloni sedmice mogu prekriti termini koji padaju u
-  nju; razlog je tada u tooltipu i za čitač ekrana.
-- Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client`, inače `melos run
-  analyze` pada na stringu iz taska 65 (generisani l10n nije u gitu).
-- Vizuelni izvor je `prototype/adminv2/` (ADR-0016); sedmice tamo nema, zato skica ide prva.
-- Paralelno je otvoren Hamzin PR #136 (task 66), koji dira i `tasks/CURRENT.md` i
-  `tasks/zero-crisis/README.md`: očekuj konflikt samo u trackeru, ne u kodu.
+- **Odluke su već donesene** u [ADR-0029](../docs/adr/0029-opseg-do-lansiranja-zero-crisis.md):
+  telefon obavezan bez SMS-a, ime i prezime, **checkbox** (ne pasivna obavijest), prihvatanje se
+  bilježi sa verzijom. Istraživanje `docs/research/auth-krajnji-korisnik.md` §3 preporučuje obavijest
+  bez checkboxa, ali ADR je jači.
+- **Zamka iz taska:** ime i telefon su po identitetu, `customers` je po salonu. Salon A ne smije
+  vidjeti da isti čovjek ide u salon B (`docs/06` §4.3). Osvježavanje ide samo kroz identitet, a
+  nikad kroz čitanje tuđeg `customers` reda.
+- Apple ime stiže samo pri prvoj autorizaciji; `supabase_auth_repository.dart` ~237 ga već upisuje u
+  `full_name`. Potvrda emaila kodom je task 81, ne ovaj.
+- Edge runtime se na ovoj mašini ugasi poslije `supabase start`. Ako REST testovi sa Edge Function
+  padnu na `503`, `supabase stop` pa ponovo `./tool/test_supabase.sh`.
+- Projekat je linkovan na hostovani (`olggovhqwirxamggkwuf`).
+- **Ostalo za sljedećeg:** poređenje telefona „po ciframa" ne normalizuje prefiks — `061 …` iz
+  salona i `+387 61 …` iz app-e su za bazu dva broja, pa isti čovjek ostaje dva reda u adresaru.
+  Normalizacija vodeće `0` naspram pozivnog broja traži zemlju salona (v. `security.md`).
 
 ## Istorija
 
-### 64 — Istek neodgovorenih zahtjeva (spojen u `develop`, 2026-10-13)
+### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
 
-[PR #133](https://github.com/htuco/salon-booking-platform/pull/133). `private.expire_pending()` + cron
-`expire-pending` (5 min), push `expired` klijentu, Melura piše „Isteklo"; pgTAP `027` + mutacije.
-**Ostaje:** Hamza `supabase db push` i `functions deploy send-push` na hostovanom; istekli zahtjev
-viđen uživo u Meluri i push na uređaju. Napomena za lokalno: `deno` je u `~/.deno/bin`, van PATH-a.
+[PR #137](https://github.com/htuco/salon-booking-platform/pull/137). Sedmica u Meluri: mreža od 7
+kolona na ≥ 840 px, lista po danima na telefonu, avatar radnika (slika ili inicijali na boji iz
+`AdminPalette.radnici`), red odsutnih uz „Svi". Dva pregleda zatvorena u grani; admin 677, viđeno
+uživo na demo buildu na 1440, 1024 i 402. Bez migracije, deploy ne treba. **Ostaje svjesno:** mali
+mjesečni kalendar dana sa starim obrascem semantike (v. `conventions.md`).
+
+### 56 — Push podsjetnici D-1 i H-3 (odložen, 2026-10-13)
+
+Učitan pa vraćen: nema Android uređaja ni emulatora (treba API 36, arm64-v8a, Google Play image),
+a fale dvije odluke (kad ide D-1, jedan ili dva prekidača). Nalazi su u status bloku task fajla.
+
+### 64, 65 i 70 — istek, limit zahtjeva i istorija obavijesti (spojeno i deployano, 2026-10-13)
+
+[PR #133](https://github.com/htuco/salon-booking-platform/pull/133),
+[#134](https://github.com/htuco/salon-booking-platform/pull/134) i
+[#135](https://github.com/htuco/salon-booking-platform/pull/135) su spojeni u `develop`. Sve tri
+zajedno prolaze lokalno: 848 pgTAP, svi REST i Deno testovi, klijent 640, `core_api` 142.
+Na hostovanom su tri migracije i `send-push`, a stari logovi su označeni pročitanim. Prvi prolaz
+`expire-pending` (21:00) je `succeeded` i zatvorio je jedan stari `pending`.
+**Ostaje:**
+- uživo viđeni „Isteklo" u Meluri, poruka o punom limitu i Obavijesti na uređaju;
+- redovi 65 i 70 u `tasks/zero-crisis/README.md` i status blokovi u task fajlovima.
 
 ### 55 — Prerada admin dashboarda (premješten u `polishing/`, 2026-10-13)
 

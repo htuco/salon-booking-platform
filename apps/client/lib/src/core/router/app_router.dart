@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/appointments/appointments_screen.dart';
+import '../../features/auth/complete_profile_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/booking/booking_success_screen.dart';
 import '../../features/booking/details_step_screen.dart';
@@ -184,6 +185,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           metod: state.uri.queryParameters['metod'],
         ),
       ),
+      // „Dopuni profil" (task 66): dolazi se samo sa prijave, kad profilu nešto fali.
+      GoRoute(
+        path: ClientRoute.completeProfile.path,
+        name: ClientRoute.completeProfile.name,
+        builder: (context, state) =>
+            CompleteProfileScreen(from: state.uri.queryParameters['from']),
+      ),
       GoRoute(
         path: ClientRoute.account.path,
         name: ClientRoute.account.name,
@@ -260,6 +268,7 @@ enum ClientRoute {
   bookDetails('/book/details', 'Podaci'),
   bookSuccess('/book/success', 'Potvrda'),
   login('/auth/login', 'Prijava'),
+  completeProfile('/auth/complete-profile', 'Dopuni profil'),
   account('/account', 'Moj račun'),
   appointments('/appointments', 'Moji termini'),
   appointmentDetails('/appointments/:id', 'Detalji termina'),

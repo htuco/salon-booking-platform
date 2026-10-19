@@ -71,7 +71,11 @@ class SpecCard extends StatelessWidget {
                   if (rows[i].trailing != null)
                     rows[i].trailing!
                   else if (rows[i].value != null)
-                    Flexible(
+                    // `Expanded`, ne `Flexible`: labela je `Expanded`, pa bi `Flexible`
+                    // dobio desnu polovinu, ali bi se skupio na širinu teksta i stao na
+                    // njen **početak** — vrijednost je tako počinjala na sredini kartice,
+                    // a badge u susjednom redu stajao uz desni rub („stepenasto").
+                    Expanded(
                       child: Text(
                         rows[i].value!,
                         textAlign: TextAlign.end,

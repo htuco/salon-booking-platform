@@ -98,6 +98,8 @@ List<Override> demoOverrides(AppEnv env, {bool prijavljen = true}) {
     myAppointmentsProvider.overrideWith(
       (ref) async => _mojiTermini(salonId, demo),
     ),
+    // Task 66: demo klijent ima kompletan profil, pa prijava ne vodi na „Dopuni profil".
+    clientProfileRepositoryProvider.overrideWithValue(const _DemoProfil()),
     // Task 70: Obavijesti sa dvije stavke; `markAllRead` u demou ne dira mrežu.
     notificationRepositoryProvider.overrideWithValue(
       const _DemoNotifications(),
@@ -285,6 +287,9 @@ class _DemoAuth implements AuthRepository {
   Future<AuthSession> signUpWithPassword({
     required String email,
     required String password,
+    required String fullName,
+    required String phone,
+    required bool acceptedTerms,
   }) => _prijavi();
 
   @override
@@ -870,4 +875,22 @@ class _DemoNotifications implements NotificationRepository {
 
   @override
   Future<void> markAllRead() async {}
+}
+
+class _DemoProfil implements ClientProfileRepository {
+  const _DemoProfil();
+
+  @override
+  Future<ClientProfileStatus> status() async => const ClientProfileStatus(
+    hasName: true,
+    hasPhone: true,
+    termsCurrent: true,
+  );
+
+  @override
+  Future<void> complete({
+    required bool acceptTerms,
+    String? phone,
+    String? name,
+  }) async {}
 }

@@ -25,7 +25,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [64](64-istek-neodgovorenih-zahtjeva.md) | Istek neodgovorenih zahtjeva 🟡 | — | 1 dan |
 | [65](65-limit-otvorenih-zahtjeva.md) | Limit otvorenih zahtjeva po klijentu (spam) | — | 0,5 dana |
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | — | 2 dana |
-| [66](66-registracija-ime-telefon-tos.md) | Registracija: ime, telefon i uslovi (checkbox) | — | 2 dana |
+| [66](66-registracija-ime-telefon-tos.md) | Registracija: ime, telefon i uslovi (checkbox) 🟡 | — | 2 dana |
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | 66 | 0,5–1 dan |
 | [67](67-pisanje-recenzija.md) | Pisanje recenzija | 66 | 2–3 dana |
 | [68](68-lista-cekanja.md) | Lista čekanja | 64 | 3–4 dana |
@@ -85,15 +85,28 @@ Folder otvoren 2026-10-12.
 
 Grana `feat/istek-zahtjeva`. `private.expire_pending()` + cron `expire-pending` (5 min), push
 `expired` klijentu, Melura piše „Isteklo". pgTAP 818 i REST suite zeleni lokalno, admin 577 testova.
-**Ostaje:** deploy na hostovanom (Hamza: `supabase db push`, `functions deploy send-push`) i
-istekli zahtjev viđen uživo u Meluri i na uređaju.
+Spojen ([PR #133](https://github.com/htuco/salon-booking-platform/pull/133)) i deployan
+2026-10-13: migracija i `send-push` na hostovanom, a prvi prolaz `expire-pending` je `succeeded`.
+**Ostaje:** istekli zahtjev viđen uživo u Meluri i na uređaju.
 
-### 69 — Sedmični kalendar u Meluri 🟡 (2026-10-14)
+### 66 — Registracija: ime, telefon i uslovi 🟡 (2026-10-13)
 
-Grana `feat/sedmicni-kalendar`. Skica u `prototype/adminv2/sedmica/` odobrena (2026-10-16), sloj
-podataka i ekran gotovi: „Sedmica" u prekidaču radi, na ≥ 840 px mreža od 7 kolona (`7a`/`7c`),
-na telefonu lista po danima (`7b`), tap na termin otvara detalj, tap na prazno nudi ručni termin
-(zaokruženo na 30 min), tap na zaglavlje otvara dan. Admin 651 testova; viđeno uživo na demo buildu
-na 1440, 1024 i 402. Drugi pregled (2026-10-19) zatvoren u istoj grani (prošli dan, rezanje teksta
-na tabletu, semantika dugmadi, prekidač 44 px, demo preko granice mjeseca). **Ostaje:** odobrenje i
-merge PR-a #137.
+Grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
+ADR-0030. Registracija sa imenom, telefonom i checkboxom; „Dopuni profil" poslije Apple/Google i za
+novu verziju uslova; profil popunjava adresar svakog salona. Pregled (Eniz) zatvoren 2026-10-19:
+profil se traži prije slanja termina, kasni sudar na telefonu se preskače (`20261019120000`).
+pgTAP 888, klijent 667; uživo: Melura prikazuje ime i telefon novog klijenta. **Ostaje:**
+odobrenje, merge, `supabase db push`, „Dopuni profil" poslije prave Apple/Google prijave na uređaju.
+
+### 56 — Push podsjetnici D-1 i H-3, odložen (2026-10-13)
+
+Nema Android uređaja ni emulatora za stavku „uživo". Na ovom Macu treba emulator API 36, arm64-v8a,
+Google Play image. Prije koda dvije odluke: kad ide D-1 i jedan ili dva prekidača. Nalazi i odluke
+su u status bloku task fajla.
+
+### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
+
+[PR #137](https://github.com/htuco/salon-booking-platform/pull/137). „Sedmica" u prekidaču radi: na
+≥ 840 px mreža od 7 kolona (`7a`/`7c`), na telefonu lista po danima (`7b`); tap na termin otvara
+detalj, tap na prazno (od danas) nudi ručni termin, tap na zaglavlje otvara dan. Dva pregleda
+zatvorena u grani; admin 677, viđeno uživo na demo buildu na 1440, 1024 i 402. Deploy ne treba.

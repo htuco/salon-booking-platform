@@ -12,21 +12,21 @@ Salon zna ko mu dolazi. Danas je svaki email klijent u Meluri „Klijent / Bez b
 samo email i lozinku, a `ensure_customer` pada na `'Klijent'`.
 
 ## Definicija gotovog
-- [ ] Forma registracije: **ime i prezime, telefon, email, lozinka** (jednom, sa „prikaži lozinku").
+- [x] Forma registracije: **ime i prezime, telefon, email, lozinka** (jednom, sa „prikaži lozinku").
       Otvara se na **registraciji**; „Već imate račun? Prijavite se" je sekundarno
-- [ ] Telefon bez SMS verifikacije; kratko objašnjenje ispod polja zašto ga salon treba
-- [ ] **Checkbox** „Prihvatam Uslove korištenja i Politiku privatnosti" sa linkovima na oba dokumenta;
+- [x] Telefon bez SMS verifikacije; kratko objašnjenje ispod polja zašto ga salon treba
+- [x] **Checkbox** „Prihvatam Uslove korištenja i Politiku privatnosti" sa linkovima na oba dokumenta;
       prazan po defaultu, bez njega dugme za registraciju nije aktivno. Isti checkbox na „Dopuni profil"
       poslije prve Apple/Google prijave
-- [ ] Prihvatanje se bilježi: verzija oba dokumenta + vrijeme, na identitetu (migracija); nova verzija
+- [x] Prihvatanje se bilježi: verzija oba dokumenta + vrijeme, na identitetu (migracija); nova verzija
       uslova traži ponovno prihvatanje pri sljedećoj prijavi
-- [ ] Ime i telefon idu u auth metapodatke → `auth_identities` → `customers` **svakog** salona tog
+- [x] Ime i telefon idu u auth metapodatke → `auth_identities` → `customers` **svakog** salona tog
       korisnika; postojeći „Klijent" redovi se osvježe
-- [ ] Melura prikazuje ime i telefon (lista klijenata, detalj termina)
-- [ ] Mapirani `user_already_exists` i `weak_password`; forma prijave ne provjerava pravila registracije;
+- [x] Melura prikazuje ime i telefon (lista klijenata, detalj termina)
+- [x] Mapirani `user_already_exists` i `weak_password`; forma prijave ne provjerava pravila registracije;
       uklonjen demo tekst „ne šaljemo email potvrdu"
-- [ ] `docs/06` §3.1 prepisan; `security.md` za novu kolonu; Data safety bilješka
-- [ ] Widget testovi forme; pgTAP za osvježavanje imena po salonima (bez curenja u tuđi salon)
+- [x] `docs/06` §3.1 prepisan; `security.md` za novu kolonu; Data safety bilješka
+- [x] Widget testovi forme; pgTAP za osvježavanje imena po salonima (bez curenja u tuđi salon)
 
 ## Zamke
 - `on conflict do nothing` u `ensure_customer` — bez izmjene postojeći klijenti zauvijek ostaju „Klijent".
@@ -34,4 +34,94 @@ samo email i lozinku, a `ensure_customer` pada na `'Klijent'`.
   isti čovjek ide i u salon B (`docs/06` §4.3).
 
 ## Status
-Nije počet.
+
+### Pregled #136 (Eniz) zatvoren u grani — čeka odobrenje i merge (2026-10-19)
+
+1. **„Dopuni profil" se više ne zaobilazi.** Korak 4 prije svakog slanja pita
+   `client_profile_status`; nepotpun profil ide na „Dopuni profil" i nazad na korak 4 sa istim
+   izborom, a greška provjere ne šalje termin. Router i dalje nema guard (katalog je javan).
+   `PopScope` na „Dopuni profil" pretvara sistemski „nazad" u odjavu.
+2. **Komentar o ciframa je ublažen**, ne kod: „po ciframa" ne normalizuje prefiks (`061 …` ≠
+   `+387 61 …`). Ostalo za sljedećeg: normalizacija traži zemlju salona.
+3. **Kasni sudar na `unique(salon_id, phone)`** se preskače kao vidljivi: nova migracija
+   `20261019120000` (stara je već na hostovanom), `exception when unique_violation` u triggeru
+   popunjavanja i u `ensure_customer`, samo za `customers_salon_id_phone_key`; ime i telefon su u
+   triggeru zasebni upisi, a upis telefona ponovo provjerava vlasnika i prazan telefon (revizija:
+   bez toga bi salonova ispravka usred petlje bila pregažena).
+4. `legal_versions()` je `stable`. Preskočen klijentski test je `app_env_test.dart` — traži
+   `--dart-define=SALON_ID`, nije iz ovog taska.
+
+**Dokaz:**
+
+```
+./tool/test_supabase.sh
+.../031_registracija_profil_trka.test.sql .. ok
+Files=31, Tests=888   Result: PASS      (+ svi REST i Deno testovi)
+flutter test (client): +667 ~1  All tests passed!
+```
+
+`031` glumi trku `before` triggerom koji ubaci telefonskog klijenta tačno prije upisa. Bez
+handlera u triggeru pada 2 testa, bez handlera u `ensure_customer` 2, sa `immutable` 1, bez
+ponovne provjere vlasnika i praznog telefona 1. Filter po imenu constrainta nijedan test ne obara
+— štiti od uniquea koji danas ne postoji. U Dartu:
+bez provjere na koraku 4 i bez `PopScope`-a pada po test.
+
+**Deploy poslije merge-a:** `supabase db push` (samo `20261019120000`).
+
+### U toku — kod gotov, čeka CI, merge i deploy (2026-10-13)
+
+Grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136).
+Odluke: [ADR-0030](../../docs/adr/0030-verzija-uslova-i-profil-popunjava-adresar.md) —
+eksplicitna verzija uslova (`public.legal_versions()`, podiže se migracijom), a profil adresar
+salona samo popunjava („Klijent"/prazno ime, prazan telefon).
+
+**Dokaz:**
+
+```
+./tool/test_supabase.sh
+.../030_registracija_profil.test.sql ... ok
+Files=30, Tests=880   Result: PASS      (+ svi REST i Deno testovi)
+dart run melos run test
+core_domain +97 · core_api +144 · core_ui +145 · client +661 ~1 · admin +577  All tests passed!
+melos run analyze: No issues found (5/5) · dart format --set-exit-if-changed: OK
+tenant_theme_test (Vitez, Travnik): +20 · gen_flavors --check: ažurni
+```
+
+Pet mutacija SQL-a obara `030`: prepisivanje uvijek (15–16), prihvatanje na prijavi (5–6), bez
+provjere sudara telefona (17), bez filtera identiteta (10–11), brisanje ostavlja telefon (30).
+U Dartu: login bez provjere profila obara sva tri testa „Dopuni profil".
+
+**Uživo** (web 402 px protiv lokalnog Supabasea, Vitez):
+- registracija „Lejla Testić / 061 555 777" → `auth_identities`: ime, telefon onako kako je
+  napisan, verzija 1/1; `ensure_customer` sa njenim tokenom → red u Vitezu sa imenom i telefonom;
+  **Melura (1440) u Klijentima prikazuje „Lejla Testić · 061 555 777"**. Detalj termina nije
+  otvaran uživo: termin zakazan kao „Klijent" dobija ime i telefon u `appointments` (pgTAP `030`),
+  a detalj čita baš te kolone (`customerName`, `customerPhone`);
+- nalog bez metapodataka (kao Apple/Google) → prijava vodi na „Dopuni profil" (ime, telefon,
+  checkbox) → identitet dobija sve tri stvari, app se vraća na `from`;
+- linkovi uz checkbox otvaraju Pravila korištenja; „Prihvatam" i „i" su isključeni iz semantike
+  (prvi prolaz ih je pokazao kao dva lažna dugmeta).
+
+**Dorada poslije pregleda uživo (Hamza, 2026-10-14):**
+- telefon dobija izbor pozivnog broja (podrazumijevano +387, region i dijaspora); broj se kuca
+  lokalno, polje ne pušta slova, vodeća nula otpada → „+387 61 123 456";
+- stroži regex za email (`isValidEmail`: „ana@gmail", „ana@@x.ba", „ana@gmail..com" padaju prije
+  mreže);
+- ekran potvrde rezervacije: fotografija usluge (pa cover salona) umjesto gradijenta, a vrijednosti,
+  badge i datum poravnati uz desni rub. Uzrok „stepenastog" teksta je bio `SpecCard` u `core_ui`
+  (`Flexible` vrijednost stajala je na početku desne polovine); novi `spec_card_test` pada na starom
+  kodu (257 px umjesto 339).
+
+Dokaz: core_domain +102, core_ui +146, client +662, admin +577; analyze i format čisti. Viđeno
+uživo u Chromeu (Vitez, lokalni Supabase): slika Fade/Brada na potvrdi, poravnata kartica.
+
+**Ostalo za sljedećeg:**
+- **Deploy (Hamza):** `supabase db push` (migracija `20261013160000_registracija_profil`).
+  Provjera: `select * from public.legal_versions()` → `1, 1`. Migracija na kraju popuni postojeće
+  „Klijent" redove imenom iz identiteta (Google/Apple korisnici).
+- „Dopuni profil" poslije **prave** Apple i Google prijave na uređaju — lokalno je odigran nalogom
+  bez metapodataka, isti put kroz `client_profile_status`.
+- Potvrda emaila je isključena na hostovanom; sa uključenom potvrdom registracija pokazuje „račun
+  čeka potvrdu" dok ne dođe ekran za kod (task 81).
+- Data safety i App Privacy formulari se popunjavaju po bilješci u `docs/06` §8.3 kod submissiona
+  (task 90).

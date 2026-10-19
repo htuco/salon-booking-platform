@@ -19,6 +19,7 @@ library;
 
 export 'src/auth/auth_platform_mapper.dart';
 export 'src/auth/auth_repository.dart';
+export 'src/auth/client_profile_repository.dart';
 export 'src/auth/customer_repository.dart';
 export 'src/auth/staff_access_repository.dart';
 export 'src/auth/staff_repository.dart';

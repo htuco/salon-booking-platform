@@ -19,8 +19,9 @@ import 'widgets/booking_step_scaffold.dart';
 /// ## Ovo je ekran prijave, ne ekran sažetka
 ///
 /// Handoff ga zove „Još jedan korak": kartica **„Čuvamo vam 14:30"** koja drži izbor na
-/// oku, pa tri načina prijave i pravna napomena. Nema polja za napomenu i **nema polja za
-/// telefon** (`docs/06 §3.1` — push zamjenjuje i poziv i SMS).
+/// oku, pa tri načina prijave i pravna napomena. Nema polja za napomenu ni za telefon:
+/// telefon se od taska 66 daje **jednom, na registraciji** (ili na „Dopuni profil" poslije
+/// Apple/Google prijave), a ne uz svaki termin (ADR-0029).
 ///
 /// `docs/06 §1.1`: cijeli flow je javan do ovog trenutka. Guard na `/book/*` bi značio da
 /// korisnik mora imati nalog da bi vidio cijene — odluka koja se ne otvara.
@@ -35,6 +36,12 @@ import 'widgets/booking_step_scaffold.dart';
 /// slanje vraća grešku umjesto da dugme tiho ne radi ništa — v. `BookingSubmitNotifier`.
 ///
 /// ## `409` je ishod, ne kvar
+///
+/// **Profil se provjerava prije slanja, svaki put** (pregled #136). Provjera samo na loginu
+/// se zaobilazi: sačuvana sesija se obnavlja sama, pa korisnik sa starom verzijom uslova ili
+/// bez telefona poslije Apple/Google prijave login nikad ne vidi, a ubijena aplikacija na
+/// „Dopuni profil" ostavlja prijavljen nalog bez profila. Profil treba tek za termin —
+/// katalog je javan (`docs/06 §1.1`) — pa je ovo jedino mjesto gdje ga treba tražiti.
 ///
 /// Slot može otići između prikaza i potvrde. Tada se ne prikazuje generička greška: poruka
 /// kaže šta se desilo, lista slotova se invalidira (u `BookingSubmitNotifier`) i korisnik
@@ -89,6 +96,33 @@ class DetailsStepScreen extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
 
+    final ClientProfileStatus profil;
+    try {
+      profil = await ref.read(clientProfileRepositoryProvider).status();
+    } on ApiError catch (greska) {
+      // Bez potvrđenog profila se ne šalje: termin bez telefona salon ne može potvrditi
+      // pozivom, a greška ovdje je ionako ista ona koja bi oborila i slanje.
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            greska is NetworkError ? l10n.noConnection : l10n.genericError,
+          ),
+        ),
+      );
+      return;
+    }
+    if (!profil.isComplete) {
+      // `push`: „Dopuni profil" se vraća ovdje (`nazadIli`), sa izborom flowa netaknutim,
+      // a korisnik termin šalje svjesno, drugim tapom.
+      router.push(
+        Uri(
+          path: ClientRoute.completeProfile.path,
+          queryParameters: {'from': ClientRoute.bookDetails.path},
+        ).toString(),
+      );
+      return;
+    }
+
     final uspjeh = await ref.read(bookingSubmitProvider.notifier).submit();
 
     if (uspjeh) {
@@ -118,7 +152,7 @@ class DetailsStepScreen extends ConsumerWidget {
 
 /// Načini prijave iz `docs/06 §1.2`, redoslijedom koji propisuje `AuthProvider`.
 ///
-/// **Telefona nema i neće ga biti** (`docs/06 §3.1`). Lista dolazi iz
+/// Telefon nije način prijave nego polje profila (task 66, ADR-0029). Lista dolazi iz
 /// `visibleAuthProvidersProvider`, već filtrirana po platformi — Apple je na iOS-u prvi
 /// jer je obavezan kad postoji ijedan drugi social provider (`docs/06 §7.2`), a na
 /// Androidu ga nema uopšte.

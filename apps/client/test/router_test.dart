@@ -85,6 +85,8 @@ void main() {
         '/book/details',
         '/book/success',
         '/auth/login',
+        // Task 66: „Dopuni profil" poslije Apple/Google prijave i za novu verziju uslova.
+        '/auth/complete-profile',
         '/account',
         '/appointments',
         '/appointments/:id',

@@ -162,37 +162,51 @@ flowchart TD
 
 Nakon logina klijent se vraća **točno gdje je bio** — izabrani slot je sačuvan u state-u. Ako je slot u međuvremenu zauzet, `409` i vraćanje na korak 3 sa objašnjenjem ([02 §4.3](02-user-flows-wireframes.md)).
 
-### 3.1 Zašto NE tražimo broj telefona
+### 3.1 Ime, telefon i uslovi pri registraciji
 
-> **Zamijenjeno [ADR-0029](adr/0029-opseg-do-lansiranja-zero-crisis.md) (2026-10-12):** ime i
-> telefon se traže pri registraciji, bez SMS verifikacije — salon u Meluri nije razlikovao email
-> klijente („Klijent", „Bez broja"). Obrazloženje ispod ostaje kao istorija odluke.
+> **Prepisano u tasku 66** po [ADR-0029](adr/0029-opseg-do-lansiranja-zero-crisis.md) i
+> [ADR-0030](adr/0030-verzija-uslova-i-profil-popunjava-adresar.md). Do tada je ovdje stajalo
+> „telefon ne tražimo, push zamjenjuje i poziv i SMS". Na uređaju se pokazalo da salon u Meluri
+> sve email klijente vidi kao „Klijent / Bez broja", a kontakt jednim tapom (task 58) nema šta
+> zvati.
 
-Cutlio ne traži telefon, i to je ispravno. **Push notifikacija zamjenjuje i poziv i SMS.**
+**Push i dalje nosi obavještenja** — potvrda, odbijanje, istek, podsjetnici i otkazivanje idu
+pushom, besplatno. Telefon je tu **za salon**: da zna ko dolazi i da može nazvati kad se termin
+mijenja. Zato se traži jednom, na računu, a ne uz svaki termin.
 
-| Situacija | Prije (telefon) | Sad (push) |
-|---|---|---|
-| Salon potvrdio termin | SMS ili Viber poruka | 🔔 Push, besplatno, instant |
-| Salon odbio termin | Poziv | 🔔 Push |
-| Podsjetnik D-1 i H-3 | SMS po komadu | 🔔 Push, besplatno |
-| Termin se pomjera | Poziv | 🔔 Push + vidljivo u "Moji termini" |
-| Klijent otkazao | — | 🔔 Push vlasniku |
+| Gdje | Šta se traži |
+|---|---|
+| **Email registracija** (otvara se prva; prijava je sekundarna) | ime i prezime, telefon, email, lozinka jednom sa „prikaži lozinku", checkbox uslova |
+| **Apple / Google, prva prijava** | ekran „Dopuni profil": telefon i checkbox. Ime samo ako ga nalog nema — Apple HIG ne dozvoljava ponovno traženje imena |
+| **Nova verzija uslova** | „Dopuni profil" pri sljedećoj prijavi **ili prije sljedećeg termina** (sačuvana sesija prijavu preskače), samo checkbox |
+| **Bilo koji nalog bez profila, prije slanja termina** | korak 4 pita status prije svakog slanja; nepotpun profil ide na „Dopuni profil", pa nazad na korak 4 sa istim izborom |
 
-**Šta se time dobija:**
-- **Jedan cijeli ekran manje** u booking flow-u, na najosjetljivijem mjestu
-- Nula troška po poruci — SMS gateway u BiH se plaća po komadu
-- Nema pitanja verifikacije telefona, nema SMS OTP-a, nema treće frikcije
-- Manje ličnih podataka = manji GDPR/ZZOP teret, posebno u dentalnoj vertikali ([05 §7](05-vertical-packs.md))
+Pravila:
 
-**Rezidualni rizik i kako se pokriva:**
+- **Telefon bez SMS verifikacije.** Ispod polja piše zašto ga salon treba. Pozivni broj se bira
+  (podrazumijevano **+387**, uz region i dijasporu), a broj se kuca lokalno („061 123 456"). Polje
+  ne pušta slova; vodeća nula otpada, a grupisanje koje je klijent napisao ostaje — u bazu ide
+  „+387 61 123 456". Baza nezavisno prihvata 6–15 cifara.
+- **Checkbox je prazan po defaultu**, sa linkovima na Uslove korištenja i Politiku privatnosti, i
+  bez njega dugme nije aktivno.
+- **Prihvatanje se bilježi na identitetu**: verzija oba dokumenta i vrijeme. Verzija je
+  eksplicitan broj koji platforma podiže migracijom (ADR-0030), ne datum izmjene teksta.
+- **Profil adresar salona samo popunjava.** Ime ide samo preko „Klijent" ili praznog, telefon
+  samo preko praznog, u svakom salonu tog korisnika. Salonova ispravka pobjeđuje. Broj koji salon
+  već ima na drugom klijentu se ne kopira (ADR-0030).
+- Potvrda emaila kodom je task 81, a zaboravljena lozinka task 57.
+
+**Rezidualni rizik:**
 
 | Rizik | Pokrivanje |
 |---|---|
-| Klijent isključi notifikacije | Status termina je uvijek vidljiv u "Moji termini". Prikaži in-app banner ako su notifikacije isključene, sa dugmetom za uključivanje |
-| Salon zaista mora nekog dobiti | Vlasnik otkaže termin sa razlogom → klijent dobija push. Ako ne reaguje, termin je `cancelled` i slot je slobodan — što je i cilj |
-| Klijent nije došao | `no_show` na `Customer` zapisu. Ponovljeni no-show → vlasnik može tražiti da klijent zove |
+| Klijent upiše tuđi ili izmišljen broj | Broj nije verifikovan i nikad ne odlučuje o pristupu. Salon ga može ispraviti u svom adresaru |
+| Klijent isključi notifikacije | Status termina je uvijek vidljiv u „Moji termini"; salon sada ima i broj |
+| Nalog iz vremena prije taska 66 | Nema telefon dok ga ne doda; adresar i dalje piše „Bez broja" |
 
-> **Telefon i dalje postoji na `Customer` zapisu** — ali ga upisuje **samo salon admin** za klijente koji zovu telefonom i nikad neće imati app ([02 §11](02-user-flows-wireframes.md)). Klijent iz app-a nema telefon i to je u redu.
+> **Telefonski klijent** koji nikad neće imati app i dalje postoji: njega upisuje salon admin
+> ([02 §11](02-user-flows-wireframes.md)). Ako se kasnije registruje istim brojem, dobija **zaseban**
+> red — spajanje je odluka salona.
 
 ---
 
@@ -615,11 +629,16 @@ Implementacija:
 
 ### 8.3 Politika privatnosti i data safety
 - Javna URL politike privatnosti — **obavezna** sad kad se prikuplja email
-- Google Play **Data safety** i Apple **App Privacy** — navesti: email, ime, identifikatori. **Ne navodi telefon** — ne prikupljamo ga od klijenta
+- Google Play **Data safety** i Apple **App Privacy** — navesti: **ime, email i telefon kao obavezne**
+  (task 66, ADR-0029), plus identifikatori. Svrha imena i telefona: funkcionalnost aplikacije
+  (salon zna ko dolazi i zove kad se termin mijenja). Ne dijele se sa trećima; telefon se ne
+  verifikuje i ne koristi za marketing
 - Facebook zahtijeva **data deletion callback URL** ako je uključen
 - Za `dental` i `health`: sabira se sa zahtjevima iz [05 §7](05-vertical-packs.md), ne zamjenjuje ih
 
-> Izbacivanje telefona iz klijentskog flow-a **smanjuje** ovaj teret. Manje podataka, manje obaveza, kraći formulari.
+> Do taska 66 ovdje je stajalo da telefon ne prikupljamo. Od taska 66 ga prikupljamo, pa formular
+> mora to reći — netačan Data safety je razlog za uklanjanje iz storea. Brisanje računa briše i
+> telefon sa identiteta i iz adresara svakog salona.
 
 ### 8.4 Ugovor sa klijentom
 Salon je controller za `Customer` podatke, ti si processor. Ali `AuthIdentity` je **tvoj** globalni pool — posebna kategorija koju DPA mora pokriti eksplicitno. Traži pravni pregled prije prvog klijenta sa loginom.

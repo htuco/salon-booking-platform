@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
@@ -82,10 +83,19 @@ class BookingSuccessScreen extends ConsumerWidget {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  // Hero površina. Prave fotografije još nema (`prototype/ui/README.md`:
-                  // svih 45 slotova su placeholderi), pa stoji brand prelaz — ne prazan
-                  // prostor, koji bi skratio ekran i pomjerio sve ispod kad slika stigne.
-                  const _Hero(),
+                  // Hero: fotografija zakazane usluge, pa cover salona (task 49/50).
+                  // Brand prelaz ostaje samo dok slika stiže i kad je nema nigdje — ne
+                  // prazan prostor, koji bi skratio ekran i pomjerio sve ispod.
+                  _Hero(
+                    imageUrl:
+                        [
+                          usluga?.imageUrl,
+                          ref.watch(salonProvider).valueOrNull?.coverImageUrl,
+                        ].firstWhere(
+                          (u) => u != null && u.isNotEmpty,
+                          orElse: () => null,
+                        ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.gutter,
@@ -132,12 +142,15 @@ class BookingSuccessScreen extends ConsumerWidget {
                                   style: theme.textTheme.displayMedium,
                                 ),
                                 const SizedBox(width: AppSpacing.md),
+                                // Datum uz desni rub, kao vrijednosti i badge u
+                                // redovima ispod — kartica ima jednu desnu liniju.
                                 Expanded(
                                   child: Text(
                                     formatDateWithWeekday(
                                       l10n,
                                       appointment.date,
                                     ),
+                                    textAlign: TextAlign.end,
                                     style: theme.textTheme.titleSmall,
                                   ),
                                 ),
@@ -194,16 +207,17 @@ class BookingSuccessScreen extends ConsumerWidget {
   }
 }
 
-/// Površina na vrhu ekrana, do dolaska pravih fotografija.
+/// Fotografija na vrhu ekrana (`07-zahtjev-poslan.png`), sa brand prelazom kao padom.
 class _Hero extends StatelessWidget {
-  const _Hero();
+  const _Hero({required this.imageUrl});
+
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Container(
-      height: 220,
+    final prelaz = DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -211,6 +225,23 @@ class _Hero extends StatelessWidget {
           colors: [scheme.primary, scheme.surface],
         ),
       ),
+      child: const SizedBox.expand(),
+    );
+
+    final url = imageUrl;
+    return SizedBox(
+      height: 220,
+      child: url == null
+          ? prelaz
+          : CachedNetworkImage(
+              imageUrl: url,
+              fit: BoxFit.cover,
+              imageRenderMethodForWeb: webImageRenderMethod,
+              // Isti razlog kao na početnoj: prelaz ispod slike se ne primijeti, a
+              // spinner preko hero površine izgleda kao da app ne radi.
+              placeholder: (context, url) => prelaz,
+              errorWidget: (context, url, error) => prelaz,
+            ),
     );
   }
 }

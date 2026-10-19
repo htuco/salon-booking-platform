@@ -53,6 +53,9 @@ class FakeAuthRepository implements AuthRepository {
   /// Zadnja adresa poslana Supabase Authu. Lozinka se namjerno ne čuva u test fakeu.
   String? zadnjiEmail;
 
+  /// Metapodaci zadnje registracije (task 66): ime, telefon i pristanak.
+  ({String fullName, String phone, bool acceptedTerms})? zadnjaRegistracija;
+
   void dispose() => _kontroler.close();
 
   @override
@@ -78,9 +81,17 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthSession> signUpWithPassword({
     required String email,
     required String password,
+    required String fullName,
+    required String phone,
+    required bool acceptedTerms,
   }) async {
     brojRegistracija++;
     zadnjiEmail = email;
+    zadnjaRegistracija = (
+      fullName: fullName,
+      phone: phone,
+      acceptedTerms: acceptedTerms,
+    );
     if (registracijaGreska != null) throw registracijaGreska!;
     _sesija = sesijaNakonPrijave;
     _kontroler.add(_sesija);
