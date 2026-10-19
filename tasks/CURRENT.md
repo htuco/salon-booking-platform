@@ -1,50 +1,48 @@
-# Trenutni task: 66 — Registracija: ime, telefon i uslovi u jednoj formi
+# Trenutni task: 58 — Kontakt klijenta jednim tapom
 
-Puni task: [tasks/zero-crisis/66-registracija-ime-telefon-tos.md](zero-crisis/66-registracija-ime-telefon-tos.md) · učitan 2026-10-13
+Puni task: [tasks/zero-crisis/58-kontakt-jednim-tapom.md](zero-crisis/58-kontakt-jednim-tapom.md) · učitan 2026-10-19
 
 ## Status
 
-U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
-2026-10-13). Pregled (Eniz) zatvoren u grani 2026-10-19; čeka njegovo odobrenje, merge i
-`supabase db push` za `20261019120000`. 66 blokira 58, 67, 81, 82, 84 i 87.
+U toku (grana `feat/kontakt-jednim-tapom`, 2026-10-19). Zavisnost 66 je spojena u `develop` (PR #136).
 
 ## Ciljevi
 
-- [x] Odluke (Hamza, 2026-10-13): eksplicitna verzija uslova, a profil adresar samo popunjava —
-      [ADR-0030](../docs/adr/0030-verzija-uslova-i-profil-popunjava-adresar.md)
-- [x] Migracija `20261013160000_registracija_profil` + pgTAP `030` (pet mutacija ga obara)
-- [x] Registracija (ime, telefon, email, lozinka jednom, checkbox), prijava bez pravila registracije,
-      `AccountExistsError` i `WeakPasswordError`, bez demo teksta
-- [x] „Dopuni profil" (`/auth/complete-profile`) poslije prijave kad profilu nešto fali
-- [x] Dokumenti: ADR-0030, `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `docs/06` §3.1 i
-      §8.3 (Data safety), `docs/01` §12, `docs/README.md`
-- [x] Uživo: registracija → Melura prikazuje ime i telefon; nalog bez profila → „Dopuni profil"
-- [x] Pregled #136 (Eniz): profil prije slanja termina i `PopScope`; kasni sudar na
-      `unique(salon_id, phone)`; iskren komentar o ciframa; `legal_versions` `stable`
-- [ ] CI zelen, PR #136 spojen u `develop`
-- [ ] Deploy (Hamza): `supabase db push` za `20261019120000` (`20261013160000` je već na
-      hostovanom); provjera `select provolatile from pg_proc where proname = 'legal_versions'` → `s`
-- [ ] „Dopuni profil" poslije prave Apple i Google prijave na uređaju
+- [x] `url_launcher` u admin, `core/kontakt.dart` (normalizacija `+387`, URI, kanali po platformi)
+- [x] Detalj termina (`3n`) i profil klijenta (`3e`): „Pozovi" i „Poruka" (sheet Viber / WhatsApp)
+- [x] Bez broja nema akcije; na webu nema Vibera, „Poruka" ide pravo na WhatsApp
+- [x] Testovi: admin 694, `kontakt_test` + grupe u `appointment_detail_test` i `clients_screen_test`
+- [x] `prototype/admin/SPEC.md`, `docs/01` §6.3, doc komentar `appointment_detail_screen.dart`
+- [x] Web demo: „Poruka" otvara WhatsApp za `+38761552104`
+- [ ] Draft PR protiv `develop`, CI zelen, pregled
+- [ ] Uživo na Android uređaju sve tri akcije (`tool/run_live_demo.sh admin -d <device-id>`)
 
 ## Napomene
 
-- **Odluke su već donesene** u [ADR-0029](../docs/adr/0029-opseg-do-lansiranja-zero-crisis.md):
-  telefon obavezan bez SMS-a, ime i prezime, **checkbox** (ne pasivna obavijest), prihvatanje se
-  bilježi sa verzijom. Istraživanje `docs/research/auth-krajnji-korisnik.md` §3 preporučuje obavijest
-  bez checkboxa, ali ADR je jači.
-- **Zamka iz taska:** ime i telefon su po identitetu, `customers` je po salonu. Salon A ne smije
-  vidjeti da isti čovjek ide u salon B (`docs/06` §4.3). Osvježavanje ide samo kroz identitet, a
-  nikad kroz čitanje tuđeg `customers` reda.
-- Apple ime stiže samo pri prvoj autorizaciji; `supabase_auth_repository.dart` ~237 ga već upisuje u
-  `full_name`. Potvrda emaila kodom je task 81, ne ovaj.
-- Edge runtime se na ovoj mašini ugasi poslije `supabase start`. Ako REST testovi sa Edge Function
-  padnu na `503`, `supabase stop` pa ponovo `./tool/test_supabase.sh`.
-- Projekat je linkovan na hostovani (`olggovhqwirxamggkwuf`).
-- **Ostalo za sljedećeg:** poređenje telefona „po ciframa" ne normalizuje prefiks — `061 …` iz
-  salona i `+387 61 …` iz app-e su za bazu dva broja, pa isti čovjek ostaje dva reda u adresaru.
-  Normalizacija vodeće `0` naspram pozivnog broja traži zemlju salona (v. `security.md`).
+- **Pravila su u `apps/admin/lib/src/core/kontakt.dart`**, a ekrani crtaju samo dugmad. Launcher je
+  `otvoriLinkProvider`, a kanali su `kanaliPorukeProvider`. Oba se u testu override-uju, pa test
+  vidi koji je link otvoren i može glumiti web.
+- **Normalizacija:** salon nema polje zemlje, pa vodeća `0` znači `+387`. To je pretpostavka BiH
+  tržišta i zapisana je u komentaru `medjunarodniBroj`. Baza se ne mijenja.
+- **„Poruka" je sheet sa dva kanala**, jer canvas (`3n`, `adminv2/profil`) crta jedno dugme. Ovu
+  odluku treba potvrditi u pregledu PR-a.
+- **Web:** `viber://` se na webu ne može provjeriti, pa Vibera tamo nema (`kIsWeb`). `tel:` i
+  `https://wa.me/` na webu rade.
+- **Bez `canLaunchUrl`** ne trebaju Android `<queries>` ni iOS `LSApplicationQueriesSchemes`.
+  `launchUrl` vrati `false` ili baci, pa info toast kaže da uređaj nema aplikaciju za to.
+- Zamka „task 54 ne smije ukloniti Pozovi": 54 je u `polishing/` i nije počet, sudara danas nema.
+- Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client` prije `melos run analyze`.
 
 ## Istorija
+
+### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
+
+[PR #136](https://github.com/htuco/salon-booking-platform/pull/136), ADR-0030. Registracija sa
+imenom, telefonom i checkboxom; „Dopuni profil" poslije Apple/Google, za novu verziju uslova i
+prije svakog slanja termina; kasni sudar na `unique(salon_id, phone)` se preskače
+(`20261019120000`). pgTAP 888, klijent 667, admin 677. **Ostaje:** Hamza `supabase db push` za
+`20261019120000`; „Dopuni profil" poslije prave Apple/Google prijave na uređaju; poređenje telefona
+ne normalizuje prefiks (`061 …` naspram `+387 61 …`).
 
 ### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
 
