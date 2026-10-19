@@ -13,6 +13,7 @@
 ///   dvaput — u redu i u profilu.
 library;
 
+import 'package:admin/src/core/kontakt.dart';
 import 'package:admin/src/core/theme/theme.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/clients/clients_providers.dart';
@@ -117,9 +118,11 @@ Widget _screen({
   List<Customer>? klijenti,
   List<Appointment>? istorija,
   Object? greska,
+  List<Override> dodatno = const [],
 }) => ProviderScope(
   key: UniqueKey(),
   overrides: [
+    ...dodatno,
     currentStaffProvider.overrideWith(
       (ref) => Stream<StaffMember?>.value(_vlasnik),
     ),
@@ -399,6 +402,48 @@ void main() {
 
     test('bez ijedne cijene vraća null, ne nulu', () {
       expect(potroseno(const []), isNull);
+    });
+  });
+
+  group('kontakt jednim tapom (task 58)', () {
+    testWidgets('profil sa brojem zove i piše na pravi link', (tester) async {
+      final otvoreni = <Uri>[];
+      await _pumpAt(
+        tester,
+        _desktop,
+        _screen(
+          klijenti: [_haris],
+          dodatno: [
+            otvoriLinkProvider.overrideWithValue((uri) async {
+              otvoreni.add(uri);
+              return true;
+            }),
+            kanaliPorukeProvider.overrideWithValue(kanaliPoruke(web: false)),
+          ],
+        ),
+      );
+
+      await tester.ensureVisible(find.text('Pozovi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pozovi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Poruka'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('WhatsApp'));
+      await tester.pumpAndSettle();
+
+      expect(otvoreni, [
+        Uri.parse('tel:+38761552104'),
+        Uri.parse('https://wa.me/38761552104'),
+      ]);
+    });
+
+    testWidgets('profil bez broja nema kontakt', (tester) async {
+      await _pumpAt(tester, _desktop, _screen(klijenti: [_obrisan]));
+
+      expect(find.text('Historija'), findsOneWidget);
+      expect(find.text('Pozovi'), findsNothing);
+      expect(find.text('Poruka'), findsNothing);
     });
   });
 }

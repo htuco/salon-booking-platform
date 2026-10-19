@@ -13,9 +13,9 @@
 ///
 /// ## Placeholderi
 ///
-/// - **„Pozovi", „Poruka", „Profil"** su nacrtani (red iz `3n`), ali tap kaže „uskoro":
-///   `tel:` i `sms:` traže `url_launcher`, kojeg admin nema, a profil je istorija klijenta
-///   (task 35). Broj telefona zato stoji ispisan i može se kopirati.
+/// - **„Profil"** u redu iz `3n` kaže „uskoro": profil je `3e` (task 35), ali veza sa
+///   detaljem još nije napravljena. „Pozovi" i „Poruka" (Viber, WhatsApp) rade od taska 58
+///   (`core/kontakt.dart`) i stoje samo kad klijent ima broj.
 /// - **„Pomjeri"** u traci radnji — pomjeranje nema RPC putanju (v. `AppointmentActionsBar`).
 ///
 /// ## Namjerno nije nacrtano
@@ -30,6 +30,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
+import '../../core/kontakt.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
@@ -138,7 +139,7 @@ class _Detalj extends ConsumerWidget {
                 children: [
                   _Klijent(termin: termin),
                   const SizedBox(height: 10),
-                  const _BrzeRadnje(),
+                  _BrzeRadnje(telefon: termin.customerPhone),
                   const SizedBox(height: AdminSpacing.lg),
                   _Podaci(termin: termin, usluga: usluga, radnik: radnik),
                   if (termin.customerNote case final napomena?
@@ -353,8 +354,8 @@ class _Klijent extends StatelessWidget {
                   ),
                   if (telefon != null && telefon.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    // Mono, jer je broj podatak koji se čita cifru po cifru — i jedini
-                    // način da se danas pozove, dok „Pozovi" nema `url_launcher`.
+                    // Mono, jer je broj podatak koji se čita cifru po cifru. Ostaje
+                    // ispisan i uz „Pozovi": broj se diktira, kopira i provjerava.
                     SelectableText(
                       telefon,
                       style: AdminText.time.copyWith(
@@ -548,23 +549,29 @@ class _Podnozje extends StatelessWidget {
   }
 }
 
-/// „Pozovi · Poruka · Profil" iz `3n` — placeholderi dok admin nema `url_launcher` i
-/// profil klijenta.
-class _BrzeRadnje extends StatelessWidget {
-  const _BrzeRadnje();
+/// „Pozovi · Poruka · Profil" iz `3n`.
+///
+/// **Bez broja nema „Pozovi" ni „Poruka"** (task 58), ni broja od kojeg nema linka
+/// (`medjunarodniBroj` vrati `null`). Dugme koje ne može ništa otvoriti je gore od praznog
+/// mjesta. „Profil" je i dalje placeholder: uvezivanje sa `3e` je svoja stavka u `SPEC.md`.
+class _BrzeRadnje extends ConsumerWidget {
+  const _BrzeRadnje({required this.telefon});
+
+  final String? telefon;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final broj = medjunarodniBroj(telefon);
     final stil = OutlinedButton.styleFrom(
       textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 16),
       backgroundColor: context.adminColors.surface,
     );
 
-    Widget dugme(String labela, String sta) => Expanded(
+    Widget dugme(String labela, VoidCallback onPressed) => Expanded(
       child: SizedBox(
         height: 50,
         child: OutlinedButton(
-          onPressed: () => pokaziUskoro(context, sta),
+          onPressed: onPressed,
           style: stil,
           child: Text(labela),
         ),
@@ -572,12 +579,16 @@ class _BrzeRadnje extends StatelessWidget {
     );
 
     return Row(
+      spacing: 10,
       children: [
-        dugme('Pozovi', 'Poziv iz aplikacije'),
-        const SizedBox(width: 10),
-        dugme('Poruka', 'Poruka iz aplikacije'),
-        const SizedBox(width: 10),
-        dugme('Profil', 'Profil klijenta'),
+        if (broj != null) ...[
+          dugme(
+            'Pozovi',
+            () => kontaktiraj(context, ref, KanalKontakta.poziv, broj),
+          ),
+          dugme('Poruka', () => ponudiPoruku(context, ref, broj)),
+        ],
+        dugme('Profil', () => pokaziUskoro(context, 'Profil klijenta')),
       ],
     );
   }

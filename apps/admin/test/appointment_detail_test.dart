@@ -5,6 +5,7 @@
 /// nijednu radnju.
 library;
 
+import 'package:admin/src/core/kontakt.dart';
 import 'package:admin/src/core/router/admin_router.dart';
 import 'package:admin/src/core/theme/theme.dart';
 import 'package:admin/src/features/appointments/appointment_detail_screen.dart';
@@ -70,21 +71,23 @@ Appointment _termin({
   cancelledBy: otkazao,
 );
 
-Widget _ekran(Appointment? termin) => ProviderScope(
-  overrides: [
-    currentStaffProvider.overrideWith(
-      (ref) => Stream<StaffMember?>.value(_vlasnik),
-    ),
-    pendingCountProvider.overrideWith((ref) async => 0),
-    adminServicesProvider.overrideWith((ref) async => _usluge),
-    adminEmployeesProvider.overrideWith((ref) async => _radnici),
-    terminProvider(_terminId).overrideWith((ref) async => termin),
-  ],
-  child: MaterialApp(
-    theme: buildAdminTheme(),
-    home: const AppointmentDetailScreen(appointmentId: _terminId),
-  ),
-);
+Widget _ekran(Appointment? termin, {List<Override> dodatno = const []}) =>
+    ProviderScope(
+      overrides: [
+        ...dodatno,
+        currentStaffProvider.overrideWith(
+          (ref) => Stream<StaffMember?>.value(_vlasnik),
+        ),
+        pendingCountProvider.overrideWith((ref) async => 0),
+        adminServicesProvider.overrideWith((ref) async => _usluge),
+        adminEmployeesProvider.overrideWith((ref) async => _radnici),
+        terminProvider(_terminId).overrideWith((ref) async => termin),
+      ],
+      child: MaterialApp(
+        theme: buildAdminTheme(),
+        home: const AppointmentDetailScreen(appointmentId: _terminId),
+      ),
+    );
 
 Future<void> _naSirini(
   WidgetTester tester,
@@ -372,6 +375,111 @@ void main() {
 
       expect(find.byType(NewAppointmentScreen), findsOneWidget);
       expect(find.byType(AppointmentDetailScreen), findsNothing);
+    });
+  });
+
+  group('kontakt jednim tapom (task 58)', () {
+    /// Lažni launcher: pamti otvorene linkove i vraća [uspjeh].
+    (List<Uri>, Override) launcher({bool uspjeh = true}) {
+      final otvoreni = <Uri>[];
+      return (
+        otvoreni,
+        otvoriLinkProvider.overrideWithValue((uri) async {
+          otvoreni.add(uri);
+          return uspjeh;
+        }),
+      );
+    }
+
+    testWidgets('bez broja nema ni „Pozovi" ni „Poruka"', (tester) async {
+      await _naSirini(tester, _telefon, _ekran(_termin(telefon: null)));
+
+      expect(find.text('Pozovi'), findsNothing);
+      expect(find.text('Poruka'), findsNothing);
+      // Red iz `3n` ne nestaje cijeli: „Profil" ne zavisi od broja.
+      expect(find.text('Profil'), findsOneWidget);
+    });
+
+    testWidgets('broj od kojeg nema linka se ne nudi', (tester) async {
+      await _naSirini(tester, _telefon, _ekran(_termin(telefon: '  12 ')));
+
+      expect(find.text('Pozovi'), findsNothing);
+      expect(find.text('Poruka'), findsNothing);
+    });
+
+    testWidgets('„Pozovi" otvara tel: u međunarodnom obliku', (tester) async {
+      final (otvoreni, override) = launcher();
+      await _naSirini(tester, _telefon, _ekran(_termin(), dodatno: [override]));
+
+      await tester.tap(find.text('Pozovi'));
+      await tester.pumpAndSettle();
+
+      expect(otvoreni, [Uri.parse('tel:+38761552104')]);
+    });
+
+    testWidgets('„Poruka" nudi Viber i WhatsApp', (tester) async {
+      final (otvoreni, override) = launcher();
+      await _naSirini(
+        tester,
+        _telefon,
+        _ekran(
+          _termin(),
+          dodatno: [
+            override,
+            kanaliPorukeProvider.overrideWithValue(kanaliPoruke(web: false)),
+          ],
+        ),
+      );
+
+      await tester.tap(find.text('Poruka'));
+      await tester.pumpAndSettle();
+      expect(find.text('Viber'), findsOneWidget);
+      expect(find.text('WhatsApp'), findsOneWidget);
+
+      await tester.tap(find.text('Viber'));
+      await tester.pumpAndSettle();
+      expect(otvoreni, [Uri.parse('viber://chat?number=%2B38761552104')]);
+
+      await tester.tap(find.text('Poruka'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('WhatsApp'));
+      await tester.pumpAndSettle();
+      expect(otvoreni.last, Uri.parse('https://wa.me/38761552104'));
+    });
+
+    testWidgets('na webu „Poruka" ide pravo na WhatsApp, bez Vibera', (
+      tester,
+    ) async {
+      final (otvoreni, override) = launcher();
+      await _naSirini(
+        tester,
+        _desktop,
+        _ekran(
+          _termin(),
+          dodatno: [
+            override,
+            kanaliPorukeProvider.overrideWithValue(kanaliPoruke(web: true)),
+          ],
+        ),
+      );
+
+      await tester.tap(find.text('Poruka'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Viber'), findsNothing);
+      expect(otvoreni, [Uri.parse('https://wa.me/38761552104')]);
+    });
+
+    testWidgets('kad uređaj ne može otvoriti link, to kaže', (tester) async {
+      final (_, override) = launcher(uspjeh: false);
+      await _naSirini(tester, _telefon, _ekran(_termin(), dodatno: [override]));
+
+      await tester.tap(find.text('Pozovi'));
+      // `pump`, ne `pumpAndSettle`: info toast se sam gasi, pa ga settle odvede.
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Poziv se ne može otvoriti.'), findsOneWidget);
     });
   });
 }
