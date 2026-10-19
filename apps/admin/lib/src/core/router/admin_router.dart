@@ -133,6 +133,7 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
             initialDate: DateTime.tryParse(
               state.uri.queryParameters['date'] ?? '',
             ),
+            initialTime: vrijemeIzAdrese(state.uri.queryParameters['time']),
           ),
         ),
       ),
@@ -334,6 +335,19 @@ String putanjaTermina(String trenutna, String id) {
     'more' => '${AdminRoute.appointments.path}/$id',
     _ => '${AdminRoute.requests.path}/$id',
   };
+}
+
+/// `10:30` iz adrese forme, ili `null` kad ga nema ili je pokvaren.
+///
+/// Pokvarena adresa ne smije oboriti formu: `time` je samo prijedlog (task 69), pa forma
+/// bez njega radi isto kao do sada.
+LocalTime? vrijemeIzAdrese(String? tekst) {
+  if (tekst == null || tekst.isEmpty) return null;
+  try {
+    return LocalTime.parse(tekst);
+  } on FormatException {
+    return null;
+  }
 }
 
 /// Otvara detalj termina u trenutnoj grani, sa „nazad" na ekran odakle je otvoren.

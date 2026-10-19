@@ -29,7 +29,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | 66 | 0,5–1 dan |
 | [67](67-pisanje-recenzija.md) | Pisanje recenzija | 66 | 2–3 dana |
 | [68](68-lista-cekanja.md) | Lista čekanja | 64 | 3–4 dana |
-| [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri | — | 2–3 dana |
+| [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri 🟡 | — | 2–3 dana |
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
 | [71](71-melura-za-svakoga.md) | Melura za svakoga: sve radi i jasno je | 54 | 3–4 dana |
 | [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna | — | 4–5 dana |
@@ -102,3 +102,10 @@ uživo: Melura prikazuje ime i telefon novog klijenta. **Ostaje:** CI, merge, `s
 Nema Android uređaja ni emulatora za stavku „uživo". Na ovom Macu treba emulator API 36, arm64-v8a,
 Google Play image. Prije koda dvije odluke: kad ide D-1 i jedan ili dva prekidača. Nalazi i odluke
 su u status bloku task fajla.
+
+### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
+
+[PR #137](https://github.com/htuco/salon-booking-platform/pull/137). „Sedmica" u prekidaču radi: na
+≥ 840 px mreža od 7 kolona (`7a`/`7c`), na telefonu lista po danima (`7b`); tap na termin otvara
+detalj, tap na prazno (od danas) nudi ručni termin, tap na zaglavlje otvara dan. Dva pregleda
+zatvorena u grani; admin 677, viđeno uživo na demo buildu na 1440, 1024 i 402. Deploy ne treba.

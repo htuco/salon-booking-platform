@@ -14,6 +14,7 @@ import 'package:admin/src/core/env/app_env.dart';
 import 'package:admin/src/core/router/admin_router.dart';
 import 'package:admin/src/core/widgets/admin_load_error.dart';
 import 'package:admin/src/demo/demo_overrides.dart';
+import 'package:admin/src/features/calendar/calendar_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -72,4 +73,67 @@ void main() {
       });
     }
   }
+
+  // Sedmica (task 69) preko granice mjeseca: demo je termine pravio sa `day + d`, pa je
+  // sedmica od 30. novembra dobijala 32. novembar — `assert` u debugu i prazan četvrtak
+  // u releaseu (pregled #137). Rute iznad sedmicu ne otvaraju, jer je „Dan" podrazumijevan.
+  for (final (sirina, velicina) in [
+    ('desktop', const Size(1440, 900)),
+    ('telefon', const Size(402, 874)),
+  ]) {
+    testWidgets('$sirina · sedmica preko granice mjeseca', (tester) async {
+      tester.binding.platformDispatcher.defaultRouteNameTestValue =
+          AdminRoute.calendar.path;
+      addTearDown(
+        tester.binding.platformDispatcher.clearDefaultRouteNameTestValue,
+      );
+      tester.view
+        ..physicalSize = velicina
+        ..devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...demoOverrides(
+              const AdminEnv(supabaseUrl: '', supabaseAnonKey: ''),
+            ),
+            kalendarDatumProvider.overrideWith(
+              () => _FiksniDatum(DateTime(2026, 11, 30)),
+            ),
+            kalendarPrikazProvider.overrideWith(
+              () => _FiksniPrikaz(KalendarPrikaz.sedmica),
+            ),
+          ],
+          child: const SalonAdminApp(),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(AdminLoadError), findsNothing);
+      expect(find.textContaining(_nijeUcitano), findsNothing);
+      // Decembarski dani sedmice nose termine, ne samo novembarski ponedjeljak.
+      expect(find.textContaining(RegExp(r'^[1-9][0-9]* termin')), findsWidgets);
+    });
+  }
+}
+
+class _FiksniDatum extends KalendarDatumNotifier {
+  _FiksniDatum(this._pocetni);
+
+  final DateTime _pocetni;
+
+  @override
+  DateTime build() => _pocetni;
+}
+
+class _FiksniPrikaz extends KalendarPrikazNotifier {
+  _FiksniPrikaz(this._pocetni);
+
+  final KalendarPrikaz _pocetni;
+
+  @override
+  KalendarPrikaz build() => _pocetni;
 }

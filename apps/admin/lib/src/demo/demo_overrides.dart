@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/env/app_env.dart';
 import '../features/appointments/appointments_providers.dart';
+import '../features/calendar/calendar_day.dart' show pocetakSedmice;
 import '../features/calendar/calendar_providers.dart';
 import '../features/clients/clients_providers.dart';
 import '../features/dashboard/danas.dart' show sljedeciRadniDan;
@@ -147,6 +148,29 @@ List<Override> demoOverrides(AdminEnv env) => [
     final dan = ref.watch(kalendarDatumProvider);
     if (dan.weekday == DateTime.sunday) return const <BlockedSlot>[];
     return [_blokada(dan)];
+  }),
+  // Sedmica (task 69): isti termini po danima pon–sub, ali **ne svi svaki dan** — sedam
+  // istih kolona bi sakrilo i preklapanje i razliku između punog i praznog dana.
+  // Nedjelja je prazna, kao u danu. `id` ostaje isti, da tap otvori demo detalj.
+  kalendarTerminiSedmiceProvider.overrideWith((ref) async {
+    final pocetak = ref.watch(kalendarDatumProvider.select(pocetakSedmice));
+    return [
+      for (var d = 0; d < 6; d++)
+        for (var i = 0; i < _termini.length; i++)
+          if ((i + d) % 3 != 0)
+            _termini[i].copyWith(
+              date: _datumOd(
+                DateTime(pocetak.year, pocetak.month, pocetak.day + d),
+              ),
+            ),
+    ];
+  }),
+  kalendarBlokadeSedmiceProvider.overrideWith((ref) async {
+    final pocetak = ref.watch(kalendarDatumProvider.select(pocetakSedmice));
+    return [
+      for (var d = 0; d < 6; d++)
+        _blokada(DateTime(pocetak.year, pocetak.month, pocetak.day + d)),
+    ];
   }),
   // FE-505: Klijenti, Radno vrijeme i Postavke su u demou pokazivali grešku učitavanja —
   // njihovi provideri idu u bazu, a demo ih nije punio.
@@ -506,3 +530,10 @@ Appointment _termin(
         : sada.subtract(Duration(minutes: poslanPrije)),
   );
 }
+
+/// `LocalDate` iz već normalizovanog `DateTime`-a.
+///
+/// `LocalDate(godina, mjesec, dan + d)` ne prelazi u sljedeći mjesec kao `DateTime`: sedmica
+/// od ponedjeljka 30. novembra bi dala 32. novembar, koji `assert` u debugu obori, a u
+/// releaseu ne pogodi nijedan dan (pregled #137).
+LocalDate _datumOd(DateTime d) => LocalDate(d.year, d.month, d.day);

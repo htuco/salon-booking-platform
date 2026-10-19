@@ -39,6 +39,14 @@ U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/sal
 
 ## Istorija
 
+### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
+
+[PR #137](https://github.com/htuco/salon-booking-platform/pull/137). Sedmica u Meluri: mreža od 7
+kolona na ≥ 840 px, lista po danima na telefonu, avatar radnika (slika ili inicijali na boji iz
+`AdminPalette.radnici`), red odsutnih uz „Svi". Dva pregleda zatvorena u grani; admin 677, viđeno
+uživo na demo buildu na 1440, 1024 i 402. Bez migracije, deploy ne treba. **Ostaje svjesno:** mali
+mjesečni kalendar dana sa starim obrascem semantike (v. `conventions.md`).
+
 ### 56 — Push podsjetnici D-1 i H-3 (odložen, 2026-10-13)
 
 Učitan pa vraćen: nema Android uređaja ni emulatora (treba API 36, arm64-v8a, Google Play image),
