@@ -4,7 +4,7 @@ Puni task: [tasks/zero-crisis/58-kontakt-jednim-tapom.md](zero-crisis/58-kontakt
 
 ## Status
 
-U toku (grana `feat/kontakt-jednim-tapom`, 2026-10-19). Zavisnost 66 je spojena u `develop` (PR #136).
+U toku (grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/salon-booking-platform/pull/138) draft, 2026-10-19). Zavisnost 66 je spojena u `develop` (PR #136).
 
 ## Ciljevi
 

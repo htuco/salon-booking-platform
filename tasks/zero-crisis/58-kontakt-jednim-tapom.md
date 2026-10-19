@@ -23,7 +23,7 @@ Iz detalja termina i profila klijenta vlasnik jednim tapom pozove klijenta ili m
 
 ## Status (2026-10-19)
 
-U toku, grana `feat/kontakt-jednim-tapom`. Kod i testovi su gotovi, ostaje Android uređaj.
+U toku, grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/salon-booking-platform/pull/138). Kod i testovi su gotovi, ostaje Android uređaj.
 
 - **Oblik:** `apps/admin/lib/src/core/kontakt.dart` drži pravila: normalizaciju, URI, kanale po
   platformi i launcher kao provider. „Poruka" iz `3n` otvara sheet Viber / WhatsApp, jer canvas crta

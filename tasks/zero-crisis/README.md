@@ -113,7 +113,7 @@ zatvorena u grani; admin 677, viđeno uživo na demo buildu na 1440, 1024 i 402.
 
 ### 58 — Kontakt klijenta jednim tapom 🟡 (2026-10-19)
 
-Grana `feat/kontakt-jednim-tapom`. „Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina (`3n`) i
+Grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/salon-booking-platform/pull/138). „Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina (`3n`) i
 profilu klijenta (`3e`), samo uz broj; lokalni `061 …` ide u link kao `+387 61 …`, a na webu nema
 Vibera. Admin 694, dvije mutacije obaraju testove, a na web demou „Poruka" otvara pravi WhatsApp
 broj. **Ostaje:** sve tri akcije na Android uređaju.
