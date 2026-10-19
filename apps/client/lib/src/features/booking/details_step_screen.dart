@@ -37,6 +37,12 @@ import 'widgets/booking_step_scaffold.dart';
 ///
 /// ## `409` je ishod, ne kvar
 ///
+/// **Profil se provjerava prije slanja, svaki put** (pregled #136). Provjera samo na loginu
+/// se zaobilazi: sačuvana sesija se obnavlja sama, pa korisnik sa starom verzijom uslova ili
+/// bez telefona poslije Apple/Google prijave login nikad ne vidi, a ubijena aplikacija na
+/// „Dopuni profil" ostavlja prijavljen nalog bez profila. Profil treba tek za termin —
+/// katalog je javan (`docs/06 §1.1`) — pa je ovo jedino mjesto gdje ga treba tražiti.
+///
 /// Slot može otići između prikaza i potvrde. Tada se ne prikazuje generička greška: poruka
 /// kaže šta se desilo, lista slotova se invalidira (u `BookingSubmitNotifier`) i korisnik
 /// se vraća na korak 3 sa **osvježenom** listom i zadržanim danom.
@@ -89,6 +95,33 @@ class DetailsStepScreen extends ConsumerWidget {
     // ekrana (uspjeh navigira), a `ScaffoldMessenger.of` bi tada gađao mrtav element.
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
+
+    final ClientProfileStatus profil;
+    try {
+      profil = await ref.read(clientProfileRepositoryProvider).status();
+    } on ApiError catch (greska) {
+      // Bez potvrđenog profila se ne šalje: termin bez telefona salon ne može potvrditi
+      // pozivom, a greška ovdje je ionako ista ona koja bi oborila i slanje.
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            greska is NetworkError ? l10n.noConnection : l10n.genericError,
+          ),
+        ),
+      );
+      return;
+    }
+    if (!profil.isComplete) {
+      // `push`: „Dopuni profil" se vraća ovdje (`nazadIli`), sa izborom flowa netaknutim,
+      // a korisnik termin šalje svjesno, drugim tapom.
+      router.push(
+        Uri(
+          path: ClientRoute.completeProfile.path,
+          queryParameters: {'from': ClientRoute.bookDetails.path},
+        ).toString(),
+      );
+      return;
+    }
 
     final uspjeh = await ref.read(bookingSubmitProvider.notifier).submit();
 

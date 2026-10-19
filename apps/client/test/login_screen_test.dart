@@ -589,6 +589,71 @@ void main() {
       expect(find.byType(CompleteProfileScreen), findsNothing);
       container.dispose();
     });
+
+    // Prije je „nazad" na Androidu vraćao na korak 4, a korisnik je ostajao prijavljen bez
+    // profila — „izlaz bez spremanja je odjava" je važilo samo za dugme (pregled #136).
+    Future<ProviderContainer> doDopuniProfil(
+      WidgetTester tester,
+      FakeAuthRepository auth,
+    ) async {
+      final container = await _pump(
+        tester,
+        auth: auth,
+        profil: FakeClientProfileRepository(
+          trenutni: const ClientProfileStatus(
+            hasName: true,
+            hasPhone: false,
+            termsCurrent: false,
+          ),
+        ),
+        ruta: _loginIzFlowa,
+      );
+      await _otvoriPrijavu(tester);
+      await tester.enterText(
+        find.byKey(const ValueKey('login-email')),
+        'google@primjer.ba',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('login-password')),
+        'Sigurna123',
+      );
+      await tester.tap(find.text('Prijavi se'));
+      await tester.pumpAndSettle();
+      expect(find.byType(CompleteProfileScreen), findsOneWidget);
+      return container;
+    }
+
+    testWidgets('sistemski „nazad" sa Dopuni profil je odjava', (tester) async {
+      final auth = FakeAuthRepository();
+      addTearDown(auth.dispose);
+      final container = await doDopuniProfil(tester, auth);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(auth.brojOdjava, 1);
+      expect(find.byType(CompleteProfileScreen), findsNothing);
+      container.dispose();
+    });
+
+    testWidgets('spremljen profil izlazi bez odjave', (tester) async {
+      final auth = FakeAuthRepository();
+      addTearDown(auth.dispose);
+      final container = await doDopuniProfil(tester, auth);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('profile-phone')),
+        '61 234 567',
+      );
+      await tester.tap(find.byKey(const ValueKey('terms-checkbox')));
+      await tester.pump();
+      await tester.tap(find.text('Nastavi'));
+      await tester.pumpAndSettle();
+
+      expect(auth.brojOdjava, 0);
+      expect(find.byType(CompleteProfileScreen), findsNothing);
+      container.dispose();
+    });
   });
 
   group('navigacija i provideri', () {

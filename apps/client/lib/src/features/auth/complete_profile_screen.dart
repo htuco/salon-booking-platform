@@ -19,16 +19,19 @@ final clientProfileStatusProvider =
 
 /// `/auth/complete-profile` — „Dopuni profil" (task 66).
 ///
-/// Dolazi se samo sa prijave, kad profilu nešto fali: Apple i Google prvi put ne daju
-/// telefon ni pristanak, a ko je prihvatio staru verziju uslova mora prihvatiti novu.
+/// Dolazi se sa prijave i sa koraka 4 prije slanja termina, kad profilu nešto fali: Apple i
+/// Google prvi put ne daju telefon ni pristanak, a ko je prihvatio staru verziju uslova mora
+/// prihvatiti novu.
 ///
 /// **Traži se samo ono što fali.** Apple HIG ne dozvoljava da se poslije Sign in with
 /// Apple ponovo traže ime i email, pa se ime pojavljuje samo kad ga nalog stvarno nema
 /// (Apple ga daje jednom, i može se izgubiti). Korisnik koji samo prihvata novu verziju
 /// uslova vidi samo checkbox.
 ///
-/// **Izlaz bez spremanja je odjava.** Profil je uslov računa, ne opcija ekrana: prijavljen
-/// korisnik bez telefona i pristanka bi zakazivao kod salona koji ga ne može nazvati.
+/// **Izlaz bez spremanja je odjava** — i dugmetom i sistemskim „nazad" (`PopScope`). Profil je
+/// uslov računa, ne opcija ekrana: prijavljen korisnik bez telefona i pristanka bi zakazivao
+/// kod salona koji ga ne može nazvati. Ubijena aplikacija ostavlja sesiju, ali termin se
+/// bez profila svejedno ne šalje — korak 4 ga traži prije slanja (pregled #136).
 class CompleteProfileScreen extends ConsumerStatefulWidget {
   const CompleteProfileScreen({this.from, super.key});
 
@@ -69,99 +72,107 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
     final theme = Theme.of(context);
     final status = ref.watch(clientProfileStatusProvider);
 
-    return Scaffold(
-      body: SafeArea(
-        child: switch (status) {
-          AsyncData(:final value) => ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.gutter,
-              AppSpacing.xxl,
-              AppSpacing.gutter,
-              AppSpacing.xxl,
-            ),
-            children: [
-              Text(
-                l10n.completeProfileTitle,
-                style: theme.textTheme.displaySmall,
+    // `canPop: false` zaustavlja samo sistemski „nazad" i iOS swipe; `nazadIli` poslije
+    // spremanja ili odjave ide kroz `GoRouter.pop`, koji `PopScope` ne pita.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_radi) _odjavi();
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: switch (status) {
+            AsyncData(:final value) => ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.gutter,
+                AppSpacing.xxl,
+                AppSpacing.gutter,
+                AppSpacing.xxl,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                value.hasPhone && value.hasName
-                    ? l10n.completeProfileTermsOnlyHint
-                    : l10n.completeProfileHint,
-                style: theme.textTheme.bodyLarge,
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              if (_greska case final poruka?) ...[
-                Text(
-                  poruka,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: context.statusColors.danger,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-              if (!value.hasName) ...[
-                TextField(
-                  key: const ValueKey('profile-name'),
-                  controller: _ime,
-                  textCapitalization: TextCapitalization.words,
-                  textInputAction: TextInputAction.next,
-                  autofillHints: const [AutofillHints.name],
-                  decoration: InputDecoration(
-                    labelText: l10n.loginNameLabel,
-                    errorText: _imeGreska,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-              if (!value.hasPhone) ...[
-                PhoneField(
-                  controller: _telefon,
-                  greska: _telefonGreska,
-                  enabled: !_radi,
-                  fieldKey: const ValueKey('profile-phone'),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-              TermsCheckbox(
-                value: _uslovi,
-                enabled: !_radi,
-                onChanged: (v) => setState(() => _uslovi = v),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              AppButton(
-                label: l10n.completeProfileSave,
-                loading: _radi,
-                onPressed: _uslovi ? () => _spremi(value) : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppButton(
-                label: l10n.completeProfileSignOut,
-                variant: AppButtonVariant.outline,
-                onPressed: _radi ? null : _odjavi,
-              ),
-            ],
-          ),
-          AsyncError() => EmptyState(
-            message: l10n.genericError,
-            actionLabel: l10n.retry,
-            onAction: () => ref.invalidate(clientProfileStatusProvider),
-          ),
-          // Skeleton, ne spinner — pravilo koje je postavio prvi ekran (task 10).
-          _ => const Padding(
-            padding: EdgeInsets.all(AppSpacing.gutter),
-            child: Column(
               children: [
-                SkeletonLoader(height: 48),
-                SizedBox(height: AppSpacing.lg),
-                SkeletonLoader(height: 56),
-                SizedBox(height: AppSpacing.lg),
-                SkeletonLoader(height: 56),
+                Text(
+                  l10n.completeProfileTitle,
+                  style: theme.textTheme.displaySmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  value.hasPhone && value.hasName
+                      ? l10n.completeProfileTermsOnlyHint
+                      : l10n.completeProfileHint,
+                  style: theme.textTheme.bodyLarge,
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                if (_greska case final poruka?) ...[
+                  Text(
+                    poruka,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: context.statusColors.danger,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                if (!value.hasName) ...[
+                  TextField(
+                    key: const ValueKey('profile-name'),
+                    controller: _ime,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.name],
+                    decoration: InputDecoration(
+                      labelText: l10n.loginNameLabel,
+                      errorText: _imeGreska,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                if (!value.hasPhone) ...[
+                  PhoneField(
+                    controller: _telefon,
+                    greska: _telefonGreska,
+                    enabled: !_radi,
+                    fieldKey: const ValueKey('profile-phone'),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+                TermsCheckbox(
+                  value: _uslovi,
+                  enabled: !_radi,
+                  onChanged: (v) => setState(() => _uslovi = v),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                AppButton(
+                  label: l10n.completeProfileSave,
+                  loading: _radi,
+                  onPressed: _uslovi ? () => _spremi(value) : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppButton(
+                  label: l10n.completeProfileSignOut,
+                  variant: AppButtonVariant.outline,
+                  onPressed: _radi ? null : _odjavi,
+                ),
               ],
             ),
-          ),
-        },
+            AsyncError() => EmptyState(
+              message: l10n.genericError,
+              actionLabel: l10n.retry,
+              onAction: () => ref.invalidate(clientProfileStatusProvider),
+            ),
+            // Skeleton, ne spinner — pravilo koje je postavio prvi ekran (task 10).
+            _ => const Padding(
+              padding: EdgeInsets.all(AppSpacing.gutter),
+              child: Column(
+                children: [
+                  SkeletonLoader(height: 48),
+                  SizedBox(height: AppSpacing.lg),
+                  SkeletonLoader(height: 56),
+                  SizedBox(height: AppSpacing.lg),
+                  SkeletonLoader(height: 56),
+                ],
+              ),
+            ),
+          },
+        ),
       ),
     );
   }

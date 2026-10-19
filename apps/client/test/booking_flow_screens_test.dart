@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'support/fake_auth_repository.dart';
+import 'support/fake_client_profile_repository.dart';
 
 /// Booking flow kroz sva četiri koraka.
 ///
@@ -338,6 +339,105 @@ void main() {
         ),
       );
 
+      container.dispose();
+    });
+  });
+
+  group('profil prije slanja (pregled #136)', () {
+    void nijePoslano(_MockBooking repo) => verifyNever(
+      () => repo.book(
+        salonId: any(named: 'salonId'),
+        customerId: any(named: 'customerId'),
+        serviceId: any(named: 'serviceId'),
+        date: any(named: 'date'),
+        startTime: any(named: 'startTime'),
+        employeeId: any(named: 'employeeId'),
+        note: any(named: 'note'),
+        deviceId: any(named: 'deviceId'),
+      ),
+    );
+
+    // Sačuvana sesija bez telefona (Apple/Google) ili sa starom verzijom uslova nikad ne
+    // prođe kroz login — provjera na loginu je bila jedina, pa se mogla zaobići.
+    for (final (opis, status) in [
+      (
+        'bez telefona',
+        const ClientProfileStatus(
+          hasName: true,
+          hasPhone: false,
+          termsCurrent: true,
+        ),
+      ),
+      (
+        'stara verzija uslova',
+        const ClientProfileStatus(
+          hasName: true,
+          hasPhone: true,
+          termsCurrent: false,
+        ),
+      ),
+    ]) {
+      testWidgets('$opis: „Dopuni profil", termin se ne šalje', (tester) async {
+        final repo = _MockBooking()..stubUspjesan();
+        final container = await _pumpFlow(
+          tester,
+          repo: repo,
+          ruta: ClientRoute.bookDetails.path,
+          customerId: _customerId,
+          profil: FakeClientProfileRepository(trenutni: status),
+          pocetniFlow: (notifier) => notifier
+            ..chooseService(_usluga.id)
+            ..chooseAnyEmployee()
+            ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
+        );
+
+        await tester.pump();
+        await tester.tap(find.text('Pošalji zahtjev'));
+        await tester.pump();
+        await tester.pump();
+
+        nijePoslano(repo);
+        expect(
+          container.read(appRouterProvider).state.uri.path,
+          ClientRoute.completeProfile.path,
+        );
+        // Izbor flowa ostaje — „Dopuni profil" vraća na korak 4 sa istim terminom.
+        expect(
+          container.read(bookingFlowProvider).startTime,
+          const LocalTime(9, 0),
+        );
+        container.dispose();
+      });
+    }
+
+    testWidgets('profil se ne može provjeriti: poruka, termin se ne šalje', (
+      tester,
+    ) async {
+      final repo = _MockBooking()..stubUspjesan();
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        ruta: ClientRoute.bookDetails.path,
+        customerId: _customerId,
+        profil: FakeClientProfileRepository(
+          statusGreska: const NetworkError('nema mreže'),
+        ),
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
+      );
+
+      await tester.pump();
+      await tester.tap(find.text('Pošalji zahtjev'));
+      await tester.pump();
+      await tester.pump();
+
+      nijePoslano(repo);
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        ClientRoute.bookDetails.path,
+      );
       container.dispose();
     });
   });
@@ -739,6 +839,7 @@ Future<ProviderContainer> _pumpFlow(
   List<Service> usluge = const [_usluga],
   List<Employee> radnici = const [_radnik],
   bool? traziIzborRadnika,
+  FakeClientProfileRepository? profil,
   void Function(BookingFlowNotifier notifier)? pocetniFlow,
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
@@ -767,6 +868,10 @@ Future<ProviderContainer> _pumpFlow(
       workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
       verticalProvider.overrideWith((ref) async => vertical),
       bookingRepositoryProvider.overrideWithValue(repo),
+      // Korak 4 provjerava profil prije slanja (pregled #136); podrazumijevano je kompletan.
+      clientProfileRepositoryProvider.overrideWithValue(
+        profil ?? FakeClientProfileRepository(),
+      ),
       bookingTodayProvider.overrideWithValue(_danas),
       bookingCustomerIdProvider.overrideWith((ref) async => customerId),
       bookingDeviceIdProvider.overrideWithValue(() async => deviceId),
