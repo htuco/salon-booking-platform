@@ -102,7 +102,9 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 
 - `auth_identities` dobija `phone`, `terms_version`, `privacy_version` i `terms_accepted_at`.
   Važeća verzija je `public.legal_versions()` → `(terms, privacy)`, konstanta koja se podiže
-  **novom migracijom**; poziva je i `anon`.
+  **novom migracijom**; poziva je i `anon`. Funkcija je `stable`, ne `immutable`
+  (`20261019120000`): vrijednost se namjerno mijenja, a `immutable` planeru dozvoljava da je
+  zamijeni konstantom.
 - Registracija šalje `signUp(data: {full_name, phone, terms_accepted: true})`.
   `sync_auth_identity` upisuje telefon (`private.clean_phone`: 6–15 cifara, inače `NULL`, nikad
   greška), a prihvatanje **samo pri `INSERT`-u**: kolone uslova nisu u `do update set` listi, pa
@@ -114,7 +116,9 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
 - Trigger nad `auth_identities` (insert, i update kad se ime ili telefon promijene) popunjava
   `customers` i denormalizovane `appointments.customer_name/phone` u **svakom** salonu tog
   identiteta: ime samo preko `'Klijent'`/praznog, telefon samo preko `NULL`, i telefon se preskače
-  kad ga u tom salonu po ciframa već nosi drugi klijent (`unique(salon_id, phone)`).
+  kad ga u tom salonu po ciframa već nosi drugi klijent (`unique(salon_id, phone)`) — cifre bez
+  normalizacije prefiksa, pa `061 …` i `+387 61 …` nisu isti — ili kad ga drugi upis zauzme
+  između provjere i upisa (`20261019120000`, kasni sudar se preskače, ne obara prijavu).
   `ensure_customer` novom redu daje telefon identiteta po istom pravilu.
 - `delete_my_account` briše i `auth_identities.phone`; verzija i vrijeme prihvatanja ostaju kao
   zapis o pristanku.
