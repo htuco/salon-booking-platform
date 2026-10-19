@@ -190,8 +190,11 @@ class ProfilAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final boje = context.adminColors;
+    // **Bez sistemskog uvećanja.** Krug je fiksne veličine, pa bi „EB" na 200 % izašao iz
+    // njega i ovalom bio presječen; ime je ionako u labeli i tekstu oko avatara.
     final inicijali = Text(
       inicijaliOd(ime),
+      textScaler: TextScaler.noScaling,
       style: TextStyle(
         fontSize: velicina * 0.36,
         fontWeight: FontWeight.w600,

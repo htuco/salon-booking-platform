@@ -10,6 +10,7 @@ library;
 
 import 'package:admin/src/core/router/admin_router.dart';
 import 'package:admin/src/core/theme/theme.dart';
+import 'package:admin/src/core/widgets/admin_scaffold.dart';
 import 'package:admin/src/features/appointments/appointments_providers.dart';
 import 'package:admin/src/features/calendar/calendar_day.dart';
 import 'package:admin/src/features/calendar/calendar_providers.dart';
@@ -17,6 +18,8 @@ import 'package:admin/src/features/calendar/calendar_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -172,6 +175,8 @@ Widget _ekran({
   String? radnikIzUloge,
   List<Appointment>? termini,
   List<BlockedSlot>? blokade,
+  List<WorkingHour>? radnoVrijeme,
+  DateTime? sada,
 }) {
   final router = GoRouter(
     initialLocation: AdminRoute.calendar.path,
@@ -204,15 +209,31 @@ Widget _ekran({
       kalendarBlokadeSedmiceProvider.overrideWith(
         (ref) async => blokade ?? _blokade,
       ),
-      kalendarRadnoVrijemeProvider.overrideWith((ref) async => _radnoVrijeme),
+      kalendarRadnoVrijemeProvider.overrideWith(
+        (ref) async => radnoVrijeme ?? _radnoVrijeme,
+      ),
       // Dnevni prikaz, kad se na njega pređe iz sedmice.
       kalendarTerminiProvider.overrideWith((ref) async => const []),
       kalendarBlokadeProvider.overrideWith((ref) async => const []),
-      sadaProvider.overrideWith((ref) => Stream.value(_sada)),
+      sadaProvider.overrideWith((ref) => Stream.value(sada ?? _sada)),
       kalendarDatumProvider.overrideWith(() => _FiksniDatum(_ponedjeljak)),
       kalendarPrikazProvider.overrideWith(() => _FiksniPrikaz(prikaz)),
     ],
-    child: MaterialApp.router(theme: buildAdminTheme(), routerConfig: router),
+    child: MaterialApp.router(
+      theme: buildAdminTheme(),
+      routerConfig: router,
+      // Sidebar crta `AppShell`, kojeg ovdje nema. Bez ovog mjesta ekran bi na 1024 imao
+      // kolone od ~135 px umjesto ~102 i mjerio raspored koji korisnik nikad ne vidi —
+      // tablet je u prvoj verziji testa zato prolazio sa odsječenim natpisima.
+      builder: (context, child) => AdminShell.jeDesktop(context)
+          ? Row(
+              children: [
+                const SizedBox(width: AdminSize.sidebarWidth),
+                Expanded(child: child!),
+              ],
+            )
+          : child!,
+    ),
   );
 }
 
@@ -229,8 +250,76 @@ Future<void> _naSirini(
   await tester.pumpAndSettle();
 }
 
+/// Gusta sedmica: kratki termini u dvije i tri trake — ono zbog čega blok bira sadržaj.
+final _gusto = [
+  for (final (i, r) in ['e1', 'e2', 'e3'].indexed)
+    _termin('Gust $i', dan: 0, od: 10 * 60, doMinuta: 10 * 60 + 30, radnik: r),
+  for (final (i, r) in ['e1', 'e2'].indexed)
+    _termin('Par $i', dan: 1, od: 10 * 60 + 30, doMinuta: 11 * 60, radnik: r),
+  _termin('Sam', dan: 3, od: 14 * 60, doMinuta: 15 * 60, radnik: 'e3'),
+  for (final (i, r) in ['e1', 'e2'].indexed)
+    _termin(
+      'Dug par $i',
+      dan: 2,
+      od: 10 * 60,
+      doMinuta: 11 * 60 + 30,
+      radnik: r,
+    ),
+];
+
+/// Nijedno vrijeme (`10:30`) u bloku nije odsječeno: ili stane cijelo, ili ga nema.
+///
+/// Odsječeno vrijeme je pogrešno vrijeme — „10" umjesto „10:30" (pregled #137). Radi i sa
+/// test fontom, jer blok mjeri vrijeme istim stilom kojim ga crta. Oznake sati na osi se
+/// preskaču: osa ima svoju širinu, a test font je širi od Barlowa.
+void _vremenaCijela(WidgetTester tester) {
+  final oblik = RegExp(r'^\d\d:\d\d$');
+  final pocetakKolona = tester.getRect(find.text('PON')).left - 20;
+  var provjereno = 0;
+  for (final p in tester.renderObjectList<RenderParagraph>(
+    find.byType(RichText),
+  )) {
+    final tekst = p.text.toPlainText();
+    if (!oblik.hasMatch(tekst)) continue;
+    if (p.localToGlobal(Offset.zero).dx < pocetakKolona) continue;
+    provjereno++;
+    expect(
+      p.getMaxIntrinsicWidth(double.infinity),
+      lessThanOrEqualTo(p.size.width + 0.5),
+      reason: '„$tekst" je odsječen na ${p.size.width.toStringAsFixed(1)} px',
+    );
+  }
+  expect(
+    provjereno,
+    greaterThan(0),
+    reason: 'nijedno vrijeme nije ni nacrtano',
+  );
+}
+
+/// Tačka u praznom dijelu kolone dana [indeks] (0 = ponedjeljak), u [minuta] sata.
+Offset _uKoloni(WidgetTester tester, int indeks, int minuta) {
+  final zaglavlje = tester.getRect(
+    find.text(['PON', 'UTO', 'SRI', 'ČET', 'PET', 'SUB', 'NED'][indeks]),
+  );
+  // Blok „Adnan Kovač" počinje u 09:00 — njegov vrh je linija tog sata.
+  final devet = tester
+      .getRect(
+        find
+            .ancestor(
+              of: find.text('Adnan Kovač'),
+              matching: find.byType(InkWell),
+            )
+            .first,
+      )
+      .top;
+  return Offset(
+    zaglavlje.left + 20,
+    devet + (minuta - 9 * 60) / 60 * kVisinaSata,
+  );
+}
+
 void main() {
-  pristupacnostEkrana('Kalendar — sedmica', _ekran);
+  pristupacnostEkrana('Kalendar — sedmica', _ekran, tablet: true);
 
   test('dodir na osi se zaokružuje dolje na pola sata, unutar ose', () {
     const osa = KalendarOsa(pocetakMinuta: 9 * 60, krajMinuta: 20 * 60);
@@ -289,7 +378,8 @@ void main() {
         // Nedjelja: zaglavlje i šrafura kolone.
         expect(find.text('Ne radi'), findsNWidgets(2));
         expect(find.text('Ne radi od 15:00'), findsOneWidget);
-        expect(find.text('09:00–20:00 · 1 termin'), findsNWidgets(4));
+        // Jedan red ili dva zavisi od fonta (v. grupu „mjere u Barlowu").
+        expect(find.textContaining('1 termin'), findsNWidgets(4));
       },
     );
 
@@ -314,6 +404,8 @@ void main() {
       expect(find.text('EB'), findsWidgets);
       expect(find.text('AK'), findsWidgets);
 
+      // Čipovi su red koji skrola kad ne stanu; test font je širi od Barlowa.
+      await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Vedad'));
       await tester.tap(find.widgetWithText(ChoiceChip, 'Vedad'));
       await tester.pumpAndSettle();
 
@@ -442,8 +534,8 @@ void main() {
         ),
         findsNothing,
       );
-      expect(find.text('09:00–20:00'), findsNWidgets(5));
-      expect(find.text('1 termin'), findsNWidgets(4));
+      expect(find.textContaining('09:00–20:00'), findsNWidgets(5));
+      expect(find.textContaining('1 termin'), findsNWidgets(4));
     });
   });
 
@@ -511,6 +603,227 @@ void main() {
       );
 
       expect(find.text('Nema termina ove sedmice.'), findsOneWidget);
+    });
+  });
+
+  group('pregled #137', () {
+    testWidgets('dugmad sedmice čitač ekrana može pritisnuti', (tester) async {
+      final semantika = tester.ensureSemantics();
+      await _naSirini(tester, _desktop, _ekran());
+
+      final ocekivano = isSemantics(
+        isButton: true,
+        hasTapAction: true,
+        isFocusable: true,
+      );
+      expect(
+        tester.getSemantics(find.bySemanticsLabel(RegExp('Adnan Kovač'))),
+        ocekivano,
+        reason: 'blok termina',
+      );
+      expect(
+        tester.getSemantics(find.bySemanticsLabel(RegExp('19.*otvori dan'))),
+        ocekivano,
+        reason: 'zaglavlje dana',
+      );
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Dan')),
+        ocekivano,
+        reason: 'segment prekidača',
+      );
+      // Danas se kaže riječima, ne samo bojom.
+      expect(
+        find.bySemanticsLabel(RegExp('danas.*otvori dan')),
+        findsOneWidget,
+      );
+      semantika.dispose();
+    });
+
+    testWidgets('prekidač: meta 44 px, „Uskoro" se vidi bez hovera', (
+      tester,
+    ) async {
+      await _naSirini(tester, _desktop, _ekran());
+
+      final segment = find.ancestor(
+        of: find.text('Sedmica'),
+        matching: find.byType(InkWell),
+      );
+      expect(tester.getSize(segment.first).height, greaterThanOrEqualTo(44));
+      expect(find.text('Uskoro'), findsOneWidget);
+
+      // Tablet: onemogućen „Mjesec" se sklanja, da top bar ne prelije.
+      await _naSirini(tester, _tablet, _ekran());
+      expect(find.text('Mjesec'), findsNothing);
+      expect(find.text('Sedmica'), findsOneWidget);
+    });
+
+    testWidgets('prošli dan ne nudi termin, današnji i budući nude', (
+      tester,
+    ) async {
+      // Srijeda 20. maj u 13:00.
+      await _naSirini(
+        tester,
+        _desktop,
+        _ekran(sada: DateTime(2026, 5, 20, 13)),
+      );
+
+      // 11:00 je u vidljivom dijelu mreže na 900 px; 17:00 bi bio ispod i tap ne bi
+      // pogodio ništa — pa bi i „ne nudi" prošao bez ikakve provjere.
+      await tester.tapAt(_uKoloni(tester, 0, 11 * 60));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('forma'), findsNothing, reason: 'ponedjeljak');
+
+      await tester.tapAt(_uKoloni(tester, 3, 11 * 60));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('forma date=2026-05-21&time=11%3A00'),
+        findsOneWidget,
+        reason: 'četvrtak',
+      );
+    });
+
+    testWidgets('šrafura „Ne radi" ne nudi termin', (tester) async {
+      await _naSirini(tester, _desktop, _ekran());
+
+      // Nedjelja je cijela neradna, subota od 15:00. Kontrola: isti tap u subotu prije
+      // zatvaranja otvara formu — inače bi „ne nudi" prolazio i za tap pored mreže.
+      await tester.tapAt(_uKoloni(tester, 6, 11 * 60));
+      await tester.tapAt(_uKoloni(tester, 5, 15 * 60 + 30));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('forma'), findsNothing);
+
+      await tester.tapAt(_uKoloni(tester, 5, 11 * 60));
+      await tester.pumpAndSettle();
+      expect(find.text('forma date=2026-05-23&time=11%3A00'), findsOneWidget);
+    });
+
+    testWidgets('linija „sada" stoji samo u današnjoj koloni', (tester) async {
+      await _naSirini(
+        tester,
+        _desktop,
+        _ekran(sada: DateTime(2026, 5, 21, 11)),
+      );
+
+      final linija = tester.getRect(find.byKey(kLinijaSadaSedmice));
+      final cetvrtak = tester.getRect(find.text('ČET'));
+      final petak = tester.getRect(find.text('PET'));
+      expect(linija.left, lessThanOrEqualTo(cetvrtak.left));
+      expect(linija.right, lessThanOrEqualTo(petak.left));
+      expect(linija.width, greaterThan(50));
+    });
+
+    testWidgets('druga sedmica nema liniju „sada"', (tester) async {
+      await _naSirini(
+        tester,
+        _desktop,
+        _ekran(sada: DateTime(2026, 5, 27, 11)),
+      );
+      expect(find.byKey(kLinijaSadaSedmice), findsNothing);
+    });
+
+    testWidgets('telefon: salon sa pauzom i bez termina kaže da nema termina', (
+      tester,
+    ) async {
+      await _naSirini(
+        tester,
+        _telefon,
+        _ekran(
+          termini: const [],
+          blokade: const [],
+          radnoVrijeme: [
+            for (var d = 1; d <= 6; d++)
+              WorkingHour(
+                id: 'wh-$d',
+                salonId: _salonId,
+                dayOfWeek: d,
+                startTime: const LocalTime(9, 0),
+                endTime: const LocalTime(17, 0),
+                breakStartTime: const LocalTime(12, 0),
+                breakEndTime: const LocalTime(12, 30),
+              ),
+          ],
+        ),
+      );
+
+      expect(find.text('Nema termina ove sedmice.'), findsOneWidget);
+    });
+  });
+
+  // **Zadnja grupa u fajlu, i to je namjerno.** Mjeri tekst u pravom Barlowu: test font
+  // crta svaki znak kao kvadrat, pa „10:30" ne stane ni u jedan blok, a „Ne radi od 15:00"
+  // traži 244 px umjesto ~100 — mjerilo bi se nešto što korisnik nikad ne vidi. Font
+  // ostaje učitan do kraja izolata, pa grupe poslije ove ne bi mjerile istim fontom kao
+  // one prije.
+  group('mjere u Barlowu (pregled #137)', () {
+    setUpAll(() async {
+      final barlow = FontLoader('Barlow');
+      for (final tezina in ['Regular', 'Medium', 'SemiBold']) {
+        barlow.addFont(rootBundle.load('assets/fonts/Barlow-$tezina.ttf'));
+      }
+      await barlow.load();
+    });
+
+    for (final (ime, velicina) in [
+      ('desktop', _desktop),
+      ('tablet', _tablet),
+    ]) {
+      testWidgets('$ime: vrijeme u bloku je cijelo ili ga nema', (
+        tester,
+      ) async {
+        await _naSirini(tester, velicina, _ekran(termini: _gusto));
+        _vremenaCijela(tester);
+      });
+
+      testWidgets('$ime: i na fontu 130 %', (tester) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await _naSirini(tester, velicina, _ekran(termini: _gusto));
+        _vremenaCijela(tester);
+      });
+    }
+
+    // Na 1440 je kolona ~161 px, a `09:00–20:00 · 0 termina` traži ~150 uz 12 px
+    // paddinga — dva reda su tačna; jedan red dobija tek širi ekran. Pravilo nije broj
+    // redova nego da se podnaslov nigdje ne reže.
+    for (final (ime, velicina) in [
+      ('desktop', _desktop),
+      ('tablet', _tablet),
+    ]) {
+      testWidgets('$ime: podnaslov zaglavlja se ne reže', (tester) async {
+        await _naSirini(tester, velicina, _ekran());
+        final podnaslovi = find.byWidgetPredicate(
+          (w) =>
+              w is Text &&
+              RegExp(r'^(09:00–\d\d:00|\d+ termin|Ne radi)')
+                  .hasMatch(w.data ?? ''),
+        );
+        expect(podnaslovi, findsWidgets);
+        for (final e in podnaslovi.evaluate()) {
+          final p = tester.renderObject<RenderParagraph>(
+            find.descendant(
+              of: find.byWidget(e.widget),
+              matching: find.byType(RichText),
+            ),
+          );
+          expect(p.didExceedMaxLines, isFalse, reason: p.text.toPlainText());
+        }
+      });
+    }
+
+    testWidgets('tablet: neradni natpis i blokada se lome, ne režu', (
+      tester,
+    ) async {
+      await _naSirini(tester, _tablet, _ekran());
+
+      for (final tekst in ['Ne radi od 15:00', 'Salon zatvoren · sastanak']) {
+        final p = tester.renderObject<RenderParagraph>(
+          find.descendant(
+            of: find.text(tekst),
+            matching: find.byType(RichText),
+          ),
+        );
+        expect(p.didExceedMaxLines, isFalse, reason: tekst);
+      }
     });
   });
 }

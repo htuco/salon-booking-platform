@@ -159,7 +159,9 @@ List<Override> demoOverrides(AdminEnv env) => [
         for (var i = 0; i < _termini.length; i++)
           if ((i + d) % 3 != 0)
             _termini[i].copyWith(
-              date: LocalDate(pocetak.year, pocetak.month, pocetak.day + d),
+              date: _datumOd(
+                DateTime(pocetak.year, pocetak.month, pocetak.day + d),
+              ),
             ),
     ];
   }),
@@ -528,3 +530,10 @@ Appointment _termin(
         : sada.subtract(Duration(minutes: poslanPrije)),
   );
 }
+
+/// `LocalDate` iz već normalizovanog `DateTime`-a.
+///
+/// `LocalDate(godina, mjesec, dan + d)` ne prelazi u sljedeći mjesec kao `DateTime`: sedmica
+/// od ponedjeljka 30. novembra bi dala 32. novembar, koji `assert` u debugu obori, a u
+/// releaseu ne pogodi nijedan dan (pregled #137).
+LocalDate _datumOd(DateTime d) => LocalDate(d.year, d.month, d.day);

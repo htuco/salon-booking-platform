@@ -9,6 +9,9 @@ part of 'calendar_screen.dart';
 // te privatne widgete kao API koji niko drugi ne smije zvati, ili ih prepisala — a dva
 // prepisana tona „potvrđeno" su dvije legende.
 
+/// Linija „sada" u sedmici — ključ za test da stoji u današnjoj koloni i nigdje drugo.
+const kLinijaSadaSedmice = ValueKey('sedmica-linija-sada');
+
 /// Razmak bloka od ivice kolone dana. Uži od `_uvlakaBloka` (8): kolona dana je na 1024
 /// široka ~108 px, pa svaki piksel uvlake ide od sadržaja bloka.
 const double _uvlakaSedmice = 4;
@@ -18,11 +21,8 @@ const double _uvlakaSedmice = 4;
 /// Prvi prag od 1280 je zato legendu slao u drugi red i na 1440 — vidio snimak, ne test.
 const double _sirinaLegendeURedu = 1000;
 
-/// Prag širine kolone ispod kojeg podnaslov zaglavlja ide u dva reda (`7c`).
-///
-/// `09:00–20:00 · 11 termina` traži ~165 px uz padding. Sa 150 je na 1440 (kolona ~161)
-/// broj termina išao pod „…", a on je razlog zbog kojeg se u zaglavlje gleda.
-const double _sirinaJednogPodnaslova = 180;
+/// Vodoravni padding zaglavlja dana: 8 lijevo, 4 desno — isti na 1440 i na tabletu.
+const EdgeInsets _paddingZaglavljaDana = EdgeInsets.fromLTRB(8, 10, 4, 10);
 
 /// Statusi u legendi — isti redoslijed kao bočna legenda dana.
 const _statusiLegende = [
@@ -367,6 +367,7 @@ class _ZaglavljaSedmice extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sada = ref.watch(sadaProvider).valueOrNull;
     final danas = sada == null ? null : sedmica.indeksDana(sada);
+    final dvaReda = _podnaslovUDvaReda(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -391,13 +392,37 @@ class _ZaglavljaSedmice extends ConsumerWidget {
                   dan: sedmica.dani[i],
                   boje: sedmica.boje,
                   danas: i == danas,
-                  dvaReda: sirinaKolone < _sirinaJednogPodnaslova,
+                  dvaReda: dvaReda,
                 ),
               ),
           ],
         ),
       ),
     );
+  }
+}
+
+extension on _ZaglavljaSedmice {
+  /// Da li **ijedan** podnaslov ne staje u jedan red — tada su svi u dva, da zaglavlja
+  /// ostanu poravnata.
+  ///
+  /// **Mjeri se tekst, ne prag kolone** (pregled #137). Prag od 180 px je slao podnaslov u
+  /// dva reda i na 1440 (kolona ~161), iako `09:00–20:00 · 11 termina` tamo staje; a na
+  /// uvećanom fontu ne bi znao da ni 200 px nije dovoljno.
+  bool _podnaslovUDvaReda(BuildContext context) {
+    final stil = Theme.of(context).textTheme.bodySmall;
+    final skalar = MediaQuery.textScalerOf(context);
+    final mjesto = sirinaKolone - _paddingZaglavljaDana.horizontal;
+    for (final dan in sedmica.dani) {
+      final sirina = (TextPainter(
+        text: TextSpan(text: dan.podnaslov, style: stil),
+        textDirection: TextDirection.ltr,
+        textScaler: skalar,
+        maxLines: 1,
+      )..layout()).width;
+      if (sirina > mjesto) return true;
+    }
+    return false;
   }
 }
 
@@ -427,22 +452,27 @@ class _ZaglavljeDanaSedmice extends ConsumerWidget {
     final podnaslov = dvaReda ? dan.podnaslov.split(' · ') : [dan.podnaslov];
     final tih = dan.radi ? null : paleta.textMuted;
 
+    // **`InkWell` je unutar `Semantics`, a `ExcludeSemantics` unutar njega** — ne obrnuto.
+    // `ExcludeSemantics` oko `InkWell`-a briše i tap i fokus, pa je čvor bio „dugme" koje
+    // čitač ekrana ne može pritisnuti, a FE-502 provjera ga je preskakala (pregled #137).
     return Semantics(
+      container: true,
       button: true,
+      selected: danas,
       label: [
         datumDugo(dan.dan),
+        if (danas) 'danas',
         dan.podnaslov,
         for (final o in dan.odsutni) o.tekst,
         'otvori dan',
       ].join(', '),
-      child: ExcludeSemantics(
-        child: InkWell(
-          onTap: () => _otvoriDan(ref, dan.dan),
+      child: InkWell(
+        onTap: () => _otvoriDan(ref, dan.dan),
+        child: ExcludeSemantics(
           child: Container(
-            // Na tabletu uži: `09:00–20:00` u koloni od ~100 px staje tek sa 8 + 4.
-            padding: dvaReda
-                ? const EdgeInsets.fromLTRB(8, 10, 4, 10)
-                : const EdgeInsets.fromLTRB(12, 10, 8, 10),
+            // 8 + 4 i na 1440: `09:00–20:00` u koloni tableta (~100 px) staje tek tako, a na
+            // 1440 isti padding pušta `09:00–20:00 · 11 termina` u jedan red (`7a`).
+            padding: _paddingZaglavljaDana,
             decoration: BoxDecoration(
               border: Border(
                 left: BorderSide(
@@ -562,6 +592,7 @@ class _OsaSedmice extends ConsumerWidget {
           ),
           if (yLinije != null && danas != null)
             Positioned(
+              key: kLinijaSadaSedmice,
               top: yLinije - 1,
               left: _sirinaOse + sirinaKolone * danas,
               width: sirinaKolone,
@@ -620,7 +651,7 @@ class _KolonaSedmice extends StatelessWidget {
           ),
           // Ispod pojaseva i termina: dodir u šrafuru „Ne radi" ne nudi termin, a dodir
           // u blok otvara taj termin.
-          if (mozeZakazati)
+          if (mozeZakazati && !_prosao)
             Positioned.fill(
               child: _PraznoMjesto(dan: dan.dan, osa: osa),
             ),
@@ -630,7 +661,7 @@ class _KolonaSedmice extends StatelessWidget {
               left: _uvlakaSedmice,
               right: _uvlakaSedmice,
               height: osa.visinaZa(stavka.odMinuta, stavka.doMinuta),
-              child: _Pojas(stavka: stavka),
+              child: _Pojas(stavka: stavka, uzak: true),
             ),
           for (final stavka in kolona.termini)
             Positioned(
@@ -653,6 +684,16 @@ class _KolonaSedmice extends StatelessWidget {
 
   double _sirinaTrake(StavkaKalendara stavka) =>
       (sirina - 2 * _uvlakaSedmice) / stavka.brojTraka;
+
+  /// Dan prije današnjeg. **Prazno mjesto u njemu ne nudi termin** (pregled #137): forma
+  /// bi se otvorila na prošlom datumu, rekla „Nema slobodnih termina" iz pogrešnog
+  /// razloga, a birač datuma u njoj ne ide unazad. U sedmici su dani prije danas pod
+  /// mišem svake sedmice, pa ovo nije rub nego svakodnevica.
+  bool get _prosao {
+    final sada = this.sada;
+    if (sada == null) return false;
+    return dan.dan.isBefore(DateTime(sada.year, sada.month, sada.day));
+  }
 }
 
 /// Prazno mjesto u koloni — dodir otvara ručno zakazivanje za taj dan i vrijeme.
@@ -690,11 +731,17 @@ class _PraznoMjesto extends StatelessWidget {
   }
 }
 
-/// Termin u koloni dana: avatar, vrijeme, ime — onoliko koliko širina pusti.
+/// Termin u koloni dana: avatar, vrijeme, ime — onoliko koliko stane.
 ///
-/// **Sadržaj bira širina bloka, ne broj traka** (skica, Pravila): ista dva termina u
-/// preklapanju su na 1440 široka ~75 px, a na 1024 ~45, pa pravilo po broju traka ne bi
-/// važilo na obje širine. Ime je uvijek u tooltipu i u detalju.
+/// **Sadržaj bira prostor, ne broj traka** (skica, Pravila): ista dva termina u preklapanju
+/// su na 1440 široka ~75 px, a na 1024 ~45, pa pravilo po broju traka ne bi važilo na obje
+/// širine. Ime je uvijek u tooltipu i u detalju.
+///
+/// **Prostor se mjeri, ne procjenjuje.** Prva verzija je poredila vanjsku širinu bloka sa
+/// pragovima 70 i 40 px, bez paddinga i bez uvećanog fonta — pa je na 1024 kratak termin u
+/// dvije trake pisao „10" umjesto „10:30" (pregled #137). Sada se vrijeme izmjeri u stilu i
+/// skali u kojoj će se iscrtati, i crta se samo cijelo: odsječeno vrijeme je pogrešno
+/// vrijeme.
 class _BlokSedmice extends ConsumerWidget {
   const _BlokSedmice({
     required this.stavka,
@@ -710,20 +757,22 @@ class _BlokSedmice extends ConsumerWidget {
   final double sirina;
   final double visina;
 
-  /// ≥ 70 px: avatar + vrijeme + ime.
-  static const double _zaIme = 70;
-
-  /// ≥ 40 px: avatar + vrijeme. Ispod: samo avatar.
-  static const double _zaVrijeme = 40;
-
   /// Ispod ove visine sve staje u jedan red (termin kraći od ~30 min).
   static const double _zaDvaReda = 40;
 
   static const double _avatar = 16;
+  static const double _razmak = 4;
+
+  /// Najmanje mjesta za ime u jednom redu — ispod toga bi ostalo samo „…".
+  static const double _zaIme = 28;
+
+  /// Vodoravno od ivice bloka do sadržaja: `Padding` desno 2, rub 3, unutrašnji 5 + 2.
+  static const double _okvir = 12;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final skala = MediaQuery.textScalerOf(context).scale(1);
+    final skalar = MediaQuery.textScalerOf(context);
+    final skala = skalar.scale(1);
     final termin = stavka.termin!;
     final uToku = sada != null && terminUToku(termin, sada!);
     final ton = _tonTermina(context, termin.status, uToku: uToku);
@@ -734,12 +783,13 @@ class _BlokSedmice extends ConsumerWidget {
       boja: sedmica.boje[termin.employeeId],
       velicina: _avatar,
     );
+    final stilVremena = AdminText.dataInline.copyWith(color: ton.tekst);
+    final tekstVremena = vrijemeOse(stavka.odMinuta);
     final vrijeme = Text(
-      vrijemeOse(stavka.odMinuta),
+      tekstVremena,
       maxLines: 1,
-      overflow: TextOverflow.clip,
       softWrap: false,
-      style: AdminText.dataInline.copyWith(color: ton.tekst),
+      style: stilVremena,
     );
     final ime = Text(
       termin.customerName,
@@ -755,48 +805,62 @@ class _BlokSedmice extends ConsumerWidget {
     );
     final jedanRed = visina < _zaDvaReda * skala;
 
+    final prostor = sirina - _okvir;
+    final sirinaVremena = (TextPainter(
+      text: TextSpan(text: tekstVremena, style: stilVremena),
+      textDirection: TextDirection.ltr,
+      textScaler: skalar,
+      maxLines: 1,
+    )..layout()).width;
+    final staneGlava = prostor >= _avatar + _razmak + sirinaVremena;
+    final staneVrijemeIspod = prostor >= sirinaVremena;
+
     final Widget sadrzaj;
-    if (sirina < _zaVrijeme) {
-      sadrzaj = Align(alignment: Alignment.topLeft, child: avatar);
-    } else if (sirina < _zaIme) {
-      sadrzaj = jedanRed
+    if (jedanRed) {
+      sadrzaj = staneGlava
           ? Row(
               children: [
                 avatar,
-                const SizedBox(width: 3),
-                Flexible(child: vrijeme),
+                const SizedBox(width: _razmak),
+                vrijeme,
+                if (prostor >=
+                    _avatar + _razmak + sirinaVremena + 5 + _zaIme * skala) ...[
+                  const SizedBox(width: 5),
+                  Expanded(child: ime),
+                ],
               ],
             )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                avatar,
-                const SizedBox(height: 2),
-                Flexible(child: vrijeme),
-              ],
-            );
-    } else {
-      final glava = Row(
+          : Align(alignment: Alignment.topLeft, child: avatar);
+    } else if (staneGlava) {
+      sadrzaj = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          avatar,
-          const SizedBox(width: 4),
-          vrijeme,
-          if (jedanRed) ...[const SizedBox(width: 5), Expanded(child: ime)],
+          Row(
+            children: [
+              avatar,
+              const SizedBox(width: _razmak),
+              vrijeme,
+            ],
+          ),
+          const SizedBox(height: 2),
+          Flexible(child: ime),
         ],
       );
-      sadrzaj = jedanRed
-          ? glava
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                glava,
-                const SizedBox(height: 2),
-                Flexible(child: ime),
-              ],
-            );
+    } else if (staneVrijemeIspod) {
+      sadrzaj = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          avatar,
+          const SizedBox(height: 2),
+          Flexible(child: vrijeme),
+        ],
+      );
+    } else {
+      sadrzaj = Align(alignment: Alignment.topLeft, child: avatar);
     }
+    final uzak = !staneVrijemeIspod;
 
     return Padding(
       padding: const EdgeInsets.only(right: 2),
@@ -804,7 +868,9 @@ class _BlokSedmice extends ConsumerWidget {
         message: '${termin.customerName} · $oznaka',
         excludeFromSemantics: true,
         waitDuration: const Duration(milliseconds: 400),
+        // `InkWell` unutar `Semantics`, sadržaj pod `ExcludeSemantics` — v. zaglavlje dana.
         child: Semantics(
+          container: true,
           button: true,
           label: oznakaTermina(
             termin,
@@ -812,17 +878,17 @@ class _BlokSedmice extends ConsumerWidget {
             usluga: ref.watch(uslugePoIdProvider)[termin.serviceId]?.name,
             radnik: radnik?.name,
           ),
-          child: ExcludeSemantics(
-            child: RubZahtjeva(
-              ceka: _cekaPotvrdu(termin.status, uToku: uToku),
-              boja: ton.rub,
-              child: Material(
-                color: ton.pozadina,
+          child: RubZahtjeva(
+            ceka: _cekaPotvrdu(termin.status, uToku: uToku),
+            boja: ton.rub,
+            child: Material(
+              color: ton.pozadina,
+              borderRadius: BorderRadius.circular(AdminRadius.base),
+              clipBehavior: Clip.hardEdge,
+              child: InkWell(
+                onTap: () => otvoriDetaljTermina(context, termin.id),
                 borderRadius: BorderRadius.circular(AdminRadius.base),
-                clipBehavior: Clip.hardEdge,
-                child: InkWell(
-                  onTap: () => otvoriDetaljTermina(context, termin.id),
-                  borderRadius: BorderRadius.circular(AdminRadius.base),
+                child: ExcludeSemantics(
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AdminRadius.base),
@@ -831,7 +897,7 @@ class _BlokSedmice extends ConsumerWidget {
                       ),
                     ),
                     padding: EdgeInsets.fromLTRB(
-                      sirina < _zaVrijeme ? 2 : 5,
+                      uzak ? 2 : 5,
                       jedanRed ? 2 : 4,
                       2,
                       2,
@@ -903,7 +969,12 @@ class _ListaSedmice extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dani = redoviSedmice(sedmica);
-    if (dani.every((d) => d.$2.isEmpty)) return const _PraznaSedmica();
+    // **Po terminima, ne po redovima.** Pauza i blokada su redovi liste, pa salon sa
+    // dnevnom pauzom nikad nije dobijao prazno stanje — dobijao je sedam dana „0 termina"
+    // sa redom „Pauza" (pregled #137). Otkazan termin jeste termin i ostaje u listi.
+    if (dani.every((d) => d.$2.every((s) => s.termin == null))) {
+      return const _PraznaSedmica();
+    }
 
     final sada = ref.watch(sadaProvider).valueOrNull;
     final danas = sada == null ? null : sedmica.indeksDana(sada);
@@ -967,11 +1038,18 @@ class _SekcijaDana extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Semantics(
+            container: true,
             button: true,
-            label: '${datumDugo(dan.dan)}, ${dan.podnaslov}, otvori dan',
-            child: ExcludeSemantics(
-              child: InkWell(
-                onTap: () => _otvoriDan(ref, dan.dan),
+            selected: danas,
+            label: [
+              datumDugo(dan.dan),
+              if (danas) 'danas',
+              dan.podnaslov,
+              'otvori dan',
+            ].join(', '),
+            child: InkWell(
+              onTap: () => _otvoriDan(ref, dan.dan),
+              child: ExcludeSemantics(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
                     minHeight: AdminSize.touchTarget,
@@ -1071,6 +1149,7 @@ class _RedTerminaSedmice extends ConsumerWidget {
         const SizedBox(width: 11),
         Expanded(
           child: Semantics(
+            container: true,
             button: true,
             label: oznakaTermina(
               termin,
@@ -1078,16 +1157,16 @@ class _RedTerminaSedmice extends ConsumerWidget {
               usluga: ref.watch(uslugePoIdProvider)[termin.serviceId]?.name,
               radnik: radnik?.name,
             ),
-            child: ExcludeSemantics(
-              child: RubZahtjeva(
-                ceka: _cekaPotvrdu(termin.status, uToku: uToku),
-                boja: ton.rub,
-                child: Material(
-                  color: ton.pozadina,
+            child: RubZahtjeva(
+              ceka: _cekaPotvrdu(termin.status, uToku: uToku),
+              boja: ton.rub,
+              child: Material(
+                color: ton.pozadina,
+                borderRadius: BorderRadius.circular(AdminRadius.base),
+                child: InkWell(
+                  onTap: () => otvoriDetaljTermina(context, termin.id),
                   borderRadius: BorderRadius.circular(AdminRadius.base),
-                  child: InkWell(
-                    onTap: () => otvoriDetaljTermina(context, termin.id),
-                    borderRadius: BorderRadius.circular(AdminRadius.base),
+                  child: ExcludeSemantics(
                     child: Container(
                       constraints: const BoxConstraints(minHeight: 56),
                       decoration: BoxDecoration(

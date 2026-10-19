@@ -181,6 +181,28 @@ Future<void> _naSirini(
 void main() {
   pristupacnostEkrana('Kalendar', _ekran);
 
+  // Blok i ćelija dana su bili `Semantics(button) > ExcludeSemantics(InkWell)`: „dugme"
+  // bez tap akcije, koje čitač ekrana ne može pritisnuti i koje FE-502 provjera iznad
+  // preskače jer gleda samo čvorove sa tap akcijom (pregled #137).
+  for (final (sirina, velicina, labela) in [
+    ('desktop', _desktop, RegExp('Mirza Aliagić')),
+    ('telefon', _telefon, RegExp('19. maj')),
+    ('telefon (red liste)', _telefon, RegExp('Mirza Aliagić')),
+  ]) {
+    testWidgets('$sirina: dugme dana čitač ekrana može pritisnuti', (
+      tester,
+    ) async {
+      final semantika = tester.ensureSemantics();
+      await _naSirini(tester, velicina, _ekran());
+
+      expect(
+        tester.getSemantics(find.bySemanticsLabel(labela).first),
+        isSemantics(isButton: true, hasTapAction: true, isFocusable: true),
+      );
+      semantika.dispose();
+    });
+  }
+
   group('desktop `3c`', () {
     testWidgets('kolona po radniku, sa smjenom i brojem termina', (
       tester,
