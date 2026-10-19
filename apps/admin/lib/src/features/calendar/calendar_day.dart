@@ -24,6 +24,8 @@ import 'package:core_domain/core_domain.dart';
 
 import '../../core/format/tekst.dart';
 
+part 'calendar_week.dart';
+
 /// Minuta u danu. Gornja granica ose i jedini dozvoljen „kraj dana".
 const int kMinutaUDanu = 24 * 60;
 

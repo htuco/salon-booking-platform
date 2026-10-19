@@ -60,6 +60,29 @@ class BlockedSlotRepository {
     return blockedSlotsFromRows(rows);
   });
 
+  /// Blokade u rasponu dana, po datumu pa po vremenu — sedmični kalendar (task 69).
+  ///
+  /// Oba kraja su **uključena**, kao u [StaffAppointmentRepository.forRange]: sedmica je
+  /// `from: ponedjeljak, to: nedjelja`, a isključiv kraj bi tiho odsjekao nedjelju.
+  /// Vraćaju se i salonske i radnikove, kao u [forDay]; koja ide u koju kolonu odlučuje ekran.
+  Future<List<BlockedSlot>> forRange({
+    required String salonId,
+    required DateTime from,
+    required DateTime to,
+  }) => guard(() async {
+    final rows = await _client
+        .from('blocked_slots')
+        .select(_columns)
+        .eq('salon_id', salonId)
+        .gte('date', _datum(from))
+        .lte('date', _datum(to))
+        // Uzlazno eksplicitno — default u ovom paketu je silazno.
+        .order('date', ascending: true)
+        .order('start_time', ascending: true);
+
+    return blockedSlotsFromRows(rows);
+  });
+
   /// Blokade **od datuma unaprijed**, po datumu pa po vremenu.
   ///
   /// [forDay] je za kalendar, koji crta jedan dan; ovo je za „Neradni dani" u `3h`, gdje

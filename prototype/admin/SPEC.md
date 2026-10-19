@@ -183,7 +183,7 @@ modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.
 | „Ponudi drugo vrijeme" (`3d`), „Pomjeri" (`3n`) | Nema RPC putanje za pomjeranje termina; `set_appointment_status` mijenja status, ne vrijeme | otvoreno |
 | „Pozovi" / „Poruka" (`3n`) | `tel:`/`sms:` traže `url_launcher`, koji nije zavisnost admina | otvoreno |
 | Fotografije klijenata i lokacije | Placeholderi iz `canvas/assets/`; `customers` i `public.users` nemaju sliku | — |
-| Prekidač `Dan · Sedmica · Mjesec` (`3c`) | Ovaj task je kalendar **dana**; dvije od tri opcije ne bi radile | otvoreno |
+| Prekidač `Dan · Sedmica · Mjesec` (`3c`) | „Dan" i „Sedmica" rade od taska 69 (skica `prototype/adminv2/sedmica/`, ADR-0029); „Mjesec" je i dalje ugašen sa „Uskoro" jer mjesečnog prikaza nema | Mjesec: otvoreno |
 | „Dodaj pauzu", „Zatvori dan" (`3c`) | Oba pišu u `working_hours`; blokada i pauza dobijaju svoj ekran | task 34 |
 | „+ Novi klijent" (`3e`) | Ručni unos ide kroz `upsert_walkin_customer` (task 24) i traži svoj obrazac; dugme koje otvara prazan ekran je gore od praznog mjesta | otvoreno |
 | „342 ukupno · 68 redovnih" (`3e`) | Zbir preko **cijelog** adresara; lista je filtrirana i odrezana na `limit`, pa bi brojka tvrdila ono što upit ne dokazuje. Podnaslov zato broji **prikazane** redove | otvoreno |

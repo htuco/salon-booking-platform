@@ -33,8 +33,15 @@ import '../../core/widgets/admin_toast.dart';
 /// booking flow, jer svaki korak sužava sljedeći: slobodni slotovi ovise o usluzi (trajanje)
 /// i radniku (radno vrijeme).
 class NewAppointmentScreen extends ConsumerStatefulWidget {
-  const NewAppointmentScreen({this.initialDate, super.key});
+  const NewAppointmentScreen({this.initialDate, this.initialTime, super.key});
   final DateTime? initialDate;
+
+  /// Vrijeme koje je vlasnik dodirnuo u sedmičnom kalendaru (task 69).
+  ///
+  /// **Prijedlog, ne izbor.** Izabere se tek kad ga baza vrati među slobodnima za izabranu
+  /// uslugu; inače forma ostaje bez vremena. Prazno mjesto u kalendaru nije slobodan
+  /// termin — buffer, korak slota i blokada radnika ga mogu zatvoriti.
+  final LocalTime? initialTime;
 
   @override
   ConsumerState<NewAppointmentScreen> createState() =>
@@ -45,7 +52,20 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
   Customer? _klijent;
   Service? _usluga;
   Employee? _radnik;
-  late DateTime _datum = widget.initialDate ?? DateTime.now();
+  late DateTime _datum = _neUProslost(widget.initialDate);
+
+  /// Datum iz adrese, ali ne prije danas.
+  ///
+  /// Sedmica ne nudi prošli dan, ali adresa `?date=` se može i ručno upisati ili ostati u
+  /// historiji browsera. Forma na prošlom datumu kaže „Nema slobodnih termina" iz pogrešnog
+  /// razloga, a birač datuma ispod nje počinje od danas, pa mu prošli početni datum ruši
+  /// `assert` (pregled #137).
+  static DateTime _neUProslost(DateTime? dan) {
+    final sada = DateTime.now();
+    final danas = DateTime(sada.year, sada.month, sada.day);
+    if (dan == null || dan.isBefore(danas)) return danas;
+    return dan;
+  }
 
   /// **Vrijeme, ne `AvailableSlot`.** Kad radnik nije izabran, `get_available_slots` vrati po
   /// jedan red za **svakog** slobodnog radnika, pa isto vrijeme dođe više puta — prva verzija
@@ -130,6 +150,11 @@ class _NewAppointmentScreenState extends ConsumerState<NewAppointmentScreen> {
                   radnik: _radnik,
                   datum: _datum,
                   izabran: _slot,
+                  // Prijedlog vrijedi samo za dan na koji je dodirnut — 10:30 utorkom
+                  // ne znači ništa kad se datum prebaci na petak.
+                  predlozeno: _datum == widget.initialDate
+                      ? widget.initialTime
+                      : null,
                   onDatum: (datum) => setState(() {
                     _datum = datum;
                     _slot = null;
@@ -555,12 +580,17 @@ class _IzborTermina extends ConsumerStatefulWidget {
     required this.izabran,
     required this.onDatum,
     required this.onSlot,
+    this.predlozeno,
   });
 
   final Service usluga;
   final Employee? radnik;
   final DateTime datum;
   final LocalTime? izabran;
+
+  /// Vrijeme koje se izabere samo, ako je među slobodnima i ništa nije izabrano —
+  /// v. [NewAppointmentScreen.initialTime].
+  final LocalTime? predlozeno;
   final ValueChanged<DateTime> onDatum;
   final ValueChanged<LocalTime> onSlot;
 
@@ -571,6 +601,12 @@ class _IzborTermina extends ConsumerStatefulWidget {
 class _IzborTerminaState extends ConsumerState<_IzborTermina> {
   List<AvailableSlot>? _slotovi;
   bool _ucitavam = false;
+
+  /// Redni broj zadnjeg upita. Odgovor starijeg upita se odbacuje: promjena radnika
+  /// usred učitavanja bi inače pustila da stariji odgovor („bilo koji radnik") stigne
+  /// zadnji, pa bi se prijedlog vremena izabrao iz tuđe liste i `book_appointment` ga
+  /// odbio sa `PT409` (pregled #137).
+  int _upit = 0;
 
   @override
   void initState() {
@@ -596,6 +632,7 @@ class _IzborTerminaState extends ConsumerState<_IzborTermina> {
     final salonId = ref.read(adminSalonIdProvider);
     if (salonId == null) return;
 
+    final upit = ++_upit;
     setState(() => _ucitavam = true);
     try {
       final slotovi = await ref
@@ -610,13 +647,19 @@ class _IzborTerminaState extends ConsumerState<_IzborTermina> {
             ),
             employeeId: widget.radnik?.id,
           );
-      if (!mounted) return;
+      if (!mounted || upit != _upit) return;
       setState(() => _slotovi = slotovi);
+      final predlozeno = widget.predlozeno;
+      if (predlozeno != null &&
+          widget.izabran == null &&
+          slotovi.distinctTimes.contains(predlozeno)) {
+        widget.onSlot(predlozeno);
+      }
     } on ApiError {
-      if (!mounted) return;
+      if (!mounted || upit != _upit) return;
       setState(() => _slotovi = const []);
     } finally {
-      if (mounted) setState(() => _ucitavam = false);
+      if (mounted && upit == _upit) setState(() => _ucitavam = false);
     }
   }
 

@@ -46,8 +46,9 @@ final kalendarDatumProvider = NotifierProvider<KalendarDatumNotifier, DateTime>(
 
 /// Radnik izabran na telefonu (`3l` chip traka). `null` = „Svi".
 ///
-/// Postoji samo za mobilni prikaz: desktop `3c` crta sve radnike jedan pored drugog, pa mu
-/// izbor ne treba. Stoji ipak ovdje, a ne u `State` ekrana, da izbor preživi rotaciju i
+/// Dnevni desktop `3c` ga ne čita: crta sve radnike jedan pored drugog. Čitaju ga mobilni
+/// dan i **sedmica na oba ekrana** (task 69), gdje su svi radnici u istoj koloni dana pa
+/// čipovi filtriraju. Stoji ovdje, a ne u `State` ekrana, da izbor preživi rotaciju i
 /// prelaz preko breakpointa.
 final izabraniRadnikProvider = NotifierProvider<IzabraniRadnik, String?>(
   IzabraniRadnik.new,
@@ -147,6 +148,105 @@ final kalendarDanProvider = FutureProvider.autoDispose<KalendarDan>((
   );
 });
 
+/// Šta kalendar pokazuje — prekidač `Dan · Sedmica · Mjesec` iz `3c` (task 69).
+enum KalendarPrikaz { dan, sedmica }
+
+/// Izabrani prikaz. **Dan je podrazumijevani i na telefonu i na računaru**: telefon ga
+/// traži po DoD-u taska 69, a računar ga zadržava jer je to prikaz na koji je salon navikao.
+///
+/// Stoji u provideru, ne u `State` ekrana, iz istog razloga kao [izabraniRadnikProvider]:
+/// izbor preživi rotaciju i prelaz preko breakpointa.
+final kalendarPrikazProvider =
+    NotifierProvider<KalendarPrikazNotifier, KalendarPrikaz>(
+      KalendarPrikazNotifier.new,
+    );
+
+class KalendarPrikazNotifier extends Notifier<KalendarPrikaz> {
+  @override
+  KalendarPrikaz build() => KalendarPrikaz.dan;
+
+  void postavi(KalendarPrikaz prikaz) => state = prikaz;
+}
+
+/// Termini sedmice u kojoj je izabrani dan.
+///
+/// **Ključ je ponedjeljak, ne izabrani dan.** Provider gleda `select` na početak sedmice,
+/// pa prelaz sa srijede na četvrtak u istoj sedmici ne pravi novi upit.
+///
+/// Filtrira se samo radnik **iz uloge** (`adminRadnikIdProvider`), kao u danu — tuđe
+/// termine radniku ionako ne vraća politika. Izbor vlasnika („Emir") filtrira Dart u
+/// [kalendarSedmicaProvider], da klik na čip ne čeka mrežu.
+final kalendarTerminiSedmiceProvider =
+    FutureProvider.autoDispose<List<Appointment>>((ref) async {
+      final salonId = ref.watch(adminSalonIdProvider);
+      if (salonId == null) return const [];
+
+      final pocetak = ref.watch(kalendarDatumProvider.select(pocetakSedmice));
+      return ref
+          .watch(staffAppointmentRepositoryProvider)
+          .forRange(
+            salonId: salonId,
+            from: pocetak,
+            to: DateTime(pocetak.year, pocetak.month, pocetak.day + 6),
+            employeeId: ref.watch(adminRadnikIdProvider),
+          );
+    });
+
+/// Blokade sedmice u kojoj je izabrani dan. Ključ je ponedjeljak, kao kod termina.
+final kalendarBlokadeSedmiceProvider =
+    FutureProvider.autoDispose<List<BlockedSlot>>((ref) async {
+      final salonId = ref.watch(adminSalonIdProvider);
+      if (salonId == null) return const [];
+
+      final pocetak = ref.watch(kalendarDatumProvider.select(pocetakSedmice));
+      return ref
+          .watch(blockedSlotRepositoryProvider)
+          .forRange(
+            salonId: salonId,
+            from: pocetak,
+            to: DateTime(pocetak.year, pocetak.month, pocetak.day + 6),
+          );
+    });
+
+/// Sastavljena sedmica — ono što sedmični prikaz crta.
+///
+/// Čeka **sva četiri** čitanja zajedno, iz istog razloga kao [kalendarDanProvider]:
+/// sedmica sastavljena prije radnog vremena nacrtala bi svaki dan kao neradni, a prije
+/// radnika bi termini stajali bez inicijala i boje, pa ih dobili trenutak kasnije.
+///
+/// **Radnik iz uloge pobjeđuje izbor iz čipova.** Radnik ne vidi čipove, ali
+/// [izabraniRadnikProvider] preživi odjavu vlasnika na istom uređaju; bez ovog pravila bi
+/// radnik dobio kolonu filtriranu po kolegi — praznu, jer tuđe termine ne vidi. Iz istog
+/// razloga kao u danu radnik dobija samo sebe u listi radnika.
+final kalendarSedmicaProvider = FutureProvider.autoDispose<KalendarSedmica>((
+  ref,
+) async {
+  final dan = ref.watch(kalendarDatumProvider);
+
+  final (termini, radnici, radnoVrijeme, blokade) = await (
+    ref.watch(kalendarTerminiSedmiceProvider.future),
+    ref.watch(adminEmployeesProvider.future),
+    ref.watch(kalendarRadnoVrijemeProvider.future),
+    ref.watch(kalendarBlokadeSedmiceProvider.future),
+  ).wait;
+
+  final radnikIzUloge = ref.watch(adminRadnikIdProvider);
+
+  return izgradiSedmicu(
+    dan: dan,
+    radnici: radnikIzUloge == null
+        ? radnici
+        : [
+            for (final r in radnici)
+              if (r.id == radnikIzUloge) r,
+          ],
+    termini: termini,
+    radnoVrijeme: radnoVrijeme,
+    blokade: blokade,
+    radnikId: radnikIzUloge ?? ref.watch(izabraniRadnikProvider),
+  );
+});
+
 /// Osvježava sve što kalendar čita.
 ///
 /// Na jednom mjestu, jer se poziva sa dva (pull-to-refresh na telefonu i dugme „Pokušaj
@@ -160,6 +260,8 @@ void osvjeziKalendar(WidgetRef ref) {
   ref
     ..invalidate(kalendarTerminiProvider)
     ..invalidate(kalendarBlokadeProvider)
+    ..invalidate(kalendarTerminiSedmiceProvider)
+    ..invalidate(kalendarBlokadeSedmiceProvider)
     ..invalidate(kalendarRadnoVrijemeProvider)
     ..invalidate(adminEmployeesProvider)
     ..invalidate(adminServicesProvider);

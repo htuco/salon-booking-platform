@@ -4,12 +4,14 @@
 /// svojim override-ima, pa ovdje dolazi gotov widget. Druga kopija override liste bi se
 /// razišla sa prvom pri prvoj izmjeni providera, i to tiho.
 ///
-/// Šta se mjeri, na obje širine iz handoffa (1440×900 i 402×874):
+/// Šta se mjeri, na obje širine iz handoffa (1440×900 i 402×874), a ekran koji ima svoj
+/// tablet raspored (sedmica, `7c`) dodaje i [kTablet] kroz `tablet: true`:
 /// - dodirne mete ≥ 44×44 (`docs/02 §14`, iOS HIG), svaka meta ima labelu i svaka se
 ///   može fokusirati — fokus koji se ne može dobiti ne može se ni vidjeti;
 /// - kontrast teksta po WCAG-u (4,5:1 tekst, 3:1 veliki tekst) na stvarno iscrtanim
 ///   pikselima, ne na tokenima;
-/// - na telefonu, sistemski font uvećan na 130 % ne presijeca nijedan red.
+/// - na telefonu (i tabletu, kad je uključen), sistemski font uvećan na 130 % ne
+///   presijeca nijedan red.
 library;
 
 import 'dart:ui' show Tristate;
@@ -21,6 +23,9 @@ import 'package:flutter_test/flutter_test.dart';
 const Size kDesktop = Size(1440, 900);
 const Size kTelefon = Size(402, 874);
 
+/// iPad u landscapeu — najuži desktop raspored koji se pritiska prstom (`7c`).
+const Size kTablet = Size(1024, 768);
+
 /// Registruje testove za ekran koji gradi [ekran].
 ///
 /// [mjeriKontrast] se gasi samo uz napisan razlog: `textContrastGuideline` čita piksele
@@ -29,10 +34,12 @@ void pristupacnostEkrana(
   String ime,
   Widget Function() ekran, {
   bool mjeriKontrast = true,
+  bool tablet = false,
 }) => pristupacnostPodignutog(
   ime,
   (tester, velicina) => _podigni(tester, velicina, ekran()),
   mjeriKontrast: mjeriKontrast,
+  tablet: tablet,
 );
 
 /// Isto kao [pristupacnostEkrana], za test fajl čiji harness sam pumpa ekran (npr.
@@ -41,10 +48,12 @@ void pristupacnostPodignutog(
   String ime,
   Future<void> Function(WidgetTester tester, Size velicina) podigni, {
   bool mjeriKontrast = true,
+  bool tablet = false,
 }) {
   group('$ime — pristupačnost (FE-502)', () {
     for (final (sirina, velicina) in [
       ('desktop', kDesktop),
+      if (tablet) ('tablet', kTablet),
       ('telefon', kTelefon),
     ]) {
       testWidgets('$sirina: mete ≥ 44 px i sa labelom', (tester) async {
@@ -68,14 +77,21 @@ void pristupacnostPodignutog(
       }
     }
 
-    testWidgets('telefon: font 130 % ne presijeca nijedan red', (tester) async {
-      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      await podigni(tester, kTelefon);
-      await tester.pump(const Duration(milliseconds: 400));
-      // Bez `takeException`: presječen red je `FlutterError` koji framework sam prijavi
-      // kao pad testa — sa widgetom i brojem reda, koje bi `takeException` progutao.
-    });
+    for (final (sirina, velicina) in [
+      ('telefon', kTelefon),
+      if (tablet) ('tablet', kTablet),
+    ]) {
+      testWidgets('$sirina: font 130 % ne presijeca nijedan red', (
+        tester,
+      ) async {
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await podigni(tester, velicina);
+        await tester.pump(const Duration(milliseconds: 400));
+        // Bez `takeException`: presječen red je `FlutterError` koji framework sam prijavi
+        // kao pad testa — sa widgetom i brojem reda, koje bi `takeException` progutao.
+      });
+    }
   });
 }
 

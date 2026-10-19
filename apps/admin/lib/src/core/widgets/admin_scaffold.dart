@@ -734,11 +734,15 @@ class _TopBar extends ConsumerWidget {
                     ),
                   ),
                 ],
-                Text(
-                  title,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                // I naslov je `Flexible`: bez toga se red prelije čim akcije uzmu mjesto —
+                // kalendar na 1024 uz font 130 % (prekidač + „+ Novi termin", pregled #137).
+                Flexible(
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
