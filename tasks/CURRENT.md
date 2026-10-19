@@ -5,7 +5,8 @@ Puni task: [tasks/zero-crisis/66-registracija-ime-telefon-tos.md](zero-crisis/66
 ## Status
 
 U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
-2026-10-13). Kod i dokaz su gotovi; čeka CI, merge i deploy. 66 blokira 58, 67, 81, 82, 84 i 87.
+2026-10-13). Pregled (Eniz) zatvoren u grani 2026-10-19; čeka njegovo odobrenje, merge i
+`supabase db push` za `20261019120000`. 66 blokira 58, 67, 81, 82, 84 i 87.
 
 ## Ciljevi
 
@@ -18,8 +19,11 @@ U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/sal
 - [x] Dokumenti: ADR-0030, `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `docs/06` §3.1 i
       §8.3 (Data safety), `docs/01` §12, `docs/README.md`
 - [x] Uživo: registracija → Melura prikazuje ime i telefon; nalog bez profila → „Dopuni profil"
+- [x] Pregled #136 (Eniz): profil prije slanja termina i `PopScope`; kasni sudar na
+      `unique(salon_id, phone)`; iskren komentar o ciframa; `legal_versions` `stable`
 - [ ] CI zelen, PR #136 spojen u `develop`
-- [ ] Deploy (Hamza): `supabase db push`; provjera `select * from public.legal_versions()` → `1, 1`
+- [ ] Deploy (Hamza): `supabase db push` za `20261019120000` (`20261013160000` je već na
+      hostovanom); provjera `select provolatile from pg_proc where proname = 'legal_versions'` → `s`
 - [ ] „Dopuni profil" poslije prave Apple i Google prijave na uređaju
 
 ## Napomene
@@ -36,6 +40,9 @@ U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/sal
 - Edge runtime se na ovoj mašini ugasi poslije `supabase start`. Ako REST testovi sa Edge Function
   padnu na `503`, `supabase stop` pa ponovo `./tool/test_supabase.sh`.
 - Projekat je linkovan na hostovani (`olggovhqwirxamggkwuf`).
+- **Ostalo za sljedećeg:** poređenje telefona „po ciframa" ne normalizuje prefiks — `061 …` iz
+  salona i `+387 61 …` iz app-e su za bazu dva broja, pa isti čovjek ostaje dva reda u adresaru.
+  Normalizacija vodeće `0` naspram pozivnog broja traži zemlju salona (v. `security.md`).
 
 ## Istorija
 

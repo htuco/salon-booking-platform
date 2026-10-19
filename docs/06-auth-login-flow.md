@@ -178,7 +178,8 @@ mijenja. Zato se traži jednom, na računu, a ne uz svaki termin.
 |---|---|
 | **Email registracija** (otvara se prva; prijava je sekundarna) | ime i prezime, telefon, email, lozinka jednom sa „prikaži lozinku", checkbox uslova |
 | **Apple / Google, prva prijava** | ekran „Dopuni profil": telefon i checkbox. Ime samo ako ga nalog nema — Apple HIG ne dozvoljava ponovno traženje imena |
-| **Nova verzija uslova** | „Dopuni profil" pri sljedećoj prijavi, samo checkbox |
+| **Nova verzija uslova** | „Dopuni profil" pri sljedećoj prijavi **ili prije sljedećeg termina** (sačuvana sesija prijavu preskače), samo checkbox |
+| **Bilo koji nalog bez profila, prije slanja termina** | korak 4 pita status prije svakog slanja; nepotpun profil ide na „Dopuni profil", pa nazad na korak 4 sa istim izborom |
 
 Pravila:
 

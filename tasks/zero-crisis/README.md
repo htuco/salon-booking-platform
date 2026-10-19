@@ -93,9 +93,10 @@ Spojen ([PR #133](https://github.com/htuco/salon-booking-platform/pull/133)) i d
 
 Grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
 ADR-0030. Registracija sa imenom, telefonom i checkboxom; „Dopuni profil" poslije Apple/Google i za
-novu verziju uslova; profil popunjava adresar svakog salona. pgTAP 880, klijent 661, admin 577;
-uživo: Melura prikazuje ime i telefon novog klijenta. **Ostaje:** CI, merge, `supabase db push`,
-„Dopuni profil" poslije prave Apple/Google prijave na uređaju.
+novu verziju uslova; profil popunjava adresar svakog salona. Pregled (Eniz) zatvoren 2026-10-19:
+profil se traži prije slanja termina, kasni sudar na telefonu se preskače (`20261019120000`).
+pgTAP 888, klijent 667; uživo: Melura prikazuje ime i telefon novog klijenta. **Ostaje:**
+odobrenje, merge, `supabase db push`, „Dopuni profil" poslije prave Apple/Google prijave na uređaju.
 
 ### 56 — Push podsjetnici D-1 i H-3, odložen (2026-10-13)
 

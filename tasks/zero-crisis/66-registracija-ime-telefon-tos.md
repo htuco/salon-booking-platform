@@ -35,6 +35,39 @@ samo email i lozinku, a `ensure_customer` pada na `'Klijent'`.
 
 ## Status
 
+### Pregled #136 (Eniz) zatvoren u grani — čeka odobrenje i merge (2026-10-19)
+
+1. **„Dopuni profil" se više ne zaobilazi.** Korak 4 prije svakog slanja pita
+   `client_profile_status`; nepotpun profil ide na „Dopuni profil" i nazad na korak 4 sa istim
+   izborom, a greška provjere ne šalje termin. Router i dalje nema guard (katalog je javan).
+   `PopScope` na „Dopuni profil" pretvara sistemski „nazad" u odjavu.
+2. **Komentar o ciframa je ublažen**, ne kod: „po ciframa" ne normalizuje prefiks (`061 …` ≠
+   `+387 61 …`). Ostalo za sljedećeg: normalizacija traži zemlju salona.
+3. **Kasni sudar na `unique(salon_id, phone)`** se preskače kao vidljivi: nova migracija
+   `20261019120000` (stara je već na hostovanom), `exception when unique_violation` u triggeru
+   popunjavanja i u `ensure_customer`, samo za `customers_salon_id_phone_key`; ime i telefon su u
+   triggeru zasebni upisi, a upis telefona ponovo provjerava vlasnika i prazan telefon (revizija:
+   bez toga bi salonova ispravka usred petlje bila pregažena).
+4. `legal_versions()` je `stable`. Preskočen klijentski test je `app_env_test.dart` — traži
+   `--dart-define=SALON_ID`, nije iz ovog taska.
+
+**Dokaz:**
+
+```
+./tool/test_supabase.sh
+.../031_registracija_profil_trka.test.sql .. ok
+Files=31, Tests=888   Result: PASS      (+ svi REST i Deno testovi)
+flutter test (client): +667 ~1  All tests passed!
+```
+
+`031` glumi trku `before` triggerom koji ubaci telefonskog klijenta tačno prije upisa. Bez
+handlera u triggeru pada 2 testa, bez handlera u `ensure_customer` 2, sa `immutable` 1, bez
+ponovne provjere vlasnika i praznog telefona 1. Filter po imenu constrainta nijedan test ne obara
+— štiti od uniquea koji danas ne postoji. U Dartu:
+bez provjere na koraku 4 i bez `PopScope`-a pada po test.
+
+**Deploy poslije merge-a:** `supabase db push` (samo `20261019120000`).
+
 ### U toku — kod gotov, čeka CI, merge i deploy (2026-10-13)
 
 Grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136).

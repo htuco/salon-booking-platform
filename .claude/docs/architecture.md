@@ -415,8 +415,12 @@ Od taska 66: email forma **počinje registracijom** (ime, telefon, email, lozink
 a ime, telefon i pristanak putuju kao metapodaci `signUp`-a do `sync_auth_identity`.
 `ClientProfileRepository` (`core_api/src/auth/`) čita `client_profile_status` i zove
 `complete_my_profile`; oba su po identitetu, bez salona. Poslije svake prijave login pita status, a
-nekompletan profil ide na `/auth/complete-profile` sa istim `?from=`. Ekran traži samo ono što
-fali, a izlaz bez spremanja je odjava. Adresar salona popunjava baza, ne app (ADR-0030).
+nekompletan profil ide na `/auth/complete-profile` sa istim `?from=`. **Korak 4 pita isto prije
+svakog slanja termina** (pregled #136): sačuvana sesija login ne vidi, pa bi provjera samo na
+loginu propuštala Apple/Google nalog bez telefona i staru verziju uslova. Router i dalje nema guard
+— profil treba tek za termin, katalog je javan. Ekran traži samo ono što fali, a izlaz bez
+spremanja je odjava, i dugmetom i sistemskim „nazad" (`PopScope`). Adresar salona popunjava baza,
+ne app (ADR-0030).
 
 Od taska 16: `AppointmentRepository` u `core_api` — **prvi repozitorij nad `appointments`**, jer
 klijent do auth rada nije mogao pročitati nijedan red. Čitanje je `from(...)` (ograničava ga RLS),

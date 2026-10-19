@@ -34,6 +34,11 @@ redove tog identiteta.
 telefonskom klijentu znači vjerovatno istog čovjeka, ali spajanje dva reda je odluka salona iz
 admin ekrana, ne baze (v. `upsert_walkin_customer`, task 24).
 
+*Dopuna (2026-10-19, pregled #136):* „po ciframa" ne normalizuje prefiks — `061 …` iz salona i
+`+387 61 …` iz aplikacije nisu isti broj, pa takav duplikat ostaje salonu. Normalizacija traži
+zemlju salona i nije dio ove odluke. Broj koji drugi upis zauzme između provjere i upisa se
+preskače isto kao vidljivi sudar (`20261019120000`).
+
 ## Razmatrane opcije
 
 - **Verzija kao `max(updated_at)` sekcija** — odbačeno: ispravka zareza, ili izmjena salonske

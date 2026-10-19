@@ -625,11 +625,25 @@ Nepostojeći identitet, tuđi salon i neprijavljen pozivalac vraćaju **istu** g
 - **`unique(salon_id, phone)` je zamka.** Kopiranje broja koji salon već ima na telefonskom
   klijentu bi palo na constraintu — u triggeru, dakle opet na prijavi. Broj se zato preskače kad ga
   u tom salonu, poređen po ciframa, nosi drugi red. Spajanje je odluka salona.
+  - **„Po ciframa" je uže nego što zvuči.** Razmak, crtica, zagrade i `+` ne smetaju, ali
+    prefiks se ne normalizuje: app šalje `+387 61 …`, salon telefonskog klijenta upiše `061 …`,
+    i te cifre se ne poklapaju — isti čovjek ostaje dva reda. Za `unique` je to bezbjedno (jednak
+    tekst znači i jednake cifre); normalizacija vodeće `0` naspram pozivnog broja traži zemlju
+    salona i otvoren je dug.
+  - **Kasni sudar se preskače isto kao vidljivi** (`20261019120000`). Između provjere i upisa
+    drugi upis može zauzeti broj; `exception when unique_violation` u triggeru i u
+    `ensure_customer` tada ostavlja red bez broja umjesto da obori prijavu ili slanje termina.
+    Ime i telefon su u triggeru zasebni upisi, pa kasni sudar ne poništava ime. Hvata se samo
+    `customers_salon_id_phone_key`; svaki drugi unique ide dalje.
+  - **Upis telefona red po red ponovo provjerava vlasnika i prazan telefon** u svom `where`, ne
+    samo u kursoru petlje. Bez toga bi salonova ispravka broja (ili prebacivanje reda na drugi
+    identitet) koja stigne dok petlja radi bila pregažena — ili bi tuđi red dobio ovaj broj.
 - `client_profile_status` i `complete_my_profile` traže `private.is_client()` i identitet iz
   tokena; `x-salon-id` se ne traži jer profil nije salonski podatak. Grant samo `authenticated`
   (`revoke ... from public, anon`).
 
-Dokaz: `030_registracija_profil.test.sql`. Pet mutacija ga obara: prepisivanje uvijek (salonova
+Dokaz: `030_registracija_profil.test.sql` i `031_registracija_profil_trka.test.sql` (kasni sudar
+glumi `before` trigger koji ubaci telefonskog klijenta tačno prije upisa). Pet mutacija obara `030`: prepisivanje uvijek (salonova
 ispravka nestaje), prihvatanje na prijavi, bez provjere sudara telefona, bez filtera identiteta
 (drugi klijent istog salona dobija tuđe ime, a sudar broja obori upis) i brisanje koje ostavlja
 telefon.
