@@ -28,7 +28,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [66](66-registracija-ime-telefon-tos.md) | Registracija: ime, telefon i uslovi (checkbox) 🟡 | — | 2 dana |
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | 66 | 0,5–1 dan |
 | [67](67-pisanje-recenzija.md) | Pisanje recenzija 🟡 | 66 | 2–3 dana |
-| [68](68-lista-cekanja.md) | Lista čekanja | 64 | 3–4 dana |
+| [68](68-lista-cekanja.md) | Lista čekanja 🟡 | 64 | 3–4 dana |
 | [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri 🟡 | — | 2–3 dana |
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
 | [71](71-melura-za-svakoga.md) | Melura za svakoga: sve radi i jasno je | 54 | 3–4 dana |
