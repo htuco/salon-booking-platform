@@ -8,6 +8,8 @@ import 'package:client/src/features/booking/details_step_screen.dart';
 import 'package:client/src/features/booking/employee_step_screen.dart';
 import 'package:client/src/features/booking/service_step_screen.dart';
 import 'package:client/src/features/booking/slot_step_screen.dart';
+import 'package:client/src/features/auth/login_screen.dart';
+import 'package:client/src/features/waitlist/waitlist_day_panel.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
@@ -295,6 +297,138 @@ void main() {
 
       expect(find.text('Ovaj dan je popunjen.'), findsOneWidget);
       expect(find.byType(TimeSlotChip), findsNothing);
+
+      container.dispose();
+    });
+  });
+
+  group('lista čekanja (task 68)', () {
+    testWidgets('pun dan se bira i nudi listu; neprijavljen ide na prijavu', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const []);
+      final lista = _MockWaitlist()..stubPunDan();
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byType(WaitlistDayPanel), findsOneWidget);
+      expect(
+        find.text(
+          'Ovaj dan je popunjen. Ako se mjesto oslobodi, možemo vam javiti.',
+        ),
+        findsOneWidget,
+      );
+      // Neradni-dan rečenica ne stoji uz pun dan.
+      expect(find.text('Ovaj dan je popunjen.'), findsNothing);
+
+      await tester.tap(find.text('Obavijesti me kad se oslobodi'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginScreen), findsOneWidget);
+      verifyNever(
+        () => lista.join(
+          serviceId: any(named: 'serviceId'),
+          date: any(named: 'date'),
+          employeeId: any(named: 'employeeId'),
+        ),
+      );
+
+      container.dispose();
+    });
+
+    testWidgets('prijavljen se upisuje za uslugu, dan i „Bilo ko"', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const []);
+      final lista = _MockWaitlist()..stubPunDan();
+      var upisan = false;
+      when(lista.mine).thenAnswer(
+        (_) async => upisan
+            ? [
+                WaitlistEntry(
+                  id: 'w1',
+                  serviceId: _usluga.id,
+                  serviceName: _usluga.name,
+                  date: _danas,
+                ),
+              ]
+            : const [],
+      );
+      when(
+        () => lista.join(
+          serviceId: any(named: 'serviceId'),
+          date: any(named: 'date'),
+          employeeId: any(named: 'employeeId'),
+        ),
+      ).thenAnswer((_) async {
+        upisan = true;
+        return 'w1';
+      });
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        customerId: _customerId,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text('Obavijesti me kad se oslobodi'));
+      await tester.pump();
+      await tester.pump();
+
+      verify(
+        () => lista.join(serviceId: _usluga.id, date: _danas, employeeId: null),
+      ).called(1);
+      expect(find.textContaining('Na listi čekanja ste.'), findsOneWidget);
+      expect(find.text('Odjavi se sa liste'), findsOneWidget);
+
+      container.dispose();
+    });
+
+    testWidgets('prazan dan koji nije pun ostaje stara rečenica, bez dugmeta', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const []);
+      final lista = _MockWaitlist()..stubPunDan(puni: {});
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Ovaj dan je popunjen.'), findsOneWidget);
+      expect(find.text('Obavijesti me kad se oslobodi'), findsNothing);
 
       container.dispose();
     });
@@ -747,6 +881,22 @@ const _verticalDateOnly = Vertical(
   defaultTheme: 'clinical_calm',
 );
 
+class _MockWaitlist extends Mock implements WaitlistRepository {
+  /// [puni] je ono što vrati `waitlist_full_dates`; podrazumijevano je današnji dan pun.
+  void stubPunDan({Set<LocalDate>? puni}) {
+    when(
+      () => fullDates(
+        salonId: any(named: 'salonId'),
+        serviceId: any(named: 'serviceId'),
+        from: any(named: 'from'),
+        to: any(named: 'to'),
+        employeeId: any(named: 'employeeId'),
+      ),
+    ).thenAnswer((_) async => puni ?? {_danas});
+    when(mine).thenAnswer((_) async => const []);
+  }
+}
+
 class _MockBooking extends Mock implements BookingRepository {
   /// [status] je ono sto **baza** vrati, ne postavka: od taska 37 `book_appointment` u
   /// `auto` modu pravi red koji je vec `confirmed`. Klijent postavku ne vidi, pa se ni
@@ -840,6 +990,7 @@ Future<ProviderContainer> _pumpFlow(
   List<Employee> radnici = const [_radnik],
   bool? traziIzborRadnika,
   FakeClientProfileRepository? profil,
+  WaitlistRepository? listaCekanja,
   void Function(BookingFlowNotifier notifier)? pocetniFlow,
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
@@ -868,6 +1019,8 @@ Future<ProviderContainer> _pumpFlow(
       workingHoursProvider.overrideWith((ref) async => const <WorkingHour>[]),
       verticalProvider.overrideWith((ref) async => vertical),
       bookingRepositoryProvider.overrideWithValue(repo),
+      if (listaCekanja != null)
+        waitlistRepositoryProvider.overrideWithValue(listaCekanja),
       // Korak 4 provjerava profil prije slanja (pregled #136); podrazumijevano je kompletan.
       clientProfileRepositoryProvider.overrideWithValue(
         profil ?? FakeClientProfileRepository(),

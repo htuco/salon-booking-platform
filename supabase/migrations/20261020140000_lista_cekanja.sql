@@ -13,7 +13,7 @@
 --      daju praznu listu. `get_available_slots` postaje omotac, pa je pravilo slotova i dalje
 --      na jednom mjestu.
 --   2. **`waitlist_entries`** bez ijednog granta za `anon` i `authenticated`. Sve ide kroz
---      RPC: upis, odjava, moji upisi, „smije li se ovaj dan", i broj po danu za salon.
+--      RPC: upis, odjava, moji upisi, puni dani u rasponu, i broj po danu za salon.
 --   3. **Obavijest vezana za upis, ne za termin.** `notification_logs` dobija
 --      `waitlist_entry_id`, a red nosi tacno jedno od ta dva. Osloboden termin je termin
 --      **drugog** klijenta i ne upisuje se u red upisanog, pa ga ne vide ni push ni
@@ -240,24 +240,30 @@ $$;
 revoke all on function private.waitlist_day_full(uuid, uuid, date, uuid)
   from public, anon, authenticated;
 
--- Klijent po ovome zna hoce li na praznom danu nacrtati „Obavijesti me". Javno kao
--- `get_available_slots`: izlaz je jedna izvedena istina o danu, bez ijednog podatka o
--- klijentu. Pregled termina ne trazi prijavu (`docs/06` §1.1), pa ni ovo.
-create function public.waitlist_available(
+-- Puni dani u rasponu. Klijent po ovome u kalendaru razlikuje pun dan (tapa se, nudi listu
+-- cekanja) od neradnog (ne tapa se), kao sto `get_available_dates` daje slobodne. Javno kao
+-- slotovi: izlaz je izvedena istina o danu, bez ijednog podatka o klijentu, a pregled termina
+-- ne trazi prijavu (`docs/06` §1.1). Raspon je ogranicen na 62 dana iz istog razloga kao kod
+-- `get_available_dates`.
+create function public.waitlist_full_dates(
   p_salon_id uuid,
   p_service_id uuid,
-  p_date date,
+  p_from date,
+  p_to date,
   p_employee_id uuid default null
-) returns boolean
+) returns table (full_date date)
 language sql stable security definer set search_path = '' as $$
-  select private.waitlist_day_full(p_salon_id, p_service_id, p_date, p_employee_id);
+  select d::date
+  from generate_series(p_from, least(p_to, p_from + 62), interval '1 day') d
+  where private.waitlist_day_full(p_salon_id, p_service_id, d::date, p_employee_id)
+  order by 1;
 $$;
 
-revoke all on function public.waitlist_available(uuid, uuid, date, uuid) from public;
-grant execute on function public.waitlist_available(uuid, uuid, date, uuid) to anon, authenticated;
+revoke all on function public.waitlist_full_dates(uuid, uuid, date, date, uuid) from public;
+grant execute on function public.waitlist_full_dates(uuid, uuid, date, date, uuid) to anon, authenticated;
 
-comment on function public.waitlist_available(uuid, uuid, date, uuid) is
-  'Da li je dan pun za uslugu (i radnika): radi, a nema slobodnog vremena. false za neradni dan, zatvorenog radnika, blokiran dan, dan van prozora rezervacije i dan sa slobodnim vremenom.';
+comment on function public.waitlist_full_dates(uuid, uuid, date, date, uuid) is
+  'Puni dani u rasponu (najvise 63) za uslugu i opcionalno radnika: dan radi, a nema slobodnog vremena. Neradni dan, zatvoren radnik, blokiran dan, dan van prozora rezervacije i dan sa slobodnim vremenom se ne vracaju.';
 
 -- ---------------------------------------------------------------------------
 -- Klijent

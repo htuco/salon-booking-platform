@@ -10,6 +10,8 @@ import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
 import 'date_labels.dart';
 import 'widgets/booking_step_scaffold.dart';
+import '../waitlist/waitlist_day_panel.dart';
+import '../waitlist/waitlist_providers.dart';
 
 /// Korak 3 — kada (`prototype/ui/screenshots/05-korak3-vrijeme.png`).
 ///
@@ -65,16 +67,20 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
     final mjesec = monthOffsetFrom(danas, _pomakMjeseci);
     final raspon = daysFrom(danas, ref.watch(bookingMaxAdvanceDaysProvider));
 
-    final dostupniDani = ref.watch(
-      availableDatesProvider(
-        DateRangeQuery(
-          serviceId: serviceId,
-          from: raspon.first,
-          to: raspon.last,
-          employeeId: flow.employeeId,
-        ),
-      ),
+    final upitRaspona = DateRangeQuery(
+      serviceId: serviceId,
+      from: raspon.first,
+      to: raspon.last,
+      employeeId: flow.employeeId,
     );
+    final dostupniDani = ref.watch(availableDatesProvider(upitRaspona));
+    // Puni dani se tapaju i nude listu čekanja (task 68). Samo u `exact_slot`: u
+    // `date_only` korak završava izbor dana, pa pun dan nema gdje ponuditi upis. Greška
+    // ovog upita ne ruši kalendar — bez nje su puni dani samo nedostupni, kao prije.
+    final puniDani = dateOnly
+        ? const <LocalDate>{}
+        : ref.watch(waitlistFullDatesProvider(upitRaspona)).valueOrNull ??
+              const <LocalDate>{};
 
     return BookingStepScaffold(
       step: BookingStep.slot,
@@ -101,6 +107,7 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
           _Kalendar(
             mjesec: mjesec,
             dostupni: dostupniDani,
+            puni: puniDani,
             izabran: flow.date,
             // Unazad se ne ide ispod tekućeg mjeseca — prošli dani ionako nisu
             // dostupni, a prazan mjesec izgleda kao kvar.
@@ -113,7 +120,11 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
           ),
           if (!dateOnly) ...[
             const SizedBox(height: AppSpacing.xxl),
-            _Vremena(serviceId: serviceId, flow: flow),
+            _Vremena(
+              serviceId: serviceId,
+              flow: flow,
+              pun: flow.date != null && puniDani.contains(flow.date),
+            ),
           ],
         ],
       ),
@@ -126,6 +137,7 @@ class _Kalendar extends ConsumerWidget {
   const _Kalendar({
     required this.mjesec,
     required this.dostupni,
+    required this.puni,
     required this.izabran,
     required this.onIzbor,
     required this.onPrethodni,
@@ -134,6 +146,9 @@ class _Kalendar extends ConsumerWidget {
 
   final LocalDate mjesec;
   final AsyncValue<List<LocalDate>> dostupni;
+
+  /// Dani koji rade, a popunjeni su — tapaju se, precrtani (task 68).
+  final Set<LocalDate> puni;
   final LocalDate? izabran;
   final ValueChanged<LocalDate> onIzbor;
   final VoidCallback? onPrethodni;
@@ -157,7 +172,7 @@ class _Kalendar extends ConsumerWidget {
     }
 
     final slobodni = (dostupni.valueOrNull ?? const <LocalDate>[]).toSet();
-    if (slobodni.isEmpty) {
+    if (slobodni.isEmpty && puni.isEmpty) {
       return EmptyState(
         message: l10n.bookingNoDates,
         icon: LucideIcons.calendarX,
@@ -181,6 +196,10 @@ class _Kalendar extends ConsumerWidget {
             id: dan.format(),
             label: dan.day.toString(),
             available: slobodni.contains(dan),
+            full: puni.contains(dan),
+            semanticLabel: puni.contains(dan)
+                ? l10n.calendarDayFull(dan.day.toString())
+                : null,
           ),
       ],
     );
@@ -189,10 +208,17 @@ class _Kalendar extends ConsumerWidget {
 
 /// Slobodna vremena za izabrani dan, u dvije grupe.
 class _Vremena extends ConsumerWidget {
-  const _Vremena({required this.serviceId, required this.flow});
+  const _Vremena({
+    required this.serviceId,
+    required this.flow,
+    required this.pun,
+  });
 
   final String serviceId;
   final BookingFlowState flow;
+
+  /// Izabran dan radi, a nema slobodnog vremena — mjesto mreže zauzima lista čekanja.
+  final bool pun;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -214,6 +240,11 @@ class _Vremena extends ConsumerWidget {
     final slotovi = ref.watch(availableSlotsProvider(upit));
 
     return switch (slotovi) {
+      AsyncData(:final value) when value.isEmpty && pun => WaitlistDayPanel(
+        serviceId: serviceId,
+        date: datum,
+        employeeId: flow.employeeId,
+      ),
       AsyncData(:final value) when value.isEmpty => EmptyState(
         message: l10n.bookingDayFull,
         icon: LucideIcons.calendarX,

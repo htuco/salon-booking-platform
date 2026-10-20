@@ -40,7 +40,9 @@ dan, usluga i radnik dva puta su jedan upis.
 **Upis se prima samo na pun dan.** Pun dan je dan na koji bi bilo slobodnog vremena da nema
 nijednog termina, a nema ga. Neradni dan, zatvoren radnik, salonska blokada cijelog dana, dan van
 `max_advance_booking_days` i dan na koji je prošlo radno vrijeme nisu puni. Isto pravilo vraća
-`waitlist_available`, po kojem klijent zna hoće li nacrtati dugme.
+`waitlist_full_dates`. Po njemu kalendar u koraku 3 crta pun dan kao **treće stanje**: prigušen
+i precrtan, ali se tapa (nedostupan dan se do sada nije tapao, pa pun dan nije ni mogao biti
+izabran). Na izabranom punom danu stoji „Obavijesti me kad se oslobodi".
 
 **Push ide jednom po oslobađanju, i samo kad je mjesto stvarno otvoreno.** Kad termin budućeg dana
 pređe u `cancelled`, svakom upisu tog dana se ponovo računa `get_available_slots` za njegovu

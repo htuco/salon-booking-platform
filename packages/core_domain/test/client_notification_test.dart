@@ -26,15 +26,44 @@ void main() {
     test('nepoznat tip prolazi — baza dodaje tipove brže od store-a', () {
       final n = ClientNotification.fromJson({
         'appointment_id': 'a',
-        'type': 'waitlist_offer',
+        'type': 'reminder_d1',
         'created_at': '2026-10-13T09:12:00Z',
         'read': true,
         'date': '2026-10-20',
         'start_time': '14:30',
       });
 
-      expect(n.type, 'waitlist_offer');
+      expect(n.type, 'reminder_d1');
       expect(n.serviceName, isNull);
+    });
+
+    test('ponuda liste čekanja nema termin ni vrijeme', () {
+      final n = ClientNotification.fromJson({
+        'appointment_id': null,
+        'type': 'waitlist_offer',
+        'created_at': '2026-10-13T09:12:00Z',
+        'read': false,
+        'service_name': 'Fade šišanje',
+        'employee_name': null,
+        'date': '2026-10-20',
+        'start_time': null,
+      });
+
+      expect(n.appointmentId, isNull);
+      expect(n.startTime, isNull);
+      expect(n.date, LocalDate(2026, 10, 20));
+    });
+
+    test('pola termina je FormatException', () {
+      expect(
+        () => ClientNotification.fromJson({
+          'appointment_id': 'a',
+          'type': 'confirmed',
+          'created_at': '2026-10-13T09:12:00Z',
+          'date': '2026-10-20',
+        }),
+        throwsFormatException,
+      );
     });
 
     test('red bez termina je FormatException', () {

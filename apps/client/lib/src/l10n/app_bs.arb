@@ -551,6 +551,37 @@
     "description": "Prazno stanje liste slotova. Ne imenuje termin — vertikale ga zovu razlicito, a genitiv mnozine se ne da sastaviti iz vertical.terms."
   },
 
+  "calendarDayFull": "{dan}, popunjen",
+  "@calendarDayFull": {
+    "description": "Čitač ekrana za popunjen dan u kalendaru koraka 3 (task 68): dan radi, ali nema slobodnog vremena. Vizuelno je broj precrtan.",
+    "placeholders": { "dan": { "type": "String" } }
+  },
+
+  "waitlistDayFull": "Ovaj dan je popunjen. Ako se mjesto oslobodi, možemo vam javiti.",
+  "@waitlistDayFull": {
+    "description": "Prazno stanje punog dana sa listom čekanja (task 68). „Mjesto\", ne „termin\": riječ termin zavisi od vertikale."
+  },
+
+  "waitlistJoin": "Obavijesti me kad se oslobodi",
+  "@waitlistJoin": { "description": "Dugme za upis na listu čekanja na punom danu." },
+
+  "waitlistJoined": "Na listi čekanja ste. Javićemo vam kad se oslobodi mjesto, a dobija ga ko prvi zakaže.",
+  "@waitlistJoined": {
+    "description": "Pun dan na koji je klijent već upisan. Drugi dio rečenice je ADR-0031: upis ne drži mjesto."
+  },
+
+  "waitlistLeave": "Odjavi se sa liste",
+  "@waitlistLeave": { "description": "Odjava sa liste čekanja, na punom danu i u Mojim terminima." },
+
+  "waitlistFailed": "Upis na listu čekanja nije uspio. Pokušajte ponovo.",
+  "@waitlistFailed": { "description": "Upis ili odjava nisu prošli, a baza nije dala svoju rečenicu." },
+
+  "waitlistSectionTitle": "Lista čekanja",
+  "@waitlistSectionTitle": { "description": "Naslov sekcije upisa u Mojim terminima, iznad predstojećih." },
+
+  "waitlistBook": "Zakaži",
+  "@waitlistBook": { "description": "Iz upisa na listu čekanja otvara booking sa tom uslugom." },
+
   "bookingNoDates": "Nema slobodnih dana u narednom periodu.",
   "@bookingNoDates": {
     "description": "Prazno stanje trake datuma — nijedan dan u rasponu nema slobodan termin."
@@ -1084,6 +1115,8 @@
   "@notificationTypeExpired": { "description": "Naslov stavke tipa expired (task 64) — zahtjev je istekao bez odgovora." },
   "notificationTypeReviewRequest": "Kako je bilo?",
   "@notificationTypeReviewRequest": { "description": "Naslov stavke tipa review_request (task 67) — salon je označio posjet završenim; ista rečenica kao push." },
+  "notificationTypeWaitlistOffer": "Oslobodilo se mjesto",
+  "@notificationTypeWaitlistOffer": { "description": "Naslov stavke tipa waitlist_offer (task 68) — ista rečenica kao push; ne obećava termin, jer ga dobija ko prvi zakaže." },
   "notificationTypeReminder": "Podsjetnik",
   "@notificationTypeReminder": { "description": "Naslov stavke tipa reminder_d1 i reminder_h3 (task 56)." },
   "notificationTypeOther": "Obavijest",

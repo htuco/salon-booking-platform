@@ -86,17 +86,21 @@ select is((select count(*)::int from public.get_available_slots((select salon fr
 -- 1. Pun dan
 -- ---------------------------------------------------------------------------
 set local role anon;
-select is(public.waitlist_available((select salon from fix), (select usluga from fix),
-  (select utorak from fix)), true, 'Anon: utorak je pun (radi, a nema slobodnog vremena)');
-select is(public.waitlist_available((select salon from fix), (select usluga from fix),
-  (select utorak from fix), (select emir from fix)), true, 'Utorak je pun i kod Emira');
-select is(public.waitlist_available((select salon from fix), (select usluga from fix),
-  (select srijeda from fix)), false, 'Srijeda ima slobodnog vremena, nije puna');
-select is(public.waitlist_available((select salon from fix), (select usluga from fix),
-  (select nedjelja from fix)), false, 'Nedjelja ne radi, nije puna');
-select is(public.waitlist_available((select salon from fix), (select usluga from fix),
-  (select utorak from fix) + 60), false, 'Dan van prozora rezervacije nije pun');
+create temporary table puni as select full_date from public.waitlist_full_dates(
+  (select salon from fix), (select usluga from fix), (select utorak from fix), (select nedjelja from fix));
+create temporary table puni_emir as select full_date from public.waitlist_full_dates(
+  (select salon from fix), (select usluga from fix), (select utorak from fix), (select nedjelja from fix),
+  (select emir from fix));
+create temporary table puni_daleko as select full_date from public.waitlist_full_dates(
+  (select salon from fix), (select usluga from fix), (select utorak from fix) + 60, (select utorak from fix) + 61);
 reset role;
+select ok((select utorak from fix) in (select full_date from puni),
+  'Anon: utorak je pun (radi, a nema slobodnog vremena)');
+select ok((select utorak from fix) in (select full_date from puni_emir), 'Utorak je pun i kod Emira');
+select ok((select srijeda from fix) not in (select full_date from puni),
+  'Srijeda ima slobodnog vremena, nije puna');
+select ok((select nedjelja from fix) not in (select full_date from puni), 'Nedjelja ne radi, nije puna');
+select is((select count(*)::int from puni_daleko), 0, 'Dan van prozora rezervacije nije pun');
 
 -- ---------------------------------------------------------------------------
 -- 2. Upis samo kroz RPC, samo klijent

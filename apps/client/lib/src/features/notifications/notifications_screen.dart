@@ -235,6 +235,7 @@ String notificationTitle(AppLocalizations l10n, String type) => switch (type) {
   'cancelled' => l10n.notificationTypeCancelled,
   'expired' => l10n.notificationTypeExpired,
   'review_request' => l10n.notificationTypeReviewRequest,
+  'waitlist_offer' => l10n.notificationTypeWaitlistOffer,
   'reminder_d1' || 'reminder_h3' => l10n.notificationTypeReminder,
   _ => l10n.notificationTypeOther,
 };
@@ -242,12 +243,17 @@ String notificationTitle(AppLocalizations l10n, String type) => switch (type) {
 /// „Fade šišanje · Emir · srijeda 20.05. u 14:30".
 ///
 /// Radnik ide iza tačke, a ne „kod Emira": padež imena se ne može izvesti iz baze.
+/// Ponuda liste čekanja nema vrijeme (task 68), pa opis staje na danu: „Fade · Emir ·
+/// utorak 27.10.".
 @visibleForTesting
 String notificationBody(AppLocalizations l10n, ClientNotification n) {
   final datum =
       '${weekdayLong(l10n, n.date.weekday).toLowerCase()} '
       '${n.date.day.toString().padLeft(2, '0')}.'
       '${n.date.month.toString().padLeft(2, '0')}.';
-  final kad = l10n.notificationBodyWhen(datum, n.startTime.format());
+  final pocetak = n.startTime;
+  final kad = pocetak == null
+      ? datum
+      : l10n.notificationBodyWhen(datum, pocetak.format());
   return [?n.serviceName, ?n.employeeName, kad].join(' · ');
 }

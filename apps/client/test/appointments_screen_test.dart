@@ -401,6 +401,41 @@ void main() {
       container.dispose();
     });
 
+    testWidgets(
+      'lista čekanja stoji iznad praznog stanja, sa odjavom (task 68)',
+      (tester) async {
+        final repo = _MockAppointments();
+        when(repo.forCurrentCustomer).thenAnswer((_) async => const []);
+        final lista = _MockWaitlist();
+        var upisi = [
+          WaitlistEntry(
+            id: 'w1',
+            serviceId: _usluga.id,
+            serviceName: 'Fade šišanje',
+            date: const LocalDate(2026, 9, 19),
+            employeeName: 'Emir',
+          ),
+        ];
+        when(lista.mine).thenAnswer((_) async => upisi);
+        when(() => lista.leave('w1')).thenAnswer((_) async => upisi = const []);
+
+        final container = await _pump(tester, repo: repo, lista: lista);
+
+        expect(find.text('Lista čekanja'), findsOneWidget);
+        expect(find.text('Fade šišanje · Emir'), findsOneWidget);
+        expect(find.text('Zakaži'), findsOneWidget);
+        expect(find.text('Nemate zakazanih termina.'), findsOneWidget);
+
+        await tester.tap(find.text('Odjavi se sa liste'));
+        await tester.pumpAndSettle();
+
+        verify(() => lista.leave('w1')).called(1);
+        expect(find.text('Lista čekanja'), findsNothing);
+
+        container.dispose();
+      },
+    );
+
     testWidgets('bez prijave ekran nudi prijavu, ne praznu listu', (
       tester,
     ) async {
@@ -698,10 +733,13 @@ class _MockReviews extends Mock implements ReviewRepository {
   }
 }
 
+class _MockWaitlist extends Mock implements WaitlistRepository {}
+
 Future<ProviderContainer> _pump(
   WidgetTester tester, {
   required _MockAppointments repo,
   _MockReviews? reviews,
+  WaitlistRepository? lista,
   DateTime? now,
   bool prijavljen = true,
   SalonSettings settings = const SalonSettings(
@@ -738,6 +776,7 @@ Future<ProviderContainer> _pump(
       appointmentRepositoryProvider.overrideWithValue(repo),
       reviewRepositoryProvider.overrideWithValue(reviews ?? _MockReviews.bez()),
       appointmentsNowProvider.overrideWithValue(now ?? _sada),
+      if (lista != null) waitlistRepositoryProvider.overrideWithValue(lista),
     ],
   );
 
