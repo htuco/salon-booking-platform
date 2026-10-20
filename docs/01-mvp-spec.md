@@ -461,6 +461,7 @@ servira i tu stranicu.
 | Dodaj termin (forma preko cijelog ekrana) | `/appointments/new` | Must |
 | Kalendar (dnevni) | `/calendar` | Should |
 | Klijenti | `/more/clients` | Should |
+| Recenzije (sakrij / vrati; tekst ne mijenja) | `/more/reviews` | Should |
 | Usluge | `/more/services` | Must |
 | Radnici | `/more/staff` | Must |
 | Radno vrijeme | `/more/hours` | Should |

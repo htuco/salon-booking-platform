@@ -8,21 +8,17 @@ U toku (grana `feat/pisanje-recenzija`, 2026-10-20). Zavisnost 66 je spojena u `
 
 ## Ciljevi
 
-- [ ] Migracija: `reviews.appointment_id` i `auth_identity_id`, jedna po terminu, samo `completed`;
-      `authenticated` gubi `insert/update/delete`, upis samo kroz RPC
-- [ ] `submit_review` (klijent, `x-salon-id`, svoj završen termin), `set_review_published` (admin
-      sakriva i vraća, tekst ne dira), klijent čita svoje recenzije
-- [ ] Prijava recenzije kroz `content_reports` (isti put kao slike, ADR-0024), `notify-content-reports`
-      zna za recenziju
-- [ ] Push `review_request` kad termin postane `completed`, tekst u `send-push`
-- [ ] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
-- [ ] pgTAP `032`: bez završenog termina nema recenzije, druga za isti termin pada, salon ne mijenja
-      tekst, tuđi termin, tuđi salon; svaka asercija oborena mutacijom
-- [ ] Klijent: „Ocijeni" na završenom terminu u „Moji termini" (1–5 + tekst), prijava recenzije na
-      `/reviews`
-- [ ] Admin: `/more/reviews` — lista, sakrij / vrati
-- [ ] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, komentari „read-only" u `Review` i
-      `ReviewRepository`, `prototype/ui/README.md` / `prototype/admin/SPEC.md`
+- [x] Migracija `20261020100000_pisanje_recenzija`: `reviews.appointment_id` i `auth_identity_id`,
+      jedna po terminu, samo `completed`; `authenticated` gubi `insert/update/delete`
+- [x] `submit_review`, `set_review_published` (tekst ne dira), `client_own`; agregat samo objavljene
+- [x] Prijava recenzije kroz `content_reports` (ADR-0024), `notify-content-reports` zna za recenziju
+- [x] Push `review_request` kad termin postane `completed`, tekst u `send-push`
+- [x] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
+- [x] pgTAP `032` (43 asercije), 8 mutacija, svaka obara bar jednu; `006` usklađen
+- [x] Klijent: „Ocijeni" na završenom terminu u „Moji termini", prijava recenzije na `/reviews`
+- [x] Admin: `/more/reviews` — lista, sakrij / vrati
+- [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `docs/01` §12,
+      `prototype/ui/README.md`, `prototype/admin/SPEC.md`, komentari „read-only" u kodu
 - [ ] Uživo: termin → Završen u Meluri → klijent ocijeni → prosjek na Početnoj se pomjeri
 
 ## Napomene
