@@ -25,7 +25,7 @@ import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../dashboard/dashboard_summary.dart' show prijeKoliko;
 import '../dashboard/danas.dart' show cekaKoliko;
-import '../../core/widgets/admin_skeleton.dart';
+import '../../core/widgets/admin_ucitavanje.dart';
 import 'appointment_actions_bar.dart';
 import 'appointment_card.dart';
 import 'appointments_providers.dart';

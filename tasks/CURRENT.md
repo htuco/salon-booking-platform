@@ -39,6 +39,19 @@ U toku (grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/sa
 
 ## Istorija
 
+### 63 — Animacija učitavanja „Termin i sada" (PR otvoren, 2026-10-20)
+
+[PR #141](https://github.com/htuco/salon-booking-platform/pull/141). `AdminUcitavanje` i
+`AdminButtonBusy` crtaju znak iz `melura-ucitavanje.svg`; splash u `web/index.html` je isti znak u
+CSS-u, samo svijetao. **Ostaje:** merge; koralno dugme u čekanju se ne vidi, jedno visjenje
+prijave uz umjetno kašnjenje ide u 60.
+
+### 59 — Radnik u lokalnom seedu (PR otvoren, 2026-10-20)
+
+[PR #140](https://github.com/htuco/salon-booking-platform/pull/140). `radnik@beautystudiotravnik.test` /
+`admin123456`, `employee` vezan za Aminu (ne Emir: testovi osoblja vežu naloge za Emira i Amara).
+`./tool/test_supabase.sh` → `Result: PASS`. **Ostaje:** merge; Melura kao radnik na ekranu ide u 60.
+
 ### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
 
 [PR #136](https://github.com/htuco/salon-booking-platform/pull/136), ADR-0030. Registracija sa
