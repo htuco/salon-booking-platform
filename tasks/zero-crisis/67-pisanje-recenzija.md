@@ -56,9 +56,9 @@ Kod gotov, grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/sa
     Meluri (cijeli admin tako piše), zvjezdice ★ u Meluri (admin nema `core_ui`), snimci na beauty
     i health temi.
 - **Dokaz:** `tool/test_supabase.sh` → pgTAP `Files=32, Tests=943 … Result: PASS`, katalog 59
-  provjera, svi REST i Deno testovi („Sve prolazi"). `032` ima 55 asercija, a svaka od 12
+  provjera, svi REST i Deno testovi („Sve prolazi"). `032` ima 55 asercija, a svaka od 11
   mutacija obara bar jednu (tabela u `security.md`). `deno test` za `send-push` i
-  `notify-content-reports`: 11 passed. `melos run test`: admin 689, client 674, `core_api` 150,
+  `notify-content-reports`: 11 passed. `melos run test`: admin 689, client 676, `core_api` 151,
   `core_domain` 102, `core_ui` 146. `melos run analyze` SUCCESS, `dart format` bez izmjena,
   `tenant_theme_test` prolazi za oba salona. Admin upit iz aplikacije pod pravim JWT-om: `HTTP
   200, 26 redova, sakrivenih 1`, a `select=auth_identity_id` daje `403`.
@@ -68,11 +68,47 @@ Kod gotov, grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/sa
   26 (zaokružen prosjek ostaje 4,8). U Meluri „Sakrij" → `is_published = f`, tekst i ocjena ostaju
   isti, a javni broj se vraća na 25. Snimci: `docs/screenshots/task-67-ocjena-sheet.png`,
   `task-67-melura-recenzije.png`.
+- **Pregled (Hamza, 2026-10-20):**
+  - **Melura nije vidjela dio javnih recenzija.** Admin je uzimao 50 najnovijih svih vrsta, a
+    klijent 50 najnovijih objavljenih sa tekstom; nove gole ocjene su potiskivale starije javne
+    tekstove, koje salon onda nije mogao sakriti. `StaffReviewRepository.forSalon` sada spaja
+    klijentski upit (`ReviewRepository.forSalon`, isti filter i granica) i 50 najnovijih ostalih,
+    pa je svaki javno prikazan red u Meluri po konstrukciji. Test u `review_repository_test.dart`
+    pada na starom upitu.
+  - **Dužina teksta se broji kao u bazi.** `maxLength` je brojao grafeme, a `char_length` kodne
+    tačke; „👍🏽" × 600 je prolazio ekran i vraćao `PT400`, koji sheet čita kao „nije završen".
+    Sheet sada reže u kodnim tačkama i brojač pokazuje isti broj; test pada sa `maxLength`.
+  - **Jedna prijava sadržaja.** `features/moderation/report_content_action.dart`
+    (`prijaviSadrzaj`) nosi tok za sliku i recenziju; skrol za veliki font sada ima i prijava
+    slike (test na 200 % fonta pada bez skrola).
+  - **Dokumenti:** redoslijed deploya ispravljen (funkcije prije migracije, pravilo u
+    `workflows.md`), recenzije u `docs/06` §8.2–8.3 i u lokalnom seed tekstu privatnosti (uz
+    telefon iz taska 66), `security.md` broji 11 mutacija kao tabela.
 - **Ostalo za sljedećeg:**
-  - Hamza, deploy: `supabase db push` za `20261020100000`, pa
-    `supabase functions deploy send-push notify-content-reports`.
+  - Hamza, deploy, **ovim redom**:
+    0. `select count(*) from public.reviews where char_length(comment) > 1000;` → `0` (inače
+       `reviews_comment_duzina` obara migraciju).
+    1. `supabase functions deploy send-push notify-content-reports`. Nove funkcije rade i nad
+       starom šemom: `notify-content-reports` red bez `review_id` šalje granom slike. Obrnuto
+       (migracija prva) stari `send-push` na `review_request` baci `unsupported_type`, red
+       završi `failed` bez ponavljanja i „Kako je bilo?" je izgubljen.
+    2. `supabase db push` za `20261020100000`.
+    3. `select has_column_privilege('anon','public.reviews','auth_identity_id','select');` → `f`
+       i `select has_function_privilege('anon','public.submit_review(uuid,integer,text)','execute');`
+       → `f`.
+    4. Ručno: tekst politike privatnosti u hostovanom `app_policies` (recenzije, telefon — v.
+       `supabase/seed.sql`) i store Data safety / App Privacy (`docs/06` §8.3).
   - Push `review_request` na uređaju (nema Android uređaja; dokazan je samo red u logu, kroz
     pgTAP).
   - Prijava recenzije koja stigne na webhook platforme (`REPORT_WEBHOOK_URL`, isto kao kod slike).
   - Svjesno van opsega: izmjena vlastite recenzije, rok za ocjenu poslije termina i odgovor salona
     na recenziju.
+  - Van opsega iz pregleda (Hamza):
+    - push `review_request` vodi na `/appointments`, ne direktno na tab „Prošli";
+    - recenzija ostaje kad termin izađe iz `completed` (salon vrati status);
+    - „Klijent" kao ime autora dolazi iz baze (`review_author`), ne iz `vertical.terms`;
+    - `content_reports.review_id` nema kompozitni FK sa `salon_id`;
+    - test anonimizacije sa istim identitetom u dva salona.
+  - Admin lista ide do 50 javnih + 50 ostalih; starije gole i sakrivene van toga traže
+    straničenje kad salon dođe do toga.
+  - Apple 1.2 navodi i blokiranje korisnika; nemamo ga (`docs/06` §8.3).

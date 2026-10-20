@@ -223,7 +223,7 @@ obje popunjene ili obje prazne), a takav red može upisati samo `service_role`.
   isti trigger i isti `on conflict`, pa ponovo završen termin ne šalje drugu poruku.
 
 Dokaz: `032_pisanje_recenzija.test.sql` (55 asercija) i dvije provjere bez tokena u
-`rest_public_catalog.ts`. Svaka od dvanaest mutacija obara bar jednu asercju:
+`rest_public_catalog.ts`. Svaka od jedanaest mutacija obara bar jednu asercju:
 
 | Mutacija | Pada |
 |---|---|

@@ -624,6 +624,8 @@ Implementacija:
 - Supabase: `auth.admin.deleteUser`
 - **Revoke tokena za Apple** — Apple to eksplicitno zahtijeva
 - Budući `confirmed` termini se otkazuju i vlasnik dobija push
+- Recenzije (task 67) ostaju kao ocjena u prosjeku salona, a ime postaje „Bivši klijent" i tekst
+  nestaje (trigger `anonymize_reviews_of_identity`, `security.md` „Pisanje recenzija")
 
 > Ovo nije opciono i nije Faza 2. Bez ekrana za brisanje računa iOS submission pada.
 
@@ -633,6 +635,17 @@ Implementacija:
   (task 66, ADR-0029), plus identifikatori. Svrha imena i telefona: funkcionalnost aplikacije
   (salon zna ko dolazi i zove kad se termin mijenja). Ne dijele se sa trećima; telefon se ne
   verifikuje i ne koristi za marketing
+- **Recenzije (task 67):** u Data safety / App Privacy navesti **„User-generated content" / „Other
+  user content"** — ocjena 1–5 i opcionalan tekst do 1000 znakova, javno vidljivi u aplikaciji
+  salona uz ime autora („Ana K."). Svrha: funkcionalnost aplikacije (ocjena salona drugim
+  klijentima). Dijele se javno, sa ostalim korisnicima te aplikacije; brisanje računa briše ime i
+  tekst, a ocjena ostaje bez imena (§8.2)
+- **Apple 1.2 (sadržaj korisnika):** app prikazuje tekst koji je napisao drugi korisnik, pa mora
+  imati prijavu neprikladnog sadržaja i način da se on ukloni. Prijava je „Prijavi recenziju"
+  (`report_review`, ide platformi, [ADR-0024](adr/0024-siroce-u-bucketu-cisti-periodicni-sweep-prijava-ide-platformi.md)),
+  a salon recenziju može sakriti u Meluri (`set_review_published`). Automatsko skrivanje na
+  prijavu namjerno ne postoji. Blokiranje korisnika, koje 1.2 takođe navodi, danas nemamo — to je
+  otvoreno pitanje za review, ne riješena stavka
 - Facebook zahtijeva **data deletion callback URL** ako je uključen
 - Za `dental` i `health`: sabira se sa zahtjevima iz [05 §7](05-vertical-packs.md), ne zamjenjuje ih
 

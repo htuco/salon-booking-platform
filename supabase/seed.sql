@@ -229,6 +229,11 @@ on conflict do nothing;
 --   push token     -> `devices` (**tek sa taskom 25**, zato u tekstu stoji uslovno)
 -- `customers.phone` i `appointments.customer_phone` postoje, ali ih puni salon iz admina.
 --
+-- *Dopuna:* od taska 66 registracija traži i telefon (`auth_identities.phone`, ADR-0029), a od
+-- taska 67 klijent piše recenziju (`reviews`: ocjena, opcionalan tekst, javno ime „Ana K.").
+-- Obje stvari su u „Šta prikupljamo" i „Brisanje računa", recenzija i u „S kim ih dijelimo";
+-- rečenica „Ne tražimo broj telefona" je uklonjena. Pasus o handoffu iznad je stanje taska 21.
+--
 -- **Sta se namjerno ne tvrdi:** da neodgovoren zahtjev istekne sam. `pending_expires_at` se
 -- upisuje, ali `supabase/functions/expire-pending/` je danas samo README — funkcije nema. Tekst
 -- koji obecava automatiku koje nema je tekst koji ce prvi korisnik demantovati.
@@ -271,6 +276,10 @@ Za sve u vezi sa podacima obratite se salonu — kontakt stoji na ekranu „O ap
 ('privacy',20,'Šta prikupljamo',
  'Email adresu i ime — dolaze od prijave preko Apple, Google ili email koda. Lozinku ne čuvamo jer je ni nemamo.
 
+Broj telefona, koji upišete pri registraciji, da vas salon može kontaktirati kad se termin mijenja.
+
+Recenziju, ako ocijenite posjet: ocjenu od 1 do 5 i tekst ako ga napišete. Recenzija je javna u aplikaciji salona, uz vaše ime i početno slovo prezimena.
+
 Historiju termina — usluga, radnik, datum, vrijeme i status zahtjeva.
 
 Napomenu uz termin, ako je upišete. Polje je opciono i prazno dok ga sami ne popunite.
@@ -281,13 +290,11 @@ Oznaku uređaja za slanje obavijesti, ako obavijesti uključite. Oznaka služi s
 
 Bez emaila nema prijave, a bez prijave nema načina da vam pokažemo vaše termine i samo vaše.'),
 ('privacy',40,'Šta ne prikupljamo',
- 'Ne tražimo broj telefona. Ako vaš broj postoji u salonovoj evidenciji, upisao ga je salon, ne aplikacija.
-
-Ne pratimo lokaciju, ne čitamo kontakte, ne postavljamo kolačiće za oglašavanje i ne koristimo analitiku trećih strana. Ne obrađujemo podatke o plaćanju jer se plaća u salonu.'),
+ 'Ne pratimo lokaciju, ne čitamo kontakte, ne postavljamo kolačiće za oglašavanje i ne koristimo analitiku trećih strana. Ne obrađujemo podatke o plaćanju jer se plaća u salonu.'),
 ('privacy',50,'Koliko dugo ih čuvamo',
  'Dok imate račun. Historija termina ostaje salonu kao evidencija posla i nakon brisanja računa, ali bez vašeg imena i kontakta — ostaju samo usluga, datum i status.'),
 ('privacy',60,'S kim ih dijelimo',
- 'Sa salonom čiju aplikaciju koristite, i ni sa kim više. Podatke ne prodajemo i ne ustupamo za oglašavanje.
+ 'Sa salonom čiju aplikaciju koristite, i ni sa kim više. Podatke ne prodajemo i ne ustupamo za oglašavanje. Izuzetak je recenzija: ocjenu, tekst i ime uz njih vidi svako ko otvori aplikaciju salona.
 
 Tehnički ih čuvamo kod pružaoca usluge hostinga, koji ih obrađuje isključivo po našem nalogu.'),
 ('privacy',70,'Vaša prava',
@@ -295,7 +302,7 @@ Tehnički ih čuvamo kod pružaoca usluge hostinga, koji ih obrađuje isključiv
 
 Zahtjev šaljete salonu, na kontakt sa ekrana „O aplikaciji", i odgovaramo u razumnom roku.'),
 ('privacy',80,'Brisanje računa',
- 'Račun brišete sami, u Postavkama aplikacije. Brisanje ukloni vaše ime, email i napomene, a budući termini se otkazuju.
+ 'Račun brišete sami, u Postavkama aplikacije. Brisanje ukloni vaše ime, email, telefon i napomene, a budući termini se otkazuju. Ocjene koje ste dali ostaju u prosjeku salona, ali bez vašeg imena i teksta.
 
 Brisanje vrijedi za sve salone u kojima ste koristili isti nalog, ne samo za ovaj.'),
 ('privacy',90,'Kontakt',

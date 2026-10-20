@@ -14,15 +14,19 @@ U toku (grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/salon
 - [x] Prijava recenzije kroz `content_reports` (ADR-0024), `notify-content-reports` zna za recenziju
 - [x] Push `review_request` kad termin postane `completed`, tekst u `send-push`
 - [x] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
-- [x] pgTAP `032` (55 asercija), 12 mutacija, svaka obara bar jednu; `006` usklađen
+- [x] pgTAP `032` (55 asercija), 11 mutacija, svaka obara bar jednu; `006` usklađen
 - [x] Pregled u grani: identitet autora i termin zatvoreni kolonskim grantom, `my_review_ratings`
 - [x] Klijent: „Ocijeni" na završenom terminu u „Moji termini", prijava recenzije na `/reviews`
 - [x] Admin: `/more/reviews` — lista, sakrij / vrati
 - [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `docs/01` §12,
       `prototype/ui/README.md`, `prototype/admin/SPEC.md`, komentari „read-only" u kodu
 - [x] Uživo (lokalni stack, web 402): Završen u Meluri → klijent ocijeni → 26 ocjena; Sakrij → 25
-- [ ] CI zelen, pregled, merge u `develop`
-- [ ] Deploy (Hamza): `supabase db push` za `20261020100000`, `supabase functions deploy send-push notify-content-reports`
+- [x] Pregled (Hamza): Melura vidi svaku javnu recenziju, tekst se broji u kodnim tačkama kao u
+      bazi, jedna prijava (`prijaviSadrzaj`) za sliku i recenziju, recenzije u `docs/06` §8.2–8.3
+- [ ] CI zelen, merge u `develop`
+- [ ] Deploy (Hamza), **ovim redom** — v. task fajl: provjera dužine teksta,
+      `supabase functions deploy send-push notify-content-reports`, **pa** `supabase db push`,
+      provjere grantova, tekst politike u hostovanom `app_policies` i store formulari
 - [ ] Push `review_request` na uređaju
 
 ## Napomene
