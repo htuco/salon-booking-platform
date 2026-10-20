@@ -1,50 +1,63 @@
-# Trenutni task: 66 — Registracija: ime, telefon i uslovi u jednoj formi
+# Trenutni task: 67 — Pisanje recenzija
 
-Puni task: [tasks/zero-crisis/66-registracija-ime-telefon-tos.md](zero-crisis/66-registracija-ime-telefon-tos.md) · učitan 2026-10-13
+Puni task: [tasks/zero-crisis/67-pisanje-recenzija.md](zero-crisis/67-pisanje-recenzija.md) · učitan 2026-10-20
 
 ## Status
 
-U toku (grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
-2026-10-13). Pregled (Eniz) zatvoren u grani 2026-10-19; čeka njegovo odobrenje, merge i
-`supabase db push` za `20261019120000`. 66 blokira 58, 67, 81, 82, 84 i 87.
+U toku (grana `feat/pisanje-recenzija`, 2026-10-20). Zavisnost 66 je spojena u `develop` (PR #136).
 
 ## Ciljevi
 
-- [x] Odluke (Hamza, 2026-10-13): eksplicitna verzija uslova, a profil adresar samo popunjava —
-      [ADR-0030](../docs/adr/0030-verzija-uslova-i-profil-popunjava-adresar.md)
-- [x] Migracija `20261013160000_registracija_profil` + pgTAP `030` (pet mutacija ga obara)
-- [x] Registracija (ime, telefon, email, lozinka jednom, checkbox), prijava bez pravila registracije,
-      `AccountExistsError` i `WeakPasswordError`, bez demo teksta
-- [x] „Dopuni profil" (`/auth/complete-profile`) poslije prijave kad profilu nešto fali
-- [x] Dokumenti: ADR-0030, `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `docs/06` §3.1 i
-      §8.3 (Data safety), `docs/01` §12, `docs/README.md`
-- [x] Uživo: registracija → Melura prikazuje ime i telefon; nalog bez profila → „Dopuni profil"
-- [x] Pregled #136 (Eniz): profil prije slanja termina i `PopScope`; kasni sudar na
-      `unique(salon_id, phone)`; iskren komentar o ciframa; `legal_versions` `stable`
-- [ ] CI zelen, PR #136 spojen u `develop`
-- [ ] Deploy (Hamza): `supabase db push` za `20261019120000` (`20261013160000` je već na
-      hostovanom); provjera `select provolatile from pg_proc where proname = 'legal_versions'` → `s`
-- [ ] „Dopuni profil" poslije prave Apple i Google prijave na uređaju
+- [ ] Migracija: `reviews.appointment_id` i `auth_identity_id`, jedna po terminu, samo `completed`;
+      `authenticated` gubi `insert/update/delete`, upis samo kroz RPC
+- [ ] `submit_review` (klijent, `x-salon-id`, svoj završen termin), `set_review_published` (admin
+      sakriva i vraća, tekst ne dira), klijent čita svoje recenzije
+- [ ] Prijava recenzije kroz `content_reports` (isti put kao slike, ADR-0024), `notify-content-reports`
+      zna za recenziju
+- [ ] Push `review_request` kad termin postane `completed`, tekst u `send-push`
+- [ ] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
+- [ ] pgTAP `032`: bez završenog termina nema recenzije, druga za isti termin pada, salon ne mijenja
+      tekst, tuđi termin, tuđi salon; svaka asercija oborena mutacijom
+- [ ] Klijent: „Ocijeni" na završenom terminu u „Moji termini" (1–5 + tekst), prijava recenzije na
+      `/reviews`
+- [ ] Admin: `/more/reviews` — lista, sakrij / vrati
+- [ ] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, komentari „read-only" u `Review` i
+      `ReviewRepository`, `prototype/ui/README.md` / `prototype/admin/SPEC.md`
+- [ ] Uživo: termin → Završen u Meluri → klijent ocijeni → prosjek na Početnoj se pomjeri
 
 ## Napomene
 
-- **Odluke su već donesene** u [ADR-0029](../docs/adr/0029-opseg-do-lansiranja-zero-crisis.md):
-  telefon obavezan bez SMS-a, ime i prezime, **checkbox** (ne pasivna obavijest), prihvatanje se
-  bilježi sa verzijom. Istraživanje `docs/research/auth-krajnji-korisnik.md` §3 preporučuje obavijest
-  bez checkboxa, ali ADR je jači.
-- **Zamka iz taska:** ime i telefon su po identitetu, `customers` je po salonu. Salon A ne smije
-  vidjeti da isti čovjek ide u salon B (`docs/06` §4.3). Osvježavanje ide samo kroz identitet, a
-  nikad kroz čitanje tuđeg `customers` reda.
-- Apple ime stiže samo pri prvoj autorizaciji; `supabase_auth_repository.dart` ~237 ga već upisuje u
-  `full_name`. Potvrda emaila kodom je task 81, ne ovaj.
-- Edge runtime se na ovoj mašini ugasi poslije `supabase start`. Ako REST testovi sa Edge Function
-  padnu na `503`, `supabase stop` pa ponovo `./tool/test_supabase.sh`.
-- Projekat je linkovan na hostovani (`olggovhqwirxamggkwuf`).
-- **Ostalo za sljedećeg:** poređenje telefona „po ciframa" ne normalizuje prefiks — `061 …` iz
-  salona i `+387 61 …` iz app-e su za bazu dva broja, pa isti čovjek ostaje dva reda u adresaru.
-  Normalizacija vodeće `0` naspram pozivnog broja traži zemlju salona (v. `security.md`).
+- **Već isporučeno:** prosjek i broj na Početnoj i na `/reviews` čitaju `salon_rating_summary`
+  (task 20, `salonRatingProvider`). Od ove stavke DoD-a ostaje samo osvježavanje poslije slanja.
+- **Postojeći redovi** (seed, budući import) nemaju termin ni identitet. Ostaju takvi; nova kolona je
+  nullable, a pisati bez termina može samo `service_role`.
+- **Ime autora** pravi baza iz `auth_identities.display_name` („Nedim H."), ne klijent — inače bi
+  klijent potpisao recenziju tuđim imenom.
+- **Admin danas nema ekran recenzija** i canvas ga ne crta. „Salon sakriva" traži mjesto u Meluri, pa
+  je `/more/reviews` po obrascu postojećih lista u „Još".
+- Push poslije termina danas vodi na `/appointments` (`send-push`, `route`); isto važi i za
+  `review_request` — tamo stoji „Ocijeni".
+- Zamka iz `security.md`: nova funkcija traži `revoke ... from public, anon`; `not (A and B)` sa
+  `client_salon_id()` je rupa kad nema headera.
+- Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client` prije `melos run analyze`.
 
 ## Istorija
+
+### 58 — Kontakt klijenta jednim tapom (PR otvoren, 2026-10-20)
+
+[PR #138](https://github.com/htuco/salon-booking-platform/pull/138), spreman za pregled.
+„Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina i profilu klijenta, samo uz broj; pravila u
+`apps/admin/lib/src/core/kontakt.dart`. Pregled zatvoren u grani (`+387 061 …` gubi nulu, prekratak
+broj nema link), admin 697. **Ostaje:** odobrenje i merge; sve tri akcije na Android uređaju.
+
+### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
+
+[PR #136](https://github.com/htuco/salon-booking-platform/pull/136), ADR-0030. Registracija sa
+imenom, telefonom i checkboxom; „Dopuni profil" poslije Apple/Google, za novu verziju uslova i
+prije svakog slanja termina; kasni sudar na `unique(salon_id, phone)` se preskače
+(`20261019120000`). pgTAP 888, klijent 667, admin 677. **Ostaje:** Hamza `supabase db push` za
+`20261019120000`; „Dopuni profil" poslije prave Apple/Google prijave na uređaju; poređenje telefona
+ne normalizuje prefiks (`061 …` naspram `+387 61 …`).
 
 ### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
 

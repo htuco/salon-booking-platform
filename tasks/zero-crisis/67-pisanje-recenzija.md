@@ -21,4 +21,4 @@ klijenta (`author_name` je slobodan tekst), a admin u njoj može sve — i mijen
 - [ ] `security.md` dopuna
 
 ## Status
-Nije počet.
+U toku (2026-10-20), grana `feat/pisanje-recenzija`.

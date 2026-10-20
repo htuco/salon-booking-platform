@@ -27,7 +27,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | — | 2 dana |
 | [66](66-registracija-ime-telefon-tos.md) | Registracija: ime, telefon i uslovi (checkbox) 🟡 | — | 2 dana |
 | [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | 66 | 0,5–1 dan |
-| [67](67-pisanje-recenzija.md) | Pisanje recenzija | 66 | 2–3 dana |
+| [67](67-pisanje-recenzija.md) | Pisanje recenzija 🟡 | 66 | 2–3 dana |
 | [68](68-lista-cekanja.md) | Lista čekanja | 64 | 3–4 dana |
 | [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri 🟡 | — | 2–3 dana |
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
@@ -110,3 +110,9 @@ su u status bloku task fajla.
 ≥ 840 px mreža od 7 kolona (`7a`/`7c`), na telefonu lista po danima (`7b`); tap na termin otvara
 detalj, tap na prazno (od danas) nudi ručni termin, tap na zaglavlje otvara dan. Dva pregleda
 zatvorena u grani; admin 677, viđeno uživo na demo buildu na 1440, 1024 i 402. Deploy ne treba.
+
+### 67 — Pisanje recenzija 🟡 (2026-10-20)
+
+Grana `feat/pisanje-recenzija`. Recenzija vezana za završen termin i identitet, upis samo kroz RPC,
+salon sakriva bez mijenjanja, prijava ide platformi. Prosjek na Početnoj već čita
+`salon_rating_summary` (task 20). U toku.
