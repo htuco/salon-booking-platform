@@ -78,6 +78,12 @@ export function messageFor(job: PushJob) {
     cancelled: "Otkazivanje",
     // Ne „odbijen": salon nije rekao ne, nego nije odgovorio do roka (task 64).
     expired: "Salon nije odgovorio na vrijeme",
+    // Salon je termin označio završenim (task 67). „Ocijeni" stoji u Mojim terminima.
+    review_request: "Kako je bilo?",
+  };
+  const bodies: Record<string, string> = {
+    // Bez riječi „termin": ona zavisi od vertikale, a push je isti za sve tenante.
+    review_request: "Ocijenite posjet u aplikaciji.",
   };
   if (!(job.type in titles)) throw new Error("unsupported_type");
   return {
@@ -85,7 +91,7 @@ export function messageFor(job: PushJob) {
       token: job.fcm_token,
       notification: {
         title: titles[job.type],
-        body: "Otvorite aplikaciju za detalje.",
+        body: bodies[job.type] ?? "Otvorite aplikaciju za detalje.",
       },
       data: {
         notification_id: job.id,

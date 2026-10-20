@@ -10,6 +10,7 @@ import '../../core/load_error.dart';
 import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
 import '../../features/booking/date_labels.dart';
+import '../../features/reviews/review_sheet.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'appointment_labels.dart';
 import 'appointments_provider.dart';
@@ -312,6 +313,11 @@ class _Kartica extends ConsumerWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(napomena, style: theme.textTheme.bodySmall),
           ],
+          // Ocjena samo za završen posjet (task 67): baza drugi status odbija.
+          if (appointment.status == AppointmentStatus.completed) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _Ocjena(appointmentId: appointment.id),
+          ],
           if (!appointment.status.isClosed) ...[
             const SizedBox(height: AppSpacing.lg),
             AppButton(
@@ -378,6 +384,43 @@ class _Kartica extends ConsumerWidget {
     NetworkError() => l10n.noConnection,
     _ => l10n.genericError,
   };
+}
+
+/// „Ocijeni" ili „Vaša ocjena ★★★★☆" na kartici završenog posjeta.
+///
+/// Dok se ocjene učitavaju (ili ne uspiju) ne crta se ništa: dugme koje bi se pokazalo pa
+/// nestalo, ili koje bi nudilo drugu ocjenu koju baza odbija sa `PT409`, je gore od praznine.
+class _Ocjena extends ConsumerWidget {
+  const _Ocjena({required this.appointmentId});
+
+  final String appointmentId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final ocjene = ref.watch(myRatingsProvider).valueOrNull;
+    if (ocjene == null) return const SizedBox.shrink();
+
+    if (ocjene[appointmentId] case final ocjena?) {
+      return Row(
+        children: [
+          Text(l10n.reviewYourRating, style: theme.textTheme.bodySmall),
+          const SizedBox(width: AppSpacing.sm),
+          StarRating(
+            value: ocjena.toDouble(),
+            size: 16,
+            semanticsLabel: l10n.reviewsStarsLabel(ocjena),
+          ),
+        ],
+      );
+    }
+    return AppButton(
+      label: l10n.reviewRate,
+      variant: AppButtonVariant.outline,
+      onPressed: () => ocijeniTermin(context, ref, appointmentId),
+    );
+  }
 }
 
 class _Prazno extends StatelessWidget {

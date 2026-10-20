@@ -1,9 +1,11 @@
 import 'package:client/src/core/router/app_router.dart';
+import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/fake_auth_repository.dart';
 import 'support/screen_harness.dart';
 
 /// `/reviews` — `SPEC.md` 5m, `13-recenzije.png`.
@@ -172,11 +174,11 @@ void main() {
     });
   });
 
-  group('ekran je read-only', () {
+  group('ovdje se ne piše', () {
     testWidgets('nema dugmeta „Ostavi recenziju"', (tester) async {
-      // Handoff ga crta na dnu 13-recenzije.png, ali klijent nad `reviews` nema nijedan
-      // write grant. Dugme koje otvori formu koja ne može spasiti tekst je gore od
-      // dugmeta kojeg nema — odluka je zapisana u doc komentaru ekrana.
+      // Handoff ga crta na dnu 13-recenzije.png. Od taska 67 recenzija se piše sa kartice
+      // završenog termina u „Moji termini", jer je vezana za taj termin — odluka je
+      // zapisana u doc komentaru ekrana.
       await pumpEkran(
         tester,
         ruta: ClientRoute.reviews.path,
@@ -186,6 +188,62 @@ void main() {
 
       expect(find.textContaining('Ostavi'), findsNothing);
       expect(find.byType(TextField), findsNothing);
+    });
+  });
+
+  // Task 67: tekst piše klijent, pa ga drugi klijent može prijaviti platformi.
+  group('prijava recenzije', () {
+    testWidgets('gost ide na prijavu i ništa ne šalje', (tester) async {
+      final prijave = _FakeContentReports();
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.reviews.path,
+        ocjena: ocjena,
+        recenzije: [recenzija(id: 'r1', autor: 'Nedim H.')],
+        contentReportRepository: prijave,
+      );
+
+      await tester.scrollUntilVisible(find.text('Prijavi recenziju'), 200);
+      await tester.tap(find.text('Prijavi recenziju'));
+      await tester.pumpAndSettle();
+      expect(find.text('Prijavite se da prijavite recenziju'), findsOneWidget);
+      expect(prijave.pozivi, isEmpty);
+    });
+
+    testWidgets('prijavljen klijent prijavljuje baš tu recenziju', (
+      tester,
+    ) async {
+      final auth = FakeAuthRepository(
+        pocetnaSesija: FakeAuthRepository.sesijaNakonPrijave,
+      );
+      addTearDown(auth.dispose);
+      final prijave = _FakeContentReports();
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.reviews.path,
+        ocjena: ocjena,
+        recenzije: [
+          recenzija(id: 'r1', autor: 'Nedim H.'),
+          recenzija(id: 'r2', autor: 'Amra K.', tekst: 'Druga recenzija.'),
+        ],
+        authRepository: auth,
+        contentReportRepository: prijave,
+      );
+
+      await tester.scrollUntilVisible(find.text('Prijavi recenziju').last, 200);
+      await tester.tap(find.text('Prijavi recenziju').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Šta nije u redu sa recenzijom?'), findsOneWidget);
+      expect(find.textContaining('ne salonu'), findsOneWidget);
+
+      await tester.tap(find.text('Lažna ili plaćena recenzija'));
+      await tester.pumpAndSettle();
+
+      expect(prijave.pozivi, [('r2', 'Lažna ili plaćena recenzija')]);
+      expect(
+        find.text('Hvala. Prijava je poslana i pregledaćemo je.'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -233,4 +291,20 @@ void main() {
       );
     });
   });
+}
+
+class _FakeContentReports implements ContentReportRepository {
+  final pozivi = <(String, String?)>[];
+
+  @override
+  Future<void> reportImage({
+    required String salonId,
+    required String imageUrl,
+    String? reason,
+  }) => throw UnimplementedError('Recenzije ne prijavljuju slike');
+
+  @override
+  Future<void> reportReview({required String reviewId, String? reason}) async {
+    pozivi.add((reviewId, reason));
+  }
 }

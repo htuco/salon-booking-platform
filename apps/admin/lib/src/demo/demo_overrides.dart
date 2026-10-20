@@ -19,6 +19,7 @@ import '../features/calendar/calendar_providers.dart';
 import '../features/clients/clients_providers.dart';
 import '../features/dashboard/danas.dart' show sljedeciRadniDan;
 import '../features/dashboard/danas_providers.dart';
+import '../features/reviews/reviews_screen.dart';
 import '../features/settings/pristup.dart';
 import '../features/settings/settings_providers.dart';
 import '../features/working_hours/working_hours_providers.dart';
@@ -113,6 +114,8 @@ List<Override> demoOverrides(AdminEnv env) => [
   dashboardRasporedProvider.overrideWith((ref) async => _radnoVrijeme),
   dashboardBlokadeProvider.overrideWith((ref) async => const <BlockedSlot>[]),
   sedmicaProvider.overrideWith((ref) async => 38),
+  // Recenzije (task 67): napisana, gola ocjena i sakrivena — tri stanja kartice.
+  adminReviewsProvider.overrideWith((ref) async => _recenzije),
   sljedeciRadniDanProvider.overrideWith((ref) async {
     final sljedeci = sljedeciRadniDan(_radnoVrijeme, DateTime.now());
     if (sljedeci == null) return null;
@@ -537,3 +540,30 @@ Appointment _termin(
 /// od ponedjeljka 30. novembra bi dala 32. novembar, koji `assert` u debugu obori, a u
 /// releaseu ne pogodi nijedan dan (pregled #137).
 LocalDate _datumOd(DateTime d) => LocalDate(d.year, d.month, d.day);
+
+final _recenzije = [
+  Review(
+    id: 'demo-rec-1',
+    salonId: _salonId,
+    authorName: 'Adnan K.',
+    rating: 5,
+    comment: 'Fade kao i uvijek, tačno na vrijeme.',
+    createdAt: DateTime.now().subtract(const Duration(days: 1)),
+  ),
+  Review(
+    id: 'demo-rec-2',
+    salonId: _salonId,
+    authorName: 'Selma H.',
+    rating: 4,
+    createdAt: DateTime.now().subtract(const Duration(days: 4)),
+  ),
+  Review(
+    id: 'demo-rec-3',
+    salonId: _salonId,
+    authorName: 'Klijent',
+    rating: 1,
+    comment: 'Tekst koji je salon sakrio.',
+    createdAt: DateTime.now().subtract(const Duration(days: 9)),
+    isPublished: false,
+  ),
+];

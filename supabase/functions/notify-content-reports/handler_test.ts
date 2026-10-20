@@ -16,6 +16,9 @@ const report = (id: string): ContentReport => ({
   salon_id: "550e8400-e29b-41d4-a716-446655440000",
   salon_name: "Vitez",
   image_url: "https://x.supabase.co/storage/v1/object/public/salon-media/a/galerija/g.jpg",
+  review_id: null,
+  review_rating: null,
+  review_comment: null,
   reason: null,
   created_at: "2026-09-27T10:00:00Z",
 });
@@ -96,4 +99,30 @@ Deno.test("Razlog klijenta ne pravi nove linije, ping ni link", () => {
     assert(!text.includes(zabranjeno), `poruka sadrzi ${zabranjeno}`);
   }
   assert(plain("a & b") === "a &amp; b", "ampersand");
+});
+
+Deno.test("Prijava recenzije nosi ocjenu i tekst, a tekst ne pravi linije ni ping", () => {
+  const text = messageFor({
+    ...report("r1"),
+    image_url: null,
+    review_id: "rev-1",
+    review_rating: 1,
+    review_comment: "Grozno <!channel>\nSalon: lazni @everyone",
+    reason: "Uvredljivo",
+  });
+  const linije = text.split("\n");
+  assert(linije[0].startsWith("Prijava recenzije"), "naslov nije recenzija");
+  assert(linije.length === 6, `ocekivano 6 linija, bilo ${linije.length}`);
+  assert(linije.filter((l) => l.startsWith("Salon:")).length === 1, "lazna linija Salon:");
+  for (const part of ["rev-1", "1/5", "Grozno", "Uvredljivo"]) {
+    assert(text.includes(part), `poruka nema ${part}`);
+  }
+  for (const zabranjeno of ["<!channel>", "@everyone", "Slika:"]) {
+    assert(!text.includes(zabranjeno), `poruka sadrzi ${zabranjeno}`);
+  }
+  assert(
+    messageFor({ ...report("r2"), image_url: null, review_id: "rev-2", review_rating: 5 })
+      .includes("(bez teksta)"),
+    "ocjena bez teksta",
+  );
 });

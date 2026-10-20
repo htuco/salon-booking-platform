@@ -39,6 +39,7 @@ export 'src/catalog/salon_repository.dart';
 export 'src/catalog/service_repository.dart';
 export 'src/catalog/settings_repository.dart';
 export 'src/catalog/staff_customer_repository.dart';
+export 'src/catalog/staff_review_repository.dart';
 export 'src/catalog/working_hours_repository.dart';
 export 'src/errors/errors.dart';
 export 'src/providers.dart';

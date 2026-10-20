@@ -106,6 +106,7 @@ void main() {
       '/more/appointments',
       '/more/appointments/:id',
       '/more/clients',
+      '/more/reviews',
       '/more/services',
       '/more/staff',
       '/more/hours',

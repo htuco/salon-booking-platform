@@ -9,10 +9,11 @@
 /// Izmjereno iz `prototype/admin/canvas/Salon OS Admin.dc.html`, ne prepisano iz `SPEC.md`:
 ///
 /// - **Sidebar (`3b`) nosi osam stavki** — Danas, Kalendar, Zahtjevi, Klijenti, Usluge,
-///   Osoblje, Radno vrijeme, Postavke.
+///   Osoblje, Radno vrijeme, Postavke. Od taska 67 je tu i deveta, **Recenzije**, iza
+///   Klijenata: canvas je nastao prije pisanja recenzija, a salon ih mora moći sakriti.
 /// - **Donja navigacija (`3k`, `3t`) nosi četiri** — Danas, Kalendar, Zahtjevi, Još.
 ///
-/// Odatle podjela: **prve tri su [primarne] i idu u donju navigaciju, ostalih pet stoje iza
+/// Odatle podjela: **prve tri su [primarne] i idu u donju navigaciju, ostalih šest stoje iza
 /// „Još" (`3t`)**. „Još" nije zasebna lista nego rep iste — [sporedne].
 ///
 /// ## Šta namjerno nije ovdje
@@ -71,7 +72,7 @@ class AdminDestination {
   String get putanja => lokacija ?? route.path;
 }
 
-/// Puna navigacija — tačno osam stavki sidebara iz `3b`, tim redom.
+/// Puna navigacija — osam stavki sidebara iz `3b`, tim redom, plus Recenzije (task 67).
 ///
 /// `final`, a ne `const`, jer „Zahtjevi" nose [pendingCountProvider]: Riverpod provider
 /// nije konstanta.
@@ -96,6 +97,12 @@ final List<AdminDestination> kAdminDestinations = [
     route: AdminRoute.clients,
     label: 'Klijenti',
     icon: LucideIcons.users300,
+  ),
+  // Deveta stavka, van `3b` (task 67): canvas je crtan dok recenzije nisu imale pisanje.
+  AdminDestination(
+    route: AdminRoute.reviews,
+    label: 'Recenzije',
+    icon: LucideIcons.star300,
   ),
   AdminDestination(
     route: AdminRoute.services,
@@ -125,7 +132,7 @@ final List<AdminDestination> kAdminDestinations = [
 /// test. Stara adresa (`/appointments?status=pending`) se preusmjerava ovamo.
 final String kZahtjeviPutanja = AdminRoute.requests.path;
 
-/// Stavka sidebara za trenutnu putanju — sidebar ima osam stavki na četiri grane.
+/// Stavka sidebara za trenutnu putanju — sidebar ima devet stavki na četiri grane.
 ///
 /// Najduži prefiks pobjeđuje, pa `/more/clients/...` označi Klijente, a ne Još. „Svi
 /// termini" (`/more/appointments`) nemaju svoju stavku i označe Zahtjeve, kao i prije

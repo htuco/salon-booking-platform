@@ -121,6 +121,7 @@ Deno.test("Svi scenariji imaju salon, stabilan ID i samo dozvoljenu rutu", () =>
       "rejected",
       "cancelled",
       "expired",
+      "review_request",
     ]
   ) {
     const { message } = messageFor({ ...job, type });

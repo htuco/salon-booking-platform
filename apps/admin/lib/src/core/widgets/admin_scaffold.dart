@@ -190,7 +190,7 @@ class AdminScaffold extends ConsumerWidget {
 // Desktop
 // ---------------------------------------------------------------------------
 
-/// Tamni sidebar iz `3b` — 236 px: wordmark, kartica salona, osam stavki, nalog na dnu.
+/// Tamni sidebar iz `3b` — 236 px: wordmark, kartica salona, stavke navigacije, nalog na dnu.
 ///
 /// **Šta iz `3b` ovdje nema:** strelicu `▾` na kartici salona i „‹ Nazad na mrežu". Oba
 /// vode na `3a` (pregled mreže lokacija), koji nema ni rutu ni podatak — admin dobija

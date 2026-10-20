@@ -1,56 +1,58 @@
-# Trenutni task: 58 — Kontakt klijenta jednim tapom
+# Trenutni task: 67 — Pisanje recenzija
 
-Puni task: [tasks/zero-crisis/58-kontakt-jednim-tapom.md](zero-crisis/58-kontakt-jednim-tapom.md) · učitan 2026-10-19
+Puni task: [tasks/zero-crisis/67-pisanje-recenzija.md](zero-crisis/67-pisanje-recenzija.md) · učitan 2026-10-20
 
 ## Status
 
-U toku (grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/salon-booking-platform/pull/138) spreman za pregled, 2026-10-20). Zavisnost 66 je spojena u `develop` (PR #136).
+U toku (grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/salon-booking-platform/pull/139), 2026-10-20). Kod, testovi i provjera uživo su gotovi; ostaje pregled, CI i deploy.
 
 ## Ciljevi
 
-- [x] `url_launcher` u admin, `core/kontakt.dart` (normalizacija `+387`, URI, kanali po platformi)
-- [x] Detalj termina (`3n`) i profil klijenta (`3e`): „Pozovi" i „Poruka" (sheet Viber / WhatsApp)
-- [x] Bez broja nema akcije; na webu nema Vibera, „Poruka" ide pravo na WhatsApp
-- [x] Testovi: admin 701, `kontakt_test` + grupe u `appointment_detail_test` i `clients_screen_test`
-- [x] `prototype/admin/SPEC.md`, `docs/01` §6.3, doc komentar `appointment_detail_screen.dart`
-- [x] Web demo: „Poruka" otvara WhatsApp za `+38761552104`
-- [x] Draft PR protiv `develop`, CI zelen, dva pregleda (2026-10-20, nalazi popravljeni, admin 701)
-- [ ] **Obavezno:** ručni test sve tri akcije na iOS simulatoru ili Android emulatoru **i** na pravom
-      uređaju (`tool/run_live_demo.sh admin -d <device-id>`, koraci u statusu taska 58)
+- [x] Migracija `20261020100000_pisanje_recenzija`: `reviews.appointment_id` i `auth_identity_id`,
+      jedna po terminu, samo `completed`; `authenticated` gubi `insert/update/delete`
+- [x] `submit_review`, `set_review_published` (tekst ne dira), `my_review_ratings`; agregat samo objavljene
+- [x] Prijava recenzije kroz `content_reports` (ADR-0024), `notify-content-reports` zna za recenziju
+- [x] Push `review_request` kad termin postane `completed`, tekst u `send-push`
+- [x] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
+- [x] pgTAP `032` (55 asercija), 11 mutacija, svaka obara bar jednu; `006` usklađen
+- [x] Pregled u grani: identitet autora i termin zatvoreni kolonskim grantom, `my_review_ratings`
+- [x] Klijent: „Ocijeni" na završenom terminu u „Moji termini", prijava recenzije na `/reviews`
+- [x] Admin: `/more/reviews` — lista, sakrij / vrati
+- [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `docs/01` §12,
+      `prototype/ui/README.md`, `prototype/admin/SPEC.md`, komentari „read-only" u kodu
+- [x] Uživo (lokalni stack, web 402): Završen u Meluri → klijent ocijeni → 26 ocjena; Sakrij → 25
+- [x] Pregled (Hamza): Melura vidi svaku javnu recenziju, tekst se broji u kodnim tačkama kao u
+      bazi, jedna prijava (`prijaviSadrzaj`) za sliku i recenziju, recenzije u `docs/06` §8.2–8.3
+- [ ] CI zelen, merge u `develop`
+- [ ] Deploy (Hamza), **ovim redom** — v. task fajl: provjera dužine teksta,
+      `supabase functions deploy send-push notify-content-reports`, **pa** `supabase db push`,
+      provjere grantova, tekst politike u hostovanom `app_policies` i store formulari
+- [ ] Push `review_request` na uređaju
 
 ## Napomene
 
-- **Pravila su u `apps/admin/lib/src/core/kontakt.dart`**, a ekrani crtaju samo dugmad. Launcher je
-  `otvoriLinkProvider`, a kanali su `kanaliPorukeProvider`. Oba se u testu override-uju, pa test
-  vidi koji je link otvoren i može glumiti web.
-- **Normalizacija:** salon nema polje zemlje, pa vodeća `0` znači `+387`. To je pretpostavka BiH
-  tržišta i zapisana je u komentaru `medjunarodniBroj`. Baza se ne mijenja.
-- **„Poruka" je sheet sa dva kanala**, jer canvas (`3n`, `adminv2/profil`) crta jedno dugme. Ovu
-  odluku treba potvrditi u pregledu PR-a.
-- **Web:** `viber://` se na webu ne može provjeriti, pa Vibera tamo nema (`kIsWeb`). `wa.me` na
-  webu otvara WhatsApp Web; `tel:` na webu nije provjeren, a launcher tamo uvijek javi uspjeh, pa
-  toast na webu ne hvata neuspjeh.
-- **Ručni test je obavezan (Hamzina odluka, 2026-10-20):** widget testovi glume launcher, pa se
-  58 ne smatra gotovim dok kontakt nije prošao rukom na simulatoru i na uređaju.
-- **Bez `canLaunchUrl`** ne trebaju Android `<queries>` ni iOS `LSApplicationQueriesSchemes`.
-  `launchUrl` vrati `false` ili baci, pa info toast kaže da uređaj nema aplikaciju za to.
-- Zamka „task 54 ne smije ukloniti Pozovi": 54 je u `polishing/` i nije počet, sudara danas nema.
+- **Već isporučeno:** prosjek i broj na Početnoj i na `/reviews` čitaju `salon_rating_summary`
+  (task 20, `salonRatingProvider`). Od ove stavke DoD-a ostaje samo osvježavanje poslije slanja.
+- **Postojeći redovi** (seed, budući import) nemaju termin ni identitet. Ostaju takvi; nova kolona je
+  nullable, a pisati bez termina može samo `service_role`.
+- **Ime autora** pravi baza iz `auth_identities.display_name` („Nedim H."), ne klijent — inače bi
+  klijent potpisao recenziju tuđim imenom.
+- **Admin danas nema ekran recenzija** i canvas ga ne crta. „Salon sakriva" traži mjesto u Meluri, pa
+  je `/more/reviews` po obrascu postojećih lista u „Još".
+- Push poslije termina danas vodi na `/appointments` (`send-push`, `route`); isto važi i za
+  `review_request` — tamo stoji „Ocijeni".
+- Zamka iz `security.md`: nova funkcija traži `revoke ... from public, anon`; `not (A and B)` sa
+  `client_salon_id()` je rupa kad nema headera.
 - Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client` prije `melos run analyze`.
 
 ## Istorija
 
-### 63 — Animacija učitavanja „Termin i sada" (PR otvoren, 2026-10-20)
+### 58 — Kontakt klijenta jednim tapom (PR otvoren, 2026-10-20)
 
-[PR #141](https://github.com/htuco/salon-booking-platform/pull/141). `AdminUcitavanje` i
-`AdminButtonBusy` crtaju znak iz `melura-ucitavanje.svg`; splash u `web/index.html` je isti znak u
-CSS-u, samo svijetao. **Ostaje:** merge; koralno dugme u čekanju se ne vidi, jedno visjenje
-prijave uz umjetno kašnjenje ide u 60.
-
-### 59 — Radnik u lokalnom seedu (PR otvoren, 2026-10-20)
-
-[PR #140](https://github.com/htuco/salon-booking-platform/pull/140). `radnik@beautystudiotravnik.test` /
-`admin123456`, `employee` vezan za Aminu (ne Emir: testovi osoblja vežu naloge za Emira i Amara).
-`./tool/test_supabase.sh` → `Result: PASS`. **Ostaje:** merge; Melura kao radnik na ekranu ide u 60.
+[PR #138](https://github.com/htuco/salon-booking-platform/pull/138), spreman za pregled.
+„Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina i profilu klijenta, samo uz broj; pravila u
+`apps/admin/lib/src/core/kontakt.dart`. Pregled zatvoren u grani (`+387 061 …` gubi nulu, prekratak
+broj nema link), admin 697. **Ostaje:** odobrenje i merge; sve tri akcije na Android uređaju.
 
 ### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
 

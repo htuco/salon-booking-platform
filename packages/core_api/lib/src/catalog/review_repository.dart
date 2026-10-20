@@ -10,8 +10,9 @@ import '../errors/errors.dart';
 /// objavljene recenzije aktivnog salona. Sakrivena recenzija i recenzija neaktivnog salona
 /// ne dolaze kao greška nego kao odsustvo reda — RLS ne vraća „zabranjeno".
 ///
-/// **Samo čitanje.** Ekran recenzija je read-only; u šemi klijent nema nijedan write grant
-/// nad `reviews`. Zato ovdje nema metode koja piše.
+/// **Pisanje ide samo kroz `submit_review`** (task 67). Klijent nema write grant nad
+/// tabelom: RPC traži njegov završen termin u salonu iz `x-salon-id` i sam pravi ime
+/// autora, pa [submit] ne šalje ni salon ni ime.
 class ReviewRepository {
   const ReviewRepository(this._client);
 
@@ -38,6 +39,9 @@ class ReviewRepository {
         .from('reviews')
         .select(_columns)
         .eq('salon_id', salonId)
+        // Politika osoblja (`staff_read`) vraća i sakrivene: vlasnik koji se istim nalogom
+        // prijavi u klijentsku app-u ne smije vidjeti drugu listu od javnosti.
+        .eq('is_published', true)
         .not('comment', 'is', null)
         .neq('comment', '')
         .order('created_at', ascending: false)
@@ -63,6 +67,40 @@ class ReviewRepository {
 
         return row == null ? null : ratingSummaryFromRow(row);
       });
+
+  /// Ocjene prijavljenog klijenta u salonu iz `x-salon-id`, kao `appointment_id → ocjena`,
+  /// i za sakrivene recenzije.
+  ///
+  /// **RPC, ne upit nad tabelom.** `reviews.appointment_id` i `auth_identity_id` nemaju
+  /// grant ni za koga osim `service_role` (task 67, `security.md`): po identitetu bi vlasnik
+  /// jednog salona našao recenzije svojih klijenata u drugom. `my_review_ratings` vraća samo
+  /// parove za identitet iz tokena.
+  Future<Map<String, int>> myRatings() => guard(() async {
+    final rows = await _client.rpc<List<dynamic>>('my_review_ratings');
+    return ratingsFromRows(rows.cast<Map<String, dynamic>>());
+  });
+
+  /// Ocjena završenog termina, 1–5, uz opcionalan tekst.
+  ///
+  /// Druga ocjena istog termina stiže kao [ConflictError] (`PT409`), termin koji salon još
+  /// nije označio završenim kao [ServerError] sa porukom baze (`PT400`).
+  Future<void> submit({
+    required String appointmentId,
+    required int rating,
+    String? comment,
+  }) => guard(() async {
+    await _client.rpc<dynamic>(
+      'submit_review',
+      params: {
+        'p_appointment_id': appointmentId,
+        'p_rating': rating,
+        'p_comment': comment,
+      },
+    );
+  });
+
+  /// Najduži tekst koji baza prima.
+  static const maxCommentLength = 1000;
 }
 
 /// Mapira `reviews` red na [Review].
@@ -93,5 +131,18 @@ SalonRatingSummary ratingSummaryFromRow(Map<String, dynamic> row) {
     });
   } catch (error) {
     throw MappingError('Neispravan `salon_rating_summary` red', cause: error);
+  }
+}
+
+/// Mapira redove `my_review_ratings` na `appointment_id → ocjena`.
+@visibleForTesting
+Map<String, int> ratingsFromRows(List<Map<String, dynamic>> rows) {
+  try {
+    return {
+      for (final row in rows)
+        row['appointment_id'] as String: (row['rating'] as num).toInt(),
+    };
+  } catch (error) {
+    throw MappingError('Neispravan `my_review_ratings` red', cause: error);
   }
 }

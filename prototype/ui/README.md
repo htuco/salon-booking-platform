@@ -191,6 +191,12 @@ nove vrijednosti. Kartica „Čuvamo vam" stoji i na prijavi, jer je prijava dio
 Kad handoff dobije te ekrane, mjerodavan je on — ovo je popuna, ne odluka.
 Kako izgledaju danas: [`docs/screenshots/task-13-otp-kod.png`](../../docs/screenshots/task-13-otp-kod.png).
 
+**Ocjena posjeta (task 67) nema svoj ekran.** `13-recenzije.png` na dnu `5m` crta „Ostavi
+recenziju", ali recenzija je vezana za završen termin, pa dugme stoji na kartici tog termina u
+`5h` („Ocijeni", odnosno „Vaša ocjena" uz zvjezdice). Sheet je izveden iz istih tokena kao sheet
+prijave slike: naslov, rečenica šta se objavljuje, pet zvjezdica iz `StarRating` (48px meta),
+polje za tekst i `AppButton`. Kartica na `5m` dobija tihu vezu „Prijavi recenziju".
+
 ### Tri odstupanja na `5n` („O aplikaciji"), sva iz istog razloga
 
 Ekran u storeu ne smije tvrditi ono što aplikacija ne radi, pa handoff ovdje nije prepisan doslovno:

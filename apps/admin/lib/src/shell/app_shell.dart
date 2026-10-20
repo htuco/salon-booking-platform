@@ -36,7 +36,7 @@ class AppShell extends ConsumerWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  /// Trenutna putanja — samo za oznaku u sidebaru, koji ima osam stavki na četiri grane.
+  /// Trenutna putanja — samo za oznaku u sidebaru, koji ima devet stavki na četiri grane.
   /// Donja traka je ne čita: njen aktivni tab je [StatefulNavigationShell.currentIndex].
   final String lokacija;
 

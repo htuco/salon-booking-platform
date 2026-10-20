@@ -611,7 +611,11 @@ ne u repou.
 ## Edge Functions na hostovanom projektu
 
 Migracija ne donosi funkciju sa sobom. Nova ili izmijenjena funkcija ide zasebno, **poslije**
-`supabase db push` (funkcija zove RPC-eve koje migracija pravi):
+`supabase db push` (funkcija zove RPC-eve koje migracija pravi). **Obrnuto kad migracija funkciji
+šalje nešto novo** — nova vrijednost `notification_type`, novo polje u redu koji funkcija čita:
+tada funkcija ide **prije** migracije i mora raditi i nad starom šemom. Stari `send-push` na
+nepoznat tip baci `unsupported_type`, red završi `failed` bez ponavljanja i poruka je izgubljena
+(task 67, `review_request`).
 
 ```sh
 supabase functions deploy accept-staff-invite   # task 45 — nalog osoblja iz poziva

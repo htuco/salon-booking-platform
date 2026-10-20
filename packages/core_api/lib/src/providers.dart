@@ -22,6 +22,7 @@ import 'catalog/salon_repository.dart';
 import 'catalog/service_repository.dart';
 import 'catalog/settings_repository.dart';
 import 'catalog/staff_customer_repository.dart';
+import 'catalog/staff_review_repository.dart';
 import 'catalog/working_hours_repository.dart';
 import 'vertical/vertical_repository.dart';
 import 'push/push_providers.dart';
@@ -357,6 +358,11 @@ final staffAppointmentRepositoryProvider = Provider<StaffAppointmentRepository>(
 /// Adresar salona, čitan iz admina.
 final staffCustomerRepositoryProvider = Provider<StaffCustomerRepository>(
   (ref) => StaffCustomerRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Recenzije salona u adminu (task 67): čitanje i sakrivanje, bez mijenjanja.
+final staffReviewRepositoryProvider = Provider<StaffReviewRepository>(
+  (ref) => StaffReviewRepository(ref.watch(supabaseClientProvider)),
 );
 
 /// Trenutno prijavljen član osoblja, ili `null`.

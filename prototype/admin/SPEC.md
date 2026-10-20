@@ -150,6 +150,10 @@ obje ljuske crtaju brojač, pa je i on dio ljuske, ne ekrana.
   membershipa. Taj ekran je buduća funkcija, ne dozvola za client-side izbor proizvoljnog salona.
 - Prototip prikazuje stanja i namjeravane akcije, ali ne zamjenjuje postojeće RPC tokove za potvrdu,
   odbijanje, otkazivanje, no-show i ručno kreiranje termina.
+- **Recenzije (`/more/reviews`, task 67) canvas ne crta.** Ekran je lista kartica po obrascu
+  Klijenata: autor, datum, zvjezdice, tekst ili „Samo ocjena, bez teksta", i jedno dugme
+  „Sakrij" / „Vrati". U sidebaru je deveta stavka, iza Klijenata. Polja za izmjenu nema, jer salon
+  tekst ne smije mijenjati (`set_review_published` dira samo `is_published`).
 - Social login se ne dodaje adminu. Prijava ostaje email+password i običan klijentski nalog ne
   smije proći admin guard.
 - Tekstovi i primjeri u canvasu su demo sadržaj. Tajne, stvarne lozinke i administratorski tokeni
