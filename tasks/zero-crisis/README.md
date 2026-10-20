@@ -26,7 +26,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [65](65-limit-otvorenih-zahtjeva.md) | Limit otvorenih zahtjeva po klijentu (spam) | — | 0,5 dana |
 | [56](56-podsjetnici-d1-h3.md) | Push podsjetnici D-1 i H-3 | — | 2 dana |
 | [66](66-registracija-ime-telefon-tos.md) | Registracija: ime, telefon i uslovi (checkbox) 🟡 | — | 2 dana |
-| [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom | 66 | 0,5–1 dan |
+| [58](58-kontakt-jednim-tapom.md) | Kontakt klijenta jednim tapom 🟡 | 66 | 0,5–1 dan |
 | [67](67-pisanje-recenzija.md) | Pisanje recenzija | 66 | 2–3 dana |
 | [68](68-lista-cekanja.md) | Lista čekanja | 64 | 3–4 dana |
 | [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri 🟡 | — | 2–3 dana |
@@ -89,14 +89,14 @@ Spojen ([PR #133](https://github.com/htuco/salon-booking-platform/pull/133)) i d
 2026-10-13: migracija i `send-push` na hostovanom, a prvi prolaz `expire-pending` je `succeeded`.
 **Ostaje:** istekli zahtjev viđen uživo u Meluri i na uređaju.
 
-### 66 — Registracija: ime, telefon i uslovi 🟡 (2026-10-13)
+### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
 
 Grana `feat/registracija-profil`, [PR #136](https://github.com/htuco/salon-booking-platform/pull/136),
 ADR-0030. Registracija sa imenom, telefonom i checkboxom; „Dopuni profil" poslije Apple/Google i za
 novu verziju uslova; profil popunjava adresar svakog salona. Pregled (Eniz) zatvoren 2026-10-19:
 profil se traži prije slanja termina, kasni sudar na telefonu se preskače (`20261019120000`).
 pgTAP 888, klijent 667; uživo: Melura prikazuje ime i telefon novog klijenta. **Ostaje:**
-odobrenje, merge, `supabase db push`, „Dopuni profil" poslije prave Apple/Google prijave na uređaju.
+`supabase db push` za `20261019120000` (Hamza), „Dopuni profil" poslije prave Apple/Google prijave na uređaju.
 
 ### 56 — Push podsjetnici D-1 i H-3, odložen (2026-10-13)
 
@@ -110,3 +110,12 @@ su u status bloku task fajla.
 ≥ 840 px mreža od 7 kolona (`7a`/`7c`), na telefonu lista po danima (`7b`); tap na termin otvara
 detalj, tap na prazno (od danas) nudi ručni termin, tap na zaglavlje otvara dan. Dva pregleda
 zatvorena u grani; admin 677, viđeno uživo na demo buildu na 1440, 1024 i 402. Deploy ne treba.
+
+### 58 — Kontakt klijenta jednim tapom 🟡 (2026-10-19)
+
+Grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/salon-booking-platform/pull/138). „Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina (`3n`) i
+profilu klijenta (`3e`), samo uz broj; lokalni `061 …` ide u link kao `+387 61 …`, a na webu nema
+Vibera. Admin 701, mutacije obaraju testove, a na web demou „Poruka" otvara pravi WhatsApp
+broj. Dva pregleda 2026-10-20 zatvorena u grani (`+387 061 …` gubi nulu, prekratak i strani broj
+bez `+` nemaju link, sheet „Poruka" skrola u landscapeu; `tel:` na webu nije provjeren).
+**Ostaje (obavezno):** ručni test sve tri akcije na simulatoru/emulatoru i na pravom uređaju.

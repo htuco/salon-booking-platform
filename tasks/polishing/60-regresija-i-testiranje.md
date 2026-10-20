@@ -20,6 +20,10 @@ zapisuju u tabelu ispod.
       i slika iz kamere u „Moj profil" (task 61)
 - [ ] Ostaci iz `polishing/` koji traže uređaj ili hostovani: Danas kao radnik na telefonu (55), toast
       na hostovanom sa pravim nalogom (62), snimci beauty i health tenanata na 402 (52, 53)
+- [ ] Ostaci iz `zero-crisis/` koji traže uređaj: kontakt jednim tapom (58) na iOS i Androidu, na
+      simulatoru/emulatoru i na pravom uređaju — „Pozovi", „Poruka" → Viber, „Poruka" → WhatsApp iz
+      detalja termina i profila klijenta, broj sa nulom i bez, uređaj bez Vibera → toast (koraci u
+      statusu taska 58)
 - [ ] Push u oba smjera na Android uređaju: novi zahtjev salonu, potvrda i podsjetnik klijentu
 - [ ] Izolacija: `supabase test db` + oba Deno REST testa zeleni; vlasnik A ne vidi ništa od B
 - [ ] Širine 1440, 2560 i 402 za admin; telefon za klijenta
