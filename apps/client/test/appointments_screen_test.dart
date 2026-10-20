@@ -426,7 +426,7 @@ void main() {
         expect(find.text('Zakaži'), findsOneWidget);
         expect(find.text('Nemate zakazanih termina.'), findsOneWidget);
 
-        await tester.tap(find.text('Odjavi se sa liste'));
+        await tester.tap(find.text('Ukloni'));
         await tester.pumpAndSettle();
 
         verify(() => lista.leave('w1')).called(1);

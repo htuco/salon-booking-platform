@@ -576,6 +576,9 @@
   "waitlistFailed": "Upis na listu čekanja nije uspio. Pokušajte ponovo.",
   "@waitlistFailed": { "description": "Upis ili odjava nisu prošli, a baza nije dala svoju rečenicu." },
 
+  "waitlistRemove": "Ukloni",
+  "@waitlistRemove": { "description": "Odjava sa liste čekanja u kartici upisa (Moji termini). Kraće od waitlistLeave: dva dugmeta stoje u pola širine na 402 px, a naslov sekcije već kaže šta se uklanja." },
+
   "waitlistSectionTitle": "Lista čekanja",
   "@waitlistSectionTitle": { "description": "Naslov sekcije upisa u Mojim terminima, iznad predstojećih." },
 

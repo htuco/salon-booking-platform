@@ -112,7 +112,7 @@ class _UpisState extends ConsumerState<_Upis> {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: AppButton(
-                  label: l10n.waitlistLeave,
+                  label: l10n.waitlistRemove,
                   variant: AppButtonVariant.outline,
                   loading: _radi,
                   onPressed: _odjavi,
