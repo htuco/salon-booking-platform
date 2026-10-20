@@ -11,11 +11,12 @@ U toku (grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/sa
 - [x] `url_launcher` u admin, `core/kontakt.dart` (normalizacija `+387`, URI, kanali po platformi)
 - [x] Detalj termina (`3n`) i profil klijenta (`3e`): „Pozovi" i „Poruka" (sheet Viber / WhatsApp)
 - [x] Bez broja nema akcije; na webu nema Vibera, „Poruka" ide pravo na WhatsApp
-- [x] Testovi: admin 697, `kontakt_test` + grupe u `appointment_detail_test` i `clients_screen_test`
+- [x] Testovi: admin 701, `kontakt_test` + grupe u `appointment_detail_test` i `clients_screen_test`
 - [x] `prototype/admin/SPEC.md`, `docs/01` §6.3, doc komentar `appointment_detail_screen.dart`
 - [x] Web demo: „Poruka" otvara WhatsApp za `+38761552104`
-- [x] Draft PR protiv `develop`, CI zelen, pregled (2026-10-20, nalazi popravljeni, admin 697)
-- [ ] Uživo na Android uređaju sve tri akcije (`tool/run_live_demo.sh admin -d <device-id>`)
+- [x] Draft PR protiv `develop`, CI zelen, dva pregleda (2026-10-20, nalazi popravljeni, admin 701)
+- [ ] **Obavezno:** ručni test sve tri akcije na iOS simulatoru ili Android emulatoru **i** na pravom
+      uređaju (`tool/run_live_demo.sh admin -d <device-id>`, koraci u statusu taska 58)
 
 ## Napomene
 
@@ -26,8 +27,11 @@ U toku (grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/sa
   tržišta i zapisana je u komentaru `medjunarodniBroj`. Baza se ne mijenja.
 - **„Poruka" je sheet sa dva kanala**, jer canvas (`3n`, `adminv2/profil`) crta jedno dugme. Ovu
   odluku treba potvrditi u pregledu PR-a.
-- **Web:** `viber://` se na webu ne može provjeriti, pa Vibera tamo nema (`kIsWeb`). `tel:` i
-  `https://wa.me/` na webu rade.
+- **Web:** `viber://` se na webu ne može provjeriti, pa Vibera tamo nema (`kIsWeb`). `wa.me` na
+  webu otvara WhatsApp Web; `tel:` na webu nije provjeren, a launcher tamo uvijek javi uspjeh, pa
+  toast na webu ne hvata neuspjeh.
+- **Ručni test je obavezan (Hamzina odluka, 2026-10-20):** widget testovi glume launcher, pa se
+  58 ne smatra gotovim dok kontakt nije prošao rukom na simulatoru i na uređaju.
 - **Bez `canLaunchUrl`** ne trebaju Android `<queries>` ni iOS `LSApplicationQueriesSchemes`.
   `launchUrl` vrati `false` ili baci, pa info toast kaže da uređaj nema aplikaciju za to.
 - Zamka „task 54 ne smije ukloniti Pozovi": 54 je u `polishing/` i nije počet, sudara danas nema.

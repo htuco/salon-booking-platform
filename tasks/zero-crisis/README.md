@@ -115,6 +115,7 @@ zatvorena u grani; admin 677, viđeno uživo na demo buildu na 1440, 1024 i 402.
 
 Grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/salon-booking-platform/pull/138). „Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina (`3n`) i
 profilu klijenta (`3e`), samo uz broj; lokalni `061 …` ide u link kao `+387 61 …`, a na webu nema
-Vibera. Admin 697, dvije mutacije obaraju testove, a na web demou „Poruka" otvara pravi WhatsApp
-broj. Pregled 2026-10-20 zatvoren u grani (`+387 061 …` gubi nulu, prekratak broj nema link).
-**Ostaje:** sve tri akcije na Android uređaju.
+Vibera. Admin 701, mutacije obaraju testove, a na web demou „Poruka" otvara pravi WhatsApp
+broj. Dva pregleda 2026-10-20 zatvorena u grani (`+387 061 …` gubi nulu, prekratak i strani broj
+bez `+` nemaju link, sheet „Poruka" skrola u landscapeu; `tel:` na webu nije provjeren).
+**Ostaje (obavezno):** ručni test sve tri akcije na simulatoru/emulatoru i na pravom uređaju.
