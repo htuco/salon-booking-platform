@@ -184,8 +184,10 @@ Prijava lokalno, iz `seed.sql` (task 23) — **samo lokalni demo, nikad produkci
 | `radnik@beautystudiotravnik.test` | Beauty Studio Travnik | radnik (`employee`), vezan za Aminu (task 59) |
 
 Lozinka je `admin123456` za sva tri. Prijava drugim nalogom je i **najbrži dokaz izolacije**: isti
-build, drugi vlasnik, nijedan tuđi termin. Radnik je u beautyju, ne na Emiru, jer testovi vežu
-svoje naloge za Emira i Amara, a jedan radnik ima jedan nalog (v. komentar u `supabase/seed.sql`).
+build, drugi vlasnik, nijedan tuđi termin. Radnik je u beautyju, ne na Emiru, jer testovi osoblja
+(pgTAP `020`–`025` i dva REST testa osoblja; spisak daje
+`grep -rlE "'employee'|\"employee\"" supabase/tests/`) vežu svoje naloge i pozive za Emira i Amara,
+a jedan radnik ima jedan nalog (v. komentar u `supabase/seed.sql`).
 
 Bez Supabase define-ova app se svejedno digne, ali prijava ne radi — `AdminEnv.hasSupabase` je
 tada `false` i Supabase klijent se ne inicijalizuje. To je namjerno: pad prije `runApp` bi dao

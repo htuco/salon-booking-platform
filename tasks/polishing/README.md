@@ -36,5 +36,5 @@ Folder otvoren 2026-10-12. Starija istorija ovih taskova je u status blokovima
 [PR #140](https://github.com/htuco/salon-booking-platform/pull/140). `supabase db reset` daje
 `radnik@beautystudiotravnik.test` / `admin123456`, radnika vezanog za Aminu (beauty). Ne Emir:
 testovi vežu svoje naloge za Emira i Amara, a jedan radnik ima jedan nalog. `./tool/test_supabase.sh`
-exit 0 (pgTAP 888, svi REST); prijava kroz GoTrue daje `employee` i dva termina salona B.
+exit 0 (pgTAP `Result: PASS`, svi REST); prijava kroz GoTrue daje `employee` i dva termina salona B.
 **Ostaje:** merge; Melura kao radnik na ekranu ide u 60.

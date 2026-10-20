@@ -10,15 +10,17 @@ Gotov u grani (`chore/radnik-u-seedu`, [PR #140](https://github.com/htuco/salon-
 ## Ciljevi
 
 - [x] `radnik@beautystudiotravnik.test` / `admin123456` u `supabase/seed.sql`, `employee`, vezan za Aminu
-- [x] `./tool/test_supabase.sh` exit 0 — pgTAP 888 (isto kao `develop`), svi REST testovi
+- [x] `./tool/test_supabase.sh` exit 0 — pgTAP `Result: PASS` (nijedna od 888 asercija nije pala),
+  svi REST testovi
 - [x] Prijava kroz GoTrue: `role = employee`, dva termina salona B, nijedan iz A
 - [x] `workflows.md` (tabela lokalnih naloga) i `/verify` navode radnika
 - [ ] Pregled i merge PR #140
 
 ## Napomene
 
-- **Amina, ne Emir** (odstupanje od DoD-a): `users_employee_unique` + testovi `021`, `025`,
-  `rest_employee_izolacija.ts`, `rest_pozivi_osoblja.ts` vežu naloge za Emira i Amara.
+- **Amina, ne Emir** (odstupanje od DoD-a): `users_employee_unique` + testovi osoblja (pgTAP
+  `020`–`025`, `rest_employee_izolacija.ts`, `rest_pozivi_osoblja.ts`; spisak daje
+  `grep -rlE "'employee'|\"employee\"" supabase/tests/`) vežu naloge i pozive za Emira i Amara.
 - `deno` nije na PATH-u Git Bash-a na ovoj mašini: `export PATH="$HOME/.deno/bin:$PATH"` prije
   `./tool/test_supabase.sh`, inače REST dio padne sa `deno: command not found` (exit 127).
 - **54** čeka odluku vlasnika proizvoda (lista šta se uklanja), **60** čeka 71 i 87.

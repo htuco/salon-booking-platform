@@ -31,11 +31,14 @@ Gotov, grana `chore/radnik-u-seedu`.
 postojeći `do` blok, proširen na treći id.
 
 **Zašto Amina, a ne Emir.** `users_employee_unique` dozvoljava jedan nalog po radniku, a testovi
-vežu svoje naloge za Emira i Amara: `021_uloga_employee`, `025_moj_profil`,
-`rest_employee_izolacija.ts` i `rest_pozivi_osoblja.ts`. Seed nalog na Emiru bi oborio sva četiri,
-a REST testove i trajno, jer ne rollbackuju. Treći barber u salonu A bi pomjerio brojače (`001`
-broji 10 aktivnih radnika, availability „bilo ko"). Aminu ne veže nijedan test (samo je koriste kao
-radnika drugog salona), a oba seed termina salona B su njena — radnik odmah vidi svoje termine.
+osoblja vežu svoje naloge i pozive za Emira i Amara: pgTAP `020`–`025`,
+`rest_employee_izolacija.ts` i `rest_pozivi_osoblja.ts` (spisak daje
+`grep -rlE "'employee'|\"employee\"" supabase/tests/`). Seed nalog na Emiru bi oborio svih
+osam, a REST testove i trajno, jer ne rollbackuju. Treći barber u salonu A bi pomjerio brojače
+(`001` broji 10 aktivnih radnika, availability „bilo ko"). Aminu ne veže nijedan test (samo je
+koriste kao radnika drugog salona), a oba seed termina salona B su njena — radnik odmah vidi svoje
+termine. To vrijedi dok termini u seedu biraju radnika `order by name limit 1` i „Amina" <
+„Lejla".
 
 **Dokaz.**
 
@@ -57,8 +60,8 @@ GET /rest/v1/appointments  → 2 reda, oba salon B, employee_name "Amina" (Lejla
 GET /rest/v1/users         → [{"role":"employee","salon_id":"…0001","employee_id":"20000000-…-000000000003"}]
 ```
 
-Nijedan red salona A. Brojevi su isti kao na `develop`-u (888), dakle seed nije pomjerio nijednu
-aserciju.
+Nijedan red salona A. Da seed nije pomjerio nijednu aserciju dokazuje `Result: PASS` (nijedna
+asercija nije pala), ne broj 888 — to je plan iz test fajlova i ne mijenja se od seeda.
 
 **Nije viđeno:** Melura prijavljena kao radnik na ekranu. To je dio regresije (60), za koju je ovaj
 nalog i napravljen.

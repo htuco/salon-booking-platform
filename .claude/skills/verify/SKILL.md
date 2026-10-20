@@ -54,7 +54,9 @@ done
 
 Admin ekran se gleda u **obje uloge**: poslije `supabase db reset` seed daje vlasnika
 (`admin@beautystudiotravnik.test`) i radnika (`radnik@beautystudiotravnik.test`) istog salona,
-lozinka `admin123456`. Radnik vidi samo Danas, kalendar i svoje termine. Tabela naloga je u
+lozinka `admin123456`. Radnik vidi samo rute iz `kRuteRadnika`
+(`apps/admin/lib/src/core/router/admin_router.dart`): Danas, kalendar, zahtjeve i termine — samo
+svoje — plus Još i Profil; ručno zakazivanje i blokade ne. Tabela naloga je u
 `.claude/docs/workflows.md`.
 
 Dodao si paket? Provjeri da je u `workspace:` listi root `pubspec.yaml`-a — paket van liste
