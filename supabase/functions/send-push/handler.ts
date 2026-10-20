@@ -1,7 +1,8 @@
 export type PushJob = {
   id: string;
   salon_id: string;
-  appointment_id: string;
+  // NULL za ponudu liste cekanja (task 68): ona je vezana za upis, ne za tudji termin.
+  appointment_id: string | null;
   type: string;
   fcm_token: string;
   staff: boolean;
@@ -80,10 +81,14 @@ export function messageFor(job: PushJob) {
     expired: "Salon nije odgovorio na vrijeme",
     // Salon je termin označio završenim (task 67). „Ocijeni" stoji u Mojim terminima.
     review_request: "Kako je bilo?",
+    // Lista cekanja (task 68). Ne „termin je vaš": mjesto dobija ko prvi zakaže (ADR-0031).
+    waitlist_offer: "Oslobodilo se mjesto",
   };
   const bodies: Record<string, string> = {
     // Bez riječi „termin": ona zavisi od vertikale, a push je isti za sve tenante.
     review_request: "Ocijenite posjet u aplikaciji.",
+    waitlist_offer:
+      "Na dan na koji čekate ima slobodnog vremena. Zakažite u aplikaciji.",
   };
   if (!(job.type in titles)) throw new Error("unsupported_type");
   return {
@@ -93,9 +98,11 @@ export function messageFor(job: PushJob) {
         title: titles[job.type],
         body: bodies[job.type] ?? "Otvorite aplikaciju za detalje.",
       },
+      // FCM `data` prima samo stringove, pa ponuda bez termina polje izostavlja. Klijent
+      // prazno polje vec tretira kao „nema termina" (`PushService._messageAppointment`).
       data: {
         notification_id: job.id,
-        appointment_id: job.appointment_id,
+        ...(job.appointment_id ? { appointment_id: job.appointment_id } : {}),
         salon_id: job.salon_id,
         route: "/appointments",
       },
