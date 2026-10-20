@@ -223,7 +223,8 @@ odgovora, da nema bijelog flasha.
 - **Platforma:** `vertical_packs`, `salons`, `salon_builds`, `users`
 - **Katalog salona:** `services`, `employees`, `employee_services`, `working_hours`, `salon_settings`
 - **Ljudi i uređaji:** `auth_identities` (globalno), `customers` (per-salon), `devices`
-- **Rad:** `appointments`, `blocked_slots`, `notification_logs`
+- **Rad:** `appointments`, `blocked_slots`, `notification_logs`, `waitlist_entries` (lista čekanja,
+  task 68 — bez app grantova, sve kroz RPC; ponuda u logu je vezana za upis, ne za termin)
 - **Sadržaj salona:** `reviews` (+ pogled `salon_rating_summary`), od taska 67 vezan za završen termin; prijave sadržaja u `content_reports`
 
 Dvije stvari koje se lako previde:

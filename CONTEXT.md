@@ -108,6 +108,20 @@ Minimalni razmak između dva termina. Ulazi u provjeru presjeka kao dio zauzetog
 (`[start, start + trajanje + buffer)`), ne kao zaseban zapis.
 _Izbjegavaj_: pauza (pauza je u radnom vremenu i pripada rasporedu).
 
+**Pun dan**
+Dan koji radi, a nema nijednog slobodnog vremena za uslugu (i radnika) — dan na koji bi bilo
+slobodnog vremena da nema termina. Nije isto što i dan bez slobodnih vremena: neradni dan, zatvoren
+radnik, blokiran dan i dan na koji je prošlo radno vrijeme takođe nemaju slobodnih vremena, ali
+nisu puni. Računa ga backend (`waitlist_full_dates`), kao i dostupnost.
+_Izbjegavaj_: popunjen termin, zauzet dan.
+
+**Upis na listu čekanja** (`waitlist_entry`)
+Klijent čeka na pun dan za uslugu, opcionalno kod radnika (task 68, ADR-0031). Kad se termin tog
+dana oslobodi i mjesto za njegovu uslugu stvarno otvori, dobija obavijest (`waitlist_offer`).
+**Upis ne drži mjesto** — termin dobija ko prvi zakaže. Važi do kraja svog dana, a nestaje kad
+klijent zakaže tu uslugu tog dana. Salon vidi samo broj upisanih po danu.
+_Izbjegavaj_: rezervacija na čekanju (miješa se sa `pending`), lista čekanja kao naziv jednog upisa.
+
 ## Identitet
 
 **`AuthIdentity`**

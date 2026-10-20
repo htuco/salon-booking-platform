@@ -4,33 +4,33 @@ Puni task: [tasks/zero-crisis/68-lista-cekanja.md](zero-crisis/68-lista-cekanja.
 
 ## Status
 
-U toku (grana `feat/lista-cekanja`, 2026-10-20). Odluke su zapisane kao **prijedlog** u
-[ADR-0031](../docs/adr/0031-lista-cekanja-push-svima-prvi-zakaze.md); Hamza ih odobrava u PR-u
-(`RASPODJELA.md`), a kod ih prati.
+U toku (grana `feat/lista-cekanja`, [PR #142](https://github.com/htuco/salon-booking-platform/pull/142),
+2026-10-20). Kod, testovi i provjera uživo su gotovi. Ostaju odluka o ADR-u, pregled, CI i deploy.
 
 ## Ciljevi
 
-- [ ] ADR (prijedlog → Hamza): ko dobija oslobođen termin (push svima pa „prvi zakaže" ili
-      čuvanje X minuta), šta je upis (dan + usluga, opcionalno radnik i dio dana), koliko upis važi
-      i koliko upisa smije imati jedan klijent
-- [ ] Migracija: tabela upisa sa `salon_id`, RLS (klijent samo svoje, salon samo svoje) i RPC-ovi
-      za upis, odjavu i „moje upise"
-- [ ] Okidač: termin oslobođen otkazivanjem, odbijanjem ili istekom → push upisanima, **jednom po
-      oslobađanju**, i samo ako se slot stvarno otvorio za njihovu uslugu
-- [ ] `send-push`: tekst i ruta za `waitlist_offer`; `my_notifications` ga prikazuje
-- [ ] Klijent: „Obavijesti me kad se oslobodi" na punom danu u koraku 3; upisi u „Moji termini"
-      sa odjavom
-- [ ] Melura: broj upisanih po danu
-- [ ] pgTAP sa negativnim testovima (tuđi salon, tuđi klijent, anon) i mutacijama
-- [ ] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `CONTEXT.md`
-      (pojam „upis na listu čekanja"), `docs/01` §12, `prototype/ui/README.md`
-- [ ] Uživo na lokalnom stacku (web 402) pa na Androidu
+- [x] ADR-0031 (prijedlog): push svima kojima se mjesto otvorilo, prvi zakaže; dan + usluga +
+      opcionalno radnik; važi do kraja dana; najviše tri upisa; salon vidi samo broj
+- [x] Migracija `20261020140000_lista_cekanja`: `waitlist_entries` bez app granta, RPC-ovi,
+      `private.candidate_slots` kao jedino pravilo slotova, okidači otkazivanja i gašenja upisa
+- [x] Ponuda vezana za upis (`notification_logs.waitlist_entry_id`), `my_notifications`,
+      `claim_push_notifications` i `send-push` je znaju
+- [x] Klijent: pun dan je treće stanje kalendara, panel upisa, sekcija u „Moji termini", stavka u
+      „Obavijesti"; demo ima punu subotu
+- [x] Melura: „Lista čekanja: N" za dan, samo vlasnik
+- [x] pgTAP `033` (53, 13 mutacija), REST bez tokena, Dart testovi u svim paketima
+- [x] Dokumenti: `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `CONTEXT.md`, `docs/01`
+      §12, `docs/06` §8.2–8.3, `prototype/ui/README.md`, `prototype/admin/SPEC.md`
+- [x] Uživo (lokalni stack, web 402 i 1440): upis → otkazivanje → ponuda → „Ukloni"; Melura broj
+- [ ] Odluka o ADR-0031 (Hamza), pregled, CI zelen, merge u `develop`
+- [ ] Deploy (Hamza), **ovim redom**: `supabase functions deploy send-push`, pa `supabase db push`
+      (provjere u task fajlu)
+- [ ] Push `waitlist_offer` na Android uređaju
 
 ## Napomene
 
-- **Ništa nije isporučeno.** Nema tabele, RPC-a ni ekrana. Jedini tragovi: red „Lista čekanja" u
-  admin postavkama vodi u „uskoro" (`settings_screen.dart` ~1225), a testovi obavijesti već koriste
-  `waitlist_offer` kao primjer nepoznatog tipa (dobija naslov „Obavijest").
+- Red „Lista čekanja" u admin postavkama i dalje vodi u „uskoro" (`settings_screen.dart` ~1225).
+  O njemu odlučuje task 54. Prekidača po salonu nema (ADR-0031).
 - **Dizajn ne postoji.** Ni `prototype/ui/` ni `prototype/beauty/` ne crtaju listu čekanja; admin
   canvas `3i` crta samo prekidač u postavkama. Oblik se slaže iz postojećih komponenti (empty state
   u koraku 3, kartica u „Moji termini"), a prijedlog oblika ide u isti PR na Hamzino odobrenje.
@@ -41,10 +41,9 @@ U toku (grana `feat/lista-cekanja`, 2026-10-20). Odluke su zapisane kao **prijed
   termin za njegov uređaj. Treba nova veza (npr. nullable `appointment_id` + `waitlist_entry_id`
   sa `check` da je tačno jedno postavljeno), a `my_notifications` i `send-push` je moraju znati.
   Tekst pusha ne smije nositi ništa o tuđem terminu osim dana, vremena i usluge.
-- **Zamka: prazan dan nije nužno pun dan.** Korak 3 prikazuje `bookingDayFull` kad
-  `get_available_slots` vrati prazno, a to je i neradni dan, zatvoren radnik i dan van
-  `max_advance_booking_days`. Dugme za listu čekanja smije stajati samo na danu koji radi a
-  popunjen je; funkcija danas tu razliku ne daje.
+- **Prazan dan nije nužno pun dan** — riješeno sa `waitlist_full_dates` (dan koji bi imao slobodnog
+  vremena bez termina). Usput je nađeno da kalendar nije dao tapnuti dan bez slobodnog vremena,
+  pa je `CalendarDay` dobio stanje `full`.
 - **Gdje se termin oslobađa:** `private.queue_appointment_push()` (zadnja verzija u
   `20261020100000_pisanje_recenzija.sql`) već grana `cancelled` po `cancelled_by`
   (`salon` iz `pending` = odbijen, `customer`, `system` = istek). Okidač za listu čekanja ide uz

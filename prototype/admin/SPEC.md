@@ -154,6 +154,12 @@ obje ljuske crtaju brojač, pa je i on dio ljuske, ne ekrana.
   Klijenata: autor, datum, zvjezdice, tekst ili „Samo ocjena, bez teksta", i jedno dugme
   „Sakrij" / „Vrati". U sidebaru je deveta stavka, iza Klijenata. Polja za izmjenu nema, jer salon
   tekst ne smije mijenjati (`set_review_published` dira samo `is_published`).
+- **Lista čekanja (task 68) canvas ne crta.** Kalendar dana vlasniku pokazuje „Lista čekanja: N"
+  (ikona zvona, `bodySmall`, `textSecondary`) desno u zaglavlju dana na desktopu, a na telefonu
+  ispod trake dana. Dan bez upisa ne crta ništa, radnik nikad. Imena i usluge se ne prikazuju
+  (`waitlist_demand` daje samo broj, ADR-0031). Red „Lista čekanja" u Postavkama ostaje „uskoro"
+  dok task 54 ne odluči o njemu: prekidač po salonu ne postoji.
+  Snimak: [`docs/screenshots/task-68-melura.png`](../../docs/screenshots/task-68-melura.png).
 - Social login se ne dodaje adminu. Prijava ostaje email+password i običan klijentski nalog ne
   smije proći admin guard.
 - Tekstovi i primjeri u canvasu su demo sadržaj. Tajne, stvarne lozinke i administratorski tokeni
