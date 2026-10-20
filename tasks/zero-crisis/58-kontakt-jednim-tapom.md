@@ -37,6 +37,13 @@ U toku, grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/sa
   (normalizacija, URI, kanali) i grupe „kontakt jednim tapom (task 58)" u `appointment_detail_test`
   (6) i `clients_screen_test` (2). Mutacije: dugmad i bez broja → pada „broj od kojeg nema linka se
   ne nudi"; Viber na webu → pada „na webu nema Vibera".
+- **Pregled (2026-10-20):** `dart-reviewer` i `flutter-ui-reviewer` nisu našli ništa kritično.
+  Popravljeno je sljedeće: `+387 061 …` i `00387 061 …` gube nulu; BiH broj sa pozivnim koji
+  ima manje od 11 cifara nema link (`12345` ga je dobijao); izuzetak launchera ide u log i ima
+  svoj test; u sheetu oba kanala više nemaju istu ikonu; bez broja „Profil" zauzima trećinu
+  reda. Admin `+697: All tests passed!`, `flutter analyze` bez nalaza. Svjesno je ostavljeno:
+  broj u sheetu je normalizovan (to je broj koji se bira), na dugmadi nema `Semantics` sa
+  imenom klijenta, a `height: 50` u redu iz `3n` je literal (bio je i prije).
 - **Uživo (web demo, 402 px):** detalj termina pokazuje „Pozovi · Poruka · Profil". Za broj
   `061 552 104` „Poruka" otvara `api.whatsapp.com/send/?phone=38761552104` (preusmjereno sa `wa.me`).
 - **Ostalo za sljedećeg:** sve tri akcije na Android uređaju (`tool/run_live_demo.sh admin -d

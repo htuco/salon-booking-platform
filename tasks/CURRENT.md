@@ -11,10 +11,10 @@ U toku (grana `feat/kontakt-jednim-tapom`, [PR #138](https://github.com/htuco/sa
 - [x] `url_launcher` u admin, `core/kontakt.dart` (normalizacija `+387`, URI, kanali po platformi)
 - [x] Detalj termina (`3n`) i profil klijenta (`3e`): „Pozovi" i „Poruka" (sheet Viber / WhatsApp)
 - [x] Bez broja nema akcije; na webu nema Vibera, „Poruka" ide pravo na WhatsApp
-- [x] Testovi: admin 694, `kontakt_test` + grupe u `appointment_detail_test` i `clients_screen_test`
+- [x] Testovi: admin 697, `kontakt_test` + grupe u `appointment_detail_test` i `clients_screen_test`
 - [x] `prototype/admin/SPEC.md`, `docs/01` §6.3, doc komentar `appointment_detail_screen.dart`
 - [x] Web demo: „Poruka" otvara WhatsApp za `+38761552104`
-- [ ] Draft PR protiv `develop`, CI zelen, pregled
+- [x] Draft PR protiv `develop`, CI zelen, pregled (2026-10-20, nalazi popravljeni, admin 697)
 - [ ] Uživo na Android uređaju sve tri akcije (`tool/run_live_demo.sh admin -d <device-id>`)
 
 ## Napomene
