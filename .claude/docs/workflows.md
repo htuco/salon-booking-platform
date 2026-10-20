@@ -206,6 +206,27 @@ da nije radila — provjeri `md5sum` posluženog `main.dart.js` naspram onog iz 
 posumnjaš u kod. Obični `http-server` uz to nema SPA fallback, pa direktan `/login` vraća 404;
 otvori root i pusti router da preusmjeri.
 
+## Super admin konzola (task 72)
+
+Lokalni alat, nikad deployan ([ADR-0032](../../docs/adr/0032-super-admin-lokalni-dart-server.md)):
+
+```sh
+dart run apps/superadmin/bin/superadmin.dart                  # lokalni stack, ključ iz supabase status
+dart run apps/superadmin/bin/superadmin.dart --env .env.prod  # SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY iz fajla
+dart run apps/superadmin/bin/superadmin.dart --port 4711      # default 4710
+```
+
+Ispiše `http://127.0.0.1:<port>/?t=<token>`. Token je nov pri svakom pokretanju, i bez njega
+stranica i API vraćaju 403. Ključ ne ide ni u ispis ni stranici. `.env.live` namjerno nema service
+ključ (`.env.example`), pa `--env .env.live` pada sa porukom. Produkcijski fajl je Hamzin (task 80).
+Za ne-lokalni projekat svaki upis traži da se otkuca ime projekta (prvi dio hosta).
+
+Na Windowsu `Ctrl+C` u terminalu gasi konzolu. Ako je pokrenuta iz alata koji ubija samo shell,
+`dartvm` ostaje na portu: `Get-NetTCPConnection -LocalPort 4710` daje PID.
+
+Testovi: `cd apps/superadmin && dart test` (ili `melos run test`). Server se testira sa lažnom
+platformom, bez baze. Platformski RPC-ovi su u pgTAP `034`.
+
 ## Build
 
 ```sh

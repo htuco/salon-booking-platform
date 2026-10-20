@@ -17,7 +17,7 @@ Zato flavor sistem postoji samo u `apps/client`.
 ## Slojevi
 
 ```
-apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (još ne postoji)
+apps/client   (N flavora)        apps/admin  (jedna)        apps/superadmin (lokalno, task 72)
       └──────────────┬───────────────────┘                          │
                 packages/core_ui                                    │
                 packages/core_api   ← jedini sloj koji zna za mrežu  │
@@ -54,6 +54,15 @@ apps/client   (N flavora)        apps/admin  (jedna)        Next.js konzola (jo�
   widgete u `widgets/` i logiku koja ne pripada ni domenu ni UI-ju — formatiranje cijene i
   vremena (zna jezik), izračun koji bi se inače sakrio u `build`. `features/home/` je prvi takav
   i uzor za ostale.
+
+### Super admin konzola: van Fluttera, van `core_*` (task 72)
+
+`apps/superadmin` je čisti Dart paket: `dart:io` server na `127.0.0.1` i jedna HTML stranica
+(`lib/src/ui/index.html`), bez build koraka ([ADR-0032](../../docs/adr/0032-super-admin-lokalni-dart-server.md)).
+Ne uvozi nijedan `core_*` paket. Nije tenant, pa nema ni temu ni repozitorije, a jedini klijent mu je
+service role ključ. U bazu piše samo kroz `platform_*` RPC-ove (`lib/src/platforma.dart`), u repo
+`tenant.yaml` (`lib/src/tenant_fajl.dart`), a generatore pokreće kao procese (`lib/src/repo.dart`).
+Server drži ključ, i stranica ga nikad ne vidi.
 
 ### Admin ljuska: četiri grane, jedan `AppShell`
 
@@ -361,7 +370,7 @@ toolchainom prototipa.
 
 ## Šta još ne postoji
 
-Da ne tražiš uzalud: nema Next.js konzole, nema pravog FCM-a i nema nijednog **pravog ekrana** —
+Da ne tražiš uzalud: nema hostovane super admin konzole (lokalna je `apps/superadmin`, ADR-0032), nema pravog FCM-a i nema nijednog **pravog ekrana** —
 sve rute imaju placeholder tijela dok ih ne napišu taskovi 10 i 11.
 Stanje po tasku: `tasks/sprint-<N>/README.md`, indeks u `tasks/README.md`.
 

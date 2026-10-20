@@ -39,8 +39,9 @@ generisano zastarjelo.
   `google-services.json` završi na putanji koju build ne gleda — i FCM tiho ne radi.
 - **`flavor` mora biti `[a-z][a-z0-9]*`.** `create("barber-vitez")` nije validan Gradle
   identifikator i ne kompajlira.
-- **`salonId` mora biti UUID i odgovarati redu u `supabase/seed.sql`.** Ako ne odgovara, app se
-  builda uredno i ne nađe svoj salon — najskuplja tiha greška u ovom lancu.
+- **`salonId` mora biti UUID i odgovarati redu u bazi okruženja.** Za demo tenante je to red u
+  `supabase/seed.sql`, a za salon napravljen konzolom red koji je konzola upisala (ADR-0032). Ako
+  ne odgovara, app se builda uredno i ne nađe svoj salon — najskuplja tiha greška u ovom lancu.
 - **`branding.primaryColor` i `branding.secondaryColor` moraju biti `#RRGGBB`.** Provjera je ovdje,
   a ne u Dartu na uređaju: neispravan heks bi tamo bio izuzetak pri startu aplikacije, ovdje je pad
   generatora u CI-ju. U registar ulaze kao ARGB `int`, pa app ne parsira boju pri startu.
@@ -146,12 +147,31 @@ artefaktu:
 
 ## Novi tenant — redoslijed
 
+**Pravi salon ide kroz super admin konzolu** (task 72, ADR-0032):
+
+```sh
+dart run apps/superadmin/bin/superadmin.dart                 # lokalni stack (supabase status)
+dart run apps/superadmin/bin/superadmin.dart --env .env.prod # projekat; fajl ima SUPABASE_SERVICE_ROLE_KEY
+```
+
+Konzola sluša samo na `127.0.0.1` i ispiše adresu sa tokenom sesije. Ona radi korake 1–4 ispod:
+salon u bazi (`platform_create_salon`), `tenant.yaml` sa istim UUID-om, sva tri generatora. Uz to
+pravi poziv vlasnika umjesto ručnog naloga, gasi i pali salon, mijenja boje i temu (baza **i**
+fallback u fajlu) i vodi status store objave. Korake 5–8 samo pokazuje sa stanjem koje provjeri.
+Za ne-lokalni projekat traži ime projekta prije svakog upisa. Demo tenant (fixture u `seed.sql`)
+i dalje ide rukom.
+
 Skill `/new-tenant` vodi kroz ovo korak po korak; ovo je referenca šta se sve mora dogoditi.
 
 1. `cp -r tenants/_template tenants/<flavor>` i popuni `tenant.yaml`.
-2. Dodaj salon u `supabase/seed.sql` sa **istim** UUID-om (ili potvrdi red u bazi).
+2. Salon u bazi sa **istim** UUID-om: konzolom, a za demo fixture blok u `supabase/seed.sql`.
 3. `dart run tool/gen_flavors.dart`
 4. `dart run tool/gen_placeholder_icons.dart` pa `dart run flutter_launcher_icons` (u `apps/client`).
+   **Poslije njega `git diff apps/client/ios/Runner.xcodeproj/project.pbxproj`.** Alat za svaki
+   iOS flavor tekstualno upiše `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS =
+   AppIcon-<zadnji flavor>` u sve konfiguracije. pbxproj je izlaz `gen_ios_flavors.rb`, pa se ta
+   izmjena vraća (`git checkout -- …project.pbxproj`). Konzola to radi sama. `-f <jedan fajl>` nije
+   izlaz: tada alat ne zna za flavor i prepiše glavni `res/`.
 5. Ako je `targets.ios: true` → `tool/gen_ios_flavors.sh` na macOS-u.
 6. **Auth po flavoru** — Google OAuth klijenti, Sign In with Apple capability, redirect URL
    `ba.nasadomena.<flavor>://login-callback` u Supabase konzoli **i** u

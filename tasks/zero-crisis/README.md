@@ -32,7 +32,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri 🟡 | — | 2–3 dana |
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
 | [71](71-melura-za-svakoga.md) | Melura za svakoga: sve radi i jasno je | 54 | 3–4 dana |
-| [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna | — | 4–5 dana |
+| [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna 🟡 | — | 4–5 dana |
 
 ## Faza B — produkcija od nule
 
@@ -120,3 +120,13 @@ obara `032`), admin 689, klijent 676, a tok je viđen uživo na lokalnom stacku.
 (identitet autora više nije javan; Hamzin pregled: Melura vidi svaku javnu recenziju, tekst se broji
 kao u bazi, jedna prijava za sliku i recenziju). **Ostaje:** merge, deploy (**prvo**
 `send-push notify-content-reports`, pa `db push`), push na uređaju.
+
+### 72 — Super admin konzola 🟡 (2026-10-20)
+
+Grana `feat/super-admin-konzola`, ADR-0032 (**predložen**). `apps/superadmin` je Dart server na
+`127.0.0.1` sa jednom stranicom: novi salon (baza → `tenant.yaml` → generatori), poziv vlasnika
+kroz postojeći `accept-staff-invite`, gašenje, boje i tema (baza i fajl), store status, a lista
+pokazuje i šta fali u CI matrici. Šest `platform_*` RPC-ova samo za `service_role`. pgTAP 1000
+(`034` 57, tri mutacije obaraju), REST zeleni, konzola 28 testova; cijeli tok viđen uživo na
+lokalnom stacku. **Ostaje:** Hamzina odluka o ADR-u, merge, `db push`; konzola na macOS-u i protiv
+hostovanog projekta (env fajl iz taska 80).

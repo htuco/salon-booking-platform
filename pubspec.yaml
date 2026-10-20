@@ -11,6 +11,7 @@ environment:
 workspace:
   - apps/client
   - apps/admin
+  - apps/superadmin
   - packages/core_domain
   - packages/core_api
   - packages/core_ui

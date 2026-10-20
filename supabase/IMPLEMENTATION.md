@@ -37,6 +37,15 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   are `service_role` only and run from the `accept-staff-invite` Edge Function, which creates
   `auth.users` with `app_metadata` taken from the invite. Invites store a sha256 of the code and
   expire after 7 days. Removing a member deletes only the `public.users` row.
+- Platform RPCs (task 72, ADR-0032): `platform_list_salons`, `platform_create_salon`,
+  `platform_set_salon_status`, `platform_set_branding`, `platform_set_store_status` and
+  `platform_create_owner_invite` are **`service_role` only** (not even a `super_admin` JWT) and are
+  called by the local console `apps/superadmin`. `platform_create_salon` writes `salons` +
+  `salon_builds` + `salon_settings` (from `vertical_packs.default_settings`) in one transaction and
+  returns the new uuid; validation errors are `PT400`, a taken slug/flavor/app ID is `PT409`.
+  `platform_create_owner_invite` creates a `salon_admin` invite with `created_by = null` (platform),
+  accepted by the same `accept-staff-invite` flow; inactive salons get `PT409`.
+  `staff_invites.created_by` is nullable since this migration.
 - Employees (task 46, ADR-0013): `users.employee_id` links the account to `employees`;
   `private.is_employee`/`current_employee_id`/`can_manage_appointment`. Employees read only
   their own appointments (`employee_own`) and salon/own blocks, and may change status or cancel

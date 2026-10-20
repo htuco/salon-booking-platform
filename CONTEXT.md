@@ -153,6 +153,8 @@ _Izbjegavaj_: web app (web build **klijent app-e** iz Fluttera je stvarna stvar 
 frontend.
 
 **Super admin konzola**
-Next.js web aplikacija za vlasnika platforme (kreiranje salona, branding, build). Odvojena od
-Flutter admin app-e koju koristi vlasnik salona.
+Lokalni alat developera (`apps/superadmin`, task 72, ADR-0032): mali Dart server na `127.0.0.1`
+sa service role ključem i jednom stranicom. Pravi salon i `tenant.yaml`, poziva prvog vlasnika,
+gasi salon, mijenja boje i temu i vodi status store objave. Nikad se ne deploya i nije dio
+Melure koju koristi vlasnik salona. Ranija ideja hostovane Next.js konzole je napuštena (ADR-0029).
 _Izbjegavaj_: dashboard (i admin app ima dashboard ekran), backoffice.

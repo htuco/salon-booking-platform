@@ -79,6 +79,33 @@ Dokaz: `020_pozivi_za_osoblje.test.sql` (37 asercija; sabotaža koja pusti iskor
 tačno onu koja to mjeri) i `rest_pozivi_osoblja.ts` (17 provjera kroz GoTrue i Edge Function,
 lokalno — CI Edge Functions ne pokreće).
 
+### Platformski RPC-ovi lokalne konzole — task 72
+
+Super admin konzola (`apps/superadmin`, ADR-0032) je lokalni alat sa service role ključem. Sve što
+piše ide kroz šest `platform_*` funkcija, i **nijedna nije za aplikaciju**:
+
+- `platform_list_salons`, `platform_create_salon`, `platform_set_salon_status`,
+  `platform_set_branding`, `platform_set_store_status`, `platform_create_owner_invite` imaju
+  `revoke all ... from public, anon, authenticated` i `grant execute ... to service_role`. Isti
+  obrazac kao `peek_staff_invite`.
+- **`super_admin` iz JWT-a ih ne otvara.** Ni nalog sa claimom i redom u `users` ne može napraviti
+  salon ni poziv vlasnika. Platformska prava ne idu u aplikaciju salona (ADR-0029). Uloga
+  `super_admin` i dalje vrijedi samo za postojeće politike (`super_salons`, `app_policies`,
+  `content_reports`).
+- Validacija je u bazi, ne u konzoli: flavor `[a-z][a-z0-9]*`, slug, `#RRGGBB`, poznata tema
+  (`private.is_known_theme`), postojeća vertikala, ID aplikacije. Zauzet slug, flavor ili ID je
+  `PT409`. Novi salon upisuje `salons`, `salon_builds` i `salon_settings` (iz
+  `vertical_packs.default_settings`) u jednoj transakciji.
+- **Poziv platforme ima `staff_invites.created_by = null`.** Prvi vlasnik novog salona nema ko da
+  ga pozove iz salona. Uloga je uvijek `salon_admin`. Kod ima isti oblik, hash i istek kao
+  `create_staff_invite`, a prihvata se istom `accept-staff-invite` funkcijom. Neaktivan salon
+  poziv ne dobija (`PT409`), jer ga `peek_staff_invite` ionako ne bi primio.
+
+Dokaz: `034_super_admin_konzola.test.sql` (57 asercija). Grant vraćen `authenticated`-u obara 2,
+uklonjena provjera aktivnog salona 3, a uklonjena pre-provjera sluga 1. Uživo je poziv iz konzole
+prihvaćen kroz `accept-staff-invite` na lokalnom stacku: prijava daje `salon_admin` za novi salon,
+a isti kod drugi put ne prolazi.
+
 ### Radnik (`employee`) — task 46
 
 Radnik dobija **sužen** pristup (ADR-0013), a promjena je aditivna: `is_admin()` se ne dira, pa

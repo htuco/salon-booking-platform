@@ -133,7 +133,9 @@ eksplicitnu registraciju, potvrdu adrese i oporavak lozinke.
 ### 6.1 Super Admin (web konzola)
 
 > **[ADR-0029](adr/0029-opseg-do-lansiranja-zero-crisis.md) (2026-10-12):** konzola je **lokalni
-> alat na mašini developera**, nikad deployana, minimalna (task 74). Opis ispod je polazna ideja.
+> alat na mašini developera**, nikad deployana, minimalna (task 72, [ADR-0032](adr/0032-super-admin-lokalni-dart-server.md): Dart server na
+> `127.0.0.1`, `apps/superadmin`). Opis ispod je polazna ideja: konzola pravi salon, poziva
+> vlasnika, gasi salon, mijenja boje i temu i vodi store status. Logo, cover i ostalo vlasnik mijenja u Meluri.
 
 **Kreiranje salona** — naziv, slug, adresa, grad, telefon, Instagram, Facebook, logo, **app ikona**, cover slika, primarna boja, sekundarna boja, tema, status (`active`/`inactive`), paket (`starter`/`pro`/`premium`).
 

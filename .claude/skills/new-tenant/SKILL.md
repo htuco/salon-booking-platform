@@ -11,6 +11,20 @@ to ponavlja na svaki PR. Mehanika i zamke: `.claude/docs/tenant-factory.md`.
 
 Flavor: **$ARGUMENTS**. Ako nije dat, traži ga (mora biti `[a-z][a-z0-9]*`).
 
+## 0. Pravi salon: konzola radi korake 1–3
+
+```sh
+dart run apps/superadmin/bin/superadmin.dart                 # lokalni stack
+dart run apps/superadmin/bin/superadmin.dart --env .env.prod # projekat (fajl sa SUPABASE_SERVICE_ROLE_KEY)
+```
+
+Otvori adresu koju ispiše i klikni „+ Novi salon". Konzola upiše salon u bazu, napiše `tenant.yaml`
+sa istim UUID-om i pokrene sva tri generatora. Vrati `project.pbxproj` ako ga je
+`flutter_launcher_icons` prepisao. Onda u detalju salona „Pozovi vlasnika" daje kod koji vlasnik
+unosi u Meluri na „Imam poziv od salona". Ručni nalog i SQL ne trebaju. Nastavi od **koraka 4**
+(CI matrica, konzola pokazuje šta fali). Koraci 1–3 ispod su za demo fixture u `seed.sql`.
+ADR-0032.
+
 ## 1. Konfiguracija
 
 ```sh

@@ -1,51 +1,60 @@
-# Trenutni task: 67 — Pisanje recenzija
+# Trenutni task: 72 — Super admin konzola, lokalna i minimalna
 
-Puni task: [tasks/zero-crisis/67-pisanje-recenzija.md](zero-crisis/67-pisanje-recenzija.md) · učitan 2026-10-20
+Puni task: [tasks/zero-crisis/72-super-admin-lokalno.md](zero-crisis/72-super-admin-lokalno.md) · učitan 2026-10-20
 
 ## Status
 
-U toku (grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/salon-booking-platform/pull/139), 2026-10-20). Kod, testovi i provjera uživo su gotovi; ostaje pregled, CI i deploy.
+U toku (grana `feat/super-admin-konzola`, 2026-10-20). Kod, testovi i provjera uživo na lokalnom
+stacku su gotovi. Ostaju odluka o ADR-0032, pregled, CI i deploy migracije.
 
 ## Ciljevi
 
-- [x] Migracija `20261020100000_pisanje_recenzija`: `reviews.appointment_id` i `auth_identity_id`,
-      jedna po terminu, samo `completed`; `authenticated` gubi `insert/update/delete`
-- [x] `submit_review`, `set_review_published` (tekst ne dira), `my_review_ratings`; agregat samo objavljene
-- [x] Prijava recenzije kroz `content_reports` (ADR-0024), `notify-content-reports` zna za recenziju
-- [x] Push `review_request` kad termin postane `completed`, tekst u `send-push`
-- [x] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
-- [x] pgTAP `032` (55 asercija), 11 mutacija, svaka obara bar jednu; `006` usklađen
-- [x] Pregled u grani: identitet autora i termin zatvoreni kolonskim grantom, `my_review_ratings`
-- [x] Klijent: „Ocijeni" na završenom terminu u „Moji termini", prijava recenzije na `/reviews`
-- [x] Admin: `/more/reviews` — lista, sakrij / vrati
-- [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `docs/01` §12,
-      `prototype/ui/README.md`, `prototype/admin/SPEC.md`, komentari „read-only" u kodu
-- [x] Uživo (lokalni stack, web 402): Završen u Meluri → klijent ocijeni → 26 ocjena; Sakrij → 25
-- [x] Pregled (Hamza): Melura vidi svaku javnu recenziju, tekst se broji u kodnim tačkama kao u
-      bazi, jedna prijava (`prijaviSadrzaj`) za sliku i recenziju, recenzije u `docs/06` §8.2–8.3
-- [ ] CI zelen, merge u `develop`
-- [ ] Deploy (Hamza), **ovim redom** — v. task fajl: provjera dužine teksta,
-      `supabase functions deploy send-push notify-content-reports`, **pa** `supabase db push`,
-      provjere grantova, tekst politike u hostovanom `app_policies` i store formulari
-- [ ] Push `review_request` na uređaju
+- [x] ADR-0032 (prijedlog): lokalni Dart server na `127.0.0.1`, baza prva pa `tenant.yaml` pa
+      generatori, ključ samo u procesu servera, vlasnik kroz poziv
+- [x] Migracija `20261020180000_super_admin_konzola`: šest `platform_*` RPC-ova samo za
+      `service_role`, `staff_invites.created_by` nullable
+- [x] pgTAP `034` (57 asercija, tri mutacije obaraju 2, 3 i 1); cijela suite 1000; REST izolacija,
+      katalog, pozivi osoblja i admin prijava zeleni
+- [x] `apps/superadmin`: lista (baza + fajl + CI matrica), novi salon, status, boje i tema, store,
+      poziv vlasnika, „napiši tenant.yaml ponovo"; 28 testova (`dart test` i `flutter test`)
+- [x] Uživo (lokalni stack, 1440 i 402): novi salon → tenant.yaml → tri generatora →
+      `gen_flavors --check` zelen; poziv → `accept-staff-invite` → prijava kao `salon_admin`; boje i
+      tema u bazi, fajlu i registru; gašenje skriva salon od anon; Play `in_review`
+- [x] Dokumenti: `tenant-factory.md`, `tenants/README.md`, `/new-tenant`, `security.md`,
+      `IMPLEMENTATION.md`, `architecture.md`, `workflows.md`, `CONTEXT.md`, `docs/01` §6.1,
+      `docs/README.md`, `CLAUDE.md`
+- [ ] Odluka o ADR-0032 (Hamza), pregled, CI zelen, merge u `develop`
+- [ ] Deploy (Hamza): `supabase db push` za `20261020180000`; nema Edge Function ni cron izmjene
+- [ ] Konzola na macOS-u (Hamzina mašina) sa iOS tenantom: `gen_ios_flavors.sh` ostaje ručni korak
 
 ## Napomene
 
-- **Već isporučeno:** prosjek i broj na Početnoj i na `/reviews` čitaju `salon_rating_summary`
-  (task 20, `salonRatingProvider`). Od ove stavke DoD-a ostaje samo osvježavanje poslije slanja.
-- **Postojeći redovi** (seed, budući import) nemaju termin ni identitet. Ostaju takvi; nova kolona je
-  nullable, a pisati bez termina može samo `service_role`.
-- **Ime autora** pravi baza iz `auth_identities.display_name` („Nedim H."), ne klijent — inače bi
-  klijent potpisao recenziju tuđim imenom.
-- **Admin danas nema ekran recenzija** i canvas ga ne crta. „Salon sakriva" traži mjesto u Meluri, pa
-  je `/more/reviews` po obrascu postojećih lista u „Još".
-- Push poslije termina danas vodi na `/appointments` (`send-push`, `route`); isto važi i za
-  `review_request` — tamo stoji „Ocijeni".
-- Zamka iz `security.md`: nova funkcija traži `revoke ... from public, anon`; `not (A and B)` sa
-  `client_salon_id()` je rupa kad nema headera.
-- Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client` prije `melos run analyze`.
+- **Zamka nađena usput:** `flutter_launcher_icons` za svaki iOS flavor prepiše
+  `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` u `project.pbxproj` imenom zadnjeg
+  flavora. Konzola vraća pbxproj, a ručni postupak je u `tenant-factory.md` (korak 4).
+- **CRLF:** na Windows checkoutu `tenant.yaml` ima CRLF; izmjena brandinga čuva završetke linija.
+- **Konzola ne dira** `seed.sql`, CI matrice ni usluge/radnike/radno vrijeme (ADR-0032). CI matricu
+  samo čita i pokazuje šta fali.
+- ID aplikacije se izvodi iz flavora (`ba.nasadomena.<flavor>`, `idPrefiks` u `server.dart`), jer
+  CI to provjerava u APK-u. Prava domena je task 75.
+- `.env.live` nema service ključ i ne smije ga dobiti (`.env.example`). Produkcijski env fajl za
+  `--env` nastaje u tasku 80.
+- Grana je sa `develop`-a bez taska 68 (PR #142). `CURRENT.md`, `tasks/zero-crisis/README.md` i
+  `docs/README.md` će imati konflikt sa 68 — oba bloka ostaju.
 
 ## Istorija
+
+### 68 — Lista čekanja (PR otvoren, 2026-10-20)
+
+[PR #142](https://github.com/htuco/salon-booking-platform/pull/142), ADR-0031 (predložen). Upis na
+pun dan, push svima kojima se mjesto otvorilo, prvi zakaže. Kod, testovi i uživo gotovi.
+**Ostaje:** Hamzina odluka o ADR-u, merge, deploy (prvo `send-push`, pa `db push`), push na uređaju.
+
+### 67 — Pisanje recenzija (spojen u `develop`, 2026-10-20)
+
+[PR #139](https://github.com/htuco/salon-booking-platform/pull/139). Recenzija vezana za završen
+termin (`submit_review`), salon samo sakriva, prijava kroz `content_reports`, push `review_request`.
+**Ostaje:** deploy (`send-push notify-content-reports`, pa `db push`), push na uređaju.
 
 ### 58 — Kontakt klijenta jednim tapom (PR otvoren, 2026-10-20)
 
