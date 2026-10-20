@@ -153,6 +153,10 @@ znači i da se **ne vidi iz migracije** — da su grantovi ikad postali kolonski
 nevidljiva `anon`-u i javni katalog bi tiho izgubio podatak. Zato svaka nova kolona u javnom
 katalogu dobija aserciju u `rest_public_catalog.ts`, koja je traži **bez tokena** (task 22).
 
+**Izuzetak je `reviews` (task 67):** grant je tamo kolonski, jer dvije kolone (identitet autora i
+termin) ne smije čitati niko osim `service_role`. Nova kolona u `reviews` je zato nevidljiva dok
+se ne doda u `grant select (...)`. V. „Pisanje recenzija".
+
 Zato **nova tabela nije automatski dostupna** i **mora dobiti i grant i politiku**. Tabela sa
 politikom bez granta je nevidljiva; tabela sa grantom bez politike je nevidljiva dok neko ne doda
 politiku koja je previše široka. `config.toml` namjerno ne postavlja `auto_expose_new_tables`.
@@ -178,8 +182,7 @@ Pravilo koje iz ovoga slijedi: **svaki novi pogled nad tabelom sa RLS-om ide sa
 `security_invoker = true`**, i dobija asercij nad vrijednošću, ne nad brojem redova.
 
 Od taska 67 pogled uz to ima i `where is_published`. Dok je granicu držala samo politika, admin
-je vidio drugi prosjek od javnosti (4.7 naspram 4.8), a sa politikom `client_own` bi klijent čija
-je recenzija sakrivena vidio svoj glas u prosjeku. Broj na ekranu je javni broj, isti za svaku
+je vidio drugi prosjek od javnosti (4.7 naspram 4.8). Broj na ekranu je javni broj, isti za svaku
 ulogu. `security_invoker` i dalje treba: filter ne zna ništa o neaktivnom salonu.
 
 ### Pisanje recenzija — task 67
@@ -189,8 +192,16 @@ Recenzija je vezana za **završen termin** i identitet (`appointment_id`, `auth_
 istom salonu. Seed i budući import nemaju termin. Obje kolone su tada `NULL` (`check` traži da su
 obje popunjene ili obje prazne), a takav red može upisati samo `service_role`.
 
+- **Grant nad `reviews` je kolonski, i bez te dvije kolone.** `anon` i `authenticated` čitaju
+  `id, salon_id, author_name, rating, comment, is_published, created_at, updated_at`.
+  `auth_identity_id` je ista osoba u svakom salonu, a vlasnik ga vidi i na svom `customers` redu.
+  Sa tabelarnim grantom bi vlasnik salona A filtrirao javne recenzije po identitetima svojih
+  klijenata i saznao ko od njih ide u salon B i kako ga ocjenjuje. Ovo je nalaz `rls-auditor` prije
+  merge-a. **Nova kolona u `reviews` zato ne ulazi u javni katalog sama**: treba je dodati u
+  `grant select (...)`, za razliku od ostalih tabela (v. „Grantovi").
 - **`authenticated` nema `insert/update/delete` nad `reviews`.** `staff_manage` (`for all`) je
   zamijenjen sa `staff_read` (`select`, `is_admin`). Salon je do tada mogao prepisati tuđi tekst.
+  Radnik sakrivene ne vidi.
 - **`submit_review(termin, ocjena, tekst)`** je jedini upis klijenta. Traži `is_client()`,
   `x-salon-id` i termin tog salona čiji je identitet pozivaočev (`owns_identity`). Tuđi,
   nepostojeći i termin drugog salona daju istu grešku `42501`. Termin koji nije `completed` daje
@@ -198,21 +209,35 @@ obje popunjene ili obje prazne), a takav red može upisati samo `service_role`.
   baza iz `display_name` identiteta (`private.review_author`), nikad klijent.
 - **`set_review_published(recenzija, bool)`** je jedini upis salona. Mijenja samo `is_published`.
   Radnik ga ne dobija. Tuđa i nepostojeća recenzija daju `42501`.
-- **`client_own`**: klijent u salonu iz headera vidi svoje recenzije, i sakrivene. Po tome „Moji
-  termini" znaju da je termin ocijenjen. Drugi klijent i anon sakrivenu ne vide.
+- **`my_review_ratings()`** vraća klijentu parove `(appointment_id, ocjena)` za njegove recenzije u
+  salonu iz headera, i za sakrivene. Po tome „Moji termini" znaju da je termin ocijenjen. Ovo je
+  funkcija, a ne politika, jer tabela `appointment_id` nikome ne daje. Osoblje, anon i poziv bez
+  konteksta dobijaju `42501`.
 - **Brisanje naloga** (trigger `anonymize_reviews_of_identity` na `deleted_at`) ostavlja ocjenu,
   a ime postaje „Bivši klijent" i tekst nestaje. Brisanje reda bi pomjerilo prosjek salona unatrag,
-  a tekst je lični sadržaj osobe koja je tražila brisanje.
+  a tekst je lični sadržaj osobe koja je tražila brisanje. Trigger dira samo redove tog identiteta.
 - **Prijava** ide kroz `report_review` u `content_reports.review_id` (v. „Čišćenje bucketa i
   prijava slike"). Prijaviti se može samo objavljena recenzija salona iz headera. Dnevni limit je
   zajednički sa slikama, a `check` traži tačno jedno od `image_url` i `review_id`.
 - **Push `review_request`** ide klijentovom uređaju termina kad termin postane `completed`. Ide kroz
   isti trigger i isti `on conflict`, pa ponovo završen termin ne šalje drugu poruku.
 
-Dokaz: `032_pisanje_recenzija.test.sql` (43 asercije). Svaka od osam mutacija obara bar jednu:
-bez provjere `completed` (2), bez vlasništva termina (4), agregat bez filtera (1 u `032`, 1 u
-`006`), `client_own` bez salona (1), bez anonimizacije (1), bez push grane (2), zadržan
-`staff_manage` sa `update` grantom (3 u `032`, 1 u `006`) i prijava sakrivene (1).
+Dokaz: `032_pisanje_recenzija.test.sql` (55 asercija) i dvije provjere bez tokena u
+`rest_public_catalog.ts`. Svaka od dvanaest mutacija obara bar jednu asercju:
+
+| Mutacija | Pada |
+|---|---|
+| bez provjere `completed` | 2 |
+| bez vlasništva termina | 4 |
+| agregat bez filtera | 1 u `032`, 1 u `006` |
+| bez anonimizacije | 1 |
+| bez push grane | 2 |
+| zadržan `staff_manage` sa `update` grantom | 3 u `032`, 1 u `006` |
+| prijava sakrivene | 1 |
+| tabelarni grant umjesto kolonskog | 4 |
+| `my_review_ratings` bez vlasništva | 1 |
+| anonimizacija bez filtera identiteta | 2 |
+| `staff_read` proširen na `is_staff` (radnik) | 1 |
 
 ## Tabela bez `salon_id` — `app_policies`
 

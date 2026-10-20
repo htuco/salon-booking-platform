@@ -218,6 +218,18 @@ try {
     "A salon without reviews has no aggregate row — the section hides instead of showing 0,0.",
   );
 
+  // Task 67: identitet autora je ista osoba u svakom salonu, a termin je tuđi. Kolonski
+  // grant ih ne daje nikome bez service ključa — po njima bi se profilisao čovjek kroz salone.
+  for (const kolona of ["auth_identity_id", "appointment_id"]) {
+    const { status } = await anonRequest(
+      "/rest/v1/reviews?select=" + kolona + "&salon_id=eq." + activeSalon,
+    );
+    assert(
+      status === 401 || status === 403,
+      `Anon must not read reviews.${kolona}, got HTTP ${status}.`,
+    );
+  }
+
   const reviewInsert = await anonRequest("/rest/v1/reviews", {
     method: "POST",
     body: JSON.stringify({ salon_id: activeSalon, author_name: "Napadac", rating: 5 }),

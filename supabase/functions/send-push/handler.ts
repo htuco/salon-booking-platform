@@ -82,7 +82,8 @@ export function messageFor(job: PushJob) {
     review_request: "Kako je bilo?",
   };
   const bodies: Record<string, string> = {
-    review_request: "Ocijenite termin u aplikaciji.",
+    // Bez riječi „termin": ona zavisi od vertikale, a push je isti za sve tenante.
+    review_request: "Ocijenite posjet u aplikaciji.",
   };
   if (!(job.type in titles)) throw new Error("unsupported_type");
   return {

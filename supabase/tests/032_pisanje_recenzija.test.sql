@@ -105,6 +105,8 @@ select throws_ok(
 create temporary table ana_rec as
 select public.submit_review((select id from ana_t1), 5, '  Odlično šišanje.  ') as id;
 grant select on ana_rec to public;
+-- Kolone termina i identiteta čita samo vlasnik baze (kolonski grant), pa provjera ide bez uloge.
+reset role;
 
 select results_eq(
   format($$select author_name, rating, comment, appointment_id, is_published from public.reviews where id = %L$$,
@@ -115,6 +117,7 @@ select is(
   (select r.auth_identity_id from public.reviews r where r.id = (select id from ana_rec)),
   (select a.auth_identity_id from public.appointments a where a.id = (select id from ana_t1)),
   'Identitet recenzije je identitet termina');
+set local role authenticated;
 
 select throws_ok(
   format($$select public.submit_review(%L, 1, 'Ipak ne')$$, (select id from ana_t1)),
@@ -211,20 +214,77 @@ select is(
   'Drugi klijent ne vidi tudju sakrivenu recenziju');
 reset role;
 
--- Ana vidi svoju i kad je sakrivena — „Moji termini" po njoj zna da je termin ocijenjen.
+-- Ana zna svoju ocjenu i kad je sakrivena — „Moji termini" po njoj zna da je termin
+-- ocijenjen. Kroz `my_review_ratings`, ne kroz tabelu: tabela je javna lista.
 set local request.jwt.claims = '{"sub":"fe670000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"providers":["email"]}}';
 set local role authenticated;
+select results_eq(
+  $$select appointment_id, rating from public.my_review_ratings()$$,
+  format($$values (%L::uuid, 5)$$, (select id from ana_t1)),
+  'Klijent dobija svoju ocjenu sakrivene recenzije, vezanu za termin');
 select is(
-  (select count(*)::int from public.reviews where id = (select id from ana_rec)), 1,
-  'Klijent vidi svoju sakrivenu recenziju');
+  (select count(*)::int from public.reviews where id = (select id from ana_rec)), 0,
+  'U javnoj listi ni autor ne vidi sakrivenu recenziju');
 select is(
   (select average from public.salon_rating_summary where salon_id = (select salon from fix)),
   4.8::numeric, 'Svoja sakrivena recenzija ne ulazi ni u klijentov prosjek');
+select throws_ok(
+  $$select auth_identity_id from public.reviews$$,
+  '42501', null, 'Klijent ne cita identitet autora');
+select throws_ok(
+  $$select appointment_id from public.reviews$$,
+  '42501', null, 'Klijent ne cita termin recenzije');
 set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440001"}';
 select is(
-  (select count(*)::int from public.reviews where id = (select id from ana_rec)), 0,
-  'Iz konteksta salona B klijent ne vidi svoju sakrivenu recenziju salona A');
+  (select count(*)::int from public.my_review_ratings()), 0,
+  'Iz konteksta salona B klijent ne dobija svoju ocjenu salona A');
+set local request.headers = '{}';
+select throws_ok(
+  $$select * from public.my_review_ratings()$$,
+  '42501', null, 'Bez x-salon-id nema ni svojih ocjena');
 set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440000"}';
+reset role;
+
+-- Bob ne dobija Aninu ocjenu.
+set local request.jwt.claims = '{"sub":"fe670000-0000-4000-8000-000000000003","role":"authenticated","app_metadata":{"providers":["email"]}}';
+set local role authenticated;
+select is(
+  (select count(*)::int from public.my_review_ratings()), 0,
+  'Drugi klijent istog salona ne dobija tudje ocjene');
+reset role;
+
+-- Ni vlasnik ni anon ne citaju identitet: po njemu bi vlasnik salona A nasao recenzije
+-- svojih klijenata u salonu B.
+set local request.jwt.claims = '{"sub":"fe670000-0000-4000-8000-000000000002","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
+set local role authenticated;
+select throws_ok(
+  $$select auth_identity_id from public.reviews$$,
+  '42501', null, 'Vlasnik ne cita identitet autora recenzije');
+select throws_ok(
+  $$select * from public.my_review_ratings()$$,
+  '42501', null, 'my_review_ratings je samo za klijenta');
+reset role;
+set local role anon;
+select throws_ok(
+  $$select auth_identity_id, appointment_id from public.reviews$$,
+  '42501', null, 'Anon ne cita identitet ni termin recenzije');
+reset role;
+
+-- Radnik salona A: recenzija je o salonu, sakrivanje je posao vlasnika.
+insert into auth.users(id, email, raw_app_meta_data, raw_user_meta_data) values
+('fe670000-0000-4000-8000-000000000005', 'radnik@rec67.invalid',
+ '{"role":"employee","salon_id":"550e8400-e29b-41d4-a716-446655440000"}', '{}');
+insert into public.users(id, salon_id, name, email, role, employee_id) values
+('fe670000-0000-4000-8000-000000000005', '550e8400-e29b-41d4-a716-446655440000',
+ 'Radnik', 'radnik@rec67.invalid', 'employee', (select emir from fix));
+set local request.jwt.claims = '{"sub":"fe670000-0000-4000-8000-000000000005","role":"authenticated","app_metadata":{"role":"employee","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
+set local role authenticated;
+select is(
+  (select count(*)::int from public.reviews where id = (select id from ana_rec)), 0,
+  'Radnik ne vidi sakrivenu recenziju svog salona');
+select throws_ok(
+  format($$select public.set_review_published(%L, true)$$, (select id from ana_rec)),
+  '42501', null, 'Radnik ne vraca sakrivenu recenziju');
 reset role;
 
 set local role anon;
@@ -306,10 +366,35 @@ reset role;
 -- ---------------------------------------------------------------------------
 -- Brisanje naloga
 -- ---------------------------------------------------------------------------
+-- Bob ima svoju recenziju u istom salonu: brisanje Aninog naloga je ne smije dirati.
+set local request.jwt.claims = '{"sub":"fe670000-0000-4000-8000-000000000003","role":"authenticated","app_metadata":{"providers":["email"]}}';
+set local role authenticated;
+create temporary table bob as select (public.ensure_customer((select salon from fix))).id as customer_id;
+create temporary table bob_t as select (public.book_appointment((select salon from fix),
+  (select customer_id from bob), (select usluga from fix), (select utorak from fix), '12:00',
+  (select emir from fix))).id as id;
+reset role;
+grant select on bob, bob_t to public;
+update public.appointments set status = 'completed', pending_expires_at = null
+where id = (select id from bob_t);
+set local role authenticated;
+create temporary table bob_rec as
+select public.submit_review((select id from bob_t), 3, 'Solidno.') as id;
+reset role;
+grant select on bob_rec to public;
+
 set local request.jwt.claims = '{"sub":"fe670000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"providers":["email"]}}';
 set local role authenticated;
 select public.delete_my_account();
 reset role;
+
+select results_eq(
+  format($$select author_name, comment from public.reviews where id = %L$$, (select id from bob_rec)),
+  $$values ('Bob'::text, 'Solidno.'::text)$$,
+  'Brisanje jednog naloga ne dira recenziju drugog klijenta');
+select is(
+  (select count(*)::int from public.reviews where author_name = 'Bivši klijent'), 1,
+  'Anonimizirana je tacno jedna recenzija — seed i import bez identiteta ostaju');
 
 select results_eq(
   format($$select author_name, comment, rating from public.reviews where id = %L$$, (select id from ana_rec)),

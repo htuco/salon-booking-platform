@@ -57,6 +57,16 @@ comment on table public.reviews is
 -- ---------------------------------------------------------------------------
 revoke insert, update, delete on public.reviews from authenticated;
 
+-- **Grant postaje kolonski.** `auth_identity_id` je ista osoba u svakom salonu, a vlasnik ga
+-- vidi i na svom `customers` redu. Sa tabelarnim grantom bi vlasnik salona A filtrirao
+-- javne recenzije po identitetima svojih klijenata i saznao ko od njih ide u salon B i kako
+-- ga ocjenjuje (nalaz `rls-auditor`, prije merge-a). `appointment_id` je tuđi termin. Obje
+-- kolone zato ne čita niko osim `service_role`; klijent svoje ocjene dobija kroz
+-- `my_review_ratings`.
+revoke select on public.reviews from anon, authenticated;
+grant select (id, salon_id, author_name, rating, comment, is_published, created_at, updated_at)
+  on public.reviews to anon, authenticated;
+
 drop policy staff_manage on public.reviews;
 
 -- Admin vidi i sakrivene, ali samo svoje. Radnik ne: recenzija je o salonu, a sakrivanje je
@@ -65,20 +75,8 @@ create policy staff_read on public.reviews
   for select to authenticated
   using (private.is_admin(salon_id));
 
--- Klijent vidi svoje recenzije u salonu iz `x-salon-id`, i sakrivene — po njima „Moji
--- termini" zna da je termin vec ocijenjen. Header bira salon, identitet kaze sta je moje
--- (ADR-0003); `owns_identity` vec trazi i `deleted_at is null`.
-create policy client_own on public.reviews
-  for select to authenticated
-  using (
-    auth_identity_id is not null
-    and salon_id = private.client_salon_id()
-    and private.owns_identity(auth_identity_id)
-  );
-
 -- **Agregat broji samo objavljene, za svakoga.** Do sada je to drzala politika, pa je admin
--- vidio drugi prosjek od javnosti, a sa `client_own` bi klijent cija je recenzija sakrivena
--- vidio svoj glas u prosjeku. Broj na ekranu je javni broj, i isti je za sve uloge.
+-- vidio drugi prosjek od javnosti. Broj na ekranu je javni broj, i isti je za sve uloge.
 -- `security_invoker` ostaje: bez njega `anon` dobija prosjek neaktivnog salona.
 create or replace view public.salon_rating_summary
   with (security_invoker = true) as
@@ -185,6 +183,34 @@ grant execute on function public.submit_review(uuid, integer, text) to authentic
 
 comment on function public.submit_review(uuid, integer, text) is
   'Klijent ocjenjuje svoj zavrsen termin u salonu iz x-salon-id: 1-5 i opcionalan tekst do 1000 znakova. Ime autora je iz identiteta. 42501 za tudji/nepostojeci termin, PT400 kad termin nije completed, PT409 za drugu recenziju istog termina.';
+
+-- Ocjene pozivaoca za njegove termine u salonu iz `x-salon-id`, i za sakrivene: po njima
+-- „Moji termini" zna da je termin vec ocijenjen. Funkcija, a ne politika, jer tabela
+-- `appointment_id` nikome ne daje (v. grant gore). Vraca samo par termin → ocjena, i samo
+-- za termine ciji je identitet pozivaocev.
+create function public.my_review_ratings()
+returns table (appointment_id uuid, rating integer)
+language plpgsql stable security definer set search_path = '' as $$
+declare v_salon uuid;
+begin
+  v_salon := private.client_salon_id();
+  if private.is_client() is not true or v_salon is null then
+    raise exception 'Nije dozvoljeno' using errcode = '42501';
+  end if;
+
+  return query
+  select r.appointment_id, r.rating
+  from public.reviews r
+  where r.salon_id = v_salon
+    and r.auth_identity_id is not null
+    and private.owns_identity(r.auth_identity_id);
+end $$;
+
+revoke all on function public.my_review_ratings() from public, anon;
+grant execute on function public.my_review_ratings() to authenticated;
+
+comment on function public.my_review_ratings() is
+  'Ocjene pozivaoca u salonu iz x-salon-id kao (appointment_id, rating), i sakrivene. Samo identitet iz tokena; 42501 za osoblje, anon i bez konteksta.';
 
 -- ---------------------------------------------------------------------------
 -- Salon sakriva
