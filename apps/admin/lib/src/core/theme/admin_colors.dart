@@ -58,6 +58,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     required this.toastInfo,
     required this.toastWarn,
     required this.toastErr,
+    required this.nowLine,
     required this.radnici,
     required this.onRadnik,
   });
@@ -113,6 +114,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     toastInfo: Color(0xFF8FB0D6),
     toastWarn: Color(0xFFE3B45A),
     toastErr: Color(0xFFE8746F),
+    nowLine: Color(0xFF3D5A80),
     // Krug radnika bez slike (sedmični kalendar, task 69). Tamni tonovi pod bijelim
     // inicijalima, svaki ≥5,8:1; koralni i crveni ton su izostavljeni jer koralna nosi
     // radnju, a crvena grešku. Mjeri `theme_contrast_test.dart`.
@@ -167,6 +169,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
     toastInfo: Color(0xFF8FB0D6),
     toastWarn: Color(0xFFE3B45A),
     toastErr: Color(0xFFE8746F),
+    nowLine: Color(0xFF8FB0D6),
     // Isti redoslijed tonova kao u svijetloj, svjetliji, pod tamnim inicijalima (≥7,5:1).
     radnici: [
       Color(0xFF91A7FF),
@@ -195,6 +198,12 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
 
   /// Krug ikone u toastu, po vrsti: uspjeh, informacija, upozorenje, greška.
   final Color toastOk, toastInfo, toastWarn, toastErr;
+
+  /// Linija „sada" u animaciji učitavanja (task 63, `assets/brand/melura-ucitavanje.svg`):
+  /// klizi kroz koralni termin ([action]). Svijetla je [accent], tamna je svjetliji ton iste
+  /// plave, jer bi tamni [accent] (`#91A7FF`) odstupao od referentnog znaka. Ista vrijednost
+  /// stoji i u `web/index.html` (splash); `web_splash_test.dart` pada kad se razmimoiđu.
+  final Color nowLine;
 
   /// Boje radnika: krug sa inicijalima kad radnik nema profilnu sliku, i čip filtera.
   ///
@@ -252,6 +261,7 @@ class AdminPalette extends ThemeExtension<AdminPalette> {
       toastInfo: mix(toastInfo, other.toastInfo),
       toastWarn: mix(toastWarn, other.toastWarn),
       toastErr: mix(toastErr, other.toastErr),
+      nowLine: mix(nowLine, other.nowLine),
       radnici: [
         for (var i = 0; i < radnici.length; i++)
           mix(radnici[i], other.radnici[i % other.radnici.length]),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format/datum.dart';
 import '../../core/format/tekst.dart';
+import '../../core/kontakt.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/app_header.dart';
@@ -1025,20 +1026,35 @@ class _ProfilSadrzaj extends ConsumerWidget {
                       child: const AdminVerzal('Zakaži termin'),
                     ),
                   ),
-                  SizedBox(
-                    height: AdminSize.touchTarget,
-                    child: OutlinedButton(
-                      onPressed: () => _uskoro(context, 'Poziv iz profila'),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, AdminSize.touchTarget),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AdminSpacing.xxl,
+                  // Kontakt (task 58) samo uz broj od kojeg ima link; isti red kao `3n`.
+                  if (medjunarodniBroj(klijent.phone) case final broj?) ...[
+                    for (final (labela, radnja) in [
+                      (
+                        'Pozovi',
+                        () => kontaktiraj(
+                          context,
+                          ref,
+                          KanalKontakta.poziv,
+                          broj,
                         ),
-                        textStyle: tekst.labelMedium,
                       ),
-                      child: const Text('Pozovi'),
-                    ),
-                  ),
+                      ('Poruka', () => ponudiPoruku(context, ref, broj)),
+                    ])
+                      SizedBox(
+                        height: AdminSize.touchTarget,
+                        child: OutlinedButton(
+                          onPressed: radnja,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, AdminSize.touchTarget),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AdminSpacing.xxl,
+                            ),
+                            textStyle: tekst.labelMedium,
+                          ),
+                          child: Text(labela),
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ],

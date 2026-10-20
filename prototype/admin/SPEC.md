@@ -185,14 +185,14 @@ modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.
 | „najstariji prije 26 min" (`3b`), „prosjek odgovora 8 min" (`3m`), „Zakazano 16.05." (`3n`) | `appointments` nema `created_at` | otvoreno |
 | „Preklapa se s pauzom Amara" (`3d`, `3m`) | Pauze i blokade ne postoje kao podatak | task 34 |
 | „Ponudi drugo vrijeme" (`3d`), „Pomjeri" (`3n`) | Nema RPC putanje za pomjeranje termina; `set_appointment_status` mijenja status, ne vrijeme | otvoreno |
-| „Pozovi" / „Poruka" (`3n`) | `tel:`/`sms:` traže `url_launcher`, koji nije zavisnost admina | otvoreno |
+| „Pozovi" / „Poruka" (`3n`) | Rade od taska 58 (`apps/admin/lib/src/core/kontakt.dart`): `tel:`, a „Poruka" otvara izbor Viber / WhatsApp, jer canvas crta jedno dugme a kanala su dva. Bez broja oba dugmeta nestaju; na webu nema Vibera, pa „Poruka" ide pravo na WhatsApp. Umjesto `sms:` je Viber, jer SMS u BiH košta, a Viber deep link ne (`docs/03`) | zatvoreno |
 | Fotografije klijenata i lokacije | Placeholderi iz `canvas/assets/`; `customers` i `public.users` nemaju sliku | — |
 | Prekidač `Dan · Sedmica · Mjesec` (`3c`) | „Dan" i „Sedmica" rade od taska 69 (skica `prototype/adminv2/sedmica/`, ADR-0029); „Mjesec" je i dalje ugašen sa „Uskoro" jer mjesečnog prikaza nema | Mjesec: otvoreno |
 | „Dodaj pauzu", „Zatvori dan" (`3c`) | Oba pišu u `working_hours`; blokada i pauza dobijaju svoj ekran | task 34 |
 | „+ Novi klijent" (`3e`) | Ručni unos ide kroz `upsert_walkin_customer` (task 24) i traži svoj obrazac; dugme koje otvara prazan ekran je gore od praznog mjesta | otvoreno |
 | „342 ukupno · 68 redovnih" (`3e`) | Zbir preko **cijelog** adresara; lista je filtrirana i odrezana na `limit`, pa bi brojka tvrdila ono što upit ne dokazuje. Podnaslov zato broji **prikazane** redove | otvoreno |
 | „Sljedeći termin" u profilu (`3e`) | Traži upit nad budućim terminima klijenta; istorija ide unatrag. Izostavljeno dok ne dobije vlastiti upit | otvoreno |
-| „Zakaži termin" i „Pozovi" u profilu (`3e`) | `tel:` traži `url_launcher` (isti razlog kao `3n`), a zakazivanje iz profila traži predpopunjen `/appointments/new` | otvoreno |
+| „Zakaži termin" u profilu (`3e`) | Zakazivanje iz profila traži predpopunjen `/appointments/new`. „Pozovi" i „Poruka" u profilu rade od taska 58, isto kao u `3n` | otvoreno |
 | Fotografija radnika u zaglavlju kolone (`3c`) | `employees.image_url` je nullable i u seedu prazan — svaka kolona bi nosila slomljenu sliku; stoji inicijal | task 33 |
 
 Uz to su dvije rečenice copy-ja promijenjene jer tvrde ono što proizvod nema: podnaslov prijave

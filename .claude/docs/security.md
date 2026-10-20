@@ -32,7 +32,8 @@ odluci o pristupu — korisnik ga može mijenjati sam.
 
 ### Pisanje admin naloga rukom — dvije zamke
 
-`seed.sql` od taska 23 nosi po jednog `salon_admin` za oba demo salona. Ko bude pisao takav red
+`seed.sql` od taska 23 nosi po jednog `salon_admin` za oba demo salona, a od taska 59 i nalog
+radnika (salon B, vezan za Aminu) po istom obrascu plus `employee_id`. Ko bude pisao takav red
 ponovo (novi tenant, test fixture, migracija podataka), tu su dvije stvari koje se **ne vide u
 bazi** nego tek na ekranu za prijavu:
 
@@ -49,7 +50,8 @@ bazi** nego tek na ekranu za prijavu:
   seed ih puni petljom, da nova kolona u budućoj verziji GoTrue-a ne obori prijavu nijemo.
 
 Ovo drži `rest_admin_login.ts` — jedini test u repou koji pada ako se u admin app-i ne može
-prijaviti.
+prijaviti. Prijavu seed naloga radnika (`radnik@beautystudiotravnik.test`) ne drži nijedan
+automatski test — provjerava se ručno (`/verify`) i u regresiji (task 60).
 
 ### Nalog osoblja iz poziva — task 45
 

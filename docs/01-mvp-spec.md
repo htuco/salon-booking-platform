@@ -224,7 +224,7 @@ Polja: `name`, `role`, `imageUrl`, `bio`, `isActive`
 
 **Blocked slots** — blokiranje vremena kad salon ili radnik nije dostupan. Blokirano se **ne prikazuje** klijentu kao slobodno.
 
-**Kontakt klijenta jednim tapom** — `tel:`, `viber://chat?number=`, `https://wa.me/` iz detalja termina, **za klijente koji imaju upisan telefon** (oni koje je salon ručno unio). Klijenti iz app-a se dobijaju push-om, ne pozivom.
+**Kontakt klijenta jednim tapom** — `tel:`, `viber://chat?number=`, `https://wa.me/` iz detalja termina i profila klijenta, **za klijente koji imaju upisan telefon**. Od taska 66 to su i klijenti iz aplikacije (registracija traži broj, ADR-0030); push ostaje prvi kanal za njih, poziv je za ono što push ne rješava. Lokalni broj (`061 …`) se za link pretvara u `+387 …`.
 
 ---
 
