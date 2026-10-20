@@ -15,6 +15,7 @@ library;
 import 'dart:io';
 
 import 'package:admin/src/core/theme/admin_colors.dart';
+import 'package:admin/src/core/widgets/admin_ucitavanje.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -42,6 +43,50 @@ void main() {
       contains('background-color: ${_hex(AdminPalette.dark.ground)}'),
       reason: 'Tamna pozadina mora pratiti `AdminPalette.dark.ground`.',
     );
+  });
+
+  group('animacija učitavanja (task 63) prati AdminUcitavanje', () {
+    // Splash i prvi Flutter kadar moraju imati isti pokret i iste boje, inače se na
+    // prelazu vidi skok. CSS ne čita Dart, pa se poredi tekst.
+    test('termin je action, linija je nowLine — svijetla i tamna', () {
+      for (final (paleta, tema) in [
+        (AdminPalette.light, 'svijetla'),
+        (AdminPalette.dark, 'tamna'),
+      ]) {
+        expect(
+          html,
+          contains('.termin { fill: ${_hex(paleta.action)}; }'),
+          reason: '$tema: termin u splashu mora biti `action`.',
+        );
+        expect(
+          html,
+          contains('fill: ${_hex(paleta.nowLine)}'),
+          reason: '$tema: linija u splashu mora biti `nowLine`.',
+        );
+      }
+    });
+
+    test('trajanje i kriva su iste kao u Dartu', () {
+      final sekunde = AdminUcitavanje.trajanje.inMilliseconds / 1000;
+      const k = AdminUcitavanje.kriva;
+      String broj(double v) => v == v.roundToDouble()
+          ? '${v.toInt()}'
+          : '$v'.replaceFirst('0.', '.');
+      expect(
+        html,
+        contains(
+          'animation: klizi ${sekunde}s cubic-bezier('
+          '${broj(k.a)}, ${broj(k.b)}, ${broj(k.c)}, ${broj(k.d)}) infinite',
+        ),
+      );
+      expect(html, contains('translateY(-34px)'));
+      expect(html, contains('translateY(34px)'));
+    });
+
+    test('poštuje manje pokreta i nestaje na prvom kadru', () {
+      expect(html, contains('prefers-reduced-motion: reduce'));
+      expect(html, contains("'flutter-first-frame'"));
+    });
   });
 
   test('index.html ne nosi Flutter šablonske vrijednosti', () {
