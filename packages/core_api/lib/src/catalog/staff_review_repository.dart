@@ -19,18 +19,36 @@ class StaffReviewRepository {
   static const _columns =
       'id, salon_id, author_name, rating, comment, created_at, is_published';
 
-  /// Sve recenzije salona, najnovije prvo, i one bez teksta: salon vidi i gole ocjene.
+  /// Recenzije salona za Meluru, najnovije prvo: i gole ocjene i sakrivene.
   ///
-  /// Granica je ista kao na klijentu ([ReviewRepository.maxReviews]); prosjek je u
-  /// `salon_rating_summary`, pa skraćena lista ne pomjera broj.
+  /// **Dva upita, jer jedna granica ne pokriva javnu listu.** Klijent prikazuje
+  /// [ReviewRepository.maxReviews] najnovijih *objavljenih sa tekstom*; jedan upit nad
+  /// svim vrstama sa istom granicom bi ih, kad salon ima puno novih golih ocjena, odsjekao
+  /// — a javna recenzija koju salon ne vidi je recenzija koju ne može sakriti. Zato prvi
+  /// upit **jeste** klijentski ([ReviewRepository.forSalon], isti filter i granica), pa je
+  /// svaki javno prikazan red ovdje po konstrukciji. Drugi daje najnovije svih vrsta (i gole
+  /// ocjene i sakrivene), do iste granice; red koji stigne iz oba se broji jednom.
+  ///
+  /// Starije gole i sakrivene recenzije van te granice se ne vide; kad salon dođe do toga,
+  /// ovo postaje straničenje. Prosjek je u `salon_rating_summary`, pa granica ne pomjera broj.
   Future<List<Review>> forSalon(String salonId) => guard(() async {
-    final rows = await _client
+    // Redom, ne paralelno: `(a, b).wait` grešku umota u `ParallelWaitError`, koji
+    // `guard` ne prepoznaje, a ekran koji se rijetko otvara ne treba uštedu jednog RTT-a.
+    final javne = await ReviewRepository(_client).forSalon(salonId);
+    final sve = await _client
         .from('reviews')
         .select(_columns)
         .eq('salon_id', salonId)
         .order('created_at', ascending: false)
         .limit(ReviewRepository.maxReviews);
-    return [for (final row in rows) _recenzija(row)];
+
+    // Red iz drugog upita nosi `is_published`; javni je po filteru objavljen, pa je isti.
+    final poId = <String, Review>{
+      for (final r in javne) r.id: r,
+      for (final row in sve) row['id'] as String: _recenzija(row),
+    };
+    return poId.values.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   });
 
   /// Sakriva ([published] = `false`) ili vraća recenziju svog salona.
