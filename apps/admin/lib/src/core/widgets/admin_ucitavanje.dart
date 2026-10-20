@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../theme/admin_colors.dart';
@@ -43,24 +45,26 @@ class AdminUcitavanje extends StatelessWidget {
 /// Indikator unutar dugmeta dok radnja traje — isti pokret kao [AdminUcitavanje], sužen.
 ///
 /// `CircularProgressIndicator` je Material potpis — debljina, tempo i luk se ne daju
-/// uskladiti sa ostatkom redizajna, a unutar dugmeta je i najvidljiviji. Ovdje je sve u
-/// **boji teksta tog dugmeta**: na koralnom dugmetu bi koralni termin nestao, a bijela na
-/// koralu pada AA. Termin je zato ista boja, prigušena, a linija puna.
+/// uskladiti sa ostatkom redizajna, a unutar dugmeta je i najvidljiviji. Znak je
+/// **jednobojan**: termin je ista boja kao linija, prigušena, jer koralni termin ne bi
+/// imao kontrast ni na koralnom ni na sivom dugmetu.
+///
+/// Dugme dok radnja traje je **onemogućeno** (`onPressed: null`), pa sivo. Njegov
+/// `DefaultTextStyle` je tada M3 `onSurface` na 38 % — termin bi na tome pao na ~13 % i
+/// nestao. Zato se ne nasljeđuje boja teksta nego se uzima [AdminPalette.ink] (≈11:1 na
+/// sivom dugmetu; ista vrijednost kao `onAction` na koralnom).
 ///
 /// Na 16–24 px linija i tačka se stope, pa dugme nosi liniju **bez tačke** (tako je i
-/// „PRIJAVLJUJEM" na stranici sa znakom).
+/// „PRIJAVLJUJEM" na stranici sa znakom), a linija ne pada ispod 2 px.
 class AdminButtonBusy extends StatelessWidget {
   const AdminButtonBusy({this.color, super.key});
 
-  /// Boja linije i termina. Kad je `null`, uzima se `DefaultTextStyle` dugmeta.
+  /// Boja linije i termina. Kad je `null`, [AdminPalette.ink].
   final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final boja =
-        color ??
-        DefaultTextStyle.of(context).style.color ??
-        context.adminColors.ink;
+    final boja = color ?? context.adminColors.ink;
 
     return Semantics(
       label: 'Radnja je u toku',
@@ -182,11 +186,14 @@ class TerminISadaPainter extends CustomPainter {
       Paint()..color = termin,
     );
 
+    // Na 20 px (dugme) bi 7 jedinica bilo 1,4 px i antialiasing bi liniju razmazao u
+    // sivu crtu, pa ne pada ispod [_minLinijaPx]. Na 72 px je 7 jedinica ionako deblje.
+    final debljina = math.max(7.0, _minLinijaPx / s);
     final linija = Paint()..color = sada;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(8, 46.5 + pomak, 84, 7),
-        const Radius.circular(_radijusLinije),
+        Rect.fromLTWH(8, 50 - debljina / 2 + pomak, 84, debljina),
+        Radius.circular(math.max(_radijusLinije, debljina / 2)),
       ),
       linija,
     );
@@ -207,3 +214,6 @@ class TerminISadaPainter extends CustomPainter {
 // kontrole (`AdminRadius`): skalira se sa znakom i ne prati temu.
 const double _radijusTermina = 10;
 const double _radijusLinije = 3.5;
+
+/// Najtanja linija „sada" u logičkim pikselima, bez obzira na veličinu znaka.
+const double _minLinijaPx = 2;

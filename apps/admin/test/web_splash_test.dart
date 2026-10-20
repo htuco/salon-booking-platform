@@ -37,36 +37,34 @@ void main() {
     );
   });
 
-  test('tamna pozadina u index.html je tamni ground', () {
-    expect(
-      html,
-      contains('background-color: ${_hex(AdminPalette.dark.ground)}'),
-      reason: 'Tamna pozadina mora pratiti `AdminPalette.dark.ground`.',
-    );
+  test('splash nema tamnu varijantu dok je admin uvijek svijetao', () {
+    // `main.dart` drži `themeMode: ThemeMode.light` (ADR-0020). Tamna pozadina ili znak
+    // po `prefers-color-scheme` bi na OS-u u dark modu dali tamno pa svijetlo — bljesak
+    // koji FE-205 sklanja. Kad se vrati `ThemeMode.system`, vraća se i ovo.
+    expect(html, isNot(contains('prefers-color-scheme: dark')));
+    expect(html, isNot(contains(_hex(AdminPalette.dark.ground))));
+    expect(html, contains('color-scheme: light;'));
   });
 
   group('animacija učitavanja (task 63) prati AdminUcitavanje', () {
-    // Splash i prvi Flutter kadar moraju imati isti pokret i iste boje, inače se na
-    // prelazu vidi skok. CSS ne čita Dart, pa se poredi tekst.
-    test('termin je action, linija je nowLine — svijetla i tamna', () {
-      for (final (paleta, tema) in [
-        (AdminPalette.light, 'svijetla'),
-        (AdminPalette.dark, 'tamna'),
-      ]) {
-        expect(
-          html,
-          contains('.termin { fill: ${_hex(paleta.action)}; }'),
-          reason: '$tema: termin u splashu mora biti `action`.',
-        );
-        expect(
-          html,
-          contains('fill: ${_hex(paleta.nowLine)}'),
-          reason: '$tema: linija u splashu mora biti `nowLine`.',
-        );
-      }
+    // Splash i Flutter znak moraju imati isti pokret i iste boje. CSS ne čita Dart, pa
+    // se poredi tekst — cijelo pravilo, da boja ne prođe u pogrešnom selektoru.
+    test('termin je action, linija je nowLine', () {
+      const paleta = AdminPalette.light;
+      expect(
+        html,
+        contains('#ucitavanje .termin { fill: ${_hex(paleta.action)}; }'),
+      );
+      expect(
+        html,
+        // Regex, ne tekst: na Windows checkoutu je kraj reda CRLF.
+        matches(
+          RegExp('#ucitavanje \\.sada \\{\\s*fill: ${_hex(paleta.nowLine)};'),
+        ),
+      );
     });
 
-    test('trajanje i kriva su iste kao u Dartu', () {
+    test('trajanje, kriva i keyframes su iste kao u Dartu', () {
       final sekunde = AdminUcitavanje.trajanje.inMilliseconds / 1000;
       const k = AdminUcitavanje.kriva;
       String broj(double v) => v == v.roundToDouble()
@@ -79,14 +77,18 @@ void main() {
           '${broj(k.a)}, ${broj(k.b)}, ${broj(k.c)}, ${broj(k.d)}) infinite',
         ),
       );
-      expect(html, contains('translateY(-34px)'));
-      expect(html, contains('translateY(34px)'));
+      expect(html, contains('0%, 100% { transform: translateY(-34px); }'));
+      expect(html, contains('50% { transform: translateY(34px); }'));
     });
 
-    test('poštuje manje pokreta i nestaje na prvom kadru', () {
-      expect(html, contains('prefers-reduced-motion: reduce'));
-      expect(html, contains("'flutter-first-frame'"));
-    });
+    test(
+      'poštuje manje pokreta, ne hvata klikove i nestaje na prvom kadru',
+      () {
+        expect(html, contains('prefers-reduced-motion: reduce'));
+        expect(html, contains('pointer-events: none'));
+        expect(html, contains("'flutter-first-frame'"));
+      },
+    );
   });
 
   test('index.html ne nosi Flutter šablonske vrijednosti', () {

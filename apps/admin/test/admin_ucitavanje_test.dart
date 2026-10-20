@@ -92,6 +92,8 @@ void main() {
 
   testWidgets('dugme bez animacija miruje', (tester) async {
     await tester.pumpWidget(_app(const AdminButtonBusy(), bezAnimacija: true));
+    // Onemogućeno dugme bi kroz `DefaultTextStyle` dalo 38 % i termin bi nestao.
+    expect(_painter(tester).sada, AdminPalette.light.ink);
     await tester.pump(const Duration(milliseconds: 400));
     expect(_painter(tester).pomak, 0);
     expect(tester.hasRunningAnimations, isFalse);

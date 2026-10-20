@@ -368,11 +368,8 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       // `action`/`onAction`), ne odavde: `3j` ga crta koralnim, a bijeli tekst na koralu
       // pada AA (3,05:1), pa je `#2C2C2C`. Raniji komentar je ovdje tvrdio da je dugme
       // „akcentna plava" po starom canvasu — to više ne važi (ADR-0016).
-      // Čekanje je ista animacija „Termin i sada" kao splash (task 63), u boji teksta
-      // dugmeta: onemogućeno dugme bi `DefaultTextStyle` dalo prigušenim, pa ide izričito.
-      child: _uToku
-          ? AdminButtonBusy(color: context.adminColors.onAction)
-          : const Text('Prijavi se'),
+      // Čekanje je ista animacija „Termin i sada" kao splash (task 63).
+      child: _uToku ? const AdminButtonBusy() : const Text('Prijavi se'),
     ),
   );
 }
