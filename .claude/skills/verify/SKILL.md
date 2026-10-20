@@ -52,6 +52,11 @@ for id in 550e8400-e29b-41d4-a716-446655440000 550e8400-e29b-41d4-a716-446655440
 done
 ```
 
+Admin ekran se gleda u **obje uloge**: poslije `supabase db reset` seed daje vlasnika
+(`admin@beautystudiotravnik.test`) i radnika (`radnik@beautystudiotravnik.test`) istog salona,
+lozinka `admin123456`. Radnik vidi samo Danas, kalendar i svoje termine. Tabela naloga je u
+`.claude/docs/workflows.md`.
+
 Dodao si paket? Provjeri da je u `workspace:` listi root `pubspec.yaml`-a — paket van liste
 `melos exec` preskače i sve gore "prolazi" bez da ga je iko pogledao.
 

@@ -177,13 +177,15 @@ flutter run -d chrome \
 
 Prijava lokalno, iz `seed.sql` (task 23) — **samo lokalni demo, nikad produkcija**:
 
-| email | salon |
-|---|---|
-| `admin@barberstudiovitez.test` | Barber Studio Vitez |
-| `admin@beautystudiotravnik.test` | Beauty Studio Travnik |
+| email | salon | uloga |
+|---|---|---|
+| `admin@barberstudiovitez.test` | Barber Studio Vitez | vlasnik (`salon_admin`) |
+| `admin@beautystudiotravnik.test` | Beauty Studio Travnik | vlasnik (`salon_admin`) |
+| `radnik@beautystudiotravnik.test` | Beauty Studio Travnik | radnik (`employee`), vezan za Aminu (task 59) |
 
-Lozinka je `admin123456` za oba. Prijava drugim nalogom je i **najbrži dokaz izolacije**: isti
-build, drugi vlasnik, nijedan tuđi termin.
+Lozinka je `admin123456` za sva tri. Prijava drugim nalogom je i **najbrži dokaz izolacije**: isti
+build, drugi vlasnik, nijedan tuđi termin. Radnik je u beautyju, ne na Emiru, jer testovi vežu
+svoje naloge za Emira i Amara, a jedan radnik ima jedan nalog (v. komentar u `supabase/seed.sql`).
 
 Bez Supabase define-ova app se svejedno digne, ali prijava ne radi — `AdminEnv.hasSupabase` je
 tada `false` i Supabase klijent se ne inicijalizuje. To je namjerno: pad prije `runApp` bi dao
