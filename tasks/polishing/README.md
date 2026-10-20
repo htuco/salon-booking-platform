@@ -17,7 +17,7 @@ poslije sigurnosnog pregleda (87), a **prije** prelaska salona na produkciju (89
 | [55](55-prerada-dashboarda.md) | Prerada admin dashboarda ✅ | redizajn | kod u `main`-u (#124–#126); radnik na telefonu ide u 60 | — |
 | [61](61-moj-profil.md) | Moj profil u adminu ✅ | feature | kod u `main`-u (#122); kamera na telefonu ide u 60 | — |
 | [62](62-toast-obavijesti.md) | Toast obavijesti u adminu ✅ | redizajn | kod u `main`-u (#123); hostovani sa pravim nalogom ide u 60 | — |
-| [63](63-animacija-ucitavanja.md) | Animacija učitavanja „Termin i sada" | dizajn | nije počet; lava animacija iz #127 je na auth ekranima i ne zatvara ovaj task | — |
+| [63](63-animacija-ucitavanja.md) | Animacija učitavanja „Termin i sada" 🟡 | dizajn | [PR #141](https://github.com/htuco/salon-booking-platform/pull/141) otvoren: znak, dugme i splash; ostaje merge | — |
 | [59](59-radnik-u-seedu.md) | Radnik u lokalnom seedu 🟡 | chore | [PR #140](https://github.com/htuco/salon-booking-platform/pull/140) otvoren: `radnik@beautystudiotravnik.test` (Amina); ostaje merge | — |
 | [60](60-regresija-i-testiranje.md) | Regresija i testiranje | test | nije počet | poslije 71 i 87, **prije** 89 i 90 |
 
@@ -31,6 +31,14 @@ poslije sigurnosnog pregleda (87), a **prije** prelaska salona na produkciju (89
 Folder otvoren 2026-10-12. Starija istorija ovih taskova je u status blokovima
 [`sprint-5/README.md`](../sprint-5/README.md#status).
 
+### 63 — Animacija učitavanja „Termin i sada" (PR otvoren, 2026-10-20)
+
+[PR #141](https://github.com/htuco/salon-booking-platform/pull/141). `AdminUcitavanje` i
+`AdminButtonBusy` (`core/widgets/admin_ucitavanje.dart`) crtaju znak iz
+`melura-ucitavanje.svg`; splash u `web/index.html` je isti znak u CSS-u i nestaje na prvom kadru.
+Splash je samo svijetao, jer je admin uvijek svijetao. Admin 686, `melos run test` zelen, viđeno
+uživo na 1440 i 402. **Ostaje:** merge; koralno dugme u čekanju se ne vidi (dugme u toku je
+onemogućeno), nerazjašnjeno jedno visjenje prijave uz umjetno kašnjenje ide u 60.
 ### 59 — Radnik u lokalnom seedu (PR otvoren, 2026-10-20)
 
 [PR #140](https://github.com/htuco/salon-booking-platform/pull/140). `supabase db reset` daje

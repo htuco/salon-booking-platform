@@ -37,26 +37,74 @@
     FE-205: pozadina prije nego što Flutter nacrta prvi kadar.
 
     Bez ovoga je to bijela stranica, pa se pri svakom otvaranju vidi bijeli bljesak
-    prije radne površine — a u tamnoj temi bijelo pa tamno, što je najgori slučaj.
+    prije radne površine.
 
-    Vrijednosti su iste kao `AdminColors.ground` u `admin_colors.dart` (`#FCFCF9`
-    svijetla, `#1A1B1E` tamna). **Ovo je jedino mjesto u repou gdje admin boja smije
-    stajati izvan tog fajla** — CSS ne može čitati Dart tokene. Kad se `ground`
-    promijeni, mijenja se i ovdje; `apps/admin/test/web_splash_test.dart` pada ako se
-    razmimoiđu.
+    Vrijednost je `AdminPalette.light.ground` iz `admin_colors.dart` (`#FCFCF9`).
+    **Ovo je jedino mjesto u repou gdje admin boja smije stajati izvan tog fajla** — CSS
+    ne može čitati Dart tokene. Kad se `ground` promijeni, mijenja se i ovdje;
+    `apps/admin/test/web_splash_test.dart` pada ako se razmimoiđu.
+
+    **Samo svijetla.** Admin je uvijek svijetao (`themeMode: ThemeMode.light` u
+    `main.dart`, ADR-0020), pa bi tamna pozadina po `prefers-color-scheme` na OS-u u dark
+    modu dala tamno pa svijetlo — upravo bljesak koji FE-205 sklanja (task 63). Tamna
+    varijanta se vraća istim redom kad se vrati `ThemeMode.system`.
 
     `color-scheme` uz to kaže pregledniku da i sam scrollbar i pozadinu prije CSS-a
     iscrta u istoj shemi.
   -->
   <style>
-    :root { color-scheme: light dark; }
+    :root { color-scheme: light; }
     html, body { margin: 0; padding: 0; background-color: #FCFCF9; }
-    @media (prefers-color-scheme: dark) {
-      html, body { background-color: #1A1B1E; }
+  </style>
+
+  <!--
+    Task 63: animacija „Termin i sada" dok se Flutter učitava — prepis
+    `assets/brand/melura-ucitavanje.svg` i widgeta `AdminUcitavanje`. Boje su
+    `AdminPalette.light.action` (termin) i `.nowLine` (linija), samo svijetle, kao
+    pozadina iznad;
+    trajanje i kriva su `AdminUcitavanje.trajanje` i `.kriva`. `web_splash_test.dart`
+    pada kad se išta od toga razmimoiđe sa Dartom.
+
+    Flutter na prvom kadru šalje događaj `flutter-first-frame`; tada splash nestaje,
+    da ne stoji ispod aplikacije i ne hvata ništa.
+  -->
+  <style>
+    #ucitavanje {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+    }
+    #ucitavanje svg { width: 72px; height: 72px; }
+    #ucitavanje .termin { fill: #EE6C4D; }
+    #ucitavanje .sada {
+      fill: #3D5A80;
+      animation: klizi 1.6s cubic-bezier(.45, 0, .25, 1) infinite;
+    }
+    @keyframes klizi {
+      0%, 100% { transform: translateY(-34px); }
+      50% { transform: translateY(34px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #ucitavanje .sada { animation: none; }
     }
   </style>
 </head>
 <body>
+  <div id="ucitavanje" role="progressbar" aria-label="Učitavanje">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <rect class="termin" x="24" y="12" width="52" height="76" rx="10"/>
+      <g class="sada">
+        <rect x="8" y="46.5" width="84" height="7" rx="3.5"/>
+        <circle cx="12" cy="50" r="7.5"/>
+      </g>
+    </svg>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('ucitavanje');
+      if (splash) splash.remove();
+    }, { once: true });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

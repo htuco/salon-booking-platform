@@ -63,16 +63,4 @@ void main() {
     );
     expect(find.byType(AdminSkeleton), findsNWidgets(2));
   });
-
-  testWidgets('dugme u radnji nosi tacke, ne Material spinner', (tester) async {
-    await tester.pumpWidget(_app(const AdminButtonBusy()));
-    await tester.pump();
-
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(
-      find.bySemanticsLabel('Radnja je u toku'),
-      findsOneWidget,
-      reason: 'Stanje radnje mora biti citljivo i citacu ekrana',
-    );
-  });
 }

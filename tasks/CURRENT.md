@@ -1,52 +1,54 @@
-# Trenutni task: 59 — Radnik u lokalnom seedu
+# Trenutni task: 63 — Animacija učitavanja „Termin i sada"
 
-Puni task: [tasks/polishing/59-radnik-u-seedu.md](polishing/59-radnik-u-seedu.md) · učitan 2026-10-20
+Puni task: [tasks/polishing/63-animacija-ucitavanja.md](polishing/63-animacija-ucitavanja.md) · učitan 2026-10-20
 
 ## Status
 
-Gotov u grani (`chore/radnik-u-seedu`, [PR #140](https://github.com/htuco/salon-booking-platform/pull/140),
-2026-10-20). Ostaje pregled i merge. Sljedeći u `polishing/`: **63 — animacija učitavanja**.
+Gotov u grani (`feat/animacija-ucitavanja`, [PR #141](https://github.com/htuco/salon-booking-platform/pull/141),
+2026-10-20). Ostaje pregled i merge. U `polishing/` nema više nezablokiranih taskova: **54** čeka
+odluku vlasnika proizvoda (lista šta se uklanja), **60** čeka 71 i 87.
 
 ## Ciljevi
 
-- [x] `radnik@beautystudiotravnik.test` / `admin123456` u `supabase/seed.sql`, `employee`, vezan za Aminu
-- [x] `./tool/test_supabase.sh` exit 0 — pgTAP `Result: PASS` (nijedna od 888 asercija nije pala),
-  svi REST testovi
-- [x] Prijava kroz GoTrue: `role = employee`, dva termina salona B, nijedan iz A
-- [x] `workflows.md` (tabela lokalnih naloga) i `/verify` navode radnika
-- [ ] Pregled i merge PR #140
+- [x] `AdminUcitavanje` i `AdminButtonBusy` u `core/widgets/admin_ucitavanje.dart`, token `nowLine`
+- [x] Splash u `web/index.html`, samo svijetao, nestaje na `flutter-first-frame`
+- [x] Prijava i „Sačuvaj"/„Prihvati" čekaju sa znakom umjesto tri tačke
+- [x] Testovi: `admin_ucitavanje_test.dart`, `web_splash_test.dart`; `melos run test` zelen
+- [x] Uživo: splash na sporoj vezi, dark OS, reduced motion; dugme prijave na 1440 i 402
+- [ ] Pregled i merge PR #141
 
 ## Napomene
 
-- **Amina, ne Emir** (odstupanje od DoD-a): `users_employee_unique` + testovi osoblja (pgTAP
-  `020`–`025`, `rest_employee_izolacija.ts`, `rest_pozivi_osoblja.ts`; spisak daje
-  `grep -rlE "'employee'|\"employee\"" supabase/tests/`) vežu naloge i pozive za Emira i Amara.
-- `deno` nije na PATH-u Git Bash-a na ovoj mašini: `export PATH="$HOME/.deno/bin:$PATH"` prije
-  `./tool/test_supabase.sh`, inače REST dio padne sa `deno: command not found` (exit 127).
-- **54** čeka odluku vlasnika proizvoda (lista šta se uklanja), **60** čeka 71 i 87.
+- Linija „sada" u kalendaru je `destructive` (crvena), ne plava kako je task pisao; znak prati SVG.
+- `melos` nije globalno instaliran na ovoj mašini: `dart run melos run analyze|test`.
+- `http-server` nema SPA fallback: statički build se otvara na `/`, ne na `/login`.
+- Zaostala CDP sesija sa throttlingom u Playwrightu guši i sljedeća učitavanja — `browser_close`.
 
 ## Istorija
 
+### 59 — Radnik u lokalnom seedu (PR otvoren, 2026-10-20)
+
+[PR #140](https://github.com/htuco/salon-booking-platform/pull/140). `radnik@beautystudiotravnik.test` /
+`admin123456`, `employee` vezan za Aminu (ne Emir: testovi vežu naloge za Emira i Amara).
+`./tool/test_supabase.sh` exit 0; uživo Melura radnika na 402 („Moj dan", samo Aminini termini).
+**Ostaje:** merge.
+
 ### 67 — Pisanje recenzija (PR otvoren, 2026-10-20)
 
-[PR #139](https://github.com/htuco/salon-booking-platform/pull/139), grana `feat/pisanje-recenzija`.
-Migracija `20261020100000_pisanje_recenzija`, `submit_review` / `set_review_published`, prijava
-recenzije, push `review_request`, „Ocijeni" u klijentu i `/more/reviews` u Meluri; pgTAP `032`.
-**Ostaje:** CI, pregled, merge; Hamza `supabase db push` za `20261020100000` i
-`supabase functions deploy send-push notify-content-reports`; push na uređaju.
+[PR #139](https://github.com/htuco/salon-booking-platform/pull/139). **Ostaje:** CI, pregled, merge;
+Hamza `supabase db push` za `20261020100000` i `supabase functions deploy send-push
+notify-content-reports`; push `review_request` na uređaju.
 
 ### 58 — Kontakt klijenta jednim tapom (PR otvoren, 2026-10-20)
 
-[PR #138](https://github.com/htuco/salon-booking-platform/pull/138), spreman za pregled.
-„Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina i profilu klijenta, samo uz broj.
-**Ostaje:** odobrenje i merge; sve tri akcije na Android uređaju.
+[PR #138](https://github.com/htuco/salon-booking-platform/pull/138). **Ostaje:** odobrenje i merge;
+sve tri akcije na Android uređaju.
 
 ### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
 
-[PR #136](https://github.com/htuco/salon-booking-platform/pull/136), ADR-0030. Registracija sa
-imenom, telefonom i checkboxom; „Dopuni profil" poslije Apple/Google, za novu verziju uslova i
-prije svakog slanja termina. **Ostaje:** Hamza `supabase db push` za `20261019120000`; „Dopuni
-profil" poslije prave Apple/Google prijave na uređaju; poređenje telefona ne normalizuje prefiks.
+[PR #136](https://github.com/htuco/salon-booking-platform/pull/136), ADR-0030. **Ostaje:** Hamza
+`supabase db push` za `20261019120000`; „Dopuni profil" poslije prave Apple/Google prijave na
+uređaju; poređenje telefona ne normalizuje prefiks.
 
 ### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
 
