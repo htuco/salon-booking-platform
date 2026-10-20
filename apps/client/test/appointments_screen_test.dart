@@ -514,6 +514,51 @@ void main() {
       container.dispose();
     });
 
+    testWidgets('tekst se broji kao u bazi: kodne tačke, ne grafemi', (
+      tester,
+    ) async {
+      // „👍🏽" je jedan grafem i dvije kodne tačke. `maxLength` bi pustio 600 takvih (1200
+      // tačaka), baza bi vratila „Tekst je predug" kao `PT400`, a sheet bi to pokazao kao
+      // „nije završen".
+      final reviews = _MockReviews.bez();
+      when(
+        () => reviews.submit(
+          appointmentId: any(named: 'appointmentId'),
+          rating: any(named: 'rating'),
+          comment: any(named: 'comment'),
+        ),
+      ).thenAnswer((_) async {});
+      final container = await naProslim(tester, reviews, [zavrsen]);
+
+      await tester.tap(find.text('Ocijeni'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('ocjena-5')));
+      await tester.enterText(
+        find.byKey(const ValueKey('ocjena-tekst')),
+        '👍🏽' * 600,
+      );
+      await tester.pump();
+
+      expect(find.text('1000/1000'), findsOneWidget);
+      await tester.tap(find.widgetWithText(AppButton, 'Pošalji ocjenu'));
+      await tester.pumpAndSettle();
+
+      final poslano =
+          verify(
+                () => reviews.submit(
+                  appointmentId: zavrsen.id,
+                  rating: 5,
+                  comment: captureAny(named: 'comment'),
+                ),
+              ).captured.single
+              as String;
+      // Rezano na granici grafema: 500 cijelih emojija, nijedan prepolovljen.
+      expect(poslano, '👍🏽' * 500);
+      expect(poslano.runes.length, 1000);
+
+      container.dispose();
+    });
+
     testWidgets('nije završen (PT400) — rečenica iz .arb, ne tekst baze', (
       tester,
     ) async {

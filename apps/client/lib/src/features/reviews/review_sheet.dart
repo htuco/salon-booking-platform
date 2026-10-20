@@ -1,6 +1,7 @@
 import 'package:core_api/core_api.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -93,8 +94,9 @@ class _OcjenaSheetState extends ConsumerState<_OcjenaSheet> {
           NetworkError() => l10n.noConnection,
           // `42501`: termin nije (više) moj, npr. obrisan nalog. Ponovni pokušaj ne pomaže.
           NotFoundError() => l10n.reviewUnavailable,
-          // `PT400` iz ovog sheeta je samo „nije završen": ocjenu i dužinu čuva ekran. Tekst
-          // baze se ne prikazuje, jer nosi „salon" i „termin", a te riječi zavise od vertikale.
+          // `PT400` iz ovog sheeta je samo „nije završen": ocjenu čuvaju zvjezdice, a dužinu
+          // [_NajviseKodnihTacaka], koji broji kao baza. Tekst baze se ne prikazuje, jer nosi
+          // „salon" i „termin", a te riječi zavise od vertikale.
           ServerError() when greska.displayMessage != null =>
             l10n.reviewNotCompleted,
           _ => l10n.reviewFailed,
@@ -108,6 +110,8 @@ class _OcjenaSheetState extends ConsumerState<_OcjenaSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    const najvise = ReviewRepository.maxCommentLength;
+    final duzina = _tekst.text.runes.length;
 
     return SafeArea(
       child: Padding(
@@ -164,10 +168,17 @@ class _OcjenaSheetState extends ConsumerState<_OcjenaSheet> {
                 enabled: !_radi,
                 minLines: 3,
                 maxLines: 6,
-                maxLength: ReviewRepository.maxCommentLength,
+                // Ne `maxLength`: on broji grafeme, a baza (`char_length`) kodne tačke. „👍🏽"
+                // je jedan grafem i dvije tačke, pa bi tekst sa emojijima prošao ekran i pao
+                // u bazi kao `PT400` — koji ovaj sheet čita kao „nije završen".
+                inputFormatters: const [_NajviseKodnihTacaka(najvise)],
+                onChanged: (_) => setState(() {}),
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
                   hintText: l10n.reviewSheetCommentHint,
+                  counterText: '$duzina/$najvise',
+                  semanticCounterText: MaterialLocalizations.of(context)
+                      .remainingTextFieldCharacterCount(najvise - duzina),
                 ),
               ),
               if (_greska case final poruka?) ...[
@@ -189,6 +200,43 @@ class _OcjenaSheetState extends ConsumerState<_OcjenaSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Granica teksta u **kodnim tačkama** (`String.runes`), kako broji Postgres `char_length`.
+///
+/// Isto ponašanje kao `LengthLimitingTextInputFormatter`, samo drugim brojanjem: kucanje na
+/// punoj granici se odbija, a predug zalijepljen tekst se reže na granici grafema, da
+/// emoji ne ostane prepolovljen. Baza tekst prvo `btrim`-a, pa je ovo gornja granica, ne
+/// tačna — ali nikad blaža od baze.
+class _NajviseKodnihTacaka extends TextInputFormatter {
+  const _NajviseKodnihTacaka(this.najvise);
+
+  final int najvise;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue stara,
+    TextEditingValue nova,
+  ) {
+    if (nova.text.runes.length <= najvise) return nova;
+    if (stara.text.runes.length == najvise && stara.selection.isCollapsed) {
+      return stara;
+    }
+    final skraceno = StringBuffer();
+    var tacaka = 0;
+    for (final grafem in nova.text.characters) {
+      tacaka += grafem.runes.length;
+      if (tacaka > najvise) break;
+      skraceno.write(grafem);
+    }
+    final tekst = skraceno.toString();
+    return TextEditingValue(
+      text: tekst,
+      selection: TextSelection.collapsed(
+        offset: nova.selection.extentOffset.clamp(0, tekst.length),
       ),
     );
   }
