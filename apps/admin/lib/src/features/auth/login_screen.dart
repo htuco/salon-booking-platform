@@ -43,6 +43,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_scaffold.dart';
+import '../../core/widgets/admin_ucitavanje.dart';
 import '../../core/widgets/admin_wordmark.dart';
 import 'admin_lava_panel.dart';
 
@@ -367,74 +368,13 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
       // `action`/`onAction`), ne odavde: `3j` ga crta koralnim, a bijeli tekst na koralu
       // pada AA (3,05:1), pa je `#2C2C2C`. Raniji komentar je ovdje tvrdio da je dugme
       // „akcentna plava" po starom canvasu — to više ne važi (ADR-0016).
-      child: _uToku ? const _IndikatorPrijave() : const Text('Prijavi se'),
+      // Čekanje je ista animacija „Termin i sada" kao splash (task 63), u boji teksta
+      // dugmeta: onemogućeno dugme bi `DefaultTextStyle` dalo prigušenim, pa ide izričito.
+      child: _uToku
+          ? AdminButtonBusy(color: context.adminColors.onAction)
+          : const Text('Prijavi se'),
     ),
   );
-}
-
-/// Indikator u toku prijave — **tri tačke, ne Material spinner.**
-///
-/// `CircularProgressIndicator` je Material potpis: debljina, tempo i luk se ne daju uskladiti
-/// sa ostatkom admina, a na koralnom dugmetu je bijeli luk i padao AA. FE-205 ukida default
-/// Flutter indikatore kroz cijelu aplikaciju; ovdje je uveden samo za dugme prijave, jer je
-/// prijava **jedini ekran koji vidi neprijavljen korisnik** i indikator se tu najviše gleda.
-///
-/// Boja je `onAction` (`#2C2C2C`), ista kao tekst dugmeta — ne `onAccent`, koji je bijel.
-class _IndikatorPrijave extends StatefulWidget {
-  const _IndikatorPrijave();
-
-  @override
-  State<_IndikatorPrijave> createState() => _IndikatorPrijaveState();
-}
-
-class _IndikatorPrijaveState extends State<_IndikatorPrijave>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _kontroler = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1200),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _kontroler.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final boja = context.adminColors.onAction;
-
-    return SizedBox(
-      height: 20,
-      child: AnimatedBuilder(
-        animation: _kontroler,
-        builder: (context, _) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < 3; i++) ...[
-              if (i > 0) const SizedBox(width: 5),
-              Opacity(
-                // Tri tačke pulsiraju u nizu: svaka kasni trećinu ciklusa za prethodnom.
-                opacity: _prozirnost((_kontroler.value + i / 3) % 1),
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: boja,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Puna vidljivost na vrhu ciklusa, 0,3 na dnu — tačka nikad ne nestane sasvim, da se
-  /// dugme ne čita kao da je izgubilo sadržaj.
-  static double _prozirnost(double t) => 0.3 + 0.7 * (1 - (2 * t - 1).abs());
 }
 
 /// Polje sa labelom **iznad** okvira, kako ga canvas crta.
