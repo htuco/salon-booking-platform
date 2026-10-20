@@ -18,7 +18,7 @@ poslije sigurnosnog pregleda (87), a **prije** prelaska salona na produkciju (89
 | [61](61-moj-profil.md) | Moj profil u adminu ✅ | feature | kod u `main`-u (#122); kamera na telefonu ide u 60 | — |
 | [62](62-toast-obavijesti.md) | Toast obavijesti u adminu ✅ | redizajn | kod u `main`-u (#123); hostovani sa pravim nalogom ide u 60 | — |
 | [63](63-animacija-ucitavanja.md) | Animacija učitavanja „Termin i sada" 🟡 | dizajn | [PR #141](https://github.com/htuco/salon-booking-platform/pull/141) otvoren: znak, dugme i splash; ostaje merge | — |
-| [59](59-radnik-u-seedu.md) | Radnik u lokalnom seedu | chore | nije počet | ide uz 60 |
+| [59](59-radnik-u-seedu.md) | Radnik u lokalnom seedu 🟡 | chore | [PR #140](https://github.com/htuco/salon-booking-platform/pull/140) otvoren: `radnik@beautystudiotravnik.test` (Amina); ostaje merge | — |
 | [60](60-regresija-i-testiranje.md) | Regresija i testiranje | test | nije počet | poslije 71 i 87, **prije** 89 i 90 |
 
 🟡 ima isto značenje kao u sprintovima: djelimično, sa imenovanim ostatkom. ✅ znači da je kod u
@@ -39,3 +39,10 @@ Folder otvoren 2026-10-12. Starija istorija ovih taskova je u status blokovima
 Splash je samo svijetao, jer je admin uvijek svijetao. Admin 686, `melos run test` zelen, viđeno
 uživo na 1440 i 402. **Ostaje:** merge; koralno dugme u čekanju se ne vidi (dugme u toku je
 onemogućeno), nerazjašnjeno jedno visjenje prijave uz umjetno kašnjenje ide u 60.
+### 59 — Radnik u lokalnom seedu (PR otvoren, 2026-10-20)
+
+[PR #140](https://github.com/htuco/salon-booking-platform/pull/140). `supabase db reset` daje
+`radnik@beautystudiotravnik.test` / `admin123456`, radnika vezanog za Aminu (beauty). Ne Emir:
+testovi vežu svoje naloge za Emira i Amara, a jedan radnik ima jedan nalog. `./tool/test_supabase.sh`
+exit 0 (pgTAP `Result: PASS`, svi REST); prijava kroz GoTrue daje `employee` i dva termina salona B.
+**Ostaje:** merge; Melura kao radnik na ekranu ide u 60.
