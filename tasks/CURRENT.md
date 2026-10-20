@@ -4,7 +4,7 @@ Puni task: [tasks/zero-crisis/67-pisanje-recenzija.md](zero-crisis/67-pisanje-re
 
 ## Status
 
-U toku (grana `feat/pisanje-recenzija`, 2026-10-20). Zavisnost 66 je spojena u `develop` (PR #136).
+U toku (grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/salon-booking-platform/pull/139), 2026-10-20). Kod, testovi i provjera uživo su gotovi; ostaje pregled, CI i deploy.
 
 ## Ciljevi
 
@@ -19,7 +19,10 @@ U toku (grana `feat/pisanje-recenzija`, 2026-10-20). Zavisnost 66 je spojena u `
 - [x] Admin: `/more/reviews` — lista, sakrij / vrati
 - [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `docs/01` §12,
       `prototype/ui/README.md`, `prototype/admin/SPEC.md`, komentari „read-only" u kodu
-- [ ] Uživo: termin → Završen u Meluri → klijent ocijeni → prosjek na Početnoj se pomjeri
+- [x] Uživo (lokalni stack, web 402): Završen u Meluri → klijent ocijeni → 26 ocjena; Sakrij → 25
+- [ ] CI zelen, pregled, merge u `develop`
+- [ ] Deploy (Hamza): `supabase db push` za `20261020100000`, `supabase functions deploy send-push notify-content-reports`
+- [ ] Push `review_request` na uređaju
 
 ## Napomene
 
