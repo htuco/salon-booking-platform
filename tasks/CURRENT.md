@@ -10,11 +10,12 @@ U toku (grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/salon
 
 - [x] Migracija `20261020100000_pisanje_recenzija`: `reviews.appointment_id` i `auth_identity_id`,
       jedna po terminu, samo `completed`; `authenticated` gubi `insert/update/delete`
-- [x] `submit_review`, `set_review_published` (tekst ne dira), `client_own`; agregat samo objavljene
+- [x] `submit_review`, `set_review_published` (tekst ne dira), `my_review_ratings`; agregat samo objavljene
 - [x] Prijava recenzije kroz `content_reports` (ADR-0024), `notify-content-reports` zna za recenziju
 - [x] Push `review_request` kad termin postane `completed`, tekst u `send-push`
 - [x] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
-- [x] pgTAP `032` (43 asercije), 8 mutacija, svaka obara bar jednu; `006` usklađen
+- [x] pgTAP `032` (55 asercija), 12 mutacija, svaka obara bar jednu; `006` usklađen
+- [x] Pregled u grani: identitet autora i termin zatvoreni kolonskim grantom, `my_review_ratings`
 - [x] Klijent: „Ocijeni" na završenom terminu u „Moji termini", prijava recenzije na `/reviews`
 - [x] Admin: `/more/reviews` — lista, sakrij / vrati
 - [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `docs/01` §12,

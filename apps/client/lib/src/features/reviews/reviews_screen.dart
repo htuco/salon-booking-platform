@@ -290,17 +290,20 @@ class _Kartica extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           // Tiho, ispod sadržaja: prijava je izuzetak, ne radnja koju kartica nudi prva.
           AppTappable(
-            semanticLabel: l10n.reviewReport,
+            semanticLabel: l10n.reviewReportFor(review.authorName),
             onTap: () => prijaviRecenziju(context, ref, review.id),
             child: ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 44),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.reviewReport,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    decoration: TextDecoration.underline,
+                // Labela iznad nosi i autora; tekst se ne čita drugi put.
+                child: ExcludeSemantics(
+                  child: Text(
+                    l10n.reviewReport,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ),

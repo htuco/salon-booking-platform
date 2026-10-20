@@ -1,5 +1,4 @@
 import 'package:core_api/core_api.dart';
-import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,18 +11,15 @@ import '../../l10n/generated/app_localizations.dart';
 /// Pravila drži baza (`submit_review`): samo svoj termin, samo `completed`, jednom. Ekran
 /// samo ne nudi ono što baza sigurno odbija.
 
-/// Ocjene klijenta za njegove završene termine, kao `appointment_id → ocjena`.
+/// Ocjene klijenta u ovom salonu, kao `appointment_id → ocjena`.
 ///
-/// Prati `myAppointmentsProvider`: novi završen termin ili odjava mijenjaju i ovo.
+/// Prati prijavu: bez sesije nema ocjena, a RPC bi bez nje vratio `42501`. Zavisnosti se
+/// registruju prije prvog `await`.
 final myRatingsProvider = FutureProvider<Map<String, int>>((ref) async {
-  final termini = await ref.watch(myAppointmentsProvider.future);
-  final zavrseni = [
-    for (final t in termini)
-      if (t.status == AppointmentStatus.completed) t.id,
-  ];
-  return ref
-      .watch(reviewRepositoryProvider)
-      .myRatings(ref.watch(currentSalonIdProvider), zavrseni);
+  final prijavljen = ref.watch(currentAuthSessionProvider) != null;
+  final repo = ref.watch(reviewRepositoryProvider);
+  if (!prijavljen) return const {};
+  return repo.myRatings();
 });
 
 /// Otvara sheet za ocjenu [appointmentId] i šalje je.
@@ -95,8 +91,12 @@ class _OcjenaSheetState extends ConsumerState<_OcjenaSheet> {
           // Već ocijenjeno, npr. sa drugog uređaja: sheet se nema šta ponoviti.
           ConflictError() => l10n.reviewAlreadyRated,
           NetworkError() => l10n.noConnection,
-          // `PT400` nosi rečenicu baze („tek kad salon označi završenim").
-          ServerError(:final message) when message.isNotEmpty => message,
+          // `42501`: termin nije (više) moj, npr. obrisan nalog. Ponovni pokušaj ne pomaže.
+          NotFoundError() => l10n.reviewUnavailable,
+          // `PT400` iz ovog sheeta je samo „nije završen": ocjenu i dužinu čuva ekran. Tekst
+          // baze se ne prikazuje, jer nosi „salon" i „termin", a te riječi zavise od vertikale.
+          ServerError() when greska.displayMessage != null =>
+            l10n.reviewNotCompleted,
           _ => l10n.reviewFailed,
         };
       });
@@ -134,18 +134,23 @@ class _OcjenaSheetState extends ConsumerState<_OcjenaSheet> {
               Row(
                 children: [
                   for (var i = 1; i <= 5; i++)
-                    AppTappable(
-                      key: ValueKey('ocjena-$i'),
-                      semanticLabel: l10n.reviewsStarsLabel(i),
-                      onTap: _radi ? null : () => setState(() => _ocjena = i),
-                      child: SizedBox.square(
-                        // 48px dodirna meta, isto kao redovi prijave.
-                        dimension: 48,
-                        child: Center(
-                          child: StarRating(
-                            value: i <= _ocjena ? 1 : 0,
-                            max: 1,
-                            size: 32,
+                    // Čitač ekrana mora čuti koja je ocjena izabrana, ne samo pet dugmadi.
+                    Semantics(
+                      selected: i == _ocjena,
+                      inMutuallyExclusiveGroup: true,
+                      child: AppTappable(
+                        key: ValueKey('ocjena-$i'),
+                        semanticLabel: l10n.reviewGiveRating(i),
+                        onTap: _radi ? null : () => setState(() => _ocjena = i),
+                        child: SizedBox.square(
+                          // 48px dodirna meta, isto kao redovi prijave.
+                          dimension: 48,
+                          child: Center(
+                            child: StarRating(
+                              value: i <= _ocjena ? 1 : 0,
+                              max: 1,
+                              size: 32,
+                            ),
                           ),
                         ),
                       ),

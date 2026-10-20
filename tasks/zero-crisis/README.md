@@ -115,6 +115,7 @@ zatvorena u grani; admin 677, viđeno uživo na demo buildu na 1440, 1024 i 402.
 
 Grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/salon-booking-platform/pull/139). Recenzija je
 vezana za završen termin, upis ide samo kroz `submit_review`, salon samo sakriva, a prijava ide
-platformi. Klijent ocjenjuje iz „Moji termini", Melura ima `/more/reviews`. pgTAP 931 (8 mutacija
-obara `032`), admin 689, klijent 673, a tok je viđen uživo na lokalnom stacku. **Ostaje:** pregled,
+platformi. Klijent ocjenjuje iz „Moji termini", Melura ima `/more/reviews`. pgTAP 943 (12 mutacija
+obara `032`), admin 689, klijent 674, a tok je viđen uživo na lokalnom stacku. Pregled zatvoren u grani
+(identitet autora više nije javan). **Ostaje:** pregled,
 merge, deploy (`db push`, `send-push`, `notify-content-reports`), push na uređaju.

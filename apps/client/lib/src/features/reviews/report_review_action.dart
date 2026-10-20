@@ -57,7 +57,8 @@ Future<void> prijaviRecenziju(
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          greska.message.isEmpty ? l10n.galleryReportFailed : greska.message,
+          // Samo rečenica baze (`PT…`) ide na ekran; dijagnostički tekst ne.
+          greska.displayMessage ?? l10n.galleryReportFailed,
         ),
       ),
     );
@@ -89,39 +90,43 @@ class _RazlogPrijave extends StatelessWidget {
           AppSpacing.gutter,
           AppSpacing.lg,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.reviewReportTitle, style: theme.textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              l10n.reviewReportBody,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            for (final razlog in razlozi)
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: theme.colorScheme.outline),
-                  ),
+        // Skrol: naslov, opis i četiri reda na velikom sistemskom fontu prelaze visinu
+        // koju sheet daje bez `isScrollControlled`.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.reviewReportTitle, style: theme.textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l10n.reviewReportBody,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                child: AppTappable(
-                  semanticLabel: razlog,
-                  onTap: () => Navigator.of(context).pop(razlog),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 48),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(razlog, style: theme.textTheme.bodyLarge),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              for (final razlog in razlozi)
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: theme.colorScheme.outline),
+                    ),
+                  ),
+                  child: AppTappable(
+                    semanticLabel: razlog,
+                    onTap: () => Navigator.of(context).pop(razlog),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(razlog, style: theme.textTheme.bodyLarge),
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

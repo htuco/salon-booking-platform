@@ -54,7 +54,9 @@ class AdminReviewsScreen extends ConsumerWidget {
                   ? [const _Prazno()]
                   : [
                       for (final r in recenzije) ...[
-                        _Kartica(recenzija: r),
+                        // Ključ po recenziji: `_radi` ne smije preći na drugu karticu kad
+                        // refresh doda novu recenziju na vrh.
+                        _Kartica(key: ValueKey(r.id), recenzija: r),
                         const SizedBox(height: AdminSpacing.md),
                       ],
                     ],
@@ -74,7 +76,7 @@ final adminReviewsProvider = FutureProvider<List<Review>>((ref) async {
 });
 
 class _Kartica extends ConsumerStatefulWidget {
-  const _Kartica({required this.recenzija});
+  const _Kartica({required this.recenzija, super.key});
 
   final Review recenzija;
 
@@ -167,11 +169,18 @@ class _KarticaState extends ConsumerState<_Kartica> {
                 )
               else
                 const Spacer(),
-              SizedBox(
-                height: AdminSize.touchTarget,
-                child: OutlinedButton(
-                  onPressed: _radi ? null : _prebaci,
-                  child: Text(r.isPublished ? 'Sakrij' : 'Vrati'),
+              // Na listi čitač ekrana inače čuje samo niz „Sakrij"; labela kaže čiju.
+              Semantics(
+                label:
+                    '${r.isPublished ? 'Sakrij' : 'Vrati'} recenziju: ${r.authorName}',
+                button: true,
+                excludeSemantics: true,
+                child: SizedBox(
+                  height: AdminSize.touchTarget,
+                  child: OutlinedButton(
+                    onPressed: _radi ? null : _prebaci,
+                    child: Text(r.isPublished ? 'Sakrij' : 'Vrati'),
+                  ),
                 ),
               ),
             ],

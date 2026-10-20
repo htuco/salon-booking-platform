@@ -5,6 +5,7 @@ import 'package:core_api/core_api.dart';
 import 'package:core_ui/core_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import 'support/fake_auth_repository.dart';
 import 'support/screen_harness.dart';
@@ -414,7 +415,14 @@ void main() {
       );
       addTearDown(auth.dispose);
       final prijave = _FakeContentReports(
-        greska: const RateLimitError('Previše prijava u jednom danu'),
+        // Uzrok kao iz stvarnog `report_content`: samo `PT…` rečenica ide na ekran.
+        greska: const RateLimitError(
+          'Previše prijava u jednom danu',
+          cause: PostgrestException(
+            message: 'Previše prijava u jednom danu',
+            code: 'PT429',
+          ),
+        ),
       );
       await otvoriLightbox(tester, auth: auth, prijave: prijave);
 

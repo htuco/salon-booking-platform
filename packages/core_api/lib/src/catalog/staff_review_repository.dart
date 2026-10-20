@@ -17,7 +17,7 @@ class StaffReviewRepository {
   final SupabaseClient _client;
 
   static const _columns =
-      'id, salon_id, author_name, rating, comment, created_at, appointment_id, is_published';
+      'id, salon_id, author_name, rating, comment, created_at, is_published';
 
   /// Sve recenzije salona, najnovije prvo, i one bez teksta: salon vidi i gole ocjene.
   ///

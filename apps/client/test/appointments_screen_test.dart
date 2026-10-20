@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import 'support/fake_auth_repository.dart';
 
@@ -450,8 +451,6 @@ void main() {
       ]);
 
       expect(find.text('Ocijeni'), findsOneWidget);
-      // Ocjene se traže samo za završene termine.
-      verify(() => reviews.myRatings(_salonId, [zavrsen.id])).called(1);
 
       container.dispose();
     });
@@ -480,8 +479,7 @@ void main() {
           comment: any(named: 'comment'),
         ),
       ).thenAnswer((_) async {
-        when(() => reviews.myRatings(any(), any()))
-            .thenAnswer((_) async => {zavrsen.id: 4});
+        when(reviews.myRatings).thenAnswer((_) async => {zavrsen.id: 4});
       });
       final container = await naProslim(tester, reviews, [zavrsen]);
 
@@ -512,6 +510,44 @@ void main() {
       // Lista se ponovo čita: dugme je zamijenila ocjena.
       expect(find.text('Ocijeni'), findsNothing);
       expect(find.text('Vaša ocjena'), findsOneWidget);
+
+      container.dispose();
+    });
+
+    testWidgets('nije završen (PT400) — rečenica iz .arb, ne tekst baze', (
+      tester,
+    ) async {
+      // Baza kaže „…kad salon označi termin završenim": obje riječi zavise od vertikale.
+      final reviews = _MockReviews.bez();
+      when(
+        () => reviews.submit(
+          appointmentId: any(named: 'appointmentId'),
+          rating: any(named: 'rating'),
+          comment: any(named: 'comment'),
+        ),
+      ).thenThrow(
+        const ServerError(
+          'Ocjena je moguća tek kad salon označi termin završenim',
+          cause: PostgrestException(
+            message: 'Ocjena je moguća tek kad salon označi termin završenim',
+            code: 'PT400',
+          ),
+        ),
+      );
+      final container = await naProslim(tester, reviews, [zavrsen]);
+
+      await tester.tap(find.text('Ocijeni'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('ocjena-3')));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(AppButton, 'Pošalji ocjenu'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Ovaj posjet još nije označen završenim.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('salon označi'), findsNothing);
 
       container.dispose();
     });
@@ -613,7 +649,7 @@ class _MockAppointments extends Mock implements AppointmentRepository {}
 class _MockReviews extends Mock implements ReviewRepository {
   /// Repozitorij čiji `myRatings` vraća [ocjene] (podrazumijevano nijednu).
   _MockReviews.bez({Map<String, int> ocjene = const {}}) {
-    when(() => myRatings(any(), any())).thenAnswer((_) async => ocjene);
+    when(myRatings).thenAnswer((_) async => ocjene);
   }
 }
 

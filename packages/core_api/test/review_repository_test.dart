@@ -37,9 +37,9 @@ void main() {
       expect(review.hasComment, isFalse);
     });
 
-    test('red bez termina i statusa je seed: objavljen, bez termina', () {
-      // Klijentski upit ne traži `is_published` ni `appointment_id`; default ne smije
-      // javnu recenziju pretvoriti u sakrivenu.
+    test('red bez is_published je objavljen', () {
+      // Klijentski upit ne traži `is_published`; default ne smije javnu recenziju
+      // pretvoriti u sakrivenu.
       final review = reviewFromRow({
         'id': 'r3',
         'salon_id': salonId,
@@ -49,10 +49,9 @@ void main() {
       });
 
       expect(review.isPublished, isTrue);
-      expect(review.appointmentId, isNull);
     });
 
-    test('red iz admina nosi termin i sakrivenost (task 67)', () {
+    test('red iz admina nosi sakrivenost (task 67)', () {
       final review = reviewFromRow({
         'id': 'r4',
         'salon_id': salonId,
@@ -60,12 +59,31 @@ void main() {
         'rating': 2,
         'comment': null,
         'created_at': '2026-10-20T09:00:00+00:00',
-        'appointment_id': 'a1',
         'is_published': false,
       });
 
-      expect(review.appointmentId, 'a1');
       expect(review.isPublished, isFalse);
+    });
+  });
+
+  group('ratingsFromRows', () {
+    test('par termin → ocjena iz my_review_ratings', () {
+      expect(
+        ratingsFromRows([
+          {'appointment_id': 'a1', 'rating': 4},
+          {'appointment_id': 'a2', 'rating': 1},
+        ]),
+        {'a1': 4, 'a2': 1},
+      );
+    });
+
+    test('red bez termina je greška mapiranja, ne tiha nula', () {
+      expect(
+        () => ratingsFromRows([
+          {'appointment_id': null, 'rating': 4},
+        ]),
+        throwsA(isA<MappingError>()),
+      );
     });
 
     test('prazan i razmakom popunjen komentar se broje kao da ga nema', () {

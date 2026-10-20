@@ -68,7 +68,8 @@ Future<void> prijaviSliku(
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          greska.message.isEmpty ? l10n.galleryReportFailed : greska.message,
+          // Samo rečenica baze (`PT…`) ide na ekran; dijagnostički tekst ne.
+          greska.displayMessage ?? l10n.galleryReportFailed,
         ),
       ),
     );

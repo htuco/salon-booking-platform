@@ -32,10 +32,8 @@ abstract class Review with _$Review {
     /// uvoza — ekran ga pokazuje relativno („prije 3 dana").
     @JsonKey(name: 'created_at') required DateTime createdAt,
 
-    /// Ocijenjen termin, ili `null` za seed i import (task 67).
-    @JsonKey(name: 'appointment_id') String? appointmentId,
-
-    /// Sakrivenu recenziju vide samo salon i njen autor; javna lista i prosjek je ne broje.
+    /// Sakrivenu recenziju vidi samo salon; javna lista i prosjek je ne broje. Termin i
+    /// identitet autora namjerno nisu polja: te kolone app ne smije čitati (task 67).
     @JsonKey(name: 'is_published') @Default(true) bool isPublished,
   }) = _Review;
 

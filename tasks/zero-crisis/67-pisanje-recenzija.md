@@ -37,13 +37,31 @@ Kod gotov, grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/sa
   recenzija vezana za termin (`prototype/ui/README.md`).
 - **Melura:** `/more/reviews` je deveta stavka navigacije, iza Klijenata. Ekran ima samo „Sakrij"
   / „Vrati", bez polja za izmjenu.
-- **Dokaz:** `tool/test_supabase.sh` → pgTAP `Files=32, Tests=931 … Result: PASS`, a svi REST i
-  Deno testovi prolaze („Sve prolazi"). `032` ima 43 asercije, a svaka od 8 mutacija obara bar
-  jednu (status, vlasništvo termina, agregat bez filtera, `client_own` bez salona, anonimizacija,
-  push, zadržan `staff_manage`, prijava sakrivene). `deno test` za `send-push` i
-  `notify-content-reports`: 11 passed. `melos run test`: admin 689, client 673, `core_api` 148,
-  `core_domain` 102, `core_ui` 146. `melos run analyze` SUCCESS, `dart format` 0 changed,
-  `tenant_theme_test` prolazi za oba salona.
+- **Pregled u grani (2026-10-20):** `rls-auditor`, `dart-reviewer`, `flutter-ui-reviewer`.
+  - **[VISOKO] popravljeno:** `auth_identity_id` i `appointment_id` su bili javni kroz
+    tabelarni grant. Vlasnik salona A je po identitetima svojih klijenata mogao naći njihove
+    recenzije u salonu B. Grant je sada kolonski, bez te dvije kolone. „Moje ocjene" idu kroz
+    `my_review_ratings()`, a politika `client_own` je uklonjena. `rest_public_catalog.ts` bez
+    tokena dobija 401/403 za obje kolone.
+  - **Testovi:** brisanje naloga ne dira tuđu recenziju ni seed; radnik ne vidi sakrivenu i ne
+    vraća je.
+  - **Klijent:** javna lista filtrira `is_published` (vlasnik u klijentskoj app-i). Sirova poruka
+    baze ne ide na ekran: `PT400` je „Ovaj posjet još nije označen završenim.", `42501` ima svoju
+    rečenicu, a u obje prijave ide `displayMessage`. Zvjezdice imaju stanje izbora za čitač
+    ekrana, „Prijavi" nosi autora, a sheet prijave ima skrol.
+  - **Tekstovi bez „termin" / „klijent":** push „Ocijenite posjet u aplikaciji." i prijava
+    „stvarna osoba".
+  - **Melura:** kartice imaju ključ po recenziji, a dugme labelu sa autorom.
+  - **Svjesno ostavljeno:** „ne salonu" u tekstu prijave (isto kao kod slike), „Klijent" u
+    Meluri (cijeli admin tako piše), zvjezdice ★ u Meluri (admin nema `core_ui`), snimci na beauty
+    i health temi.
+- **Dokaz:** `tool/test_supabase.sh` → pgTAP `Files=32, Tests=943 … Result: PASS`, katalog 59
+  provjera, svi REST i Deno testovi („Sve prolazi"). `032` ima 55 asercija, a svaka od 12
+  mutacija obara bar jednu (tabela u `security.md`). `deno test` za `send-push` i
+  `notify-content-reports`: 11 passed. `melos run test`: admin 689, client 674, `core_api` 150,
+  `core_domain` 102, `core_ui` 146. `melos run analyze` SUCCESS, `dart format` bez izmjena,
+  `tenant_theme_test` prolazi za oba salona. Admin upit iz aplikacije pod pravim JWT-om: `HTTP
+  200, 26 redova, sakrivenih 1`, a `select=auth_identity_id` daje `403`.
 - **Uživo (lokalni stack, web, 402 px):** klijent Lejla (GoTrue signup, rezervacija kroz
   `book_appointment`) → Melura „Potvrdi" → „Označi kao završeno" → klijent „Prošli" → „Ocijeni"
   (4 + tekst). Baza bilježi `Lejla H.|4|Brzo i uredno…|t|<termin>`, a broj ocjena raste sa 25 na

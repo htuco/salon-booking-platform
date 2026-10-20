@@ -13,7 +13,7 @@
 ///   Klijenata: canvas je nastao prije pisanja recenzija, a salon ih mora moći sakriti.
 /// - **Donja navigacija (`3k`, `3t`) nosi četiri** — Danas, Kalendar, Zahtjevi, Još.
 ///
-/// Odatle podjela: **prve tri su [primarne] i idu u donju navigaciju, ostalih pet stoje iza
+/// Odatle podjela: **prve tri su [primarne] i idu u donju navigaciju, ostalih šest stoje iza
 /// „Još" (`3t`)**. „Još" nije zasebna lista nego rep iste — [sporedne].
 ///
 /// ## Šta namjerno nije ovdje
