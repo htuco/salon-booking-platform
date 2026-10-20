@@ -9,18 +9,22 @@ import '../../core/load_error.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/formatters.dart';
+import 'report_review_action.dart';
 import 'time_ago.dart';
 
 /// `/reviews` — prosjek, histogram 5→1 i lista recenzija (`SPEC.md` 5m, `13-recenzije.png`).
 ///
 /// **Pod-ekran bez tab bara**, kao i `/gallery`.
 ///
-/// ## Read-only, i to je odluka a ne nedostatak
+/// ## Ovdje se ne piše, nego čita i prijavljuje
 ///
-/// Handoff na dnu crta dugme „Ostavi recenziju". Ekran ga nema: recenzije dolaze iz admina
-/// ili importa (task 20, Zamke), klijent nad `reviews` nema nijedan write grant, a dugme
-/// koje otvori formu koja ne može spasiti tekst je gore od dugmeta kojeg nema. Kad pisanje
-/// dobije svoj task, dugme se vraća zajedno sa RPC-om koji ga podupire.
+/// Handoff na dnu crta dugme „Ostavi recenziju". Ekran ga ni od taska 67 nema: recenzija je
+/// vezana za **završen termin**, pa se piše sa kartice tog termina u „Moji termini"
+/// (`review_sheet.dart`). Dugme ovdje bi moralo prvo pitati koji termin, a klijent bez
+/// završenog termina bi dobio formu koju baza odbija.
+///
+/// Svaka kartica nudi „Prijavi recenziju" (`report_review_action.dart`): tekst piše neko
+/// drugi, pa ga je moguće prijaviti platformi.
 ///
 /// ## Dva izvora, jedan ekran
 ///
@@ -236,15 +240,15 @@ class _Red extends StatelessWidget {
   }
 }
 
-/// Jedna recenzija — ime, datum, zvjezdice, tekst.
-class _Kartica extends StatelessWidget {
+/// Jedna recenzija — ime, datum, zvjezdice, tekst, i prijava.
+class _Kartica extends ConsumerWidget {
   const _Kartica({required this.review, required this.sada});
 
   final Review review;
   final DateTime sada;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
@@ -283,6 +287,25 @@ class _Kartica extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             _Komentar(tekst: review.comment!),
           ],
+          const SizedBox(height: AppSpacing.sm),
+          // Tiho, ispod sadržaja: prijava je izuzetak, ne radnja koju kartica nudi prva.
+          AppTappable(
+            semanticLabel: l10n.reviewReport,
+            onTap: () => prijaviRecenziju(context, ref, review.id),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 44),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l10n.reviewReport,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

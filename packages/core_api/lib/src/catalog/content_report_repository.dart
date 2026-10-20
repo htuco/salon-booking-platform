@@ -30,4 +30,14 @@ class ContentReportRepository {
       },
     );
   });
+
+  /// Prijava objavljene recenzije salona iz `x-salon-id` (task 67). Isti put i isti dnevni
+  /// limit kao slika; salon prijavu ne vidi.
+  Future<void> reportReview({required String reviewId, String? reason}) =>
+      guard(() async {
+        await _client.rpc<dynamic>(
+          'report_review',
+          params: {'p_review_id': reviewId, 'p_reason': reason},
+        );
+      });
 }

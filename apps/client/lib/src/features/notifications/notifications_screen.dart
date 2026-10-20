@@ -234,6 +234,7 @@ String notificationTitle(AppLocalizations l10n, String type) => switch (type) {
   'rejected' => l10n.notificationTypeRejected,
   'cancelled' => l10n.notificationTypeCancelled,
   'expired' => l10n.notificationTypeExpired,
+  'review_request' => l10n.notificationTypeReviewRequest,
   'reminder_d1' || 'reminder_h3' => l10n.notificationTypeReminder,
   _ => l10n.notificationTypeOther,
 };

@@ -10,8 +10,9 @@ import '../errors/errors.dart';
 /// objavljene recenzije aktivnog salona. Sakrivena recenzija i recenzija neaktivnog salona
 /// ne dolaze kao greška nego kao odsustvo reda — RLS ne vraća „zabranjeno".
 ///
-/// **Samo čitanje.** Ekran recenzija je read-only; u šemi klijent nema nijedan write grant
-/// nad `reviews`. Zato ovdje nema metode koja piše.
+/// **Pisanje ide samo kroz `submit_review`** (task 67). Klijent nema write grant nad
+/// tabelom: RPC traži njegov završen termin u salonu iz `x-salon-id` i sam pravi ime
+/// autora, pa [submit] ne šalje ni salon ni ime.
 class ReviewRepository {
   const ReviewRepository(this._client);
 
@@ -63,6 +64,51 @@ class ReviewRepository {
 
         return row == null ? null : ratingSummaryFromRow(row);
       });
+
+  /// Ocjene koje je klijent dao za [appointmentIds], kao `appointment_id → ocjena`.
+  ///
+  /// Upit ide **po mojim terminima**, ne po identitetu: klijent ne zna svoj
+  /// `auth_identity_id`, a javna politika mu daje i tuđe objavljene recenzije sa terminom.
+  /// Tuđa recenzija ne može nositi ID mog termina, pa filter po njima vraća samo moje —
+  /// i sakrivene, kroz politiku `client_own`.
+  Future<Map<String, int>> myRatings(
+    String salonId,
+    Iterable<String> appointmentIds,
+  ) => guard(() async {
+    final ids = appointmentIds.toList();
+    if (ids.isEmpty) return const <String, int>{};
+    final rows = await _client
+        .from('reviews')
+        .select('appointment_id, rating')
+        .eq('salon_id', salonId)
+        .inFilter('appointment_id', ids);
+    return {
+      for (final row in rows)
+        row['appointment_id'] as String: (row['rating'] as num).toInt(),
+    };
+  });
+
+  /// Ocjena završenog termina, 1–5, uz opcionalan tekst.
+  ///
+  /// Druga ocjena istog termina stiže kao [ConflictError] (`PT409`), termin koji salon još
+  /// nije označio završenim kao [ServerError] sa porukom baze (`PT400`).
+  Future<void> submit({
+    required String appointmentId,
+    required int rating,
+    String? comment,
+  }) => guard(() async {
+    await _client.rpc<dynamic>(
+      'submit_review',
+      params: {
+        'p_appointment_id': appointmentId,
+        'p_rating': rating,
+        'p_comment': comment,
+      },
+    );
+  });
+
+  /// Najduži tekst koji baza prima.
+  static const maxCommentLength = 1000;
 }
 
 /// Mapira `reviews` red na [Review].

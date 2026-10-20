@@ -417,6 +417,129 @@ void main() {
       container.dispose();
     });
   });
+
+  group('ocjena završenog posjeta (task 67)', () {
+    // Pravila (samo svoj, samo `completed`, jednom) drži `submit_review` i dokazuje ih
+    // `032_pisanje_recenzija.test.sql`. Ovdje: gdje ekran nudi ocjenu i šta pošalje.
+    final zavrsen = _termin(
+      dan: 5,
+      sat: 14,
+      status: AppointmentStatus.completed,
+    );
+
+    Future<ProviderContainer> naProslim(
+      WidgetTester tester,
+      _MockReviews reviews,
+      List<Appointment> termini,
+    ) async {
+      final repo = _MockAppointments();
+      when(repo.forCurrentCustomer).thenAnswer((_) async => termini);
+      final container = await _pump(tester, repo: repo, reviews: reviews);
+      await tester.tap(find.text('Prošli'));
+      await tester.pumpAndSettle();
+      return container;
+    }
+
+    testWidgets('završen posjet bez ocjene nudi „Ocijeni", otkazan ne', (
+      tester,
+    ) async {
+      final reviews = _MockReviews.bez();
+      final container = await naProslim(tester, reviews, [
+        zavrsen,
+        _termin(dan: 6, status: AppointmentStatus.cancelled),
+      ]);
+
+      expect(find.text('Ocijeni'), findsOneWidget);
+      // Ocjene se traže samo za završene termine.
+      verify(() => reviews.myRatings(_salonId, [zavrsen.id])).called(1);
+
+      container.dispose();
+    });
+
+    testWidgets('ocijenjen posjet pokazuje ocjenu, bez dugmeta', (
+      tester,
+    ) async {
+      final reviews = _MockReviews.bez(ocjene: {zavrsen.id: 4});
+      final container = await naProslim(tester, reviews, [zavrsen]);
+
+      expect(find.text('Ocijeni'), findsNothing);
+      expect(find.text('Vaša ocjena'), findsOneWidget);
+      expect(find.bySemanticsLabel('4 od 5 zvjezdica'), findsOneWidget);
+
+      container.dispose();
+    });
+
+    testWidgets('bez zvjezdice nema slanja; ocjena i tekst idu u submit', (
+      tester,
+    ) async {
+      final reviews = _MockReviews.bez();
+      when(
+        () => reviews.submit(
+          appointmentId: any(named: 'appointmentId'),
+          rating: any(named: 'rating'),
+          comment: any(named: 'comment'),
+        ),
+      ).thenAnswer((_) async {
+        when(() => reviews.myRatings(any(), any()))
+            .thenAnswer((_) async => {zavrsen.id: 4});
+      });
+      final container = await naProslim(tester, reviews, [zavrsen]);
+
+      await tester.tap(find.text('Ocijeni'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kako je bilo?'), findsOneWidget);
+
+      final posalji = find.widgetWithText(AppButton, 'Pošalji ocjenu');
+      expect(tester.widget<AppButton>(posalji).onPressed, isNull);
+
+      await tester.tap(find.byKey(const ValueKey('ocjena-4')));
+      await tester.enterText(
+        find.byKey(const ValueKey('ocjena-tekst')),
+        'Brzo i uredno.',
+      );
+      await tester.pump();
+      await tester.tap(posalji);
+      await tester.pumpAndSettle();
+
+      verify(
+        () => reviews.submit(
+          appointmentId: zavrsen.id,
+          rating: 4,
+          comment: 'Brzo i uredno.',
+        ),
+      ).called(1);
+      expect(find.text('Hvala na ocjeni.'), findsOneWidget);
+      // Lista se ponovo čita: dugme je zamijenila ocjena.
+      expect(find.text('Ocijeni'), findsNothing);
+      expect(find.text('Vaša ocjena'), findsOneWidget);
+
+      container.dispose();
+    });
+
+    testWidgets('već ocijenjeno (PT409) kaže to u sheetu', (tester) async {
+      final reviews = _MockReviews.bez();
+      when(
+        () => reviews.submit(
+          appointmentId: any(named: 'appointmentId'),
+          rating: any(named: 'rating'),
+          comment: any(named: 'comment'),
+        ),
+      ).thenThrow(const ConflictError('Ovaj termin je već ocijenjen'));
+      final container = await naProslim(tester, reviews, [zavrsen]);
+
+      await tester.tap(find.text('Ocijeni'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('ocjena-5')));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(AppButton, 'Pošalji ocjenu'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Već ste ocijenili ovaj posjet.'), findsOneWidget);
+      expect(find.text('Hvala na ocjeni.'), findsNothing);
+
+      container.dispose();
+    });
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -487,9 +610,17 @@ Appointment _termin({
 
 class _MockAppointments extends Mock implements AppointmentRepository {}
 
+class _MockReviews extends Mock implements ReviewRepository {
+  /// Repozitorij čiji `myRatings` vraća [ocjene] (podrazumijevano nijednu).
+  _MockReviews.bez({Map<String, int> ocjene = const {}}) {
+    when(() => myRatings(any(), any())).thenAnswer((_) async => ocjene);
+  }
+}
+
 Future<ProviderContainer> _pump(
   WidgetTester tester, {
   required _MockAppointments repo,
+  _MockReviews? reviews,
   DateTime? now,
   bool prijavljen = true,
   SalonSettings settings = const SalonSettings(
@@ -524,6 +655,7 @@ Future<ProviderContainer> _pump(
       salonSettingsProvider.overrideWith((ref) async => settings),
       authRepositoryProvider.overrideWithValue(auth),
       appointmentRepositoryProvider.overrideWithValue(repo),
+      reviewRepositoryProvider.overrideWithValue(reviews ?? _MockReviews.bez()),
       appointmentsNowProvider.overrideWithValue(now ?? _sada),
     ],
   );

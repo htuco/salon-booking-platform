@@ -444,6 +444,10 @@ class _FakeContentReports implements ContentReportRepository {
     pozivi.add((salonId, imageUrl, reason));
     if (greska != null) throw greska!;
   }
+
+  @override
+  Future<void> reportReview({required String reviewId, String? reason}) =>
+      throw UnimplementedError('Galerija ne prijavljuje recenzije');
 }
 
 /// Jedan swipe na sljedeću sliku. Pomak je udio širine, ne fiksni broj piksela: površina

@@ -13,6 +13,7 @@ import '../../features/appointments/new_appointment_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/pozivnica_screen.dart';
 import '../../features/clients/clients_screen.dart';
+import '../../features/reviews/reviews_screen.dart';
 import '../../features/calendar/calendar_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/more/more_screen.dart';
@@ -230,6 +231,11 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
                     (_) => const AdminClientsScreen(),
                   ),
                   ruta(
+                    AdminRoute.reviews,
+                    roditelj: AdminRoute.more,
+                    (_) => const AdminReviewsScreen(),
+                  ),
+                  ruta(
                     AdminRoute.services,
                     roditelj: AdminRoute.more,
                     (_) => const AdminServicesScreen(),
@@ -431,6 +437,9 @@ enum AdminRoute {
   appointments('/more/appointments', 'Termini'),
   appointmentDetails('/more/appointments/:id', 'Detalji termina'),
   clients('/more/clients', 'Klijenti'),
+
+  /// Recenzije salona (task 67) — čitanje i sakrivanje; canvas ga ne crta.
+  reviews('/more/reviews', 'Recenzije'),
   services('/more/services', 'Usluge'),
   employees('/more/staff', 'Radnici'),
   workingHours('/more/hours', 'Radno vrijeme'),
