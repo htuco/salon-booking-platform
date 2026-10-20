@@ -35,8 +35,10 @@ enum KanalKontakta {
 /// zemlje (v. `security.md`, „po ciframa"), pa lokalni broj iz salona van BiH ovdje dobije
 /// pogrešan prefiks. Baza se ne mijenja: ovo je samo oblik linka.
 ///
-/// `null` za prazan unos i za ono što ne liči na broj (manje od 8 ili više od 15 cifara,
-/// granica iz E.164; za `+387` najmanje 11, jer BiH nacionalni broj bez nule ima 8).
+/// `null` za prazan unos i za ono što ne liči na broj. Granice: 8–15 cifara (E.164), a za
+/// `+387` 11–12, jer BiH nacionalni broj bez nule ima 8 cifara (fiksni i većina mobilnih) ili
+/// 9 (noviji mobilni). Broj bez nule i bez pozivnog je BiH samo dok staje u tih 9; duži je
+/// strani broj kojem je salon izostavio `+`, i pogrešan `+387` bi zvao nepostojeći broj.
 /// Ekran tada ne nudi kontakt, umjesto da ponudi dugme koje ne radi.
 String? medjunarodniBroj(String? telefon) {
   final unos = telefon?.trim() ?? '';
@@ -44,16 +46,18 @@ String? medjunarodniBroj(String? telefon) {
   final cifre = unos.replaceAll(RegExp(r'\D'), '');
 
   String medjunarodne;
-  if (unos.startsWith('+')) {
-    medjunarodne = cifre;
-  } else if (cifre.startsWith('00')) {
+  if (cifre.startsWith('00')) {
+    // I „+00387 …": plus i `00` znače isto, pa je jedno od njih višak.
     medjunarodne = cifre.substring(2);
   } else if (cifre.startsWith('0')) {
+    // I „+061 …": pozivni broj države ne počinje nulom, pa je `0` nacionalna nula, a plus
+    // višak — isto pravilo kao bez plusa.
     medjunarodne = '387${cifre.substring(1)}';
-  } else if (cifre.startsWith('387')) {
+  } else if (unos.startsWith('+') || cifre.startsWith('387')) {
     medjunarodne = cifre;
   } else {
-    // „61 552 104": lokalni broj kojem je salon izostavio nulu.
+    // „61 552 104": lokalni broj kojem je salon izostavio nulu. Duži od 9 cifara odbije
+    // granica za `+387` ispod.
     medjunarodne = '387$cifre';
   }
   // „+387 061 …": adresar često drži i pozivni i nulu, a `wa.me` i Viber sa nulom ne
@@ -61,9 +65,14 @@ String? medjunarodniBroj(String? telefon) {
   if (medjunarodne.startsWith('3870')) {
     medjunarodne = '387${medjunarodne.substring(4)}';
   }
+  // „00 061 …": i poslije `00` ostaje nula, a nijedan pozivni broj države njom ne počinje.
+  if (medjunarodne.startsWith('0')) return null;
 
-  final najmanje = medjunarodne.startsWith('387') ? 11 : 8;
-  if (medjunarodne.length < najmanje || medjunarodne.length > 15) return null;
+  final (najmanje, najvise) = medjunarodne.startsWith('387')
+      ? (11, 12)
+      : (8, 15);
+  if (medjunarodne.length < najmanje || medjunarodne.length > najvise)
+    return null;
   return '+$medjunarodne';
 }
 
@@ -87,8 +96,10 @@ Uri uriKontakta(KanalKontakta kanal, String broj) {
 ///
 /// **Viber na webu ne postoji kao dugme.** `viber://` u pregledniku bez instalirane
 /// desktop aplikacije ne radi ništa i ne javi grešku, a `canLaunchUrl` na webu za
-/// nepoznatu šemu ne zna odgovor — dugme bi bilo mrtvo. `tel:` i `https://wa.me/` na webu
-/// rade (sistemski izbor aplikacije, WhatsApp Web).
+/// nepoznatu šemu ne zna odgovor — dugme bi bilo mrtvo. `https://wa.me/` na webu otvara
+/// WhatsApp Web (provjereno uživo). „Pozovi" ostaje jer macOS i Windows imaju handler za
+/// `tel:`, ali `tel:` u pregledniku **nije provjeren**, a neuspjeh se tamo ne vidi (v.
+/// [kontaktiraj]).
 List<KanalKontakta> kanaliPoruke({required bool web}) => web
     ? const [KanalKontakta.whatsapp]
     : const [KanalKontakta.viber, KanalKontakta.whatsapp];
@@ -111,6 +122,9 @@ final otvoriLinkProvider = Provider<Future<bool> Function(Uri)>(
 ///
 /// Za razliku od klijentske app-e, ovdje se neuspjeh **ne guta**: vlasnik je usred posla i
 /// treba znati da Viber nije instaliran, inače tapne ponovo i misli da app ne radi.
+///
+/// **Na webu toast ne hvata neuspjeh.** Launcher tamo otvara novi prozor sa `noopener` i
+/// uvijek javi uspjeh, pa link bez handlera ostane tih — toast radi samo na iOS-u i Androidu.
 Future<void> kontaktiraj(
   BuildContext context,
   WidgetRef ref,
@@ -155,6 +169,9 @@ Future<void> ponudiPoruku(
   final izbor = await showModalBottomSheet<KanalKontakta>(
     context: context,
     useRootNavigator: true,
+    // Kao „Šta dodajemo?" iz mobilnog shella: bez ovoga sheet u landscapeu sa notchom
+    // prelazi visinu i WhatsApp ostaje ispod ivice.
+    isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
     barrierColor: boje.sidebarBackground.withValues(alpha: 0.45),
@@ -167,7 +184,7 @@ Future<void> ponudiPoruku(
       final tekst = Theme.of(sheetContext).textTheme;
       return SafeArea(
         top: false,
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

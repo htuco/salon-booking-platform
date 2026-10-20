@@ -448,6 +448,47 @@ void main() {
       expect(otvoreni.last, Uri.parse('https://wa.me/38761552104'));
     });
 
+    testWidgets('u landscapeu sa notchom sheet staje i WhatsApp se tapne', (
+      tester,
+    ) async {
+      // iPhone SE širine u landscapeu, sa insetima telefona sa notchom: bez skrolanja
+      // sheet je prelazio visinu za 27 px i WhatsApp je ostajao ispod ivice.
+      tester.view.padding = const FakeViewPadding(
+        left: 47,
+        right: 47,
+        bottom: 21,
+      );
+      tester.view.viewPadding = const FakeViewPadding(
+        left: 47,
+        right: 47,
+        bottom: 21,
+      );
+      final (otvoreni, override) = launcher();
+      await _naSirini(
+        tester,
+        const Size(667, 375),
+        _ekran(
+          _termin(),
+          dodatno: [
+            override,
+            kanaliPorukeProvider.overrideWithValue(kanaliPoruke(web: false)),
+          ],
+        ),
+      );
+
+      await tester.ensureVisible(find.text('Poruka'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Poruka'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('WhatsApp'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('WhatsApp'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(otvoreni, [Uri.parse('https://wa.me/38761552104')]);
+    });
+
     testWidgets('na webu „Poruka" ide pravo na WhatsApp, bez Vibera', (
       tester,
     ) async {

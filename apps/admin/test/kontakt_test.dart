@@ -37,6 +37,24 @@ void main() {
     test('pozivni bez plusa i lokalni bez nule', () {
       expect(medjunarodniBroj('387 61 552 104'), '+38761552104');
       expect(medjunarodniBroj('61 552 104'), '+38761552104');
+      expect(medjunarodniBroj('64 123 4567'), '+387641234567');
+    });
+
+    test('strani broj bez plusa ne dobije lažni +387', () {
+      // Duži od 9 cifara nije BiH broj bez nule, nego strani kojem fali `+`.
+      expect(medjunarodniBroj('385 91 234 5678'), isNull);
+      expect(medjunarodniBroj('49 151 2345678'), isNull);
+    });
+
+    test('BiH broj duži od 9 cifara bez nule nema link', () {
+      expect(medjunarodniBroj('+387 61 552 104 99'), isNull);
+      expect(medjunarodniBroj('061 552 104 99'), isNull);
+    });
+
+    test('plus uz nulu nije pozivni koji počinje nulom', () {
+      expect(medjunarodniBroj('+061 552 104'), '+38761552104');
+      expect(medjunarodniBroj('+00387 61 552 104'), '+38761552104');
+      expect(medjunarodniBroj('00 061 552 104'), isNull);
     });
 
     test('prazno i ono što nije broj nema link', () {
