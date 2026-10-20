@@ -49,10 +49,12 @@ class AdminUcitavanje extends StatelessWidget {
 /// **jednobojan**: termin je ista boja kao linija, prigušena, jer koralni termin ne bi
 /// imao kontrast ni na koralnom ni na sivom dugmetu.
 ///
-/// Dugme dok radnja traje je **onemogućeno** (`onPressed: null`), pa sivo. Njegov
-/// `DefaultTextStyle` je tada M3 `onSurface` na 38 % — termin bi na tome pao na ~13 % i
-/// nestao. Zato se ne nasljeđuje boja teksta nego se uzima [AdminPalette.ink] (≈11:1 na
-/// sivom dugmetu; ista vrijednost kao `onAction` na koralnom).
+/// Korisnici su onemogućena dugmad (`onPressed: null`, dakle siva) i `suffixIcon` polja
+/// pretrage dok pretraga traje. Onemogućenom dugmetu je `DefaultTextStyle` M3 `onSurface`
+/// na 38 % — termin bi na tome pao na ~13 % i nestao. Zato se ne nasljeđuje boja teksta
+/// nego se uzima [AdminPalette.ink] (≈11:1 na sivom dugmetu). Admin je uvijek svijetao
+/// (ADR-0020), a u svijetloj paleti je `ink` ista vrijednost kao `onAction`, pa bi znak
+/// ostao čitljiv i na koralnom dugmetu; u tamnoj paleti se to dvoje razlikuje.
 ///
 /// Na 16–24 px linija i tačka se stope, pa dugme nosi liniju **bez tačke** (tako je i
 /// „PRIJAVLJUJEM" na stranici sa znakom), a linija ne pada ispod 2 px.

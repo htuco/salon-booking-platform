@@ -101,9 +101,11 @@ Repo je još mlad, pa je lista kratka i namjerno pokazuje *dokazane* obrasce:
   (`apps/admin/lib/src/core/widgets/admin_ucitavanje.dart`): `AdminUcitavanje` za čekanje bez
   sadržaja, `AdminButtonBusy` u dugmetu dok radnja traje, i isti znak u CSS-u kao splash u
   `apps/admin/web/index.html`. Ekran sa podacima i dalje crta kostur (`AdminSkeletonList`), jer
-  kostur drži raspored. Pokret i boje (`action`, `nowLine`) postoje na dva mjesta — Dart i CSS —
-  i `web_splash_test.dart` pada kad se razmimoiđu; izvor istine je
-  `apps/admin/assets/brand/melura-ucitavanje.svg`.
+  kostur drži raspored. Znak postoji na tri mjesta — SVG
+  (`apps/admin/assets/brand/melura-ucitavanje.svg`, izvor istine), Dart i CSS.
+  `web_splash_test.dart` drži Dart i CSS zajedno samo za pokret (trajanje, kriva, hod ±34) i
+  boje (`action`, `nowLine`); geometriju (termin 52 × 76, `rx` 10, linija 84 × 7) i sam SVG ne
+  poredi niko, pa se uz promjenu oblika ručno mijenjaju sva tri.
 - **Logika koja bi se sakrila u `build`** → `apps/client/lib/src/features/home/salon_schedule.dart`.
   Živi status "Otvoreno do 20:00" se računa iz `WorkingHour`-a u zasebnoj klasi koja prima `now`
   kao parametar, pa test može stajati u srijedu u 08:00 bez `pumpWidget`-a i bez čekanja srijede.
