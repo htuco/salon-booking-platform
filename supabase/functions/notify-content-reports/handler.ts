@@ -6,7 +6,11 @@ export type ContentReport = {
   id: string;
   salon_id: string;
   salon_name: string;
-  image_url: string;
+  /** Prijavljena slika, ili `null` kad je prijavljena recenzija (task 67). */
+  image_url: string | null;
+  review_id: string | null;
+  review_rating: number | null;
+  review_comment: string | null;
   reason: string | null;
   created_at: string;
 };
@@ -47,11 +51,23 @@ export function plain(value: string) {
  * treba slika i salon, ne ko je prijavio. Red u `content_reports` ima ostalo.
  */
 export function messageFor(r: ContentReport) {
+  // Recenzija (task 67): ocjena i tekst umjesto slike. Tekst je klijentov, pa ide kroz isti
+  // `plain` kao razlog; autor se ne šalje iz istog razloga kao prijavitelj.
+  const sadrzaj = r.review_id
+    ? [
+      `Prijava recenzije — ${plain(r.salon_name)}`,
+      `Salon: ${r.salon_id}`,
+      `Recenzija: ${r.review_id} (${r.review_rating ?? "?"}/5)`,
+      `Tekst: ${r.review_comment ? plain(r.review_comment) : "(bez teksta)"}`,
+    ]
+    : [
+      `Prijava slike — ${plain(r.salon_name)}`,
+      `Salon: ${r.salon_id}`,
+      // URL je iz galerije salona (baza provjerava), ali i njega bira vlasnik.
+      `Slika: ${plain(r.image_url ?? "")}`,
+    ];
   return [
-    `Prijava slike — ${plain(r.salon_name)}`,
-    `Salon: ${r.salon_id}`,
-    // URL je iz galerije salona (baza provjerava), ali i njega bira vlasnik.
-    `Slika: ${plain(r.image_url)}`,
+    ...sadrzaj,
     `Razlog: ${r.reason ? plain(r.reason) : "(nije naveden)"}`,
     `Prijava: ${r.id} (${r.created_at})`,
   ].join("\n");

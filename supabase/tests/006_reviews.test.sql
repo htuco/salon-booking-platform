@@ -91,8 +91,9 @@ set local role authenticated;
 select is((select count(*)::int from public.reviews),25,'Klijent vidi isto sto i anon');
 select is((select average from public.salon_rating_summary where salon_id='550e8400-e29b-41d4-a716-446655440000'),
   4.8::numeric,'Prijava ne mijenja prosjek');
-select results_eq($$update public.reviews set rating=1 returning id$$,$$select null::uuid where false$$,
-  'Klijentov update ne pogadja nijedan red');
+-- Od taska 67 `authenticated` nema `update` grant: klijent pise samo kroz `submit_review`.
+select throws_ok($$update public.reviews set rating=1$$,
+  '42501','permission denied for table reviews','Klijent ne mijenja recenzije direktno');
 reset role;
 
 -- ---------------------------------------------------------------------------
@@ -103,8 +104,9 @@ set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440001
 set local role authenticated;
 select is((select count(*)::int from public.reviews),26,
   'Vlasnik A vidi i sakrivenu recenziju svog salona');
+-- Od taska 67 agregat broji samo objavljene za svakoga: broj na ekranu je javni broj.
 select is((select average from public.salon_rating_summary where salon_id='550e8400-e29b-41d4-a716-446655440000'),
-  4.7::numeric,'Vlasnik A vidi prosjek sa sakrivenom — 4.7, ne 4.8');
+  4.8::numeric,'Vlasnik A vidi javni prosjek — 4.8, sakrivena jedinica ne ulazi');
 select is((select count(*)::int from public.reviews where salon_id='550e8400-e29b-41d4-a716-446655440098'),0,
   'Vlasnik A ne vidi recenzije tudjeg salona ni kad je taj salon neaktivan');
 select ok((select count(*) from public.reviews where is_published=false) = 1,
@@ -115,8 +117,8 @@ set local request.jwt.claims = '{"sub":"a0000000-0000-4000-8000-000000000012","r
 set local role authenticated;
 select is((select count(*)::int from public.reviews where salon_id='550e8400-e29b-41d4-a716-446655440000'),25,
   'Vlasnik B nad salonom A pada na javnu politiku — 25, bez sakrivene');
-select results_eq($$delete from public.reviews where salon_id='550e8400-e29b-41d4-a716-446655440000' returning id$$,
-  $$select null::uuid where false$$,'Vlasnik B ne moze obrisati recenziju salona A');
+select throws_ok($$delete from public.reviews where salon_id='550e8400-e29b-41d4-a716-446655440000'$$,
+  '42501','permission denied for table reviews','Vlasnik B ne moze obrisati recenziju salona A');
 reset role;
 
 select * from finish();
