@@ -123,7 +123,7 @@ kao u bazi, jedna prijava za sliku i recenziju). **Ostaje:** merge, deploy (**pr
 
 ### 72 — Super admin konzola 🟡 (2026-10-20)
 
-Grana `feat/super-admin-konzola`, ADR-0032 (**predložen**). `apps/superadmin` je Dart server na
+Grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), ADR-0032 (**predložen**). `apps/superadmin` je Dart server na
 `127.0.0.1` sa jednom stranicom: novi salon (baza → `tenant.yaml` → generatori), poziv vlasnika
 kroz postojeći `accept-staff-invite`, gašenje, boje i tema (baza i fajl), store status, a lista
 pokazuje i šta fali u CI matrici. Šest `platform_*` RPC-ova samo za `service_role`. pgTAP 1000

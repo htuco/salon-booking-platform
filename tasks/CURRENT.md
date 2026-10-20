@@ -4,7 +4,7 @@ Puni task: [tasks/zero-crisis/72-super-admin-lokalno.md](zero-crisis/72-super-ad
 
 ## Status
 
-U toku (grana `feat/super-admin-konzola`, 2026-10-20). Kod, testovi i provjera uživo na lokalnom
+U toku (grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), 2026-10-20). Kod, testovi i provjera uživo na lokalnom
 stacku su gotovi. Ostaju odluka o ADR-0032, pregled, CI i deploy migracije.
 
 ## Ciljevi
