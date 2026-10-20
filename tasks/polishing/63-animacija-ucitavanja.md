@@ -70,6 +70,7 @@ dart run melos run analyze   → svih 5 paketa: No issues found!
 dart run melos run test      → core_domain 102, core_api 146, core_ui 146, client 667, admin 686 — SUCCESS
 apps/admin flutter test      → 686 (poslije popravki iz pregleda)
 web_splash_test: pokvareno trajanje (1.5s) i tamna linija → -2; pogrešna boja .sada → pada
+web_splash_test: themeMode vraćen na ThemeMode.system u main.dart → -1 (splash nema tamnu varijantu)
 ```
 
 Uživo (statički build nad lokalnim stackom, Playwright):

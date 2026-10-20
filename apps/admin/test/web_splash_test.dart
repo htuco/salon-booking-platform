@@ -2,7 +2,7 @@
 ///
 /// Admin je Flutter **web**, pa se prije prvog Flutter kadra vidi obična HTML stranica.
 /// Dok je `index.html` bio netaknut Flutter šablon, to je bila **bijela** stranica — pa
-/// se pri svakom otvaranju vidio bijeli bljesak, a u tamnoj temi bijelo pa tamno.
+/// se pri svakom otvaranju vidio bijeli bljesak prije radne površine.
 ///
 /// CSS ne može čitati Dart tokene, pa je ta jedna boja nužno prepisana na dva mjesta.
 /// Ovaj test je cijena tog izuzetka: kad se `ground` promijeni u `admin_colors.dart`, a
@@ -44,6 +44,16 @@ void main() {
     expect(html, isNot(contains('prefers-color-scheme: dark')));
     expect(html, isNot(contains(_hex(AdminPalette.dark.ground))));
     expect(html, contains('color-scheme: light;'));
+    // Razlog gornjih tvrdnji, ne samo posljedica: bez ovoga povratak `ThemeMode.system`
+    // ne obori nijedan test, a OS u dark modu opet vidi svijetli splash pa tamnu app-u.
+    expect(
+      File('lib/main.dart').readAsStringSync(),
+      contains('themeMode: ThemeMode.light'),
+      reason:
+          'Splash u web/index.html je samo svijetao jer je admin uvijek svijetao '
+          '(ADR-0020). Uz povratak `ThemeMode.system` mora se vratiti i tamni '
+          'splash (pozadina i znak po `prefers-color-scheme: dark`) i ovaj test.',
+    );
   });
 
   group('animacija učitavanja (task 63) prati AdminUcitavanje', () {
