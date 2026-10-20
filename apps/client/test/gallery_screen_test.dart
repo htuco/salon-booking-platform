@@ -434,6 +434,43 @@ void main() {
       expect(find.text('Previše prijava u jednom danu'), findsOneWidget);
       expect(find.textContaining('Hvala'), findsNothing);
     });
+
+    testWidgets('sheet na velikom sistemskom fontu skrola, ne presijeca', (
+      tester,
+    ) async {
+      // Sheet je zajednički sa prijavom recenzije (`prijaviSadrzaj`). Bez skrola naslov,
+      // opis i četiri razloga na 200 % fonta prelaze visinu koju sheet dobije (9/16
+      // ekrana), a presječen `Column` framework prijavi kao pad testa. Ekran je nizak i
+      // širok (telefon položeno), da mjeri sheet, ne zaglavlje lightboxa.
+      final auth = FakeAuthRepository(
+        pocetnaSesija: FakeAuthRepository.sesijaNakonPrijave,
+      );
+      addTearDown(auth.dispose);
+      final prijave = _FakeContentReports();
+      await otvoriLightbox(tester, auth: auth, prijave: prijave);
+      tester.view.physicalSize = const Size(800, 480);
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.bySemanticsLabel('Prijavi sliku'));
+      await tester.pumpAndSettle();
+
+      // Zadnji razlog je ispod ivice sheeta i do njega se stiže skrolom.
+      final zadnji = find.text('Nešto drugo');
+      await tester.scrollUntilVisible(
+        zadnji,
+        100,
+        scrollable: find.ancestor(
+          of: find.text('Šta nije u redu sa slikom?'),
+          matching: find.byType(Scrollable),
+        ),
+      );
+      await tester.tap(zadnji);
+      await tester.pumpAndSettle();
+
+      expect(prijave.pozivi.single.$3, 'Nešto drugo');
+    });
   });
 }
 
