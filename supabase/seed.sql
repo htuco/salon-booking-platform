@@ -492,7 +492,11 @@ values
 ('00000000-0000-0000-0000-000000000000','11111111-0000-4000-8000-000000000002','authenticated','authenticated',
  'admin@beautystudiotravnik.test', extensions.crypt('admin123456', extensions.gen_salt('bf')), now(),
  '{"provider":"email","providers":["email"],"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440001"}',
- '{"name":"Vlasnica Beauty Studio Travnik"}', now(), now())
+ '{"name":"Vlasnica Beauty Studio Travnik"}', now(), now()),
+('00000000-0000-0000-0000-000000000000','11111111-0000-4000-8000-000000000003','authenticated','authenticated',
+ 'radnik@beautystudiotravnik.test', extensions.crypt('admin123456', extensions.gen_salt('bf')), now(),
+ '{"provider":"email","providers":["email"],"role":"employee","salon_id":"550e8400-e29b-41d4-a716-446655440001"}',
+ '{"name":"Amina"}', now(), now())
 on conflict (id) do nothing;
 
 -- Prazni stringovi umjesto NULL-a u svim nullable text kolonama koje GoTrue skenira
@@ -506,9 +510,9 @@ begin
     'phone_change','phone_change_token','email_change_token_current','reauthentication_token']
   loop
     execute format(
-      'update auth.users set %I = %L where id in (%L,%L) and %I is null',
+      'update auth.users set %I = %L where id in (%L,%L,%L) and %I is null',
       kolona, '', '11111111-0000-4000-8000-000000000001',
-      '11111111-0000-4000-8000-000000000002', kolona);
+      '11111111-0000-4000-8000-000000000002', '11111111-0000-4000-8000-000000000003', kolona);
   end loop;
 end $$;
 
@@ -521,6 +525,9 @@ values
  now(), now(), now()),
 ('11111111-0000-4000-8000-000000000002','11111111-0000-4000-8000-000000000002','11111111-0000-4000-8000-000000000002','email',
  '{"sub":"11111111-0000-4000-8000-000000000002","email":"admin@beautystudiotravnik.test","email_verified":true,"phone_verified":false}',
+ now(), now(), now()),
+('11111111-0000-4000-8000-000000000003','11111111-0000-4000-8000-000000000003','11111111-0000-4000-8000-000000000003','email',
+ '{"sub":"11111111-0000-4000-8000-000000000003","email":"radnik@beautystudiotravnik.test","email_verified":true,"phone_verified":false}',
  now(), now(), now())
 on conflict (id) do nothing;
 
@@ -529,6 +536,22 @@ insert into public.users(id, salon_id, name, email, role) values
  'Vlasnik Barber Studio Vitez','admin@barberstudiovitez.test','salon_admin'),
 ('11111111-0000-4000-8000-000000000002','550e8400-e29b-41d4-a716-446655440001',
  'Vlasnica Beauty Studio Travnik','admin@beautystudiotravnik.test','salon_admin')
+on conflict (id) do nothing;
+
+-- Radnik (task 59): nalog za ulogu `employee`, da se Melura radnika provjerava bez ručnog SQL-a.
+-- `private.is_employee()` trazi claim `role = employee` i `salon_id` **i** red u `public.users`
+-- sa vezom na aktivnog radnika — isti dvostruki uslov kao kod vlasnika, plus veza.
+--
+-- **Vezan je za Aminu (beauty), ne za Emira.** Testovi vezu svoje naloge za Emira i Amara
+-- (`021`, `025`, `rest_employee_izolacija.ts`, `rest_pozivi_osoblja.ts`), a `users_employee_unique`
+-- dozvoljava jedan nalog po radniku: seed nalog na Emiru bi te testove oborio, a REST testove i
+-- trajno, jer ne rollbackuju. Aminu ne veze nijedan test, a oba seed termina salona B su njena,
+-- pa radnik odmah vidi svoje termine.
+--
+--   radnik@beautystudiotravnik.test — lozinka: `admin123456` (samo lokalni stack)
+insert into public.users(id, salon_id, name, email, role, employee_id) values
+('11111111-0000-4000-8000-000000000003','550e8400-e29b-41d4-a716-446655440001',
+ 'Amina','radnik@beautystudiotravnik.test','employee','20000000-0000-4000-8000-000000000003')
 on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------------
