@@ -14,6 +14,7 @@ import 'package:admin/src/features/appointments/new_appointment_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -476,6 +477,27 @@ void main() {
 
       await tester.tap(find.text('Pozovi'));
       // `pump`, ne `pumpAndSettle`: info toast se sam gasi, pa ga settle odvede.
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Poziv se ne može otvoriti.'), findsOneWidget);
+    });
+
+    testWidgets('kad platforma baci, isti toast', (tester) async {
+      await _naSirini(
+        tester,
+        _telefon,
+        _ekran(
+          _termin(),
+          dodatno: [
+            otvoriLinkProvider.overrideWithValue(
+              (uri) async => throw PlatformException(code: 'NO_ACTIVITY'),
+            ),
+          ],
+        ),
+      );
+
+      await tester.tap(find.text('Pozovi'));
       await tester.pump();
       await tester.pump();
 

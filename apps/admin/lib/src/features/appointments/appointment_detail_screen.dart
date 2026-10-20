@@ -589,6 +589,9 @@ class _BrzeRadnje extends ConsumerWidget {
           dugme('Poruka', () => ponudiPoruku(context, ref, broj)),
         ],
         dugme('Profil', () => pokaziUskoro(context, 'Profil klijenta')),
+        // Bez broja „Profil" zadrži širinu jedne trećine: placeholder preko cijelog reda
+        // bi bio najveća kontrola na kartici.
+        if (broj == null) const Spacer(flex: 2),
       ],
     );
   }

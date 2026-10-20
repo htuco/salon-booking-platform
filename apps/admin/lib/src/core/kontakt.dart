@@ -36,13 +36,14 @@ enum KanalKontakta {
 /// pogrešan prefiks. Baza se ne mijenja: ovo je samo oblik linka.
 ///
 /// `null` za prazan unos i za ono što ne liči na broj (manje od 8 ili više od 15 cifara,
-/// granica iz E.164). Ekran tada ne nudi kontakt, umjesto da ponudi dugme koje ne radi.
+/// granica iz E.164; za `+387` najmanje 11, jer BiH nacionalni broj bez nule ima 8).
+/// Ekran tada ne nudi kontakt, umjesto da ponudi dugme koje ne radi.
 String? medjunarodniBroj(String? telefon) {
   final unos = telefon?.trim() ?? '';
   if (unos.isEmpty) return null;
   final cifre = unos.replaceAll(RegExp(r'\D'), '');
 
-  final String medjunarodne;
+  String medjunarodne;
   if (unos.startsWith('+')) {
     medjunarodne = cifre;
   } else if (cifre.startsWith('00')) {
@@ -55,8 +56,14 @@ String? medjunarodniBroj(String? telefon) {
     // „61 552 104": lokalni broj kojem je salon izostavio nulu.
     medjunarodne = '387$cifre';
   }
+  // „+387 061 …": adresar često drži i pozivni i nulu, a `wa.me` i Viber sa nulom ne
+  // nađu osobu.
+  if (medjunarodne.startsWith('3870')) {
+    medjunarodne = '387${medjunarodne.substring(4)}';
+  }
 
-  if (medjunarodne.length < 8 || medjunarodne.length > 15) return null;
+  final najmanje = medjunarodne.startsWith('387') ? 11 : 8;
+  if (medjunarodne.length < najmanje || medjunarodne.length > 15) return null;
   return '+$medjunarodne';
 }
 
@@ -114,15 +121,15 @@ Future<void> kontaktiraj(
   var otvoreno = false;
   try {
     otvoreno = await otvori(uriKontakta(kanal, broj));
-  } catch (_) {
-    // Platforma baca kad šema nije registrovana; ishod je isti kao `false`.
+  } catch (e) {
+    // Platforma baca kad šema nije registrovana; za vlasnika je ishod isti kao `false`,
+    // a uzrok ostaje u logu.
+    debugPrint('kontakt: $kanal nije otvoren: $e');
   }
   if (otvoreno || !context.mounted) return;
   AdminToast.info(
     context,
-    kanal == KanalKontakta.poziv
-        ? 'Poziv se ne može otvoriti.'
-        : '${kanal.naziv} se ne može otvoriti.',
+    '${kanal.naziv} se ne može otvoriti.',
     opis: 'Na ovom uređaju nema aplikacije za to.',
   );
 }
@@ -178,10 +185,11 @@ Future<void> ponudiPoruku(
               ),
               const SizedBox(height: AdminSpacing.lg),
               for (final kanal in kanali)
+                // Bez ikone, kao lista u profilu: ista ikona za oba kanala ne nosi
+                // ništa, a logo tuđeg brenda u adminu ne crtamo.
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   minTileHeight: AdminSize.touchTarget,
-                  leading: const Icon(Icons.chat_bubble_outline),
                   title: Text(kanal.naziv),
                   onTap: () => Navigator.pop(sheetContext, kanal),
                 ),

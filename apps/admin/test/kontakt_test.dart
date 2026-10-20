@@ -24,6 +24,16 @@ void main() {
       expect(medjunarodniBroj('0049 151 2345678'), '+491512345678');
     });
 
+    test('pozivni uz nulu gubi nulu', () {
+      expect(medjunarodniBroj('+387 061 552 104'), '+38761552104');
+      expect(medjunarodniBroj('00387 061 552 104'), '+38761552104');
+    });
+
+    test('BiH broj kraći od 8 cifara nema link', () {
+      expect(medjunarodniBroj('12345'), isNull);
+      expect(medjunarodniBroj('061 552'), isNull);
+    });
+
     test('pozivni bez plusa i lokalni bez nule', () {
       expect(medjunarodniBroj('387 61 552 104'), '+38761552104');
       expect(medjunarodniBroj('61 552 104'), '+38761552104');
