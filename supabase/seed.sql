@@ -454,7 +454,8 @@ insert into public.salon_policies(salon_id,sort_order,title,body) values
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------------
--- Osoblje: po jedan `salon_admin` za svaki demo salon.
+-- Osoblje: po jedan `salon_admin` za svaki demo salon, i od taska 59 jedan radnik (salon B,
+-- blok ispod admin naloga).
 --
 -- Do taska 23 seed nije imao **nijednog** admina, pa se u admin aplikaciju nije imalo
 -- cime prijaviti. Testovi to nisu otkrivali jer svaki pgTAP fajl pravi svoje korisnike i
@@ -466,11 +467,12 @@ on conflict do nothing;
 -- Samo jedan od njih znaci admina koji se prijavi ali ne vidi nijedan red, sto na ekranu
 -- izgleda kao prazna baza umjesto kao pogresna konfiguracija. Detalji: `.claude/docs/security.md`.
 --
--- Lozinka je ista za oba i namjerno trivijalna: **ovo je lokalni demo seed**, koji nikad ne
--- ide na produkciju (`supabase db reset` je lokalna komanda). Pravi salon dobija nalog kroz
--- poziv iz super admin konzole u Sprintu 3, ne kroz seed.
+-- Lozinka je ista za sva tri naloga i namjerno trivijalna: **ovo je lokalni demo seed**, koji
+-- nikad ne ide na produkciju (`supabase db reset` je lokalna komanda). Pravi salon dobija nalog
+-- kroz poziv iz super admin konzole u Sprintu 3, ne kroz seed.
 --
---   admin@barberstudiovitez.test / admin@beautystudiotravnik.test — lozinka: `admin123456`
+--   admin@barberstudiovitez.test / admin@beautystudiotravnik.test / radnik@beautystudiotravnik.test
+--   — lozinka: `admin123456`
 --
 -- `instance_id`, `aud` i `role` moraju biti popunjeni tacno ovako: GoTrue filtrira po njima
 -- pri prijavi, a red bez njih postoji u tabeli i **ne moze se prijaviti** — greska koja se
@@ -542,11 +544,15 @@ on conflict (id) do nothing;
 -- `private.is_employee()` trazi claim `role = employee` i `salon_id` **i** red u `public.users`
 -- sa vezom na aktivnog radnika — isti dvostruki uslov kao kod vlasnika, plus veza.
 --
--- **Vezan je za Aminu (beauty), ne za Emira.** Testovi vezu svoje naloge za Emira i Amara
--- (`021`, `025`, `rest_employee_izolacija.ts`, `rest_pozivi_osoblja.ts`), a `users_employee_unique`
--- dozvoljava jedan nalog po radniku: seed nalog na Emiru bi te testove oborio, a REST testove i
--- trajno, jer ne rollbackuju. Aminu ne veze nijedan test, a oba seed termina salona B su njena,
--- pa radnik odmah vidi svoje termine.
+-- **Vezan je za Aminu (beauty), ne za Emira.** Testovi osoblja vezu svoje naloge i pozive za
+-- Emira i Amara (danas pgTAP `020`–`025`, `rest_employee_izolacija.ts`, `rest_pozivi_osoblja.ts`;
+-- spisak daje `grep -rlE "'employee'|\"employee\"" supabase/tests/`), a `users_employee_unique`
+-- dozvoljava jedan nalog po radniku: seed nalog na Emiru bi te testove oborio (poziv za Emira
+-- pada na „Ovaj radnik vec ima nalog"), a REST testove i trajno, jer ne rollbackuju.
+-- Aminu ne veze nijedan test, a oba seed termina salona B su njena, pa radnik odmah vidi svoje
+-- termine — ali samo zato sto termini ispod biraju radnika `order by name limit 1`, a
+-- „Amina" < „Lejla"; preimenovanje radnika ili drugi izbor u insertu termina ostavlja ovaj nalog
+-- bez ijednog termina.
 --
 --   radnik@beautystudiotravnik.test — lozinka: `admin123456` (samo lokalni stack)
 insert into public.users(id, salon_id, name, email, role, employee_id) values
