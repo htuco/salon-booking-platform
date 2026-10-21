@@ -3,6 +3,7 @@ import {
   createHandler,
   messageFor,
   type PushJob,
+  startsIn,
   workerAuthorization,
 } from "./handler.ts";
 
@@ -123,6 +124,8 @@ Deno.test("Svi scenariji imaju salon, stabilan ID i samo dozvoljenu rutu", () =>
       "expired",
       "review_request",
       "waitlist_offer",
+      "reminder_d1",
+      "reminder_h3",
     ]
   ) {
     const { message } = messageFor({ ...job, type });
@@ -186,4 +189,65 @@ Deno.test("Potpis ne otkriva tajnu i odbija star ili promijenjen timestamp", asy
     !await authorized(stale, "worker-secret"),
     "Stari potpis je prihvacen",
   );
+});
+
+Deno.test("Podsjetnici: tekst po vertikali, satni sa preostalim vremenom", () => {
+  const d1 = messageFor({
+    ...job,
+    type: "reminder_d1",
+    appointment_term: "Tretman",
+  });
+  assert(d1.message.notification.title === "Podsjetnik", "Pogresan naslov");
+  assert(
+    d1.message.notification.body ===
+      "Tretman je sutra. Detalji su u aplikaciji.",
+    `Dnevni tekst: ${d1.message.notification.body}`,
+  );
+
+  const h3 = messageFor({
+    ...job,
+    type: "reminder_h3",
+    appointment_term: "Termin",
+    starts_in_minutes: 178,
+  });
+  assert(
+    h3.message.notification.body ===
+      "Termin počinje za 3 sata. Detalji su u aplikaciji.",
+    `Satni tekst: ${h3.message.notification.body}`,
+  );
+  assert(h3.message.data.appointment_id === job.appointment_id, "Nema termina");
+});
+
+Deno.test("Podsjetnik bez novih kolona (stari claim) ne pada i ne laze", () => {
+  const d1 = messageFor({ ...job, type: "reminder_d1" });
+  assert(
+    d1.message.notification.body ===
+      "Termin je sutra. Detalji su u aplikaciji.",
+    "Bez rijeci iz baze ide Termin",
+  );
+  const h3 = messageFor({ ...job, type: "reminder_h3", appointment_term: " " });
+  assert(
+    h3.message.notification.body ===
+      "Termin uskoro počinje. Detalji su u aplikaciji.",
+    `Bez minuta nema broja: ${h3.message.notification.body}`,
+  );
+});
+
+Deno.test("Satni broji po bosanski", () => {
+  const ocekivano: Array<[number, string]> = [
+    [60, "za 1 sat"],
+    [120, "za 2 sata"],
+    [240, "za 4 sata"],
+    [300, "za 5 sati"],
+    [660, "za 11 sati"],
+    [720, "za 12 sati"],
+    [45, "za 45 minuta"],
+    [1, "za 1 minutu"],
+    [2, "za 2 minute"],
+    [21, "za 21 minutu"],
+    [12, "za 12 minuta"],
+  ];
+  for (const [minute, tekst] of ocekivano) {
+    assert(startsIn(minute) === tekst, `${minute} min: ${startsIn(minute)}`);
+  }
 });
