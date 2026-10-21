@@ -69,6 +69,9 @@ class BookingSettingsInput {
     required this.minCancelHours,
     required this.requireStaffChoice,
     required this.showPricesInApp,
+    required this.remindersEnabled,
+    required this.hourlyReminderEnabled,
+    required this.hourlyReminderHours,
   });
 
   /// Postojeće postavke kao početno stanje forme.
@@ -82,6 +85,9 @@ class BookingSettingsInput {
     minCancelHours: s.minCancelHours,
     requireStaffChoice: s.requireStaffChoice,
     showPricesInApp: s.showPricesInApp,
+    remindersEnabled: s.remindersEnabled,
+    hourlyReminderEnabled: s.hourlyReminderEnabled,
+    hourlyReminderHours: s.hourlyReminderHours,
   );
 
   final String bookingMode;
@@ -94,6 +100,13 @@ class BookingSettingsInput {
   final bool requireStaffChoice;
   final bool showPricesInApp;
 
+  /// Dnevni podsjetnik, 24 h prije (`reminders_enabled`).
+  final bool remindersEnabled;
+
+  /// Satni podsjetnik i njegov N (1–12).
+  final bool hourlyReminderEnabled;
+  final int hourlyReminderHours;
+
   BookingSettingsInput copyWith({
     String? bookingMode,
     String? bookingGranularity,
@@ -104,6 +117,9 @@ class BookingSettingsInput {
     int? minCancelHours,
     bool? requireStaffChoice,
     bool? showPricesInApp,
+    bool? remindersEnabled,
+    bool? hourlyReminderEnabled,
+    int? hourlyReminderHours,
   }) => BookingSettingsInput(
     bookingMode: bookingMode ?? this.bookingMode,
     bookingGranularity: bookingGranularity ?? this.bookingGranularity,
@@ -115,6 +131,9 @@ class BookingSettingsInput {
     minCancelHours: minCancelHours ?? this.minCancelHours,
     requireStaffChoice: requireStaffChoice ?? this.requireStaffChoice,
     showPricesInApp: showPricesInApp ?? this.showPricesInApp,
+    remindersEnabled: remindersEnabled ?? this.remindersEnabled,
+    hourlyReminderEnabled: hourlyReminderEnabled ?? this.hourlyReminderEnabled,
+    hourlyReminderHours: hourlyReminderHours ?? this.hourlyReminderHours,
   );
 
   @override
@@ -128,7 +147,10 @@ class BookingSettingsInput {
       other.maxAdvanceBookingDays == maxAdvanceBookingDays &&
       other.minCancelHours == minCancelHours &&
       other.requireStaffChoice == requireStaffChoice &&
-      other.showPricesInApp == showPricesInApp;
+      other.showPricesInApp == showPricesInApp &&
+      other.remindersEnabled == remindersEnabled &&
+      other.hourlyReminderEnabled == hourlyReminderEnabled &&
+      other.hourlyReminderHours == hourlyReminderHours;
 
   @override
   int get hashCode => Object.hash(
@@ -141,6 +163,9 @@ class BookingSettingsInput {
     minCancelHours,
     requireStaffChoice,
     showPricesInApp,
+    remindersEnabled,
+    hourlyReminderEnabled,
+    hourlyReminderHours,
   );
 }
 
@@ -216,6 +241,9 @@ class SettingsActions {
           minCancelHours: unos.minCancelHours,
           requireStaffChoice: unos.requireStaffChoice,
           showPricesInApp: unos.showPricesInApp,
+          remindersEnabled: unos.remindersEnabled,
+          hourlyReminderEnabled: unos.hourlyReminderEnabled,
+          hourlyReminderHours: unos.hourlyReminderHours,
         );
     _ref.invalidate(postavkeBookingProvider);
   }

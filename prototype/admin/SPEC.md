@@ -160,6 +160,12 @@ obje ljuske crtaju brojač, pa je i on dio ljuske, ne ekrana.
   (`waitlist_demand` daje samo broj, ADR-0031). Red „Lista čekanja" u Postavkama ostaje „uskoro"
   dok task 54 ne odluči o njemu: prekidač po salonu ne postoji.
   Snimak: [`docs/screenshots/task-68-melura.png`](../../docs/screenshots/task-68-melura.png).
+- **Podsjetnici u Postavkama (`3i`, „Obavijesti klijentima", task 56, ADR-0033) rade.** Canvas
+  crta „Podsjetnik dan prije" i „Podsjetnik sat prije"; satni je u aplikaciji N sati prije, pa
+  naslov nosi broj („Podsjetnik 3 sata prije") i ispod njega, samo dok je uključen, stoji izbor
+  „Koliko sati prije termina" (1–12, `DropdownButtonFormField` u obliku polja `3i`). Oba se
+  snimaju na „Sačuvaj" kroz `update_salon_settings`, kao ostala pravila. „Potvrda termina" ostaje
+  ugašen i uključen: šalje se uvijek.
 - Social login se ne dodaje adminu. Prijava ostaje email+password i običan klijentski nalog ne
   smije proći admin guard.
 - Tekstovi i primjeri u canvasu su demo sadržaj. Tajne, stvarne lozinke i administratorski tokeni
