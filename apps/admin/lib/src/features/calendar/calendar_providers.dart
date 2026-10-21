@@ -270,19 +270,18 @@ void osvjeziKalendar(WidgetRef ref) {
 /// Koliko klijenata čeka po danu, za sedmicu prikazanog dana (task 68).
 ///
 /// **Samo broj, i samo vlasniku.** `waitlist_demand` radniku daje `42501`, pa ga radnik ni
-/// ne pita. Sedmica, a ne dan: strelice i traka dana se kreću unutar nje, pa jedan upit
-/// pokrije svaki klik. Greška ovdje ne ruši kalendar — bez broja je kalendar isti kao prije.
+/// ne pita. Sedmica, a ne dan: provider gleda samo ponedjeljak prikazanog dana
+/// (`.select(pocetakSedmice)`), pa klik na drugi dan iste sedmice ne šalje novi upit, a
+/// prelaz u sljedeću sedmicu šalje. Greška ovdje ne ruši kalendar — bez broja je kalendar
+/// isti kao prije.
 final kalendarListaCekanjaProvider =
     FutureProvider.autoDispose<Map<LocalDate, int>>((ref) async {
       final salonId = ref.watch(adminSalonIdProvider);
       if (salonId == null || ref.watch(adminRadnikIdProvider) != null) {
         return const {};
       }
-      final dan = ref.watch(kalendarDatumProvider);
-      final ponedjeljak = DateTime(
-        dan.year,
-        dan.month,
-        dan.day - dan.weekday + 1,
+      final ponedjeljak = ref.watch(
+        kalendarDatumProvider.select(pocetakSedmice),
       );
       final nedjelja = DateTime(
         ponedjeljak.year,
