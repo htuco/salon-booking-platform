@@ -134,6 +134,17 @@ gasi tek potvrđen termin, deaktivacija usluge ili radnika briše upis, panel ka
 dozvoljen. pgTAP 1008 (`033` 65, 9 novih mutacija obara), klijent 686, admin 725. **Ostaje:** CI,
 merge, deploy (**prvo** `send-push`, sa onim iz taska 67, pa `db push`) i push na Android uređaju.
 
+### 91 — Lista čekanja sa rasponom 🟡 (2026-10-21)
+
+Grana `feat/lista-cekanja-raspon`, [PR #146](https://github.com/htuco/salon-booking-platform/pull/146),
+dopuna [ADR-0031](../../docs/adr/0031-lista-cekanja-push-svima-prvi-zakaze.md). Upis je raspon koji
+računa baza: od izabranog dana do dana prije prvog slobodnog termina (ili do kraja prozora), jedan
+po usluzi i radniku, granica se ne pomjera. Otkazivanje bilo kojeg dana u rasponu budi upis, a
+ponuda pamti dan; potvrđen termin u rasponu gasi upis, istek briše `expire-waitlist`. Klijent:
+„Prvi slobodan termin" i „Javi mi ako se oslobodi ranije", raspon u Mojim terminima. pgTAP 1168
+(`036` 65, 33 mutacije), klijent 691, admin 726, tok viđen uživo na 402. **Ostaje:** review, CI,
+merge, `db push` (redoslijed sa #144 u PR-u), push na uređaju.
+
 ### 72 — Super admin konzola 🟡 (2026-10-20)
 
 Grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), ADR-0032 (**prihvaćen** 2026-10-21). `apps/superadmin` je Dart server na

@@ -4,29 +4,33 @@ Puni task: [tasks/zero-crisis/91-lista-cekanja-raspon.md](zero-crisis/91-lista-c
 
 ## Status
 
-U toku (grana `feat/lista-cekanja-raspon`, 2026-10-21).
+U toku (grana `feat/lista-cekanja-raspon`, [PR #146](https://github.com/htuco/salon-booking-platform/pull/146),
+2026-10-21). Kod, testovi, dokumenti i uživo dokaz su gotovi; čeka review, CI i merge.
 
 ## Ciljevi
 
-- [ ] Dopuna ADR-0031 (raspon do prvog slobodnog termina) i red u `docs/README.md`
-- [ ] Nova migracija: `date_from`/`date_to` umjesto `date`, stari upisi → raspon od jednog dana,
+- [x] Dopuna ADR-0031 (raspon do prvog slobodnog termina) i red u `docs/README.md`
+- [x] Migracija `20261021191123_lista_cekanja_raspon`: `date_from`/`date_to`, stari upisi → raspon,
       jedan upis po (salon, identitet, usluga, radnik)
-- [ ] `join_waitlist` računa raspon kroz `private.candidate_slots`, odbija kad je slobodno već prvi dan
-- [ ] Okidač ponuda po rasponu, dan ponude u `notification_logs`; gašenje potvrđenim terminom u
-      rasponu; istekao upis nestaje, prošli dani se ne nude
-- [ ] `my_waitlist`, `waitlist_full_dates`, `waitlist_demand`, `my_notifications` usklađeni
-- [ ] pgTAP `036` + usklađen `033`, mutacije zabilježene
-- [ ] `core_domain`/`core_api`: `WaitlistEntry` sa `dateFrom`/`dateTo`
-- [ ] Klijent: „Prvi slobodan termin" i „Obavijesti me ako se oslobodi ranije", raspon u „Moji
-      termini", dan ponude u Obavijestima; Melura „Lista čekanja: N" po danu
-- [ ] Dokumenti po tabeli sinhronizacije
-- [ ] Uživo na lokalnom stacku: pun 5 dana, upis, otkazivanje treći dan → ponuda; potvrda → upis nestaje
+- [x] `join_waitlist` računa raspon kroz `private.candidate_slots`, odbija kad je prvi dan slobodan
+- [x] Okidač po rasponu sa danom ponude; gašenje potvrđenim terminom u rasponu; `expire-waitlist`
+- [x] `my_waitlist`, `waitlist_demand`, `my_notifications` usklađeni (`waitlist_full_dates` isti)
+- [x] pgTAP `036` (65) + usklađen `033`; 33 mutacije u `security.md`
+- [x] `core_domain`/`core_api`: `WaitlistEntry` sa `dateFrom`/`dateTo`
+- [x] Klijent i Melura; snimci `docs/screenshots/task-91-*.png`
+- [x] Dokumenti po tabeli sinhronizacije
+- [x] Uživo na lokalnom stacku (pr91): pun 5 dana, upis, otkazivanje trećeg dana → ponuda sa danom;
+      potvrda → upis nestaje
+- [ ] Review, CI zelen, merge
+- [ ] Deploy (Hamza): `supabase db push` (v. PR #146 za redoslijed sa #144)
 
 ## Napomene
 
 - Task 56 (podsjetnici) je u [PR #144](https://github.com/htuco/salon-booking-platform/pull/144)
   na reviewu i redefiniše `claim_push_notifications` i `update_salon_settings`; ova grana ih ne
   dira. Pri merge-u se očekuje konflikt u ovom fajlu — oba bloka ostaju.
+- [PR #145](https://github.com/htuco/salon-booking-platform/pull/145) nosi isti task fajl 91
+  (commit `8eb9637`).
 
 ## Istorija
 
