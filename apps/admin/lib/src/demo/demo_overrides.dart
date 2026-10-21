@@ -175,6 +175,13 @@ List<Override> demoOverrides(AdminEnv env) => [
         _blokada(DateTime(pocetak.year, pocetak.month, pocetak.day + d)),
     ];
   }),
+  // Task 68: subota sedmice ima troje na listi čekanja, da se oznaka vidi u demou.
+  kalendarListaCekanjaProvider.overrideWith((ref) async {
+    final pocetak = ref.watch(kalendarDatumProvider.select(pocetakSedmice));
+    return {
+      _datumOd(DateTime(pocetak.year, pocetak.month, pocetak.day + 5)): 3,
+    };
+  }),
   // FE-505: Klijenti, Radno vrijeme i Postavke su u demou pokazivali grešku učitavanja —
   // njihovi provideri idu u bazu, a demo ih nije punio.
   adminKlijentiProvider.overrideWith((ref) async => _klijenti),

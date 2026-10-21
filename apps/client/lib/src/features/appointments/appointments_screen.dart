@@ -11,6 +11,8 @@ import '../../core/formatters.dart';
 import '../../core/router/app_router.dart';
 import '../../features/booking/date_labels.dart';
 import '../../features/reviews/review_sheet.dart';
+import '../../features/waitlist/waitlist_providers.dart';
+import '../../features/waitlist/waitlist_section.dart';
 import '../../l10n/generated/app_localizations.dart';
 import 'appointment_labels.dart';
 import 'appointments_provider.dart';
@@ -59,7 +61,9 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
     // Realtime veza može biti suspendovana dok je aplikacija u pozadini. Povratak na
     // ekran zato uvijek ponovo čita iz baze, čak i ako FCM/Realtime događaj nije uhvaćen.
     if (state == AppLifecycleState.resumed) {
-      ref.invalidate(myAppointmentsProvider);
+      ref
+        ..invalidate(myAppointmentsProvider)
+        ..invalidate(myWaitlistProvider);
     }
   }
 
@@ -197,6 +201,7 @@ class _Lista extends ConsumerWidget {
 
     Future<void> osvjezi() async {
       ref.invalidate(myAppointmentsProvider);
+      if (!zatvoreni) ref.invalidate(myWaitlistProvider);
       await ref.read(myAppointmentsProvider.future);
     }
 
@@ -206,6 +211,18 @@ class _Lista extends ConsumerWidget {
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
+            // Lista čekanja stoji i kad termina nema: upis je upravo ono što korisnik
+            // ima kad mu je dan bio pun (task 68).
+            if (!zatvoreni)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.gutter,
+                  AppSpacing.gutter,
+                  AppSpacing.gutter,
+                  0,
+                ),
+                child: WaitlistSection(),
+              ),
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.55,
               child: _Prazno(
@@ -223,12 +240,16 @@ class _Lista extends ConsumerWidget {
 
     return AppRefresh(
       onRefresh: osvjezi,
-      child: ListView.separated(
+      child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.gutter),
-        itemCount: termini.length,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-        itemBuilder: (context, i) => _Kartica(appointment: termini[i]),
+        children: [
+          if (!zatvoreni) const WaitlistSection(),
+          for (final (i, termin) in termini.indexed) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.md),
+            _Kartica(appointment: termin),
+          ],
+        ],
       ),
     );
   }

@@ -1,58 +1,81 @@
-# Trenutni task: 67 — Pisanje recenzija
+# Trenutni task: 68 — Lista čekanja
 
-Puni task: [tasks/zero-crisis/67-pisanje-recenzija.md](zero-crisis/67-pisanje-recenzija.md) · učitan 2026-10-20
+Puni task: [tasks/zero-crisis/68-lista-cekanja.md](zero-crisis/68-lista-cekanja.md) · učitan 2026-10-20
 
 ## Status
 
-U toku (grana `feat/pisanje-recenzija`, [PR #139](https://github.com/htuco/salon-booking-platform/pull/139), 2026-10-20). Kod, testovi i provjera uživo su gotovi; ostaje pregled, CI i deploy.
+U toku (grana `feat/lista-cekanja`, [PR #142](https://github.com/htuco/salon-booking-platform/pull/142),
+2026-10-20). Kod, testovi i provjera uživo su gotovi. Ostaju odluka o ADR-u, pregled, CI i deploy.
 
 ## Ciljevi
 
-- [x] Migracija `20261020100000_pisanje_recenzija`: `reviews.appointment_id` i `auth_identity_id`,
-      jedna po terminu, samo `completed`; `authenticated` gubi `insert/update/delete`
-- [x] `submit_review`, `set_review_published` (tekst ne dira), `my_review_ratings`; agregat samo objavljene
-- [x] Prijava recenzije kroz `content_reports` (ADR-0024), `notify-content-reports` zna za recenziju
-- [x] Push `review_request` kad termin postane `completed`, tekst u `send-push`
-- [x] Brisanje naloga: recenzija ostaje kao ocjena, ime i tekst nestaju
-- [x] pgTAP `032` (55 asercija), 11 mutacija, svaka obara bar jednu; `006` usklađen
-- [x] Pregled u grani: identitet autora i termin zatvoreni kolonskim grantom, `my_review_ratings`
-- [x] Klijent: „Ocijeni" na završenom terminu u „Moji termini", prijava recenzije na `/reviews`
-- [x] Admin: `/more/reviews` — lista, sakrij / vrati
-- [x] Dokumenti: `security.md`, `supabase/IMPLEMENTATION.md`, `architecture.md`, `docs/01` §12,
-      `prototype/ui/README.md`, `prototype/admin/SPEC.md`, komentari „read-only" u kodu
-- [x] Uživo (lokalni stack, web 402): Završen u Meluri → klijent ocijeni → 26 ocjena; Sakrij → 25
-- [x] Pregled (Hamza): Melura vidi svaku javnu recenziju, tekst se broji u kodnim tačkama kao u
-      bazi, jedna prijava (`prijaviSadrzaj`) za sliku i recenziju, recenzije u `docs/06` §8.2–8.3
-- [ ] CI zelen, merge u `develop`
-- [ ] Deploy (Hamza), **ovim redom** — v. task fajl: provjera dužine teksta,
-      `supabase functions deploy send-push notify-content-reports`, **pa** `supabase db push`,
-      provjere grantova, tekst politike u hostovanom `app_policies` i store formulari
-- [ ] Push `review_request` na uređaju
+- [x] ADR-0031 (prijedlog): push svima kojima se mjesto otvorilo, prvi zakaže; dan + usluga +
+      opcionalno radnik; važi do kraja dana; najviše tri upisa; salon vidi samo broj
+- [x] Migracija `20261020140000_lista_cekanja`: `waitlist_entries` bez app granta, RPC-ovi,
+      `private.candidate_slots` kao jedino pravilo slotova, okidači otkazivanja i gašenja upisa
+- [x] Ponuda vezana za upis (`notification_logs.waitlist_entry_id`), `my_notifications`,
+      `claim_push_notifications` i `send-push` je znaju
+- [x] Klijent: pun dan je treće stanje kalendara, panel upisa, sekcija u „Moji termini", stavka u
+      „Obavijesti"; demo ima punu subotu
+- [x] Melura: „Lista čekanja: N" za dan, samo vlasnik
+- [x] pgTAP `033` (53, 13 mutacija), REST bez tokena, Dart testovi u svim paketima
+- [x] Dokumenti: `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `CONTEXT.md`, `docs/01`
+      §12, `docs/06` §8.2–8.3, `prototype/ui/README.md`, `prototype/admin/SPEC.md`
+- [x] Uživo (lokalni stack, web 402 i 1440): upis → otkazivanje → ponuda → „Ukloni"; Melura broj
+- [ ] Odluka o ADR-0031 (Hamza), pregled, CI zelen, merge u `develop`
+- [ ] Deploy (Hamza), **ovim redom**: `supabase functions deploy send-push`, pa `supabase db push`
+      (provjere u task fajlu)
+- [ ] Push `waitlist_offer` na Android uređaju
 
 ## Napomene
 
-- **Već isporučeno:** prosjek i broj na Početnoj i na `/reviews` čitaju `salon_rating_summary`
-  (task 20, `salonRatingProvider`). Od ove stavke DoD-a ostaje samo osvježavanje poslije slanja.
-- **Postojeći redovi** (seed, budući import) nemaju termin ni identitet. Ostaju takvi; nova kolona je
-  nullable, a pisati bez termina može samo `service_role`.
-- **Ime autora** pravi baza iz `auth_identities.display_name` („Nedim H."), ne klijent — inače bi
-  klijent potpisao recenziju tuđim imenom.
-- **Admin danas nema ekran recenzija** i canvas ga ne crta. „Salon sakriva" traži mjesto u Meluri, pa
-  je `/more/reviews` po obrascu postojećih lista u „Još".
-- Push poslije termina danas vodi na `/appointments` (`send-push`, `route`); isto važi i za
-  `review_request` — tamo stoji „Ocijeni".
-- Zamka iz `security.md`: nova funkcija traži `revoke ... from public, anon`; `not (A and B)` sa
-  `client_salon_id()` je rupa kad nema headera.
+- Red „Lista čekanja" u admin postavkama i dalje vodi u „uskoro" (`settings_screen.dart` ~1225).
+  O njemu odlučuje task 54. Prekidača po salonu nema (ADR-0031).
+- **Dizajn ne postoji.** Ni `prototype/ui/` ni `prototype/beauty/` ne crtaju listu čekanja; admin
+  canvas `3i` crta samo prekidač u postavkama. Oblik se slaže iz postojećih komponenti (empty state
+  u koraku 3, kartica u „Moji termini"), a prijedlog oblika ide u isti PR na Hamzino odobrenje.
+- **Zamka: `notification_logs` je vezan za termin.** `appointment_id` je `not null`, FK na
+  `appointments` i dio `unique(appointment_id, device_id, type)`, a `my_notifications` vlasništvo
+  provjerava preko `appointments.auth_identity_id`. Oslobođeni termin je **tuđi** termin. Upisati
+  ga u log upisanom klijentu bi ili sakrilo obavijest (nije njegov termin) ili, gore, vezalo tuđi
+  termin za njegov uređaj. Treba nova veza (npr. nullable `appointment_id` + `waitlist_entry_id`
+  sa `check` da je tačno jedno postavljeno), a `my_notifications` i `send-push` je moraju znati.
+  Tekst pusha ne smije nositi ništa o tuđem terminu osim dana, vremena i usluge.
+- **Prazan dan nije nužno pun dan** — riješeno sa `waitlist_full_dates` (dan koji bi imao slobodnog
+  vremena bez termina). Usput je nađeno da kalendar nije dao tapnuti dan bez slobodnog vremena,
+  pa je `CalendarDay` dobio stanje `full`.
+- **Gdje se termin oslobađa:** `private.queue_appointment_push()` (zadnja verzija u
+  `20261020100000_pisanje_recenzija.sql`) već grana `cancelled` po `cancelled_by`
+  (`salon` iz `pending` = odbijen, `customer`, `system` = istek). Okidač za listu čekanja ide uz
+  njega, ne u njega. Oslobađanje kroz brisanje blokade ili promjenu radnog vremena **nije** u
+  opsegu taska.
+- **„Prvi zakaže"** znači da `book_appointment` ostaje jedina provjera; upis ne daje prednost. Ako
+  ADR izabere čuvanje termina, to je novi status i istek kao u 64, a procjena raste na 5+ dana.
+- **Limit iz 65** (`max_pending_per_customer`) i dalje važi kad klijent zakaže iz pusha.
+- Push na uređaju i dalje nema Android (v. 56). Uživo se dokazuje red u `notification_logs` i
+  ekran „Obavijesti"; sam push ostaje za regresiju (60) ako uređaja ne bude.
+- Zamke iz `security.md`: nova funkcija traži `revoke ... from public, anon`; `not (A and B)` sa
+  `client_salon_id()` je rupa kad nema headera; `x-salon-id` ne daje članstvo.
 - Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client` prije `melos run analyze`.
 
 ## Istorija
 
-### 58 — Kontakt klijenta jednim tapom (PR otvoren, 2026-10-20)
+### 67 — Pisanje recenzija (spojen u `develop`, 2026-10-20)
 
-[PR #138](https://github.com/htuco/salon-booking-platform/pull/138), spreman za pregled.
+[PR #139](https://github.com/htuco/salon-booking-platform/pull/139). Recenzija vezana za završen
+termin (`submit_review`, jedna po terminu), salon samo sakriva (`set_review_published`, `/more/reviews`
+u Meluri), prijava kroz `content_reports`, push `review_request` kad termin postane `completed`.
+pgTAP `032` (55 asercija, 11 mutacija). Uživo na lokalnom stacku: ocjena → 26, „Sakrij" → 25.
+**Ostaje:** Hamzin deploy **ovim redom** (v. task fajl): `supabase functions deploy send-push
+notify-content-reports`, pa `supabase db push`, provjere grantova i tekst politike u `app_policies`;
+push `review_request` na uređaju.
+
+### 58 — Kontakt klijenta jednim tapom (spojen u `develop`, 2026-10-20)
+
+[PR #138](https://github.com/htuco/salon-booking-platform/pull/138), spojen u `develop` 2026-10-20.
 „Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina i profilu klijenta, samo uz broj; pravila u
 `apps/admin/lib/src/core/kontakt.dart`. Pregled zatvoren u grani (`+387 061 …` gubi nulu, prekratak
-broj nema link), admin 697. **Ostaje:** odobrenje i merge; sve tri akcije na Android uređaju.
+broj nema link), admin 697. **Ostaje:** sve tri akcije na Android uređaju.
 
 ### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
 

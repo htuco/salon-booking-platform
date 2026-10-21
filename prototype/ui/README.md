@@ -197,6 +197,25 @@ recenziju", ali recenzija je vezana za završen termin, pa dugme stoji na kartic
 prijave slike: naslov, rečenica šta se objavljuje, pet zvjezdica iz `StarRating` (48px meta),
 polje za tekst i `AppButton`. Kartica na `5m` dobija tihu vezu „Prijavi recenziju".
 
+**Lista čekanja (task 68) nema svoj ekran.** Handoff ne crta ni pun dan ni upis, pa je oblik
+izveden iz postojećih komponenti:
+
+- **Pun dan u kalendaru `5e` je treće stanje dana** (`CalendarDay.full`): prigušen kao nedostupan,
+  ali se **tapa** i broj je **precrtan**, pa se razlika vidi oblikom, ne samo bojom. Čitač ekrana
+  kaže „27, popunjen". Na izabranom punom danu mrežu vremena zamjenjuje panel: ikona, rečenica i
+  `AppButton` `secondary` „Obavijesti me kad se oslobodi"; poslije upisa „Na listi čekanja ste…" i
+  `outline` „Odjavi se sa liste". Uređaj bez dozvole za push ne dobija ponudu, pa tada panel nosi
+  ikonu `bellOff` i rečenicu da su obavijesti isključene i da se uključuju u postavkama telefona.
+  Riječ je „mjesto", ne „termin": termin zavisi od vertikale.
+- **`5h` dobija sekciju „Lista čekanja"** iznad predstojećih: hairline kartica sa danom, uslugom i
+  radnikom, i dva dugmeta u pola širine — „Zakaži" i „Ukloni" (kratko, jer „Odjavi se sa liste" na
+  402 px ne stane). Kad upis ne može da se učita, sekcija nosi naslov i `LoadError` („Pokušaj
+  ponovo"), ne nestaje.
+- **`5j` stavka `waitlist_offer`**: „Oslobodilo se mjesto", opis bez vremena (`Fade · utorak 27.10.`).
+
+Kako izgleda: [`docs/screenshots/task-68-pun-dan.png`](../../docs/screenshots/task-68-pun-dan.png),
+`task-68-upisan.png`, `task-68-moji-termini.png`, `task-68-obavijest.png`.
+
 ### Tri odstupanja na `5n` („O aplikaciji"), sva iz istog razloga
 
 Ekran u storeu ne smije tvrditi ono što aplikacija ne radi, pa handoff ovdje nije prepisan doslovno:

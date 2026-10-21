@@ -268,6 +268,50 @@ void main() {
     expect(tapnuti, ['2026-09-14']);
   });
 
+  testWidgets('CalendarMonth: popunjen dan je precrtan i tapa se (task 68)', (
+    tester,
+  ) async {
+    // Nedostupan dan se ne tapa; popunjen se tapa, jer na njemu stoji lista cekanja.
+    // Razlika je oblik (precrtan broj), ne samo boja.
+    final tapnuti = <String>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(
+          primary: barberPrimary,
+          secondary: barberSecondary,
+          themeName: 'modern_barber',
+        ),
+        home: Scaffold(
+          body: CalendarMonth(
+            monthLabel: 'Septembar 2026',
+            weekdayLabels: const ['P', 'U', 'S', 'Č', 'P', 'S', 'N'],
+            leadingEmptyCells: 0,
+            onSelect: tapnuti.add,
+            days: const [
+              CalendarDay(
+                id: '2026-09-15',
+                label: '15',
+                available: false,
+                full: true,
+                semanticLabel: '15, popunjen',
+              ),
+              CalendarDay(id: '2026-09-16', label: '16', available: false),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final broj = tester.widget<Text>(find.text('15'));
+    expect(broj.style?.decoration, TextDecoration.lineThrough);
+    expect(find.bySemanticsLabel('15, popunjen'), findsOneWidget);
+
+    await tester.tap(find.text('15'));
+    await tester.tap(find.text('16'));
+    await tester.pump();
+    expect(tapnuti, ['2026-09-15']);
+  });
+
   testWidgets('StepProgressBar: korak van raspona se steze, ne rusi ekran', (
     tester,
   ) async {

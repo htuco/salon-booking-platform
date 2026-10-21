@@ -430,13 +430,13 @@ servira i tu stranicu.
 | Sve usluge | `/services` | Must |
 | Booking — usluga | `/book/service` | Must |
 | Booking — radnik | `/book/employee` | Must |
-| Booking — termin | `/book/slot` | Must |
+| Booking — termin (pun dan nudi listu čekanja, task 68) | `/book/slot` | Must |
 | Booking — podaci | `/book/details` | Must |
 | Booking — potvrda | `/book/success` | Must |
 | **Login (Apple/Google/Email)** | `/auth/login` | Must |
 | Dopuni profil (telefon, uslovi — task 66) | `/auth/complete-profile` | Must |
 | **Moj račun + brisanje računa** | `/account` | Must |
-| Moji termini | `/appointments` | Must |
+| Moji termini (+ upisi na listu čekanja) | `/appointments` | Must |
 | Detalji termina + otkazivanje | `/appointments/:id` | Should |
 | Tim / radnici | `/team` | Should |
 | Galerija + lightbox | `/gallery` | Should |
@@ -459,7 +459,7 @@ servira i tu stranicu.
 | Termini + filteri („Svi termini") | `/more/appointments` | Must |
 | Detalji termina — u grani iz koje je otvoren | `/today/appointment/:id`, `/calendar/appointment/:id`, `/requests/:id`, `/more/appointments/:id` | Must |
 | Dodaj termin (forma preko cijelog ekrana) | `/appointments/new` | Must |
-| Kalendar (dnevni) | `/calendar` | Should |
+| Kalendar (dnevni; broj na listi čekanja za dan, samo vlasnik) | `/calendar` | Should |
 | Klijenti | `/more/clients` | Should |
 | Recenzije (sakrij / vrati; tekst ne mijenja) | `/more/reviews` | Should |
 | Usluge | `/more/services` | Must |

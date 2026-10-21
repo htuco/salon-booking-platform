@@ -310,6 +310,38 @@ try {
   );
 
   // ---------------------------------------------------------------------------
+  // Waitlist (task 68). The client asks "is this day full?" before the user signs in, so
+  // `waitlist_full_dates` must answer without a token, exactly like the slot list. Joining,
+  // and the table itself, must not.
+  // ---------------------------------------------------------------------------
+  const closedSunday = new Date();
+  closedSunday.setUTCDate(closedSunday.getUTCDate() + 7 + ((7 - closedSunday.getUTCDay()) % 7));
+  const fullDates = await anonRequest("/rest/v1/rpc/waitlist_full_dates", {
+    method: "POST",
+    body: JSON.stringify({
+      p_salon_id: activeSalon,
+      p_service_id: "10000000-0000-4000-8000-000000000001",
+      p_from: closedSunday.toISOString().slice(0, 10),
+      p_to: closedSunday.toISOString().slice(0, 10),
+    }),
+  });
+  assert(
+    fullDates.status === 200 && Array.isArray(fullDates.body) && fullDates.body.length === 0,
+    `Anon waitlist_full_dates on a closed Sunday must be HTTP 200 [], got ${fullDates.status} ${JSON.stringify(fullDates.body)}.`,
+  );
+  const join = await anonRequest("/rest/v1/rpc/join_waitlist", {
+    method: "POST",
+    headers: { "x-salon-id": activeSalon },
+    body: JSON.stringify({
+      p_service_id: "10000000-0000-4000-8000-000000000001",
+      p_date: closedSunday.toISOString().slice(0, 10),
+    }),
+  });
+  assert(join.status >= 400, `Anon join_waitlist must be rejected, got HTTP ${join.status}.`);
+  const entries = await anonRequest("/rest/v1/waitlist_entries?select=id");
+  assert(entries.status >= 400, `Anon read of waitlist_entries must be rejected, got HTTP ${entries.status}.`);
+
+  // ---------------------------------------------------------------------------
   // 5. An inactive salon disappears from the public catalog.
   //
   // This is the reason SalonRepository maps "no row" to NotFoundError instead of treating

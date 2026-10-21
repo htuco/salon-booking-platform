@@ -122,6 +122,7 @@ Deno.test("Svi scenariji imaju salon, stabilan ID i samo dozvoljenu rutu", () =>
       "cancelled",
       "expired",
       "review_request",
+      "waitlist_offer",
     ]
   ) {
     const { message } = messageFor({ ...job, type });
@@ -139,10 +140,27 @@ Deno.test("Svi scenariji imaju salon, stabilan ID i samo dozvoljenu rutu", () =>
       "Android obavijest pada na FCM fallback kanal",
     );
     assert(
-      !JSON.stringify(message.notification).includes(job.appointment_id),
+      !JSON.stringify(message.notification).includes(job.appointment_id!),
       "Licni detalji na lock screenu",
     );
   }
+});
+
+Deno.test("Ponuda liste cekanja nema termin, a data ostaje samo stringovi", () => {
+  const { message } = messageFor({
+    ...job,
+    type: "waitlist_offer",
+    appointment_id: null,
+  });
+  assert(!("appointment_id" in message.data), "Ponuda nosi appointment_id");
+  assert(
+    Object.values(message.data).every((value) => typeof value === "string"),
+    "FCM data mora biti string",
+  );
+  assert(
+    message.notification.title === "Oslobodilo se mjesto",
+    "Pogresan naslov",
+  );
 });
 
 Deno.test("Potpis ne otkriva tajnu i odbija star ili promijenjen timestamp", async () => {
