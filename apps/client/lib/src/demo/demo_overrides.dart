@@ -110,6 +110,9 @@ List<Override> demoOverrides(AppEnv env, {bool prijavljen = true}) {
     // Task 68: subota je u demou pun dan, pa se lista čekanja vidi bez backenda. Upisi
     // žive u memoriji dok je stranica otvorena.
     waitlistRepositoryProvider.overrideWithValue(_DemoWaitlist(demo)),
+    // Demo pokazuje upis kakav je na telefonu sa uključenim obavijestima. Na webu push ne
+    // postoji, pa bi panel inače uvijek rekao da su obavijesti isključene.
+    pushPermissionProvider.overrideWith((ref) async => true),
   ];
 }
 

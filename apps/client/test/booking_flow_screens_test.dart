@@ -10,6 +10,7 @@ import 'package:client/src/features/booking/service_step_screen.dart';
 import 'package:client/src/features/booking/slot_step_screen.dart';
 import 'package:client/src/features/auth/login_screen.dart';
 import 'package:client/src/features/waitlist/waitlist_day_panel.dart';
+import 'package:client/src/features/waitlist/waitlist_providers.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:core_ui/core_ui.dart';
@@ -403,6 +404,157 @@ void main() {
       expect(find.textContaining('Na listi čekanja ste.'), findsOneWidget);
       expect(find.text('Odjavi se sa liste'), findsOneWidget);
 
+      container.dispose();
+    });
+
+    testWidgets('bez dozvole za obavijesti panel ne obećava javljanje', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const []);
+      final lista = _MockWaitlist()..stubPunDan();
+      when(lista.mine).thenAnswer(
+        (_) async => [
+          WaitlistEntry(
+            id: 'w1',
+            serviceId: _usluga.id,
+            serviceName: _usluga.name,
+            date: _danas,
+          ),
+        ],
+      );
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        customerId: _customerId,
+        obavijestiDozvoljene: false,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      // Ponuda ide samo uređaju sa push tokenom (ADR-0031): „Javićemo vam" bi bilo netačno.
+      expect(
+        find.textContaining('obavijesti za ovu aplikaciju su isključene'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Javićemo vam'), findsNothing);
+      expect(find.text('Odjavi se sa liste'), findsOneWidget);
+
+      container.dispose();
+    });
+
+    testWidgets('neuspjela odjava na punom danu ima svoju poruku', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const []);
+      final lista = _MockWaitlist()..stubPunDan();
+      when(lista.mine).thenAnswer(
+        (_) async => [
+          WaitlistEntry(
+            id: 'w1',
+            serviceId: _usluga.id,
+            serviceName: _usluga.name,
+            date: _danas,
+          ),
+        ],
+      );
+      when(() => lista.leave('w1')).thenThrow(const ServerError('pad'));
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        customerId: _customerId,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.text('Odjavi se sa liste'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('Odjava sa liste čekanja nije uspjela. Pokušajte ponovo.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Upis na listu čekanja nije uspio. Pokušajte ponovo.'),
+        findsNothing,
+      );
+
+      container.dispose();
+    });
+
+    testWidgets('poslije zakazivanja sa upisa kartica upisa nestaje', (
+      tester,
+    ) async {
+      // Auto režim: termin nastaje potvrđen, pa baza briše upis iste usluge tog dana.
+      // Mock to glumi tako što drugo čitanje `my_waitlist` vraća praznu listu.
+      final repo = _MockBooking()
+        ..stubUspjesan(status: AppointmentStatus.confirmed);
+      final lista = _MockWaitlist()..stubPunDan(puni: {});
+      var citanja = 0;
+      when(lista.mine).thenAnswer((_) async {
+        citanja++;
+        return citanja == 1
+            ? [
+                WaitlistEntry(
+                  id: 'w1',
+                  serviceId: _usluga.id,
+                  serviceName: _usluga.name,
+                  date: _danas,
+                ),
+              ]
+            : const [];
+      });
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        customerId: _customerId,
+        ruta: ClientRoute.bookDetails.path,
+        dodatno: [myAppointmentsProvider.overrideWith((ref) async => const [])],
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseSlot(date: _danas, startTime: const LocalTime(9, 0)),
+      );
+      // Korisnik je upis vidio u „Moji termini" prije nego što je tapnuo „Zakaži":
+      // `myWaitlistProvider` ga drži u kešu.
+      expect(await container.read(myWaitlistProvider.future), hasLength(1));
+
+      await tester.pump();
+      await tester.tap(find.text('Pošalji zahtjev'));
+      await tester.pump();
+      await tester.pump();
+      expect(container.read(lastBookingProvider), isNotNull);
+
+      container.read(appRouterProvider).go(ClientRoute.appointments.path);
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      expect(citanja, 2);
+      expect(find.text('Lista čekanja'), findsNothing);
+
+      // Snackbar potvrde i prelaz rute imaju svoje tajmere; test ih pušta da isteknu.
+      await tester.pump(const Duration(seconds: 5));
       container.dispose();
     });
 
@@ -991,6 +1143,8 @@ Future<ProviderContainer> _pumpFlow(
   bool? traziIzborRadnika,
   FakeClientProfileRepository? profil,
   WaitlistRepository? listaCekanja,
+  bool obavijestiDozvoljene = true,
+  List<Override> dodatno = const [],
   void Function(BookingFlowNotifier notifier)? pocetniFlow,
 }) async {
   tester.binding.platformDispatcher.defaultRouteNameTestValue = ruta;
@@ -1021,6 +1175,10 @@ Future<ProviderContainer> _pumpFlow(
       bookingRepositoryProvider.overrideWithValue(repo),
       if (listaCekanja != null)
         waitlistRepositoryProvider.overrideWithValue(listaCekanja),
+      // U testu push ne postoji (`PUSH_ENABLED`), pa bi panel liste čekanja uvijek rekao
+      // da su obavijesti isključene. Podrazumijevano je telefon sa dozvolom.
+      pushPermissionProvider.overrideWith((ref) async => obavijestiDozvoljene),
+      ...dodatno,
       // Korak 4 provjerava profil prije slanja (pregled #136); podrazumijevano je kompletan.
       clientProfileRepositoryProvider.overrideWithValue(
         profil ?? FakeClientProfileRepository(),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/load_error.dart';
 import '../../core/router/app_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../booking/date_labels.dart';
@@ -15,6 +16,9 @@ import 'waitlist_providers.dart';
 /// Push o oslobođenom mjestu vodi ovdje (`send-push` šalje `route: /appointments`), pa
 /// upis ima „Zakaži": booking sa tom uslugom, gdje korisnik bira dan i vrijeme iz liste koju
 /// računa baza. Bez upisa sekcija se ne crta — prazna lista čekanja nije vijest.
+///
+/// **Greška nije prazno stanje** (`LoadError`): upit koji padne crta naslov sekcije i
+/// „Pokušaj ponovo", umjesto da sakrije upise za koje korisnik zna da postoje.
 class WaitlistSection extends ConsumerWidget {
   const WaitlistSection({super.key});
 
@@ -22,7 +26,27 @@ class WaitlistSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final upisi = ref.watch(myWaitlistProvider).valueOrNull ?? const [];
+    final stanje = ref.watch(myWaitlistProvider);
+
+    // Greška se crta i kad je stara lista još u kešu: ponovni pokušaj koji opet padne ne
+    // smije tiho vratiti stare kartice kao da su istina.
+    if (stanje.hasError && !stanje.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.waitlistSectionTitle, style: theme.textTheme.titleMedium),
+            LoadError(
+              error: stanje.error!,
+              onRetry: () => ref.invalidate(myWaitlistProvider),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final upisi = stanje.valueOrNull ?? const [];
     if (upisi.isEmpty) return const SizedBox.shrink();
 
     return Padding(
@@ -42,39 +66,30 @@ class WaitlistSection extends ConsumerWidget {
   }
 }
 
-class _Upis extends ConsumerStatefulWidget {
+class _Upis extends ConsumerWidget {
   const _Upis({required this.upis});
 
   final WaitlistEntry upis;
 
-  @override
-  ConsumerState<_Upis> createState() => _UpisState();
-}
-
-class _UpisState extends ConsumerState<_Upis> {
-  bool _radi = false;
-
-  Future<void> _odjavi() async {
+  Future<void> _odjavi(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => _radi = true);
-    try {
-      await ref.read(waitlistRepositoryProvider).leave(widget.upis.id);
-      ref.invalidate(myWaitlistProvider);
-    } on ApiError catch (greska) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(greska.displayMessage ?? l10n.waitlistFailed)),
-      );
-    } finally {
-      if (mounted) setState(() => _radi = false);
-    }
+    final akcija = waitlistActionProvider(upis.id);
+    if (await ref.read(akcija.notifier).leave(upis.id)) return;
+
+    // Rečenica baze ako je dala svoju; inače poruka o odjavi, ne o upisu.
+    final greska = ref.read(akcija).error;
+    final poruka = greska is ApiError ? greska.displayMessage : null;
+    messenger.showSnackBar(
+      SnackBar(content: Text(poruka ?? l10n.waitlistLeaveFailed)),
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final upis = widget.upis;
+    final radi = ref.watch(waitlistActionProvider(upis.id)).isLoading;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -114,8 +129,8 @@ class _UpisState extends ConsumerState<_Upis> {
                 child: AppButton(
                   label: l10n.waitlistRemove,
                   variant: AppButtonVariant.outline,
-                  loading: _radi,
-                  onPressed: _odjavi,
+                  loading: radi,
+                  onPressed: () => _odjavi(context, ref),
                 ),
               ),
             ],

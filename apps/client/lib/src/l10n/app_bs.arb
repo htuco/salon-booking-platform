@@ -570,11 +570,19 @@
     "description": "Pun dan na koji je klijent već upisan. Drugi dio rečenice je ADR-0031: upis ne drži mjesto."
   },
 
+  "waitlistJoinedNoPush": "Na listi čekanja ste, ali obavijesti za ovu aplikaciju su isključene, pa vam ne možemo javiti kad se mjesto oslobodi. Uključite ih u postavkama telefona i vratite se ovdje.",
+  "@waitlistJoinedNoPush": {
+    "description": "Pun dan na koji je klijent upisan, a uređaj nema dozvolu za notifikacije (task 68, ADR-0031). Ponuda ide samo uređaju sa push tokenom, pa „Javićemo vam\" ovdje ne bi bilo tačno. Povratak u aplikaciju ponovo registruje uređaj sa tokenom."
+  },
+
   "waitlistLeave": "Odjavi se sa liste",
   "@waitlistLeave": { "description": "Odjava sa liste čekanja, na punom danu i u Mojim terminima." },
 
   "waitlistFailed": "Upis na listu čekanja nije uspio. Pokušajte ponovo.",
-  "@waitlistFailed": { "description": "Upis ili odjava nisu prošli, a baza nije dala svoju rečenicu." },
+  "@waitlistFailed": { "description": "Upis nije prošao, a baza nije dala svoju rečenicu." },
+
+  "waitlistLeaveFailed": "Odjava sa liste čekanja nije uspjela. Pokušajte ponovo.",
+  "@waitlistLeaveFailed": { "description": "Odjava („Ukloni\" u Mojim terminima, „Odjavi se sa liste\" na punom danu) nije prošla, a baza nije dala svoju rečenicu." },
 
   "waitlistRemove": "Ukloni",
   "@waitlistRemove": { "description": "Odjava sa liste čekanja u kartici upisa (Moji termini). Kraće od waitlistLeave: dva dugmeta stoje u pola širine na 402 px, a naslov sekcije već kaže šta se uklanja." },

@@ -61,7 +61,9 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
     // Realtime veza može biti suspendovana dok je aplikacija u pozadini. Povratak na
     // ekran zato uvijek ponovo čita iz baze, čak i ako FCM/Realtime događaj nije uhvaćen.
     if (state == AppLifecycleState.resumed) {
-      ref.invalidate(myAppointmentsProvider);
+      ref
+        ..invalidate(myAppointmentsProvider)
+        ..invalidate(myWaitlistProvider);
     }
   }
 

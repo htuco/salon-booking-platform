@@ -17,6 +17,9 @@ import 'waitlist_providers.dart';
 ///
 /// Neprijavljen korisnik ide na prijavu i vraća se ovdje (`?from=`); flow ostaje živ jer je
 /// ovaj ekran i dalje na steku ispod prijave.
+///
+/// Upisan klijent bez dozvole za notifikacije ne dobija „Javićemo vam", nego rečenicu da
+/// obavijesti nisu uključene: ponuda ide samo uređaju sa push tokenom.
 class WaitlistDayPanel extends ConsumerStatefulWidget {
   const WaitlistDayPanel({
     required this.serviceId,
@@ -34,7 +37,29 @@ class WaitlistDayPanel extends ConsumerStatefulWidget {
 }
 
 class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
-  bool _radi = false;
+  // Dozvola za notifikacije se mijenja van aplikacije. Korisnik kojem panel kaže „uključite
+  // ih u postavkama" vraća se ovdje, pa se dozvola tada čita ponovo.
+  late final AppLifecycleListener _zivot;
+
+  @override
+  void initState() {
+    super.initState();
+    _zivot = AppLifecycleListener(
+      onResume: () => ref.invalidate(pushPermissionProvider),
+    );
+  }
+
+  @override
+  void dispose() {
+    _zivot.dispose();
+    super.dispose();
+  }
+
+  String get _kljuc => waitlistDayKey(
+    serviceId: widget.serviceId,
+    date: widget.date,
+    employeeId: widget.employeeId,
+  );
 
   WaitlistEntry? _moj(List<WaitlistEntry> upisi) => upisi
       .where(
@@ -45,22 +70,34 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
       )
       .firstOrNull;
 
-  Future<void> _izvrsi(Future<void> Function() akcija) async {
+  Future<void> _upisi() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => _radi = true);
-    try {
-      await akcija();
-      ref.invalidate(myWaitlistProvider);
-      await ref.read(myWaitlistProvider.future);
-    } on ApiError catch (greska) {
-      // Rečenica baze (`PT400` pun dan, `PT429` tri upisa) ide na ekran; ostalo ne.
-      messenger.showSnackBar(
-        SnackBar(content: Text(greska.displayMessage ?? l10n.waitlistFailed)),
-      );
-    } finally {
-      if (mounted) setState(() => _radi = false);
-    }
+    final uspjeh = await ref
+        .read(waitlistActionProvider(_kljuc).notifier)
+        .join(
+          serviceId: widget.serviceId,
+          date: widget.date,
+          employeeId: widget.employeeId,
+        );
+    if (!uspjeh) _greska(messenger, l10n.waitlistFailed);
+  }
+
+  Future<void> _odjavi(WaitlistEntry upis) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final uspjeh = await ref
+        .read(waitlistActionProvider(_kljuc).notifier)
+        .leave(upis.id);
+    if (!uspjeh) _greska(messenger, l10n.waitlistLeaveFailed);
+  }
+
+  /// Rečenica baze (`PT400` pun dan, `PT429` tri upisa) ide na ekran; ostalo dobija
+  /// [rezerva], posebnu za upis i za odjavu.
+  void _greska(ScaffoldMessengerState messenger, String rezerva) {
+    final greska = ref.read(waitlistActionProvider(_kljuc)).error;
+    final poruka = greska is ApiError ? greska.displayMessage : null;
+    messenger.showSnackBar(SnackBar(content: Text(poruka ?? rezerva)));
   }
 
   @override
@@ -70,7 +107,11 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
     final prijavljen = ref.watch(isSignedInProvider);
     final upisi = ref.watch(myWaitlistProvider);
     final moj = _moj(upisi.valueOrNull ?? const []);
-    final repo = ref.read(waitlistRepositoryProvider);
+    final radi = ref.watch(waitlistActionProvider(_kljuc)).isLoading;
+    // Ponuda ide samo uređaju sa push tokenom (ADR-0031). Dok se dozvola čita, panel ne
+    // tvrdi da je isključena.
+    final bezObavijesti =
+        moj != null && ref.watch(pushPermissionProvider).valueOrNull == false;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
@@ -78,13 +119,21 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Icon(
-            moj == null ? LucideIcons.calendarX : LucideIcons.bellRing,
+            moj == null
+                ? LucideIcons.calendarX
+                : bezObavijesti
+                ? LucideIcons.bellOff
+                : LucideIcons.bellRing,
             size: AppSize.iconEmptyState,
             color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            moj == null ? l10n.waitlistDayFull : l10n.waitlistJoined,
+            moj == null
+                ? l10n.waitlistDayFull
+                : bezObavijesti
+                ? l10n.waitlistJoinedNoPush
+                : l10n.waitlistJoined,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge,
           ),
@@ -94,7 +143,7 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
               label: l10n.waitlistJoin,
               variant: AppButtonVariant.secondary,
               icon: LucideIcons.bell,
-              loading: _radi || (prijavljen && upisi.isLoading),
+              loading: radi || (prijavljen && upisi.isLoading),
               onPressed: !prijavljen
                   ? () => context.push(
                       Uri(
@@ -102,20 +151,14 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
                         queryParameters: {'from': ClientRoute.bookSlot.path},
                       ).toString(),
                     )
-                  : () => _izvrsi(
-                      () => repo.join(
-                        serviceId: widget.serviceId,
-                        date: widget.date,
-                        employeeId: widget.employeeId,
-                      ),
-                    ),
+                  : _upisi,
             )
           else
             AppButton(
               label: l10n.waitlistLeave,
               variant: AppButtonVariant.outline,
-              loading: _radi,
-              onPressed: () => _izvrsi(() => repo.leave(moj.id)),
+              loading: radi,
+              onPressed: () => _odjavi(moj),
             ),
         ],
       ),

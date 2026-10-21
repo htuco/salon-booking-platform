@@ -436,6 +436,77 @@ void main() {
       },
     );
 
+    testWidgets(
+      'pad liste čekanja je greška sa ponovnim pokušajem, ne prazna sekcija',
+      (tester) async {
+        final repo = _MockAppointments();
+        when(repo.forCurrentCustomer).thenAnswer((_) async => const []);
+        final lista = _MockWaitlist();
+        var pokusaj = 0;
+        when(lista.mine).thenAnswer((_) async {
+          pokusaj++;
+          if (pokusaj == 1) throw const NetworkError('nema mreže');
+          return [
+            WaitlistEntry(
+              id: 'w1',
+              serviceId: _usluga.id,
+              serviceName: 'Fade šišanje',
+              date: const LocalDate(2026, 9, 19),
+            ),
+          ];
+        });
+
+        final container = await _pump(tester, repo: repo, lista: lista);
+
+        expect(find.text('Lista čekanja'), findsOneWidget);
+        expect(find.text('Pokušaj ponovo'), findsOneWidget);
+        expect(find.text('Fade šišanje'), findsNothing);
+
+        await tester.tap(find.text('Pokušaj ponovo'));
+        await tester.pumpAndSettle();
+
+        expect(pokusaj, 2);
+        expect(find.text('Fade šišanje'), findsOneWidget);
+        expect(find.text('Pokušaj ponovo'), findsNothing);
+
+        container.dispose();
+      },
+    );
+
+    testWidgets('neuspjelo „Ukloni" ima poruku o odjavi, ne o upisu', (
+      tester,
+    ) async {
+      final repo = _MockAppointments();
+      when(repo.forCurrentCustomer).thenAnswer((_) async => const []);
+      final lista = _MockWaitlist();
+      when(lista.mine).thenAnswer(
+        (_) async => [
+          WaitlistEntry(
+            id: 'w1',
+            serviceId: _usluga.id,
+            serviceName: 'Fade šišanje',
+            date: const LocalDate(2026, 9, 19),
+          ),
+        ],
+      );
+      when(() => lista.leave('w1')).thenThrow(const ServerError('pad'));
+
+      final container = await _pump(tester, repo: repo, lista: lista);
+
+      await tester.tap(find.text('Ukloni'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('Odjava sa liste čekanja nije uspjela. Pokušajte ponovo.'),
+        findsOneWidget,
+      );
+      expect(find.text('Fade šišanje'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 5));
+      container.dispose();
+    });
+
     testWidgets('bez prijave ekran nudi prijavu, ne praznu listu', (
       tester,
     ) async {
