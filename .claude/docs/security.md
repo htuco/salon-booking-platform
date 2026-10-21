@@ -356,9 +356,10 @@ Raspon računa baza (task 91), klijent ga ne šalje.
   raspona.
 
 Dokaz: `033_lista_cekanja.test.sql` (65 asercija, od taska 91 na rasponu od jednog dana),
-`036_lista_cekanja_raspon.test.sql` (57) i tri provjere bez tokena u `rest_public_catalog.ts` (od
-taska 91 `join_waitlist` za anon mora pasti na `42501` iz funkcije, ne na `404` nepostojećeg
-potpisa). Svaka mutacija obara bar jednu asercju (brojevi za prvih trinaest su iz taska 68, osim
+`036_lista_cekanja_raspon.test.sql` (65) i tri provjere bez tokena u `rest_public_catalog.ts` (od
+taska 91 `join_waitlist` za anon mora pasti na `42501` od granta, ne na `404` nepostojećeg
+potpisa; sam grant poslije `drop` + `create` `036` provjerava kroz `has_function_privilege`, jer
+Supabase default privilegije novoj funkciji vraćaju EXECUTE za `anon`). Svaka mutacija obara bar jednu asercju (brojevi za prvih trinaest su iz taska 68, osim
 onih čije je testove review promijenio — ti su ponovo pokrenuti 2026-10-21):
 
 | Mutacija | Pada |
@@ -419,6 +420,10 @@ Mutacije taska 91 (2026-10-21, `033` + `036`, pokrenute nad pr91 stackom):
 | `expire_waitlist` ne briše ništa | 3 |
 | `candidate_slots` bez zaštite prošlog dana | 0 — druga zaštita (slot ≥ sada) drži |
 | `candidate_slots` bez obje zaštite prošlosti | 1 |
+| `join_waitlist` briše istekle upise bez filtera identiteta | 1 |
+| `join_waitlist` briše istekle upise bez filtera salona | 1 |
+| `my_notifications` bez filtera salona u grani ponuda | 1 |
+| EXECUTE vraćen `anon`-u (`join_waitlist`, `my_waitlist`) i `authenticated`-u (`expire_waitlist`) | 3 |
 
 ## Tabela bez `salon_id` — `app_policies`
 

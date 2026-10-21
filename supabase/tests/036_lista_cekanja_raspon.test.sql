@@ -351,6 +351,23 @@ select is((select array_agg(date order by date) from ana_obavijesti where type =
   array[(select p from fix) + 2, (select p from fix) + 3],
   'Ana u istoriji vidi dvije ponude, svaku sa danom koji se oslobodio');
 
+-- Ista Ana u aplikaciji salona B ne vidi ponude iz A: `my_notifications` drzi salon iz headera.
+set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440001"}';
+select set_config('request.jwt.claims', (select ana from jwt), true);
+set local role authenticated;
+select is((select count(*)::int from public.my_notifications() where type = 'waitlist_offer'), 0,
+  'Ana sa headerom salona B ne vidi svoje ponude iz salona A');
+reset role;
+set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440000"}';
+
+-- Vlasnik salona A ne vidi redove ponuda ni u svom logu (`staff_notification_logs`), ni sad kad
+-- red nosi i dan ponude.
+select set_config('request.jwt.claims', (select vlasnik from jwt), true);
+set local role authenticated;
+select is((select count(*)::int from public.notification_logs where waitlist_entry_id is not null), 0,
+  'Vlasnik salona A ne vidi redove ponuda svog salona');
+reset role;
+
 -- ---------------------------------------------------------------------------
 -- 6. Gasenje
 -- ---------------------------------------------------------------------------
@@ -399,6 +416,10 @@ select ok(not exists (select 1 from public.waitlist_entries where id = (select i
 insert into public.waitlist_entries(id, salon_id, auth_identity_id, service_id, employee_id, date_from, date_to)
 select 'fe910000-0000-4000-8000-00000000bb01', f.salon, (select bob from ident), f.usluga, f.emir, f.t - 3, f.t - 1
 from fix f;
+-- Bob ima istekao upis i u salonu B: `join_waitlist` u A brise samo njegove istekle upise u A.
+insert into public.waitlist_entries(id, salon_id, auth_identity_id, service_id, date_from, date_to)
+select 'fe910000-0000-4000-8000-00000000bb02', f.salon_b, (select bob from ident), f.usluga_b, f.t - 3, f.t - 1
+from fix f;
 select set_config('request.jwt.claims', (select bob from jwt), true);
 set local role authenticated;
 create temporary table bob_emir as select * from public.join_waitlist(
@@ -408,6 +429,10 @@ grant select on bob_emir to public;
 select ok((select id <> 'fe910000-0000-4000-8000-00000000bb01' and date_from = (select p from fix)
   and date_to = (select p from fix) + 4 from bob_emir),
   'Istekao upis istog kljuca ne blokira novi: novi red, novi raspon');
+select ok(exists (select 1 from public.waitlist_entries where id = (select id from cira_upisi where oznaka = 'istekao')),
+  'join_waitlist ne brise tudji istekao upis');
+select ok(exists (select 1 from public.waitlist_entries where id = 'fe910000-0000-4000-8000-00000000bb02'),
+  'join_waitlist u salonu A ne brise isteklog upisa istog klijenta u salonu B');
 
 -- Cirin istekao upis ima i staru ponudu; prolaz ih brise oba, a upis koji traje ostaje.
 insert into public.notification_logs(salon_id, waitlist_entry_id, device_id, type, waitlist_offer_date, status)
@@ -464,8 +489,6 @@ select throws_ok(format('select * from public.waitlist_demand(%L, %L, %L)',
   'Vlasnik salona B ne vidi potraznju salona A: 42501');
 select throws_ok(format('select * from public.join_waitlist(%L)', (select usluga from fix)), '42501', null,
   'Vlasnik salona B ne upisuje: 42501');
-select is((select count(*)::int from public.notification_logs where type = 'waitlist_offer'), 0,
-  'Vlasnik salona B ne vidi redove ponuda');
 reset role;
 select set_config('request.jwt.claims', (select bob from jwt), true);
 set local role authenticated;
@@ -473,8 +496,21 @@ select throws_ok('select * from public.waitlist_entries', '42501', null, 'Klijen
 reset role;
 
 -- ---------------------------------------------------------------------------
--- 9. Sema
+-- 9. Sema i grantovi
 -- ---------------------------------------------------------------------------
+-- `drop` + `create` vraca default privilegije (EXECUTE za anon); granica je `revoke`. Test koji
+-- samo zove funkciju kao anon ne razlikuje grant od tijela, pa se grant provjerava direktno.
+select ok(not has_function_privilege('anon', 'public.join_waitlist(uuid, uuid, date)', 'execute'),
+  'anon nema EXECUTE na join_waitlist');
+select ok(has_function_privilege('authenticated', 'public.join_waitlist(uuid, uuid, date)', 'execute'),
+  'authenticated ima EXECUTE na join_waitlist');
+select ok(not has_function_privilege('anon', 'public.my_waitlist()', 'execute'),
+  'anon nema EXECUTE na my_waitlist');
+select ok(has_function_privilege('authenticated', 'public.my_waitlist()', 'execute'),
+  'authenticated ima EXECUTE na my_waitlist');
+select ok(not has_function_privilege('authenticated', 'private.expire_waitlist()', 'execute')
+  and not has_function_privilege('anon', 'private.expire_waitlist()', 'execute'),
+  'expire_waitlist brise preko svih salona: nema EXECUTE za authenticated ni anon');
 select hasnt_column('public', 'waitlist_entries', 'date', 'Upis vise nema jedan dan');
 select col_not_null('public', 'waitlist_entries', 'date_from', 'date_from je obavezan');
 select col_not_null('public', 'waitlist_entries', 'date_to', 'date_to je obavezan');

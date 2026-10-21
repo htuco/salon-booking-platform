@@ -337,8 +337,9 @@ try {
       p_from: closedSunday.toISOString().slice(0, 10),
     }),
   });
-  // Task 91 changed the signature to (service, employee, from). The function itself must refuse
-  // (42501), not PostgREST for a missing overload: a 404 would pass `>= 400` and prove nothing.
+  // Task 91 changed the signature to (service, employee, from). Anon must hit the missing EXECUTE
+  // grant (42501), not a missing overload: a 404 would pass `>= 400` and prove nothing. The grant
+  // itself is asserted in 036 (`has_function_privilege`).
   assert(
     (join.status === 401 || join.status === 403) && join.body?.code === "42501",
     `Anon join_waitlist must be refused by the function (42501), got HTTP ${join.status} ${JSON.stringify(join.body)}.`,
