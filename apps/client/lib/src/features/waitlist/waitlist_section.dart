@@ -11,7 +11,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../booking/date_labels.dart';
 import 'waitlist_providers.dart';
 
-/// „Lista čekanja" iznad predstojećih termina (task 68).
+/// „Lista čekanja" iznad predstojećih termina (task 68), svaki upis sa svojim rasponom (task 91).
 ///
 /// Push o oslobođenom mjestu vodi ovdje (`send-push` šalje `route: /appointments`), pa
 /// upis ima „Zakaži": booking sa tom uslugom, gdje korisnik bira dan i vrijeme iz liste koju
@@ -100,8 +100,15 @@ class _Upis extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Raspon od jednog dana je dan, kao u tasku 68; duži raspon je „Od 21.10. do
+          // 30.10." (task 91). Početak je danas ili kasnije: baza prošle dane ne vraća.
           Text(
-            formatDateWithWeekday(l10n, upis.date),
+            upis.dateFrom == upis.dateTo
+                ? formatDateWithWeekday(l10n, upis.dateTo)
+                : l10n.waitlistRange(
+                    formatDayMonth(upis.dateFrom),
+                    formatDayMonth(upis.dateTo),
+                  ),
             style: theme.textTheme.titleSmall,
           ),
           const SizedBox(height: AppSpacing.xs),

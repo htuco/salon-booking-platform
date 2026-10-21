@@ -41,6 +41,12 @@ String formatDate(LocalDate date) =>
     '${date.month.toString().padLeft(2, '0')}.'
     '${date.year}.';
 
+/// `14.09.` — dan i mjesec bez godine, za rečenicu („do 30.10.") gdje je godina očigledna:
+/// raspon liste čekanja ne izlazi iz prozora rezervacije (task 91).
+String formatDayMonth(LocalDate date) =>
+    '${date.day.toString().padLeft(2, '0')}.'
+    '${date.month.toString().padLeft(2, '0')}.';
+
 /// `Petak, 14.09.2026.` — zapis za sažetak zadnjeg koraka i success ekran.
 String formatDateWithWeekday(AppLocalizations l10n, LocalDate date) =>
     '${weekdayLong(l10n, date.weekday)}, ${formatDate(date)}';

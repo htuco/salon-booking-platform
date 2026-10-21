@@ -303,7 +303,117 @@ void main() {
     });
   });
 
-  group('lista čekanja (task 68)', () {
+  group('lista čekanja (task 68 i 91)', () {
+    testWidgets('pun dan kaže prvi slobodan termin poslije izabranog dana', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const [])
+        // Dan prije izabranog se ne računa: „ranije" je u odnosu na izabrani dan.
+        ..stubSlobodniDani(const [
+          LocalDate(2026, 9, 12),
+          _danas,
+          LocalDate(2026, 9, 17),
+          LocalDate(2026, 9, 18),
+        ]);
+      final lista = _MockWaitlist()..stubPunDan();
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('Prvi slobodan termin: Četvrtak, 17.09.2026.'),
+        findsOneWidget,
+      );
+      expect(find.text('Obavijesti me ako se oslobodi ranije'), findsOneWidget);
+
+      container.dispose();
+    });
+
+    testWidgets('bez slobodnog dana u prozoru panel kaže do kada nema', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const [])
+        ..stubSlobodniDani(const []);
+      final lista = _MockWaitlist()..stubPunDan();
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.textContaining('nema slobodnog vremena.'), findsOneWidget);
+      expect(find.textContaining('Prvi slobodan'), findsNothing);
+
+      container.dispose();
+    });
+
+    testWidgets('upis kod istog radnika vidi se na svakom punom danu', (
+      tester,
+    ) async {
+      // Upis je jedan po usluzi i radniku (task 91): drugi pun dan ne nudi novi upis nego
+      // pokazuje postojeći, sa njegovom granicom.
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const []);
+      const drugiDan = LocalDate(2026, 9, 16);
+      final lista = _MockWaitlist()..stubPunDan(puni: {_danas, drugiDan});
+      when(lista.mine).thenAnswer(
+        (_) async => [
+          WaitlistEntry(
+            id: 'w1',
+            serviceId: _usluga.id,
+            serviceName: _usluga.name,
+            dateFrom: _danas,
+            dateTo: const LocalDate(2026, 9, 30),
+          ),
+        ],
+      );
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        customerId: _customerId,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(drugiDan),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.textContaining('Na listi čekanja ste do 30.09.'),
+        findsOneWidget,
+      );
+      expect(find.text('Obavijesti me ako se oslobodi ranije'), findsNothing);
+
+      container.dispose();
+    });
+
     testWidgets('pun dan se bira i nudi listu; neprijavljen ide na prijavu', (
       tester,
     ) async {
@@ -328,20 +438,20 @@ void main() {
       expect(find.byType(WaitlistDayPanel), findsOneWidget);
       expect(
         find.text(
-          'Ovaj dan je popunjen. Ako se mjesto oslobodi, možemo vam javiti.',
+          'Ovaj dan je popunjen. Ako se mjesto oslobodi ranije, možemo vam javiti.',
         ),
         findsOneWidget,
       );
       // Neradni-dan rečenica ne stoji uz pun dan.
       expect(find.text('Ovaj dan je popunjen.'), findsNothing);
 
-      await tester.tap(find.text('Obavijesti me kad se oslobodi'));
+      await tester.tap(find.text('Obavijesti me ako se oslobodi ranije'));
       await tester.pumpAndSettle();
       expect(find.byType(LoginScreen), findsOneWidget);
       verifyNever(
         () => lista.join(
           serviceId: any(named: 'serviceId'),
-          date: any(named: 'date'),
+          from: any(named: 'from'),
           employeeId: any(named: 'employeeId'),
         ),
       );
@@ -364,7 +474,8 @@ void main() {
                   id: 'w1',
                   serviceId: _usluga.id,
                   serviceName: _usluga.name,
-                  date: _danas,
+                  dateFrom: _danas,
+                  dateTo: _sutra,
                 ),
               ]
             : const [],
@@ -372,12 +483,12 @@ void main() {
       when(
         () => lista.join(
           serviceId: any(named: 'serviceId'),
-          date: any(named: 'date'),
+          from: any(named: 'from'),
           employeeId: any(named: 'employeeId'),
         ),
       ).thenAnswer((_) async {
         upisan = true;
-        return 'w1';
+        return (id: 'w1', dateFrom: _danas, dateTo: _sutra);
       });
 
       final container = await _pumpFlow(
@@ -394,14 +505,18 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await tester.tap(find.text('Obavijesti me kad se oslobodi'));
+      await tester.tap(find.text('Obavijesti me ako se oslobodi ranije'));
       await tester.pump();
       await tester.pump();
 
+      // Dan iz flowa je početak raspona; granicu računa baza (task 91).
       verify(
-        () => lista.join(serviceId: _usluga.id, date: _danas, employeeId: null),
+        () => lista.join(serviceId: _usluga.id, from: _danas, employeeId: null),
       ).called(1);
-      expect(find.textContaining('Na listi čekanja ste.'), findsOneWidget);
+      expect(
+        find.textContaining('Na listi čekanja ste do 15.09.'),
+        findsOneWidget,
+      );
       expect(find.text('Odjavi se sa liste'), findsOneWidget);
 
       container.dispose();
@@ -420,7 +535,8 @@ void main() {
             id: 'w1',
             serviceId: _usluga.id,
             serviceName: _usluga.name,
-            date: _danas,
+            dateFrom: _danas,
+            dateTo: _sutra,
           ),
         ],
       );
@@ -464,7 +580,8 @@ void main() {
             id: 'w1',
             serviceId: _usluga.id,
             serviceName: _usluga.name,
-            date: _danas,
+            dateFrom: _danas,
+            dateTo: _sutra,
           ),
         ],
       );
@@ -517,7 +634,8 @@ void main() {
                   id: 'w1',
                   serviceId: _usluga.id,
                   serviceName: _usluga.name,
-                  date: _danas,
+                  dateFrom: _danas,
+                  dateTo: _sutra,
                 ),
               ]
             : const [];
@@ -580,7 +698,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Ovaj dan je popunjen.'), findsOneWidget);
-      expect(find.text('Obavijesti me kad se oslobodi'), findsNothing);
+      expect(find.text('Obavijesti me ako se oslobodi ranije'), findsNothing);
 
       container.dispose();
     });
@@ -970,6 +1088,7 @@ void main() {
 const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 const _customerId = '30000000-0000-4000-8000-000000000001';
 const _danas = LocalDate(2026, 9, 14);
+const _sutra = LocalDate(2026, 9, 15);
 
 const _env = AppEnv(
   salonId: _salonId,
@@ -1081,6 +1200,20 @@ class _MockBooking extends Mock implements BookingRepository {
         deviceId: any(named: 'deviceId'),
       ),
     ).thenAnswer((_) async => _termin.copyWith(status: status));
+  }
+
+  /// Ono što vrati `get_available_dates` (task 91: panel punog dana iz toga čita prvi
+  /// slobodan dan). Poziva se poslije [stubUspjesan], koji podrazumijeva samo danas.
+  void stubSlobodniDani(List<LocalDate> dani) {
+    when(
+      () => availableDates(
+        salonId: any(named: 'salonId'),
+        serviceId: any(named: 'serviceId'),
+        from: any(named: 'from'),
+        to: any(named: 'to'),
+        employeeId: any(named: 'employeeId'),
+      ),
+    ).thenAnswer((_) async => dani);
   }
 
   void stubSlotovi(List<AvailableSlot> slotovi) {

@@ -402,7 +402,7 @@ void main() {
     });
 
     testWidgets(
-      'lista čekanja stoji iznad praznog stanja, sa odjavom (task 68)',
+      'lista čekanja stoji iznad praznog stanja, sa rasponom i odjavom (task 68, 91)',
       (tester) async {
         final repo = _MockAppointments();
         when(repo.forCurrentCustomer).thenAnswer((_) async => const []);
@@ -412,7 +412,8 @@ void main() {
             id: 'w1',
             serviceId: _usluga.id,
             serviceName: 'Fade šišanje',
-            date: const LocalDate(2026, 9, 19),
+            dateFrom: const LocalDate(2026, 9, 15),
+            dateTo: const LocalDate(2026, 9, 19),
             employeeName: 'Emir',
           ),
         ];
@@ -423,6 +424,8 @@ void main() {
 
         expect(find.text('Lista čekanja'), findsOneWidget);
         expect(find.text('Fade šišanje · Emir'), findsOneWidget);
+        // Upis pokazuje raspon (task 91), ne jedan dan.
+        expect(find.text('Od 15.09. do 19.09.'), findsOneWidget);
         expect(find.text('Zakaži'), findsOneWidget);
         expect(find.text('Nemate zakazanih termina.'), findsOneWidget);
 
@@ -451,7 +454,8 @@ void main() {
               id: 'w1',
               serviceId: _usluga.id,
               serviceName: 'Fade šišanje',
-              date: const LocalDate(2026, 9, 19),
+              dateFrom: const LocalDate(2026, 9, 19),
+              dateTo: const LocalDate(2026, 9, 19),
             ),
           ];
         });
@@ -485,7 +489,8 @@ void main() {
             id: 'w1',
             serviceId: _usluga.id,
             serviceName: 'Fade šišanje',
-            date: const LocalDate(2026, 9, 19),
+            dateFrom: const LocalDate(2026, 9, 19),
+            dateTo: const LocalDate(2026, 9, 19),
           ),
         ],
       );
@@ -502,6 +507,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Fade šišanje'), findsOneWidget);
+      // Raspon od jednog dana je dan, kao u tasku 68.
+      expect(find.text('Subota, 19.09.2026.'), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 5));
       container.dispose();
