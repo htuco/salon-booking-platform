@@ -98,11 +98,16 @@ profil se traži prije slanja termina, kasni sudar na telefonu se preskače (`20
 pgTAP 888, klijent 667; uživo: Melura prikazuje ime i telefon novog klijenta. **Ostaje:**
 odobrenje, merge, `supabase db push`, „Dopuni profil" poslije prave Apple/Google prijave na uređaju.
 
-### 56 — Push podsjetnici D-1 i H-3, odložen (2026-10-13)
+### 56 — Push podsjetnici D-1 i H-3 🟡 (2026-10-21)
 
-Nema Android uređaja ni emulatora za stavku „uživo". Na ovom Macu treba emulator API 36, arm64-v8a,
-Google Play image. Prije koda dvije odluke: kad ide D-1 i jedan ili dva prekidača. Nalazi i odluke
-su u status bloku task fajla.
+Grana `feat/podsjetnici`, [PR #144](https://github.com/htuco/salon-booking-platform/pull/144),
+[ADR-0033](../../docs/adr/0033-podsjetnici-dnevni-24h-i-satni-n-sati.md). Dnevni tačno 24 h prije,
+satni N sati prije (salon bira N u Meluri, 1–12, podrazumijevano 3), dva prekidača; SQL + `pg_cron`
+(`queue-reminders`), slanje kroz postojeći `send-push`, a claim ne šalje podsjetnik otkazanog ili
+počelog termina. pgTAP `035` (67 asercija, 26 mutacija), admin 730, klijent 690; uživo na lokalnom
+stacku cron napravio oba reda, Melura snima prekidače i N. **Ostaje:** potvrda dvije
+podrazumijevane odluke (N 1–12; nema podsjetnika za termin zakazan ili potvrđen kasnije), merge,
+deploy **`send-push` prije `db push`**, push na Android emulatoru.
 
 ### 69 — Sedmični kalendar u Meluri (spojen u `develop`, 2026-10-19)
 

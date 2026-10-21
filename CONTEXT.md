@@ -124,6 +124,15 @@ dana (zahtjev na čekanju ga ne gasi) ili kad salon deaktivira uslugu ili radnik
 samo broj upisanih po danu.
 _Izbjegavaj_: rezervacija na čekanju (miješa se sa `pending`), lista čekanja kao naziv jednog upisa.
 
+**Podsjetnik** (`reminder_d1`, `reminder_h3`)
+Push klijentu prije potvrđenog termina (task 56, ADR-0033). **Dnevni** ide tačno 24 h prije
+početka, **satni** N sati prije (salon bira N, 1–12, podrazumijevano 3); svaki ima svoj prekidač u
+Meluri. Ime `reminder_h3` je istorijsko i ostaje i kad N nije 3. Termin zakazan ili potvrđen
+kasnije od trenutka podsjetnika ga ne dobija, a otkazan termin ga ne dobija ni kad je red već
+čekao u redu za slanje.
+_Izbjegavaj_: D-1/H-3 kao naziv postavke (H-3 je samo podrazumijevani N), obavijest o potvrdi
+(to je `confirmed`, drugi tip).
+
 ## Identitet
 
 **`AuthIdentity`**

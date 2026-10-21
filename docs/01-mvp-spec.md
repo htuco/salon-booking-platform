@@ -188,7 +188,11 @@ mod po salonu (`allowGuestBooking`, default off). Detalji: [06-auth-login-flow.m
 | D-1 od termina | "Sutra u 14:30 — Muško šišanje kod Emira" |
 | H-3 od termina | "Termin za 3 sata — Muško šišanje" |
 
-D-1 / H-3 pattern je Cutliov dokazani default ([research §2](03-market-research-cutlio.md)). Push je besplatan — ovo je feature koju web verzija ne može dati i glavni argument za native.
+D-1 / H-3 pattern je Cutliov dokazani default ([research §2](03-market-research-cutlio.md)).
+Kako je implementirano (task 56, [ADR-0033](adr/0033-podsjetnici-dnevni-24h-i-satni-n-sati.md)): D-1
+je tačno 24 h prije, H-3 je N sati prije (salon bira N, podrazumijevano 3), svaki sa svojim
+prekidačem. Tekst je generički („Termin je sutra.", „Termin počinje za 3 sata.") — bez vremena,
+usluge i radnika, jer već predatu poruku odjava ne može povući (`security.md`, „Push uređaji"). Push je besplatan — ovo je feature koju web verzija ne može dati i glavni argument za native.
 
 ### 6.3 Admin app (jedna app za sve salone)
 

@@ -4,10 +4,12 @@ Puni task: [tasks/zero-crisis/56-podsjetnici-d1-h3.md](zero-crisis/56-podsjetnic
 
 ## Status
 
-U toku (grana `feat/podsjetnici`, 2026-10-21). Odluke su zapisane u
-[ADR-0033](../docs/adr/0033-podsjetnici-dnevni-24h-i-satni-n-sati.md); dvije podrazumijevane
-vrijednosti (N je 1–12 h; nema podsjetnika za termin zakazan ili potvrđen kasnije od trenutka
-podsjetnika) čekaju Hamzinu potvrdu u PR-u. Za stavku „uživo" treba Android emulator.
+U toku (grana `feat/podsjetnici`, [PR #144](https://github.com/htuco/salon-booking-platform/pull/144),
+2026-10-21). Kod, pgTAP (035, 26 mutacija), `send-push`, Melura i klijent su gotovi i dokazani
+lokalno; odluke su u [ADR-0033](../docs/adr/0033-podsjetnici-dnevni-24h-i-satni-n-sati.md). Dvije
+podrazumijevane vrijednosti (N je 1–12 h; nema podsjetnika za termin zakazan ili potvrđen kasnije
+od trenutka podsjetnika) čekaju Hamzinu potvrdu u PR-u. **Ostaju:** review i merge, deploy
+(`send-push` prije `db push`), uživo na Android emulatoru sa pravim FCM-om.
 
 ## Ciljevi
 
@@ -15,30 +17,34 @@ podsjetnika) čekaju Hamzinu potvrdu u PR-u. Za stavku „uživo" treba Android 
       Satni ide **N sati prije**, a salon bira N (1 h, 2 h, 3 h …; podrazumijevano 3 h, kako task
       kaže). **Dva prekidača** u Meluri: dnevni samo uključi/isključi, satni uključi/isključi plus
       izbor N
-- [ ] Šema za odluke: dnevni može ostati postojeći `reminders_enabled`, a satni traži novu kolonu za
+- [x] Šema za odluke: dnevni može ostati postojeći `reminders_enabled`, a satni traži novu kolonu za
       uključen/isključen i jednu za N (sa `check` granicom). Novi potpis `update_salon_settings` je
       preopterećenje (zamka iz taska 37): stari potpis se dropa ili ostaje omotač, nikako dva
       paralelna. Tip `reminder_h3` ostaje ime enuma i kad je N različit od 3
-- [ ] Migracija: `private.queue_reminders()` + `pg_cron` posao (obrazac taska 64: SQL u bazi,
+- [x] Migracija: `private.queue_reminders()` + `pg_cron` posao (obrazac taska 64: SQL u bazi,
       `send-reminders/README.md` ostaje ili se ažurira); samo `confirmed` termin, samo uz
       `reminders_enabled`, vrijeme u zoni salona (cron radi u UTC-u)
-- [ ] Jedan red po terminu i tipu: unique `(appointment_id, device_id, type)` već postoji, pa
+- [x] Jedan red po terminu i tipu: unique `(appointment_id, device_id, type)` već postoji, pa
       `on conflict do nothing`; drugi prolaz ne pravi novi red
-- [ ] H-3 se ne pravi za termin koji počinje za manje od 3 sata, ni poslije početka
-- [ ] Filter u `claim_push_notifications`: red podsjetnika za termin koji više nije `confirmed` ili
+- [x] H-3 se ne pravi za termin koji počinje za manje od 3 sata, ni poslije početka (tačnije:
+      za termin zakazan ili potvrđen poslije trenutka podsjetnika — prijedlog iz ADR-0033)
+- [x] Filter u `claim_push_notifications`: red podsjetnika za termin koji više nije `confirmed` ili
       je već počeo ide u `logged`, ne šalje se. Zadnja definicija je u
       `20261020140000_lista_cekanja.sql`; redefiniše se iz nje, ne iz starije
-- [ ] `send-push`: tipovi `reminder_d1` i `reminder_h3` u `messageFor` (danas `unsupported_type`),
+- [x] `send-push`: tipovi `reminder_d1` i `reminder_h3` u `messageFor` (danas `unsupported_type`),
       tekst po vertikali (`vertical_packs.terminology` + `salons.terminology_override`), Deno test
-- [ ] pgTAP: tačno jedan red; drugi prolaz ne pravi novi; otkazan termin ne dobija red; ugašen
+- [x] pgTAP: tačno jedan red; drugi prolaz ne pravi novi; otkazan termin ne dobija red; ugašen
       `reminders_enabled` ne pravi red; H-3 za termin kroz < 3 h ne nastaje; svaka provjera pada
       kad se njen uslov ukloni (mutacija)
-- [ ] Admin Postavke: prekidači „Podsjetnici" rade i pišu ono što je odlučeno (danas
+- [x] Admin Postavke: prekidači „Podsjetnici" rade i pišu ono što je odlučeno (danas
       `onChanged: null` i „Još ne radi", `settings_screen.dart:1247-1277`)
-- [ ] Klijent: `about_app_screen.dart` i opis `aboutAppStep3Title` (`app_bs.arb:1070-1071`) više ne
+- [x] Klijent: `about_app_screen.dart` i opis `aboutAppStep3Title` (`app_bs.arb:1070-1071`) više ne
       kažu da podsjetnika nema; lista Obavijesti već ima naslov „Podsjetnik" (task 70)
-- [ ] Dokumenti: `security.md` (nova funkcija, cron, grantovi), `supabase/IMPLEMENTATION.md`,
+- [x] Dokumenti: `security.md` (nova funkcija, cron, grantovi), `supabase/IMPLEMENTATION.md`,
       `send-reminders/README.md`, `workflows.md` (cron), task fajl i blok u `tasks/zero-crisis/README.md`
+- [x] Uživo na lokalnom stacku (umjesto emulatora za dio koji ne traži FCM): N = 1 snimljen kroz
+      Melura web, cron `queue-reminders` u 17:55 UTC napravio `reminder_d1` i `reminder_h3`,
+      ručni drugi prolaz 0, claim daje „Termin" i 60 min; snimci `docs/screenshots/task-56-*.png`
 - [ ] Uživo na Android emulatoru (API 36, arm64-v8a, **Google Play image**; bez Google Playa FCM ne
       radi): termin za sutra → D-1 stiže, tekst po vertikali. Piše se „viđeno na emulatoru (pravi
       FCM)", ne „na uređaju"
