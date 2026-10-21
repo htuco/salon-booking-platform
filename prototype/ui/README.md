@@ -204,10 +204,13 @@ izveden iz postojećih komponenti:
   ali se **tapa** i broj je **precrtan**, pa se razlika vidi oblikom, ne samo bojom. Čitač ekrana
   kaže „27, popunjen". Na izabranom punom danu mrežu vremena zamjenjuje panel: ikona, rečenica i
   `AppButton` `secondary` „Obavijesti me kad se oslobodi"; poslije upisa „Na listi čekanja ste…" i
-  `outline` „Odjavi se sa liste". Riječ je „mjesto", ne „termin": termin zavisi od vertikale.
+  `outline` „Odjavi se sa liste". Uređaj bez dozvole za push ne dobija ponudu, pa tada panel nosi
+  ikonu `bellOff` i rečenicu da su obavijesti isključene i da se uključuju u postavkama telefona.
+  Riječ je „mjesto", ne „termin": termin zavisi od vertikale.
 - **`5h` dobija sekciju „Lista čekanja"** iznad predstojećih: hairline kartica sa danom, uslugom i
   radnikom, i dva dugmeta u pola širine — „Zakaži" i „Ukloni" (kratko, jer „Odjavi se sa liste" na
-  402 px ne stane).
+  402 px ne stane). Kad upis ne može da se učita, sekcija nosi naslov i `LoadError` („Pokušaj
+  ponovo"), ne nestaje.
 - **`5j` stavka `waitlist_offer`**: „Oslobodilo se mjesto", opis bez vremena (`Fade · utorak 27.10.`).
 
 Kako izgleda: [`docs/screenshots/task-68-pun-dan.png`](../../docs/screenshots/task-68-pun-dan.png),

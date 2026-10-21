@@ -116,10 +116,12 @@ nisu puni. Računa ga backend (`waitlist_full_dates`), kao i dostupnost.
 _Izbjegavaj_: popunjen termin, zauzet dan.
 
 **Upis na listu čekanja** (`waitlist_entry`)
-Klijent čeka na pun dan za uslugu, opcionalno kod radnika (task 68, ADR-0031). Kad se termin tog
-dana oslobodi i mjesto za njegovu uslugu stvarno otvori, dobija obavijest (`waitlist_offer`).
-**Upis ne drži mjesto** — termin dobija ko prvi zakaže. Važi do kraja svog dana, a nestaje kad
-klijent zakaže tu uslugu tog dana. Salon vidi samo broj upisanih po danu.
+Klijent čeka na pun dan za uslugu, opcionalno kod radnika (task 68, ADR-0031). Kad otkazan termin
+tog dana otvori vrijeme baš za njegovu uslugu i radnika, dobija obavijest (`waitlist_offer`) — jednu
+po oslobađanju, i samo ako uređaj ima dozvolu za push. **Upis ne drži mjesto** — termin dobija ko
+prvi zakaže. Važi do kraja svog dana, a nestaje kad klijentu bude **potvrđen** termin te usluge tog
+dana (zahtjev na čekanju ga ne gasi) ili kad salon deaktivira uslugu ili radnika upisa. Salon vidi
+samo broj upisanih po danu.
 _Izbjegavaj_: rezervacija na čekanju (miješa se sa `pending`), lista čekanja kao naziv jednog upisa.
 
 ## Identitet

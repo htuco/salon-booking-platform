@@ -652,7 +652,8 @@ Implementacija:
   vezan za već prijavljen identitet, iste vrste kao termin. Prijedlog: u formularu ga voditi uz
   termine (Play „App activity", Apple „Other User Content"), a kategoriju potvrditi pri popunjavanju
   formulara (task 90). Svrha je funkcionalnost (obavijest kad se mjesto oslobodi). Salon vidi
-  samo broj upisanih po danu, ne ko je upisan. Brisanje računa briše upise (§8.2)
+  samo broj upisanih po danu, ne ko je upisan — ni kroz log obavijesti, čije redove ponuda ne
+  vidi (ADR-0031). Brisanje računa briše upise (§8.2)
 - Facebook zahtijeva **data deletion callback URL** ako je uključen
 - Za `dental` i `health`: sabira se sa zahtjevima iz [05 §7](05-vertical-packs.md), ne zamjenjuje ih
 

@@ -121,13 +121,14 @@ obara `032`), admin 689, klijent 676, a tok je viđen uživo na lokalnom stacku.
 kao u bazi, jedna prijava za sliku i recenziju). **Ostaje:** merge, deploy (**prvo**
 `send-push notify-content-reports`, pa `db push`), push na uređaju.
 
-### 68 — Lista čekanja 🟡 (2026-10-20)
+### 68 — Lista čekanja 🟡 (2026-10-21)
 
 Grana `feat/lista-cekanja`, [PR #142](https://github.com/htuco/salon-booking-platform/pull/142).
-Upis na pun dan je za uslugu i opcionalno radnika. Otkazivanje šalje push samo upisima kojima se
-mjesto stvarno otvorilo, a termin dobija ko prvi zakaže
-([ADR-0031](../../docs/adr/0031-lista-cekanja-push-svima-prvi-zakaze.md), **predložen**). Kalendar
-koraka 3 dobija treće stanje „pun dan" (precrtan, tapa se), „Moji termini" sekciju upisa, a Melura
-„Lista čekanja: N" za vlasnika. pgTAP 996 (13 mutacija obara `033`), klijent 681, admin 722, viđeno
-uživo na lokalnom stacku (402 i 1440). **Ostaje:** Hamzina odluka o ADR-u, merge, deploy (**prvo**
-`send-push`, pa `db push`) i push na Android uređaju.
+Upis na pun dan je za uslugu i opcionalno radnika. Otkazivanje šalje push samo upisima kojima je
+baš ono otvorilo vrijeme, jedan po klijentu, a termin dobija ko prvi zakaže
+([ADR-0031](../../docs/adr/0031-lista-cekanja-push-svima-prvi-zakaze.md), **prihvaćen 2026-10-21**).
+Kalendar koraka 3 dobija treće stanje „pun dan" (precrtan, tapa se), „Moji termini" sekciju upisa,
+a Melura „Lista čekanja: N" za vlasnika. Review je dodao: salon ne vidi redove ponuda u logu, upis
+gasi tek potvrđen termin, deaktivacija usluge ili radnika briše upis, panel kaže kad push nije
+dozvoljen. pgTAP 1008 (`033` 65, 9 novih mutacija obara), klijent 686, admin 725. **Ostaje:** CI,
+merge, deploy (**prvo** `send-push`, sa onim iz taska 67, pa `db push`) i push na Android uređaju.

@@ -2,8 +2,11 @@
 
 ## Status
 
-predložen (2026-10-20) — razrađuje [ADR-0029](0029-opseg-do-lansiranja-zero-crisis.md) za task 68.
-Odobrava Hamza u PR-u taska (`tasks/RASPODJELA.md`).
+prihvaćen (2026-10-21) — razrađuje [ADR-0029](0029-opseg-do-lansiranja-zero-crisis.md) za task 68.
+Predložen 2026-10-20; Hamza ga je prihvatio u reviewu PR-a #142 uz izmjene koje su ovdje već upisane:
+„jednom po oslobađanju" znači da ponudu donosi samo otkazivanje koje upisu otvara vrijeme, jedna
+ponuda po klijentu, upis gasi tek potvrđen termin, salon ne vidi redove ponuda ni u logu, i tri
+posljedice (push dozvola, `waitlist_full_dates` i odsustvo radnika, deaktivirana usluga ili radnik).
 
 ## Kontekst
 
@@ -33,9 +36,11 @@ Upis ne daje prednost i ne drži termin. `book_appointment` ostaje jedina provje
 **Upis je dan + usluga, a radnik je opcionalan.** Radnik je onaj iz koraka 2; „Bilo ko" je upis
 bez radnika. Dijela dana (jutro, popodne) nema.
 
-**Upis važi do kraja svog dana**, a nestaje i ranije, čim isti klijent zakaže istu uslugu tog dana.
-Jedan klijent ima najviše **tri** aktivna upisa u salonu (`PT429`, kao limit iz taska 65); isti
-dan, usluga i radnik dva puta su jedan upis.
+**Upis važi do kraja svog dana**, a nestaje i ranije, čim isti klijent ima **potvrđen** termin iste
+usluge tog dana (termin koji nastaje potvrđen, ili zahtjev koji salon potvrdi). Zahtjev na čekanju
+(`pending`) upis ne gasi: salon ga može odbiti ili pustiti da istekne, a klijent bi tada ostao i
+bez termina i bez mjesta na listi. Jedan klijent ima najviše **tri** aktivna upisa u salonu
+(`PT429`, kao limit iz taska 65); isti dan, usluga i radnik dva puta su jedan upis.
 
 **Upis se prima samo na pun dan.** Pun dan je dan na koji bi bilo slobodnog vremena da nema
 nijednog termina, a nema ga. Neradni dan, zatvoren radnik, salonska blokada cijelog dana, dan van
@@ -44,16 +49,27 @@ nijednog termina, a nema ga. Neradni dan, zatvoren radnik, salonska blokada cije
 i precrtan, ali se tapa (nedostupan dan se do sada nije tapao, pa pun dan nije ni mogao biti
 izabran). Na izabranom punom danu stoji „Obavijesti me kad se oslobodi".
 
-**Push ide jednom po oslobađanju, i samo kad je mjesto stvarno otvoreno.** Kad termin budućeg dana
-pređe u `cancelled`, svakom upisu tog dana se ponovo računa `get_available_slots` za njegovu
-uslugu i radnika. Ko dobije bar jedno vrijeme, dobija push na svaki svoj uređaj u tom salonu. Ako
-prethodna ponuda istom upisu još čeka slanje, nova se ne dodaje.
+**Push ide jednom po oslobađanju, i samo upisu kojem je baš to otkazivanje otvorilo vrijeme.** Kad
+termin budućeg dana pređe u `cancelled`, upis tog dana dobija ponudu samo ako za njegovu uslugu i
+radnika sada postoji slobodno vrijeme koje je otkazani termin do tada blokirao: isti radnik i
+interval slota koji se preklapa sa intervalom otkazanog termina (trajanje i bafer, istim pravilom
+kojim `candidate_slots` termin poredi sa slotom). Termin bez radnika blokirao je svakog radnika, pa
+ga oslobađa svakom. Ponuda ide na svaki uređaj vlasnika upisa u tom salonu. Bez uslova preklapanja
+bi svako nepovezano otkazivanje tog dana ponovo slalo već poslanu ponudu, čim je dan imao ijedno
+slobodno vrijeme. Ako prethodna ponuda istom upisu još čeka slanje, nova se ne dodaje.
+
+**Jedna ponuda po klijentu po oslobađanju.** Kad isti klijent ima više upisa koje isto otkazivanje
+budi („Bilo ko" i „kod Emira"), ponudu dobija najraniji upis. Poruka je „oslobodilo se mjesto", i
+druga ponuda za isti dan ne bi rekla ništa novo.
 
 **Obavijest liste čekanja je vezana za upis, ne za termin.** `notification_logs` dobija
 `waitlist_entry_id`. Red nosi tačno jedno od ta dva. Oslobođeni termin se ne upisuje nigdje u red
 upisanog klijenta, pa ni u push ni u `my_notifications`.
 
-**Salon vidi samo broj upisanih po danu**, kroz `waitlist_demand`, ne imena ni usluge.
+**Salon vidi samo broj upisanih po danu**, kroz `waitlist_demand`, ne imena ni usluge. Redove ponuda
+ne vidi ni u logu obavijesti: `staff_notification_logs` ih isključuje, jer red ponude nosi
+`device_id` klijenta, a admin čita termine sa `device_id`, pa bi spojem saznao ime i telefon onoga
+ko čeka.
 
 **Prekidača po salonu nema.** Lista čekanja radi u svakom salonu.
 
@@ -87,3 +103,16 @@ upisanog klijenta, pa ni u push ni u `my_notifications`.
 - `get_available_slots` je od ovog taska tanak omotač oko `private.candidate_slots`, koji zna
   računati i dan bez termina. Promjena pravila slotova ide u tu funkciju.
 - Brisanje naloga briše upise na listu čekanja tog identiteta.
+- **Bez push dozvole nema ponude.** Ponuda se pravi samo za uređaj sa `fcm_token`, a uređaj bez
+  dozvole za notifikacije se registruje bez tokena. Panel punog dana tada kaže da obavijesti nisu
+  uključene i da se uključuju u postavkama telefona, umjesto „Javićemo vam". Povratak u aplikaciju
+  ponovo registruje uređaj, sada sa tokenom.
+- **Svjesna cijena: javni `waitlist_full_dates` otkriva dane kad radnik ne radi.** Radno vrijeme je
+  javno, a blokade nisu. Dan koji po radnom vremenu radi, a nema slobodnog vremena, do sada je
+  izgledao isto bez obzira na razlog; sada ga `waitlist_full_dates` dijeli na pun (zauzet terminima)
+  i ne-pun (blokiran). Upit sa `p_employee_id` tako pokazuje dane kad je taj radnik blokiran
+  (bolovanje, godišnji). Bez te razlike kalendar ne bi znao na koji dan nudi listu čekanja, pa je
+  cijena prihvaćena; razlog blokade (`reason`) se ne otkriva.
+- **Deaktivirana usluga ili radnik brišu upise koji ih traže.** Takav upis ponudu nikad ne bi dobio
+  (`candidate_slots` ih preskače), a trošio bi jedno od tri mjesta do kraja dana. Upis „Bilo ko"
+  ostaje kad se deaktivira jedan radnik.
