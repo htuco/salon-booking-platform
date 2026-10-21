@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Procjena** | 2 dana |
-| **Zavisi od** | [76](76-supabase-produkcija-i-staging.md), [81](81-potvrda-emaila-kodom.md), [82](82-izmjena-profila-klijenta.md), [83](83-crashlytics.md), [84](84-apple-google-prijava.md), 64–72 (sve nove tabele i funkcije postoje) |
+| **Zavisi od** | [76](76-supabase-produkcija-i-staging.md), [81](81-potvrda-emaila-kodom.md), [82](82-izmjena-profila-klijenta.md), [83](83-crashlytics.md), [84](84-apple-google-prijava.md), 64–72 i [91](91-lista-cekanja-raspon.md) (sve nove tabele i funkcije postoje) |
 | **Blokira** | [89](89-prelazak-na-produkciju.md), [60](../polishing/60-regresija-i-testiranje.md) (regresija) |
 | **Reference** | `.claude/docs/security.md` · agent `rls-auditor` · skill `/security-review` |
 

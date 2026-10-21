@@ -18,7 +18,7 @@ kod i dokazuje ga lokalno; produkcijski dio je već u Hamzinom tasku (73–80) i
 | Folder | Taskovi |
 |---|---|
 | `polishing/` | 52, 53, 54, 55, 59, 60, 61, 62, 63 |
-| `zero-crisis/` faza A | 64, 65, 56, 66, 58, 67, 68, 69, 70, 71, 72 |
+| `zero-crisis/` faza A | 64, 65, 56, 66, 58, 67, 68, 69, 70, 71, 72, 91 |
 | `zero-crisis/` faza C | 81, 57, 82, 83, 84 — kod; produkcijski dio je u 74, 76, 77, 78, 79 |
 | `zero-crisis/` faza D | 87 — sigurnosni pregled koda i RLS-a; provjera produkcije je dio 89 |
 
