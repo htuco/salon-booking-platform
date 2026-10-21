@@ -78,7 +78,7 @@
   .obavijest.warn { color: var(--warn); background: var(--warn-bg); }
   .lista { margin: 8px 0 0; padding-left: 20px; }
   .lista li { margin: 4px 0; }
-  #saloni { overflow-x: auto; }
+  #saloni, #samo-fajl .panel { overflow-x: auto; }
   .prazno { padding: 32px; text-align: center; color: var(--muted); border: 1px dashed var(--line); }
   @media (max-width: 720px) {
     header { padding: 12px 16px; }
@@ -136,7 +136,9 @@
 
 <script>
 'use strict';
-// Token sesije stiže u adresi. Čuva se samo za ovaj tab i briše iz adresne trake.
+// Token sesije stiže u adresi koju je konzola ispisala. Stranica ga spremi u sessionStorage
+// ovog taba i skloni iz adresne trake. Server stranicu daje i bez tokena (u njoj nema tajne),
+// pa F5 na `/` radi i token se čita iz sessionStorage-a. API bez tokena i dalje vraća 403.
 const token = (() => {
   const t = new URLSearchParams(location.search).get('t');
   try { if (t) sessionStorage.setItem('konzola-token', t); } catch (_) {}
@@ -168,6 +170,10 @@ function obavijest(tekst, vrsta = 'bad') {
 }
 
 async function ucitaj() {
+  if (!token) {
+    obavijest('Nema tokena sesije. Otvori adresu koju je konzola ispisala u terminalu.');
+    return;
+  }
   try {
     stanje = await api('GET', '/api/stanje');
     obavijest('');
@@ -239,8 +245,18 @@ function crtajSalone() {
   }
   const samo = stanje.samoFajl;
   $('#samo-fajl').innerHTML = samo.length ? `<h2>Tenanti bez reda u ovoj bazi</h2>
-    <div class="panel sub">Fajl postoji, salona nema. Na hostovanom su to obično demo tenanti iz seeda; inače je fajl napisan rukom.
-    <ul class="lista mono">${samo.map((t) => `<li>${esc(t.flavor)} — ${esc(t.salonId)}</li>`).join('')}</ul></div>` : '';
+    <div class="panel">
+    <p class="sub" style="margin-top:0">Fajl postoji, salona u ovoj bazi nema: salon je napravljen u drugom okruženju, ili je lokalna baza resetovana. „Upiši" ga upiše iz <span class="mono">tenant.yaml</span> sa istim UUID-om; fajl i generatori se ne diraju. Na hostovanom projektu demo tenante iz seeda ne upisuj.</p>
+    <table><thead><tr><th>Flavor</th><th>Naziv salona</th><th>Grad</th><th>Paket</th><th></th></tr></thead><tbody>
+    ${samo.map((t) => `<tr class="samo" data-flavor="${esc(t.flavor)}">
+      <td><span class="mono">${esc(t.flavor)}</span><div class="sub mono">${esc(t.salonId)}</div><div class="sub">${esc(t.vertikala)} · ${esc(t.tema)}</div></td>
+      <td><input name="u-naziv" value="${esc(t.naziv)}" aria-label="Naziv salona"></td>
+      <td><input name="u-grad" value="${esc(t.grad)}" aria-label="Grad" placeholder="obavezno"></td>
+      <td><select name="u-plan" aria-label="Paket"><option>starter</option><option>pro</option><option>premium</option></select></td>
+      <td><button type="button" data-akcija="upisi">Upiši u ovu bazu iz tenant.yaml</button></td>
+    </tr>`).join('')}
+    </tbody></table>
+    <div id="samo-rezultat"></div></div>` : '';
 }
 
 function detalj(s) {
@@ -277,7 +293,9 @@ function detalj(s) {
     <section>
       <h3>Vlasnik</h3>
       <p class="sub" style="margin:0">${s.admin_count ? `Salon ima ${s.admin_count} vlasnički nalog.` : 'Salon još nema vlasnika.'} ${s.open_owner_invites ? `Otvorenih poziva: ${s.open_owner_invites}.` : ''}</p>
+      ${s.platform_invite_id ? `<div class="red"><span class="sub">Poziv platforme je otvoren do ${esc(new Date(s.platform_invite_expires_at).toLocaleString('bs'))}.</span><button type="button" data-akcija="povuci" data-poziv="${esc(s.platform_invite_id)}">Povuci poziv</button></div>` : ''}
       <div class="red"><label><span>Ime i prezime vlasnika</span><input name="p-ime"></label><button type="button" data-akcija="poziv">Napravi poziv</button></div>
+      <div class="hint">Novi poziv povlači prethodni poziv platforme: stari kod prestaje važiti.</div>
       <div class="poziv-rezultat"></div>
     </section>
     ${s.flavor ? `<section>
@@ -287,6 +305,11 @@ function detalj(s) {
         <label><span>App Store</span><select name="s-app">${opcije(store, s.app_store_status)}</select></label>
       </div>
       <div class="hint mono">${esc(s.application_id)} · ${esc(s.app_display_name)}</div>
+    </section>` : ''}
+    ${s.flavor && s.tenant.postoji ? `<section>
+      <h3>Generatori</h3>
+      <p class="sub" style="margin:0">gen_flavors, placeholder ikona i launcher ikone, ponovo. Za korak koji je pao, ili ikonu stavljenu rukom u <span class="mono">tenants/${esc(s.flavor)}/assets/icon.png</span>.</p>
+      <div class="red"><button type="button" data-akcija="generatori">Ponovi generatore</button></div>
     </section>` : ''}
     ${s.flavor && !s.tenant.postoji ? `<section>
       <h3>tenant.yaml fali</h3>
@@ -347,11 +370,37 @@ $('#saloni').addEventListener('click', (e) => {
       el.innerHTML = `<p class="kod">${esc(r.kod)}</p><p class="sub">Kod se vidi samo sada. Baza čuva samo njegov hash.</p>
         <div class="poruka">${esc(r.poruka)}</div><div class="red"><button type="button" data-kopiraj>Kopiraj poruku</button></div>`;
       $('[data-kopiraj]', el).addEventListener('click', () => navigator.clipboard?.writeText(r.poruka));
+    } else if (akcija === 'povuci') {
+      if (!confirm('Povući poziv? Kod koji je vlasnik dobio prestaje važiti.')) return;
+      await api('POST', `/api/saloni/${id}/povuci-poziv`, { poziv: dugme.dataset.poziv });
+      obavijest('Poziv je povučen.', 'ok');
+      await ucitaj();
+    } else if (akcija === 'generatori') {
+      $('.rezultat', kutija).innerHTML = '<p class="sub">Pokrećem generatore — flutter_launcher_icons traje desetak sekundi…</p>';
+      const r = await api('POST', `/api/saloni/${id}/generatori`);
+      await ucitaj();
+      crtajKorake($(`.akcije[data-id="${id}"] .rezultat`), r.koraci);
     } else if (akcija === 'tenant') {
       const r = await api('POST', `/api/saloni/${id}/tenant`, { ios: $('[name=t-ios]', kutija).checked });
       await ucitaj();
       crtajKorake($(`.akcije[data-id="${id}"] .rezultat`), r.koraci);
     }
+  });
+});
+
+$('#samo-fajl').addEventListener('click', (e) => {
+  const dugme = e.target.closest('button[data-akcija="upisi"]');
+  if (!dugme) return;
+  const red = dugme.closest('tr.samo');
+  radi(dugme, async () => {
+    const r = await api('POST', `/api/tenanti/${red.dataset.flavor}/upisi`, {
+      naziv: $('[name=u-naziv]', red).value.trim(),
+      grad: $('[name=u-grad]', red).value.trim(),
+      plan: $('[name=u-plan]', red).value,
+    });
+    obavijest(`Salon ${red.dataset.flavor} je upisan u ovu bazu iz tenant.yaml.`, 'ok');
+    otvoren = r.id;
+    await ucitaj();
   });
 });
 

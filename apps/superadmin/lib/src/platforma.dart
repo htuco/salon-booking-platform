@@ -29,6 +29,20 @@ class Platforma {
     ),
   );
 
+  /// Teme koje baza prima (`private.known_themes`). Konzola ih ne drži sama, pa izbor u formi
+  /// ne može ponuditi temu koju bi baza odbila.
+  Future<List<String>> teme() async {
+    final podaci = await _rpc('platform_list_themes', const {});
+    if (podaci is! List) {
+      throw const PlatformaGreska(
+        'neocekivano',
+        'Baza nije vratila listu tema.',
+      );
+    }
+    return [for (final t in podaci) '$t'];
+  }
+
+  /// `p_id` u [polja] je UUID iz `tenant.yaml`-a kad salon već postoji u drugom okruženju.
   Future<String> napraviSalon(Map<String, Object?> polja) async =>
       '${await _rpc('platform_create_salon', polja)}';
 
@@ -69,6 +83,12 @@ class Platforma {
     }
     return redovi.single;
   }
+
+  /// Povlači otvoren poziv platforme. Poziv koji je napravio salon baza ne dira (`PT404`).
+  Future<void> povuciPoziv(String salonId, String pozivId) => _rpc(
+    'platform_revoke_owner_invite',
+    {'p_salon_id': salonId, 'p_invite_id': pozivId},
+  );
 
   void zatvori() => _http.close(force: true);
 

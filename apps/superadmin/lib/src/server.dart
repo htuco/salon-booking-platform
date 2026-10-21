@@ -7,6 +7,10 @@
 ///      može poslati bez CORS preflighta, a na preflight server ne odgovara dozvolom.
 ///   3. `Origin`, kad postoji, mora biti naš.
 /// Upis na projekat koji nije lokalni traži i `x-potvrda` sa imenom projekta.
+///
+/// Sama stranica (`GET /`) ne traži token: u njoj nema ničeg tajnog (statičan HTML, bez
+/// podataka i bez ključa), a token iz adrese čuva u `sessionStorage` taba i briše ga iz adresne
+/// trake. Zato F5 radi, a token ne ostaje vidljiv na ekranu ni u adresi koja se kopira.
 library;
 
 import 'dart:convert';
@@ -23,12 +27,6 @@ import 'tenant_fajl.dart';
 /// flavora i ne kuca se. Prava domena dolazi u tasku 75 i mijenja se ovdje i u šablonu.
 const idPrefiks = 'ba.nasadomena';
 
-const _teme = [
-  'modern_barber',
-  'elegant_beauty',
-  'warm_wellness',
-  'clinical_calm',
-];
 const _statusiStorea = ['draft', 'in_review', 'live'];
 
 class Konzola {
@@ -81,20 +79,17 @@ class Konzola {
         return await res.close();
       }
       if (req.method == 'GET' && putanja == '/') {
-        if (!_isti(req.uri.queryParameters['t'] ?? '', token)) {
-          return await _greska(
-            res,
-            403,
-            'Otvori adresu koju je konzola ispisala u terminalu.',
-          );
-        }
         return await _stranica(res);
       }
       if (!putanja.startsWith('/api/')) {
         return await _greska(res, 404, 'Nema te stranice.');
       }
       if (!_isti(req.headers.value('x-konzola-token') ?? '', token)) {
-        return await _greska(res, 403, 'Nema tokena sesije.');
+        return await _greska(
+          res,
+          403,
+          'Nema tokena sesije. Otvori adresu koju je konzola ispisala u terminalu.',
+        );
       }
 
       if (req.method == 'GET' && putanja == '/api/stanje') {
@@ -125,10 +120,18 @@ class Konzola {
           'branding' => await postaviBranding(id, tijelo),
           'store' => await postaviStore(id, tijelo),
           'poziv' => await pozivVlasnika(id, tijelo),
+          'povuci-poziv' => await povuciPoziv(id, tijelo),
           'tenant' => await napisiTenantPonovo(id, tijelo),
+          'generatori' => await ponoviGeneratore(id),
           _ => null,
         };
         if (odgovor != null) return await _json(res, 200, odgovor);
+      }
+      // ['api', 'tenanti', ':flavor', 'upisi']
+      if (segmenti.length == 4 &&
+          segmenti[1] == 'tenanti' &&
+          segmenti[3] == 'upisi') {
+        return await _json(res, 200, await upisiIzFajla(segmenti[2], tijelo));
       }
       return await _greska(res, 404, 'Nepoznata akcija.');
     } on PlatformaGreska catch (e) {
@@ -157,6 +160,7 @@ class Konzola {
   Future<Map<String, Object?>> stanje() async {
     final saloni = await platforma.saloni();
     final vertikale = await platforma.vertikale();
+    final teme = await platforma.teme();
     final tenanti = repo.tenanti();
     final matrice = repo.ciMatrice();
     final uBazi = <String>{};
@@ -184,13 +188,23 @@ class Konzola {
         'projekat': okruzenje.projekat,
         'izvor': okruzenje.izvor,
       },
-      'teme': _teme,
+      'teme': teme,
       'vertikale': vertikale,
       'saloni': redovi,
+      // Fajl bez reda u ovoj bazi: salon napravljen u drugom okruženju, ili lokalna baza
+      // poslije `db reset`. Konzola ga upiše iz fajla, sa istim UUID-om.
       'samoFajl': [
         for (final t in tenanti.values)
           if (!uBazi.contains(t.salonId))
-            {'flavor': t.flavor, 'salonId': t.salonId},
+            {
+              'flavor': t.flavor,
+              'salonId': t.salonId,
+              'naziv': t.naziv ?? t.imeAplikacije,
+              'grad': t.grad ?? '',
+              'imeAplikacije': t.imeAplikacije,
+              'vertikala': t.vertical,
+              'tema': t.tema,
+            },
       ],
     };
   }
@@ -222,18 +236,24 @@ class Konzola {
       'p_plan': b['plan'] is String ? b['plan'] : 'starter',
     });
 
-    // Od ovog trenutka salon postoji. Šta god padne ispod, konzola to kaže i nudi ponovo.
+    // Od ovog trenutka salon postoji. Šta god padne ispod, konzola to kaže i nudi ponovo:
+    // bez fajla „Napiši tenant.yaml", sa fajlom „Ponovi generatore".
     final koraci = <Map<String, Object?>>[];
     try {
       _napisiTenant(await _salon(id), ios: ios);
-      koraci.add(
-        Korak(
-          'tenant.yaml',
-          uspjeh: true,
-          izlaz: 'tenants/$flavor/tenant.yaml',
-        ).json,
-      );
-      if (ikona != null) {
+    } on Object catch (e) {
+      koraci.add(Korak('tenant.yaml', uspjeh: false, izlaz: '$e').json);
+      return {'id': id, 'koraci': koraci};
+    }
+    koraci.add(
+      Korak(
+        'tenant.yaml',
+        uspjeh: true,
+        izlaz: 'tenants/$flavor/tenant.yaml',
+      ).json,
+    );
+    if (ikona != null) {
+      try {
         repo.ikona(flavor)
           ..parent.createSync(recursive: true)
           ..writeAsBytesSync(ikona);
@@ -244,10 +264,19 @@ class Konzola {
             izlaz: 'tenants/$flavor/assets/icon.png',
           ).json,
         );
+      } on Object catch (e) {
+        // Generatori se ne pokreću: placeholder bi zauzeo mjesto ikone, a ne bi se vidjelo
+        // da prava ikona fali. Fajl postoji, pa „Ponovi generatore" nastavlja odavde.
+        koraci.add(
+          Korak(
+            'Ikona',
+            uspjeh: false,
+            izlaz:
+                '$e\n\nStavi ikonu u tenants/$flavor/assets/icon.png rukom, pa „Ponovi generatore".',
+          ).json,
+        );
+        return {'id': id, 'koraci': koraci};
       }
-    } on Object catch (e) {
-      koraci.add(Korak('tenant.yaml', uspjeh: false, izlaz: '$e').json);
-      return {'id': id, 'koraci': koraci};
     }
     koraci.addAll((await repo.generisi()).map((k) => k.json));
     return {'id': id, 'koraci': koraci};
@@ -266,7 +295,8 @@ class Konzola {
     if (repo.tenantYaml(flavor).existsSync()) {
       throw ZahtjevGreska(
         409,
-        'tenants/$flavor/tenant.yaml već postoji i ne prepisuje se.',
+        'tenants/$flavor/tenant.yaml već postoji i ne prepisuje se. '
+        'Za generatore: „Ponovi generatore".',
       );
     }
     _napisiTenant(salon, ios: b['ios'] == true);
@@ -280,6 +310,85 @@ class Konzola {
         ...(await repo.generisi()).map((k) => k.json),
       ],
     };
+  }
+
+  /// Salon iz `tenant.yaml`-a u bazu ovog okruženja, sa **istim UUID-om** (`p_id`). Za salon
+  /// napravljen u drugom okruženju, i za lokalni stack poslije `db reset`. Fajl se ne piše i
+  /// generatori se ne pokreću: fajl je već tu i generisano se ne mijenja.
+  ///
+  /// Naziv salona i grad nisu polja fajla. Dolaze iz tijela (forma ih predloži iz prvog
+  /// komentara fajla), a naziv bez toga pada na ime aplikacije.
+  Future<Map<String, Object?>> upisiIzFajla(
+    String flavor,
+    Map<String, Object?> b,
+  ) async {
+    if (!RegExp(r'^[a-z][a-z0-9]*$').hasMatch(flavor)) {
+      throw ZahtjevGreska(400, 'Flavor nije ispravan.');
+    }
+    final fajl = repo.tenantYaml(flavor);
+    if (!fajl.existsSync()) {
+      throw ZahtjevGreska(404, 'Nema tenants/$flavor/tenant.yaml.');
+    }
+    final TenantNaDisku t;
+    try {
+      t = TenantNaDisku.procitaj(fajl.readAsStringSync());
+    } on Object catch (e) {
+      throw ZahtjevGreska(400, 'tenants/$flavor/tenant.yaml se ne čita: $e');
+    }
+    if (t.flavor != flavor) {
+      throw ZahtjevGreska(
+        400,
+        'tenants/$flavor/tenant.yaml ima flavor „${t.flavor}" — mora biti isti kao folder.',
+      );
+    }
+    String? polje(String kljuc) {
+      final v = b[kljuc];
+      return v is String && v.trim().isNotEmpty ? v.trim() : null;
+    }
+
+    final naziv = polje('naziv') ?? t.naziv ?? t.imeAplikacije;
+    final grad = polje('grad') ?? t.grad;
+    if (grad == null) {
+      throw ZahtjevGreska(400, 'Grad nije u fajlu — upiši ga.');
+    }
+    final id = await platforma.napraviSalon({
+      'p_name': naziv,
+      'p_slug': t.slug,
+      'p_city': grad,
+      'p_vertical': t.vertical,
+      'p_theme': t.tema,
+      'p_primary_color': t.primarna,
+      'p_secondary_color': t.sekundarna,
+      'p_flavor': t.flavor,
+      'p_application_id': t.applicationId,
+      'p_bundle_id': t.bundleId,
+      'p_display_name': t.imeAplikacije,
+      'p_plan': polje('plan') ?? 'starter',
+      'p_id': t.salonId,
+    });
+    return {
+      'id': id,
+      'koraci': [
+        Korak(
+          'Baza',
+          uspjeh: true,
+          izlaz: 'Salon $id upisan iz tenants/$flavor/tenant.yaml.',
+        ).json,
+      ],
+    };
+  }
+
+  /// gen_flavors, placeholder ikona i launcher ikone za salon koji ima fajl. Za pad generatora
+  /// ili ikone pri pravljenju salona, i za ikonu koju je developer stavio rukom.
+  Future<Map<String, Object?>> ponoviGeneratore(String id) async {
+    final flavor = (await _salon(id))['flavor'] as String?;
+    if (flavor == null || !repo.tenantYaml(flavor).existsSync()) {
+      throw ZahtjevGreska(
+        409,
+        'Salon nema tenant.yaml — prvo „Napiši tenant.yaml".',
+      );
+    }
+    return {'koraci': (await repo.generisi()).map((k) => k.json).toList()};
   }
 
   Future<Map<String, Object?>> postaviStatus(
@@ -398,6 +507,14 @@ class Konzola {
         kod: '${poziv['code']}',
       ),
     };
+  }
+
+  Future<Map<String, Object?>> povuciPoziv(
+    String id,
+    Map<String, Object?> b,
+  ) async {
+    await platforma.povuciPoziv(id, _tekst(b, 'poziv'));
+    return {'ok': true};
   }
 
   // -------------------------------------------------------------------------

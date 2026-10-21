@@ -61,6 +61,19 @@ void main() {
       expect(o.izvor, '.env.prod');
     });
 
+    test('ime projekta: ref za *.supabase.co, cijeli host za custom domen', () {
+      Okruzenje o(String url) =>
+          Okruzenje(url: Uri.parse(url), kljuc: 'k', izvor: 't');
+      expect(o('https://AbCd1234.supabase.co').projekat, 'abcd1234');
+      expect(o('https://api.salon.ba').projekat, 'api.salon.ba');
+      expect(
+        o('https://api.supabase.co.evil.ba').projekat,
+        'api.supabase.co.evil.ba',
+      );
+      expect(o('https://a.b.supabase.co').projekat, 'a.b.supabase.co');
+      expect(o('http://localhost:54321').projekat, 'lokalno');
+    });
+
     test('env fajl bez service ključa pada (kao .env.live danas)', () {
       expect(
         () => Okruzenje.izEnvFajla(

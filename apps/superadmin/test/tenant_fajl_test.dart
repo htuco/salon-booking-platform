@@ -67,6 +67,59 @@ void main() {
       expect(t.primarna, '#B07D62');
       expect(t.tema, 'elegant_beauty');
       expect(t.imeAplikacije, 'Studio "Lejla"');
+      // Sve što treba za upis u bazu drugog okruženja (isti UUID).
+      expect(t.slug, 'studio-lejla');
+      expect(t.vertical, 'beauty');
+      expect(t.applicationId, 'ba.nasadomena.studiolejla');
+      expect(t.bundleId, 'ba.nasadomena.studiolejla');
+      expect(t.naziv, 'Studio: Lejla #1');
+      expect(t.grad, 'Zenica');
+    });
+
+    test('naziv i grad iz komentara ručno pisanog fajla; demo ih nema', () {
+      final authentic = TenantNaDisku.procitaj(
+        File('../../tenants/authenticbarber/tenant.yaml').readAsStringSync(),
+      );
+      expect(authentic.naziv, 'Authentic Barbershop');
+      expect(authentic.grad, 'Vitez');
+      final demo = TenantNaDisku.procitaj(
+        File('../../tenants/barberstudiovitez/tenant.yaml').readAsStringSync(),
+      );
+      expect(demo.naziv, isNull);
+      expect(demo.grad, isNull);
+    });
+
+    test('prelom reda u nazivu, gradu ili imenu ne ubacuje YAML ključ', () {
+      const zlonamjeran = NoviTenant(
+        salonId: '0b9c2a51-7f3e-4c1d-9a8b-2e6f4d3c1b0a',
+        flavor: 'studiolejla',
+        slug: 'studio-lejla',
+        vertical: 'beauty',
+        naziv: 'Lejla\nbranding:\n  theme: neon',
+        grad: 'Zenica\r\ntargets: x',
+        imeAplikacije: 'Lejla\n  primaryColor: "#000000"\u0007',
+        applicationId: 'ba.nasadomena.studiolejla',
+        bundleId: 'ba.nasadomena.studiolejla',
+        primarna: '#b07d62',
+        sekundarna: '#f7efe8',
+        tema: 'elegant_beauty',
+        ios: false,
+      );
+      final tekst = napisiTenantYaml(zlonamjeran);
+      final yaml = loadYaml(tekst) as YamlMap;
+      expect(yaml.keys.toSet(), {
+        'tenant',
+        'app',
+        'branding',
+        'auth',
+        'store',
+        'targets',
+      });
+      expect(yaml['branding']['theme'], 'elegant_beauty');
+      expect(yaml['targets']['android'], isTrue);
+      expect(yaml['app']['displayName'], zlonamjeran.imeAplikacije);
+      // Komentar ostaje jedna linija.
+      expect(tekst.split('\n').first, startsWith('# Lejla branding:'));
     });
   });
 
@@ -177,6 +230,113 @@ targets:
       );
       expect(novi, contains('  theme: clinical_calm\r\n'));
       expect(novi.replaceAll('\r\n', ''), isNot(contains('\n')));
+    });
+
+    test('branding sa komentarom u istoj liniji se nalazi', () {
+      final saKomentarom = fajl.replaceFirst(
+        'branding:\n',
+        'branding: # fallback boje\n',
+      );
+      final novi = zamijeniBranding(
+        saKomentarom,
+        primarna: '#000000',
+        sekundarna: '#FFFFFF',
+        tema: 'clinical_calm',
+      );
+      expect(novi, contains('branding: # fallback boje\n'));
+      expect(novi, contains('  theme: clinical_calm'));
+    });
+
+    test('komentar na kraju linije ostaje', () {
+      final saKomentarom = fajl
+          .replaceFirst(
+            '  primaryColor: "#C6A667"',
+            '  primaryColor: "#C6A667" # zlatna',
+          )
+          .replaceFirst(
+            '  theme: modern_barber',
+            '  theme: modern_barber  # v. ADR-0025',
+          );
+      final novi = zamijeniBranding(
+        saKomentarom,
+        primarna: '#123456',
+        sekundarna: '#FFFFFF',
+        tema: 'clinical_calm',
+      );
+      expect(novi, contains('  primaryColor: "#123456" # zlatna'));
+      expect(novi, contains('  theme: clinical_calm  # v. ADR-0025'));
+      expect(TenantNaDisku.procitaj(novi).primarna, '#123456');
+    });
+
+    test('ugniježđen ključ istog imena se ne dira', () {
+      final ugnijezdeno = fajl.replaceFirst(
+        '  theme: modern_barber\n',
+        '  theme: modern_barber\n  tamna:\n    primaryColor: "#000000"\n    theme: ne_diraj\n',
+      );
+      final novi = zamijeniBranding(
+        ugnijezdeno,
+        primarna: '#123456',
+        sekundarna: '#FFFFFF',
+        tema: 'clinical_calm',
+      );
+      expect(novi, contains('    primaryColor: "#000000"'));
+      expect(novi, contains('    theme: ne_diraj'));
+      expect(novi, contains('  primaryColor: "#123456"'));
+      final yaml = loadYaml(novi) as YamlMap;
+      expect(yaml['branding']['tamna']['primaryColor'], '#000000');
+    });
+
+    test('splash u jednostrukim navodnicima prati boju', () {
+      final jednostruki = fajl.replaceFirst(
+        'splashBackground: "#171717"',
+        "splashBackground: '#171717'",
+      );
+      final novi = zamijeniBranding(
+        jednostruki,
+        primarna: '#000000',
+        sekundarna: '#FFFFFF',
+        tema: 'modern_barber',
+      );
+      expect(novi, contains('splashBackground: "#FFFFFF"'));
+    });
+
+    test('splash jednak primarnoj prati primarnu, ne sekundarnu', () {
+      final kaoPrimarna = fajl.replaceFirst(
+        'splashBackground: "#171717"',
+        'splashBackground: "#c6a667"',
+      );
+      final novi = zamijeniBranding(
+        kaoPrimarna,
+        primarna: '#123456',
+        sekundarna: '#FFFFFF',
+        tema: 'modern_barber',
+      );
+      expect(novi, contains('splashBackground: "#123456"'));
+    });
+
+    test('splash kod tenanata iz repoa ostaje uz boju uz koju je bio', () {
+      for (final d in Directory(
+        '../../tenants',
+      ).listSync().whereType<Directory>()) {
+        final f = File('${d.path}/tenant.yaml');
+        if (d.path.endsWith('_template') || !f.existsSync()) continue;
+        final prije = loadYaml(f.readAsStringSync()) as YamlMap;
+        final b = prije['branding'] as YamlMap;
+        final novi = loadYaml(
+          zamijeniBranding(
+            f.readAsStringSync(),
+            primarna: '#010101',
+            sekundarna: '#020202',
+            tema: 'modern_barber',
+          ),
+        ) as YamlMap;
+        final ocekivano = b['splashBackground'] == b['secondaryColor']
+            ? '#020202'
+            : b['splashBackground'] == b['primaryColor']
+            ? '#010101'
+            : b['splashBackground'];
+        expect(novi['branding']['splashBackground'], ocekivano, reason: d.path);
+      }
     });
 
     test('pravi tenant iz repoa ostaje validan YAML sa novim bojama', () {

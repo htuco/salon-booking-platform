@@ -1,7 +1,8 @@
 // Lokalna super admin konzola (task 72, ADR-0032).
 //
 //   dart run superadmin                  # lokalni stack (supabase status)
-//   dart run superadmin --env .env.prod  # projekat iz fajla, sa SUPABASE_SERVICE_ROLE_KEY
+//   dart run superadmin --env .env.prod  # projekat iz fajla, sa SUPABASE_SERVICE_ROLE_KEY;
+//                                        # relativna putanja je od trenutnog foldera
 //   dart run superadmin --port 4711
 //
 // Pokreće se iz korijena repoa ili bilo kojeg foldera ispod njega. Ključ se ne ispisuje.
@@ -66,10 +67,10 @@ Future<void> main(List<String> args) async {
 Future<Okruzenje> _okruzenje(List<String> args, Repo repo) async {
   final env = _vrijednost(args, '--env');
   if (env != null) {
-    final f = File(env).isAbsolute
-        ? File(env)
-        : File('${repo.korijen.path}/$env');
-    if (!f.existsSync()) throw OkruzenjeGreska('Nema fajla $env.');
+    // Relativna putanja je od foldera iz kojeg je komanda pokrenuta, kao kod svakog CLI-ja.
+    // `File(env)` to već radi: relativan `File` se razrješava od `Directory.current`.
+    final f = File(env).absolute;
+    if (!f.existsSync()) throw OkruzenjeGreska('Nema fajla ${f.path}.');
     return Okruzenje.izEnvFajla(f.readAsStringSync(), ime: env);
   }
   final ProcessResult r;

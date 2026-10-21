@@ -68,8 +68,20 @@ class Okruzenje {
   bool get lokalno =>
       url.host == '127.0.0.1' || url.host == 'localhost' || url.host == '::1';
 
-  /// Ime koje se kuca kao potvrda: prvi dio hosta (`<ref>` iz `<ref>.supabase.co`).
-  String get projekat => lokalno ? 'lokalno' : url.host.split('.').first;
+  /// Ime koje se kuca kao potvrda prije upisa. Za hostovani Supabase to je ref projekta
+  /// (`<ref>` iz `<ref>.supabase.co`), isti kao u URL-u dashboarda. Za svaki drugi host
+  /// (custom domen, self-hosted) cijeli host: prvi dio `api.salon.ba` bi bio „api", što ne
+  /// kaže na koji projekat se piše.
+  String get projekat {
+    if (lokalno) return 'lokalno';
+    final host = url.host.toLowerCase();
+    const supabase = '.supabase.co';
+    if (host.endsWith(supabase)) {
+      final ref = host.substring(0, host.length - supabase.length);
+      if (ref.isNotEmpty && !ref.contains('.')) return ref;
+    }
+    return host;
+  }
 
   @override
   String toString() => 'Okruzenje(${url.host}, $izvor)';
