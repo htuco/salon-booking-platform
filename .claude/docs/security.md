@@ -550,7 +550,8 @@ otvaranja bez zavisnosti od doba dana; sabotaža koja isključi provjeru otvaran
 
 `authenticated` ima samo SELECT nad `salons` i `salon_settings`. Pisanje ide kroz
 `update_salon_contact` i `update_salon_settings`; obje su `security definer` i traže
-`private.is_admin(p_salon_id) is true`.
+`private.is_admin(p_salon_id) is true`. Od taska 56 `update_salon_settings` piše i podsjetnike
+(v. „Podsjetnici").
 
 **Nad `salons` vlasnik do ovog taska nije mogao pisati uopšte** — postojale su samo
 `public_salons`, `staff_salons` (oba `select`) i `super_salons`. Grant iz init migracije je bio
@@ -911,6 +912,49 @@ Nema argumenata ni tenant konteksta namjerno: prolazi kroz sve salone kao sistem
 Dokaz: `027_istek_zahtjeva.test.sql` (18 asercija). Mutacija bez uslova početka obara 2, a
 mutacija koja zatvara i `confirmed` obara 4.
 
+### Podsjetnici — `private.queue_reminders` (task 56, ADR-0033)
+
+`pg_cron` posao `queue-reminders` (svakih 5 min) zove `private.queue_reminders(p_now default
+now())`: `security definer`, `search_path = ''`, `execute` samo `service_role` — kao
+`expire_pending`, prolazi kroz sve salone kao sistem i zato je van dohvata klijenta i osoblja.
+`p_now` postoji samo za pgTAP; ko ga može pozvati (`service_role`) ionako smije pisati
+`notification_logs`.
+
+- Red nastaje samo za `confirmed` termin sa `auth_identity_id`, u aktivnom salonu, i ide **samo
+  klijentskim uređajima vlasnika termina u salonu termina**: `staff_user_id is null`,
+  `auth_identity_id` termina, `fcm_token is not null`, identitet nije obrisan. Uređaj osoblja ne
+  dobija podsjetnik ni kad (pogrešno) nosi klijentski identitet — `035` to drži namjerno.
+- Vrijeme je u zoni iz `salon_settings.timezone`. Dnevni (`reminders_enabled`) od 24 h prije do
+  ponoći pred dan termina, satni (`hourly_reminder_enabled`, N = `hourly_reminder_hours`, `check`
+  1–12) od N h prije do početka.
+- Termin zakazan ili potvrđen poslije trenutka podsjetnika ga ne dobija: `coalesce(confirmed_at,
+  created_at) <= trenutak`. **`appointments.confirmed_at` piše samo trigger
+  `stamp_confirmed_at`** (`before insert or update of status`) i odbacuje vrijednost iz upisa —
+  put koji bi poslao stari trenutak bi vratio podsjetnik koji pravilo isključuje. Kolona je u
+  postojećem tabelarnom `select` grantu; klijent je vidi samo za svoj termin.
+- Jednom po `(appointment_id, device_id, type)`: postojeći unique ključ i `on conflict do nothing`.
+
+**`claim_push_notifications` (redefinisan iz taska 68, drop + create jer izlaz dobija dvije
+kolone; argumenti i grantovi isti)** gasi red podsjetnika u `logged` prije nego ga preuzme:
+`appointment_not_confirmed`, `appointment_started`, `reminder_disabled`, `reminder_late`. Nove
+kolone izlaza su `appointment_term` (riječ za termin: override salona, pa pack vertikale) i
+`starts_in_minutes` (samo satni). Ništa od toga nije podatak o klijentu.
+
+**`update_salon_settings` ima novi potpis** (13 argumenata): stari je oborjen `drop function`
+prije `create` (zamka iz tabele „Admin akcije"), pa overload ne postoji. Tri nova argumenta imaju
+`default null` = „ne mijenjaj", da stara Melura sa deset argumenata pogodi jedinu funkciju i ne
+ugasi podsjetnike. Guard `is_admin(p_salon_id)` i `PT400` za N van 1–12 su isti obrazac kao ostala
+pravila.
+
+Dokaz: `035_podsjetnici.test.sql` (67 asercija). 26 mutacija, svaka obara bar jednu: bez
+prekidača 2, bez kraja prozora 7, dnevni do početka umjesto do ponoći 4, bez pravila
+„zakazan/potvrđen kasnije" 2, samo `created_at` 1, i `pending` 1, bez statusa 2, zona uvijek
+Sarajevo 1, N ignorisan 1, bez filtera osoblja 7, bez vlasnika uređaja 8, bez tokena 7, bez salona
+uređaja (FK pada), bez `on conflict` (unique pada), claim bez statusa / početka / ugašenog dnevnog /
+ugašenog satnog / zakašnjelog dnevnog 2/2/1/1/2, bez override-a 1, bez packa 1, settings bez guarda
+2, bez validacije N 2, `null` gasi umjesto da čuva 1, trigger prihvata vrijednost iz upisa 1,
+`grant execute` za `authenticated` 1.
+
 ## Admin akcije nad terminima — `set_appointment_status` i ručni unos
 
 Task 24. Ovaj odjeljak zatvara rupu koju je gornja lista godinu dana vodila kao otvorenu.
@@ -1153,6 +1197,7 @@ ništa.
 | `023_galerija_logo_cover.test.sql` | logo, cover i galerija — samo kroz RPC i samo vlasnik svog salona; nova slika mora biti objekat tog salona u folderu svoje vrste; zastarjela galerija daje `PT409` bez upisa |
 | `rest_galerija.ts` | cijeli put ekrana: upload → javni URL → RPC → `anon` čita; konflikt stiže kao HTTP 409, tuđi objekat kao 400 |
 | `024_ciscenje_i_prijava.test.sql` | siroče je samo fajl bez reference u bilo kojem salonu; neaktivna usluga štiti sliku; upload mlađi od 24h, UUID velikim slovima, `.` segment i drugi bucket se ne vraćaju; referenca na obrisan objekat se odbija; prijavu čita samo `super_admin`, upisuje samo pravi klijent za sliku iz galerije salona iz headera, jednom, najviše 10 dnevno |
+| `035_podsjetnici.test.sql` | podsjetnici — dnevni tačno 24 h prije i do ponoći pred dan termina, satni N h prije i do početka, promjena N mijenja trenutak, samo `confirmed`, zakazan ili potvrđen kasnije ne dobija, samo klijentski uređaji vlasnika sa tokenom u salonu termina (osoblje, tuđi identitet, drugi salon ne), drugi prolaz ne pravi ništa, zona salona, ugašen dnevni/satni; claim gasi otkazan, počeo, ugašen i zakasnio; riječ po vertikali; grantovi, cron i `update_salon_settings` |
 | `033_lista_cekanja.test.sql` | lista čekanja — pun dan naspram neradnog, upis samo kroz RPC i samo klijent iz headera, limit, tuđi i drugi salon ne vide ni ne brišu, salon vidi samo broj i ne vidi redove ponuda u logu, otkazivanje budi samo upis kojem je baš ono otvorilo vrijeme (isti radnik, preklapanje, isti salon), jednom po klijentu i samo njegove uređaje, ponuda bez tuđeg termina, tuđe „pročitano" je ne dira, worker je ne odbacuje, potvrđen termin (ne `pending`), deaktivacija usluge/radnika i brisanje naloga gase upis |
 | `rest_ciscenje.ts` | stvaran `cleanup-media` handler kroz Storage API: zamijenjen cover i prekinut upload nestaju, referencirani ostaje javan, u folderu ostaje jedan fajl; prijava kroz PostgREST, salon je ne vidi |
 
@@ -1200,7 +1245,9 @@ dobija push: tip `confirmed` visi o *promjeni* statusa, koje tamo nema. Ručni u
 `cancelled_by = 'system'`, task 64) javlja klijentu tip `expired`, a salonu ništa.
 
 Samo `service_role` smije pozvati
-`claim_push_notifications`; korisnik ne bira ni primaoca ni sadržaj slanja. Unique ključ i
+`claim_push_notifications`; korisnik ne bira ni primaoca ni sadržaj slanja. Od taska 56 claim
+gasi i podsjetnike koji više ne vrijede (termin nije `confirmed`, počeo je, salon je ugasio
+podsjetnik, dnevni je zakasnio) — v. „Podsjetnici". Unique ključ i
 `FOR UPDATE SKIP LOCKED` sprečavaju ponovno preuzimanje istog događaja.
 
 **Istorija obavijesti (task 70).** Klijent i dalje nema politiku ni direktan `select` nad

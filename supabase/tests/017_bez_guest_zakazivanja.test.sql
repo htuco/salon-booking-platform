@@ -21,7 +21,7 @@ select is(
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.update_salon_settings(uuid, text, text, int, int, int, int, int, boolean, boolean)',
+    'public.update_salon_settings(uuid, text, text, int, int, int, int, int, boolean, boolean, boolean, boolean, int)',
     'EXECUTE'
   ),
   'Admin aplikacija ima execute nad novim potpisom postavki'

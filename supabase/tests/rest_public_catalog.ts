@@ -77,7 +77,7 @@ const RATING_COLUMNS = "salon_id,average,total,count_5,count_4,count_3,count_2,c
 const POLICY_COLUMNS = "id,document,sort_order,title,body,updated_at";
 const SALON_POLICY_COLUMNS = "id,salon_id,document,sort_order,title,body,updated_at";
 const SETTINGS_COLUMNS =
-  "id,salon_id,booking_mode,booking_granularity,buffer_minutes,slot_step_minutes,min_advance_booking_hours,max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice,show_prices_in_app,timezone,language";
+  "id,salon_id,booking_mode,booking_granularity,buffer_minutes,slot_step_minutes,min_advance_booking_hours,max_advance_booking_days,pending_expiry_hours,min_cancel_hours,require_staff_choice,show_prices_in_app,reminders_enabled,hourly_reminder_enabled,hourly_reminder_hours,timezone,language";
 
 try {
   // ---------------------------------------------------------------------------
@@ -145,6 +145,12 @@ try {
   assert(settings.length === 1, "Every salon has exactly one salon_settings row.");
   assert(settings[0].timezone === "Europe/Sarajevo", "timezone must be readable by anon.");
   assert(settings[0].slot_step_minutes === 15, "slot_step_minutes must map from the seed.");
+  // Task 56: "O aplikaciji" says whether reminders arrive, before sign-in.
+  assert(
+    settings[0].reminders_enabled === true && settings[0].hourly_reminder_enabled === true &&
+      settings[0].hourly_reminder_hours === 3,
+    `Reminder settings must be readable by anon with their defaults, got ${JSON.stringify(settings[0])}.`,
+  );
 
   // ---------------------------------------------------------------------------
   // 2. The catalog is public; appointments are not.
