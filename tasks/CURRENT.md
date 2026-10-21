@@ -1,49 +1,80 @@
-# Trenutni task: 72 — Super admin konzola, lokalna i minimalna
+# Trenutni task: 56 — Push podsjetnici D-1 i H-3
 
-Puni task: [tasks/zero-crisis/72-super-admin-lokalno.md](zero-crisis/72-super-admin-lokalno.md) · učitan 2026-10-20
+Puni task: [tasks/zero-crisis/56-podsjetnici-d1-h3.md](zero-crisis/56-podsjetnici-d1-h3.md) · učitan 2026-10-21
 
 ## Status
 
-U toku (grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), 2026-10-21). ADR-0032 prihvaćen, popravke iz
-reviewa pushane i CI zelen. Ostaju merge i deploy migracije.
+U toku (grana `feat/podsjetnici`, 2026-10-21). Odluke su zapisane u
+[ADR-0033](../docs/adr/0033-podsjetnici-dnevni-24h-i-satni-n-sati.md); dvije podrazumijevane
+vrijednosti (N je 1–12 h; nema podsjetnika za termin zakazan ili potvrđen kasnije od trenutka
+podsjetnika) čekaju Hamzinu potvrdu u PR-u. Za stavku „uživo" treba Android emulator.
 
 ## Ciljevi
 
-- [x] ADR-0032 (prijedlog): lokalni Dart server na `127.0.0.1`, baza prva pa `tenant.yaml` pa
-      generatori, ključ samo u procesu servera, vlasnik kroz poziv
-- [x] Migracija `20261020180000_super_admin_konzola`: šest `platform_*` RPC-ova samo za
-      `service_role`, `staff_invites.created_by` nullable
-- [x] pgTAP `034` (57 asercija, tri mutacije obaraju 2, 3 i 1); cijela suite 1000; REST izolacija,
-      katalog, pozivi osoblja i admin prijava zeleni
-- [x] `apps/superadmin`: lista (baza + fajl + CI matrica), novi salon, status, boje i tema, store,
-      poziv vlasnika, „napiši tenant.yaml ponovo"; 28 testova (`dart test` i `flutter test`)
-- [x] Uživo (lokalni stack, 1440 i 402): novi salon → tenant.yaml → tri generatora →
-      `gen_flavors --check` zelen; poziv → `accept-staff-invite` → prijava kao `salon_admin`; boje i
-      tema u bazi, fajlu i registru; gašenje skriva salon od anon; Play `in_review`
-- [x] Dokumenti: `tenant-factory.md`, `tenants/README.md`, `/new-tenant`, `security.md`,
-      `IMPLEMENTATION.md`, `architecture.md`, `workflows.md`, `CONTEXT.md`, `docs/01` §6.1,
-      `docs/README.md`, `CLAUDE.md`
-- [x] ADR-0032 prihvaćen (Hamza, 2026-10-21), popravke iz reviewa, CI zelen
-- [ ] Merge u `develop`
-- [ ] Deploy (Hamza): `supabase db push` za `20261020180000`; nema Edge Function ni cron izmjene
-- [ ] Konzola na macOS-u (Hamzina mašina) sa iOS tenantom: `gen_ios_flavors.sh` ostaje ručni korak
+- [x] **Odluke (Hamza, 2026-10-21):** dnevni podsjetnik ide **tačno 24 h prije** početka termina.
+      Satni ide **N sati prije**, a salon bira N (1 h, 2 h, 3 h …; podrazumijevano 3 h, kako task
+      kaže). **Dva prekidača** u Meluri: dnevni samo uključi/isključi, satni uključi/isključi plus
+      izbor N
+- [ ] Šema za odluke: dnevni može ostati postojeći `reminders_enabled`, a satni traži novu kolonu za
+      uključen/isključen i jednu za N (sa `check` granicom). Novi potpis `update_salon_settings` je
+      preopterećenje (zamka iz taska 37): stari potpis se dropa ili ostaje omotač, nikako dva
+      paralelna. Tip `reminder_h3` ostaje ime enuma i kad je N različit od 3
+- [ ] Migracija: `private.queue_reminders()` + `pg_cron` posao (obrazac taska 64: SQL u bazi,
+      `send-reminders/README.md` ostaje ili se ažurira); samo `confirmed` termin, samo uz
+      `reminders_enabled`, vrijeme u zoni salona (cron radi u UTC-u)
+- [ ] Jedan red po terminu i tipu: unique `(appointment_id, device_id, type)` već postoji, pa
+      `on conflict do nothing`; drugi prolaz ne pravi novi red
+- [ ] H-3 se ne pravi za termin koji počinje za manje od 3 sata, ni poslije početka
+- [ ] Filter u `claim_push_notifications`: red podsjetnika za termin koji više nije `confirmed` ili
+      je već počeo ide u `logged`, ne šalje se. Zadnja definicija je u
+      `20261020140000_lista_cekanja.sql`; redefiniše se iz nje, ne iz starije
+- [ ] `send-push`: tipovi `reminder_d1` i `reminder_h3` u `messageFor` (danas `unsupported_type`),
+      tekst po vertikali (`vertical_packs.terminology` + `salons.terminology_override`), Deno test
+- [ ] pgTAP: tačno jedan red; drugi prolaz ne pravi novi; otkazan termin ne dobija red; ugašen
+      `reminders_enabled` ne pravi red; H-3 za termin kroz < 3 h ne nastaje; svaka provjera pada
+      kad se njen uslov ukloni (mutacija)
+- [ ] Admin Postavke: prekidači „Podsjetnici" rade i pišu ono što je odlučeno (danas
+      `onChanged: null` i „Još ne radi", `settings_screen.dart:1247-1277`)
+- [ ] Klijent: `about_app_screen.dart` i opis `aboutAppStep3Title` (`app_bs.arb:1070-1071`) više ne
+      kažu da podsjetnika nema; lista Obavijesti već ima naslov „Podsjetnik" (task 70)
+- [ ] Dokumenti: `security.md` (nova funkcija, cron, grantovi), `supabase/IMPLEMENTATION.md`,
+      `send-reminders/README.md`, `workflows.md` (cron), task fajl i blok u `tasks/zero-crisis/README.md`
+- [ ] Uživo na Android emulatoru (API 36, arm64-v8a, **Google Play image**; bez Google Playa FCM ne
+      radi): termin za sutra → D-1 stiže, tekst po vertikali. Piše se „viđeno na emulatoru (pravi
+      FCM)", ne „na uređaju"
+- [ ] Deploy (Hamza) poslije merge-a: `supabase functions deploy send-push` **prije** `supabase db
+      push`, inače se redovi podsjetnika gube kao `unsupported_type`
 
 ## Napomene
 
-- **Zamka nađena usput:** `flutter_launcher_icons` za svaki iOS flavor prepiše
-  `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` u `project.pbxproj` imenom zadnjeg
-  flavora. Konzola vraća pbxproj, a ručni postupak je u `tenant-factory.md` (korak 4).
-- **CRLF:** na Windows checkoutu `tenant.yaml` ima CRLF; izmjena brandinga čuva završetke linija.
-- **Konzola ne dira** `seed.sql`, CI matrice ni usluge/radnike/radno vrijeme (ADR-0032). CI matricu
-  samo čita i pokazuje šta fali.
-- ID aplikacije se izvodi iz flavora (`ba.nasadomena.<flavor>`, `idPrefiks` u `server.dart`), jer
-  CI to provjerava u APK-u. Prava domena je task 75.
-- `.env.live` nema service ključ i ne smije ga dobiti (`.env.example`). Produkcijski env fajl za
-  `--env` nastaje u tasku 80.
-- Task 68 (PR #142) je spojen prije ovog PR-a; konflikti u `CURRENT.md`, `tasks/zero-crisis/README.md`
-  i `docs/README.md` riješeni su tako da oba bloka ostaju.
+- **Već postoji** (provjereno na `develop`-u 3269dd4, 2026-10-21): enum `reminder_d1` i
+  `reminder_h3`, `salon_settings.reminders_enabled` (default `true`, `init_schema.sql:163`), unique
+  `(appointment_id, device_id, type)` na `notification_logs`, `dispatch_push` + cron
+  `send-push-queued` (task 39), naslov „Podsjetnik" u listi Obavijesti.
+- **Ne postoji:** `send-reminders` je samo README („Sprint 3"), cron za podsjetnike, tipovi
+  podsjetnika u `send-push/handler.ts` (`messageFor` baca `unsupported_type` na liniji 93).
+- **Zamka:** `claim_push_notifications` ne gleda status termina. Bez filtera bi podsjetnik u redu
+  otišao i poslije otkazivanja. Lista čekanja (68) je funkciju redefinisala, pa se mijenja ta
+  verzija.
+- **Zamka:** pomjeranje termina danas ne postoji („Pomjeri" je „uskoro", task 54), pa „pomjeren
+  termin" iz DoD-a znači samo otkazan. Kad pomjeranje dođe, podsjetnik mora pratiti novo vrijeme.
+- **Veza sa 54:** 54 odlučuje šta ostaje u admin Postavkama, a red „Podsjetnici" je tamo kandidat.
+  Ovaj task ga oživljava, pa ga 54 ne smije ukloniti.
+- Na Macu nema Android SDK-a. Emulator se postavlja prije stavke „uživo", a kod i pgTAP ne čekaju na
+  njega.
+- Procjena ostaje 2 dana, plus postavljanje emulatora.
 
 ## Istorija
+
+### 72 — Super admin konzola (spojen u `develop`, 2026-10-21)
+
+[PR #143](https://github.com/htuco/salon-booking-platform/pull/143), ADR-0032 (prihvaćen 2026-10-21).
+`apps/superadmin`: lokalni Dart server na `127.0.0.1`. Novi salon ide baza → `tenant.yaml` sa istim
+UUID-om → generatori, a „Upiši u ovu bazu iz tenant.yaml" daje isti UUID u svakom okruženju. Poziv
+vlasnika kroz `accept-staff-invite`, novi poziv povlači stari. Osam `platform_*` RPC-ova samo za
+`service_role`. pgTAP `034` (95 asercija), konzola 46 testova. **Ostaje:** `supabase db push`;
+konzola na macOS-u i protiv hostovanog (env iz taska 80); zaseban task za `super_admin` JWT kroz
+`create_staff_invite`.
 
 ### 68 — Lista čekanja (spojen u `develop`, 2026-10-21)
 
