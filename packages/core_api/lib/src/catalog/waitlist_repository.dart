@@ -3,7 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../errors/errors.dart';
 
-/// Lista čekanja (task 68, ADR-0031).
+/// Upis koji je `join_waitlist` napravio ili vratio: ID i raspon koji je izračunala baza.
+typedef WaitlistJoin = ({String id, LocalDate dateFrom, LocalDate dateTo});
+
+/// Lista čekanja (task 68 i 91, ADR-0031).
 ///
 /// Tabela `waitlist_entries` nema nijedan grant za aplikaciju — sve ide kroz RPC. Klijentske
 /// funkcije same izvode salon iz `x-salon-id` i identitet iz tokena, pa se ovdje ne šalju:
@@ -41,25 +44,37 @@ class WaitlistRepository {
     };
   });
 
-  /// Upisuje prijavljenog klijenta. Ponovljen upis vraća isti; `PT400` kad dan nije pun,
+  /// Upisuje prijavljenog klijenta na uslugu (i radnika) od dana [from] — bez njega od danas —
+  /// do dana prije prvog slobodnog termina. Raspon računa baza (task 91) i vraća ga.
+  ///
+  /// Ponovljen upis za istu uslugu i radnika vraća postojeći, sa njegovim rasponom: granica
+  /// se ne pomjera. `PT400` kad je prvi dan slobodan ili u rasponu nema punog dana,
   /// `PT429` (`RateLimitError`) za četvrti aktivan upis.
-  Future<String> join({
+  Future<WaitlistJoin> join({
     required String serviceId,
-    required LocalDate date,
     String? employeeId,
+    LocalDate? from,
   }) => guard(() async {
-    final id = await _client.rpc<dynamic>(
+    final rows = await _client.rpc<List<dynamic>>(
       'join_waitlist',
       params: {
         'p_service_id': serviceId,
-        'p_date': date.format(),
         'p_employee_id': employeeId,
+        'p_from': from?.format(),
       },
     );
-    if (id is! String) {
-      throw FormatException('join_waitlist bez ID-a', '$id');
+    final row = rows.cast<Map<String, dynamic>>().firstOrNull;
+    final id = row?['id'];
+    final dateFrom = row?['date_from'];
+    final dateTo = row?['date_to'];
+    if (id is! String || dateFrom is! String || dateTo is! String) {
+      throw FormatException('join_waitlist bez upisa', '$rows');
     }
-    return id;
+    return (
+      id: id,
+      dateFrom: LocalDate.parse(dateFrom),
+      dateTo: LocalDate.parse(dateTo),
+    );
   });
 
   /// Odjava. Upis koji više ne postoji nije greška.
@@ -70,7 +85,7 @@ class WaitlistRepository {
     );
   });
 
-  /// Aktivni upisi klijenta u ovom salonu, od danas.
+  /// Aktivni upisi klijenta u ovom salonu, sa rasponom od danas.
   Future<List<WaitlistEntry>> mine() => guard(() async {
     final rows = await _client.rpc<List<dynamic>>('my_waitlist');
     return rows
@@ -79,7 +94,8 @@ class WaitlistRepository {
         .toList(growable: false);
   });
 
-  /// Broj klijenata koji čekaju, po danu, za admina salona. Dan bez upisa nema ključ.
+  /// Broj klijenata koji čekaju, po danu, za admina salona. Upis se broji na svaki dan svog
+  /// raspona; dan bez upisa nema ključ.
   Future<Map<LocalDate, int>> demand({
     required String salonId,
     required LocalDate from,

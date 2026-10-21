@@ -292,6 +292,7 @@ podsjetnici i ostali planirani poslovi još su stubovi:
 |---|---|---|
 | `send-push` | `pg_cron`, svake minute, kroz `private.dispatch_push` | FCM HTTP v1, preuzima i ažurira `notification_logs` |
 | `expire-pending` (nije Edge Function) | `pg_cron`, svakih 5 min, `private.expire_pending()` u SQL-u | `pending` kojem je prošao rok ili početak → `cancelled` / `system`, klijentu push `expired` (task 64) |
+| `expire-waitlist` (nije Edge Function) | `pg_cron`, svaki sat, `private.expire_waitlist()` u SQL-u | briše upise na listu čekanja kojima je prošao zadnji dan raspona, sa ponudama (task 91); čitači ih filtriraju i prije prolaza |
 | `send-reminders` | `pg_cron`, dnevno + po satu | D-1 i H-3 podsjetnici, provjerava log prije slanja |
 | `dental-recall` | `pg_cron`, sedmično | recall za dentalnu vertikalu |
 

@@ -288,20 +288,30 @@ Dokaz: `032_pisanje_recenzija.test.sql` (55 asercija) i dvije provjere bez token
 | anonimizacija bez filtera identiteta | 2 |
 | `staff_read` proširen na `is_staff` (radnik) | 1 |
 
-### Lista čekanja — task 68
+### Lista čekanja — task 68 i 91
 
-[ADR-0031](../../docs/adr/0031-lista-cekanja-push-svima-prvi-zakaze.md). Upis
-(`waitlist_entries`) je dan + usluga + opcionalno radnik, po **identitetu** u salonu.
+[ADR-0031](../../docs/adr/0031-lista-cekanja-push-svima-prvi-zakaze.md) (sa dopunom 2026-10-21).
+Upis (`waitlist_entries`) je usluga + opcionalno radnik + **raspon** `[date_from, date_to]`, po
+**identitetu** u salonu: jedan red po (salon, identitet, usluga, radnik), `nulls not distinct`.
+Raspon računa baza (task 91), klijent ga ne šalje.
 
 - **Tabela nema nijedan grant za `anon` ni `authenticated`, i nema politiku.** Klijentu treba
   naziv usluge i radnika, a salonu samo broj; oboje daju funkcije. Politika bez čitaoca bila bi
   još jedna granica koju treba držati. Direktan `select` i `insert` padaju na `42501` (grant).
-- **`join_waitlist`, `leave_waitlist`, `my_waitlist`** traže `is_client()` i `x-salon-id`, a
-  identitet izvode iz tokena (`for update` nad njim, zbog limita). Odjava tuđeg i nepostojećeg
-  upisa nema efekta **i nema grešku** — greška bi odala da upis postoji. Upis se prima samo na
-  pun dan (`PT400`), najviše tri aktivna po klijentu u salonu (`PT429`).
-- **`waitlist_demand`** daje vlasniku broj različitih identiteta po danu. Radnik, klijent i drugi
-  salon dobijaju `42501`. Imena i usluge salon ne dobija.
+- **`join_waitlist(usluga, radnik, od)`, `leave_waitlist`, `my_waitlist`** traže `is_client()` i
+  `x-salon-id`, a identitet izvode iz tokena (`for update` nad njim, zbog limita). Odjava tuđeg i
+  nepostojećeg upisa nema efekta **i nema grešku** — greška bi odala da upis postoji.
+  `join_waitlist` računa raspon kroz `private.candidate_slots` (od `od` ili danas do dana prije
+  prvog dana sa slobodnim vremenom, ili do kraja prozora) i odbija `PT400` kad je prvi dan slobodan,
+  kad u rasponu nema punog dana, za prošli dan i dan van prozora, i u `date_only` salonu; najviše
+  tri aktivna upisa po klijentu u salonu (`PT429`). Postojeći upis istog ključa vraća neizmijenjen,
+  a svoj istekao upis briše prije novog (inače bi držao ključ). Potpis je od taska 91 novi (`drop`
+  + `create`, isti grantovi: `authenticated`, ne `anon`).
+- **`my_waitlist`** vraća samo upise sa `date_to >= danas` (zona salona), a `date_from` bez proslih
+  dana.
+- **`waitlist_demand`** daje vlasniku broj različitih identiteta po danu; upis se broji na **svaki
+  dan svog raspona**, od danas. Radnik, klijent i drugi salon dobijaju `42501`. Imena i usluge salon
+  ne dobija.
 - **`waitlist_full_dates`** je javan kao slotovi: izlaz je izvedena istina o danu, bez podatka o
   klijentu. Računa ga `private.candidate_slots`, koji je od ovog taska **jedino mjesto pravila
   slotova** (`get_available_slots` je omotač istog potpisa). Promjena pravila slotova ide tamo.
@@ -315,13 +325,17 @@ Dokaz: `032_pisanje_recenzija.test.sql` (55 asercija) i dvije provjere bez token
   Bez te grane bi worker svaku ponudu odbacio kao `recipient_unavailable` (spoj na termin je bio
   `inner join`).
 - **Trigger budi samo upise kojima je baš to otkazivanje otvorilo vrijeme**, samo u salonu termina
-  (`w.salon_id = new.salon_id`): upis dobija ponudu kad `candidate_slots` za njegovu uslugu i
-  radnika vrati slobodan slot **kod radnika otkazanog termina** (termin bez radnika blokirao je
+  (`w.salon_id = new.salon_id`) i samo one čiji **raspon pokriva dan otkazivanja**: upis dobija
+  ponudu kad `candidate_slots` za njegovu uslugu i radnika **tog dana** vrati slobodan slot **kod
+  radnika otkazanog termina** (termin bez radnika blokirao je
   svakog, pa oslobađa svakog) čiji se `span` preklapa sa intervalom otkazanog termina (`kraj +
   bafer`, isti uslov kojim `candidate_slots` termin poredi sa slotom). Nepovezano otkazivanje istog
   dana zato ne šalje ponovo već poslanu ponudu. Od više upisa istog identiteta koje isto otkazivanje
   budi, ponudu dobija **najraniji** (`distinct on` po identitetu): jedna ponuda po klijentu.
-  `set_day_closed` upisuje blokadu **prije** otkazivanja, pa zatvoren dan ne budi nikoga. Ponuda
+  `set_day_closed` upisuje blokadu **prije** otkazivanja, pa zatvoren dan ne budi nikoga. Prošli
+  dan se ne nudi: `candidate_slots` za njega ne vraća ništa (dvije zaštite — dan ≥ danas i slot ≥
+  sada + `min_advance`). Ponuda nosi **dan koji se oslobodio** (`notification_logs.waitlist_offer_date`,
+  `check` da ga red ponude ima, a red termina nema); `my_notifications` vraća taj dan. Ponuda
   ide svim klijentskim uređajima sa `fcm_token` identiteta upisa — uređaj bez dozvole za push je
   ne dobija, i panel to kaže — a dok jedna čeka slanje, druga se istom upisu ne dodaje (parcijalni
   `unique`).
@@ -331,16 +345,22 @@ Dokaz: `032_pisanje_recenzija.test.sql` (55 asercija) i dvije provjere bez token
   `device_id`, pa bi spojem `notification_logs.device_id = appointments.device_id` saznao ime i
   telefon onoga ko čeka — ono što ADR-0031 odbija. Admin aplikacija log ne čita, pa joj ništa ne
   fali; redove termina i dalje vidi.
-- **Upis se gasi sam**: **potvrđen** termin iste usluge tog dana (insert kao `confirmed` ili prelaz
-  u `confirmed`; zahtjev na čekanju i odbijen zahtjev ne gase), deaktivacija usluge ili radnika
-  koje upis traži (upis „Bilo ko" ostaje kad se deaktivira radnik) i `deleted_at` na identitetu
-  (trigger, kao kod recenzija) ga brišu, a sa njim i ponude (`on delete cascade`). Uklanjanje veze
-  radnik–usluga (`update_employee` sa novim spiskom usluga) upis kod tog radnika **ne** briše; on
-  tada ponudu ne dobija dok se veza ne vrati, ali troši mjesto do kraja dana.
+- **Upis se gasi sam**: **potvrđen** termin iste usluge **bilo koji dan u rasponu** (insert kao
+  `confirmed` ili prelaz u `confirmed`; zahtjev na čekanju i odbijen zahtjev ne gase; termin na
+  prvi slobodan dan, `date_to + 1`, ne gasi), deaktivacija usluge ili radnika koje upis traži (upis
+  „Bilo ko" ostaje kad se deaktivira radnik), `deleted_at` na identitetu (trigger, kao kod
+  recenzija) i istek — `private.expire_waitlist()` (pg_cron `expire-waitlist`, svaki sat, samo
+  `service_role`) briše upise sa `date_to < danas` — ga brišu, a sa njim i ponude (`on delete
+  cascade`). Uklanjanje veze radnik–usluga (`update_employee` sa novim spiskom usluga) upis kod tog
+  radnika **ne** briše; on tada ponudu ne dobija dok se veza ne vrati, ali troši mjesto do kraja
+  raspona.
 
-Dokaz: `033_lista_cekanja.test.sql` (65 asercija) i tri provjere bez tokena u
-`rest_public_catalog.ts`. Svaka mutacija obara bar jednu asercju (brojevi za prvih trinaest su iz
-taska 68, osim onih čije je testove review promijenio — ti su ponovo pokrenuti 2026-10-21):
+Dokaz: `033_lista_cekanja.test.sql` (65 asercija, od taska 91 na rasponu od jednog dana),
+`036_lista_cekanja_raspon.test.sql` (65) i tri provjere bez tokena u `rest_public_catalog.ts` (od
+taska 91 `join_waitlist` za anon mora pasti na `42501` od granta, ne na `404` nepostojećeg
+potpisa; sam grant poslije `drop` + `create` `036` provjerava kroz `has_function_privilege`, jer
+Supabase default privilegije novoj funkciji vraćaju EXECUTE za `anon`). Svaka mutacija obara bar jednu asercju (brojevi za prvih trinaest su iz taska 68, osim
+onih čije je testove review promijenio — ti su ponovo pokrenuti 2026-10-21):
 
 | Mutacija | Pada |
 |---|---|
@@ -366,6 +386,44 @@ taska 68, osim onih čije je testove review promijenio — ti su ponovo pokrenut
 | bez gašenja na brisanju naloga | 1 |
 | `my_waitlist` bez filtera salona | 1 |
 | `join_waitlist` bez `is_client()` | 2 |
+
+Mutacije taska 91 (2026-10-21, `033` + `036`, pokrenute nad pr91 stackom):
+
+| Mutacija | Pada |
+|---|---|
+| okidač bez granice raspona | 7 |
+| okidač budi samo prvi dan raspona | 4 |
+| okidač traži slot na `date_from`, ne na danu otkazivanja | 4 |
+| okidač bez filtera salona | 4 |
+| okidač bez dana ponude | fajl pada (`check`) |
+| gašenje samo na `date_from` | 2 |
+| gašenje uključuje granični dan | 1 |
+| `join_waitlist` bez provjere slobodnog prvog dana | 1 (rečenica) |
+| `join_waitlist` bez provjere punog dana | 9 |
+| `join_waitlist`: granica uključuje prvi slobodan dan | 10 |
+| `join_waitlist` ignoriše izabrani dan | 12 |
+| `join_waitlist` bez idempotencije | fajl pada (`unique`) |
+| `join_waitlist` bez `date_only` provjere | 3 |
+| `join_waitlist` bez limita | 9 |
+| `join_waitlist` bez brisanja svog isteklog upisa | 1 |
+| `join_waitlist` bez provjere prošlog dana i prozora | 6 |
+| `join_waitlist` bez `is_client()` | 4 |
+| `my_waitlist` bez filtera isteka | 2 |
+| `my_waitlist` bez odsijecanja prošlih dana | 1 |
+| `my_waitlist` bez vlasništva | 6 |
+| `my_waitlist` bez filtera salona | 3 |
+| `waitlist_demand` broji samo prvi dan raspona | 4 |
+| `waitlist_demand` bez `count(distinct)` | 3 |
+| `waitlist_demand` broji prošle dane | 1 |
+| `waitlist_demand` bez guarda | 5 |
+| `my_notifications` vraća `date_from` umjesto dana ponude | 1 |
+| `expire_waitlist` ne briše ništa | 3 |
+| `candidate_slots` bez zaštite prošlog dana | 0 — druga zaštita (slot ≥ sada) drži |
+| `candidate_slots` bez obje zaštite prošlosti | 1 |
+| `join_waitlist` briše istekle upise bez filtera identiteta | 1 |
+| `join_waitlist` briše istekle upise bez filtera salona | 1 |
+| `my_notifications` bez filtera salona u grani ponuda | 1 |
+| EXECUTE vraćen `anon`-u (`join_waitlist`, `my_waitlist`) i `authenticated`-u (`expire_waitlist`) | 3 |
 
 ## Tabela bez `salon_id` — `app_policies`
 
@@ -1155,6 +1213,7 @@ ništa.
 | `024_ciscenje_i_prijava.test.sql` | siroče je samo fajl bez reference u bilo kojem salonu; neaktivna usluga štiti sliku; upload mlađi od 24h, UUID velikim slovima, `.` segment i drugi bucket se ne vraćaju; referenca na obrisan objekat se odbija; prijavu čita samo `super_admin`, upisuje samo pravi klijent za sliku iz galerije salona iz headera, jednom, najviše 10 dnevno |
 | `033_lista_cekanja.test.sql` | lista čekanja — pun dan naspram neradnog, upis samo kroz RPC i samo klijent iz headera, limit, tuđi i drugi salon ne vide ni ne brišu, salon vidi samo broj i ne vidi redove ponuda u logu, otkazivanje budi samo upis kojem je baš ono otvorilo vrijeme (isti radnik, preklapanje, isti salon), jednom po klijentu i samo njegove uređaje, ponuda bez tuđeg termina, tuđe „pročitano" je ne dira, worker je ne odbacuje, potvrđen termin (ne `pending`), deaktivacija usluge/radnika i brisanje naloga gase upis |
 | `rest_ciscenje.ts` | stvaran `cleanup-media` handler kroz Storage API: zamijenjen cover i prekinut upload nestaju, referencirani ostaje javan, u folderu ostaje jedan fajl; prijava kroz PostgREST, salon je ne vidi |
+| `036_lista_cekanja_raspon.test.sql` | lista čekanja sa rasponom (task 91) — raspon od izabranog dana do dana prije prvog slobodnog ili do kraja prozora; slobodan prvi dan, raspon bez punog dana, prošli dan, van prozora i `date_only` odbijeni; ponovljen upis ne pomjera granicu; limit tri, raspon je jedan upis; prošli dani otpadaju, istekao upis nestaje sa ponudama i ne drži ključ; potražnja po danu raspona; otkazivanje u rasponu budi i ponuda pamti dan, prije i poslije raspona, nepovezano, prošli dan i drugi salon ne; potvrđen termin u rasponu gasi, `pending` i granični dan ne; Bob, drugi salon, anon, radnik i vlasnik B |
 
 > **Test koji mjeri kalendar ne mjeri kod.** Tri testa u ovoj suiti su bila zelena samo u
 > dijelu dana ili sedmice, i sva tri su nađena tek pokretanjem u tasku 17 — `004` je padao

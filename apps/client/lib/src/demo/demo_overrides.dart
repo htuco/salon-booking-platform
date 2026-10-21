@@ -902,11 +902,24 @@ class _DemoWaitlist implements WaitlistRepository {
   ).toSet();
 
   @override
-  Future<String> join({
+  Future<WaitlistJoin> join({
     required String serviceId,
-    required LocalDate date,
     String? employeeId,
+    LocalDate? from,
   }) async {
+    final postojeci = _upisi
+        .where((u) => u.serviceId == serviceId && u.employeeId == employeeId)
+        .firstOrNull;
+    if (postojeci != null) {
+      return (
+        id: postojeci.id,
+        dateFrom: postojeci.dateFrom,
+        dateTo: postojeci.dateTo,
+      );
+    }
+    // Demo raspon je sam izabrani dan (subota je puna, nedjelja ne radi); pravi računa baza.
+    final sada = DateTime.now();
+    final dan = from ?? LocalDate(sada.year, sada.month, sada.day);
     final id = 'demo-upis-${_upisi.length + 1}';
     _upisi.add(
       WaitlistEntry(
@@ -915,7 +928,8 @@ class _DemoWaitlist implements WaitlistRepository {
         serviceName:
             demo.services.where((s) => s.id == serviceId).firstOrNull?.name ??
             '—',
-        date: date,
+        dateFrom: dan,
+        dateTo: dan,
         employeeId: employeeId,
         employeeName: demo.employees
             .where((e) => e.id == employeeId)
@@ -923,7 +937,7 @@ class _DemoWaitlist implements WaitlistRepository {
             ?.name,
       ),
     );
-    return id;
+    return (id: id, dateFrom: dan, dateTo: dan);
   }
 
   @override

@@ -19,6 +19,12 @@ const _salonId = '550e8400-e29b-41d4-a716-446655440000';
 final _srijeda = DateTime(2026, 5, 20);
 
 class _LaznaLista implements WaitlistRepository {
+  // Ne `const` mapa: `LocalDate` ima svoj `==`, a ključ konstantne mape ga ne smije imati.
+  _LaznaLista([Map<LocalDate, int>? odgovor])
+    : odgovor = odgovor ?? {const LocalDate(2026, 5, 20): 3};
+
+  /// Ono što vrati `waitlist_demand`: broj po danu, već izračunat u bazi.
+  final Map<LocalDate, int> odgovor;
   final pozivi = <({LocalDate from, LocalDate to})>[];
 
   @override
@@ -28,7 +34,7 @@ class _LaznaLista implements WaitlistRepository {
     required LocalDate to,
   }) async {
     pozivi.add((from: from, to: to));
-    return {const LocalDate(2026, 5, 20): 3};
+    return odgovor;
   }
 
   @override
@@ -80,6 +86,41 @@ void main() {
     expect(find.textContaining('Lista čekanja'), findsNothing);
     expect(lista.pozivi, isEmpty);
   });
+
+  testWidgets(
+    'upis sa rasponom se vidi na svakom danu koji pokriva (task 91)',
+    (tester) async {
+      // Baza broji upis na svaki dan raspona (`waitlist_demand`, `036`): Ana čeka od
+      // ponedjeljka do srijede, a u srijedu čekaju još dvoje. Melura samo prikazuje broj dana.
+      final lista = _LaznaLista({
+        const LocalDate(2026, 5, 18): 1,
+        const LocalDate(2026, 5, 19): 1,
+        const LocalDate(2026, 5, 20): 3,
+      });
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: _overrides(lista),
+          child: MaterialApp(
+            theme: buildAdminTheme(),
+            home: Scaffold(
+              body: Column(
+                children: [
+                  for (final dan in [18, 19, 20, 21])
+                    ListaCekanjaDana(dan: DateTime(2026, 5, dan)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Lista čekanja: 1'), findsNWidgets(2));
+      expect(find.text('Lista čekanja: 3'), findsOneWidget);
+      expect(find.textContaining('Lista čekanja'), findsNWidgets(3));
+      expect(lista.pozivi, hasLength(1));
+    },
+  );
 
   test(
     'klik na dan iste sedmice ne šalje novi upit, sljedeća sedmica šalje',

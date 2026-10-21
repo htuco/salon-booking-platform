@@ -65,7 +65,13 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
 
     final spreman = flow.isStepComplete(BookingStep.slot, dateOnly: dateOnly);
     final mjesec = monthOffsetFrom(danas, _pomakMjeseci);
-    final raspon = daysFrom(danas, ref.watch(bookingMaxAdvanceDaysProvider));
+    // Prozor je danas..danas+N, oba kraja uključena, kao u bazi (`get_available_slots`,
+    // `join_waitlist`): N dana unaprijed **od** danas je N+1 dan. Sa N dana bi kalendar
+    // prešutio zadnji dan, a lista čekanja rekla „do 19.11." gdje baza kaže „do 20.11."
+    final raspon = daysFrom(
+      danas,
+      ref.watch(bookingMaxAdvanceDaysProvider) + 1,
+    );
 
     final upitRaspona = DateRangeQuery(
       serviceId: serviceId,
@@ -74,7 +80,7 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
       employeeId: flow.employeeId,
     );
     final dostupniDani = ref.watch(availableDatesProvider(upitRaspona));
-    // Puni dani se tapaju i nude listu čekanja (task 68). Samo u `exact_slot`: u
+    // Puni dani se tapaju i nude listu čekanja (task 68 i 91). Samo u `exact_slot`: u
     // `date_only` korak završava izbor dana, pa pun dan nema gdje ponuditi upis. Greška
     // ovog upita ne ruši kalendar — bez nje su puni dani samo nedostupni, kao prije.
     final puniDani = dateOnly
@@ -124,6 +130,19 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
               serviceId: serviceId,
               flow: flow,
               pun: flow.date != null && puniDani.contains(flow.date),
+              // Prvi slobodan dan poslije izabranog: iz iste liste kao kalendar, ne
+              // izračunat ovdje. Lista je sortirana (`order by 1` u bazi).
+              prviSlobodan: flow.date == null
+                  ? null
+                  : (dostupniDani.valueOrNull ?? const <LocalDate>[])
+                        .where((d) => d.compareTo(flow.date!) > 0)
+                        .fold<LocalDate?>(
+                          null,
+                          (min, d) =>
+                              min == null || d.compareTo(min) < 0 ? d : min,
+                        ),
+              prviSlobodanPoznat: dostupniDani.hasValue,
+              krajProzora: raspon.last,
             ),
           ],
         ],
@@ -212,6 +231,9 @@ class _Vremena extends ConsumerWidget {
     required this.serviceId,
     required this.flow,
     required this.pun,
+    required this.prviSlobodan,
+    required this.prviSlobodanPoznat,
+    required this.krajProzora,
   });
 
   final String serviceId;
@@ -219,6 +241,15 @@ class _Vremena extends ConsumerWidget {
 
   /// Izabran dan radi, a nema slobodnog vremena — mjesto mreže zauzima lista čekanja.
   final bool pun;
+
+  /// Prvi dan poslije izabranog koji ima slobodnog vremena (task 91); `null` kad ga nema.
+  final LocalDate? prviSlobodan;
+
+  /// Je li lista slobodnih dana stigla (v. [WaitlistDayPanel.firstFreeKnown]).
+  final bool prviSlobodanPoznat;
+
+  /// Zadnji dan prozora rezervacije.
+  final LocalDate krajProzora;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -244,6 +275,9 @@ class _Vremena extends ConsumerWidget {
         serviceId: serviceId,
         date: datum,
         employeeId: flow.employeeId,
+        firstFree: prviSlobodan,
+        firstFreeKnown: prviSlobodanPoznat,
+        windowEnd: krajProzora,
       ),
       AsyncData(:final value) when value.isEmpty => EmptyState(
         message: l10n.bookingDayFull,

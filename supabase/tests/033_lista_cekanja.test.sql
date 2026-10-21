@@ -1,4 +1,7 @@
--- Lista cekanja. Task 68, ADR-0031.
+-- Lista cekanja. Task 68, ADR-0031. Od taska 91 je upis raspon (`date_from`, `date_to`), a
+-- `join_waitlist(usluga, radnik, od)` ga racuna; ovaj fajl i dalje dokazuje granice iz 68 na
+-- rasponu od jednog dana (utorak je pun, srijeda slobodna). Raspon sam dokazuje
+-- `036_lista_cekanja_raspon.test.sql`.
 --
 -- Granice:
 --   1. pun dan je samo dan koji radi a nema slobodnog vremena; neradni dan i dan sa slobodnim
@@ -115,24 +118,25 @@ create temporary table ana_tel as select public.register_device((select salon fr
   'fd000000-0000-4000-8000-0000000000a1', repeat('a', 64), 'android', 'ana-tel') as id;
 create temporary table ana_tablet as select public.register_device((select salon from fix),
   'fd000000-0000-4000-8000-0000000000a2', repeat('c', 64), 'ios', 'ana-tablet') as id;
-create temporary table ana_bilo_ko as select public.join_waitlist(
-  (select usluga from fix), (select utorak from fix)) as id;
-create temporary table ana_emir as select public.join_waitlist(
-  (select usluga from fix), (select utorak from fix), (select emir from fix)) as id;
-select is(public.join_waitlist((select usluga from fix), (select utorak from fix)),
+create temporary table ana_bilo_ko as select id from public.join_waitlist(
+  (select usluga from fix), null, (select utorak from fix));
+create temporary table ana_emir as select id from public.join_waitlist(
+  (select usluga from fix), (select emir from fix), (select utorak from fix));
+select is((select id from public.join_waitlist((select usluga from fix), null, (select utorak from fix))),
   (select id from ana_bilo_ko), 'Ponovljen upis vraca isti red');
-select throws_ok(format('select public.join_waitlist(%L, %L)',
-  (select usluga from fix), (select srijeda from fix)), 'PT400', null,
+-- Kod Amara, jer Ana vec ima upis „Bilo ko" za ovu uslugu, a isti kljuc vraca postojeci upis.
+select throws_ok(format('select public.join_waitlist(%L, %L, %L)',
+  (select usluga from fix), (select amar from fix), (select srijeda from fix)), 'PT400', null,
   'Upis na dan sa slobodnim vremenom pada (PT400)');
-select throws_ok(format('select public.join_waitlist(%L, %L)',
-  (select usluga from fix), (select nedjelja from fix)), 'PT400', null,
-  'Upis na neradni dan pada (PT400)');
+select throws_ok(format('select public.join_waitlist(%L, %L, %L)',
+  (select usluga from fix), (select amar from fix), (select nedjelja from fix)), 'PT400', null,
+  'Upis na neradni dan pada (PT400): raspon do slobodnog ponedjeljka nema punog dana');
 select throws_ok('select * from public.waitlist_entries', '42501', null,
   'Klijent ne cita tabelu direktno (nema grant)');
 select throws_ok(format(
-  'insert into public.waitlist_entries(salon_id, auth_identity_id, service_id, date) values (%L, %L, %L, %L)',
+  'insert into public.waitlist_entries(salon_id, auth_identity_id, service_id, date_from, date_to) values (%L, %L, %L, %L, %L)',
   (select salon from fix), (select auth_identity_id from public.devices where id = (select id from ana_tel)),
-  (select usluga from fix), (select srijeda from fix)), '42501', null,
+  (select usluga from fix), (select srijeda from fix), (select srijeda from fix)), '42501', null,
   'Klijent ne pise tabelu direktno, ni za dan koji nije pun');
 reset role;
 grant select on ana_tel, ana_tablet, ana_bilo_ko, ana_emir to public;
@@ -150,45 +154,52 @@ select is((select count(*)::int from public.waitlist_entries w
 set local request.headers = '{}';
 select set_config('request.jwt.claims', (select ana from jwt), true);
 set local role authenticated;
-select throws_ok(format('select public.join_waitlist(%L, %L)',
+select throws_ok(format('select public.join_waitlist(%L, null, %L)',
   (select usluga from fix), (select utorak from fix)), '42501', null, 'Bez x-salon-id: 42501');
 reset role;
 set local request.headers = '{"x-salon-id":"550e8400-e29b-41d4-a716-446655440000"}';
 select set_config('request.jwt.claims', (select vlasnik from jwt), true);
 set local role authenticated;
-select throws_ok(format('select public.join_waitlist(%L, %L)',
+select throws_ok(format('select public.join_waitlist(%L, null, %L)',
   (select usluga from fix), (select utorak from fix)), '42501', null, 'Vlasnik salona ne upisuje: 42501');
 reset role;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 set local role anon;
-select throws_ok(format('select public.join_waitlist(%L, %L)',
+select throws_ok(format('select public.join_waitlist(%L, null, %L)',
   (select usluga from fix), (select utorak from fix)), '42501', null, 'Anon ne upisuje: 42501');
 reset role;
 
 -- ---------------------------------------------------------------------------
 -- 3. Limit
 -- ---------------------------------------------------------------------------
--- Cira vec ima tri upisa (ubaceni su mimo RPC-a da test ne zavisi od tri puna dana).
--- Jedan prosli upis se ne broji.
+-- Cira vec ima tri upisa (ubaceni su mimo RPC-a da test ne zavisi od tri puna dana), svaki za
+-- drugu uslugu ili radnika: od taska 91 je isti kljuc jedan upis. Jedan istekao upis se ne broji.
 select set_config('request.jwt.claims', (select cira from jwt), true);
 set local role authenticated;
 create temporary table cira_tel as select public.register_device((select salon from fix),
   'fd000000-0000-4000-8000-0000000000c1', repeat('d', 64), 'android', 'cira-tel') as id;
 reset role;
 grant select on cira_tel to public;
-insert into public.waitlist_entries(salon_id, auth_identity_id, service_id, date)
-select f.salon, ai.id, f.usluga, d
-from fix f, public.auth_identities ai,
-  unnest(array[f.srijeda, f.cetvrtak, f.petak, (now() at time zone 'Europe/Sarajevo')::date - 2]) d
+insert into public.waitlist_entries(salon_id, auth_identity_id, service_id, employee_id, date_from, date_to)
+select f.salon, ai.id, v.usluga, v.radnik, v.dan, v.dan
+from fix f, public.auth_identities ai, (values
+  ('10000000-0000-4000-8000-000000000001'::uuid, '20000000-0000-4000-8000-000000000001'::uuid,
+   (select srijeda from fix)),
+  ('10000000-0000-4000-8000-000000000001'::uuid, '20000000-0000-4000-8000-000000000002'::uuid,
+   (select cetvrtak from fix)),
+  ('10000000-0000-4000-8000-000000000002'::uuid, null::uuid, (select petak from fix)),
+  ('10000000-0000-4000-8000-000000000002'::uuid, '20000000-0000-4000-8000-000000000001'::uuid,
+   (now() at time zone 'Europe/Sarajevo')::date - 2)
+) v(usluga, radnik, dan)
 where ai.supabase_user_id = 'fd000000-0000-4000-8000-000000000003';
 
 select set_config('request.jwt.claims', (select cira from jwt), true);
 set local role authenticated;
-select throws_ok(format('select public.join_waitlist(%L, %L)',
+select throws_ok(format('select public.join_waitlist(%L, null, %L)',
   (select usluga from fix), (select utorak from fix)), 'PT429', null,
-  'Cetvrti aktivan upis pada (PT429); prosli se ne broji');
+  'Cetvrti aktivan upis pada (PT429); istekao se ne broji');
 select is((select count(*)::int from public.my_waitlist()), 3,
-  'my_waitlist ne vraca prosli dan');
+  'my_waitlist ne vraca istekao upis');
 reset role;
 
 -- ---------------------------------------------------------------------------
@@ -339,9 +350,9 @@ create temporary table cira_b as
 select gen_random_uuid() as id, ai.id as identity
 from public.auth_identities ai where ai.supabase_user_id = 'fd000000-0000-4000-8000-000000000003';
 grant select on cira_b to public;
-insert into public.waitlist_entries(id, salon_id, auth_identity_id, service_id, date)
+insert into public.waitlist_entries(id, salon_id, auth_identity_id, service_id, date_from, date_to)
 select (select id from cira_b), f.salon_b, (select identity from cira_b),
-  '10000000-0000-4000-8000-000000000005', f.utorak
+  '10000000-0000-4000-8000-000000000005', f.utorak, f.utorak
 from fix f;
 select ok(exists(select 1 from public.get_available_slots((select salon_b from fix),
   '10000000-0000-4000-8000-000000000005', (select utorak from fix)) where start_time = '10:00'),
@@ -491,7 +502,7 @@ select f.salon, f.usluga, f.emir, (select customer_id from cira_kupac), (select 
 from fix f;
 select is((select count(*)::int from public.waitlist_entries
   where auth_identity_id = (select identity from cira_b) and salon_id = (select salon from fix)
-    and date = (select srijeda from fix)), 0,
+    and (select srijeda from fix) between date_from and date_to), 0,
   'Termin koji nastaje potvrden gasi upis');
 
 select set_config('request.jwt.claims', (select cira from jwt), true);
@@ -516,8 +527,8 @@ from (values
   ('brada', '10000000-0000-4000-8000-000000000002'::uuid, null::uuid)
 ) v(oznaka, usluga, radnik);
 grant select on bob_upisi to public;
-insert into public.waitlist_entries(id, salon_id, auth_identity_id, service_id, employee_id, date)
-select b.id, f.salon, d.auth_identity_id, b.usluga, b.radnik, f.cetvrtak
+insert into public.waitlist_entries(id, salon_id, auth_identity_id, service_id, employee_id, date_from, date_to)
+select b.id, f.salon, d.auth_identity_id, b.usluga, b.radnik, f.cetvrtak, f.cetvrtak
 from bob_upisi b, fix f, public.devices d where d.id = (select id from bob_tel);
 
 select set_config('request.jwt.claims', (select vlasnik from jwt), true);

@@ -648,8 +648,10 @@ Implementacija:
   a salon recenziju može sakriti u Meluri (`set_review_published`). Automatsko skrivanje na
   prijavu namjerno ne postoji. Blokiranje korisnika, koje 1.2 takođe navodi, danas nemamo — to je
   otvoreno pitanje za review, ne riješena stavka
-- **Lista čekanja (task 68):** novi lični podatak nije — upis je dan, usluga i opcionalno radnik,
-  vezan za već prijavljen identitet, iste vrste kao termin. Prijedlog: u formularu ga voditi uz
+- **Lista čekanja (task 68 i 91):** novi lični podatak nije — upis je usluga, opcionalno radnik i
+  raspon dana (od dana upisa do dana prije prvog slobodnog termina; ponuda pamti dan koji se
+  oslobodio), vezan za već prijavljen identitet, iste vrste kao termin. Istekao upis se briše
+  zajedno sa ponudama (`expire-waitlist`). Prijedlog: u formularu ga voditi uz
   termine (Play „App activity", Apple „Other User Content"), a kategoriju potvrditi pri popunjavanju
   formulara (task 90). Svrha je funkcionalnost (obavijest kad se mjesto oslobodi). Salon vidi
   samo broj upisanih po danu, ne ko je upisan — ni kroz log obavijesti, čije redove ponuda ne

@@ -43,26 +43,27 @@ final waitlistActionProvider = AsyncNotifierProvider.autoDispose
     .family<WaitlistActionNotifier, void, String>(WaitlistActionNotifier.new);
 
 /// Ključ panela punog dana u [waitlistActionProvider].
-String waitlistDayKey({
-  required String serviceId,
-  required LocalDate date,
-  String? employeeId,
-}) => 'dan:$serviceId:${date.format()}:${employeeId ?? '-'}';
+///
+/// Bez dana: od taska 91 je upis jedan po usluzi i radniku, a raspon nosi sam upis, pa svi
+/// puni dani iste usluge i radnika pokazuju isti upis.
+String waitlistDayKey({required String serviceId, String? employeeId}) =>
+    'dan:$serviceId:${employeeId ?? '-'}';
 
 class WaitlistActionNotifier
     extends AutoDisposeFamilyAsyncNotifier<void, String> {
   @override
   Future<void> build(String arg) async {}
 
-  /// Upisuje prijavljenog klijenta; `true` kad je prošlo.
+  /// Upisuje prijavljenog klijenta od dana [from] do dana prije prvog slobodnog termina;
+  /// `true` kad je prošlo. Raspon računa baza (task 91), pa ga ekran čita iz liste upisa.
   Future<bool> join({
     required String serviceId,
-    required LocalDate date,
+    required LocalDate from,
     String? employeeId,
   }) => _izvrsi(
     () => ref
         .read(waitlistRepositoryProvider)
-        .join(serviceId: serviceId, date: date, employeeId: employeeId),
+        .join(serviceId: serviceId, employeeId: employeeId, from: from),
   );
 
   /// Odjavljuje upis [entryId]; `true` kad je prošlo.

@@ -164,6 +164,7 @@ Svaka funkcija je izolovana u svom folderu pod `supabase/functions/<ime>/index.t
 |---|---|---|
 | `send-push` | Poziv iz drugih funkcija ili trigera | FCM HTTP v1 API poziv, piše `NotificationLog` |
 | `expire-pending` | `pg_cron`, svakih 5 min — SQL funkcija `private.expire_pending()`, ne Edge Function (task 64) | Termini u `pending` kojima je prošao rok ili početak → `cancelled`, `cancelled_by = system` |
+| `expire-waitlist` | `pg_cron`, svaki sat — SQL funkcija `private.expire_waitlist()`, ne Edge Function (task 91) | Upisi na listu čekanja kojima je prošao zadnji dan raspona → obrisani, sa ponudama |
 | `send-reminders` | `pg_cron`, jednom dnevno + na sat | D-1 i H-3 reminderi, provjerava `NotificationLog` prije slanja ([01 §11](01-mvp-spec.md#11-database-entities)) |
 | `dental-recall` | `pg_cron`, sedmično | Recall notifikacije za dentalnu vertikalu ([05 §9](05-vertical-packs.md)) |
 

@@ -557,22 +557,63 @@
     "placeholders": { "dan": { "type": "String" } }
   },
 
-  "waitlistDayFull": "Ovaj dan je popunjen. Ako se mjesto oslobodi, možemo vam javiti.",
+  "waitlistDayFull": "Ovaj dan je popunjen. Ako se mjesto oslobodi ranije, možemo vam javiti.",
   "@waitlistDayFull": {
-    "description": "Prazno stanje punog dana sa listom čekanja (task 68). „Mjesto\", ne „termin\": riječ termin zavisi od vertikale."
+    "description": "Pun dan sa listom čekanja (task 68 i 91), ispod „Prvi slobodan termin\". „Ranije\" znači prije prvog slobodnog termina: upis čeka od ovog dana do dana prije njega. „Mjesto\", ne „termin\": riječ termin zavisi od vertikale."
   },
 
-  "waitlistJoin": "Obavijesti me kad se oslobodi",
-  "@waitlistJoin": { "description": "Dugme za upis na listu čekanja na punom danu." },
+  "waitlistFirstFree": "Prvi slobodan {appointment}: {date}",
+  "@waitlistFirstFree": {
+    "description": "Iznad panela punog dana (task 91): prvi dan poslije izabranog koji ima slobodnog vremena, iz istog get_available_dates kao kalendar. {appointment} je vertical.terms.appointmentSingular malim slovom, jer riječ zavisi od vertikale. Pridjev je u muškom rodu: svi današnji packovi imaju „Termin\"; override ženskog roda („Seansa\") traži preformulaciju.",
+    "placeholders": {
+      "appointment": { "type": "String", "example": "termin" },
+      "date": { "type": "String", "example": "četvrtak, 30.10.2026." }
+    }
+  },
 
-  "waitlistJoined": "Na listi čekanja ste. Javićemo vam kad se oslobodi mjesto, a dobija ga ko prvi zakaže.",
+  "waitlistNoFreeUntil": "Do {date} nema slobodnog vremena.",
+  "@waitlistNoFreeUntil": {
+    "description": "Panel punog dana kad u prozoru rezervacije nema nijednog slobodnog dana (task 91). {date} je zadnji dan prozora; upis tada čeka do njega.",
+    "placeholders": { "date": { "type": "String", "example": "20.11." } }
+  },
+
+  "waitlistJoin": "Javi mi ako se oslobodi ranije",
+  "@waitlistJoin": { "description": "Dugme za upis na listu čekanja na punom danu kad postoji prvi slobodan termin (task 91): upis traje do dana prije njega, pa obavijest javlja ono što je ranije. Kraće od „Obavijesti me ako se oslobodi ranije\", koje se na 402 px u sve tri teme reže (311–317 px labela naspram 291)." },
+
+  "waitlistJoinNoFree": "Obavijesti me kad se oslobodi",
+  "@waitlistJoinNoFree": { "description": "Isto dugme kad u prozoru nema slobodnog termina, ili lista slobodnih dana još nije stigla: „ranije\" tada nema na šta da se odnosi." },
+
+  "waitlistDayFullNoFree": "Ovaj dan je popunjen. Ako se mjesto oslobodi, možemo vam javiti.",
+  "@waitlistDayFullNoFree": { "description": "Rečenica punog dana bez prvog slobodnog termina (task 68 i 91), bez „ranije\"." },
+
+  "waitlistOtherRange": "Već čekate mjesto za ovu uslugu od {from} do {to}, a ovaj dan nije u tom rasponu. Za drugi raspon se odjavite pa upišite ponovo.",
+  "@waitlistOtherRange": {
+    "description": "Pun dan van raspona postojećeg upisa iste usluge i radnika (task 91). Upis je jedan po usluzi i radniku, a baza ga ne proširuje, pa „Na listi ste\" ovdje ne bi bilo tačno.",
+    "placeholders": {
+      "from": { "type": "String", "example": "25.10." },
+      "to": { "type": "String", "example": "29.10." }
+    }
+  },
+
+  "waitlistJoined": "Na listi čekanja ste do {date}. Javićemo vam kad se mjesto oslobodi, a dobija ga ko prvi zakaže.",
   "@waitlistJoined": {
-    "description": "Pun dan na koji je klijent već upisan. Drugi dio rečenice je ADR-0031: upis ne drži mjesto."
+    "description": "Pun dan na koji je klijent već upisan. {date} je zadnji dan raspona (dan prije prvog slobodnog termina u trenutku upisa). Drugi dio rečenice je ADR-0031: upis ne drži mjesto.",
+    "placeholders": { "date": { "type": "String", "example": "30.10." } }
   },
 
-  "waitlistJoinedNoPush": "Na listi čekanja ste, ali obavijesti za ovu aplikaciju su isključene, pa vam ne možemo javiti kad se mjesto oslobodi. Uključite ih u postavkama telefona i vratite se ovdje.",
+  "waitlistJoinedNoPush": "Na listi čekanja ste do {date}, ali obavijesti za ovu aplikaciju su isključene, pa vam ne možemo javiti kad se mjesto oslobodi. Uključite ih u postavkama telefona i vratite se ovdje.",
   "@waitlistJoinedNoPush": {
-    "description": "Pun dan na koji je klijent upisan, a uređaj nema dozvolu za notifikacije (task 68, ADR-0031). Ponuda ide samo uređaju sa push tokenom, pa „Javićemo vam\" ovdje ne bi bilo tačno. Povratak u aplikaciju ponovo registruje uređaj sa tokenom."
+    "description": "Pun dan na koji je klijent upisan, a uređaj nema dozvolu za notifikacije (task 68, ADR-0031). Ponuda ide samo uređaju sa push tokenom, pa „Javićemo vam\" ovdje ne bi bilo tačno. Povratak u aplikaciju ponovo registruje uređaj sa tokenom.",
+    "placeholders": { "date": { "type": "String", "example": "30.10." } }
+  },
+
+  "waitlistRange": "Od {from} do {to}",
+  "@waitlistRange": {
+    "description": "Naslov kartice upisa u Mojim terminima kad upis pokriva više dana (task 91). {from} je danas ili kasniji dan na koji se klijent upisao, {to} zadnji dan raspona.",
+    "placeholders": {
+      "from": { "type": "String", "example": "21.10." },
+      "to": { "type": "String", "example": "30.10." }
+    }
   },
 
   "waitlistLeave": "Odjavi se sa liste",
