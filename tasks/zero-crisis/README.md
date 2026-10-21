@@ -123,10 +123,15 @@ kao u bazi, jedna prijava za sliku i recenziju). **Ostaje:** merge, deploy (**pr
 
 ### 72 — Super admin konzola 🟡 (2026-10-20)
 
-Grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), ADR-0032 (**predložen**). `apps/superadmin` je Dart server na
+Grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), ADR-0032 (**prihvaćen** 2026-10-21). `apps/superadmin` je Dart server na
 `127.0.0.1` sa jednom stranicom: novi salon (baza → `tenant.yaml` → generatori), poziv vlasnika
 kroz postojeći `accept-staff-invite`, gašenje, boje i tema (baza i fajl), store status, a lista
 pokazuje i šta fali u CI matrici. Šest `platform_*` RPC-ova samo za `service_role`. pgTAP 1000
 (`034` 57, tri mutacije obaraju), REST zeleni, konzola 28 testova; cijeli tok viđen uživo na
-lokalnom stacku. **Ostaje:** Hamzina odluka o ADR-u, merge, `db push`; konzola na macOS-u i protiv
-hostovanog projekta (env fajl iz taska 80).
+lokalnom stacku. **Popravke iz reviewa (2026-10-21):** UUID salona isti u svakom okruženju
+(`p_id`, „Upiši u ovu bazu iz tenant.yaml" — uživo poslije `db reset` isti UUID), povlačenje poziva
+i novi poziv gasi stari, flavor `test*`/`lint` odbijen u bazi i generatoru, F5 radi,
+`security.md` tačan o `super_admin` JWT-u (rupa ostaje za zaseban task); pgTAP 1038 (`034` 95,
+devet mutacija obara), REST zeleni, konzola 46 testova. **Ostaje:** merge, `db push`; zaseban task
+za `super_admin` kroz `create_staff_invite`; konzola na macOS-u i protiv hostovanog projekta (env
+fajl iz taska 80).

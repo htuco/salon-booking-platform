@@ -15,6 +15,10 @@ napiše `tenants/<flavor>/tenant.yaml` sa istim UUID-om i pokrene generatore:
 dart run apps/superadmin/bin/superadmin.dart   # lokalni stack; --env <fajl> za projekat
 ```
 
+UUID nastaje u prvom okruženju i od tada živi u `tenant.yaml`-u. Svaka druga baza (produkcija,
+lokalni stack poslije `supabase db reset`) salon dobija iz fajla: u konzoli „Upiši u ovu bazu iz
+tenant.yaml", koji ne dira ni fajl ni generisano.
+
 Rukom, za demo fixture iz `supabase/seed.sql`:
 
 ```sh
@@ -47,8 +51,11 @@ platformi, izvan `tenant.yaml` i gita. `tool/firebase_defines.dart` je pretvara 
   neslaganje znači da `google-services.json` završi na putanji koju build ne gleda.
 - **`flavor` mora biti `[a-z][a-z0-9]*`.** Crtice i donje crte nisu validan gradle
   identifikator — `create("barber-vitez")` ne kompajlira.
+- **`flavor` ne počinje sa `test` i nije `lint`, `main`, `debug`, `profile` ni `release`.** Gradle
+  takav flavor odbija i pada za sve tenante; `gen_flavors.dart` ga zato ne pušta.
 - **`salonId` mora biti UUID** i mora odgovarati redu u bazi okruženja: za demo tenante
-  [`supabase/seed.sql`](../supabase/seed.sql), za salon iz konzole red koji je ona upisala.
+  [`supabase/seed.sql`](../supabase/seed.sql), za salon iz konzole red sa istim UUID-om u svakoj
+  bazi (prva ga je napravila, ostale ga upišu iz ovog fajla).
   Ako ne odgovara, aplikacija se builda ali ne nalazi svoj salon.
 - **`branding.primaryColor` i `branding.secondaryColor` moraju biti `#RRGGBB`**, i moraju biti iste
   kao `salons.primary_color`/`secondary_color` u bazi. To su fallback boje dok backend ne odgovori —

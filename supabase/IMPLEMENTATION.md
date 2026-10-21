@@ -37,14 +37,25 @@ The REST script refuses remote hosts, creates two real Auth users, logs in to re
   are `service_role` only and run from the `accept-staff-invite` Edge Function, which creates
   `auth.users` with `app_metadata` taken from the invite. Invites store a sha256 of the code and
   expire after 7 days. Removing a member deletes only the `public.users` row.
-- Platform RPCs (task 72, ADR-0032): `platform_list_salons`, `platform_create_salon`,
-  `platform_set_salon_status`, `platform_set_branding`, `platform_set_store_status` and
-  `platform_create_owner_invite` are **`service_role` only** (not even a `super_admin` JWT) and are
-  called by the local console `apps/superadmin`. `platform_create_salon` writes `salons` +
-  `salon_builds` + `salon_settings` (from `vertical_packs.default_settings`) in one transaction and
-  returns the new uuid; validation errors are `PT400`, a taken slug/flavor/app ID is `PT409`.
-  `platform_create_owner_invite` creates a `salon_admin` invite with `created_by = null` (platform),
-  accepted by the same `accept-staff-invite` flow; inactive salons get `PT409`.
+- Platform RPCs (task 72, ADR-0032): `platform_list_salons`, `platform_list_themes`,
+  `platform_create_salon`, `platform_set_salon_status`, `platform_set_branding`,
+  `platform_set_store_status`, `platform_create_owner_invite` and `platform_revoke_owner_invite`
+  are **`service_role` only** (pgTAP `034` checks every `public.platform_%` in the catalog) and
+  are called by the local console `apps/superadmin`. A `super_admin` JWT cannot call them, but it
+  still creates owner invites through `create_staff_invite` (`private.is_admin` starts with
+  `is_super_admin()`) — a known hole, closed by a separate task. `platform_create_salon` writes
+  `salons` + `salon_builds` + `salon_settings` (from `vertical_packs.default_settings`) in one
+  transaction and returns the uuid; `p_id uuid default null` lets every environment after the
+  first insert the salon with the `salonId` from `tenant.yaml`. Validation errors are `PT400`
+  (incl. a reserved flavor — `test*`, `lint`, `main`, `debug`, `profile`, `release` break Gradle
+  for every tenant — control characters in name/city/display name, and the nil uuid); a taken
+  uuid/slug/flavor/app ID is `PT409`. Themes live only in `private.known_themes()`.
+  `platform_create_owner_invite` creates a `salon_admin` invite with `created_by = null`
+  (platform), revoking earlier open platform invites of the same salon; inactive salons get
+  `PT409`. `platform_revoke_owner_invite(salon, invite)` revokes one platform invite (`PT404` for
+  salon-made, accepted or revoked ones). Invite codes come from `private.new_invite_code()`, shared
+  with `create_staff_invite` (redefined in this migration, same signature and grants).
+  `update_salon_contact` (redefined) also rejects control characters in the city.
   `staff_invites.created_by` is nullable since this migration.
 - Employees (task 46, ADR-0013): `users.employee_id` links the account to `employees`;
   `private.is_employee`/`current_employee_id`/`can_manage_appointment`. Employees read only

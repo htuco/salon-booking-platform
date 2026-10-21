@@ -39,6 +39,11 @@ generisano zastarjelo.
   `google-services.json` završi na putanji koju build ne gleda — i FCM tiho ne radi.
 - **`flavor` mora biti `[a-z][a-z0-9]*`.** `create("barber-vitez")` nije validan Gradle
   identifikator i ne kompajlira.
+- **`flavor` ne smije počinjati sa `test`, niti biti `lint`, `main`, `debug`, `profile` ili
+  `release`.** Regex ga pušta, a Android Gradle Plugin odbija (prefiks unit test source seta,
+  rezervisano ime, sudar sa build tipom) i pada sync **svih** tenanata, ne samo tog. Konzola flavor
+  izvodi iz naziva („Test Salon" → `testsalon`), pa pravilo drže i generator i baza
+  (`private.is_reserved_flavor`).
 - **`salonId` mora biti UUID i odgovarati redu u bazi okruženja.** Za demo tenante je to red u
   `supabase/seed.sql`, a za salon napravljen konzolom red koji je konzola upisala (ADR-0032). Ako
   ne odgovara, app se builda uredno i ne nađe svoj salon — najskuplja tiha greška u ovom lancu.
@@ -156,10 +161,21 @@ dart run apps/superadmin/bin/superadmin.dart --env .env.prod # projekat; fajl im
 
 Konzola sluša samo na `127.0.0.1` i ispiše adresu sa tokenom sesije. Ona radi korake 1–4 ispod:
 salon u bazi (`platform_create_salon`), `tenant.yaml` sa istim UUID-om, sva tri generatora. Uz to
-pravi poziv vlasnika umjesto ručnog naloga, gasi i pali salon, mijenja boje i temu (baza **i**
-fallback u fajlu) i vodi status store objave. Korake 5–8 samo pokazuje sa stanjem koje provjeri.
+pravi poziv vlasnika umjesto ručnog naloga (novi poziv povlači prethodni, a otvoren se može
+povući), gasi i pali salon, mijenja boje i temu (baza **i** fallback u fajlu) i vodi status store
+objave. Ako padne korak poslije baze, nudi „Napiši tenant.yaml" (nema fajla) ili „Ponovi
+generatore" (fajl postoji, npr. pala ikona). Korake 5–8 samo pokazuje sa stanjem koje provjeri.
 Za ne-lokalni projekat traži ime projekta prije svakog upisa. Demo tenant (fixture u `seed.sql`)
 i dalje ide rukom.
+
+**UUID salona je isti u svakom okruženju, a izvor mu je `tenant.yaml`.** Prvo okruženje u kojem
+salon nastane (konzolom, „+ Novi salon") UUID izmisli i upiše ga u fajl. Svako sljedeće okruženje —
+produkcija → lokalni stack, ili lokalni stack poslije `supabase db reset` — ga **upiše iz fajla**:
+konzola fajl bez reda u bazi pokaže pod „Tenanti bez reda u ovoj bazi", a „Upiši u ovu bazu iz
+tenant.yaml" zove `platform_create_salon` sa `p_id` = `salonId` iz fajla. Fajl se ne piše i
+generatori se ne pokreću. Naziv salona i grad nisu polja fajla: konzola ih predloži iz prvog
+komentara koji sama piše (`# Naziv (Grad) — …`), a developer potvrdi. Poslije `db reset` je to
+jedan klik po salonu.
 
 Skill `/new-tenant` vodi kroz ovo korak po korak; ovo je referenca šta se sve mora dogoditi.
 

@@ -82,29 +82,49 @@ lokalno — CI Edge Functions ne pokreće).
 ### Platformski RPC-ovi lokalne konzole — task 72
 
 Super admin konzola (`apps/superadmin`, ADR-0032) je lokalni alat sa service role ključem. Sve što
-piše ide kroz šest `platform_*` funkcija, i **nijedna nije za aplikaciju**:
+piše ide kroz osam `platform_*` funkcija, i **nijedna nije za aplikaciju**:
 
-- `platform_list_salons`, `platform_create_salon`, `platform_set_salon_status`,
-  `platform_set_branding`, `platform_set_store_status`, `platform_create_owner_invite` imaju
-  `revoke all ... from public, anon, authenticated` i `grant execute ... to service_role`. Isti
-  obrazac kao `peek_staff_invite`.
-- **`super_admin` iz JWT-a ih ne otvara.** Ni nalog sa claimom i redom u `users` ne može napraviti
-  salon ni poziv vlasnika. Platformska prava ne idu u aplikaciju salona (ADR-0029). Uloga
-  `super_admin` i dalje vrijedi samo za postojeće politike (`super_salons`, `app_policies`,
-  `content_reports`).
-- Validacija je u bazi, ne u konzoli: flavor `[a-z][a-z0-9]*`, slug, `#RRGGBB`, poznata tema
-  (`private.is_known_theme`), postojeća vertikala, ID aplikacije. Zauzet slug, flavor ili ID je
-  `PT409`. Novi salon upisuje `salons`, `salon_builds` i `salon_settings` (iz
+- `platform_list_salons`, `platform_list_themes`, `platform_create_salon`,
+  `platform_set_salon_status`, `platform_set_branding`, `platform_set_store_status`,
+  `platform_create_owner_invite` i `platform_revoke_owner_invite` imaju `revoke all ... from
+  public, anon, authenticated` i `grant execute ... to service_role`. Isti obrazac kao
+  `peek_staff_invite`. pgTAP `034` to provjerava **preko kataloga** (sve `public.platform_%`),
+  pa nova funkcija bez revoke-a obara test i kad je niko ne doda u listu.
+- **`super_admin` iz JWT-a ne otvara `platform_*` funkcije** — ni nalog sa claimom i redom u
+  `users`. Platformska prava ne idu u aplikaciju salona (ADR-0029). **To ne znači da takav nalog
+  ne može napraviti poziv vlasnika:** `create_staff_invite` provjerava `private.is_admin`, a on
+  počinje sa `is_super_admin() or …`, pa super admin JWT pravi `salon_admin` poziv za **bilo
+  koji** salon. Isto tako politika `super_builds` (uz `insert`/`update` grant koji `authenticated`
+  ima na `salon_builds`) mu pušta direktan upis u `salon_builds`. To je otvorena rupa (v. „Šta
+  još nije zatvoreno"), ne svojstvo konzole; pgTAP `034` je drži kao `lives_ok` koji pada kad se
+  rupa zatvori.
+- Validacija je u bazi, ne u konzoli: flavor `[a-z][a-z0-9]*` i ne rezervisan
+  (`private.is_reserved_flavor`: ne počinje sa `test`, nije `lint`, `main`, `debug`, `profile`,
+  `release` — Gradle bi pao za sve tenante), slug, `#RRGGBB`, poznata tema
+  (`private.is_known_theme` nad `private.known_themes()`, jedinom listom tema u bazi), postojeća
+  vertikala, ID aplikacije, i **bez kontrolnih znakova** u nazivu, gradu i imenu aplikacije (idu u
+  `tenant.yaml`, gdje bi prelom reda ubacio ključ). Istu zabranu za grad ima i
+  `update_salon_contact`, jer grad mijenja i vlasnik. Zauzet slug, flavor, ID ili UUID je `PT409`.
+  Novi salon upisuje `salons`, `salon_builds` i `salon_settings` (iz
   `vertical_packs.default_settings`) u jednoj transakciji.
+- **UUID salona dolazi iz `tenant.yaml`-a u svakom okruženju osim prvog**: `platform_create_salon`
+  prima `p_id`. Nil UUID iz šablona je `PT400`.
 - **Poziv platforme ima `staff_invites.created_by = null`.** Prvi vlasnik novog salona nema ko da
-  ga pozove iz salona. Uloga je uvijek `salon_admin`. Kod ima isti oblik, hash i istek kao
-  `create_staff_invite`, a prihvata se istom `accept-staff-invite` funkcijom. Neaktivan salon
-  poziv ne dobija (`PT409`), jer ga `peek_staff_invite` ionako ne bi primio.
+  ga pozove iz salona. Uloga je uvijek `salon_admin`. Kod dolazi iz `private.new_invite_code()`,
+  iste funkcije koju od ove migracije koristi i `create_staff_invite` (bez `execute` za klijentske
+  uloge), sa istim hashom i istekom, a prihvata se istom `accept-staff-invite` funkcijom. Neaktivan
+  salon poziv ne dobija (`PT409`), jer ga `peek_staff_invite` ionako ne bi primio.
+- **Novi poziv platforme povlači prethodne otvorene pozive platforme** za isti salon, a
+  `platform_revoke_owner_invite(salon, poziv)` povlači jedan. Oba diraju samo `created_by is null`:
+  poziv koji je napravio salon povlači salon (`revoke_staff_invite`).
 
-Dokaz: `034_super_admin_konzola.test.sql` (57 asercija). Grant vraćen `authenticated`-u obara 2,
-uklonjena provjera aktivnog salona 3, a uklonjena pre-provjera sluga 1. Uživo je poziv iz konzole
-prihvaćen kroz `accept-staff-invite` na lokalnom stacku: prijava daje `salon_admin` za novi salon,
-a isti kod drugi put ne prolazi.
+Dokaz: `034_super_admin_konzola.test.sql` (95 asercija). Mutacije: grant `authenticated`-u na
+`platform_revoke_owner_invite` obara 2 (direktnu i katalošku), grant na `private.new_invite_code`
+1, `is_reserved_flavor` → `false` 3, ignorisan `p_id` 2, novi poziv bez povlačenja prethodnog 5,
+isključena zabrana kontrolnih znakova 3, povlačenje bez `created_by is null` 1, a
+bez filtera po salonu u povlačenju prethodnog poziva ili u listi 2 i 2. Uživo je poziv iz
+konzole prihvaćen kroz `accept-staff-invite` na lokalnom stacku: prijava daje `salon_admin` za
+novi salon, a isti kod drugi put ne prolazi; drugi poziv ugasi prvi kod, a „Povuci poziv" drugi.
 
 ### Radnik (`employee`) — task 46
 
@@ -659,6 +679,14 @@ Ovo su poznate rupe, ne previdi. Ne piši kod koji se oslanja na to da su zatvor
   aplikacije ne može nastati. `get_available_slots` ga i dalje konzervativno tretira kao zauzeće
   cijelog salona.
 - ~~**Brisanje/anonimizacija naloga**~~ — **zatvoreno** u tasku 17, v. odjeljak ispod.
+- **`super_admin` JWT pravi poziv vlasnika i piše build red za bilo koji salon.**
+  `create_staff_invite` (i ostali admin RPC-ovi) provjeravaju `private.is_admin`, koji počinje sa
+  `private.is_super_admin() or …`; politika `super_builds` (uz `insert`/`update` grant
+  `authenticated`-a na `salon_builds`) super adminu pušta direktan upis u `salon_builds`. Nalog sa `super_admin` claimom i redom u `users` je
+  zato platformski nalog u aplikaciji salona, suprotno ADR-0029. Konzola (task 72) ga ne koristi
+  i ne treba, ali ga ne zatvara — **zatvara se zasebnim taskom** (Hamza, review PR-a #143).
+  pgTAP `034` drži rupu kao `lives_ok`,
+  pa zatvaranje obara test i traži da se on obrne.
 
 ## Upsert klijenta — `public.ensure_customer`
 

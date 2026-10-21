@@ -62,7 +62,10 @@ apps/client   (N flavora)        apps/admin  (jedna)        apps/superadmin (lok
 Ne uvozi nijedan `core_*` paket. Nije tenant, pa nema ni temu ni repozitorije, a jedini klijent mu je
 service role ključ. U bazu piše samo kroz `platform_*` RPC-ove (`lib/src/platforma.dart`), u repo
 `tenant.yaml` (`lib/src/tenant_fajl.dart`), a generatore pokreće kao procese (`lib/src/repo.dart`).
-Server drži ključ, i stranica ga nikad ne vidi.
+Server drži ključ, i stranica ga nikad ne vidi. Činjenice koje dijeli sa drugim slojevima ne
+uvozi nego provjerava: listu tema čita iz baze (`platform_list_themes`), a
+`test/sinhronizacija_test.dart` drži da se teme baze slažu sa `AppTheme` u `core_ui` i da
+podrazumijevane boje `tenant.yaml`-a odgovaraju `tool/gen_flavors.dart` (pokreće ga stvarno).
 
 ### Admin ljuska: četiri grane, jedan `AppShell`
 
