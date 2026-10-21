@@ -62,4 +62,4 @@ istovremeno, a termin dobija ko prvi zakaže.
   dopiši u DoD.
 
 ## Status
-Nije počet.
+U toku (grana `feat/lista-cekanja-raspon`, 2026-10-21).

@@ -33,7 +33,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
 | [71](71-melura-za-svakoga.md) | Melura za svakoga: sve radi i jasno je | 54 | 3–4 dana |
 | [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna 🟡 | — | 4–5 dana |
-| [91](91-lista-cekanja-raspon.md) | Lista čekanja: „obavijesti me ako se oslobodi ranije" (raspon) | 68 | 2–3 dana |
+| [91](91-lista-cekanja-raspon.md) | Lista čekanja: „obavijesti me ako se oslobodi ranije" (raspon) 🟡 | 68 | 2–3 dana |
 
 ## Faza B — produkcija od nule
 

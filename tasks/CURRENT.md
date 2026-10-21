@@ -1,49 +1,47 @@
-# Trenutni task: 72 — Super admin konzola, lokalna i minimalna
+# Trenutni task: 91 — Lista čekanja: „Obavijesti me ako se oslobodi ranije"
 
-Puni task: [tasks/zero-crisis/72-super-admin-lokalno.md](zero-crisis/72-super-admin-lokalno.md) · učitan 2026-10-20
+Puni task: [tasks/zero-crisis/91-lista-cekanja-raspon.md](zero-crisis/91-lista-cekanja-raspon.md) · učitan 2026-10-21
 
 ## Status
 
-U toku (grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), 2026-10-21). ADR-0032 prihvaćen, popravke iz
-reviewa pushane i CI zelen. Ostaju merge i deploy migracije.
+U toku (grana `feat/lista-cekanja-raspon`, 2026-10-21).
 
 ## Ciljevi
 
-- [x] ADR-0032 (prijedlog): lokalni Dart server na `127.0.0.1`, baza prva pa `tenant.yaml` pa
-      generatori, ključ samo u procesu servera, vlasnik kroz poziv
-- [x] Migracija `20261020180000_super_admin_konzola`: šest `platform_*` RPC-ova samo za
-      `service_role`, `staff_invites.created_by` nullable
-- [x] pgTAP `034` (57 asercija, tri mutacije obaraju 2, 3 i 1); cijela suite 1000; REST izolacija,
-      katalog, pozivi osoblja i admin prijava zeleni
-- [x] `apps/superadmin`: lista (baza + fajl + CI matrica), novi salon, status, boje i tema, store,
-      poziv vlasnika, „napiši tenant.yaml ponovo"; 28 testova (`dart test` i `flutter test`)
-- [x] Uživo (lokalni stack, 1440 i 402): novi salon → tenant.yaml → tri generatora →
-      `gen_flavors --check` zelen; poziv → `accept-staff-invite` → prijava kao `salon_admin`; boje i
-      tema u bazi, fajlu i registru; gašenje skriva salon od anon; Play `in_review`
-- [x] Dokumenti: `tenant-factory.md`, `tenants/README.md`, `/new-tenant`, `security.md`,
-      `IMPLEMENTATION.md`, `architecture.md`, `workflows.md`, `CONTEXT.md`, `docs/01` §6.1,
-      `docs/README.md`, `CLAUDE.md`
-- [x] ADR-0032 prihvaćen (Hamza, 2026-10-21), popravke iz reviewa, CI zelen
-- [ ] Merge u `develop`
-- [ ] Deploy (Hamza): `supabase db push` za `20261020180000`; nema Edge Function ni cron izmjene
-- [ ] Konzola na macOS-u (Hamzina mašina) sa iOS tenantom: `gen_ios_flavors.sh` ostaje ručni korak
+- [ ] Dopuna ADR-0031 (raspon do prvog slobodnog termina) i red u `docs/README.md`
+- [ ] Nova migracija: `date_from`/`date_to` umjesto `date`, stari upisi → raspon od jednog dana,
+      jedan upis po (salon, identitet, usluga, radnik)
+- [ ] `join_waitlist` računa raspon kroz `private.candidate_slots`, odbija kad je slobodno već prvi dan
+- [ ] Okidač ponuda po rasponu, dan ponude u `notification_logs`; gašenje potvrđenim terminom u
+      rasponu; istekao upis nestaje, prošli dani se ne nude
+- [ ] `my_waitlist`, `waitlist_full_dates`, `waitlist_demand`, `my_notifications` usklađeni
+- [ ] pgTAP `036` + usklađen `033`, mutacije zabilježene
+- [ ] `core_domain`/`core_api`: `WaitlistEntry` sa `dateFrom`/`dateTo`
+- [ ] Klijent: „Prvi slobodan termin" i „Obavijesti me ako se oslobodi ranije", raspon u „Moji
+      termini", dan ponude u Obavijestima; Melura „Lista čekanja: N" po danu
+- [ ] Dokumenti po tabeli sinhronizacije
+- [ ] Uživo na lokalnom stacku: pun 5 dana, upis, otkazivanje treći dan → ponuda; potvrda → upis nestaje
 
 ## Napomene
 
-- **Zamka nađena usput:** `flutter_launcher_icons` za svaki iOS flavor prepiše
-  `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` u `project.pbxproj` imenom zadnjeg
-  flavora. Konzola vraća pbxproj, a ručni postupak je u `tenant-factory.md` (korak 4).
-- **CRLF:** na Windows checkoutu `tenant.yaml` ima CRLF; izmjena brandinga čuva završetke linija.
-- **Konzola ne dira** `seed.sql`, CI matrice ni usluge/radnike/radno vrijeme (ADR-0032). CI matricu
-  samo čita i pokazuje šta fali.
-- ID aplikacije se izvodi iz flavora (`ba.nasadomena.<flavor>`, `idPrefiks` u `server.dart`), jer
-  CI to provjerava u APK-u. Prava domena je task 75.
-- `.env.live` nema service ključ i ne smije ga dobiti (`.env.example`). Produkcijski env fajl za
-  `--env` nastaje u tasku 80.
-- Task 68 (PR #142) je spojen prije ovog PR-a; konflikti u `CURRENT.md`, `tasks/zero-crisis/README.md`
-  i `docs/README.md` riješeni su tako da oba bloka ostaju.
+- Task 56 (podsjetnici) je u [PR #144](https://github.com/htuco/salon-booking-platform/pull/144)
+  na reviewu i redefiniše `claim_push_notifications` i `update_salon_settings`; ova grana ih ne
+  dira. Pri merge-u se očekuje konflikt u ovom fajlu — oba bloka ostaju.
 
 ## Istorija
+
+### 56 — Push podsjetnici dnevni i satni (PR otvoren, 2026-10-21)
+
+[PR #144](https://github.com/htuco/salon-booking-platform/pull/144), čeka review. Redefiniše
+`claim_push_notifications` i `update_salon_settings`, dodaje `appointments.confirmed_at`.
+
+### 72 — Super admin konzola (spojen u `develop`, 2026-10-21)
+
+[PR #143](https://github.com/htuco/salon-booking-platform/pull/143), ADR-0032 (prihvaćen
+2026-10-21). Lokalni Dart server na `127.0.0.1`: novi salon (baza → `tenant.yaml` → generatori),
+poziv vlasnika, gašenje, boje i tema, store status; šest `platform_*` RPC-ova samo za
+`service_role`. pgTAP 1038 (`034` 95). **Ostaje:** `db push` za `20261020180000`; zaseban task za
+`super_admin` kroz `create_staff_invite`; konzola na macOS-u i protiv hostovanog projekta.
 
 ### 68 — Lista čekanja (spojen u `develop`, 2026-10-21)
 
