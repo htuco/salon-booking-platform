@@ -1,64 +1,58 @@
-# Trenutni task: 68 — Lista čekanja
+# Trenutni task: 72 — Super admin konzola, lokalna i minimalna
 
-Puni task: [tasks/zero-crisis/68-lista-cekanja.md](zero-crisis/68-lista-cekanja.md) · učitan 2026-10-20
+Puni task: [tasks/zero-crisis/72-super-admin-lokalno.md](zero-crisis/72-super-admin-lokalno.md) · učitan 2026-10-20
 
 ## Status
 
-U toku (grana `feat/lista-cekanja`, [PR #142](https://github.com/htuco/salon-booking-platform/pull/142),
-2026-10-20). Kod, testovi i provjera uživo su gotovi. Ostaju odluka o ADR-u, pregled, CI i deploy.
+U toku (grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), 2026-10-21). ADR-0032 prihvaćen, popravke iz
+reviewa pushane i CI zelen. Ostaju merge i deploy migracije.
 
 ## Ciljevi
 
-- [x] ADR-0031 (prijedlog): push svima kojima se mjesto otvorilo, prvi zakaže; dan + usluga +
-      opcionalno radnik; važi do kraja dana; najviše tri upisa; salon vidi samo broj
-- [x] Migracija `20261020140000_lista_cekanja`: `waitlist_entries` bez app granta, RPC-ovi,
-      `private.candidate_slots` kao jedino pravilo slotova, okidači otkazivanja i gašenja upisa
-- [x] Ponuda vezana za upis (`notification_logs.waitlist_entry_id`), `my_notifications`,
-      `claim_push_notifications` i `send-push` je znaju
-- [x] Klijent: pun dan je treće stanje kalendara, panel upisa, sekcija u „Moji termini", stavka u
-      „Obavijesti"; demo ima punu subotu
-- [x] Melura: „Lista čekanja: N" za dan, samo vlasnik
-- [x] pgTAP `033` (53, 13 mutacija), REST bez tokena, Dart testovi u svim paketima
-- [x] Dokumenti: `security.md`, `IMPLEMENTATION.md`, `architecture.md`, `CONTEXT.md`, `docs/01`
-      §12, `docs/06` §8.2–8.3, `prototype/ui/README.md`, `prototype/admin/SPEC.md`
-- [x] Uživo (lokalni stack, web 402 i 1440): upis → otkazivanje → ponuda → „Ukloni"; Melura broj
-- [ ] Odluka o ADR-0031 (Hamza), pregled, CI zelen, merge u `develop`
-- [ ] Deploy (Hamza), **ovim redom**: `supabase functions deploy send-push`, pa `supabase db push`
-      (provjere u task fajlu)
-- [ ] Push `waitlist_offer` na Android uređaju
+- [x] ADR-0032 (prijedlog): lokalni Dart server na `127.0.0.1`, baza prva pa `tenant.yaml` pa
+      generatori, ključ samo u procesu servera, vlasnik kroz poziv
+- [x] Migracija `20261020180000_super_admin_konzola`: šest `platform_*` RPC-ova samo za
+      `service_role`, `staff_invites.created_by` nullable
+- [x] pgTAP `034` (57 asercija, tri mutacije obaraju 2, 3 i 1); cijela suite 1000; REST izolacija,
+      katalog, pozivi osoblja i admin prijava zeleni
+- [x] `apps/superadmin`: lista (baza + fajl + CI matrica), novi salon, status, boje i tema, store,
+      poziv vlasnika, „napiši tenant.yaml ponovo"; 28 testova (`dart test` i `flutter test`)
+- [x] Uživo (lokalni stack, 1440 i 402): novi salon → tenant.yaml → tri generatora →
+      `gen_flavors --check` zelen; poziv → `accept-staff-invite` → prijava kao `salon_admin`; boje i
+      tema u bazi, fajlu i registru; gašenje skriva salon od anon; Play `in_review`
+- [x] Dokumenti: `tenant-factory.md`, `tenants/README.md`, `/new-tenant`, `security.md`,
+      `IMPLEMENTATION.md`, `architecture.md`, `workflows.md`, `CONTEXT.md`, `docs/01` §6.1,
+      `docs/README.md`, `CLAUDE.md`
+- [x] ADR-0032 prihvaćen (Hamza, 2026-10-21), popravke iz reviewa, CI zelen
+- [ ] Merge u `develop`
+- [ ] Deploy (Hamza): `supabase db push` za `20261020180000`; nema Edge Function ni cron izmjene
+- [ ] Konzola na macOS-u (Hamzina mašina) sa iOS tenantom: `gen_ios_flavors.sh` ostaje ručni korak
 
 ## Napomene
 
-- Red „Lista čekanja" u admin postavkama i dalje vodi u „uskoro" (`settings_screen.dart` ~1225).
-  O njemu odlučuje task 54. Prekidača po salonu nema (ADR-0031).
-- **Dizajn ne postoji.** Ni `prototype/ui/` ni `prototype/beauty/` ne crtaju listu čekanja; admin
-  canvas `3i` crta samo prekidač u postavkama. Oblik se slaže iz postojećih komponenti (empty state
-  u koraku 3, kartica u „Moji termini"), a prijedlog oblika ide u isti PR na Hamzino odobrenje.
-- **Zamka: `notification_logs` je vezan za termin.** `appointment_id` je `not null`, FK na
-  `appointments` i dio `unique(appointment_id, device_id, type)`, a `my_notifications` vlasništvo
-  provjerava preko `appointments.auth_identity_id`. Oslobođeni termin je **tuđi** termin. Upisati
-  ga u log upisanom klijentu bi ili sakrilo obavijest (nije njegov termin) ili, gore, vezalo tuđi
-  termin za njegov uređaj. Treba nova veza (npr. nullable `appointment_id` + `waitlist_entry_id`
-  sa `check` da je tačno jedno postavljeno), a `my_notifications` i `send-push` je moraju znati.
-  Tekst pusha ne smije nositi ništa o tuđem terminu osim dana, vremena i usluge.
-- **Prazan dan nije nužno pun dan** — riješeno sa `waitlist_full_dates` (dan koji bi imao slobodnog
-  vremena bez termina). Usput je nađeno da kalendar nije dao tapnuti dan bez slobodnog vremena,
-  pa je `CalendarDay` dobio stanje `full`.
-- **Gdje se termin oslobađa:** `private.queue_appointment_push()` (zadnja verzija u
-  `20261020100000_pisanje_recenzija.sql`) već grana `cancelled` po `cancelled_by`
-  (`salon` iz `pending` = odbijen, `customer`, `system` = istek). Okidač za listu čekanja ide uz
-  njega, ne u njega. Oslobađanje kroz brisanje blokade ili promjenu radnog vremena **nije** u
-  opsegu taska.
-- **„Prvi zakaže"** znači da `book_appointment` ostaje jedina provjera; upis ne daje prednost. Ako
-  ADR izabere čuvanje termina, to je novi status i istek kao u 64, a procjena raste na 5+ dana.
-- **Limit iz 65** (`max_pending_per_customer`) i dalje važi kad klijent zakaže iz pusha.
-- Push na uređaju i dalje nema Android (v. 56). Uživo se dokazuje red u `notification_logs` i
-  ekran „Obavijesti"; sam push ostaje za regresiju (60) ako uređaja ne bude.
-- Zamke iz `security.md`: nova funkcija traži `revoke ... from public, anon`; `not (A and B)` sa
-  `client_salon_id()` je rupa kad nema headera; `x-salon-id` ne daje članstvo.
-- Poslije `git pull` na `develop` treba `flutter gen-l10n` u `apps/client` prije `melos run analyze`.
+- **Zamka nađena usput:** `flutter_launcher_icons` za svaki iOS flavor prepiše
+  `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` u `project.pbxproj` imenom zadnjeg
+  flavora. Konzola vraća pbxproj, a ručni postupak je u `tenant-factory.md` (korak 4).
+- **CRLF:** na Windows checkoutu `tenant.yaml` ima CRLF; izmjena brandinga čuva završetke linija.
+- **Konzola ne dira** `seed.sql`, CI matrice ni usluge/radnike/radno vrijeme (ADR-0032). CI matricu
+  samo čita i pokazuje šta fali.
+- ID aplikacije se izvodi iz flavora (`ba.nasadomena.<flavor>`, `idPrefiks` u `server.dart`), jer
+  CI to provjerava u APK-u. Prava domena je task 75.
+- `.env.live` nema service ključ i ne smije ga dobiti (`.env.example`). Produkcijski env fajl za
+  `--env` nastaje u tasku 80.
+- Task 68 (PR #142) je spojen prije ovog PR-a; konflikti u `CURRENT.md`, `tasks/zero-crisis/README.md`
+  i `docs/README.md` riješeni su tako da oba bloka ostaju.
 
 ## Istorija
+
+### 68 — Lista čekanja (spojen u `develop`, 2026-10-21)
+
+[PR #142](https://github.com/htuco/salon-booking-platform/pull/142), ADR-0031 (prihvaćen 2026-10-21).
+Upis na pun dan za uslugu i opcionalno radnika; otkazivanje šalje push samo upisima kojima je baš
+ono otvorilo vrijeme, jedan po klijentu, a termin dobija ko prvi zakaže. Salon vidi samo broj po
+danu, ne i redove ponuda. pgTAP `033` (65 asercija), klijent 686, admin 725. **Ostaje:** deploy
+**ovim redom**: `supabase functions deploy send-push` (sa onim iz taska 67), pa `supabase db push`;
+push na Android uređaju.
 
 ### 67 — Pisanje recenzija (spojen u `develop`, 2026-10-20)
 

@@ -11,6 +11,27 @@ to ponavlja na svaki PR. Mehanika i zamke: `.claude/docs/tenant-factory.md`.
 
 Flavor: **$ARGUMENTS**. Ako nije dat, traži ga (mora biti `[a-z][a-z0-9]*`).
 
+## 0. Pravi salon: konzola radi korake 1–3
+
+```sh
+dart run apps/superadmin/bin/superadmin.dart                 # lokalni stack
+dart run apps/superadmin/bin/superadmin.dart --env .env.prod # projekat (fajl sa SUPABASE_SERVICE_ROLE_KEY)
+```
+
+Otvori adresu koju ispiše i klikni „+ Novi salon". Konzola upiše salon u bazu, napiše `tenant.yaml`
+sa istim UUID-om i pokrene sva tri generatora (i sama vrati `project.pbxproj` ako ga je
+`flutter_launcher_icons` prepisao). Ako korak poslije baze padne: „Napiši tenant.yaml" ili
+„Ponovi generatore". Onda u detalju salona „Napravi poziv" daje kod koji vlasnik unosi u Meluri na
+„Imam poziv od salona"; novi poziv povlači prethodni, a „Povuci poziv" gasi otvoren kod. Ručni
+nalog i SQL ne trebaju. Nastavi od **koraka 4** (CI matrica, konzola pokazuje šta fali). Koraci
+1–3 ispod su za demo fixture u `seed.sql`. ADR-0032.
+
+**Drugo okruženje, isti salon.** Salon nastaje jednom (UUID izmisli prvo okruženje) i UUID od tada
+živi u `tenant.yaml`-u. Na produkciji, ili lokalno poslije `supabase db reset`, konzola fajl bez
+reda pokaže pod „Tenanti bez reda u ovoj bazi": „Upiši u ovu bazu iz tenant.yaml" ga upiše sa
+istim UUID-om, bez diranja fajla i generatora. Nikad ne pravi isti salon dva puta kroz „+ Novi
+salon" — dobio bi drugi UUID, a folder koji postoji konzola ionako odbija.
+
 ## 1. Konfiguracija
 
 ```sh
@@ -22,6 +43,8 @@ Popuni `tenants/<flavor>/tenant.yaml`. Tri polja su tvrda:
 - `tenant.flavor` **identično imenu foldera** — inače `google-services.json` završi na putanji koju
   build ne gleda.
 - `tenant.flavor` mora biti `[a-z][a-z0-9]*` — crtica ne kompajlira u Gradleu.
+- `tenant.flavor` ne počinje sa `test` i nije `lint`, `main`, `debug`, `profile` ni `release` —
+  Gradle ga odbija i pada za sve tenante (`gen_flavors.dart` i baza ga ne puštaju).
 - `tenant.salonId` je UUID i mora odgovarati redu u `supabase/seed.sql` — inače se app builda i ne
   nađe svoj salon.
 

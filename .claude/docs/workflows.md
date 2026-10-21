@@ -206,6 +206,38 @@ da nije radila — provjeri `md5sum` posluženog `main.dart.js` naspram onog iz 
 posumnjaš u kod. Obični `http-server` uz to nema SPA fallback, pa direktan `/login` vraća 404;
 otvori root i pusti router da preusmjeri.
 
+## Super admin konzola (task 72)
+
+Lokalni alat, nikad deployan ([ADR-0032](../../docs/adr/0032-super-admin-lokalni-dart-server.md)):
+
+```sh
+dart run apps/superadmin/bin/superadmin.dart                  # lokalni stack, ključ iz supabase status
+dart run apps/superadmin/bin/superadmin.dart --env .env.prod  # SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY iz fajla
+dart run apps/superadmin/bin/superadmin.dart --port 4711      # default 4710
+```
+
+Ispiše `http://127.0.0.1:<port>/?t=<token>`. Token je nov pri svakom pokretanju. Stranica ga
+spremi u `sessionStorage` taba i skloni iz adresne trake, pa F5 radi; API bez tokena vraća 403
+(nova kartica bez adrese iz terminala ne radi ništa). Ključ ne ide ni u ispis ni stranici.
+`--env` sa relativnom putanjom se čita od foldera iz kojeg je komanda pokrenuta. `.env.live`
+namjerno nema service ključ (`.env.example`), pa `--env .env.live` pada sa porukom. Produkcijski
+fajl je Hamzin (task 80). Za ne-lokalni projekat svaki upis traži da se otkuca ime projekta: ref
+projekta za `https://<ref>.supabase.co`, a cijeli host za custom domen ili self-hosted
+(`api.salon.ba`, ne „api").
+
+**Poslije `supabase db reset`** lokalna baza ima samo seed. Salone napravljene konzolom (fajl je u
+`tenants/`, reda nema) konzola pokaže pod „Tenanti bez reda u ovoj bazi"; „Upiši u ovu bazu iz
+tenant.yaml" ih vrati sa **istim UUID-om** (`platform_create_salon` sa `p_id`), bez diranja fajla i
+generisanog. Isto se radi kad salon napravljen na produkciji treba lokalno.
+
+Na Windowsu `Ctrl+C` u terminalu gasi konzolu. Ako je pokrenuta iz alata koji ubija samo shell,
+`dartvm` ostaje na portu: `Get-NetTCPConnection -LocalPort 4710` daje PID.
+
+Testovi: `cd apps/superadmin && dart test` (ili `melos run test`). Server se testira sa lažnom
+platformom, bez baze. `sinhronizacija_test.dart` pokreće pravi `tool/gen_flavors.dart` u temp
+repou (podrazumijevane boje, rezervisan flavor) i poredi teme baze sa `core_ui`, pa traži
+`dart pub get` u korijenu (`.dart_tool/package_config.json`). Platformski RPC-ovi su u pgTAP `034`.
+
 ## Build
 
 ```sh

@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="bs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super admin</title>
+<!--
+  Super admin konzola (task 72, ADR-0032). Bez build koraka i bez vanjskih fajlova: CSP
+  dozvoljava samo ovu stranicu i API istog servera. Oblik prati platformu (radius 0, hairline
+  granice). Boja tenanta se ne koristi, jer konzola nije tenant.
+-->
+<style>
+  :root {
+    --bg: #fafaf9; --surface: #ffffff; --ink: #1c1917; --muted: #57534e; --line: #d6d3d1;
+    --ok: #166534; --ok-bg: #dcfce7; --warn: #92400e; --warn-bg: #fef3c7;
+    --bad: #991b1b; --bad-bg: #fee2e2; --accent: #1c1917; --accent-ink: #fafaf9;
+    --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0c0a09; --surface: #1c1917; --ink: #f5f5f4; --muted: #a8a29e; --line: #44403c;
+      --ok: #86efac; --ok-bg: #14532d; --warn: #fcd34d; --warn-bg: #451a03;
+      --bad: #fca5a5; --bad-bg: #450a0a; --accent: #f5f5f4; --accent-ink: #1c1917;
+    }
+  }
+  * { box-sizing: border-box; border-radius: 0; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 16px 24px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .02em; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+    margin: 32px 0 12px; font-weight: 600; }
+  .env { font: 600 12px var(--mono); padding: 4px 8px; border: 1px solid currentColor; }
+  .env.lokalno { color: var(--ok); background: var(--ok-bg); }
+  .env.daljinski { color: var(--bad); background: var(--bad-bg); }
+  .spacer { flex: 1; }
+  button, select, input { font: inherit; color: inherit; }
+  button { border: 1px solid var(--ink); background: var(--surface); padding: 8px 14px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: progress; }
+  input, select { border: 1px solid var(--line); background: var(--surface); padding: 8px 10px; width: 100%; }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+  label { display: block; font-size: 13px; color: var(--muted); }
+  label > span { display: block; margin-bottom: 4px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  tr.salon { cursor: pointer; }
+  tr.salon:hover td, tr.salon.otvoren td { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .sub { color: var(--muted); font-size: 13px; }
+  .mono { font-family: var(--mono); font-size: 13px; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 6px; border: 1px solid currentColor; margin: 0 4px 4px 0; white-space: nowrap; }
+  .tag.ok { color: var(--ok); background: var(--ok-bg); }
+  .tag.warn { color: var(--warn); background: var(--warn-bg); }
+  .tag.bad { color: var(--bad); background: var(--bad-bg); }
+  .sw { display: inline-block; width: 16px; height: 16px; border: 1px solid var(--line); vertical-align: -3px; margin-right: 2px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); padding: 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .akcije { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .akcije section { border: 1px solid var(--line); padding: 16px; }
+  .akcije h3 { margin: 0 0 12px; font-size: 15px; }
+  .red { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; margin-top: 12px; }
+  .red > * { flex: 1 1 140px; }
+  .red > button { flex: 0 0 auto; }
+  .boja { display: flex; gap: 6px; }
+  .boja input[type=color] { width: 44px; padding: 2px; flex: 0 0 44px; height: 40px; }
+  .koraci { list-style: none; padding: 0; margin: 12px 0 0; }
+  .koraci li { border-top: 1px solid var(--line); padding: 8px 0; }
+  .koraci pre { margin: 6px 0 0; white-space: pre-wrap; font: 12px/1.4 var(--mono); color: var(--muted); max-height: 220px; overflow: auto; }
+  .poruka { white-space: pre-wrap; font: 13px/1.5 var(--mono); border: 1px dashed var(--ink); padding: 12px; margin-top: 12px; }
+  .kod { font: 700 22px var(--mono); letter-spacing: .12em; }
+  .obavijest { padding: 12px 16px; border: 1px solid currentColor; margin: 16px 0; }
+  .obavijest.bad { color: var(--bad); background: var(--bad-bg); }
+  .obavijest.ok { color: var(--ok); background: var(--ok-bg); }
+  .obavijest.warn { color: var(--warn); background: var(--warn-bg); }
+  .lista { margin: 8px 0 0; padding-left: 20px; }
+  .lista li { margin: 4px 0; }
+  #saloni, #samo-fajl .panel { overflow-x: auto; }
+  .prazno { padding: 32px; text-align: center; color: var(--muted); border: 1px dashed var(--line); }
+  @media (max-width: 720px) {
+    header { padding: 12px 16px; }
+    .sakrij-usko { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Super admin</h1>
+  <span id="env" class="env">…</span>
+  <span id="env-opis" class="sub"></span>
+  <span class="spacer"></span>
+  <button id="osvjezi" type="button">Osvježi</button>
+  <button id="novi-dugme" class="primary" type="button">+ Novi salon</button>
+</header>
+<main>
+  <div id="obavijest"></div>
+
+  <div id="novi" class="panel" hidden>
+    <h2 style="margin-top:0">Novi salon</h2>
+    <form id="novi-forma" class="grid" autocomplete="off">
+      <label><span>Naziv salona</span><input name="naziv" required placeholder="Studio Lejla"></label>
+      <label><span>Grad</span><input name="grad" required placeholder="Zenica"></label>
+      <label><span>Vertikala</span><select name="vertikala" required></select></label>
+      <label><span>Tema</span><select name="tema"></select>
+        <div class="hint">Prazno = tema vertikale.</div></label>
+      <label><span>Primarna boja</span><div class="boja"><input type="color" data-za="primarna" value="#C6A667"><input name="primarna" value="#C6A667" pattern="#[0-9A-Fa-f]{6}" required></div></label>
+      <label><span>Sekundarna boja</span><div class="boja"><input type="color" data-za="sekundarna" value="#171717"><input name="sekundarna" value="#171717" pattern="#[0-9A-Fa-f]{6}" required></div></label>
+      <label><span>Ime aplikacije</span><input name="imeAplikacije" required>
+        <div class="hint">Ime ispod ikone. Mijenja se samo novim buildom.</div></label>
+      <label><span>Flavor</span><input name="flavor" required pattern="[a-z][a-z0-9]*">
+        <div class="hint mono" id="id-pregled">ba.nasadomena.…</div></label>
+      <label><span>Slug</span><input name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*"></label>
+      <label><span>Paket</span><select name="plan"><option>starter</option><option>pro</option><option>premium</option></select></label>
+      <label><span>Ikona aplikacije (PNG, 1024×1024)</span><input type="file" name="ikona" accept="image/png">
+        <div class="hint">Bez nje ide placeholder sa inicijalima. Logo salona vlasnik stavlja u Meluri.</div></label>
+      <label style="align-self:center"><span>Platforme</span>
+        <span style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" name="ios" style="width:auto"> I iOS build</span>
+        <div class="hint">iOS traži gen_ios_flavors.sh na macOS-u.</div></label>
+      <div class="red" style="grid-column:1/-1">
+        <span class="sub">Konzola upiše salon u bazu, napiše tenant.yaml i pokrene generatore.</span>
+        <button type="button" id="novi-odustani">Odustani</button>
+        <button type="submit" class="primary">Napravi salon</button>
+      </div>
+    </form>
+    <div id="novi-rezultat"></div>
+  </div>
+
+  <h2>Saloni</h2>
+  <div id="saloni"><div class="prazno">Učitavam…</div></div>
+
+  <div id="samo-fajl"></div>
+</main>
+
+<script>
+'use strict';
+// Token sesije stiže u adresi koju je konzola ispisala. Stranica ga spremi u sessionStorage
+// ovog taba i skloni iz adresne trake. Server stranicu daje i bez tokena (u njoj nema tajne),
+// pa F5 na `/` radi i token se čita iz sessionStorage-a. API bez tokena i dalje vraća 403.
+const token = (() => {
+  const t = new URLSearchParams(location.search).get('t');
+  try { if (t) sessionStorage.setItem('konzola-token', t); } catch (_) {}
+  try { history.replaceState(null, '', '/'); } catch (_) {}
+  try { return t || sessionStorage.getItem('konzola-token') || ''; } catch (_) { return t || ''; }
+})();
+
+let stanje = null;
+let otvoren = null;
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(metoda, putanja, tijelo) {
+  const zaglavlja = { 'x-konzola-token': token, 'content-type': 'application/json' };
+  if (metoda !== 'GET' && stanje && !stanje.okruzenje.lokalno) {
+    const p = prompt(`Upisuješ na projekat ${stanje.okruzenje.projekat} (${stanje.okruzenje.host}).\nOtkucaj ime projekta za potvrdu:`);
+    if (p === null) throw new Error('Upis otkazan.');
+    zaglavlja['x-potvrda'] = p.trim();
+  }
+  const r = await fetch(putanja, { method: metoda, headers: zaglavlja, body: tijelo ? JSON.stringify(tijelo) : undefined });
+  const podaci = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(podaci.greska || `Greška ${r.status}`);
+  return podaci;
+}
+
+function obavijest(tekst, vrsta = 'bad') {
+  $('#obavijest').innerHTML = tekst ? `<div class="obavijest ${vrsta}">${esc(tekst)}</div>` : '';
+}
+
+async function ucitaj() {
+  if (!token) {
+    obavijest('Nema tokena sesije. Otvori adresu koju je konzola ispisala u terminalu.');
+    return;
+  }
+  try {
+    stanje = await api('GET', '/api/stanje');
+    obavijest('');
+  } catch (e) {
+    obavijest(e.message);
+    return;
+  }
+  const o = stanje.okruzenje;
+  const env = $('#env');
+  env.textContent = o.lokalno ? 'LOKALNO' : `PROJEKAT ${o.projekat}`;
+  env.className = `env ${o.lokalno ? 'lokalno' : 'daljinski'}`;
+  $('#env-opis').textContent = `${o.host} · ključ iz: ${o.izvor}`;
+  popuniFormu();
+  crtajSalone();
+}
+
+function popuniFormu() {
+  const v = $('select[name=vertikala]');
+  if (!v.options.length) {
+    v.innerHTML = stanje.vertikale.map((p) => `<option value="${esc(p.key)}">${esc(p.display_name)} (${esc(p.key)})</option>`).join('');
+  }
+  const t = $('#novi-forma select[name=tema]');
+  if (!t.options.length) {
+    t.innerHTML = '<option value="">— tema vertikale —</option>' + stanje.teme.map((x) => `<option>${esc(x)}</option>`).join('');
+  }
+}
+
+function statusTag(s) {
+  return s.status === 'active' ? '<span class="tag ok">aktivan</span>' : '<span class="tag bad">ugašen</span>';
+}
+function storeTag(ime, s) {
+  const v = { draft: 'warn', in_review: 'warn', live: 'ok' }[s] || 'bad';
+  return `<span class="tag ${v}">${ime}: ${esc(s ?? '—')}</span>`;
+}
+function buildTagovi(s) {
+  const t = [];
+  if (!s.flavor) return '<span class="tag bad">nema build reda</span>';
+  if (!s.tenant.postoji) t.push('<span class="tag bad">nema tenant.yaml</span>');
+  else if (s.tenant.razlike.length) t.push(`<span class="tag warn">fajl ≠ baza: ${esc(s.tenant.razlike.join(', '))}</span>`);
+  else t.push('<span class="tag ok">tenant.yaml</span>');
+  const ci = s.ci;
+  const fali = [];
+  if (!ci['build-flavors']) fali.push('APK');
+  if (s.tenant.ios && !ci['build-ios']) fali.push('iOS');
+  if (!ci['release-artifacts']) fali.push('AAB');
+  t.push(fali.length ? `<span class="tag warn">CI fali: ${fali.join(', ')}</span>` : '<span class="tag ok">CI</span>');
+  return t.join('');
+}
+
+function crtajSalone() {
+  const saloni = stanje.saloni;
+  if (!saloni.length) {
+    $('#saloni').innerHTML = '<div class="prazno">Nijedan salon u ovoj bazi. „+ Novi salon" pravi prvi.</div>';
+  } else {
+    $('#saloni').innerHTML = `<table>
+      <thead><tr><th>Salon</th><th class="sakrij-usko">Flavor</th><th>Status</th><th class="sakrij-usko">Tema</th><th>Store</th><th>Vlasnik</th><th class="sakrij-usko">Build</th></tr></thead>
+      <tbody>${saloni.map((s) => `
+        <tr class="salon ${otvoren === s.id ? 'otvoren' : ''}" data-id="${esc(s.id)}" tabindex="0">
+          <td><strong>${esc(s.name)}</strong><div class="sub">${esc(s.city)} · ${esc(s.vertical_pack_key)} · ${esc(s.plan)}</div></td>
+          <td class="mono sakrij-usko">${esc(s.flavor ?? '—')}</td>
+          <td>${statusTag(s)}</td>
+          <td class="sakrij-usko"><span class="sw" style="background:${esc(s.primary_color)}"></span><span class="sw" style="background:${esc(s.secondary_color)}"></span> <span class="sub">${esc(s.theme)}</span></td>
+          <td>${s.flavor ? storeTag('Play', s.play_store_status) + storeTag('App', s.app_store_status) : '—'}</td>
+          <td>${s.admin_count ? `<span class="tag ok">${s.admin_count} nalog</span>` : s.open_owner_invites ? '<span class="tag warn">poziv poslan</span>' : '<span class="tag bad">nema</span>'}</td>
+          <td class="sakrij-usko">${buildTagovi(s)}</td>
+        </tr>
+        ${otvoren === s.id ? `<tr><td colspan="7">${detalj(s)}</td></tr>` : ''}`).join('')}
+      </tbody></table>`;
+  }
+  const samo = stanje.samoFajl;
+  $('#samo-fajl').innerHTML = samo.length ? `<h2>Tenanti bez reda u ovoj bazi</h2>
+    <div class="panel">
+    <p class="sub" style="margin-top:0">Fajl postoji, salona u ovoj bazi nema: salon je napravljen u drugom okruženju, ili je lokalna baza resetovana. „Upiši" ga upiše iz <span class="mono">tenant.yaml</span> sa istim UUID-om; fajl i generatori se ne diraju. Na hostovanom projektu demo tenante iz seeda ne upisuj.</p>
+    <table><thead><tr><th>Flavor</th><th>Naziv salona</th><th>Grad</th><th>Paket</th><th></th></tr></thead><tbody>
+    ${samo.map((t) => `<tr class="samo" data-flavor="${esc(t.flavor)}">
+      <td><span class="mono">${esc(t.flavor)}</span><div class="sub mono">${esc(t.salonId)}</div><div class="sub">${esc(t.vertikala)} · ${esc(t.tema)}</div></td>
+      <td><input name="u-naziv" value="${esc(t.naziv)}" aria-label="Naziv salona"></td>
+      <td><input name="u-grad" value="${esc(t.grad)}" aria-label="Grad" placeholder="obavezno"></td>
+      <td><select name="u-plan" aria-label="Paket"><option>starter</option><option>pro</option><option>premium</option></select></td>
+      <td><button type="button" data-akcija="upisi">Upiši u ovu bazu iz tenant.yaml</button></td>
+    </tr>`).join('')}
+    </tbody></table>
+    <div id="samo-rezultat"></div></div>` : '';
+}
+
+function detalj(s) {
+  const opcije = (lista, izabran) => lista.map((x) => `<option ${x === izabran ? 'selected' : ''}>${esc(x)}</option>`).join('');
+  const store = ['draft', 'in_review', 'live'];
+  const preostalo = [];
+  if (s.flavor) {
+    if (!s.ci['build-flavors'] || !s.ci['release-artifacts'] || (s.tenant.ios && !s.ci['build-ios'])) {
+      preostalo.push(`Dodaj <span class="mono">${esc(s.flavor)}</span> u CI matrice u <span class="mono">.github/workflows/flutter-build.yml</span> (build-flavors, ${s.tenant.ios ? 'build-ios, ' : ''}release-artifacts).`);
+    }
+    if (s.tenant.ios) preostalo.push('Na macOS-u: <span class="mono">tool/gen_ios_flavors.sh</span>.');
+    preostalo.push(`Redirect URL <span class="mono">${esc(s.application_id)}://login-callback</span> u Supabase Auth i <span class="mono">supabase/config.toml</span>; Google OAuth klijenti po flavoru (<span class="mono">tasks/sprint-2/12-konzole-checklist.md</span>).`);
+    preostalo.push(`Build i provjera: <span class="mono">tool/build_tenant.sh ${esc(s.flavor)} apk debug</span>.`);
+  }
+  if (!s.admin_count) preostalo.unshift('Pozovi vlasnika (desno) i pošalji mu kod.');
+  return `<div class="akcije" data-id="${esc(s.id)}">
+    <section>
+      <h3>Status</h3>
+      <p class="sub" style="margin:0">${s.status === 'active' ? 'Aktivan salon vide klijenti, a vlasnik se može prijaviti.' : 'Ugašen salon ne vidi niko, a poziv se ne može prihvatiti.'}</p>
+      <div class="red"><button type="button" data-akcija="status" data-status="${s.status === 'active' ? 'inactive' : 'active'}">${s.status === 'active' ? 'Ugasi salon' : 'Upali salon'}</button></div>
+    </section>
+    <section>
+      <h3>Boje i tema</h3>
+      <div class="red">
+        <label><span>Primarna</span><div class="boja"><input type="color" data-za="b-primarna" value="${esc(s.primary_color)}"><input name="b-primarna" value="${esc(s.primary_color)}"></div></label>
+        <label><span>Sekundarna</span><div class="boja"><input type="color" data-za="b-sekundarna" value="${esc(s.secondary_color)}"><input name="b-sekundarna" value="${esc(s.secondary_color)}"></div></label>
+      </div>
+      <div class="red">
+        <label><span>Tema</span><select name="b-tema">${opcije(stanje.teme, s.theme)}</select></label>
+        <button type="button" data-akcija="branding">Sačuvaj</button>
+      </div>
+      <div class="hint">Upisuje bazu i fallback u tenant.yaml, pa pokreće gen_flavors.</div>
+    </section>
+    <section>
+      <h3>Vlasnik</h3>
+      <p class="sub" style="margin:0">${s.admin_count ? `Salon ima ${s.admin_count} vlasnički nalog.` : 'Salon još nema vlasnika.'} ${s.open_owner_invites ? `Otvorenih poziva: ${s.open_owner_invites}.` : ''}</p>
+      ${s.platform_invite_id ? `<div class="red"><span class="sub">Poziv platforme je otvoren do ${esc(new Date(s.platform_invite_expires_at).toLocaleString('bs'))}.</span><button type="button" data-akcija="povuci" data-poziv="${esc(s.platform_invite_id)}">Povuci poziv</button></div>` : ''}
+      <div class="red"><label><span>Ime i prezime vlasnika</span><input name="p-ime"></label><button type="button" data-akcija="poziv">Napravi poziv</button></div>
+      <div class="hint">Novi poziv povlači prethodni poziv platforme: stari kod prestaje važiti.</div>
+      <div class="poziv-rezultat"></div>
+    </section>
+    ${s.flavor ? `<section>
+      <h3>Store</h3>
+      <div class="red">
+        <label><span>Google Play</span><select name="s-play">${opcije(store, s.play_store_status)}</select></label>
+        <label><span>App Store</span><select name="s-app">${opcije(store, s.app_store_status)}</select></label>
+      </div>
+      <div class="hint mono">${esc(s.application_id)} · ${esc(s.app_display_name)}</div>
+    </section>` : ''}
+    ${s.flavor && s.tenant.postoji ? `<section>
+      <h3>Generatori</h3>
+      <p class="sub" style="margin:0">gen_flavors, placeholder ikona i launcher ikone, ponovo. Za korak koji je pao, ili ikonu stavljenu rukom u <span class="mono">tenants/${esc(s.flavor)}/assets/icon.png</span>.</p>
+      <div class="red"><button type="button" data-akcija="generatori">Ponovi generatore</button></div>
+    </section>` : ''}
+    ${s.flavor && !s.tenant.postoji ? `<section>
+      <h3>tenant.yaml fali</h3>
+      <p class="sub" style="margin:0">Salon je u bazi, a fajla nema. Konzola ga piše iz reda u bazi.</p>
+      <div class="red"><label style="flex:0 0 auto"><span style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" name="t-ios" style="width:auto"> I iOS build</span></label><button type="button" data-akcija="tenant">Napiši tenant.yaml</button></div>
+    </section>` : ''}
+    ${preostalo.length ? `<section style="grid-column:1/-1">
+      <h3>Ostaje rukom</h3>
+      <ol class="lista">${preostalo.map((p) => `<li>${p}</li>`).join('')}</ol>
+    </section>` : ''}
+    <div class="rezultat" style="grid-column:1/-1"></div>
+  </div>`;
+}
+
+function crtajKorake(el, koraci) {
+  el.innerHTML = `<ul class="koraci">${koraci.map((k) => `<li><span class="tag ${k.uspjeh ? 'ok' : 'bad'}">${k.uspjeh ? 'ok' : 'pao'}</span> ${esc(k.naziv)}${k.izlaz ? `<pre>${esc(k.izlaz)}</pre>` : ''}</li>`).join('')}</ul>`;
+}
+
+async function radi(dugme, posao) {
+  dugme.disabled = true;
+  try { await posao(); } catch (e) { obavijest(e.message); } finally { dugme.disabled = false; }
+}
+
+// --- Lista i detalj ---------------------------------------------------------
+$('#saloni').addEventListener('click', (e) => {
+  const red = e.target.closest('tr.salon');
+  if (red) {
+    otvoren = otvoren === red.dataset.id ? null : red.dataset.id;
+    crtajSalone();
+    return;
+  }
+  const dugme = e.target.closest('button[data-akcija]');
+  if (!dugme) return;
+  const kutija = dugme.closest('.akcije');
+  const id = kutija.dataset.id;
+  const rezultat = $('.rezultat', kutija);
+  const akcija = dugme.dataset.akcija;
+  radi(dugme, async () => {
+    if (akcija === 'status') {
+      if (dugme.dataset.status === 'inactive' && !confirm('Ugasiti salon? Klijenti ga više neće vidjeti.')) return;
+      await api('POST', `/api/saloni/${id}/status`, { status: dugme.dataset.status });
+      obavijest('Status je promijenjen.', 'ok');
+      await ucitaj();
+    } else if (akcija === 'branding') {
+      const r = await api('POST', `/api/saloni/${id}/branding`, {
+        primarna: $('[name=b-primarna]', kutija).value.trim(),
+        sekundarna: $('[name=b-sekundarna]', kutija).value.trim(),
+        tema: $('[name=b-tema]', kutija).value,
+      });
+      await ucitaj();
+      crtajKorake($(`.akcije[data-id="${id}"] .rezultat`), r.koraci);
+    } else if (akcija === 'poziv') {
+      const ime = $('[name=p-ime]', kutija).value.trim();
+      if (!ime) throw new Error('Upiši ime vlasnika.');
+      const r = await api('POST', `/api/saloni/${id}/poziv`, { ime });
+      await ucitaj();
+      const el = $(`.akcije[data-id="${id}"] .poziv-rezultat`);
+      el.innerHTML = `<p class="kod">${esc(r.kod)}</p><p class="sub">Kod se vidi samo sada. Baza čuva samo njegov hash.</p>
+        <div class="poruka">${esc(r.poruka)}</div><div class="red"><button type="button" data-kopiraj>Kopiraj poruku</button></div>`;
+      $('[data-kopiraj]', el).addEventListener('click', () => navigator.clipboard?.writeText(r.poruka));
+    } else if (akcija === 'povuci') {
+      if (!confirm('Povući poziv? Kod koji je vlasnik dobio prestaje važiti.')) return;
+      await api('POST', `/api/saloni/${id}/povuci-poziv`, { poziv: dugme.dataset.poziv });
+      obavijest('Poziv je povučen.', 'ok');
+      await ucitaj();
+    } else if (akcija === 'generatori') {
+      $('.rezultat', kutija).innerHTML = '<p class="sub">Pokrećem generatore — flutter_launcher_icons traje desetak sekundi…</p>';
+      const r = await api('POST', `/api/saloni/${id}/generatori`);
+      await ucitaj();
+      crtajKorake($(`.akcije[data-id="${id}"] .rezultat`), r.koraci);
+    } else if (akcija === 'tenant') {
+      const r = await api('POST', `/api/saloni/${id}/tenant`, { ios: $('[name=t-ios]', kutija).checked });
+      await ucitaj();
+      crtajKorake($(`.akcije[data-id="${id}"] .rezultat`), r.koraci);
+    }
+  });
+});
+
+$('#samo-fajl').addEventListener('click', (e) => {
+  const dugme = e.target.closest('button[data-akcija="upisi"]');
+  if (!dugme) return;
+  const red = dugme.closest('tr.samo');
+  radi(dugme, async () => {
+    const r = await api('POST', `/api/tenanti/${red.dataset.flavor}/upisi`, {
+      naziv: $('[name=u-naziv]', red).value.trim(),
+      grad: $('[name=u-grad]', red).value.trim(),
+      plan: $('[name=u-plan]', red).value,
+    });
+    obavijest(`Salon ${red.dataset.flavor} je upisan u ovu bazu iz tenant.yaml.`, 'ok');
+    otvoren = r.id;
+    await ucitaj();
+  });
+});
+
+$('#saloni').addEventListener('change', (e) => {
+  const sel = e.target.closest('select[name=s-play], select[name=s-app]');
+  if (!sel) return;
+  const id = sel.closest('.akcije').dataset.id;
+  const store = sel.name === 's-play' ? 'play' : 'app';
+  api('POST', `/api/saloni/${id}/store`, { store, status: sel.value })
+    .then(() => { obavijest(`${store === 'play' ? 'Google Play' : 'App Store'}: ${sel.value}.`, 'ok'); return ucitaj(); })
+    .catch((err) => { obavijest(err.message); ucitaj(); });
+});
+
+$('#saloni').addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr.salon')) { e.preventDefault(); e.target.click(); }
+});
+
+// Birač boje i hex polje drže istu vrijednost, u obje forme.
+document.addEventListener('input', (e) => {
+  const za = e.target.dataset?.za;
+  const scope = e.target.closest('.akcije, form') || document;
+  if (za) { const t = $(`[name=${za}]`, scope); if (t) t.value = e.target.value.toUpperCase(); return; }
+  if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value || '')) {
+    const c = $(`[data-za="${e.target.name}"]`, scope);
+    if (c) c.value = e.target.value;
+  }
+});
+
+// --- Novi salon -------------------------------------------------------------
+const forma = $('#novi-forma');
+const rucno = new Set();
+const ascii = (s) => s.toLowerCase()
+  .replace(/đ/g, 'dj').replace(/[čć]/g, 'c').replace(/š/g, 's').replace(/ž/g, 'z')
+  .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+function izvedi() {
+  const naziv = forma.naziv.value.trim();
+  if (!rucno.has('flavor')) forma.flavor.value = ascii(naziv).replace(/[^a-z0-9]/g, '').replace(/^[0-9]+/, '');
+  if (!rucno.has('slug')) forma.slug.value = ascii(naziv).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!rucno.has('imeAplikacije')) forma.imeAplikacije.value = naziv;
+  $('#id-pregled').textContent = `ba.nasadomena.${forma.flavor.value || '…'}`;
+}
+forma.naziv.addEventListener('input', izvedi);
+for (const ime of ['flavor', 'slug', 'imeAplikacije']) {
+  forma[ime].addEventListener('input', () => { rucno.add(ime); izvedi(); });
+}
+
+$('#novi-dugme').addEventListener('click', () => { $('#novi').hidden = false; forma.naziv.focus(); });
+$('#novi-odustani').addEventListener('click', () => { $('#novi').hidden = true; });
+
+forma.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const dugme = $('button[type=submit]', forma);
+  radi(dugme, async () => {
+    let ikona = null;
+    const fajl = forma.ikona.files[0];
+    if (fajl) {
+      const bajtovi = new Uint8Array(await fajl.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bajtovi.length; i += 0x8000) bin += String.fromCharCode(...bajtovi.subarray(i, i + 0x8000));
+      ikona = btoa(bin);
+    }
+    $('#novi-rezultat').innerHTML = '<p class="sub">Upisujem salon i pokrećem generatore — flutter_launcher_icons traje desetak sekundi…</p>';
+    const r = await api('POST', '/api/saloni', {
+      naziv: forma.naziv.value, grad: forma.grad.value, vertikala: forma.vertikala.value,
+      tema: forma.tema.value, primarna: forma.primarna.value, sekundarna: forma.sekundarna.value,
+      flavor: forma.flavor.value, slug: forma.slug.value, imeAplikacije: forma.imeAplikacije.value,
+      plan: forma.plan.value, ios: forma.ios.checked, ikona,
+    });
+    crtajKorake($('#novi-rezultat'), r.koraci);
+    const sviOk = r.koraci.every((k) => k.uspjeh);
+    obavijest(sviOk ? 'Salon je napravljen. Otvori ga u listi i pozovi vlasnika.' : 'Salon je u bazi, ali jedan korak nije prošao — v. ispod forme.', sviOk ? 'ok' : 'warn');
+    otvoren = r.id;
+    forma.reset(); rucno.clear(); izvedi();
+    await ucitaj();
+  }).catch(() => {});
+});
+
+$('#osvjezi').addEventListener('click', ucitaj);
+ucitaj();
+</script>
+</body>
+</html>

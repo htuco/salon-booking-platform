@@ -14,7 +14,8 @@ tenante, pa su pravila stroža nego u ostatku repoa. Root pravila važe — v. `
 - **Strukturirani fajl se mijenja alatom, ne tekstom.** `project.pbxproj` ide kroz `xcodeproj` gem
   ([ADR-0004](../docs/adr/0004-ios-flavori-kroz-xcodeproj-gem.md)) — neispravan pbxproj ruši sve
   flavore odjednom, a vidi se tek kad se otvori Xcode.
-- **Validiraj ulaz prije nego išta dotakneš**: `flavor` mora biti `[a-z][a-z0-9]*` i isto kao ime
+- **Validiraj ulaz prije nego išta dotakneš**: `flavor` mora biti `[a-z][a-z0-9]*` (i ne `test*`,
+  `lint`, `main`, `debug`, `profile`, `release` — Gradle ih odbija za sve tenante) i isto kao ime
   foldera, `salonId` mora biti UUID koji postoji u `supabase/seed.sql`.
 - **Ne pretpostavljaj oblik okruženja.** `gen_ios_flavors.sh` probava sve vjerodostojne `GEM_HOME`
   kandidate jer `pod` nije isti na Homebrew mašini i na GitHub runneru — pretpostavka je već jednom

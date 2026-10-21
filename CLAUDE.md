@@ -24,6 +24,7 @@ tek kad zatrebaju, po tabeli ispod. Uz to, bez mog truda, stižu i:
 ## Mapa repoa
 
 - `apps/client/` — Flutter, N flavora, brandiran po salonu. `apps/admin/` — Flutter, generička za sve salone.
+  `apps/superadmin/` — lokalna super admin konzola (čisti Dart server, nikad se ne deploya, ADR-0032).
 - `packages/core_domain|core_api|core_ui/` — zajednički kod. Danas skeletoni.
 - `supabase/` — migracije, seed, pgTAP + Deno testovi, Edge Functions. Izvor istine za šemu.
 - `tenants/<flavor>/tenant.yaml` — jedini fajl koji se piše po klijentu.

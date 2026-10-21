@@ -32,7 +32,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [69](69-sedmicni-kalendar.md) | Sedmični kalendar u Meluri 🟡 | — | 2–3 dana |
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
 | [71](71-melura-za-svakoga.md) | Melura za svakoga: sve radi i jasno je | 54 | 3–4 dana |
-| [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna | — | 4–5 dana |
+| [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna 🟡 | — | 4–5 dana |
 
 ## Faza B — produkcija od nule
 
@@ -132,3 +132,18 @@ a Melura „Lista čekanja: N" za vlasnika. Review je dodao: salon ne vidi redov
 gasi tek potvrđen termin, deaktivacija usluge ili radnika briše upis, panel kaže kad push nije
 dozvoljen. pgTAP 1008 (`033` 65, 9 novih mutacija obara), klijent 686, admin 725. **Ostaje:** CI,
 merge, deploy (**prvo** `send-push`, sa onim iz taska 67, pa `db push`) i push na Android uređaju.
+
+### 72 — Super admin konzola 🟡 (2026-10-20)
+
+Grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), ADR-0032 (**prihvaćen** 2026-10-21). `apps/superadmin` je Dart server na
+`127.0.0.1` sa jednom stranicom: novi salon (baza → `tenant.yaml` → generatori), poziv vlasnika
+kroz postojeći `accept-staff-invite`, gašenje, boje i tema (baza i fajl), store status, a lista
+pokazuje i šta fali u CI matrici. Šest `platform_*` RPC-ova samo za `service_role`. pgTAP 1000
+(`034` 57, tri mutacije obaraju), REST zeleni, konzola 28 testova; cijeli tok viđen uživo na
+lokalnom stacku. **Popravke iz reviewa (2026-10-21):** UUID salona isti u svakom okruženju
+(`p_id`, „Upiši u ovu bazu iz tenant.yaml" — uživo poslije `db reset` isti UUID), povlačenje poziva
+i novi poziv gasi stari, flavor `test*`/`lint` odbijen u bazi i generatoru, F5 radi,
+`security.md` tačan o `super_admin` JWT-u (rupa ostaje za zaseban task); pgTAP 1038 (`034` 95,
+devet mutacija obara), REST zeleni, konzola 46 testova. **Ostaje:** merge, `db push`; zaseban task
+za `super_admin` kroz `create_staff_invite`; konzola na macOS-u i protiv hostovanog projekta (env
+fajl iz taska 80).

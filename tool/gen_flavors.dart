@@ -182,6 +182,25 @@ class Tenant {
       );
       exit(1);
     }
+    // Android Gradle Plugin odbija flavor koji počinje sa `test` (prefiks unit test source
+    // seta) ili se zove `lint`; `main` je zajednički source set, a ime build tipa (`debug`,
+    // `profile`, `release`) se sudara sa build tipom. Gradle tada pada pri syncu za **sve**
+    // tenante, ne samo za ovaj. Isto pravilo drži `private.is_reserved_flavor` u bazi.
+    if (flavor.startsWith('test') ||
+        const [
+          'lint',
+          'main',
+          'debug',
+          'profile',
+          'release',
+        ].contains(flavor)) {
+      stderr.writeln(
+        '$flavor: Gradle ne prima flavor koji počinje sa "test" niti flavor '
+        'lint, main, debug, profile ili release — pao bi sync svih tenanata. '
+        'Promijeni flavor (i ime foldera).',
+      );
+      exit(1);
+    }
     final salonId = tenant['salonId'] as String;
     if (!RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(salonId)) {
       stderr.writeln('$flavor: salonId "$salonId" nije UUID.');
