@@ -79,7 +79,7 @@ void main() {
     final r = repo(
       (_) => {
         'code': 'PT429',
-        'message': 'Već čekate na tri dana. Odjavite jedan da biste se upisali na novi.',
+        'message': 'Već imate tri upisa na listi čekanja. Odjavite jedan da biste se upisali na novi.',
       },
       status: 429,
     );
@@ -90,7 +90,7 @@ void main() {
         isA<RateLimitError>().having(
           (e) => e.displayMessage,
           'poruka',
-          contains('tri dana'),
+          contains('tri upisa'),
         ),
       ),
     );

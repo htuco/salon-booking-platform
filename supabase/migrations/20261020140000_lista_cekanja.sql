@@ -1,8 +1,8 @@
 -- Task 68: lista cekanja (ADR-0031).
 --
 -- Klijent se na pun dan upisuje za uslugu (i opcionalno radnika). Kad se termin tog dana
--- oslobodi, svako ko je upisan, a kome se mjesto za njegovu uslugu stvarno otvorilo, dobija
--- push. Termin dobija ko prvi zakaze: upis ne drzi termin i ne daje prednost, pa
+-- oslobodi, svako ko je upisan, a kome je bas to otkazivanje otvorilo vrijeme za njegovu uslugu,
+-- dobija jedan push. Termin dobija ko prvi zakaze: upis ne drzi termin i ne daje prednost, pa
 -- `book_appointment` ostaje jedina provjera.
 --
 -- Cetiri stvari koje ova migracija uvodi:
@@ -17,9 +17,11 @@
 --   3. **Obavijest vezana za upis, ne za termin.** `notification_logs` dobija
 --      `waitlist_entry_id`, a red nosi tacno jedno od ta dva. Osloboden termin je termin
 --      **drugog** klijenta i ne upisuje se u red upisanog, pa ga ne vide ni push ni
---      `my_notifications`.
---   4. **Dva triggera nad `appointments`**: otkazivanje budi listu, a novi termin istog
---      klijenta za isti dan i uslugu brise njegov upis.
+--      `my_notifications`. Ni salon ne vidi redove ponuda u logu (`staff_notification_logs`
+--      ih iskljucuje): `device_id` bi ga spojem preko termina doveo do imena upisanog.
+--   4. **Dva triggera nad `appointments`**: otkazivanje budi listu, a potvrden termin istog
+--      klijenta za isti dan i uslugu brise njegov upis. Deaktivirana usluga ili radnik brisu
+--      upise koji se vise ne mogu ispuniti.
 
 alter type public.notification_type add value if not exists 'waitlist_offer';
 
@@ -27,7 +29,9 @@ alter type public.notification_type add value if not exists 'waitlist_offer';
 -- Slotovi: jedno pravilo, dva pitanja
 -- ---------------------------------------------------------------------------
 -- Tijelo je prepisano iz `20260924120000_korak_po_usluzi.sql`. Mijenja se samo uslov nad
--- `appointments`, koji `p_count_appointments = false` iskljucuje. Prosli slotovi,
+-- `appointments`, koji `p_count_appointments = false` iskljucuje. Izlaz nosi i `span` slota,
+-- jer okidac liste cekanja pita „preklapa li se ovaj slot sa otkazanim terminom" istim
+-- intervalom kojim ga je termin blokirao. Prosli slotovi,
 -- `min_advance_booking_hours`, radno vrijeme, pauze i blokade vaze u oba slucaja: dan na koji
 -- je radno vrijeme vec proslo nije pun nego gotov.
 create function private.candidate_slots(
@@ -37,7 +41,7 @@ create function private.candidate_slots(
   p_employee_id uuid,
   p_ignore_min_advance boolean,
   p_count_appointments boolean
-) returns table (start_time time, employee_id uuid)
+) returns table (start_time time, employee_id uuid, span tsrange)
 language sql
 stable
 security definer
@@ -103,7 +107,7 @@ as $$
     ) as gs
     where not w.closed
   )
-  select c.slot_ts::time, c.emp
+  select c.slot_ts::time, c.emp, c.span
   from cand c
   cross join cfg
   where
@@ -142,7 +146,7 @@ revoke all on function private.candidate_slots(uuid, uuid, date, uuid, boolean, 
   from public, anon, authenticated;
 
 comment on function private.candidate_slots(uuid, uuid, date, uuid, boolean, boolean) is
-  'Jedino mjesto koje racuna slotove. p_count_appointments = false daje slotove kao da nema nijednog termina (pun dan naspram neradnog, task 68). Bez app grantova; zovu je get_available_slots i funkcije liste cekanja.';
+  'Jedino mjesto koje racuna slotove. p_count_appointments = false daje slotove kao da nema nijednog termina (pun dan naspram neradnog, task 68). span je interval koji slot zauzima (trajanje + bafer salona), isti s kojim se poredi termin. Bez app grantova; zovu je get_available_slots i funkcije liste cekanja.';
 
 -- Isti potpis, isti grantovi, isto ponasanje. `create or replace` ovdje nije zamka iz
 -- `security.md` (preopterecenje), jer se potpis ne mijenja.
@@ -215,11 +219,19 @@ alter table public.notification_logs
     check (num_nonnulls(appointment_id, waitlist_entry_id) = 1);
 
 -- „Jednom po oslobadjanju": svaki termin se oslobodi najvise jednom (`cancelled` je konacan),
--- pa trigger dodaje jednu ponudu po oslobadjanju. Dva otkazivanja u istoj minuti ne prave
--- dvije poruke: dok prethodna ponuda istom upisu ceka slanje, nova se ne dodaje.
+-- a trigger dodaje ponudu samo upisu kojem je bas to otkazivanje otvorilo vrijeme, i samo
+-- jednom po klijentu. Dva povezana otkazivanja u istoj minuti ne prave dvije poruke: dok
+-- prethodna ponuda istom upisu ceka slanje, nova se ne dodaje.
 create unique index notification_logs_ponuda_ceka
   on public.notification_logs (waitlist_entry_id, device_id)
   where waitlist_entry_id is not null and status = 'queued';
+
+-- Salon ne vidi redove ponuda. `staff_notification_logs` (init) daje adminu svaki red loga
+-- svog salona, a red ponude nosi `device_id` klijenta; spoj preko `appointments.device_id`
+-- (admin cita termine kroz `staff_manage`) bi otkrio ime i telefon onoga ko ceka, sto
+-- ADR-0031 odbija. Admin aplikacija ne cita `notification_logs` uopste, pa joj nista ne fali.
+alter policy staff_notification_logs on public.notification_logs
+  using (private.is_admin(salon_id) and waitlist_entry_id is null);
 
 -- ---------------------------------------------------------------------------
 -- Pun dan
@@ -317,7 +329,7 @@ begin
   if (select count(*) from public.waitlist_entries w
       where w.salon_id = v_salon and w.auth_identity_id = v_identity
         and w.date >= v_today) >= 3 then
-    raise exception 'Već čekate na tri dana. Odjavite jedan da biste se upisali na novi.'
+    raise exception 'Već imate tri upisa na listi čekanja. Odjavite jedan da biste se upisali na novi.'
       using errcode = 'PT429';
   end if;
 
@@ -430,28 +442,49 @@ comment on function public.waitlist_demand(uuid, date, date) is
 -- ---------------------------------------------------------------------------
 -- Triggeri nad terminima
 -- ---------------------------------------------------------------------------
--- Otkazivanje (salon, klijent, istek) budi listu. Svakom upisu tog dana se ponovo racuna
--- `candidate_slots` za njegovu uslugu i radnika: otkazana brada od 15 minuta ne otvara
--- mjesto za farbanje. `after` trigger vidi vlastito otkazivanje, pa je slot vec slobodan.
+-- Otkazivanje (salon, klijent, istek) budi listu, ali samo upise kojima je **ovo**
+-- otkazivanje otvorilo vrijeme. Upis dobija ponudu kad za njegovu uslugu i radnika postoji
+-- slobodan slot (`after` trigger vidi vlastito otkazivanje, pa je slot vec slobodan) koji je
+-- otkazani termin do sada blokirao: isti radnik i preklapanje intervala, onim istim uslovom
+-- kojim `candidate_slots` termin poredi sa slotom (trajanje + bafer slota naspram kraja +
+-- bafera termina). Termin bez radnika blokirao je svakog radnika, pa ga oslobadja svakom.
+--
+-- Bez preklapanja bi svako nepovezano otkazivanje tog dana ponovo slalo istu ponudu cim je
+-- prethodna poslana: otkazana brada u 10:00 ne otvara nista na danu koji je slobodan od
+-- 16:00, a slot od 16:00 bi i dalje „postojao".
+--
+-- Jedna ponuda po klijentu: ako isti identitet ima vise upisa koje ovo otkazivanje budi
+-- („Bilo ko" i „kod Emira"), ponudu dobija najraniji upis. Push je „oslobodilo se mjesto",
+-- a ne spisak, i drugi upis ga ne bi rekao bolje.
+--
 -- `set_day_closed` prvo upise blokadu, pa tek onda otkazuje, i zato zatvoren dan ne budi
 -- nikoga.
 create function private.queue_waitlist_offers() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
   insert into public.notification_logs (salon_id, waitlist_entry_id, device_id, type)
-  select w.salon_id, w.id, d.id, 'waitlist_offer'::public.notification_type
-  from public.waitlist_entries w
+  select u.salon_id, u.id, d.id, 'waitlist_offer'::public.notification_type
+  from (
+    select distinct on (w.auth_identity_id) w.salon_id, w.id, w.auth_identity_id
+    from public.waitlist_entries w
+    where w.salon_id = new.salon_id
+      and w.date = new.date
+      and exists (
+        select 1
+        from private.candidate_slots(
+          w.salon_id, w.service_id, w.date, w.employee_id, false, true) s
+        where (old.employee_id is null or s.employee_id = old.employee_id)
+          and s.span && tsrange(
+                old.date + old.start_time,
+                old.date + old.end_time + make_interval(mins => old.buffer_minutes))
+      )
+    order by w.auth_identity_id, w.created_at, w.id
+  ) u
   join public.devices d
-    on d.salon_id = w.salon_id
+    on d.salon_id = u.salon_id
    and d.staff_user_id is null
-   and d.auth_identity_id = w.auth_identity_id
+   and d.auth_identity_id = u.auth_identity_id
    and d.fcm_token is not null
-  where w.salon_id = new.salon_id
-    and w.date = new.date
-    and exists (
-      select 1 from private.candidate_slots(
-        w.salon_id, w.service_id, w.date, w.employee_id, false, true)
-    )
   on conflict (waitlist_entry_id, device_id)
     where waitlist_entry_id is not null and status = 'queued'
     do nothing;
@@ -465,8 +498,11 @@ create trigger queue_waitlist_offers
   when (new.status = 'cancelled' and old.status in ('pending', 'confirmed'))
   execute function private.queue_waitlist_offers();
 
--- Klijent koji zakaze istu uslugu tog dana vise ne ceka. Bez obzira na radnika: upis „kod
--- Emira" je ispunjen i terminom kod Amara, jer je klijent sam izabrao.
+-- Klijent kojem je termin iste usluge tog dana **potvrden** vise ne ceka. Bez obzira na
+-- radnika: upis „kod Emira" je ispunjen i terminom kod Amara, jer je klijent sam izabrao.
+-- Zahtjev na cekanju (`pending`) ne gasi upis: salon ga moze odbiti ili pustiti da istekne, a
+-- klijent bi tada ostao i bez termina i bez mjesta na listi. Potvrda je ili insert vec
+-- potvrdenog termina (auto rezim, rucni unos) ili prelaz u `confirmed`.
 create function private.close_waitlist_entry() returns trigger
 language plpgsql security definer set search_path = '' as $$
 begin
@@ -480,10 +516,40 @@ end $$;
 revoke all on function private.close_waitlist_entry() from public, anon, authenticated;
 
 create trigger close_waitlist_entry
-  after insert on public.appointments
+  after insert or update of status on public.appointments
   for each row
-  when (new.auth_identity_id is not null and new.status in ('pending', 'confirmed'))
+  when (new.auth_identity_id is not null and new.status = 'confirmed')
   execute function private.close_waitlist_entry();
+
+-- Deaktivirana usluga ili radnik: upis koji ih trazi vise nikad ne dobija ponudu
+-- (`candidate_slots` ih preskace), a trosio bi jedno od tri mjesta do kraja dana. Brise se,
+-- zajedno sa ponudama, kao da se klijent odjavio. Upis „Bilo ko" ostaje kad se deaktivira
+-- jedan radnik: drugi i dalje moze osloboditi mjesto.
+create function private.delete_waitlist_of_inactive() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if tg_table_name = 'services' then
+    delete from public.waitlist_entries w
+    where w.salon_id = new.salon_id and w.service_id = new.id;
+  else
+    delete from public.waitlist_entries w
+    where w.salon_id = new.salon_id and w.employee_id = new.id;
+  end if;
+  return new;
+end $$;
+revoke all on function private.delete_waitlist_of_inactive() from public, anon, authenticated;
+
+create trigger delete_waitlist_of_inactive_service
+  after update of is_active on public.services
+  for each row
+  when (old.is_active and not new.is_active)
+  execute function private.delete_waitlist_of_inactive();
+
+create trigger delete_waitlist_of_inactive_employee
+  after update of is_active on public.employees
+  for each row
+  when (old.is_active and not new.is_active)
+  execute function private.delete_waitlist_of_inactive();
 
 -- Brisanje naloga gasi i upise. Trigger, a ne nova verzija `delete_my_account`, isto kao
 -- recenzije (task 67): svaki put do `deleted_at` ima isti ishod.
