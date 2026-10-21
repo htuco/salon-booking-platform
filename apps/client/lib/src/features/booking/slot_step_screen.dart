@@ -65,7 +65,13 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
 
     final spreman = flow.isStepComplete(BookingStep.slot, dateOnly: dateOnly);
     final mjesec = monthOffsetFrom(danas, _pomakMjeseci);
-    final raspon = daysFrom(danas, ref.watch(bookingMaxAdvanceDaysProvider));
+    // Prozor je danas..danas+N, oba kraja uključena, kao u bazi (`get_available_slots`,
+    // `join_waitlist`): N dana unaprijed **od** danas je N+1 dan. Sa N dana bi kalendar
+    // prešutio zadnji dan, a lista čekanja rekla „do 19.11." gdje baza kaže „do 20.11."
+    final raspon = daysFrom(
+      danas,
+      ref.watch(bookingMaxAdvanceDaysProvider) + 1,
+    );
 
     final upitRaspona = DateRangeQuery(
       serviceId: serviceId,
@@ -130,7 +136,12 @@ class _SlotStepScreenState extends ConsumerState<SlotStepScreen> {
                   ? null
                   : (dostupniDani.valueOrNull ?? const <LocalDate>[])
                         .where((d) => d.compareTo(flow.date!) > 0)
-                        .firstOrNull,
+                        .fold<LocalDate?>(
+                          null,
+                          (min, d) =>
+                              min == null || d.compareTo(min) < 0 ? d : min,
+                        ),
+              prviSlobodanPoznat: dostupniDani.hasValue,
               krajProzora: raspon.last,
             ),
           ],
@@ -221,6 +232,7 @@ class _Vremena extends ConsumerWidget {
     required this.flow,
     required this.pun,
     required this.prviSlobodan,
+    required this.prviSlobodanPoznat,
     required this.krajProzora,
   });
 
@@ -232,6 +244,9 @@ class _Vremena extends ConsumerWidget {
 
   /// Prvi dan poslije izabranog koji ima slobodnog vremena (task 91); `null` kad ga nema.
   final LocalDate? prviSlobodan;
+
+  /// Je li lista slobodnih dana stigla (v. [WaitlistDayPanel.firstFreeKnown]).
+  final bool prviSlobodanPoznat;
 
   /// Zadnji dan prozora rezervacije.
   final LocalDate krajProzora;
@@ -261,6 +276,7 @@ class _Vremena extends ConsumerWidget {
         date: datum,
         employeeId: flow.employeeId,
         firstFree: prviSlobodan,
+        firstFreeKnown: prviSlobodanPoznat,
         windowEnd: krajProzora,
       ),
       AsyncData(:final value) when value.isEmpty => EmptyState(

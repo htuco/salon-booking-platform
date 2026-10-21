@@ -21,8 +21,9 @@ import 'waitlist_providers.dart';
 /// `get_available_dates` poslije izabranog, isto pravilo slotova kojim baza računa granicu.
 /// Upis ne drži mjesto (ADR-0031), pa tekst to kaže, umjesto da obeća termin.
 ///
-/// Upis je jedan po usluzi i radniku: na svakom punom danu iste usluge i radnika panel
-/// pokazuje isti upis, sa njegovim rasponom.
+/// Upis je jedan po usluzi i radniku: pun dan u rasponu pokazuje upis i njegovu granicu, a pun
+/// dan van raspona kaže da klijent već čeka u drugom rasponu i nudi odjavu — baza postojeći
+/// upis ne proširuje.
 ///
 /// Neprijavljen korisnik ide na prijavu i vraća se ovdje (`?from=`); flow ostaje živ jer je
 /// ovaj ekran i dalje na steku ispod prijave.
@@ -34,6 +35,7 @@ class WaitlistDayPanel extends ConsumerStatefulWidget {
     required this.serviceId,
     required this.date,
     required this.windowEnd,
+    required this.firstFreeKnown,
     this.employeeId,
     this.firstFree,
     super.key,
@@ -45,6 +47,10 @@ class WaitlistDayPanel extends ConsumerStatefulWidget {
 
   /// Prvi dan poslije [date] sa slobodnim vremenom; `null` kad ga u prozoru nema.
   final LocalDate? firstFree;
+
+  /// Je li lista slobodnih dana stigla. Dok nije (ili je pala), panel o prvom slobodnom
+  /// terminu ne kaže ništa: „nema slobodnog" izvedeno iz greške bi bila neistina.
+  final bool firstFreeKnown;
 
   /// Zadnji dan prozora rezervacije — do njega upis čeka kad slobodnog dana nema.
   final LocalDate windowEnd;
@@ -108,8 +114,7 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
   }
 
   /// Rečenica baze (`PT400` slobodan dan ili raspon bez punog dana, `PT429` tri upisa) ide na
-  /// ekran; ostalo dobija
-  /// [rezerva], posebnu za upis i za odjavu.
+  /// ekran; ostalo dobija [rezerva], posebnu za upis i za odjavu.
   void _greska(ScaffoldMessengerState messenger, String rezerva) {
     final greska = ref.read(waitlistActionProvider(_kljuc)).error;
     final poruka = greska is ApiError ? greska.displayMessage : null;
@@ -130,6 +135,12 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
         moj != null && ref.watch(pushPermissionProvider).valueOrNull == false;
 
     final appointment = verticalOf(ref).terms.appointmentSingular.toLowerCase();
+    // Upis je jedan po usluzi i radniku, a baza ga ne proširuje: pun dan van njegovog raspona
+    // ne smije reći „na listi ste", jer ponuda za taj dan ne stiže.
+    final pokriva = moj != null && moj.covers(widget.date);
+    // „Ranije" ima smisla samo kad postoji prvi slobodan termin od kojeg je nešto ranije.
+    final ranije = widget.firstFree != null;
+    final prvi = widget.firstFree;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
@@ -137,7 +148,7 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Icon(
-            moj == null
+            !pokriva
                 ? LucideIcons.calendarX
                 : bezObavijesti
                 ? LucideIcons.bellOff
@@ -146,13 +157,14 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
             color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: AppSpacing.lg),
-          if (moj == null) ...[
+          if (moj == null && widget.firstFreeKnown) ...[
             Text(
-              widget.firstFree == null
+              prvi == null
                   ? l10n.waitlistNoFreeUntil(formatDayMonth(widget.windowEnd))
                   : l10n.waitlistFirstFree(
                       appointment,
-                      formatDateWithWeekday(l10n, widget.firstFree!),
+                      '${weekdayLong(l10n, prvi.weekday).toLowerCase()}, '
+                      '${formatDate(prvi)}',
                     ),
               textAlign: TextAlign.center,
               style: theme.textTheme.titleSmall,
@@ -161,7 +173,12 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
           ],
           Text(
             moj == null
-                ? l10n.waitlistDayFull
+                ? (ranije ? l10n.waitlistDayFull : l10n.waitlistDayFullNoFree)
+                : !pokriva
+                ? l10n.waitlistOtherRange(
+                    formatDayMonth(moj.dateFrom),
+                    formatDayMonth(moj.dateTo),
+                  )
                 : bezObavijesti
                 ? l10n.waitlistJoinedNoPush(formatDayMonth(moj.dateTo))
                 : l10n.waitlistJoined(formatDayMonth(moj.dateTo)),
@@ -171,7 +188,7 @@ class _WaitlistDayPanelState extends ConsumerState<WaitlistDayPanel> {
           const SizedBox(height: AppSpacing.xl),
           if (moj == null)
             AppButton(
-              label: l10n.waitlistJoin,
+              label: ranije ? l10n.waitlistJoin : l10n.waitlistJoinNoFree,
               variant: AppButtonVariant.secondary,
               icon: LucideIcons.bell,
               loading: radi || (prijavljen && upisi.isLoading),

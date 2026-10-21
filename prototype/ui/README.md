@@ -203,14 +203,18 @@ pa je oblik izveden iz postojećih komponenti:
 - **Pun dan u kalendaru `5e` je treće stanje dana** (`CalendarDay.full`): prigušen kao nedostupan,
   ali se **tapa** i broj je **precrtan**, pa se razlika vidi oblikom, ne samo bojom. Čitač ekrana
   kaže „27, popunjen". Na izabranom punom danu mrežu vremena zamjenjuje panel: ikona, `titleSmall`
-  „Prvi slobodan termin: Četvrtak, 30.10.2026." (prvi dan poslije izabranog iz iste liste kao
+  „Prvi slobodan termin: četvrtak, 30.10.2026." (prvi dan poslije izabranog iz iste liste kao
   kalendar; „termin" je `terms.appointmentSingular`; bez slobodnog dana „Do 20.11. nema slobodnog
-  vremena."), rečenica i `AppButton` `secondary` „Obavijesti me ako se oslobodi ranije"; poslije
-  upisa „Na listi čekanja ste do 29.10.…" i `outline` „Odjavi se sa liste". Upis je jedan po usluzi
-  i radniku, pa svaki pun dan iste usluge pokazuje isti upis i njegovu granicu. Uređaj bez dozvole
-  za push ne dobija ponudu, pa tada panel nosi ikonu `bellOff` i rečenicu da su obavijesti
-  isključene i da se uključuju u postavkama telefona. U rečenicama liste je riječ „mjesto", ne
-  „termin": termin zavisi od vertikale.
+  vremena."; dok lista dana nije stigla, red se ne crta), rečenica i `AppButton` `secondary` „Javi
+  mi ako se oslobodi ranije" — kraće od „Obavijesti me ako se oslobodi ranije", koje se na 402 px u
+  sve tri teme reže. Bez prvog slobodnog termina „ranije" nema na šta da se odnosi, pa dugme ostaje
+  „Obavijesti me kad se oslobodi". Poslije upisa „Na listi čekanja ste do 29.10.…" i `outline`
+  „Odjavi se sa liste". Upis je jedan po usluzi i radniku, i baza ga ne proširuje: pun dan van
+  njegovog raspona kaže „Već čekate mjesto za ovu uslugu od … do …, a ovaj dan nije u tom
+  rasponu" i nudi odjavu. Uređaj bez dozvole za push ne dobija ponudu, pa tada panel nosi ikonu
+  `bellOff` i rečenicu da su obavijesti isključene i da se uključuju u postavkama telefona. U
+  rečenicama liste je riječ „mjesto", ne „termin": termin zavisi od vertikale. Kalendar ide do
+  danas + `max_advance_booking_days` uključivo, kao baza (task 91; ranije dan kraće).
 - **`5h` dobija sekciju „Lista čekanja"** iznad predstojećih: hairline kartica sa rasponom („Od
   21.10. do 29.10."; raspon od jednog dana je dan sa danom u sedmici), uslugom i radnikom, i dva
   dugmeta u pola širine — „Zakaži" i „Ukloni" (kratko, jer „Odjavi se sa liste" na 402 px ne

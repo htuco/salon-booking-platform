@@ -333,10 +333,16 @@ void main() {
       await tester.pump();
 
       expect(
-        find.text('Prvi slobodan termin: Četvrtak, 17.09.2026.'),
+        find.text('Prvi slobodan termin: četvrtak, 17.09.2026.'),
         findsOneWidget,
       );
-      expect(find.text('Obavijesti me ako se oslobodi ranije'), findsOneWidget);
+      expect(
+        find.text(
+          'Ovaj dan je popunjen. Ako se mjesto oslobodi ranije, možemo vam javiti.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Javi mi ako se oslobodi ranije'), findsOneWidget);
 
       container.dispose();
     });
@@ -363,8 +369,12 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      expect(find.textContaining('nema slobodnog vremena.'), findsOneWidget);
+      // Prozor je danas..danas+N kao u bazi: 14.09. + 60 dana (`BookingRules.fallback`).
+      expect(find.text('Do 13.11. nema slobodnog vremena.'), findsOneWidget);
       expect(find.textContaining('Prvi slobodan'), findsNothing);
+      // „Ranije" nema na šta da se odnosi, pa ga nema ni u dugmetu.
+      expect(find.text('Obavijesti me kad se oslobodi'), findsOneWidget);
+      expect(find.textContaining('ranije'), findsNothing);
 
       container.dispose();
     });
@@ -409,7 +419,97 @@ void main() {
         find.textContaining('Na listi čekanja ste do 30.09.'),
         findsOneWidget,
       );
-      expect(find.text('Obavijesti me ako se oslobodi ranije'), findsNothing);
+      expect(find.text('Obavijesti me kad se oslobodi'), findsNothing);
+
+      container.dispose();
+    });
+
+    testWidgets('pun dan van raspona postojećeg upisa ne kaže „na listi ste"', (
+      tester,
+    ) async {
+      // Baza postojeći upis vraća neizmijenjen (granica se ne pomjera), pa ponuda za dan van
+      // raspona ne stiže: panel to mora reći i ponuditi odjavu.
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const []);
+      const vanRaspona = LocalDate(2026, 9, 24);
+      final lista = _MockWaitlist()..stubPunDan(puni: {_danas, vanRaspona});
+      when(lista.mine).thenAnswer(
+        (_) async => [
+          WaitlistEntry(
+            id: 'w1',
+            serviceId: _usluga.id,
+            serviceName: _usluga.name,
+            dateFrom: _danas,
+            dateTo: const LocalDate(2026, 9, 18),
+          ),
+        ],
+      );
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        customerId: _customerId,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(vanRaspona),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.textContaining(
+          'Već čekate mjesto za ovu uslugu od 14.09. do 18.09.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Na listi čekanja ste'), findsNothing);
+      expect(find.text('Odjavi se sa liste'), findsOneWidget);
+
+      container.dispose();
+    });
+
+    testWidgets('riječ za termin u „Prvi slobodan …" dolazi iz vertikale', (
+      tester,
+    ) async {
+      final repo = _MockBooking()
+        ..stubUspjesan()
+        ..stubSlotovi(const [])
+        ..stubSlobodniDani(const [LocalDate(2026, 9, 17)]);
+      final lista = _MockWaitlist()..stubPunDan();
+      final vertikala = Vertical(
+        key: 'health',
+        displayName: 'Ordinacija',
+        terms: VerticalTerms.fallback.mergeOverride({
+          'appointmentSingular': 'Pregled',
+        }),
+        rules: Vertical.fallback.rules,
+        features: VerticalFeatures.fallback,
+        defaultTheme: 'clinical_calm',
+      );
+
+      final container = await _pumpFlow(
+        tester,
+        repo: repo,
+        listaCekanja: lista,
+        vertical: vertikala,
+        ruta: ClientRoute.bookSlot.path,
+        pocetniFlow: (notifier) => notifier
+          ..chooseService(_usluga.id)
+          ..chooseAnyEmployee()
+          ..chooseDate(_danas),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.text('Prvi slobodan pregled: četvrtak, 17.09.2026.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Prvi slobodan termin'), findsNothing);
 
       container.dispose();
     });
@@ -438,14 +538,14 @@ void main() {
       expect(find.byType(WaitlistDayPanel), findsOneWidget);
       expect(
         find.text(
-          'Ovaj dan je popunjen. Ako se mjesto oslobodi ranije, možemo vam javiti.',
+          'Ovaj dan je popunjen. Ako se mjesto oslobodi, možemo vam javiti.',
         ),
         findsOneWidget,
       );
       // Neradni-dan rečenica ne stoji uz pun dan.
       expect(find.text('Ovaj dan je popunjen.'), findsNothing);
 
-      await tester.tap(find.text('Obavijesti me ako se oslobodi ranije'));
+      await tester.tap(find.text('Obavijesti me kad se oslobodi'));
       await tester.pumpAndSettle();
       expect(find.byType(LoginScreen), findsOneWidget);
       verifyNever(
@@ -505,7 +605,7 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await tester.tap(find.text('Obavijesti me ako se oslobodi ranije'));
+      await tester.tap(find.text('Obavijesti me kad se oslobodi'));
       await tester.pump();
       await tester.pump();
 
@@ -698,7 +798,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Ovaj dan je popunjen.'), findsOneWidget);
-      expect(find.text('Obavijesti me ako se oslobodi ranije'), findsNothing);
+      expect(find.text('Obavijesti me kad se oslobodi'), findsNothing);
 
       container.dispose();
     });
