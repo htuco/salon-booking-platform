@@ -11,6 +11,7 @@ import 'src/core/router/app_router.dart';
 import 'src/core/theme_provider.dart';
 import 'src/core/vertical_provider.dart';
 import 'src/features/booking/booking_flow_provider.dart';
+import 'src/features/waitlist/waitlist_providers.dart';
 import 'src/l10n/generated/app_localizations.dart';
 
 Future<void> main() async {
@@ -75,9 +76,13 @@ class SalonClientApp extends ConsumerWidget {
 
       final sesija = ref.watch(currentAuthSessionProvider);
       if (sesija != null) {
+        // Lista čekanja ide uz termine (task 68): potvrđen termin gasi upis u bazi, a
+        // promjena termina je jedini signal koji klijent o tome dobija.
         ref.listen(appointmentChangesProvider(env.salonId), (_, next) {
           if (!next.hasValue) return;
-          ref.invalidate(myAppointmentsProvider);
+          ref
+            ..invalidate(myAppointmentsProvider)
+            ..invalidate(myWaitlistProvider);
         });
       }
     }
@@ -85,12 +90,16 @@ class SalonClientApp extends ConsumerWidget {
     ref.listen(pushReceivedProvider, (_, next) {
       final message = next.valueOrNull;
       if (message == null) return;
-      ref.invalidate(myAppointmentsProvider);
+      ref
+        ..invalidate(myAppointmentsProvider)
+        ..invalidate(myWaitlistProvider);
       unawaited(ForegroundNotifications.show(message));
     });
     ref.listen(pushOpenedProvider, (_, next) {
       if (!next.hasValue) return;
-      ref.invalidate(myAppointmentsProvider);
+      ref
+        ..invalidate(myAppointmentsProvider)
+        ..invalidate(myWaitlistProvider);
       ref.read(appRouterProvider).go(ClientRoute.appointments.path);
     });
 

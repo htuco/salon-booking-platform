@@ -4,8 +4,8 @@ Puni task: [tasks/zero-crisis/72-super-admin-lokalno.md](zero-crisis/72-super-ad
 
 ## Status
 
-U toku (grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), 2026-10-20). Kod, testovi i provjera uživo na lokalnom
-stacku su gotovi. Ostaju odluka o ADR-0032, pregled, CI i deploy migracije.
+U toku (grana `feat/super-admin-konzola`, [PR #143](https://github.com/htuco/salon-booking-platform/pull/143), 2026-10-21). ADR-0032 prihvaćen, popravke iz
+reviewa pushane i CI zelen. Ostaju merge i deploy migracije.
 
 ## Ciljevi
 
@@ -23,7 +23,8 @@ stacku su gotovi. Ostaju odluka o ADR-0032, pregled, CI i deploy migracije.
 - [x] Dokumenti: `tenant-factory.md`, `tenants/README.md`, `/new-tenant`, `security.md`,
       `IMPLEMENTATION.md`, `architecture.md`, `workflows.md`, `CONTEXT.md`, `docs/01` §6.1,
       `docs/README.md`, `CLAUDE.md`
-- [ ] Odluka o ADR-0032 (Hamza), pregled, CI zelen, merge u `develop`
+- [x] ADR-0032 prihvaćen (Hamza, 2026-10-21), popravke iz reviewa, CI zelen
+- [ ] Merge u `develop`
 - [ ] Deploy (Hamza): `supabase db push` za `20261020180000`; nema Edge Function ni cron izmjene
 - [ ] Konzola na macOS-u (Hamzina mašina) sa iOS tenantom: `gen_ios_flavors.sh` ostaje ručni korak
 
@@ -39,29 +40,36 @@ stacku su gotovi. Ostaju odluka o ADR-0032, pregled, CI i deploy migracije.
   CI to provjerava u APK-u. Prava domena je task 75.
 - `.env.live` nema service ključ i ne smije ga dobiti (`.env.example`). Produkcijski env fajl za
   `--env` nastaje u tasku 80.
-- Grana je sa `develop`-a bez taska 68 (PR #142). `CURRENT.md`, `tasks/zero-crisis/README.md` i
-  `docs/README.md` će imati konflikt sa 68 — oba bloka ostaju.
+- Task 68 (PR #142) je spojen prije ovog PR-a; konflikti u `CURRENT.md`, `tasks/zero-crisis/README.md`
+  i `docs/README.md` riješeni su tako da oba bloka ostaju.
 
 ## Istorija
 
-### 68 — Lista čekanja (PR otvoren, 2026-10-20)
+### 68 — Lista čekanja (spojen u `develop`, 2026-10-21)
 
-[PR #142](https://github.com/htuco/salon-booking-platform/pull/142), ADR-0031 (predložen). Upis na
-pun dan, push svima kojima se mjesto otvorilo, prvi zakaže. Kod, testovi i uživo gotovi.
-**Ostaje:** Hamzina odluka o ADR-u, merge, deploy (prvo `send-push`, pa `db push`), push na uređaju.
+[PR #142](https://github.com/htuco/salon-booking-platform/pull/142), ADR-0031 (prihvaćen 2026-10-21).
+Upis na pun dan za uslugu i opcionalno radnika; otkazivanje šalje push samo upisima kojima je baš
+ono otvorilo vrijeme, jedan po klijentu, a termin dobija ko prvi zakaže. Salon vidi samo broj po
+danu, ne i redove ponuda. pgTAP `033` (65 asercija), klijent 686, admin 725. **Ostaje:** deploy
+**ovim redom**: `supabase functions deploy send-push` (sa onim iz taska 67), pa `supabase db push`;
+push na Android uređaju.
 
 ### 67 — Pisanje recenzija (spojen u `develop`, 2026-10-20)
 
 [PR #139](https://github.com/htuco/salon-booking-platform/pull/139). Recenzija vezana za završen
-termin (`submit_review`), salon samo sakriva, prijava kroz `content_reports`, push `review_request`.
-**Ostaje:** deploy (`send-push notify-content-reports`, pa `db push`), push na uređaju.
+termin (`submit_review`, jedna po terminu), salon samo sakriva (`set_review_published`, `/more/reviews`
+u Meluri), prijava kroz `content_reports`, push `review_request` kad termin postane `completed`.
+pgTAP `032` (55 asercija, 11 mutacija). Uživo na lokalnom stacku: ocjena → 26, „Sakrij" → 25.
+**Ostaje:** Hamzin deploy **ovim redom** (v. task fajl): `supabase functions deploy send-push
+notify-content-reports`, pa `supabase db push`, provjere grantova i tekst politike u `app_policies`;
+push `review_request` na uređaju.
 
-### 58 — Kontakt klijenta jednim tapom (PR otvoren, 2026-10-20)
+### 58 — Kontakt klijenta jednim tapom (spojen u `develop`, 2026-10-20)
 
-[PR #138](https://github.com/htuco/salon-booking-platform/pull/138), spreman za pregled.
+[PR #138](https://github.com/htuco/salon-booking-platform/pull/138), spojen u `develop` 2026-10-20.
 „Pozovi" i „Poruka" (Viber, WhatsApp) u detalju termina i profilu klijenta, samo uz broj; pravila u
 `apps/admin/lib/src/core/kontakt.dart`. Pregled zatvoren u grani (`+387 061 …` gubi nulu, prekratak
-broj nema link), admin 697. **Ostaje:** odobrenje i merge; sve tri akcije na Android uređaju.
+broj nema link), admin 697. **Ostaje:** sve tri akcije na Android uređaju.
 
 ### 66 — Registracija: ime, telefon i uslovi (spojen u `develop`, 2026-10-19)
 

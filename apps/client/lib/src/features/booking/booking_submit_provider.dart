@@ -2,6 +2,7 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../waitlist/waitlist_providers.dart';
 import 'booking_flow_provider.dart';
 import 'booking_flow_state.dart';
 import 'booking_identity.dart';
@@ -105,6 +106,11 @@ class BookingSubmitNotifier extends AutoDisposeAsyncNotifier<void> {
           );
 
       ref.read(lastBookingProvider.notifier).set(appointment);
+      // Potvrđen termin iste usluge tog dana gasi upis na listu čekanja (task 68). Klijent
+      // često zakazuje upravo iz kartice upisa, pa bi bez ovoga „Moji termini" i dalje
+      // pokazivali upis koji je baza već obrisala. Zahtjev na čekanju upis ne gasi, i tada
+      // novo čitanje vrati isti upis.
+      ref.invalidate(myWaitlistProvider);
       state = const AsyncValue<void>.data(null);
       return true;
     } on ApiError catch (error, stack) {

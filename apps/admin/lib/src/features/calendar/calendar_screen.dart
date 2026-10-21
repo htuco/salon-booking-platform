@@ -419,9 +419,53 @@ class _ZaglavljeDana extends ConsumerWidget {
               onPressed: () => ref.read(kalendarDatumProvider.notifier).danas(),
               child: const Text('Danas'),
             ),
+          const Spacer(),
+          ListaCekanjaDana(dan: dan),
         ],
       ),
     );
+  }
+}
+
+/// „Lista čekanja: 3" za prikazani dan (task 68) — salon vidi potražnju, ne imena.
+///
+/// Dan bez upisa ne crta ništa: nula nije vijest, a stalna oznaka bi se brzo prestala
+/// čitati. Radnik je nikad ne vidi (`kalendarListaCekanjaProvider`).
+class ListaCekanjaDana extends ConsumerWidget {
+  const ListaCekanjaDana({required this.dan, this.padding, super.key});
+
+  final DateTime dan;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final broj =
+        ref.watch(kalendarListaCekanjaProvider).valueOrNull?[LocalDate(
+          dan.year,
+          dan.month,
+          dan.day,
+        )] ??
+        0;
+    if (broj == 0) return const SizedBox.shrink();
+    final boje = context.adminColors;
+
+    final oznaka = Semantics(
+      label: 'Na listi čekanja za ovaj dan: $broj',
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(LucideIcons.bellRing300, size: 16, color: boje.textSecondary),
+          const SizedBox(width: AdminSpacing.xs),
+          Text(
+            'Lista čekanja: $broj',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: boje.textSecondary),
+          ),
+        ],
+      ),
+    );
+    return padding == null ? oznaka : Padding(padding: padding!, child: oznaka);
   }
 }
 
@@ -1469,6 +1513,18 @@ class _Telefon extends ConsumerWidget {
       children: [
         const _MobilnoZaglavlje(),
         const _TrakaDana(),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ListaCekanjaDana(
+            dan: ref.watch(kalendarDatumProvider),
+            padding: const EdgeInsets.fromLTRB(
+              AdminSpacing.gutterMobile,
+              AdminSpacing.sm,
+              AdminSpacing.gutterMobile,
+              0,
+            ),
+          ),
+        ),
         if (dan.valueOrNull case final ucitan?) _TrakaRadnika(dan: ucitan),
         Expanded(
           child: dan.when(

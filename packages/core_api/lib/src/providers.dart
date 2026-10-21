@@ -23,6 +23,7 @@ import 'catalog/service_repository.dart';
 import 'catalog/settings_repository.dart';
 import 'catalog/staff_customer_repository.dart';
 import 'catalog/staff_review_repository.dart';
+import 'catalog/waitlist_repository.dart';
 import 'catalog/working_hours_repository.dart';
 import 'vertical/vertical_repository.dart';
 import 'push/push_providers.dart';
@@ -436,4 +437,9 @@ final contentReportRepositoryProvider = Provider<ContentReportRepository>(
 /// Istorija obavijesti klijenta (task 70). Salon i vlasnika izvodi baza.
 final notificationRepositoryProvider = Provider<NotificationRepository>(
   (ref) => NotificationRepository(ref.watch(supabaseClientProvider)),
+);
+
+/// Lista čekanja (task 68): klijent se upisuje i odjavljuje, salon vidi samo broj po danu.
+final waitlistRepositoryProvider = Provider<WaitlistRepository>(
+  (ref) => WaitlistRepository(ref.watch(supabaseClientProvider)),
 );

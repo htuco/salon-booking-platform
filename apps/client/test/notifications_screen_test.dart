@@ -39,7 +39,8 @@ void main() {
         notificationTitle(l10n, 'expired'),
         'Salon nije odgovorio na vrijeme',
       );
-      expect(notificationTitle(l10n, 'waitlist_offer'), 'Obavijest');
+      expect(notificationTitle(l10n, 'nesto_novo'), 'Obavijest');
+      expect(notificationTitle(l10n, 'waitlist_offer'), 'Oslobodilo se mjesto');
     });
 
     test('opis nosi uslugu, radnika i termin', () {
@@ -51,6 +52,17 @@ void main() {
         notificationBody(l10n, _obavijest(radnik: null)),
         'Fade šišanje · srijeda 21.10. u 14:30',
       );
+    });
+
+    test('ponuda liste čekanja staje na danu, bez vremena (task 68)', () {
+      final ponuda = ClientNotification(
+        type: 'waitlist_offer',
+        createdAt: DateTime(2026, 10, 13, 9, 12),
+        read: false,
+        date: LocalDate(2026, 10, 21),
+        serviceName: 'Fade šišanje',
+      );
+      expect(notificationBody(l10n, ponuda), 'Fade šišanje · srijeda 21.10.');
     });
   });
 

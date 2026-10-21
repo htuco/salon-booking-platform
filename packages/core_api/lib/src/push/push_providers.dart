@@ -46,6 +46,18 @@ final pushOpenedProvider = StreamProvider<String>((ref) async* {
   yield* messages.stream;
 });
 
+/// Da li ovaj uređaj prima push. `false` i kad push na ovom buildu ne postoji (web,
+/// `PUSH_ENABLED` nije uključen): ni tada uređaj nema token, pa ponuda liste čekanja ne
+/// stiže (task 68).
+///
+/// `autoDispose`, jer se dozvola mijenja van aplikacije (postavke telefona) i ekran je
+/// čita ponovo kad se otvori ili kad se korisnik vrati.
+final pushPermissionProvider = FutureProvider.autoDispose<bool>((ref) async {
+  final service = ref.watch(pushServiceProvider);
+  if (service == null) return false;
+  return service.notificationsAllowed();
+});
+
 final pushReceivedProvider = StreamProvider<PushMessage>(
   (ref) => ref.watch(pushServiceProvider)?.received ?? const Stream.empty(),
 );

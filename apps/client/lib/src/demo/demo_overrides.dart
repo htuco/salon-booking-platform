@@ -107,6 +107,12 @@ List<Override> demoOverrides(AppEnv env, {bool prijavljen = true}) {
     myNotificationsProvider.overrideWith(
       (ref) async => prijavljen ? _mojeObavijesti(demo) : const [],
     ),
+    // Task 68: subota je u demou pun dan, pa se lista čekanja vidi bez backenda. Upisi
+    // žive u memoriji dok je stranica otvorena.
+    waitlistRepositoryProvider.overrideWithValue(_DemoWaitlist(demo)),
+    // Demo pokazuje upis kakav je na telefonu sa uključenim obavijestima. Na webu push ne
+    // postoji, pa bi panel inače uvijek rekao da su obavijesti isključene.
+    pushPermissionProvider.overrideWith((ref) async => true),
   ];
 }
 
@@ -313,8 +319,10 @@ List<AvailableSlot> _demoSlotovi(_Demo demo, SlotQuery query) {
     for (var sat = 9; sat < 17; sat++)
       for (final minuta in [0, 30])
         for (final radnik in radnici)
-          // Popodne petkom namjerno prazno, da se prazno stanje vidi i u demou.
-          if (!(query.date.weekday == DateTime.friday && sat >= 13))
+          // Popodne petkom namjerno prazno, da se prazno stanje vidi i u demou, a
+          // subota je pun dan (lista čekanja, task 68).
+          if (!(query.date.weekday == DateTime.friday && sat >= 13) &&
+              query.date.weekday != DateTime.saturday)
             AvailableSlot(
               startTime: LocalTime(sat, minuta),
               employeeId: radnik,
@@ -322,20 +330,26 @@ List<AvailableSlot> _demoSlotovi(_Demo demo, SlotQuery query) {
   ];
 }
 
-/// Svi dani u rasponu osim nedjelje — salon nedjeljom ne radi (`seed.sql`).
-List<LocalDate> _demoDatumi(DateRangeQuery query) {
+/// Dani u rasponu koji zadovoljavaju [uslov], kao `LocalDate`.
+List<LocalDate> _daniGdje(
+  DateRangeQuery query,
+  bool Function(int weekday) uslov,
+) {
   final dani = <LocalDate>[];
   var dan = DateTime(query.from.year, query.from.month, query.from.day);
   final kraj = DateTime(query.to.year, query.to.month, query.to.day);
 
   while (!dan.isAfter(kraj)) {
-    if (dan.weekday != DateTime.sunday) {
-      dani.add(LocalDate(dan.year, dan.month, dan.day));
-    }
+    if (uslov(dan.weekday)) dani.add(LocalDate(dan.year, dan.month, dan.day));
     dan = DateTime(dan.year, dan.month, dan.day + 1);
   }
   return dani;
 }
+
+/// Svi dani u rasponu osim nedjelje i subote — nedjeljom salon ne radi (`seed.sql`), a
+/// subota je u demou pun dan.
+List<LocalDate> _demoDatumi(DateRangeQuery query) =>
+    _daniGdje(query, (d) => d != DateTime.sunday && d != DateTime.saturday);
 
 /// Zadnji termin za demo success ekran — `pending`, kako ga baza i pravi.
 class _DemoZadnjiTermin extends LastBookingNotifier {
@@ -865,6 +879,66 @@ List<ClientNotification> _mojeObavijesti(_Demo demo) {
       employeeName: radnik,
     ),
   ];
+}
+
+/// Lista čekanja u demou: subote su pune, upisi u memoriji. Nema limita ni provjere dana —
+/// to drži `join_waitlist` u bazi, a demo samo pokazuje oblik ekrana.
+class _DemoWaitlist implements WaitlistRepository {
+  _DemoWaitlist(this.demo);
+
+  final _Demo demo;
+  final _upisi = <WaitlistEntry>[];
+
+  @override
+  Future<Set<LocalDate>> fullDates({
+    required String salonId,
+    required String serviceId,
+    required LocalDate from,
+    required LocalDate to,
+    String? employeeId,
+  }) async => _daniGdje(
+    DateRangeQuery(serviceId: serviceId, from: from, to: to),
+    (d) => d == DateTime.saturday,
+  ).toSet();
+
+  @override
+  Future<String> join({
+    required String serviceId,
+    required LocalDate date,
+    String? employeeId,
+  }) async {
+    final id = 'demo-upis-${_upisi.length + 1}';
+    _upisi.add(
+      WaitlistEntry(
+        id: id,
+        serviceId: serviceId,
+        serviceName:
+            demo.services.where((s) => s.id == serviceId).firstOrNull?.name ??
+            '—',
+        date: date,
+        employeeId: employeeId,
+        employeeName: demo.employees
+            .where((e) => e.id == employeeId)
+            .firstOrNull
+            ?.name,
+      ),
+    );
+    return id;
+  }
+
+  @override
+  Future<void> leave(String entryId) async =>
+      _upisi.removeWhere((u) => u.id == entryId);
+
+  @override
+  Future<List<WaitlistEntry>> mine() async => List.unmodifiable(_upisi);
+
+  @override
+  Future<Map<LocalDate, int>> demand({
+    required String salonId,
+    required LocalDate from,
+    required LocalDate to,
+  }) async => const {};
 }
 
 class _DemoNotifications implements NotificationRepository {

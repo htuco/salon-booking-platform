@@ -15,6 +15,8 @@ class CalendarDay {
     required this.id,
     required this.label,
     this.available = true,
+    this.full = false,
+    this.semanticLabel,
   });
 
   /// Ono čime ekran prepoznaje dan — u klijentu je to `LocalDate.format()`.
@@ -29,6 +31,15 @@ class CalendarDay {
   /// non-interactive"). Prazno mjesto umjesto njega bi razbilo mrežu sedmice i korisnik bi
   /// izgubio orijentaciju u mjesecu.
   final bool available;
+
+  /// Dan radi, ali je popunjen (task 68). Crta se prigušen kao nedostupan, **precrtan**, i
+  /// **tapa se** — na njemu ekran nudi listu čekanja. Razlika od nedostupnog je oblik, ne
+  /// samo boja: precrtan broj se vidi i bez razlikovanja nijansi.
+  final bool full;
+
+  /// Šta čitač ekrana kaže umjesto samog broja („27, popunjen"). Sastavlja ga ekran, jer
+  /// `core_ui` ne zna jezik.
+  final String? semanticLabel;
 }
 
 /// Mjesečni kalendar za izbor dana — `prototype/ui/SPEC.md` 5e.
@@ -118,7 +129,7 @@ class CalendarMonth extends StatelessWidget {
             return _Dan(
               day: dan,
               selected: dan.id == selectedId,
-              onTap: dan.available ? () => onSelect(dan.id) : null,
+              onTap: dan.available || dan.full ? () => onSelect(dan.id) : null,
             );
           },
         ),
@@ -168,6 +179,7 @@ class _Dan extends StatelessWidget {
     final scheme = theme.colorScheme;
     final izbor = context.selectionColors;
     final nedostupan = onTap == null;
+    final prigusen = nedostupan || day.full;
 
     // Izabrani dan je **invertovan** (`SPEC.md`: "selected inverted"): ispuna u boji
     // teksta, tekst u boji podloge. U barberu brand boja se ovdje namjerno ne koristi —
@@ -177,7 +189,7 @@ class _Dan extends StatelessWidget {
     final pozadina = selected ? izbor.selected : Colors.transparent;
     final tekst = selected
         ? izbor.onSelected
-        : nedostupan
+        : prigusen
         ? scheme.onSurfaceVariant
         : scheme.onSurface;
 
@@ -185,6 +197,8 @@ class _Dan extends StatelessWidget {
       button: !nedostupan,
       selected: selected,
       enabled: !nedostupan,
+      label: day.semanticLabel,
+      excludeSemantics: day.semanticLabel != null,
       child: InkWell(
         onTap: onTap,
         child: AnimatedContainer(
@@ -196,7 +210,11 @@ class _Dan extends StatelessWidget {
           ),
           child: Text(
             day.label,
-            style: theme.textTheme.labelMedium?.copyWith(color: tekst),
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: tekst,
+              decoration: day.full ? TextDecoration.lineThrough : null,
+              decorationColor: tekst,
+            ),
           ),
         ),
       ),

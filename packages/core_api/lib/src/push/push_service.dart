@@ -193,6 +193,23 @@ class PushService with WidgetsBindingObserver {
     return _deviceId;
   }
 
+  /// Da li uređaj smije prikazati push: dozvola je data (ili privremena na iOS-u).
+  ///
+  /// Bez dozvole uređaj se registruje bez tokena, a ponuda liste čekanja ide samo uređaju sa
+  /// tokenom (task 68) — ekran to mora reći, umjesto da obeća obavijest koja ne stiže.
+  /// Firebase koji se ne može podići (nema konfiguracije) je isto „ne smije".
+  Future<bool> notificationsAllowed() async {
+    try {
+      await initialize();
+      final settings = await FirebaseMessaging.instance
+          .getNotificationSettings();
+      return settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+    } on Object {
+      return false;
+    }
+  }
+
   Future<String?> deviceForBooking() => guard(() async {
     await initialize();
     return _serialize(_sync);
