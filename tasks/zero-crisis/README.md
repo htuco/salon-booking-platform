@@ -11,7 +11,7 @@ Van opsega (ADR-0029): javni web link i QR, 2FA, SMS, datum rođenja, plaćanje 
 
 **Brojevi prate redoslijed.** Task zavisi samo od taskova sa manjim brojem. Izuzeci su 56–58, koji su
 došli iz Sprinta 5 sa svojim brojevima, i dva taska iz [`polishing/`](../polishing/): 54 (prije 71) i
-60 (regresija, prije 89).
+60 (regresija, prije 89), i **91** (lista čekanja sa rasponom, dodan 2026-10-21 poslije 68, ide prije 87).
 
 **Produkcija polazi od nule** (73–80): u kodu i okruženju nema nijednog produkcijskog ključa ni
 naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple tim) se rotira i ne ide dalje.
@@ -33,6 +33,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 | [70](70-istorija-obavijesti.md) | Istorija obavijesti u klijentskoj app-i | — | 1 dan |
 | [71](71-melura-za-svakoga.md) | Melura za svakoga: sve radi i jasno je | 54 | 3–4 dana |
 | [72](72-super-admin-lokalno.md) | Super admin konzola, lokalna i minimalna 🟡 | — | 4–5 dana |
+| [91](91-lista-cekanja-raspon.md) | Lista čekanja: „obavijesti me ako se oslobodi ranije" (raspon) | 68 | 2–3 dana |
 
 ## Faza B — produkcija od nule
 
@@ -63,7 +64,7 @@ naloga. Sve razvojno (`.env.live`, današnji hostovani projekat, lični Apple ti
 |---|---|---|---|
 | [85](85-kapacitet-i-opterecenje.md) | Kapacitet i test opterećenja | 76, 81 | 2 dana |
 | [86](86-backup-nadzor-alarmi.md) | Backup, oporavak, nadzor i alarmi | 76, 79 | 1–2 dana |
-| [87](87-sigurnosni-pregled.md) | Sigurnosni pregled prije lansiranja | 64–72, 76, 81–84 | 2 dana |
+| [87](87-sigurnosni-pregled.md) | Sigurnosni pregled prije lansiranja | 64–72, 91, 76, 81–84 | 2 dana |
 | [88](88-pravno-i-podrska.md) | Pravni dokumenti, podrška i incidenti | tekstovi | 1–2 dana |
 | [60](../polishing/60-regresija-i-testiranje.md) | Regresija i testiranje (iz `polishing/`) | 71, 87 | 2–3 dana |
 | [89](89-prelazak-na-produkciju.md) | Prelazak pravih salona na produkciju | 75–88, 60 | 1–2 dana |
