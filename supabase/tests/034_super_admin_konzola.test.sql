@@ -6,7 +6,11 @@
 --      a pogrešan ili zauzet unos ne ostavlja ništa;
 --   3. status, boje i tema, store status mijenjaju samo svoje polje i samo postojeći salon;
 --   4. poziv vlasnika: `salon_admin`, `created_by = null`, kod radi kroz postojeće prihvatanje,
---      a za neaktivan salon se ne pravi.
+--      a za neaktivan salon se ne pravi; novi poziv platforme povlači prethodni, a povučen kod
+--      više ne radi;
+--   5. UUID po okruženju: `p_id` daje salonu UUID iz `tenant.yaml`-a, zauzet UUID je PT409;
+--   6. rezervisan flavor (`test*`, `lint`...) i kontrolni znakovi u nazivu, gradu i imenu
+--      aplikacije ne prolaze, ni kroz `update_salon_contact`.
 begin;
 set local search_path = public, extensions;
 select no_plan();
@@ -26,7 +30,7 @@ select ok(not has_function_privilege('anon', 'public.platform_list_salons()', 'e
 select ok(not has_function_privilege('authenticated', 'public.platform_list_salons()', 'execute'),
   'authenticated nema execute na platform_list_salons');
 select ok(not has_function_privilege('authenticated',
-  'public.platform_create_salon(text,text,text,text,text,text,text,text,text,text,text,public.salon_plan)', 'execute'),
+  'public.platform_create_salon(text,text,text,text,text,text,text,text,text,text,text,public.salon_plan,uuid)', 'execute'),
   'authenticated nema execute na platform_create_salon');
 select ok(not has_function_privilege('authenticated', 'public.platform_set_salon_status(uuid,public.salon_status)', 'execute'),
   'authenticated nema execute na platform_set_salon_status');
@@ -40,6 +44,38 @@ select ok(not has_function_privilege('anon', 'public.platform_create_owner_invit
   'anon nema execute na platform_create_owner_invite');
 select ok(has_function_privilege('service_role', 'public.platform_create_owner_invite(uuid,text)', 'execute'),
   'service_role ima execute na platform_create_owner_invite');
+select ok(not has_function_privilege('authenticated', 'public.platform_revoke_owner_invite(uuid,uuid)', 'execute'),
+  'authenticated nema execute na platform_revoke_owner_invite');
+select ok(not has_function_privilege('anon', 'public.platform_revoke_owner_invite(uuid,uuid)', 'execute'),
+  'anon nema execute na platform_revoke_owner_invite');
+select ok(has_function_privilege('service_role', 'public.platform_revoke_owner_invite(uuid,uuid)', 'execute'),
+  'service_role ima execute na platform_revoke_owner_invite');
+
+-- Katalog, ne lista: hvata i svaku buduću `platform_*` funkciju kojoj neko zaboravi revoke.
+-- Broj drži da test ne prođe prazan (preimenovana šema, pogrešan filter).
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname like 'platform\_%'), 8,
+  'Tačno osam public.platform_* funkcija');
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname like 'platform\_%'
+    and (has_function_privilege('anon', p.oid, 'execute')
+      or has_function_privilege('authenticated', p.oid, 'execute'))), 0,
+  'Nijedna platform_* funkcija nema execute za anon ni authenticated');
+select is((select count(*)::int from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname like 'platform\_%'
+    and has_function_privilege('service_role', p.oid, 'execute')), 8,
+  'service_role ima execute na svih osam');
+
+-- Pomoćne funkcije: generator koda se ne zove iz aplikacije.
+select ok(not has_function_privilege('authenticated', 'private.new_invite_code()', 'execute'),
+  'authenticated nema execute na private.new_invite_code');
+select ok(not has_function_privilege('anon', 'private.new_invite_code()', 'execute'),
+  'anon nema execute na private.new_invite_code');
+-- `create or replace` u ovoj migraciji ne smije promijeniti ko zove `create_staff_invite`.
+select ok(has_function_privilege('authenticated', 'public.create_staff_invite(uuid,public.staff_role,text,uuid)', 'execute'),
+  'create_staff_invite i dalje zove authenticated (admin salona)');
+select ok(not has_function_privilege('anon', 'public.create_staff_invite(uuid,public.staff_role,text,uuid)', 'execute'),
+  'create_staff_invite i dalje ne zove anon');
 
 set local request.jwt.claims = '{"sub":"fe720000-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"role":"super_admin"}}';
 set local role authenticated;
@@ -50,7 +86,12 @@ select throws_ok($$ select public.platform_create_salon('X', 'x', 'Vitez', 'barb
 select throws_ok($$ select * from public.platform_list_salons() $$,
   '42501', null, 'Super admin iz aplikacije ne vidi platformsku listu');
 select throws_ok($$ select * from public.platform_create_owner_invite('550e8400-e29b-41d4-a716-446655440000', 'X') $$,
-  '42501', null, 'Super admin iz aplikacije ne pravi poziv vlasnika');
+  '42501', null, 'Super admin iz aplikacije ne pravi poziv vlasnika kroz platform_create_owner_invite');
+-- **Poznata rupa, ne zatvara se u tasku 72** (security.md §„Šta još nije zatvoreno"):
+-- `create_staff_invite` provjerava `private.is_admin`, a on počinje sa `is_super_admin()`.
+-- Kad se rupa zatvori, ova asercija pada i mijenja se u `throws_ok`.
+select lives_ok($$ select * from public.create_staff_invite('550e8400-e29b-41d4-a716-446655440000', 'salon_admin', 'X') $$,
+  'Poznata rupa: super admin iz aplikacije pravi poziv vlasnika kroz create_staff_invite');
 reset role;
 
 set local request.jwt.claims = '{"sub":"11111111-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
@@ -138,6 +179,74 @@ reset role;
 select is((select count(*)::int from public.salons where slug = 'novi-x'), 0,
   'Nijedan odbijen unos nije ostavio salon');
 
+-- Rezervisan flavor: `[a-z][a-z0-9]*` ga pušta, a Gradle ruši sync svih tenanata.
+set local role service_role;
+select throws_ok($$ select public.platform_create_salon('Test Salon', 'test-salon', 'Vitez', 'barber', null,
+  '#111111', '#222222', 'testsalon', 'ba.nasadomena.testsalon', 'ba.nasadomena.testsalon', 'Test Salon') $$,
+  'PT400', null, 'Flavor koji počinje sa test pada');
+select throws_ok($$ select public.platform_create_salon('Lint', 'lint', 'Vitez', 'barber', null,
+  '#111111', '#222222', 'lint', 'ba.nasadomena.lint', 'ba.nasadomena.lint', 'Lint') $$,
+  'PT400', null, 'Flavor lint pada');
+select throws_ok($$ select public.platform_create_salon('Release', 'release', 'Vitez', 'barber', null,
+  '#111111', '#222222', 'release', 'ba.nasadomena.release', 'ba.nasadomena.release', 'Release') $$,
+  'PT400', null, 'Flavor sa imenom build tipa pada');
+reset role;
+select ok(not private.is_reserved_flavor('kontest') and not private.is_reserved_flavor('tefter'),
+  'test usred ili samo te na početku nije rezervisano');
+
+-- Kontrolni znakovi: naziv i grad idu u komentar `tenant.yaml`-a, prelom bi ubacio ključ.
+set local role service_role;
+select throws_ok($$ select public.platform_create_salon(E'X\nprimaryColor: "#000000"', 'novi-x', 'Vitez', 'barber', null,
+  '#111111', '#222222', 'novix', 'ba.nasadomena.novix', 'ba.nasadomena.novix', 'X') $$,
+  'PT400', null, 'Prelom reda u nazivu pada');
+select throws_ok($$ select public.platform_create_salon('X', 'novi-x', E'Vitez\ttheme: x', 'barber', null,
+  '#111111', '#222222', 'novix', 'ba.nasadomena.novix', 'ba.nasadomena.novix', 'X') $$,
+  'PT400', null, 'Tab u gradu pada');
+select throws_ok($$ select public.platform_create_salon('X', 'novi-x', 'Vitez', 'barber', null,
+  '#111111', '#222222', 'novix', 'ba.nasadomena.novix', 'ba.nasadomena.novix', E'X\rY') $$,
+  'PT400', null, 'CR u imenu aplikacije pada');
+reset role;
+
+-- ---------------------------------------------------------------------------
+-- 5. UUID po okruženju (`p_id`)
+-- ---------------------------------------------------------------------------
+set local role service_role;
+select is(public.platform_create_salon('Sa Fajla', 'sa-fajla', 'Mostar', 'barber', null,
+  '#111111', '#222222', 'safajla', 'ba.nasadomena.safajla', 'ba.nasadomena.safajla', 'Sa Fajla',
+  'starter', 'fe720000-0000-4000-8000-0000000000aa'),
+  'fe720000-0000-4000-8000-0000000000aa'::uuid, 'Dat UUID je UUID salona');
+select throws_ok($$ select public.platform_create_salon('Drugi', 'drugi-salon', 'Mostar', 'barber', null,
+  '#111111', '#222222', 'drugisalon', 'ba.nasadomena.drugisalon', 'ba.nasadomena.drugisalon', 'Drugi',
+  'starter', '550e8400-e29b-41d4-a716-446655440000') $$,
+  'PT409', 'Salon sa ovim UUID-om već postoji u ovoj bazi', 'Zauzet UUID je PT409');
+select throws_ok($$ select public.platform_create_salon('Drugi', 'drugi-salon', 'Mostar', 'barber', null,
+  '#111111', '#222222', 'drugisalon', 'ba.nasadomena.drugisalon', 'ba.nasadomena.drugisalon', 'Drugi',
+  'starter', '00000000-0000-0000-0000-000000000000') $$,
+  'PT400', null, 'UUID iz šablona pada');
+reset role;
+select is((select row(s.slug, b.flavor)::text from public.salons s join public.salon_builds b on b.salon_id = s.id
+  where s.id = 'fe720000-0000-4000-8000-0000000000aa'), row('sa-fajla', 'safajla')::text,
+  'Salon sa datim UUID-om ima i build red');
+select is((select count(*)::int from public.salons where slug = 'drugi-salon'), 0,
+  'Odbijen UUID nije ostavio salon');
+
+-- Grad iz Melure: ista zabrana kroz `update_salon_contact`.
+insert into auth.users(id, email, raw_app_meta_data, raw_user_meta_data) values
+('fe720000-0000-4000-8000-000000000003', 'vlasnik-a@konzola72.invalid',
+  '{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}', '{}');
+insert into public.users(id, salon_id, name, email, role) values
+('fe720000-0000-4000-8000-000000000003', '550e8400-e29b-41d4-a716-446655440000', 'Vlasnik A',
+  'vlasnik-a@konzola72.invalid', 'salon_admin');
+set local request.jwt.claims = '{"sub":"fe720000-0000-4000-8000-000000000003","role":"authenticated","app_metadata":{"role":"salon_admin","salon_id":"550e8400-e29b-41d4-a716-446655440000"}}';
+set local role authenticated;
+select throws_ok($$ select public.update_salon_contact('550e8400-e29b-41d4-a716-446655440000',
+  (select name from public.salons where id = '550e8400-e29b-41d4-a716-446655440000'), 'Adresa', E'Vitez\n# x') $$,
+  'PT400', null, 'Vlasnik ne upisuje prelom reda u grad');
+select lives_ok($$ select public.update_salon_contact('550e8400-e29b-41d4-a716-446655440000',
+  (select name from public.salons where id = '550e8400-e29b-41d4-a716-446655440000'), 'Adresa', ' Vitez ') $$,
+  'Običan grad i dalje prolazi');
+reset role;
+
 -- ---------------------------------------------------------------------------
 -- 3. Status, boje i tema, store
 -- ---------------------------------------------------------------------------
@@ -178,6 +287,55 @@ select throws_ok($$ select public.platform_set_salon_status(gen_random_uuid(), '
 -- ---------------------------------------------------------------------------
 -- 4. Poziv vlasnika
 -- ---------------------------------------------------------------------------
+-- Poziv koji je napravio salon (`created_by` nije null): poziv platforme ga ne povlači.
+reset role;
+insert into public.staff_invites(id, salon_id, role, name, code_hash, expires_at, created_by)
+values ('fe720000-0000-4000-8000-0000000000b1', (select id from novi), 'salon_admin', 'Salonski',
+  'fe72-salonski-hash', now() + interval '7 days', 'fe720000-0000-4000-8000-000000000001');
+set local role service_role;
+
+-- Poziv platforme drugog salona: pozivi za `novi` ga ne smiju povući ni pokazati u svom redu.
+create temporary table tudji as
+select * from public.platform_create_owner_invite('550e8400-e29b-41d4-a716-446655440000', 'Vlasnik A');
+create temporary table prvi as
+select * from public.platform_create_owner_invite((select id from novi), 'Prvi');
+create temporary table drugi as
+select * from public.platform_create_owner_invite((select id from novi), 'Drugi');
+select is((select count(*)::int from public.peek_staff_invite((select code from tudji))), 1,
+  'Poziv platforme drugog salona ostaje otvoren');
+select is((select platform_invite_id from public.platform_list_salons()
+  where id = '550e8400-e29b-41d4-a716-446655440000'),
+  (select invite_id from tudji), 'Lista pokazuje poziv drugog salona u njegovom redu');
+select is((select count(*)::int from public.peek_staff_invite((select code from prvi))), 0,
+  'Novi poziv platforme povlači prethodni: stari kod više ne radi');
+select is((select count(*)::int from public.peek_staff_invite((select code from drugi))), 1,
+  'Novi kod radi');
+select is((select platform_invite_id from public.platform_list_salons() where id = (select id from novi)),
+  (select invite_id from drugi), 'Lista pokazuje zadnji poziv platforme');
+reset role;
+select ok((select revoked_at is null from public.staff_invites where id = 'fe720000-0000-4000-8000-0000000000b1'),
+  'Poziv koji je napravio salon ostaje otvoren');
+set local role service_role;
+
+select throws_ok($$ select public.platform_revoke_owner_invite((select id from novi), 'fe720000-0000-4000-8000-0000000000b1') $$,
+  'PT404', null, 'Platforma ne povlači poziv koji je napravio salon');
+select throws_ok($$ select public.platform_revoke_owner_invite('550e8400-e29b-41d4-a716-446655440000', (select invite_id from drugi)) $$,
+  'PT404', null, 'Poziv se ne povlači preko tuđeg salona');
+select lives_ok($$ select public.platform_revoke_owner_invite((select id from novi), (select invite_id from drugi)) $$,
+  'Poziv platforme se povlači');
+select is((select count(*)::int from public.peek_staff_invite((select code from drugi))), 0,
+  'Povučen kod više ne radi');
+select throws_ok($$ select public.platform_revoke_owner_invite((select id from novi), (select invite_id from drugi)) $$,
+  'PT404', null, 'Već povučen poziv je PT404');
+select is((select platform_invite_id from public.platform_list_salons() where id = (select id from novi)),
+  null::uuid, 'Lista više ne pokazuje poziv platforme');
+select throws_ok($$ select * from public.platform_create_owner_invite((select id from novi), E'Elma\nX') $$,
+  'PT400', null, 'Prelom reda u imenu vlasnika pada');
+reset role;
+-- Salonski poziv se čisti, da brojač ispod mjeri samo poziv platforme.
+update public.staff_invites set revoked_at = now() where id = 'fe720000-0000-4000-8000-0000000000b1';
+set local role service_role;
+
 create temporary table poziv as
 select * from public.platform_create_owner_invite((select id from novi), ' Elma Hodžić ');
 select throws_ok($$ select * from public.platform_create_owner_invite((select id from novi), ' ') $$,
