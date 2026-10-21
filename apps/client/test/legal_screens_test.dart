@@ -210,14 +210,73 @@ void main() {
       expect(find.text('BV'), findsOneWidget);
     });
 
-    testWidgets('„Kako radi" ne obećava podsjetnik kojeg nema', (tester) async {
+    testWidgets('„Kako radi" obećava podsjetnik koji salon šalje (oba)', (
+      tester,
+    ) async {
+      // Defaulti iz baze: dnevni i satni uključeni, N = 3 (task 56, ADR-0033).
       await pumpEkran(tester, ruta: ClientRoute.aboutApp.path);
 
       expect(find.text('Kako radi'), findsOneWidget);
       expect(find.text('Pošaljete zahtjev'), findsOneWidget);
       expect(find.text('Salon potvrdi'), findsOneWidget);
-      // Handoff ovdje crta „Dobijete podsjetnik", ali `send-reminders` i `send-push` su
-      // danas samo README (task 25). Ekran u storeu ne smije obećati push kojeg nema.
+      expect(find.text('Dobijete podsjetnik'), findsOneWidget);
+      expect(
+        find.text(
+          'Dan prije i 3 sata prije početka, ako su obavijesti dozvoljene.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Vidite status'), findsNothing);
+    });
+
+    testWidgets('samo dnevni: bez broja sati', (tester) async {
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.aboutApp.path,
+        postavke: const SalonSettings(
+          id: 's1',
+          salonId: '550e8400-e29b-41d4-a716-446655440000',
+          hourlyReminderEnabled: false,
+        ),
+      );
+
+      expect(
+        find.text('Dan prije početka, ako su obavijesti dozvoljene.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('samo satni: N iz postavki, u jednini', (tester) async {
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.aboutApp.path,
+        postavke: const SalonSettings(
+          id: 's1',
+          salonId: '550e8400-e29b-41d4-a716-446655440000',
+          remindersEnabled: false,
+          hourlyReminderHours: 1,
+        ),
+      );
+
+      expect(
+        find.text('1 sat prije početka, ako su obavijesti dozvoljene.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('salon bez podsjetnika ih ne obećava', (tester) async {
+      // Ekran u storeu ne smije obećati push koji ovaj salon ne šalje.
+      await pumpEkran(
+        tester,
+        ruta: ClientRoute.aboutApp.path,
+        postavke: const SalonSettings(
+          id: 's1',
+          salonId: '550e8400-e29b-41d4-a716-446655440000',
+          remindersEnabled: false,
+          hourlyReminderEnabled: false,
+        ),
+      );
+
       expect(find.text('Dobijete podsjetnik'), findsNothing);
       expect(find.text('Vidite status'), findsOneWidget);
     });

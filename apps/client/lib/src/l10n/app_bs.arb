@@ -654,7 +654,7 @@
 
   "bookingSuccessBodyConfirmed": "Ovaj salon potvrđuje termine odmah, pa je vaš već upisan u raspored. Nema čekanja na odgovor.",
   "@bookingSuccessBodyConfirmed": {
-    "description": "Objasnjenje uz confirmed status na success ekranu. Ne obecava podsjetnik — reminder push jos ne postoji (task 39)."
+    "description": "Objasnjenje uz confirmed status na success ekranu. Ne obecava podsjetnik: salon ga moze ugasiti (task 56), a ovaj ekran ne cita postavke podsjetnika."
   },
 
   "bookingBackHome": "Nazad na početnu",
@@ -1068,10 +1068,28 @@
   "@aboutAppStep2Body": { "description": "Korak 2, tijelo." },
 
   "aboutAppStep3Title": "Vidite status",
-  "@aboutAppStep3Title": { "description": "Korak 3. Handoff ovdje piše 'Dobijete podsjetnik', ali podsjetnika nema: send-reminders i send-push su danas samo README (task 25). Ekran u storeu ne smije obećati ono što app ne radi." },
+  "@aboutAppStep3Title": { "description": "Korak 3 kad salon ima ugašena oba podsjetnika (ili se postavke još nisu učitale). Handoff ovdje piše 'Dobijete podsjetnik', a to od taska 56 vrijedi samo kad salon podsjetnik šalje — ekran ne smije obećati push koji ovaj salon ne šalje." },
 
   "aboutAppStep3Body": "Zahtjev, potvrda i otkazivanje stoje u „Moji termini\".",
-  "@aboutAppStep3Body": { "description": "Korak 3, tijelo. Opisuje ono što app danas stvarno radi." },
+  "@aboutAppStep3Body": { "description": "Korak 3, tijelo, bez podsjetnika. Opisuje ono što app tada stvarno radi." },
+
+  "aboutAppStep3RemindersTitle": "Dobijete podsjetnik",
+  "@aboutAppStep3RemindersTitle": { "description": "Korak 3 iz handoffa, kad salon šalje bar jedan podsjetnik (task 56, ADR-0033)." },
+
+  "aboutAppStep3RemindersBoth": "{hours, plural, one{Dan prije i {hours} sat prije početka, ako su obavijesti dozvoljene.} few{Dan prije i {hours} sata prije početka, ako su obavijesti dozvoljene.} other{Dan prije i {hours} sati prije početka, ako su obavijesti dozvoljene.}}",
+  "@aboutAppStep3RemindersBoth": {
+    "description": "Korak 3, tijelo: salon šalje dnevni (24 h prije) i satni (N h prije). Bez riječi 'termin' — ona je vertikalni pojam. 'Ako su obavijesti dozvoljene': push stiže samo uz dozvolu.",
+    "placeholders": { "hours": { "type": "int", "example": "3" } }
+  },
+
+  "aboutAppStep3RemindersDaily": "Dan prije početka, ako su obavijesti dozvoljene.",
+  "@aboutAppStep3RemindersDaily": { "description": "Korak 3, tijelo: salon šalje samo dnevni podsjetnik, 24 h prije." },
+
+  "aboutAppStep3RemindersHourly": "{hours, plural, one{{hours} sat prije početka, ako su obavijesti dozvoljene.} few{{hours} sata prije početka, ako su obavijesti dozvoljene.} other{{hours} sati prije početka, ako su obavijesti dozvoljene.}}",
+  "@aboutAppStep3RemindersHourly": {
+    "description": "Korak 3, tijelo: salon šalje samo satni podsjetnik, N h prije.",
+    "placeholders": { "hours": { "type": "int", "example": "3" } }
+  },
 
   "aboutAppRate": "Ocijenite aplikaciju",
   "@aboutAppRate": { "description": "Pravni red koji ostaje vidljiv ali neaktivan dok app nije u prodavnici." },

@@ -220,9 +220,10 @@ Kako izgleda: [`docs/screenshots/task-68-pun-dan.png`](../../docs/screenshots/ta
 
 Ekran u storeu ne smije tvrditi ono što aplikacija ne radi, pa handoff ovdje nije prepisan doslovno:
 
-- **Treći korak „Kako radi" nije „Dobijete podsjetnik" nego „Vidite status".** Podsjetnika nema —
-  `supabase/functions/send-reminders/` i `send-push/` su danas samo `README` (task 25). Kad push
-  stigne, korak se vraća na handoff formulaciju.
+- **Treći korak „Kako radi" je „Dobijete podsjetnik" samo kad ga salon šalje** (task 56,
+  ADR-0033). Tijelo kaže koji: „Dan prije i 3 sata prije početka, ako su obavijesti dozvoljene.",
+  samo dan prije, ili samo N sati prije. Salon koji je ugasio oba (i ekran dok se postavke ne
+  učitaju) ostaje na „Vidite status" — obećanje koje salon ne drži je gore od manjeg.
 - **„Ocijenite aplikaciju" stoji vidljiv, ali neaktivan.** Traži App Store / Play ID, a aplikacije
   nisu objavljene. Crta se na 45% prozirnosti (`SPEC.md` §Interactions) i **ne prima dodir**, uz
   red objašnjenja ispod. Sakriti ga značilo bi da se lista mijenja pod korisnikom kad app ode u
