@@ -334,10 +334,15 @@ try {
     headers: { "x-salon-id": activeSalon },
     body: JSON.stringify({
       p_service_id: "10000000-0000-4000-8000-000000000001",
-      p_date: closedSunday.toISOString().slice(0, 10),
+      p_from: closedSunday.toISOString().slice(0, 10),
     }),
   });
-  assert(join.status >= 400, `Anon join_waitlist must be rejected, got HTTP ${join.status}.`);
+  // Task 91 changed the signature to (service, employee, from). The function itself must refuse
+  // (42501), not PostgREST for a missing overload: a 404 would pass `>= 400` and prove nothing.
+  assert(
+    (join.status === 401 || join.status === 403) && join.body?.code === "42501",
+    `Anon join_waitlist must be refused by the function (42501), got HTTP ${join.status} ${JSON.stringify(join.body)}.`,
+  );
   const entries = await anonRequest("/rest/v1/waitlist_entries?select=id");
   assert(entries.status >= 400, `Anon read of waitlist_entries must be rejected, got HTTP ${entries.status}.`);
 
