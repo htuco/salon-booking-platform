@@ -1276,8 +1276,8 @@ class _ObavijestiKartica extends StatelessWidget {
           _PrekidacRed(
             naslov: 'Podsjetnik dan prije',
             opis:
-                'Klijent dobija obavijest tačno 24 sata prije termina. Termin '
-                'zakazan kasnije od toga je ne dobija.',
+                'Klijent dobija obavijest tačno 24 sata prije termina. Ako je '
+                'termin zakazan ili potvrđen kasnije, podsjetnika nema.',
             ukljuceno: unos.remindersEnabled,
             onChanged: promijeni == null
                 ? null
@@ -1290,7 +1290,7 @@ class _ObavijestiKartica extends StatelessWidget {
                 naslov: 'Podsjetnik ${satiTekst(sati)} prije',
                 opis:
                     'Klijent dobija obavijest ${satiTekst(sati)} prije termina. '
-                    'Termin zakazan kasnije od toga je ne dobija.',
+                    'Ako je termin zakazan ili potvrđen kasnije, podsjetnika nema.',
                 ukljuceno: unos.hourlyReminderEnabled,
                 onChanged: promijeni == null
                     ? null
@@ -1305,27 +1305,35 @@ class _ObavijestiKartica extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: _Mjera.red),
                   child: _Polje(
                     labela: 'Koliko sati prije termina',
-                    child: DropdownButtonFormField<int>(
-                      key: const Key('postavke-sati-podsjetnika'),
-                      initialValue: sati,
-                      isExpanded: true,
-                      decoration: _ukras(),
-                      items: [
-                        for (
-                          var n = SalonSettings.minHourlyReminderHours;
-                          n <= SalonSettings.maxHourlyReminderHours;
-                          n++
-                        )
-                          DropdownMenuItem(value: n, child: Text(satiTekst(n))),
-                      ],
-                      onChanged: promijeni == null
-                          ? null
-                          : (n) {
-                              if (n == null) return;
-                              promijeni(
-                                (u) => u.copyWith(hourlyReminderHours: n),
-                              );
-                            },
+                    // Labela iz `_Polje` je zaseban `Text`; bez ovoga čitač ekrana na
+                    // dropdownu kaže samo „3 sata", bez pitanja na koje broj odgovara.
+                    child: Semantics(
+                      label: 'Koliko sati prije termina',
+                      child: DropdownButtonFormField<int>(
+                        key: const Key('postavke-sati-podsjetnika'),
+                        initialValue: sati,
+                        isExpanded: true,
+                        decoration: _ukras(),
+                        items: [
+                          for (
+                            var n = SalonSettings.minHourlyReminderHours;
+                            n <= SalonSettings.maxHourlyReminderHours;
+                            n++
+                          )
+                            DropdownMenuItem(
+                              value: n,
+                              child: Text(satiTekst(n)),
+                            ),
+                        ],
+                        onChanged: promijeni == null
+                            ? null
+                            : (n) {
+                                if (n == null) return;
+                                promijeni(
+                                  (u) => u.copyWith(hourlyReminderHours: n),
+                                );
+                              },
+                      ),
                     ),
                   ),
                 ),

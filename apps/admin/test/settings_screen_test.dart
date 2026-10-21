@@ -492,8 +492,8 @@ void _podsjetniciTestovi() {
     expect(find.text('Podsjetnik 5 sati prije'), findsOneWidget);
     expect(
       find.text(
-        'Klijent dobija obavijest 5 sati prije termina. Termin zakazan '
-        'kasnije od toga je ne dobija.',
+        'Klijent dobija obavijest 5 sati prije termina. Ako je termin '
+        'zakazan ili potvrđen kasnije, podsjetnika nema.',
       ),
       findsOneWidget,
     );
@@ -525,6 +525,20 @@ void _podsjetniciTestovi() {
         .map((s) => s.value)
         .toSet();
     expect(stavke, {for (var n = 1; n <= 12; n++) n});
+  });
+
+  testWidgets('izbor N nosi svoje pitanje za čitač ekrana', (tester) async {
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(postavke: _postavke, dodatno: overrides()),
+    );
+
+    final izbor = find.byKey(const Key('postavke-sati-podsjetnika'));
+    await _doVidljivog(tester, izbor);
+    final cvor = tester.getSemantics(izbor);
+    expect(cvor.label, contains('Koliko sati prije termina'));
+    expect(cvor.label, contains('3 sata'));
   });
 
   testWidgets('isključen satni sakrije izbor N, i snima se isključen', (

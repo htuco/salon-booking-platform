@@ -104,7 +104,7 @@ Grana `feat/podsjetnici`, [PR #144](https://github.com/htuco/salon-booking-platf
 [ADR-0033](../../docs/adr/0033-podsjetnici-dnevni-24h-i-satni-n-sati.md). Dnevni tačno 24 h prije,
 satni N sati prije (salon bira N u Meluri, 1–12, podrazumijevano 3), dva prekidača; SQL + `pg_cron`
 (`queue-reminders`), slanje kroz postojeći `send-push`, a claim ne šalje podsjetnik otkazanog ili
-počelog termina. pgTAP `035` (67 asercija, 26 mutacija), admin 730, klijent 690; uživo na lokalnom
+počelog termina. pgTAP `035` (67 asercija, 26 mutacija), admin 731, klijent 690; uživo na lokalnom
 stacku cron napravio oba reda, Melura snima prekidače i N. **Ostaje:** potvrda dvije
 podrazumijevane odluke (N 1–12; nema podsjetnika za termin zakazan ili potvrđen kasnije), merge,
 deploy **`send-push` prije `db push`**, push na Android emulatoru.

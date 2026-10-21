@@ -46,7 +46,7 @@ potvrdu).
 
 **Dokaz:** `./tool/test_supabase.sh` na čistom stacku — pgTAP Files=35, Tests=1170 PASS (`035`: 67
 asercija), svi REST i Deno testovi zeleni; 26 mutacija nad migracijom, svaka obara bar jednu
-aserciju (popis u `security.md`, „Podsjetnici"). `melos run test`: admin 730, client 690, core_api
+aserciju (popis u `security.md`, „Podsjetnici"). `melos run test`: admin 731, client 690, core_api
 158, core_domain 106, core_ui 147. Uživo na lokalnom stacku: N = 1 snimljen kroz Melura web
 (`docs/screenshots/task-56-melura-1440.png`, `-402.png`), dnevni isključen i snimljen (`f` u bazi);
 termin za 24 h + 4 min i za 1 h + 4 min → cron `queue-reminders` u 17:55:00 UTC napravio
