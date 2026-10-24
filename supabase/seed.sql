@@ -241,13 +241,19 @@ on conflict do nothing;
 -- **Ovo nije pravni savjet.** Pisano da bude tacno naspram koda i upotrebljivo za App Privacy i
 -- Data Safety formulare; prije submissiona ga mora pogledati neko ko za to odgovara.
 
--- Platformske sekcije pravila. `sort_order` je rijedak (10, 40, 50) da salonske sekcije stanu
+-- Platformske sekcije pravila. `sort_order` je rijedak (10, 15, 40, 50) da salonske sekcije stanu
 -- izmedju njih bez preracunavanja — handoff ih upravo tako i isprepliće.
 insert into public.app_policies(document,sort_order,title,body) values
 ('terms',10,'Zakazivanje',
  'Zahtjev za termin nije potvrda. {appointmentSingular} je potvrđen tek kad ga salon prihvati i kad o tome dobijete obavijest u aplikaciji.
 
 Dok je zahtjev na čekanju, salon ga može prihvatiti ili odbiti. Do potvrde vrijeme nije rezervisano za vas.'),
+('terms',15,'Obavijesti',
+ 'Svaki klijent aplikacije dobija obavijesti o svojim zahtjevima i terminima: kad salon prihvati, odbije ili otkaže vaš zahtjev ili termin. Te obavijesti se šalju uvijek i salon ih ne može isključiti.
+
+Ako salon uključi podsjetnike, stiže i podsjetnik prije termina. Dobijate i obavijest kad se oslobodi termin za koji ste na listi čekanja, te poziv da ocijenite završen termin.
+
+Obavijesti stižu samo ako ste aplikaciji dozvolili obavijesti na telefonu. Dozvolu možete povući u postavkama telefona.'),
 ('terms',40,'Cijene',
  'Cijene u aplikaciji su informativne i važe za standardnu izvedbu usluge. Konačnu cijenu dogovarate u salonu, prije nego što usluga počne.
 

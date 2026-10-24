@@ -8,7 +8,7 @@
 /// engine stvarno primjenjuje, a **Pravila salona** su `salon_policies` — samo one sekcije
 /// `/terms` ekrana koje obavezuju salon.
 ///
-/// **Zakazivanje, Cijene i „Vaši podaci" se odavde ne mogu dotaći** (`app_policies`,
+/// **Zakazivanje, Obavijesti, Cijene i „Vaši podaci" se odavde ne mogu dotaći** (`app_policies`,
 /// [ADR-0009]). Te tri sekcije obavezuju firmu pod čijim imenom aplikacija stoji u storeu
 /// i iste su u svakoj brandiranoj app-i; ekran ih prikazuje kao zaključan popis, jer
 /// vlasnik koji ih ne vidi ne zna ni da postoje ni zašto ih ne može mijenjati.
