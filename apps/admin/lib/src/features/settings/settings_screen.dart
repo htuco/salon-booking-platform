@@ -48,6 +48,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/format/terminologija.dart';
 import '../../core/widgets/admin_load_error.dart';
 import '../../core/poruka_greske.dart';
 import '../../core/theme/theme.dart';
@@ -169,7 +170,8 @@ class _Okvir extends StatelessWidget {
   }
 }
 
-/// „Pregled u aplikaciji" i „SAČUVAJ" iz `3i`.
+/// „SAČUVAJ" iz `3i`. „Pregled u aplikaciji" iz `3i` nije crtan: nema rute koja bi pokazala
+/// klijentsku aplikaciju iz admina.
 class _TopBarAkcije extends StatelessWidget {
   const _TopBarAkcije({required this.onSacuvaj, required this.snimam});
 
@@ -181,19 +183,6 @@ class _TopBarAkcije extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: _Mjera.dugme,
-          child: OutlinedButton(
-            // Nema rute koja bi pokazala klijentsku aplikaciju iz admina.
-            onPressed: () =>
-                _uskoro(context, 'Pregled u aplikaciji stiže uskoro.'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 17),
-            ),
-            child: const Text('Pregled u aplikaciji'),
-          ),
-        ),
-        const SizedBox(width: 10),
         SizedBox(
           height: _Mjera.dugme,
           child: FilledButton(
@@ -1236,9 +1225,9 @@ class _ZakazivanjeKartica extends StatelessWidget {
 
 /// „Obavijesti klijentima" iz `3i`.
 ///
-/// Nijedna od tri nije postavka salona: potvrdu `send-push` šalje uvijek, a podsjetnike
-/// (`send-reminders`) još niko ne šalje. Prekidači zato pokazuju stvarno stanje i ne
-/// pomjeraju se.
+/// Podsjetnike (`send-reminders`) još niko ne šalje, pa prekidači pokazuju stvarno stanje i
+/// ne pomjeraju se. „Potvrda termina" nema red: `send-push` je šalje uvijek, pa prekidač nije
+/// ništa omogućavao; ta rečenica stoji u pravilima aplikacije.
 class _ObavijestiKartica extends StatelessWidget {
   const _ObavijestiKartica();
 
@@ -1250,18 +1239,6 @@ class _ObavijestiKartica extends StatelessWidget {
       naslov: 'Obavijesti klijentima',
       child: _Redovi(
         children: [
-          _PrekidacRed(
-            naslov: 'Potvrda termina',
-            opis:
-                'Klijent dobija obavijest kad potvrdite, odbijete ili otkažete '
-                'njegov termin. Šalje se uvijek.',
-            ukljuceno: true,
-            onChanged: null,
-            naDodir: () => _uskoro(
-              context,
-              'Potvrda termina se šalje uvijek i ne može se isključiti.',
-            ),
-          ),
           _PrekidacRed(
             naslov: 'Podsjetnik dan prije',
             opis: 'Klijent bi dobio podsjetnik 24 sata prije termina. Još ne radi.',
@@ -1414,67 +1391,109 @@ class _SekcijaRed extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Platformska pravila — vidljiva, zaključana
+// Pravila aplikacije — dugme koje otvara dijalog
 // ---------------------------------------------------------------------------
 
-/// Zaključan popis sekcija koje piše platforma.
+/// Dugme „Pravila aplikacije": dijalog sa platformskim sekcijama, samo za čitanje.
 ///
-/// **Postoji zato što nevidljivo ograničenje izgleda kao kvar.** Vlasnik koji na `/terms`
-/// vidi šest sekcija, a u postavkama tri, prijavljuje da mu „fale pravila". Ovdje piše
-/// koje su i zašto ih ne može mijenjati (ADR-0009). Lista je kratka i statična jer je
-/// ista u svakoj brandiranoj app-i — čitanje iz `app_policies` bi dodalo upit koji ne
-/// mijenja ništa što je vlasniku upotrebljivo.
+/// **Zašto dijalog, a ne zaključana lista u postavkama.** Lista naslova sa lokotima nije
+/// vlasniku ništa omogućavala, a zauzimala je pola ekrana; tekst koji ga zanima (šta klijent
+/// pročita prije zakazivanja) je u dijalogu. Sekcije se čitaju iz `app_policies`, iste
+/// koje klijent vidi (ADR-0009), pa se tekst ne može razići od onog u aplikaciji.
 class _PlatformskaPravila extends StatelessWidget {
   const _PlatformskaPravila();
 
-  static const _sekcije = ['Zakazivanje', 'Cijene', 'Vaši podaci'];
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final prigusen = theme.textTheme.bodySmall?.copyWith(
-      color: context.adminColors.textSecondary,
-    );
-
     return _Kartica(
-      naslov: 'Pravila platforme',
+      naslov: 'Pravila aplikacije',
       dno: _Mjera.kartica,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Iste su u svakoj aplikaciji i mijenjamo ih mi — obavezuju firmu koja '
-            'aplikaciju objavljuje u prodavnici.',
-            style: prigusen,
+            'Dio pravila je isti u svakoj aplikaciji i mijenjamo ga mi — obavezuje firmu '
+            'koja aplikaciju objavljuje u prodavnici.',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: context.adminColors.textSecondary),
           ),
-          const SizedBox(height: AdminSpacing.sm),
-          _Redovi(
-            children: [
-              for (final naslov in _sekcije)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(naslov, style: theme.textTheme.titleSmall),
-                      ),
-                      Icon(
-                        Icons.lock_outline,
-                        size: 18,
-                        color: context.adminColors.textMuted,
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: AdminSpacing.sm),
-          Text(
-            'Politika privatnosti je u cijelosti naša i ne uređuje se ovdje.',
-            style: prigusen,
+          const SizedBox(height: AdminSpacing.md),
+          OutlinedButton(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => const _PravilaAplikacijeDijalog(),
+            ),
+            child: const Text('Pravila aplikacije'),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PravilaAplikacijeDijalog extends ConsumerWidget {
+  const _PravilaAplikacijeDijalog();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sekcije = ref.watch(postavkePlatformskaPravilaProvider);
+    // Isti placeholderi kao u klijentskoj aplikaciji: vlasnik čita ono što i klijent, a ne
+    // šablon sa `{appointmentSingular}`.
+    final vrijednosti = PolicyPlaceholders(
+      minCancelHours: ref
+          .watch(postavkeBookingProvider)
+          .valueOrNull
+          ?.minCancelHours,
+      phone: ref.watch(postavkeSalonProvider).valueOrNull?.phone,
+      email: ref.watch(postavkeSalonProvider).valueOrNull?.email,
+      appointmentSingular: vertikalaAdmina(ref).terms.appointmentSingular,
+    );
+    final tema = Theme.of(context).textTheme;
+    final prigusen = tema.bodySmall?.copyWith(
+      color: context.adminColors.textSecondary,
+    );
+
+    return AlertDialog(
+      title: const Text('Pravila aplikacije'),
+      content: SizedBox(
+        width: 520,
+        child: sekcije.when(
+          loading: () => const AdminSkeletonList(redova: 3),
+          error: (_, _) => AdminLoadError(
+            poruka: 'Pravila se ne mogu učitati.',
+            onRetry: () => ref.invalidate(postavkePlatformskaPravilaProvider),
+          ),
+          data: (lista) => lista.isEmpty
+              ? Text('Pravila još nisu upisana.', style: prigusen)
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ista su u svakoj aplikaciji i ne uređuju se ovdje. '
+                        'Politika privatnosti je u cijelosti platformska.',
+                        style: prigusen,
+                      ),
+                      for (final sekcija in lista) ...[
+                        const SizedBox(height: AdminSpacing.lg),
+                        Text(sekcija.title, style: tema.titleSmall),
+                        const SizedBox(height: AdminSpacing.xs),
+                        Text(
+                          applyPolicyPlaceholders(sekcija.body, vrijednosti),
+                          style: tema.bodyMedium,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Zatvori'),
+        ),
+      ],
     );
   }
 }

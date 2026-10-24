@@ -172,7 +172,7 @@ obje ljuske crtaju brojač, pa je i on dio ljuske, ne ekrana.
 > postoji, a kad ne postoji, crta se kao placeholder koji ne laže (ugašen ili „Uskoro"). Iz tabele
 > su nacrtani „Slobodno vrijeme", procenat zauzetosti, „Otvoreno do", „Pretraži klijenta", „prije
 > 26 min", `Dan · Sedmica · Mjesec`, „Dodaj pauzu"/„Zatvori dan", sljedeći termin u profilu i
-> placeholderi za „Ponudi drugo vrijeme", „Pomjeri", „Pozovi", „+ Novi klijent". Van opsega ostaje
+> placeholderi za „Ponudi drugo vrijeme", „Pomjeri", „Pozovi" (a „+ Novi klijent" je potom uklonjen, v. dopunu ADR-0020). Van opsega ostaje
 > samo prelaz na mrežu lokacija (`3a`). Pismo je Barlow, ne Space Grotesk + JetBrains Mono.
 
 Handoff crta i kontrole i brojke iza kojih danas ne stoji ni podatak ni RPC putanja. Svaka od njih
@@ -194,8 +194,10 @@ modelu su gori od praznog mjesta, jer vlasnik po njima odlučuje.
 | „Pozovi" / „Poruka" (`3n`) | Rade od taska 58 (`apps/admin/lib/src/core/kontakt.dart`): `tel:`, a „Poruka" otvara izbor Viber / WhatsApp, jer canvas crta jedno dugme a kanala su dva. Bez broja oba dugmeta nestaju; na webu nema Vibera, pa „Poruka" ide pravo na WhatsApp. Umjesto `sms:` je Viber, jer SMS u BiH košta, a Viber deep link ne (`docs/03`) | zatvoreno |
 | Fotografije klijenata i lokacije | Placeholderi iz `canvas/assets/`; `customers` i `public.users` nemaju sliku | — |
 | Prekidač `Dan · Sedmica · Mjesec` (`3c`) | „Dan" i „Sedmica" rade od taska 69 (skica `prototype/adminv2/sedmica/`, ADR-0029); „Mjesec" je i dalje ugašen sa „Uskoro" jer mjesečnog prikaza nema | Mjesec: otvoreno |
-| „Dodaj pauzu", „Zatvori dan" (`3c`) | Oba pišu u `working_hours`; blokada i pauza dobijaju svoj ekran | task 34 |
-| „+ Novi klijent" (`3e`) | Ručni unos ide kroz `upsert_walkin_customer` (task 24) i traži svoj obrazac; dugme koje otvara prazan ekran je gore od praznog mjesta | otvoreno |
+| „Dodaj pauzu", „Zatvori dan" (`3c`) | Rade: otvaraju iste dijaloge kao ekran radnog vremena i snimaju odmah (`working_hours_pisanje.dart`) | gotovo |
+| „+ Novi klijent" (`3e`) | **Uklonjeno** (ADR-0020, dopuna 2026-10-24): klijent nastaje pri registraciji, a klijent bez aplikacije se dodaje kroz „Novi termin" | uklonjeno |
+| „Kopiraj prošlu sedmicu" (`3g`), „Pregled u aplikaciji" (`3i`) | **Uklonjeno** (ADR-0020, dopuna): raspored je ponavljajući; admin nema rutu na klijentsku app | uklonjeno |
+| „Pravila zakazivanja" na radnom vremenu (`3h`) | **Uklonjeno**: ista tri broja stoje i mijenjaju se u Postavkama | uklonjeno |
 | „342 ukupno · 68 redovnih" (`3e`) | Zbir preko **cijelog** adresara; lista je filtrirana i odrezana na `limit`, pa bi brojka tvrdila ono što upit ne dokazuje. Podnaslov zato broji **prikazane** redove | otvoreno |
 | „Sljedeći termin" u profilu (`3e`) | Traži upit nad budućim terminima klijenta; istorija ide unatrag. Izostavljeno dok ne dobije vlastiti upit | otvoreno |
 | „Zakaži termin" u profilu (`3e`) | Zakazivanje iz profila traži predpopunjen `/appointments/new`. „Pozovi" i „Poruka" u profilu rade od taska 58, isto kao u `3n` | otvoreno |
@@ -220,7 +222,7 @@ je gori od rasporeda sa kolonom viška. Tu kolonu dobija i termin čiji radnik v
 ## Redoslijed implementacije
 
 Task 33 prikazuje stvarni ponavljajući raspored po danima iz `working_hours`, sa salonskim
-fallbackom. Canvasovo „Kopiraj prošlu sedmicu“, sedmični broj termina/sati i oznaka „u smjeni“
+fallbackom. Canvasovo „Kopiraj prošlu sedmicu“ (uklonjeno), sedmični broj termina/sati i oznaka „u smjeni“
 nisu uvedeni kao lažne vrijednosti: nema datiranih smjena. Uređivanje rasporeda ostaje tasku 34.
 Kartice prelaze na manje kolona prema raspoloživoj širini i veličini fonta; tabela smjena na
 uskim desktop prozorima prelazi u listu, kao na telefonu. Editor je scrollable bottom sheet.

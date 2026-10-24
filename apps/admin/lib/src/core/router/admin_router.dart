@@ -173,17 +173,6 @@ final adminRouterProvider = Provider<GoRouter>((ref) {
                     AdminRoute.calendarAppointment,
                     AdminRoute.calendar,
                   ),
-                  // `/calendar/block` još nema svoj ekran: blokada se dodaje iz brzih
-                  // akcija i sa radnog vremena (task 34).
-                  ruta(
-                    AdminRoute.calendarBlock,
-                    roditelj: AdminRoute.calendar,
-                    (state) => AdminPlaceholderScreen(
-                      title: AdminRoute.calendarBlock.title,
-                      path: state.uri.path,
-                      route: AdminRoute.calendarBlock,
-                    ),
-                  ),
                 ],
               ),
             ],
@@ -363,8 +352,8 @@ void otvoriDetaljTermina(BuildContext context, String id) =>
 /// Rute koje radnik smije otvoriti — njegov dan, kalendar i termini (task 47).
 ///
 /// **Lista dozvoljenih, ne zabranjenih:** modul koji se tek doda ostaje radniku zatvoren
-/// dok ga neko svjesno ne upiše ovdje. `/appointments/new` i `/calendar/block` nisu tu jer
-/// ručno zakazivanje i blokade traže `is_admin` u bazi.
+/// dok ga neko svjesno ne upiše ovdje. `/appointments/new` nije tu jer ručno
+/// zakazivanje traži `is_admin` u bazi.
 const kRuteRadnika = {
   AdminRoute.dashboard,
   AdminRoute.dashboardAppointment,
@@ -423,7 +412,6 @@ enum AdminRoute {
   dashboardAppointment('/today/appointment/:id', 'Detalji termina'),
   calendar('/calendar', 'Kalendar'),
   calendarAppointment('/calendar/appointment/:id', 'Detalji termina'),
-  calendarBlock('/calendar/block', 'Blokiraj vrijeme'),
   requests('/requests', 'Zahtjevi'),
   requestDetails('/requests/:id', 'Detalji termina'),
 

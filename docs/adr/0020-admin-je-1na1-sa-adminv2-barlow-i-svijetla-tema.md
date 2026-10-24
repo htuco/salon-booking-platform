@@ -47,3 +47,22 @@ da admin bude **1:1 sa izvozom**. Razlika nije bila u mjerama nego u tri stvari:
 - `prototype/admin/SPEC.md` (tabela „Šta canvas crta, a aplikacija namjerno nema") i
   `.claude/docs/conventions.md` treba uskladiti sa ovim ADR-om.
 - Klijentska aplikacija se ne mijenja: ADR-0018 i ADR-0019 za nju i dalje važe.
+
+## Dopuna (2026-10-24): tačka 3 ne važi za odbijene elemente
+
+Vlasnik proizvoda je pri ručnom pregledu admina odbio dio elemenata koje je tačka 3 tražila kao
+placeholder. **Novi podatak je njegova odluka**, pa tačka 3 više ne važi za:
+
+- „+ Novi klijent" (`3e`) — klijent nastaje sam pri registraciji (`ensure_customer`), a klijent bez
+  aplikacije se dodaje kroz „Novi termin";
+- „Kopiraj prošlu sedmicu" (`3g`) — raspored je ponavljajući, nema šta kopirati;
+- „Pregled u aplikaciji" (`3i`) — admin nema rutu koja bi pokazala klijentsku aplikaciju;
+- karticu „Pravila zakazivanja" na radnom vremenu — ista tri broja stoje u Postavkama, gdje se i
+  mijenjaju;
+- red „Potvrda termina" u Obavijestima — šalje se uvijek, pa prekidač nije ništa omogućavao;
+  rečenica o tome ide u pravila aplikacije.
+
+Tačka 3 i dalje važi za sve ostalo što je „uskoro" a vlasnik ga nije odbio („Mjesec", „Pomjeri",
+„Zakaži termin" iz profila, brisanje usluge, raspored po radniku); svaki ima svoj issue.
+„Dodaj pauzu" i „Zatvori dan" u kalendaru više nisu placeholderi ni preusmjerenja: otvaraju iste
+dijaloge kao ekran radnog vremena.

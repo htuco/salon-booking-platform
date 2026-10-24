@@ -10,9 +10,10 @@
 ///
 /// - **Broj termina u sedmici** („31 termin") — ekran nema sedmični upit termina, a novi
 ///   ne pravi. Piše se „— termina", ne izmišljena brojka. Sati su stvarni: zbir smjena.
-/// - **„Kopiraj prošlu sedmicu"**, **„Uredi smjene"** i klik na polje smjene — raspored po
-///   radniku se danas ne uređuje nigdje u adminu, pa dugmad kažu „uskoro" i vode na
-///   „Radno vrijeme", gdje su salonski raspored i odsustva.
+/// - **„Uredi smjene"** i klik na polje smjene — raspored po radniku se danas ne uređuje
+///   nigdje u adminu, pa kažu „uskoro" i vode na „Radno vrijeme", gdje su salonski raspored
+///   i odsustva. „Kopiraj prošlu sedmicu" je uklonjen: raspored je ponavljajući, pa nema šta
+///   kopirati. Radno vrijeme po radniku ostaje i dolazi kao zaseban task.
 library;
 
 import 'package:core_api/core_api.dart';
@@ -176,26 +177,6 @@ class _TopBarAkcije extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Placeholder, i zato prvi otpada kad top bar postane uzak: raspored je
-        // ponavljajući, pa „prošla sedmica" danas nema šta kopirati. Prag 1200 kao na
-        // dashboardu: na 1024 px pored sidebara breadcrumb je prelijevao top bar.
-        if (MediaQuery.sizeOf(context).width >= 1200) ...[
-          SizedBox(
-            height: AdminSize.touchTarget,
-            child: OutlinedButton(
-              onPressed: () => _uskoro(
-                context,
-                'Kopiranje sedmice stiže uskoro — raspored se danas ponavlja '
-                'svake sedmice.',
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              child: const Text('Kopiraj prošlu sedmicu'),
-            ),
-          ),
-          const SizedBox(width: 10),
-        ],
         SizedBox(
           height: AdminSize.touchTarget,
           child: FilledButton(

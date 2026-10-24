@@ -13,10 +13,11 @@
 /// - **Mjesec** iz prekidača `Dan · Sedmica · Mjesec`. Segment je nacrtan jer ga `3c`
 ///   crta, ali je onemogućen sa oznakom „Uskoro": prikaza iza njega nema, a dugme koje
 ///   izgleda aktivno i ne radi ništa laže više od sivog.
-/// - **Pisanje iz bočne trake.** „Dodaj pauzu" i „Zatvori dan" vode na radno vrijeme, gdje
-///   pauze i blokade već postoje — kalendar ih ne piše sam. „Blokiraj vrijeme" je po
-///   odluci vlasnika proizvoda uklonjen iz bočne trake; na telefonu ga nosi ikona `⊘` iz
-///   `3l`.
+/// - **Vlastito pisanje u bočnoj traci.** „Dodaj pauzu" i „Zatvori dan" otvaraju iste
+///   dijaloge kao ekran radnog vremena (`working_hours_pisanje.dart`,
+///   `prikaziUredjivacBlokade`), pa pauze i blokade imaju jedno pravilo bez obzira odakle
+///   se dodaju. „Blokiraj vrijeme" je po odluci vlasnika proizvoda uklonjen iz bočne
+///   trake; na telefonu ga nosi ikona `⊘` iz `3l`.
 /// - **Fotografija radnika** u zaglavlju kolone. `employees.image_url` je nullable i u
 ///   seedu prazan, pa bi svaka kolona nosila slomljenu sliku; inicijal radi isti posao.
 ///   Slike radnika dobijaju svoj modul u tasku 33.
@@ -42,6 +43,8 @@ import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointment_card.dart';
 import '../appointments/appointments_providers.dart';
 import '../profile/profilna_slika.dart';
+import '../working_hours/working_hours_dialogs.dart';
+import '../working_hours/working_hours_pisanje.dart';
 import 'calendar_day.dart';
 import 'calendar_providers.dart';
 
@@ -1227,15 +1230,20 @@ class _BocnaTraka extends ConsumerWidget {
           const _MiniMjesec(),
           const SizedBox(height: AdminSpacing.xl),
           const _Legenda(),
-          // Oba vode na radno vrijeme: tamo pauze i blokade već postoje, sa validacijom
-          // koju bi kalendar morao ponoviti. Dva dugmeta za isti cilj su ovdje namjerna —
-          // vlasnik traži radnju po imenu, ne po ekranu na kojem ona živi. Radniku ne
-          // stoje: `/working-hours` mu je zatvoren (task 47).
+          // Isti dijalozi kao na ekranu radnog vremena, ne preusmjerenje: vlasnik traži radnju
+          // po imenu i ne treba napustiti kalendar da bi je uradio. Radniku ne stoje:
+          // radno vrijeme mu je zatvoreno (task 47).
           if (ref.watch(adminRadnikIdProvider) == null) ...[
             const SizedBox(height: AdminSpacing.xl),
-            const _DugmeTrake(tekst: 'Dodaj pauzu'),
+            _DugmeTrake(
+              tekst: 'Dodaj pauzu',
+              onPressed: () => dodajPauzuIzKalendara(context, ref),
+            ),
             const SizedBox(height: 10),
-            const _DugmeTrake(tekst: 'Zatvori dan'),
+            _DugmeTrake(
+              tekst: 'Zatvori dan',
+              onPressed: () => prikaziUredjivacBlokade(context, ref),
+            ),
           ],
         ],
       ),
@@ -1245,14 +1253,15 @@ class _BocnaTraka extends ConsumerWidget {
 
 /// Sekundarno dugme bočne trake — puna širina, bijelo na podlozi trake, kako ga `3c` crta.
 class _DugmeTrake extends StatelessWidget {
-  const _DugmeTrake({required this.tekst});
+  const _DugmeTrake({required this.tekst, required this.onPressed});
 
   final String tekst;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
-      onPressed: () => context.go(AdminRoute.workingHours.path),
+      onPressed: onPressed,
       // Bez podloge bi dugme preuzelo ton trake i izgubilo se uz bijele kartice iznad.
       style: OutlinedButton.styleFrom(
         backgroundColor: context.adminColors.surface,

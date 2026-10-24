@@ -99,7 +99,6 @@ void main() {
       '/today/appointment/:id',
       '/calendar',
       '/calendar/appointment/:id',
-      '/calendar/block',
       '/requests',
       '/requests/:id',
       '/more',
@@ -266,7 +265,6 @@ void main() {
       ('/more/hours', '/today'),
       ('/more/services', '/today'),
       ('/appointments/new', '/today'),
-      ('/calendar/block', '/today'),
       // Stare adrese prvo postanu nove, pa ih guard tek onda sudi.
       ('/dashboard', '/today'),
       ('/appointments', '/more/appointments'),
