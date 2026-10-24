@@ -40,10 +40,12 @@ final appPackageInfoProvider = FutureProvider<PackageInfo>(
 ///   po tenantu.
 /// - **Verzija dolazi iz `package_info_plus`**, ne iz konstante koja zastari — DoD taska 21
 ///   to traži izričito.
-/// - **„Dobijete podsjetnik" je izostavljeno.** Handoff ga crta kao treći korak, ali
-///   podsjetnika nema: `send-reminders` i `send-push` su danas samo `README` (task 25).
-///   Ekran koji u storeu obeća push koji ne postoji je obećanje koje prvi korisnik
-///   demantuje, pa treći korak opisuje ono što app stvarno radi — status u „Moji termini".
+/// - **„Dobijete podsjetnik" stoji samo kad ga salon šalje.** Handoff ga crta kao treći
+///   korak; od taska 56 (ADR-0033) podsjetnik postoji, ali ga salon može ugasiti (dnevni,
+///   satni ili oba). Tekst se zato gradi iz `salon_settings`: dan prije, N sati prije ili
+///   oboje. Dok postavke ne stignu, ili kad su oba ugašena, treći korak ostaje ono što
+///   app sigurno radi — status u „Moji termini". Obećanje koje salon ne drži je gore od
+///   rečenice koja obećava manje.
 /// - **„Ocijenite aplikaciju" ostaje vidljiv, ali neaktivan.** Traži App Store / Play ID,
 ///   a aplikacije nisu objavljene. Sakriti ga značilo bi da se lista mijenja pod korisnikom
 ///   kad app ode u store; prazan tap je gori od reda koji vidljivo čeka.
@@ -132,11 +134,7 @@ class _Sadrzaj extends ConsumerWidget {
           tijelo: l10n.aboutAppStep2Body,
         ),
         const SizedBox(height: AppSpacing.md),
-        _Korak(
-          broj: 3,
-          naslov: l10n.aboutAppStep3Title,
-          tijelo: l10n.aboutAppStep3Body,
-        ),
+        _TreciKorak(postavke: ref.watch(salonSettingsProvider).valueOrNull),
         const SizedBox(height: AppSpacing.xxl),
 
         LinkRowGroup(
@@ -189,6 +187,38 @@ class _Sadrzaj extends ConsumerWidget {
       queryParameters: {'subject': naslov},
     );
     await launchUrl(adresa);
+  }
+}
+
+/// Treći korak „Kako radi": podsjetnik kad ga salon šalje, inače status u „Moji termini".
+class _TreciKorak extends StatelessWidget {
+  const _TreciKorak({required this.postavke});
+
+  /// `null` dok se postavke učitavaju ili kad upit padne — tada se ne obećava ništa.
+  final SalonSettings? postavke;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final p = postavke;
+
+    if (p == null || !p.sendsReminders) {
+      return _Korak(
+        broj: 3,
+        naslov: l10n.aboutAppStep3Title,
+        tijelo: l10n.aboutAppStep3Body,
+      );
+    }
+    final sati = p.hourlyReminderHours;
+    return _Korak(
+      broj: 3,
+      naslov: l10n.aboutAppStep3RemindersTitle,
+      tijelo: switch ((p.remindersEnabled, p.hourlyReminderEnabled)) {
+        (true, true) => l10n.aboutAppStep3RemindersBoth(sati),
+        (true, false) => l10n.aboutAppStep3RemindersDaily,
+        _ => l10n.aboutAppStep3RemindersHourly(sati),
+      },
+    );
   }
 }
 

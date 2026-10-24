@@ -42,6 +42,19 @@ abstract class SalonSettings with _$SalonSettings {
     bool requireStaffChoice,
     @JsonKey(name: 'show_prices_in_app') @Default(true) bool showPricesInApp,
 
+    /// Dnevni podsjetnik (`reminder_d1`): push klijentu tačno 24 h prije početka termina
+    /// (ADR-0033). Kolona se zove `reminders_enabled` iz vremena kad je bila jedina.
+    @JsonKey(name: 'reminders_enabled') @Default(true) bool remindersEnabled,
+
+    /// Satni podsjetnik (`reminder_h3`): push [hourlyReminderHours] sati prije početka.
+    @JsonKey(name: 'hourly_reminder_enabled')
+    @Default(true)
+    bool hourlyReminderEnabled,
+
+    /// N za satni podsjetnik, 1–12 ([minHourlyReminderHours]–[maxHourlyReminderHours]).
+    /// Enum ostaje `reminder_h3` i kad N nije 3.
+    @JsonKey(name: 'hourly_reminder_hours') @Default(3) int hourlyReminderHours,
+
     /// IANA zona (`Europe/Sarajevo`). Jedino mjesto gdje `LocalTime` postaje stvarni
     /// trenutak — i to tek na prikazu, ne u ovom sloju.
     @Default('Europe/Sarajevo') String timezone,
@@ -58,4 +71,11 @@ abstract class SalonSettings with _$SalonSettings {
 
   /// Termin je odmah potvrđen, bez čekanja na salon.
   bool get confirmsAutomatically => bookingMode == 'auto';
+
+  /// Klijent dobija bar jedan podsjetnik.
+  bool get sendsReminders => remindersEnabled || hourlyReminderEnabled;
+
+  /// Granice N iz `salon_settings_hourly_reminder_hours_check` (ADR-0033).
+  static const minHourlyReminderHours = 1;
+  static const maxHourlyReminderHours = 12;
 }

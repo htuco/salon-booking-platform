@@ -655,6 +655,28 @@ supabase functions deploy cleanup-media         # task 51 — siročad iz salon-
 supabase functions deploy notify-content-reports  # task 51 — prijave slika na webhook
 ```
 
+### Podsjetnici (task 56) — cron bez workera
+
+Podsjetnike pravi `pg_cron` posao `queue-reminders` (svakih 5 min, migracija `20261021172634`),
+koji zove `private.queue_reminders()` u bazi; šalje ih postojeći `send-push-queued` →
+`send-push`. Nema nove Edge Function ni tajne. **Redoslijed deploya:** `supabase functions deploy
+send-push` **prije** `supabase db push` — stari `send-push` na `reminder_d1`/`reminder_h3` baca
+`unsupported_type` i red se gubi.
+
+Provjera poslije deploya (SQL editor):
+
+```sql
+select jobname, schedule, command from cron.job where jobname = 'queue-reminders';
+select has_function_privilege('authenticated', 'private.queue_reminders(timestamptz)', 'execute'); -- false
+select private.queue_reminders();   -- broj novih redova; drugi poziv odmah poslije daje 0
+select type, status, error, count(*) from public.notification_logs
+where type in ('reminder_d1', 'reminder_h3') group by 1, 2, 3;
+```
+
+Lokalno, bez čekanja crona i bez pravog sata: `select private.queue_reminders('<trenutak>'::timestamptz);`
+— parametar postoji samo za pgTAP (`035_podsjetnici.test.sql`) i ručnu provjeru. Bez Vault
+konfiguracije redovi ostaju `queued`, kao i svaki drugi push lokalno.
+
 ### Workeri taska 51 — tajne i Vault
 
 Oba workera okida `pg_cron` (migracija `20260927100000`), ali bez tajni ne rade ništa: fajlovi

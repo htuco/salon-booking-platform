@@ -1,7 +1,8 @@
 # send-push
 
 FCM HTTP v1 worker za redove iz `notification_logs`. Postgres trigger pravi red za novi
-zahtjev vlasniku, potvrdu/odbijanje klijentu i otkazivanje. `pg_cron` svake minute poziva
+zahtjev vlasniku, potvrdu/odbijanje klijentu i otkazivanje; `pg_cron` posao `queue-reminders`
+pravi podsjetnike (task 56, v. `../send-reminders/README.md`). `pg_cron` svake minute poziva
 `private.dispatch_push()`; Vault bez konfiguracije znači da redovi ostaju `queued`.
 
 ## Konfiguracija
@@ -25,7 +26,10 @@ samo ponovo pokrenuti obradu reda; primalac i sadržaj nikad ne dolaze iz HTTP p
 - `sending`: preuzeto atomskim `FOR UPDATE SKIP LOCKED`; drugi worker preskače taj red.
 - `sent`: FCM je prihvatio zahtjev. To **nije potvrda prikaza na telefonu**.
 - `failed`: FCM HTTP greška ili `delivery_unknown` nakon timeouta.
-- `logged`: primalac više nije dostupan, promijenio je nalog ili se odjavio.
+- `logged`: primalac više nije dostupan, promijenio je nalog ili se odjavio (`recipient_unavailable`,
+  `signed_out`), ili podsjetnik više ne vrijedi (task 56): `appointment_not_confirmed`,
+  `appointment_started`, `reminder_disabled`, `reminder_late` (dnevni poslije ponoći pred dan
+  termina).
 
 Slanje ima najviše jedan pokušaj po logu. **Nema automatskog ponavljanja `failed`/`sending`**:
 timeout ili pad procesa poslije FCM prihvata ne dokazuje da poruka nije poslata. Ručni reset na
@@ -33,6 +37,11 @@ timeout ili pad procesa poslije FCM prihvata ne dokazuje da poruka nije poslata.
 `sending`; takav red traži operativnu provjeru. Ne obećava se exactly-once isporuka.
 
 Poruka sadrži generički tekst i identifikatore, bez imena, telefona ili razloga otkazivanja.
+Podsjetnici (task 56) dobijaju od `claim_push_notifications` riječ za termin po vertikali
+(`appointment_term`: `salons.terminology_override` pa `vertical_packs.terminology`, ključ
+`appointmentSingular`) i, za satni, minute do početka pri slanju (`starts_in_minutes`): „Termin je
+sutra." i „Tretman počinje za 3 sata." — bez vremena, usluge i salona. Bez tih kolona (stari claim)
+tekst pada na „Termin" i „uskoro počinje". Zato se `send-push` deploya **prije** migracije 56.
 Tap vodi na `/appointments`, gdje trenutni JWT i RLS ponovo određuju dostupne podatke. Već
 predat push ne može se povući odjavom; redovi koji čekaju se gase pri odjavi/promjeni naloga.
 `/notifications` ostaje postojeće prazno stanje; klijentska politika za historiju nije uvedena.

@@ -11,6 +11,7 @@ import 'package:admin/src/features/settings/settings_screen.dart';
 import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -345,6 +346,8 @@ void main() {
     expect(find.byType(TextFormField), findsNothing);
   });
 
+  _podsjetniciTestovi();
+
   testWidgets('uvećan sistemski font ne preliva telefon', (tester) async {
     await _pumpAt(
       tester,
@@ -361,12 +364,14 @@ class _LazeAkcije extends SettingsActions {
   _LazeAkcije(super.ref);
 
   final slike = <(SalonImage, String?)>[];
+  final pravila = <BookingSettingsInput>[];
 
   @override
   Future<void> sacuvajKontakt(ContactInput unos) async {}
 
   @override
-  Future<void> sacuvajPravila(BookingSettingsInput unos) async {}
+  Future<void> sacuvajPravila(BookingSettingsInput unos) async =>
+      pravila.add(unos);
 
   @override
   Future<void> sacuvajSliku(SalonImage vrsta, String? url) async =>
@@ -459,5 +464,154 @@ void _slikeTestovi() {
       findsOneWidget,
     );
     expect(find.textContaining('uskoro'), findsNothing);
+  });
+}
+
+/// Podsjetnici (task 56, ADR-0033): dva prekidača i izbor N, snimaju se kroz „Sačuvaj".
+void _podsjetniciTestovi() {
+  late _LazeAkcije akcije;
+  List<Override> overrides() => [
+    adminSalonIdProvider.overrideWithValue(_salonId),
+    settingsActionsProvider.overrideWith((ref) => akcije = _LazeAkcije(ref)),
+  ];
+
+  /// `Semantics` reda prekidača — nosi `toggled` i `enabled` (v. `_PrekidacRed`).
+  SemanticsProperties red(WidgetTester tester, String naslov) => tester
+      .widget<Semantics>(
+        find
+            .ancestor(
+              of: find.text(naslov),
+              matching: find.byWidgetPredicate(
+                (w) => w is Semantics && w.properties.toggled != null,
+              ),
+            )
+            .first,
+      )
+      .properties;
+
+  testWidgets('prekidači podsjetnika pokazuju stanje iz baze i rade', (
+    tester,
+  ) async {
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(
+        postavke: _postavke.copyWith(
+          remindersEnabled: true,
+          hourlyReminderEnabled: false,
+          hourlyReminderHours: 5,
+        ),
+        dodatno: overrides(),
+      ),
+    );
+
+    await _doVidljivog(tester, find.text('Podsjetnik dan prije'));
+    // Ništa od „uskoro": prekidači su stvarni. (Lista čekanja u kartici Zakazivanje je
+    // i dalje „uskoro" — task 54 odlučuje o njoj.)
+    expect(find.textContaining('Klijent bi dobio podsjetnik'), findsNothing);
+    expect(find.textContaining('Podsjetnici stižu uskoro'), findsNothing);
+    expect(find.text('Podsjetnik 5 sati prije'), findsOneWidget);
+
+    final dnevni = red(tester, 'Podsjetnik dan prije');
+    expect(dnevni.toggled, isTrue);
+    expect(dnevni.enabled, isTrue);
+    final satni = red(tester, 'Podsjetnik 5 sati prije');
+    expect(satni.toggled, isFalse);
+    expect(satni.enabled, isTrue);
+    // Ugašen satni ne nudi izbor N.
+    expect(find.byKey(const Key('postavke-sati-podsjetnika')), findsNothing);
+  });
+
+  testWidgets('„Sačuvaj" šalje oba prekidača i izabrani N', (tester) async {
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(postavke: _postavke, dodatno: overrides()),
+    );
+
+    // Polazno: oba uključena, N = 3 (defaulti iz baze).
+    await _doVidljivog(tester, find.text('Podsjetnik dan prije'));
+    await tester.tap(find.text('Podsjetnik dan prije'));
+    await tester.pumpAndSettle();
+
+    final izbor = find.byKey(const Key('postavke-sati-podsjetnika'));
+    await _doVidljivog(tester, izbor);
+    await tester.tap(izbor);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('5 sati').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Podsjetnik 5 sati prije'), findsOneWidget);
+    expect(
+      find.text(
+        'Klijent dobija obavijest 5 sati prije termina. Ako je termin '
+        'zakazan ili potvrđen kasnije, podsjetnika nema.',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('SAČUVAJ'));
+    await tester.pumpAndSettle();
+
+    expect(akcije.pravila, hasLength(1));
+    final poslano = akcije.pravila.single;
+    expect(poslano.remindersEnabled, isFalse);
+    expect(poslano.hourlyReminderEnabled, isTrue);
+    expect(poslano.hourlyReminderHours, 5);
+  });
+
+  testWidgets('izbor N nudi tačno 1–12 sati', (tester) async {
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(postavke: _postavke, dodatno: overrides()),
+    );
+
+    final izbor = find.byKey(const Key('postavke-sati-podsjetnika'));
+    await _doVidljivog(tester, izbor);
+    await tester.tap(izbor);
+    await tester.pumpAndSettle();
+
+    final stavke = tester
+        .widgetList<DropdownMenuItem<int>>(find.byType(DropdownMenuItem<int>))
+        .map((s) => s.value)
+        .toSet();
+    expect(stavke, {for (var n = 1; n <= 12; n++) n});
+  });
+
+  testWidgets('izbor N nosi svoje pitanje za čitač ekrana', (tester) async {
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(postavke: _postavke, dodatno: overrides()),
+    );
+
+    final izbor = find.byKey(const Key('postavke-sati-podsjetnika'));
+    await _doVidljivog(tester, izbor);
+    final cvor = tester.getSemantics(izbor);
+    expect(cvor.label, contains('Koliko sati prije termina'));
+    expect(cvor.label, contains('3 sata'));
+  });
+
+  testWidgets('isključen satni sakrije izbor N, i snima se isključen', (
+    tester,
+  ) async {
+    await _pumpAt(
+      tester,
+      _telefon,
+      _screen(postavke: _postavke, dodatno: overrides()),
+    );
+
+    await _doVidljivog(tester, find.text('Podsjetnik 3 sata prije'));
+    await tester.tap(find.text('Podsjetnik 3 sata prije'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('postavke-sati-podsjetnika')), findsNothing);
+
+    await tester.tap(find.text('Sačuvaj').first);
+    await tester.pumpAndSettle();
+
+    expect(akcije.pravila.single.hourlyReminderEnabled, isFalse);
+    expect(akcije.pravila.single.hourlyReminderHours, 3);
+    expect(akcije.pravila.single.remindersEnabled, isTrue);
   });
 }

@@ -54,6 +54,16 @@ void main() {
       );
     });
 
+    test('oba podsjetnika su „Podsjetnik" sa uslugom i terminom (task 56)', () {
+      // Satni je `reminder_h3` i kad salon izabere N različit od 3 (ADR-0033).
+      expect(notificationTitle(l10n, 'reminder_d1'), 'Podsjetnik');
+      expect(notificationTitle(l10n, 'reminder_h3'), 'Podsjetnik');
+      expect(
+        notificationBody(l10n, _obavijest(tip: 'reminder_h3')),
+        'Fade šišanje · Emir · srijeda 21.10. u 14:30',
+      );
+    });
+
     test('ponuda liste čekanja staje na danu, bez vremena (task 68)', () {
       final ponuda = ClientNotification(
         type: 'waitlist_offer',
@@ -73,6 +83,8 @@ void main() {
         (_) async => [
           _obavijest(),
           _obavijest(tip: 'rejected', procitano: true),
+          _obavijest(tip: 'reminder_d1', procitano: true),
+          _obavijest(tip: 'reminder_h3', procitano: true),
         ],
       );
       when(repo.markAllRead).thenAnswer((_) async {});
@@ -82,7 +94,8 @@ void main() {
       expect(find.byType(NotificationsScreen), findsOneWidget);
       expect(find.text('Zahtjev je potvrđen'), findsOneWidget);
       expect(find.text('Zahtjev je odbijen'), findsOneWidget);
-      expect(find.text('Danas · 09:12'), findsNWidgets(2));
+      expect(find.text('Podsjetnik'), findsNWidgets(2));
+      expect(find.text('Danas · 09:12'), findsNWidgets(4));
       // Čitač ekrana čuje da je prva nova, druga ne.
       expect(find.bySemanticsLabel(RegExp(r'^Novo\. ')), findsOneWidget);
       verify(repo.markAllRead).called(1);

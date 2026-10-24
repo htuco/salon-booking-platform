@@ -20,9 +20,10 @@
 ///
 /// ## Šta `3i` crta, a iza čega nema podatka
 ///
-/// Lista čekanja, podsjetnici i pregled u aplikaciji nemaju ni kolonu ni RPC. Crtaju se
-/// kao ugašene kontrole koje na dodir kažu „uskoro" — kontrola koja se pomjeri, a ne
-/// snimi ništa, laže.
+/// Prekidač liste čekanja nema ni kolonu ni RPC (#264). Crta se kao ugašena kontrola koja
+/// na dodir kaže „uskoro" — kontrola koja se pomjeri, a ne snimi ništa, laže. „Pregled u
+/// aplikaciji" iz `3i` nije crtan (ADR-0020, dopuna 2026-10-24). Podsjetnici su od taska 56 stvarni (ADR-0033): dva prekidača i
+/// izbor N idu kroz isti `update_salon_settings` kao ostala booking pravila.
 ///
 /// ## Slike salona jesu ovdje, branding nije
 ///
@@ -48,6 +49,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/format/tekst.dart';
 import '../../core/format/terminologija.dart';
 import '../../core/widgets/admin_load_error.dart';
 import '../../core/poruka_greske.dart';
@@ -448,7 +450,10 @@ class _PostavkeState extends ConsumerState<_Postavke> {
       unos: _unos,
       onChanged: _snimam ? null : _promijeni,
     );
-    const obavijesti = _ObavijestiKartica();
+    final obavijesti = _ObavijestiKartica(
+      unos: _unos,
+      onChanged: _snimam ? null : _promijeni,
+    );
     final kontakt = _KontaktKartica(
       grad: _grad,
       email: _email,
@@ -1225,15 +1230,21 @@ class _ZakazivanjeKartica extends StatelessWidget {
 
 /// „Obavijesti klijentima" iz `3i`.
 ///
-/// Podsjetnike (`send-reminders`) još niko ne šalje, pa prekidači pokazuju stvarno stanje i
-/// ne pomjeraju se. „Potvrda termina" nema red: `send-push` je šalje uvijek, pa prekidač nije
+/// Podsjetnici jesu postavka salona (task 56, ADR-0033): dnevni ide tačno 24 h prije termina,
+/// satni N sati prije, a N vlasnik bira ispod prekidača. Sve se snima na „Sačuvaj", kao i
+/// ostatak forme. „Potvrda termina" nema red: `send-push` je šalje uvijek, pa prekidač nije
 /// ništa omogućavao; ta rečenica stoji u pravilima aplikacije.
 class _ObavijestiKartica extends StatelessWidget {
-  const _ObavijestiKartica();
+  const _ObavijestiKartica({required this.unos, required this.onChanged});
+
+  final BookingSettingsInput unos;
+  final void Function(BookingSettingsInput Function(BookingSettingsInput))?
+  onChanged;
 
   @override
   Widget build(BuildContext context) {
-    void podsjetnici() => _uskoro(context, 'Podsjetnici stižu uskoro.');
+    final promijeni = onChanged;
+    final sati = unos.hourlyReminderHours;
 
     return _Kartica(
       naslov: 'Obavijesti klijentima',
@@ -1241,17 +1252,69 @@ class _ObavijestiKartica extends StatelessWidget {
         children: [
           _PrekidacRed(
             naslov: 'Podsjetnik dan prije',
-            opis: 'Klijent bi dobio podsjetnik 24 sata prije termina. Još ne radi.',
-            ukljuceno: false,
-            onChanged: null,
-            naDodir: podsjetnici,
+            opis:
+                'Klijent dobija obavijest tačno 24 sata prije termina. Ako je '
+                'termin zakazan ili potvrđen kasnije, podsjetnika nema.',
+            ukljuceno: unos.remindersEnabled,
+            onChanged: promijeni == null
+                ? null
+                : (v) => promijeni((u) => u.copyWith(remindersEnabled: v)),
           ),
-          _PrekidacRed(
-            naslov: 'Podsjetnik sat prije',
-            opis: 'Klijent bi dobio podsjetnik sat prije termina. Još ne radi.',
-            ukljuceno: false,
-            onChanged: null,
-            naDodir: podsjetnici,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _PrekidacRed(
+                naslov: 'Podsjetnik ${satiTekst(sati)} prije',
+                opis:
+                    'Klijent dobija obavijest ${satiTekst(sati)} prije termina. '
+                    'Ako je termin zakazan ili potvrđen kasnije, podsjetnika nema.',
+                ukljuceno: unos.hourlyReminderEnabled,
+                onChanged: promijeni == null
+                    ? null
+                    : (v) => promijeni(
+                        (u) => u.copyWith(hourlyReminderEnabled: v),
+                      ),
+              ),
+              // Izbor N ima smisla samo uz uključen satni; ugašen se ne crta, da vlasnik ne
+              // bira broj koji ništa ne mijenja.
+              if (unos.hourlyReminderEnabled)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: _Mjera.red),
+                  child: _Polje(
+                    labela: 'Koliko sati prije termina',
+                    // Labela iz `_Polje` je zaseban `Text`; bez ovoga čitač ekrana na
+                    // dropdownu kaže samo „3 sata", bez pitanja na koje broj odgovara.
+                    child: Semantics(
+                      label: 'Koliko sati prije termina',
+                      child: DropdownButtonFormField<int>(
+                        key: const Key('postavke-sati-podsjetnika'),
+                        initialValue: sati,
+                        isExpanded: true,
+                        decoration: _ukras(),
+                        items: [
+                          for (
+                            var n = SalonSettings.minHourlyReminderHours;
+                            n <= SalonSettings.maxHourlyReminderHours;
+                            n++
+                          )
+                            DropdownMenuItem(
+                              value: n,
+                              child: Text(satiTekst(n)),
+                            ),
+                        ],
+                        onChanged: promijeni == null
+                            ? null
+                            : (n) {
+                                if (n == null) return;
+                                promijeni(
+                                  (u) => u.copyWith(hourlyReminderHours: n),
+                                );
+                              },
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),

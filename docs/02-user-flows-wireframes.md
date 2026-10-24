@@ -647,7 +647,7 @@ sequenceDiagram
 - Provjeri `NotificationLog` prije slanja — bez toga scheduler duplira remindere pri restartu ([01 §11](01-mvp-spec.md))
 - D-1 se ne šalje ako je termin zakazan manje od 24h unaprijed
 - H-3 se ne šalje za termine u prvom satu radnog vremena (klijent spava)
-- `remindersEnabled` u `SalonSettings` gasi sve reminder-e po salonu
+- `remindersEnabled` u `SalonSettings` gasi dnevni podsjetnik (24 h prije), a `hourlyReminderEnabled` satni (N h prije, `hourlyReminderHours`) — od taska 56 dva prekidača ([ADR-0033](adr/0033-podsjetnici-dnevni-24h-i-satni-n-sati.md))
 
 ---
 

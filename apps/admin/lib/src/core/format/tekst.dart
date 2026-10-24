@@ -37,3 +37,15 @@ String iznosKm(double iznos) {
       : iznos.toStringAsFixed(2);
   return '$tekst KM';
 }
+
+/// `1 sat`, `3 sata`, `5 sati`, `12 sati`, `21 sat` — isto pravilo kao [terminaTekst], sa tri
+/// oblika: 2–4 je „sata", ostalo „sati", i 11–14 je uvijek „sati".
+String satiTekst(int broj) {
+  final zadnjeDvije = broj % 100;
+  if (zadnjeDvije >= 11 && zadnjeDvije <= 14) return '$broj sati';
+  return switch (broj % 10) {
+    1 => '$broj sat',
+    2 || 3 || 4 => '$broj sata',
+    _ => '$broj sati',
+  };
+}

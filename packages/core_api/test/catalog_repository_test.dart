@@ -234,6 +234,20 @@ void main() {
       expect(settings.bufferMinutes, 5);
       expect(settings.timezone, 'Europe/Sarajevo');
     });
+
+    test('mapira podsjetnike (task 56)', () {
+      final settings = salonSettingsFromRow({
+        'id': 'st-1',
+        'salon_id': '550e8400-e29b-41d4-a716-446655440000',
+        'reminders_enabled': true,
+        'hourly_reminder_enabled': false,
+        'hourly_reminder_hours': 2,
+      });
+
+      expect(settings.remindersEnabled, isTrue);
+      expect(settings.hourlyReminderEnabled, isFalse);
+      expect(settings.hourlyReminderHours, 2);
+    });
   });
 
   test('nijedan repozitorij ne vraća Map', () {

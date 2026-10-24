@@ -217,6 +217,32 @@ void main() {
       expect(settings.isDateOnly, isTrue);
       expect(settings.confirmsAutomatically, isTrue);
     });
+
+    // Task 56, ADR-0033. Defaulti su isti kao u bazi: red bez kolona (stari API) ne smije
+    // ekranu reći da podsjetnika nema.
+    test('podsjetnici: bez kolona oba su uključena, N = 3', () {
+      final settings = SalonSettings.fromJson({'id': 'st-3', 'salon_id': 's'});
+
+      expect(settings.remindersEnabled, isTrue);
+      expect(settings.hourlyReminderEnabled, isTrue);
+      expect(settings.hourlyReminderHours, 3);
+      expect(settings.sendsReminders, isTrue);
+    });
+
+    test('podsjetnici: mapira kolone, a ugašena oba znači bez podsjetnika', () {
+      final settings = SalonSettings.fromJson({
+        'id': 'st-4',
+        'salon_id': 's',
+        'reminders_enabled': false,
+        'hourly_reminder_enabled': false,
+        'hourly_reminder_hours': 7,
+      });
+
+      expect(settings.remindersEnabled, isFalse);
+      expect(settings.hourlyReminderEnabled, isFalse);
+      expect(settings.hourlyReminderHours, 7);
+      expect(settings.sendsReminders, isFalse);
+    });
   });
 
   group('Appointment', () {

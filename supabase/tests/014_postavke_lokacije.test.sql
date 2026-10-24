@@ -65,7 +65,7 @@ select ok(not has_function_privilege('anon',
   'public.update_salon_contact(uuid, text, text, text, text, text, text, text, text)', 'EXECUTE'),
   'Anon ne mijenja kontakt podatke');
 select ok(not has_function_privilege('anon',
-  'public.update_salon_settings(uuid, text, text, int, int, int, int, int, boolean, boolean)',
+  'public.update_salon_settings(uuid, text, text, int, int, int, int, int, boolean, boolean, boolean, boolean, int)',
   'EXECUTE'),
   'Anon ne mijenja booking pravila');
 
