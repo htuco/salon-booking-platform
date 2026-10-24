@@ -76,8 +76,8 @@ select ok(
 -- ---------------------------------------------------------------------------
 set local role anon;
 
-select is((select count(*)::int from public.app_policies where document='terms'),3,
-  'Anon vidi tri platformske sekcije pravila');
+select is((select count(*)::int from public.app_policies where document='terms'),4,
+  'Anon vidi četiri platformske sekcije pravila');
 select is((select count(*)::int from public.app_policies where document='privacy'),9,
   'Anon vidi devet sekcija politike privatnosti');
 select is((select count(*)::int from public.salon_policies),9,
@@ -86,8 +86,8 @@ select is((select count(*)::int from public.salon_policies
            where salon_id='550e8400-e29b-41d4-a716-446655440097'),0,
   'Anon ne vidi sekciju neaktivnog salona');
 
--- Spojena lista koju ekran numerise `01..06` za barbera: platformske 10/40/50 i salonske
--- 20/30/60 se isprepliću upravo kako handoff crta.
+-- Spojena lista koju ekran numerise `01..07` za barbera: platformske 10/15/40/50 i salonske
+-- 20/30/60 se isprepliću; „Obavijesti" (15) stoje odmah iza „Zakazivanja".
 select results_eq(
   $$select title from (
       select sort_order,title from public.app_policies where document='terms'
@@ -95,8 +95,8 @@ select results_eq(
       select sort_order,title from public.salon_policies
        where salon_id='550e8400-e29b-41d4-a716-446655440000'
     ) s order by sort_order$$,
-  $$values ('Zakazivanje'),('Otkazivanje'),('Kašnjenje'),('Cijene'),('Vaši podaci'),('Kontakt')$$,
-  'Spojene sekcije barbera idu redom sa 15-pravila-koristenja.png');
+  $$values ('Zakazivanje'),('Obavijesti'),('Otkazivanje'),('Kašnjenje'),('Cijene'),('Vaši podaci'),('Kontakt')$$,
+  'Spojene sekcije barbera idu redom: platformske i salonske po sort_order');
 
 -- Beauty nema „Kontakt" jer u seedu nema ni telefon ni mail. Ekran mora podnijeti kraci
 -- dokument — to je uredno stanje, ne greska.
