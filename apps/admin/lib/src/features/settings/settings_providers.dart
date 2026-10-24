@@ -53,6 +53,22 @@ final postavkeSekcijeProvider = FutureProvider.autoDispose<List<PolicySection>>(
   },
 );
 
+/// Sekcije pravila **koje piše platforma** — iste koje klijent vidi na „Pravila korištenja".
+///
+/// Samo čitanje: admin ih prikazuje u dijalogu „Pravila aplikacije", ali ih ne mijenja
+/// (ADR-0009). `terms` spaja obje liste, pa se platformske biraju po [PolicySection.isPlatform].
+final postavkePlatformskaPravilaProvider =
+    FutureProvider.autoDispose<List<PolicySection>>((ref) async {
+      final salonId = ref.watch(adminSalonIdProvider);
+      if (salonId == null) return const [];
+
+      final sve = await ref.watch(policyRepositoryProvider).terms(salonId);
+      return [
+        for (final sekcija in sve)
+          if (sekcija.isPlatform) sekcija,
+      ];
+    });
+
 /// Vrijednosti forme booking pravila prije RPC poziva.
 ///
 /// Brojevi su `int`, ne tekst: za razliku od cijene usluge (koja putuje kao decimalni

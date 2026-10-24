@@ -34,6 +34,7 @@ import '../../core/widgets/admin_refresh.dart';
 import '../../core/widgets/admin_scaffold.dart';
 import '../../core/widgets/admin_verzal.dart';
 import '../appointments/appointments_providers.dart';
+import '../working_hours/working_hours_dialogs.dart';
 import 'danas.dart';
 import 'danas_blokovi.dart';
 import 'danas_providers.dart';
@@ -76,11 +77,11 @@ class AdminDashboardScreen extends ConsumerWidget {
 }
 
 /// Brze akcije top bara — `6a`. Samo vlasnik.
-class _BrzeAkcije extends StatelessWidget {
+class _BrzeAkcije extends ConsumerWidget {
   const _BrzeAkcije();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // `6a`: 40 px, padding 16 (18 za glavnu), 14,5 px u rečenici, 13,5 px u verzalu.
     final sporedno = kompaktnoDugme(
       visina: 40,
@@ -91,7 +92,7 @@ class _BrzeAkcije extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         OutlinedButton(
-          onPressed: () => context.go(AdminRoute.calendarBlock.path),
+          onPressed: () => prikaziUredjivacBlokade(context, ref),
           style: sporedno,
           child: const Text('Blokiraj vrijeme'),
         ),

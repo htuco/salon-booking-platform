@@ -11,7 +11,7 @@
 /// ## Availability ostaje na backendu
 ///
 /// Ovaj ekran mijenja **ulaz** u `get_available_slots`, nikad njegova pravila. Ovdje se
-/// ne računa nijedan slobodan termin; jedino što ekran provjerava sam (`_provjeri`) je
+/// ne računa nijedan slobodan termin; jedino što ekran provjerava sam (`provjeriSedmicu`) je
 /// staje li pauza u smjenu i je li kraj poslije početka, i to samo da greška stigne kao
 /// rečenica uz dan koji je kriv umjesto kao sirovi `PT400`. Baza istu provjeru ponavlja i
 /// ostaje jedina koja obavezuje (`docs/01 §8.1`).
@@ -38,6 +38,7 @@ import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_ucitavanje.dart';
 import '../../core/widgets/admin_verzal.dart';
 import 'working_hours_dialogs.dart';
+import 'working_hours_pisanje.dart';
 import 'working_hours_providers.dart';
 import 'working_hours_sekcije.dart';
 import '../../core/widgets/admin_toast.dart';
@@ -88,23 +89,8 @@ class _AdminWorkingHoursScreenState
   void _zamijeni(int index, WorkingHoursInput dan) =>
       setState(() => _dani[index] = dan);
 
-  /// Pauza je kolona dana: dani iz nove grupe dobijaju vrijeme, dani koji su ispali iz
-  /// stare ga gube.
   void _primijeniPauzu(Set<int> stariDani, IzmjenaPauze izmjena) {
-    setState(() {
-      for (var i = 0; i < _dani.length; i++) {
-        final dan = _dani[i];
-        final uNovoj = !izmjena.ukloni && izmjena.dani.contains(dan.dayOfWeek);
-        if (uNovoj) {
-          _dani[i] = dan.copyWith(
-            breakStartTime: izmjena.od,
-            breakEndTime: izmjena.do_,
-          );
-        } else if (stariDani.contains(dan.dayOfWeek)) {
-          _dani[i] = dan.copyWith(clearBreak: true);
-        }
-      }
-    });
+    setState(() => _dani = primijeniPauzu(_dani, stariDani, izmjena));
   }
 
   Future<void> _urediDan(int index) async {
@@ -117,28 +103,6 @@ class _AdminWorkingHoursScreenState
     );
     if (izbor == null || !mounted) return;
     _zamijeni(index, dan.copyWith(startTime: izbor.$1, endTime: izbor.$2));
-  }
-
-  /// Ono malo što ekran smije izračunati sam: staje li pauza u smjenu.
-  ///
-  /// Ovo **nije** availability logika — to ostaje u bazi. Ovdje je samo da greška stigne
-  /// kao rečenica uz dan koji je kriv, umjesto kao sirovi `PT400` iz backenda. Baza istu
-  /// provjeru ponavlja i ostaje jedina koja obavezuje.
-  String? _provjeri() {
-    for (final dan in _dani) {
-      if (dan.isClosed) continue;
-      final ime = kDaniSedmice[dan.dayOfWeek - 1];
-      if (dan.endTime <= dan.startTime) {
-        return '$ime: kraj radnog vremena mora biti poslije početka.';
-      }
-      if (dan.hasBreak &&
-          (dan.breakStartTime! < dan.startTime ||
-              dan.breakEndTime! > dan.endTime ||
-              dan.breakEndTime! <= dan.breakStartTime!)) {
-        return '$ime: pauza mora biti unutar radnog vremena.';
-      }
-    }
-    return null;
   }
 
   /// Greška ide i u `_greska` i u toast — dugme za snimanje je u top baru ili na dnu,
@@ -156,12 +120,8 @@ class _AdminWorkingHoursScreenState
     }
   }
 
-  /// Snima tek kad vlasnik vidi šta ispada van novog vremena.
-  ///
-  /// Redoslijed je namjeran: prvo pitanje bazi šta bi ispalo, pa dijalog, pa upis. Obrnut
-  /// redoslijed bi značio da vlasnik saznaje za posljedicu kad je već nastala.
   Future<void> _sacuvaj() async {
-    final problem = _provjeri();
+    final problem = provjeriSedmicu(_dani);
     if (problem != null) {
       _prijaviGresku(problem, kvar: false);
       return;
@@ -170,22 +130,15 @@ class _AdminWorkingHoursScreenState
       _snimam = true;
       _greska = null;
     });
-    final actions = ref.read(workingHoursActionsProvider);
     try {
-      final konflikti = await actions.konflikti(_dani);
-      if (!mounted) return;
-      if (konflikti.isNotEmpty) {
-        final nastavi = await prikaziKonflikte(context, konflikti);
-        if (!mounted) return;
-        if (nastavi != true) {
-          setState(() => _snimam = false);
-          return;
-        }
-      }
-      await actions.sacuvaj(_dani);
+      final sacuvano = await snimiSedmicu(
+        context,
+        ref.read(workingHoursActionsProvider),
+        _dani,
+      );
       if (!mounted) return;
       setState(() => _snimam = false);
-      AdminToast.uspjeh(context, 'Radno vrijeme je sačuvano.');
+      if (sacuvano) AdminToast.uspjeh(context, 'Radno vrijeme je sačuvano.');
     } on ApiError catch (error) {
       if (!mounted) return;
       _prijaviGresku(porukaGreske(error));
@@ -280,8 +233,6 @@ class _AdminWorkingHoursScreenState
           ),
           SizedBox(height: razmakSekcija),
           RadnoVrijemeNeradniDani(naslovUKartici: desktop),
-          SizedBox(height: razmakSekcija),
-          RadnoVrijemePravila(naslovUKartici: desktop),
         ];
 
         final tijelo = dvijeKolone

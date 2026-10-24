@@ -508,26 +508,40 @@ class IzmjenaPauze {
 /// „Sačuvaj izmjene", kroz istu provjeru konflikata kao i sati. Pauza je kolona dana, pa
 /// je izbor dana ovdje isto što i „kojim danima ova kolona dobija ovo vrijeme".
 ///
-/// [dani] `null` znači novu pauzu.
+/// [dani] `null` znači novu pauzu. [snimaOdmah] je za kalendar, koji nema „Sačuvaj
+/// izmjene": dijalog tada tako kaže, umjesto da obeća snimanje koje ne postoji.
 Future<IzmjenaPauze?> prikaziUrediPauzu(
   BuildContext context, {
   required List<WorkingHoursInput> sedmica,
   LocalTime? od,
   LocalTime? do_,
   Set<int>? dani,
+  bool snimaOdmah = false,
 }) => showDialog<IzmjenaPauze>(
   context: context,
-  builder: (_) =>
-      _UredjivacPauze(sedmica: sedmica, od: od, do_: do_, dani: dani),
+  builder: (_) => _UredjivacPauze(
+    sedmica: sedmica,
+    od: od,
+    do_: do_,
+    dani: dani,
+    snimaOdmah: snimaOdmah,
+  ),
 );
 
 class _UredjivacPauze extends StatefulWidget {
-  const _UredjivacPauze({required this.sedmica, this.od, this.do_, this.dani});
+  const _UredjivacPauze({
+    required this.sedmica,
+    this.od,
+    this.do_,
+    this.dani,
+    this.snimaOdmah = false,
+  });
 
   final List<WorkingHoursInput> sedmica;
   final LocalTime? od;
   final LocalTime? do_;
   final Set<int>? dani;
+  final bool snimaOdmah;
 
   @override
   State<_UredjivacPauze> createState() => _UredjivacPauzeState();
@@ -619,8 +633,8 @@ class _UredjivacPauzeState extends State<_UredjivacPauze> {
               ),
               const SizedBox(height: AdminSpacing.sm),
               Text(
-                'Dan koji već ima drugu pauzu dobija ovu umjesto nje. Promjena se '
-                'snima tek sa „Sačuvaj izmjene".',
+                'Dan koji već ima drugu pauzu dobija ovu umjesto nje. '
+                '${widget.snimaOdmah ? 'Promjena se snima odmah.' : 'Promjena se snima tek sa „Sačuvaj izmjene".'}',
                 style: tema.bodySmall?.copyWith(color: boje.textSecondary),
               ),
               if (_greska != null) ...[
@@ -646,7 +660,7 @@ class _UredjivacPauzeState extends State<_UredjivacPauze> {
         FilledButton(
           onPressed: _primijeni,
           style: FilledButton.styleFrom(textStyle: AdminText.actionLabel),
-          child: const AdminVerzal('Primijeni'),
+          child: AdminVerzal(widget.snimaOdmah ? 'Sačuvaj' : 'Primijeni'),
         ),
       ],
     );

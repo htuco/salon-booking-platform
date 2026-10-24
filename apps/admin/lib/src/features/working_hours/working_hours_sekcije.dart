@@ -8,14 +8,11 @@ import 'package:core_api/core_api.dart';
 import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/poruka_greske.dart';
-import '../../core/router/admin_router.dart';
 import '../../core/theme/theme.dart';
 import '../../core/widgets/admin_skeleton.dart';
 import '../../core/widgets/admin_verzal.dart';
-import '../settings/settings_providers.dart';
 import 'working_hours_dialogs.dart';
 import 'working_hours_providers.dart';
 import '../../core/widgets/admin_toast.dart';
@@ -459,131 +456,6 @@ class _RedBlokadeState extends ConsumerState<_RedBlokade> {
         color: boje.destructive,
         icon: const Icon(Icons.close, size: 18),
       ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Pravila zakazivanja
-// ---------------------------------------------------------------------------
-
-/// „Pravila zakazivanja" iz `3h` — **samo prikaz**.
-///
-/// Vrijednosti su stvarne (`salon_settings`, isti provider kao Postavke), ali se mijenjaju
-/// u Postavkama, gdje forma i provjera već postoje. Druga forma ovdje bi bila drugi upis
-/// istog reda sa svojim pravilima.
-class RadnoVrijemePravila extends ConsumerWidget {
-  const RadnoVrijemePravila({required this.naslovUKartici, super.key});
-
-  final bool naslovUKartici;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final postavke = ref.watch(postavkeBookingProvider);
-    final s = postavke.valueOrNull;
-    String vrijednost(String Function(SalonSettings) f) =>
-        s != null ? f(s) : (postavke.isLoading ? '…' : '—');
-
-    return SekcijaKartica(
-      naslov: 'Pravila zakazivanja',
-      naslovUKartici: naslovUKartici,
-      children: [
-        _RedPravila(
-          labela: 'Razmak termina',
-          vrijednost: vrijednost((s) => '${s.slotStepMinutes} min'),
-        ),
-        const SizedBox(height: 13),
-        _RedPravila(
-          labela: 'Najranije zakazivanje',
-          vrijednost: vrijednost(
-            (s) => '${s.minAdvanceBookingHours} h unaprijed',
-          ),
-        ),
-        const SizedBox(height: 13),
-        _RedPravila(
-          labela: 'Otkazivanje najkasnije',
-          vrijednost: vrijednost((s) => '${s.minCancelHours} h prije'),
-        ),
-      ],
-    );
-  }
-}
-
-class _RedPravila extends StatelessWidget {
-  const _RedPravila({required this.labela, required this.vrijednost});
-
-  final String labela;
-  final String vrijednost;
-
-  /// Ne vodi odmah u Postavke: odlazak sa ekrana bi bacio nesnimljene sate.
-  void _objasni(BuildContext context) {
-    // Informacija, ne upozorenje: napomena se sama skloni i kad nosi akciju.
-    AdminToast.info(
-      context,
-      'Pravila zakazivanja se mijenjaju u Postavkama.',
-      akcija: AdminToastAkcija(
-        'Postavke',
-        () => context.go(AdminRoute.settings.path),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final boje = context.adminColors;
-    final tema = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        Expanded(child: Text(labela, style: tema.bodyLarge)),
-        const SizedBox(width: AdminSpacing.md),
-        Flexible(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: ConstrainedBox(
-              // 206 iz `3h`; na uskoj kartici polje dijeli red sa labelom pola-pola.
-              constraints: const BoxConstraints(maxWidth: 206),
-              child: Semantics(
-                button: true,
-                label: '$labela, $vrijednost, mijenja se u Postavkama',
-                excludeSemantics: true,
-                child: InkWell(
-                  onTap: () => _objasni(context),
-                  borderRadius: BorderRadius.circular(AdminRadius.base),
-                  child: Container(
-                    height: 42,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: boje.border),
-                      borderRadius: BorderRadius.circular(AdminRadius.base),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            vrijednost,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: tema.bodyLarge?.copyWith(
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_drop_down,
-                          size: 18,
-                          color: boje.textSecondary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

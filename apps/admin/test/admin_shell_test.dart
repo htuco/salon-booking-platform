@@ -88,9 +88,9 @@ Widget _ekran({
                   GoRoute(
                     path: 'block',
                     builder: (context, state) => AdminPlaceholderScreen(
-                      title: AdminRoute.calendarBlock.title,
+                      title: 'Nenapisan modul',
                       path: state.uri.path,
-                      route: AdminRoute.calendarBlock,
+                      route: AdminRoute.calendar,
                     ),
                   ),
                 ],
