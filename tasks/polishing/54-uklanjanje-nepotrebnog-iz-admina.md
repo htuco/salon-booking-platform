@@ -34,4 +34,19 @@ označi kao nepotrebno.
   ne uklanja tu mogućnost.
 
 ## Status
-Nije počet.
+U toku (grana `feat/54-ciscenje-admina`, 2026-10-24). Lista potvrđena od vlasnika proizvoda pri
+ručnom pregledu admina; dopuna ADR-0020 napisana.
+
+**Uklonjeno:** „+ Novi klijent", „Kopiraj prošlu sedmicu", „Pregled u aplikaciji", kartica
+„Pravila zakazivanja" na radnom vremenu, red „Potvrda termina" u Obavijestima, ruta
+`/calendar/block`. „Pravila platforme" su postala dugme „Pravila aplikacije" koje otvara dijalog.
+
+**Popravljeno umjesto uklanjanja:** „Dodaj pauzu" i „Zatvori dan" u kalendaru te „Blokiraj
+vrijeme" na Danas otvaraju iste dijaloge kao radno vrijeme.
+
+**Ostaje kao issue:** Mjesec (#259), „Zakaži termin" iz profila (#260), brisanje usluge (#261),
+pauza po usluzi (#262), raspored po radniku (#263), prekidač liste čekanja (#264), tekst pravila
+aplikacije (#265), „tačno vrijeme" i horizont 90 dana (#266). Podsjetnici stižu sa PR-om #144.
+
+Zamka „Podsjetnici pišu `reminders_enabled`" iz ovog fajla je pogrešna na `develop`-u: red nije ništa
+pisao. Admin 728 testova; viđeno uživo na 1440 (vlasnik).

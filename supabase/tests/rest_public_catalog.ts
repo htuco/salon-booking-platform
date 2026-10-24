@@ -254,7 +254,7 @@ try {
   // itself would reveal it — the developer is always signed in.
   // ---------------------------------------------------------------------------
   const appTerms = await anonRows("app_policies", POLICY_COLUMNS, "&document=eq.terms&order=sort_order");
-  assert(appTerms.length === 3, `Anon must read 3 platform terms sections, got ${appTerms.length}.`);
+  assert(appTerms.length === 4, `Anon must read 4 platform terms sections, got ${appTerms.length}.`);
 
   // No `order=` on purpose: this asserts what the repository actually sends. Dart's
   // `PostgrestTransformBuilder.order` defaults to `ascending = false`, so `.order('sort_order')`
@@ -280,7 +280,7 @@ try {
   );
   assert(salonTerms.length === 3, `Anon must read 3 salon sections for the barber, got ${salonTerms.length}.`);
 
-  // The merged order is what the screen numbers 01..06. Asserting it here and not only in
+  // The merged order is what the screen numbers 01..07. Asserting it here and not only in
   // pgTAP is the point: PostgREST is where `order=` is actually applied, and a sort_order
   // collision between the two tables would show up as a shuffled legal document.
   const merged = [...appTerms, ...salonTerms]
@@ -288,8 +288,8 @@ try {
     .map((row) => row.title)
     .join(" · ");
   assert(
-    merged === "Zakazivanje · Otkazivanje · Kašnjenje · Cijene · Vaši podaci · Kontakt",
-    `Merged terms must follow 15-pravila-koristenja.png, got: ${merged}`,
+    merged === "Zakazivanje · Obavijesti · Otkazivanje · Kašnjenje · Cijene · Vaši podaci · Kontakt",
+    `Merged terms must interleave platform (10/15/40/50) and salon (20/30/60) sections, got: ${merged}`,
   );
 
   // The body keeps the placeholder; the screen fills it from salon_settings. If a seed ever

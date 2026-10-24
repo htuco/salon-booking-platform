@@ -246,18 +246,70 @@ void main() {
     );
   });
 
-  testWidgets('platformske sekcije su vidljive i zaključane', (tester) async {
-    // **Ovo je ekranska strana ADR-0009.** Tri sekcije obavezuju firmu i salon ih ne
-    // može mijenjati; da ih ekran prećuti, vlasnik bi prijavio da mu „fale pravila".
-    await _pumpAt(tester, _desktop, _screen());
+  testWidgets('platformska pravila se otvaraju iz dugmeta i samo se čitaju', (
+    tester,
+  ) async {
+    // **Ovo je ekranska strana ADR-0009.** Sekcije obavezuju firmu i salon ih ne može
+    // mijenjati; vlasnik ih ipak mora moći pročitati, da ne prijavi da mu „fale pravila".
+    // Tekst dolazi iz `app_policies`, pa se ne može razići od onog koji klijent vidi.
+    final platformske = [
+      for (final (i, naslov) in const [
+        'Zakazivanje',
+        'Cijene',
+        'Vaši podaci',
+      ].indexed)
+        PolicySection(
+          id: 'a$i',
+          sortOrder: i,
+          title: naslov,
+          body: 'Tekst sekcije $naslov.',
+          updatedAt: DateTime(2026, 9, 21),
+        ),
+    ];
+    await _pumpAt(
+      tester,
+      _desktop,
+      _screen(
+        dodatno: [
+          postavkePlatformskaPravilaProvider.overrideWith(
+            (ref) async => platformske,
+          ),
+        ],
+      ),
+    );
 
-    await _doVidljivog(tester, find.text('Pravila platforme'));
+    await _doVidljivog(
+      tester,
+      find.widgetWithText(OutlinedButton, 'Pravila aplikacije'),
+    );
+    // Prije klika tekst nije na ekranu: dugme ne smije nositi cijeli popis.
+    expect(find.text('Tekst sekcije Cijene.'), findsNothing);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Pravila aplikacije'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    // Ograničeno na dijalog: „Zakazivanje" je i naslov kartice na samoj stranici.
+    final dijalog = find.byType(AlertDialog);
     for (final naslov in const ['Zakazivanje', 'Cijene', 'Vaši podaci']) {
-      expect(find.text(naslov), findsWidgets);
+      expect(
+        find.descendant(of: dijalog, matching: find.text(naslov)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: dijalog,
+          matching: find.text('Tekst sekcije $naslov.'),
+        ),
+        findsOneWidget,
+      );
     }
-    expect(find.byIcon(Icons.lock_outline), findsNWidgets(3));
-    // Nijedna od njih nema dugme za izmjenu — jedino salonske sekcije ga imaju.
+    // Nijedna nema dugme za izmjenu — jedino salonske sekcije ga imaju.
     expect(find.byIcon(Icons.edit_outlined), findsNothing);
+
+    await tester.tap(find.text('Zatvori'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
   });
 
   testWidgets('salon bez svojih sekcija dobije uredno prazno stanje', (

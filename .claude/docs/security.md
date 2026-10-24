@@ -374,9 +374,10 @@ taska 21, **`public.app_policies`**. Oba nose isti oblik politike — `using(tru
 `private.is_super_admin()` za pisanje — i oba postoje zato što je podatak **platformski**, ne
 tenantski.
 
-Kod pravila razlog nije udobnost nego odgovornost. Šest sekcija sa `15-pravila-koristenja.png`
-nisu iste vrste: Zakazivanje, Cijene i Vaši podaci obavezuju **firmu pod čijim imenom app stoji u
-storeu**; Otkazivanje, Kašnjenje i Kontakt obavezuju salon. Te druge žive u `public.salon_policies`
+Kod pravila razlog nije udobnost nego odgovornost. Sekcije sa `15-pravila-koristenja.png`
+nisu iste vrste: Zakazivanje, Obavijesti (dodana poslije handoffa, task 54), Cijene i Vaši podaci
+obavezuju **firmu pod čijim imenom app stoji u storeu**; Otkazivanje, Kašnjenje i Kontakt
+obavezuju salon. Te druge žive u `public.salon_policies`
 (`salon_id`, `private.is_admin(salon_id)` za CRUD, `private.salon_active(salon_id)` za javno
 čitanje). Politika privatnosti je u cijelosti platformska i `check (document = 'terms')` na
 `salon_policies` to provodi u bazi, ne u komentaru.

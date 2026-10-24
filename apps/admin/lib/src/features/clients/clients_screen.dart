@@ -44,8 +44,8 @@ String inicijal(Customer klijent) {
 String telefonKlijenta(Customer klijent) =>
     klijent.hasPhone ? klijent.phone!.trim() : 'Bez broja';
 
-/// Pretraga stoji u top baru tek kad stane uz breadcrumb i „+ Novi klijent" (288 + 136
-/// px iz `3e`); ispod toga prelazi u tijelo ekrana, umjesto da top bar prelije.
+/// Pretraga stoji u top baru tek kad stane uz breadcrumb (288 px iz `3e`); ispod toga
+/// prelazi u tijelo ekrana, umjesto da top bar prelije.
 bool _pretragaUTopBaru(BuildContext context) =>
     MediaQuery.sizeOf(context).width >= 1000;
 
@@ -70,33 +70,17 @@ class AdminClientsScreen extends ConsumerWidget {
   }
 }
 
-/// Akcije top bara iz `3e`: pretraga 288 × 42 i koralno „+ NOVI KLIJENT".
+/// Akcije top bara iz `3e`: pretraga 288 px, visoka koliko ostale kontrole top bara.
+///
+/// „+ Novi klijent" iz `3e` ovdje nema: klijent nastaje sam pri registraciji u klijentskoj
+/// aplikaciji (`ensure_customer`), a klijent bez aplikacije se dodaje kroz „Novi termin".
 class _TopBarAkcije extends StatelessWidget {
   const _TopBarAkcije();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (_pretragaUTopBaru(context)) ...[
-          const SizedBox(width: 288, child: _Pretraga()),
-          const SizedBox(width: AdminSpacing.md),
-        ],
-        SizedBox(
-          height: AdminSize.touchTarget,
-          child: FilledButton(
-            onPressed: () => _uskoro(context, 'Novi klijent'),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, AdminSize.touchTarget),
-              padding: const EdgeInsets.symmetric(horizontal: AdminSpacing.lg),
-              textStyle: AdminText.actionLabel,
-            ),
-            child: const AdminVerzal('+ Novi klijent'),
-          ),
-        ),
-      ],
-    );
+    if (!_pretragaUTopBaru(context)) return const SizedBox.shrink();
+    return const SizedBox(width: 288, child: _Pretraga());
   }
 }
 
@@ -464,9 +448,14 @@ class _PretragaState extends ConsumerState<_Pretraga> {
       _kontroler.text = izraz;
       setState(() {});
     });
-    return TextField(
+    final polje = TextField(
       controller: _kontroler,
       style: Theme.of(context).textTheme.bodyMedium,
+      // Na desktopu polje puni zadanu visinu: `constraints.minHeight` ga ne digne na dodirnu
+      // metu, pa je pretraga bila niža od dugmadi pored nje.
+      expands: !telefon,
+      maxLines: telefon ? 1 : null,
+      textAlignVertical: TextAlignVertical.center,
       decoration: InputDecoration(
         hintText: 'Ime ili broj telefona',
         isDense: true,
@@ -500,6 +489,9 @@ class _PretragaState extends ConsumerState<_Pretraga> {
         setState(() {});
       },
     );
+    return telefon
+        ? polje
+        : SizedBox(height: AdminSize.touchTarget, child: polje);
   }
 }
 
